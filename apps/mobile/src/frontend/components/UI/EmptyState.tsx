@@ -1,4 +1,4 @@
-/** Shared empty card keeps a warm Daylight welcome and actionable recovery without inventing feature content. */
+/** Calm, readable recovery cards retain fan/admin action boundaries and truthful source copy. */
 import { type Href, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -53,7 +53,7 @@ export function EmptyState({
     <View style={styles.card} accessibilityRole="summary" accessibilityLabel={title}>
       <MenuBackdrop accent="gold" />
       {kicker ? <Text style={[styles.kicker, { color: mark }]}>{kicker}</Text> : null}
-      <Text style={styles.title}>{title}</Text>
+      <Text accessibilityRole="header" style={styles.title}>{title}</Text>
       {lede ? <Text style={styles.lede}>{lede}</Text> : null}
       {actionLabel && onAction ? (
         <AnimatedButton
@@ -86,10 +86,10 @@ const styles = StyleSheet.create({
     borderRadius: MENU_METRICS.cardRadius,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: FOCAL.electricGold,
+    borderColor: colors.border,
     padding: space.lg,
     gap: space.sm,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     ...cardShadow,
   },
   kicker: {
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     fontWeight: '800',
-    textAlign: 'center',
+    textAlign: 'left',
     letterSpacing: -0.2,
   },
   lede: {
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '600',
-    textAlign: 'center',
+    textAlign: 'left',
     maxWidth: 420,
   },
   primary: {
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   admin: {
-    minHeight: 40,
+    minHeight: MENU_METRICS.touchTarget,
     paddingHorizontal: space.md,
     borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.surface,

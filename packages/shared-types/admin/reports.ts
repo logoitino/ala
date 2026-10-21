@@ -30,6 +30,10 @@ export type PortalReports = {
   series: ReportSeries;
   /** `get_admin_reports.donation_bands`. `null` = not in this read (migration not applied) or not an object. */
   donationBands: DonationBands | null;
+  /** `get_admin_reports.trivia` (20261020180000). `null` = not in this read; zeros = read, no rounds. */
+  trivia: TriviaReport | null;
+  /** `get_admin_reports.smoothness` (20261020180000 + 20261020173000 + flag). Same null semantics. */
+  smoothness: SmoothnessReport | null;
 };
 
 /**
@@ -44,6 +48,39 @@ export type DonationBands = {
   from50to250: number | null;
   /** $250 and up. */
   over250: number | null;
+};
+
+/**
+ * Trivia funnel over 7 days (behavior-logging Step 1 events). Each count is `null` when absent,
+ * so a partial payload never shows a 0 it did not return. Lists keep `null` (absent) vs `[]` (empty).
+ */
+export type TriviaReport = {
+  prepViews7d: number | null;
+  startPresses7d: number | null;
+  starts7d: number | null;
+  answers7d: number | null;
+  nexts7d: number | null;
+  completes7d: number | null;
+  abandons7d: number | null;
+  unavailable7d: number | null;
+  startFailed7d: number | null;
+  answerFailed7d: number | null;
+  nextFailed7d: number | null;
+  explanationFailed7d: number | null;
+  /** Answers per question position, position order (drop-off reads left to right). */
+  byPosition7d: ReportLeader[] | null;
+  /** Starts per round kind, most first. */
+  startsByKind7d: ReportLeader[] | null;
+};
+
+/** Smoothness over 7 days (behavior-logging Step 2 events). Same null semantics as trivia. */
+export type SmoothnessReport = {
+  mounts7d: number | null;
+  avgMountMs7d: number | null;
+  /** Average mount ms per surface, slowest first. */
+  bySurface7d: ReportLeader[] | null;
+  appStarts7d: number | null;
+  avgStartMs7d: number | null;
 };
 
 export type ReportPoint = { label: string; value: number };
@@ -109,6 +146,8 @@ const EMPTY_REPORTS: PortalReports = {
   leaders: { malo: null, hype: null, schools: null },
   series: { clips: null, malo: null, stalls: null, dwell: null },
   donationBands: null,
+  trivia: null,
+  smoothness: null,
 };
 
 const EMPTY_REVENUE: PortalRevenue = {
@@ -222,6 +261,53 @@ export function donationBandsSentence(bands: DonationBands): string {
     return `${band.label}: ${value.toLocaleString('en-US')} ${value === 1 ? 'athlete' : 'athletes'}`;
   });
   return `${DONATION_BANDS_TITLE}. ${parts.join('; ')}.`;
+}
+
+/**
+ * @purpose Parse `get_admin_reports.trivia`. Pure.
+ * @returns `null` when the key is absent, not an object, or carries nothing recognizable (malformed);
+ *   otherwise each count, or `null` when that count is absent (partial). Present `[]` lists stay `[]`.
+ */
+export function parseTriviaReport(value: unknown): TriviaReport | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const bag = value as Record<string, unknown>;
+  const report: TriviaReport = {
+    prepViews7d: asIntOrNull(bag.prep_views_7d),
+    startPresses7d: asIntOrNull(bag.start_presses_7d),
+    starts7d: asIntOrNull(bag.starts_7d),
+    answers7d: asIntOrNull(bag.answers_7d),
+    nexts7d: asIntOrNull(bag.nexts_7d),
+    completes7d: asIntOrNull(bag.completes_7d),
+    abandons7d: asIntOrNull(bag.abandons_7d),
+    unavailable7d: asIntOrNull(bag.unavailable_7d),
+    startFailed7d: asIntOrNull(bag.start_failed_7d),
+    answerFailed7d: asIntOrNull(bag.answer_failed_7d),
+    nextFailed7d: asIntOrNull(bag.next_failed_7d),
+    explanationFailed7d: asIntOrNull(bag.explanation_failed_7d),
+    byPosition7d: asLeaders(bag.by_position_7d),
+    startsByKind7d: asLeaders(bag.starts_by_kind_7d),
+  };
+  const scalars = [report.prepViews7d, report.startPresses7d, report.starts7d, report.answers7d, report.nexts7d,
+    report.completes7d, report.abandons7d, report.unavailable7d, report.startFailed7d, report.answerFailed7d,
+    report.nextFailed7d, report.explanationFailed7d];
+  return scalars.every((v) => v == null) && report.byPosition7d == null && report.startsByKind7d == null ? null : report;
+}
+
+/**
+ * @purpose Parse `get_admin_reports.smoothness`. Pure. Same null semantics as trivia.
+ */
+export function parseSmoothnessReport(value: unknown): SmoothnessReport | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const bag = value as Record<string, unknown>;
+  const report: SmoothnessReport = {
+    mounts7d: asIntOrNull(bag.mounts_7d),
+    avgMountMs7d: asIntOrNull(bag.avg_mount_ms_7d),
+    bySurface7d: asLeaders(bag.by_surface_7d),
+    appStarts7d: asIntOrNull(bag.app_starts_7d),
+    avgStartMs7d: asIntOrNull(bag.avg_start_ms_7d),
+  };
+  return report.mounts7d == null && report.avgMountMs7d == null && report.bySurface7d == null
+    && report.appStarts7d == null && report.avgStartMs7d == null ? null : report;
 }
 
 function dollarsToCents(value: unknown): number {
@@ -398,6 +484,8 @@ export function parseReportsPayload(data: unknown): PortalReports {
     },
     series: asSeries(row.series),
     donationBands: parseDonationBands(row.donation_bands),
+    trivia: parseTriviaReport(row.trivia),
+    smoothness: parseSmoothnessReport(row.smoothness),
   };
 }
 

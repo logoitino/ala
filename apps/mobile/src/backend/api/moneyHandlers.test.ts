@@ -1,7 +1,8 @@
 /**
  * Characterization of the money server handlers on both runtimes (SCALE-04): the Metro / Node handlers in
  * `src/backend/api` and the Deno Edge Functions in `supabase/functions`. Written against the code before the shared
- * core existed and kept unchanged after, so it proves the refactor kept every status code, message and response body.
+ * core existed and retained after, with Connect persistence regressions verifying server-only saves before links.
+ * Profile/Stripe failures never masquerade as successful durable onboarding.
  * The Edge Functions run here through a small `Deno.serve` / `Deno.env` stand-in and virtual `esm.sh` modules; no
  * network, Stripe or Supabase is reached. Tokens are opaque strings, so every case takes the `getUser` path.
  */
@@ -15,8 +16,38 @@ const mockState = {
   getUser: jest.fn(),
   rpc: jest.fn(),
   profile: null as Row,
+  profileError: null as unknown,
+  guardian: null as Row,
+  contextPatch: {} as Record<string, unknown>,
+  updateError: null as unknown,
+  updateMatched: true,
   queries: [] as Query[],
 };
+
+/** External RPC boundary; atomic SQL authorization/reuse is exercised by the separate replay. */
+function mockConnectRpc(fn: string, args: Record<string, unknown>) {
+  if (fn === 'stripe_connect_context') {
+    if (mockState.profileError) return { data: null, error: mockState.profileError };
+    const profile = mockState.profile;
+    if (!profile) return { data: null, error: null };
+    const guardian = args.target_player_id != null;
+    const row = guardian ? mockState.guardian : profile;
+    return { data: { ...profile, stripe_connect_id: row?.stripe_connect_id ?? null,
+      owner_user_id: args.actor_user_id, target_player_id: args.target_player_id,
+      target_kind: guardian ? 'guardian' : 'self', ...mockState.contextPatch }, error: null };
+  }
+  if (fn === 'save_stripe_connect_account') {
+    const guardian = args.target_player_id != null;
+    const row = guardian ? mockState.guardian : mockState.profile;
+    if (mockState.updateError) return { data: null, error: mockState.updateError };
+    if (!mockState.updateMatched || !row || args.expected_profile_id !== mockState.profile?.id
+      || row.stripe_connect_id !== args.expected_account_id) return { data: null, error: null };
+    Object.assign(row, { stripe_connect_id: args.account_id, payouts_enabled: args.transfers_enabled,
+      ...(!guardian ? { stripe_onboarding_complete: args.onboarding_complete } : {}) });
+    return { data: args.account_id, error: null };
+  }
+  return { data: false, error: null };
+}
 
 function mockMakeClient() {
   return {
@@ -25,13 +56,24 @@ function mockMakeClient() {
     from: (table: string) => {
       const query: Query = { table, ops: [] };
       mockState.queries.push(query);
+      const settle = () => {
+        const update = query.ops.find((op) => op[0] === 'update');
+        if (!update) return { data: mockState.profile, error: mockState.profileError };
+        if (mockState.updateError) return { data: null, error: mockState.updateError };
+        if (!mockState.updateMatched || !mockState.profile) return { data: null, error: null };
+        const binding = query.ops.find((op) => (op[0] === 'eq' || op[0] === 'is') && op[1] === 'stripe_connect_id');
+        if (binding && mockState.profile.stripe_connect_id !== binding[2]) return { data: null, error: null };
+        Object.assign(mockState.profile, update[1]);
+        return { data: { id: mockState.profile.id }, error: null };
+      };
       const builder = {
         select: (columns: string) => { query.ops.push(['select', columns]); return builder; },
         update: (values: unknown) => { query.ops.push(['update', values]); return builder; },
         eq: (column: string, value: unknown) => { query.ops.push(['eq', column, value]); return builder; },
-        maybeSingle: () => Promise.resolve({ data: mockState.profile, error: null }),
+        is: (column: string, value: unknown) => { query.ops.push(['is', column, value]); return builder; },
+        maybeSingle: () => Promise.resolve(settle()),
         then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
-          Promise.resolve({ data: null, error: null }).then(resolve, reject),
+          Promise.resolve(settle()).then(resolve, reject),
       };
       return builder;
     },
@@ -119,7 +161,7 @@ const NEW_ACCOUNT_PARAMS = (email: string) => ({
   defaults: {
     currency: 'usd',
     responsibilities: { fees_collector: 'application', losses_collector: 'application' },
-    profile: { product_description: "Tapua'i athlete receiving Mālo tips and subscriptions" },
+    profile: { product_description: "Tapua'i athlete receiving donations and subscriptions" },
   },
   configuration: { recipient: { capabilities: { stripe_balance: { stripe_transfers: { requested: true } } } } },
   metadata: { tapuai_user_id: 'user-1' },
@@ -178,6 +220,11 @@ beforeEach(() => {
   mockState.createClientCalls.length = 0;
   mockState.queries.length = 0;
   mockState.profile = null;
+  mockState.profileError = null;
+  mockState.guardian = null;
+  mockState.contextPatch = {};
+  mockState.updateError = null;
+  mockState.updateMatched = true;
   mockStripeCtorCalls.length = 0;
   jest.clearAllMocks();
   mockState.getUser.mockResolvedValue(SIGNED_IN);
@@ -295,6 +342,19 @@ describe.each([
       expect.objectContaining({ amount: 50, metadata: { tapuai_user_id: 'user-1' } }),
     );
   });
+  test('donation declaration preserves legacy checkout without requiring a new context RPC', async () => {
+    expect(await read(await handler()(request({ amount: 650, playerId: PLAYER, platformTipCents: 50,
+      donation: { giftCents: 500, coverFees: true, platformTipPercent: 10 },
+      tapuai_context_id: 'client-cannot-create-authority', donorId: 'someone-else', purpose: 'donation' })))).toEqual({
+      status: 200, body: { clientSecret: 'pi_secret_1' },
+    });
+    expect(mockState.rpc).toHaveBeenCalledTimes(1);
+    expect(mockState.rpc).toHaveBeenCalledWith('malo_target_frozen', { target_player_id: PLAYER });
+    expect(mockStripe.paymentIntents.create).toHaveBeenCalledWith(expect.objectContaining({ metadata: {
+      tapuai_user_id: 'user-1', tapuai_player_id: PLAYER, tapuai_platform_tip_cents: '50',
+      tapuai_purpose: 'donation', tapuai_notification_authority: 'false',
+    } }));
+  });
 
   test('a Stripe error is 400 with its message', async () => {
     mockStripe.paymentIntents.create.mockRejectedValue(new Error('card declined'));
@@ -411,6 +471,10 @@ describe.each([
   ['node', () => node.connect],
   ['edge', () => edge.connect],
 ])('create-stripe-account (%s)', (runtime, handler) => {
+  beforeEach(() => {
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'node-service';
+    mockState.rpc.mockImplementation(mockConnectRpc);
+  });
   const ret = 'alasports://stripe-connect/return';
   const refresh = 'alasports://stripe-connect/refresh';
 
@@ -433,9 +497,9 @@ describe.each([
     expect(mockState.getUser).toHaveBeenCalledWith('Token abc');
   });
 
-  test('a thrown auth provider error is 400', async () => {
+  test('a thrown auth provider error is safe 400', async () => {
     mockState.getUser.mockRejectedValue(new Error('auth down'));
-    expect(await read(await handler()(request({ returnUrl: ret })))).toEqual({ status: 400, body: { error: 'auth down' } });
+    expect(await read(await handler()(request({ returnUrl: ret })))).toEqual({ status: 400, body: { error: 'Bank setup could not be completed. Try again.' } });
   });
 
   test.each([
@@ -456,9 +520,8 @@ describe.each([
       status: 403,
       body: { error: 'Agree to Terms of Service & NIL Compliance before connecting a bank.' },
     });
-    expect(mockState.queries[0]).toEqual({
-      table: 'profiles',
-      ops: [['select', 'id, stripe_connect_id, legal_terms_accepted_at, legal_terms_version'], ['eq', 'user_id', 'user-1']],
+    expect(mockState.rpc).toHaveBeenCalledWith('stripe_connect_context', {
+      actor_user_id: 'user-1', target_player_id: null,
     });
     expect(mockStripe.v2.core.accounts.create).not.toHaveBeenCalled();
   });
@@ -471,7 +534,7 @@ describe.each([
     mockState.profile = { id: 'p1', stripe_connect_id: '   ', legal_terms_accepted_at: '2026-09-01' };
     expect(await read(await handler()(request({ mode, returnUrl: ret })))).toEqual({
       status: 400,
-      body: { error: 'No Stripe Express account is linked to this athlete yet.' },
+      body: { error: 'No Stripe Express account is linked to this athlete yet.', code: 'connect_not_linked' },
     });
   });
 
@@ -484,13 +547,9 @@ describe.each([
     });
     expect(mockStripe.v2.core.accounts.retrieve).toHaveBeenCalledWith('acct_1', { include: ACCOUNT_INCLUDE });
     expect(mockStripe.v2.core.accountLinks.create).not.toHaveBeenCalled();
-    expect(mockState.queries[1]).toEqual({
-      table: 'profiles',
-      ops: [
-        ['update', { stripe_connect_id: 'acct_1', stripe_onboarding_complete: true, payouts_enabled: true }],
-        ['eq', 'id', 'p1'],
-        ['eq', 'user_id', 'user-1'],
-      ],
+    expect(mockState.rpc).toHaveBeenCalledWith('save_stripe_connect_account', {
+      actor_user_id: 'user-1', target_player_id: null, expected_profile_id: 'p1',
+      expected_account_id: ' acct_1 ', account_id: 'acct_1', onboarding_complete: true, transfers_enabled: true,
     });
   });
 
@@ -559,14 +618,192 @@ describe.each([
     expect(mockStripe.v2.core.accountLinks.create).toHaveBeenCalledWith(linkParams('account_update', ret, ret));
   });
 
-  test('a Stripe error is 400 with its message', async () => {
+  test('a profile read failure stops before Stripe and does not expose database error contents', async () => {
+    mockState.profileError = { message: 'sensitive provider diagnostics', code: 'XX000' };
+    const response = await read(await handler()(request({ returnUrl: ret })));
+    expect(response.status).toBe(503);
+    expect(JSON.stringify(response.body)).not.toContain('sensitive');
+    expect(mockStripe.v2.core.accounts.create).not.toHaveBeenCalled();
+    expect(mockStripe.v2.core.accounts.retrieve).not.toHaveBeenCalled();
+  });
+
+  test.each(['database error', 'zero matching rows'])('%s cannot return a link or successful status', async (failure) => {
+    mockState.profile = { id: 'p1', stripe_connect_id: null, legal_terms_accepted_at: '2026-09-01' };
+    if (failure === 'database error') mockState.updateError = { message: 'protected update rejected' };
+    else mockState.updateMatched = false;
+    const result = await read(await handler()(request({ returnUrl: ret })));
+    expect(result.status).toBe(503);
+    expect(result.body).toHaveProperty('error');
+    expect(result.body).not.toHaveProperty('url');
+    expect(mockStripe.v2.core.accountLinks.create).not.toHaveBeenCalled();
+    expect(mockState.profile.stripe_connect_id).toBeNull();
+  });
+
+  test.each(['status', 'dashboard'])('an unconfirmed %s save cannot return ready flags or a dashboard link', async (mode) => {
+    mockState.profile = { id: 'p1', stripe_connect_id: 'acct_1' };
+    mockState.updateError = { message: 'database unavailable' };
+    mockStripe.v2.core.accounts.retrieve.mockResolvedValue(account({ applied: true, transfers: 'active' }));
+    const result = await read(await handler()(request({ mode, returnUrl: ret })));
+    expect(result.status).toBe(503);
+    expect(result.body).not.toHaveProperty('payouts_enabled');
+    expect(mockStripe.accounts.createLoginLink).not.toHaveBeenCalled();
+    expect(mockStripe.v2.core.accountLinks.create).not.toHaveBeenCalled();
+  });
+
+  test('saves the created account before a failed link request, then retries that saved account', async () => {
+    mockState.profile = { id: 'p1', stripe_connect_id: null, legal_terms_accepted_at: '2026-09-01' };
+    mockStripe.v2.core.accountLinks.create.mockRejectedValueOnce(new Error('link unavailable'));
+    expect((await handler()(request({ returnUrl: ret }))).status).toBe(400);
+    expect(mockState.profile.stripe_connect_id).toBe('acct_1');
+    const result = await read(await handler()(request({ returnUrl: ret })));
+    expect(result.status).toBe(200);
+    expect(result.body.accountId).toBe('acct_1');
+    expect(mockStripe.v2.core.accounts.create).toHaveBeenCalledTimes(1);
+    expect(mockStripe.v2.core.accounts.retrieve).toHaveBeenCalledWith('acct_1', { include: ACCOUNT_INCLUDE });
+  });
+
+  test('competing first-onboarding requests cannot issue links for two different bindings', async () => {
+    mockState.profile = { id: 'p1', stripe_connect_id: null, legal_terms_accepted_at: '2026-09-01' };
+    mockStripe.v2.core.accounts.create.mockResolvedValueOnce(account({ id: 'acct_first' }))
+      .mockResolvedValueOnce(account({ id: 'acct_second' }));
+    const results = await Promise.all([handler()(request({ returnUrl: ret })), handler()(request({ returnUrl: ret }))]);
+    expect(results.map((result) => result.status).sort()).toEqual([200, 503]);
+    expect(mockState.profile.stripe_connect_id).toBe('acct_first');
+    expect(mockStripe.v2.core.accountLinks.create).toHaveBeenCalledTimes(1);
+    expect(mockStripe.v2.core.accountLinks.create).toHaveBeenCalledWith(expect.objectContaining({ account: 'acct_first' }));
+  });
+
+  test('a delayed status cannot overwrite an account replacement', async () => {
+    mockState.profile = { id: 'p1', stripe_connect_id: 'acct_1' };
+    mockStripe.v2.core.accounts.retrieve.mockImplementationOnce(async () => {
+      mockState.profile!.stripe_connect_id = 'acct_replaced';
+      return account({ id: 'acct_1', applied: true, transfers: 'active' });
+    });
+    const result = await read(await handler()(request({ mode: 'status' })));
+    expect(result.status).toBe(503);
+    expect(mockState.profile.stripe_connect_id).toBe('acct_replaced');
+    expect(result.body).not.toHaveProperty('accountId');
+  });
+
+  test('a retrieved account cannot replace a different stored binding', async () => {
+    mockState.profile = { id: 'p1', stripe_connect_id: 'acct_1' };
+    mockStripe.v2.core.accounts.retrieve.mockResolvedValue(account({ id: 'acct_other' }));
+    const result = await read(await handler()(request({ mode: 'status' })));
+    expect(result.status).toBe(400);
+    expect(mockState.profile.stripe_connect_id).toBe('acct_1');
+    expect(mockState.queries.filter((query) => query.ops.some((op) => op[0] === 'update'))).toEqual([]);
+  });
+
+  test('an invalid profile id cannot create an account or publish unpersisted status', async () => {
+    mockState.profile = { id: '   ', stripe_connect_id: 'acct_1', legal_terms_accepted_at: '2026-09-01' };
+    expect((await handler()(request({ mode: 'status' }))).status).toBe(403);
+    expect(mockStripe.v2.core.accounts.retrieve).not.toHaveBeenCalled();
+  });
+
+  test('guardian onboarding selects only the athlete custodial binding and records target metadata', async () => {
+    mockState.profile = { id: 'parent1', stripe_connect_id: 'acct_parent_own', legal_terms_accepted_at: '2026-09-01' };
+    mockState.guardian = { stripe_connect_id: null, payouts_enabled: false };
+    const result = await read(await handler()(request({ returnUrl: ret, playerId: PLAYER, ownerUserId: 'attacker' })));
+    expect(result.status).toBe(200);
+    expect(result.body).toMatchObject({ playerId: PLAYER, accountId: 'acct_1' });
+    expect(mockState.profile.stripe_connect_id).toBe('acct_parent_own');
+    expect(mockState.guardian.stripe_connect_id).toBe('acct_1');
+    expect(mockStripe.v2.core.accounts.retrieve).not.toHaveBeenCalled();
+    expect(mockState.rpc).toHaveBeenCalledWith('stripe_connect_context', { actor_user_id: 'user-1', target_player_id: PLAYER });
+    expect(mockStripe.v2.core.accounts.create).toHaveBeenCalledWith(expect.objectContaining({ metadata: {
+      tapuai_user_id: 'user-1', tapuai_player_id: PLAYER, tapuai_payee_profile_id: 'parent1',
+    } }));
+  });
+
+  test('guardian status cannot borrow the guardian own-profile account when no athlete bank is linked', async () => {
+    mockState.profile = { id: 'parent1', stripe_connect_id: 'acct_parent_own' };
+    mockState.guardian = { stripe_connect_id: null };
+    const result = await read(await handler()(request({ mode: 'status', playerId: PLAYER })));
+    expect(result).toEqual({ status: 400, body: { error: 'No Stripe Express account is linked to this athlete yet.', code: 'connect_not_linked', playerId: PLAYER } });
+    expect(mockStripe.v2.core.accounts.retrieve).not.toHaveBeenCalled();
+    expect(mockStripe.v2.core.accounts.create).not.toHaveBeenCalled();
+  });
+
+  test('guardian status persists only the custodial row and confirms the selected target', async () => {
+    mockState.profile = { id: 'parent1', stripe_connect_id: 'acct_parent_own', payouts_enabled: false };
+    mockState.guardian = { stripe_connect_id: 'acct_1', payouts_enabled: false };
+    mockStripe.v2.core.accounts.retrieve.mockResolvedValue(account({ applied: true, transfers: 'active' }));
+    const result = await read(await handler()(request({ mode: 'status', playerId: PLAYER })));
+    expect(result.status).toBe(200);
+    expect(result.body).toMatchObject({ playerId: PLAYER, payouts_enabled: true, url: null });
+    expect(mockState.profile.payouts_enabled).toBe(false);
+    expect(mockState.guardian.payouts_enabled).toBe(true);
+    expect(mockState.rpc).toHaveBeenCalledWith('save_stripe_connect_account', expect.objectContaining({
+      actor_user_id: 'user-1', target_player_id: PLAYER, expected_profile_id: 'parent1', expected_account_id: 'acct_1',
+    }));
+  });
+
+  test.each([null, [], 'not an object', 42])('invalid body %p fails safely before provider or DB work', async (body) => {
+    const result = await read(await handler()(request(body)));
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe('A bank setup request must be an object.');
+    expect(mockState.rpc).not.toHaveBeenCalled();
+    expect(mockStripe.v2.core.accounts.create).not.toHaveBeenCalled();
+  });
+
+  test.each(['', 'not-a-uuid', null, 7, [PLAYER]])('invalid target %p cannot silently fall back to self', async (playerId) => {
+    mockState.profile = { id: 'parent1', stripe_connect_id: 'acct_parent_own', legal_terms_accepted_at: '2026-09-01' };
+    const result = await read(await handler()(request({ returnUrl: ret, playerId })));
+    expect(result.status).toBe(400);
+    expect(mockState.rpc).not.toHaveBeenCalled();
+    expect(mockStripe.v2.core.accounts.retrieve).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    { owner_user_id: 'someone-else' }, { target_player_id: null }, { target_kind: 'self' },
+  ])('a mismatched trusted guardian context %p fails closed before Stripe', async (context) => {
+    mockState.profile = { id: 'parent1', legal_terms_accepted_at: '2026-09-01' };
+    mockState.contextPatch = context;
+    expect((await handler()(request({ returnUrl: ret, playerId: PLAYER }))).status).toBe(403);
+    expect(mockStripe.v2.core.accounts.create).not.toHaveBeenCalled();
+  });
+
+  test('eligibility refusal is safe and cannot expose the RPC diagnostics', async () => {
+    mockState.profileError = { code: '42501', message: 'secret sensitive guardian evidence' };
+    const result = await read(await handler()(request({ returnUrl: ret, playerId: PLAYER })));
+    expect(result.status).toBe(403);
+    expect(result.body.code).toBe('connect_ineligible');
+    expect(JSON.stringify(result.body)).not.toContain('sensitive');
+    expect(mockStripe.v2.core.accounts.create).not.toHaveBeenCalled();
+  });
+
+  test('guardian eligibility change during Stripe await stops before any link', async () => {
+    mockState.profile = { id: 'parent1', legal_terms_accepted_at: '2026-09-01' };
+    mockState.guardian = { stripe_connect_id: null };
+    mockStripe.v2.core.accounts.create.mockImplementationOnce(async () => {
+      mockState.updateError = { code: '42501', message: 'guardian revoked' };
+      return account();
+    });
+    expect((await handler()(request({ returnUrl: ret, playerId: PLAYER }))).status).toBe(503);
+    expect(mockStripe.v2.core.accountLinks.create).not.toHaveBeenCalled();
+    expect(mockState.guardian.stripe_connect_id).toBeNull();
+  });
+
+  test('capability-only flags never fabricate or overwrite identity/TIN evidence', async () => {
+    mockState.profile = { id: 'p1', stripe_connect_id: 'acct_1' };
+    mockStripe.v2.core.accounts.retrieve.mockResolvedValue(account({ applied: true, transfers: 'active' }));
+    expect((await handler()(request({ mode: 'status' }))).status).toBe(200);
+    expect(mockState.rpc.mock.calls.map(([name]) => name)).toEqual(['stripe_connect_context', 'save_stripe_connect_account']);
+    expect(mockState.queries).toEqual([]);
+  });
+
+  test('a Stripe failure reports fixed safe copy', async () => {
     mockState.profile = { id: 'p1', stripe_connect_id: 'acct_1' };
     mockStripe.v2.core.accounts.retrieve.mockRejectedValue(new Error('no such account'));
-    expect(await read(await handler()(request({ mode: 'status' })))).toEqual({ status: 400, body: { error: 'no such account' } });
+    expect(await read(await handler()(request({ mode: 'status' })))).toEqual({ status: 400, body: { error: 'Bank setup could not be completed. Try again.' } });
   });
 });
 
 describe('create-stripe-account runtime differences (kept on purpose)', () => {
+  beforeEach(() => {
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'node-service';
+    mockState.rpc.mockImplementation(mockConnectRpc);
+  });
   test('node: the Stripe key is checked after the session; edge: before it', async () => {
     delete process.env.STRIPE_SECRET_KEY;
     delete denoEnv.STRIPE_SECRET_KEY;
@@ -579,27 +816,21 @@ describe('create-stripe-account runtime differences (kept on purpose)', () => {
     mockState.getUser.mockResolvedValue(SIGNED_IN);
     expect(await read(await node.connect(request({ returnUrl: 'x' })))).toEqual({
       status: 500,
-      body: { error: PI_STRIPE_MISSING_NODE },
+      body: { error: 'Missing STRIPE_SECRET_KEY. Load it into the private server process and restart Expo.' },
     });
   });
 
-  test('edge requires the service role key; node falls back to the caller session', async () => {
+  test('both runtimes require a service credential before protected profile operations', async () => {
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     delete denoEnv.SUPABASE_SERVICE_ROLE_KEY;
-    expect(await read(await edge.connect(request({ returnUrl: 'x' })))).toEqual({
-      status: 500,
-      body: { error: 'Missing SUPABASE_SERVICE_ROLE_KEY.' },
-    });
-    expect(mockState.getUser).not.toHaveBeenCalled();
     mockState.profile = { id: 'p1', stripe_connect_id: 'acct_1' };
-    await node.connect(request({ mode: 'status' }, 'Bearer tok'));
-    expect(mockState.createClientCalls).toEqual([
-      [process.env.EXPO_PUBLIC_SUPABASE_URL, process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY, AUTH_OPTS],
-      [
-        process.env.EXPO_PUBLIC_SUPABASE_URL,
-        process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-        { ...AUTH_OPTS, global: { headers: { Authorization: 'Bearer tok' } } },
-      ],
-    ]);
+    for (const handler of [node.connect, edge.connect]) {
+      expect(await read(await handler(request({ mode: 'status' })))).toEqual({
+        status: 500, body: { error: 'Missing SUPABASE_SERVICE_ROLE_KEY.' },
+      });
+    }
+    expect(mockState.queries).toEqual([]);
+    expect(mockStripe.v2.core.accounts.retrieve).not.toHaveBeenCalled();
   });
 
   test('node uses the service role for profiles when configured', async () => {
@@ -634,8 +865,9 @@ describe('create-stripe-account runtime differences (kept on purpose)', () => {
 
   test('a profile without an id is not updated', async () => {
     mockState.profile = { stripe_connect_id: 'acct_1' };
-    await node.connect(request({ mode: 'status' }));
-    await edge.connect(request({ mode: 'status' }));
+    expect((await node.connect(request({ mode: 'status' }))).status).toBe(403);
+    expect((await edge.connect(request({ mode: 'status' }))).status).toBe(403);
+    expect(mockStripe.v2.core.accounts.retrieve).not.toHaveBeenCalled();
     expect(mockState.queries.filter((q) => q.ops.some((op) => op[0] === 'update'))).toEqual([]);
   });
 });

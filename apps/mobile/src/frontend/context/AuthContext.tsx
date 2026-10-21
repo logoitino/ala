@@ -2,7 +2,8 @@
  * Who is using the app: the Supabase session, the signed-in profile and role, guest browse markers, sign-in
  * (Apple / Google / Magic Link), the fan-or-athlete switch, and the owner "Studio unlock".
  * Everything else asks this context before gating a feature (`useAuth`). Profile edits write `profiles`;
- * role, verification and player link are server-owned and cannot be set from here.
+ * role, verification and player link are server-owned and cannot be set from here. Profile reads
+ * belong to one session lifetime: a delayed refresh cannot publish into an incoming account.
  * @sideEffects Supabase Auth session, `profiles` reads / writes, AsyncStorage guest markers.
  */
 
@@ -16,6 +17,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -93,6 +95,8 @@ type AuthContextValue = {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
+  /** Memory-only account-lifetime guard for pending UI work; remains valid through same-owner token refresh. */
+  isSessionCurrent?: () => boolean;
   loading: boolean;
   switchRole: (role: UserRole) => Promise<void>;
   /** Preview a production surface from Studio without losing portal access. */
@@ -126,14 +130,45 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [role, setRole] = useState<UserRole>('fan');
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [{ session, epoch: renderedSessionEpoch }, setSessionState] = useState<{ session: Session | null; epoch: number }>({ session: null, epoch: 0 });
+  const [storedProfile, setProfile] = useState<Profile | null>(null);
+  // Mask ownership in the render as well as clearing state at the auth boundary.
+  const profile = storedProfile?.user_id === session?.user.id ? storedProfile : null;
+  const sessionRef = useRef<Session | null>(null);
+  const sessionEpoch = useRef(0);
+  const accountEpoch = useRef(0);
+  const profileLoad = useRef(0);
+  const mounted = useRef(false);
   const [loading, setLoading] = useState(true);
   const [extraRoles, setExtraRoles] = useState<UserRole[]>([]);
   const [activeRoleOverride, setActiveRoleOverride] = useState<'fan' | 'athlete' | null>(null);
   const [studioUnlocked, setStudioUnlocked] = useState(false);
+  const [birthPromptDismissed, setBirthPromptDismissed] = useState(false);
 
-  const loadProfile = useCallback(async (userId: string | undefined) => {
+  const isCurrentSession = useCallback((epoch: number, userId?: string) => (
+    mounted.current && epoch === sessionEpoch.current && sessionRef.current?.user.id === userId
+  ), []);
+
+  const installSession = useCallback((nextSession: Session | null) => {
+    const changedOwner = sessionRef.current?.user.id !== nextSession?.user.id;
+    const epoch = ++sessionEpoch.current;
+    ++profileLoad.current;
+    sessionRef.current = nextSession;
+    if (changedOwner) {
+      ++accountEpoch.current;
+      setProfile(null);
+      setExtraRoles([]);
+      setActiveRoleOverride(null);
+      setBirthPromptDismissed(false);
+    }
+    setSessionState({ session: nextSession, epoch });
+    return epoch;
+  }, []);
+
+  const loadProfile = useCallback(async (userId: string | undefined, epoch = sessionEpoch.current) => {
+    if (!isCurrentSession(epoch, userId)) return null;
+    const load = ++profileLoad.current;
+    const isCurrentLoad = () => isCurrentSession(epoch, userId) && load === profileLoad.current;
     if (!userId || !isSupabaseConfigured) {
       setProfile(null);
       return null;
@@ -145,32 +180,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('user_id', userId)
       .maybeSingle();
 
-    const next = (data as Profile | null) ?? null;
+    if (!isCurrentLoad()) return null;
+    const next = data && data.user_id === userId ? { ...data } as Profile : null;
     if (next?.school_id) {
       next.team = await fetchSchoolTeam(next.school_id);
     } else {
       const local = await readAthleteOnboarding();
       if (next && local?.team) next.team = local.team;
     }
+    if (!isCurrentLoad()) return null;
     setProfile(next);
     return next;
-  }, []);
+  }, [isCurrentSession]);
 
   const hydrateSession = useCallback(
-    async (nextSession: Session | null) => {
-      setSession(nextSession);
+    async (nextSession: Session | null, expectedEpoch = sessionEpoch.current) => {
+      if (!mounted.current || expectedEpoch !== sessionEpoch.current) return null;
+      const epoch = installSession(nextSession);
       if (nextSession?.user) {
         await ensureFanProfile(nextSession.user);
-        await loadProfile(nextSession.user.id);
+        if (!isCurrentSession(epoch, nextSession.user.id)) return null;
+        return loadProfile(nextSession.user.id, epoch);
       } else {
         setProfile(null);
+        return null;
       }
     },
-    [loadProfile],
+    [installSession, isCurrentSession, loadProfile],
   );
 
   useEffect(() => {
     let active = true;
+    mounted.current = true;
+    const bootstrapEpoch = sessionEpoch.current;
 
     const bootstrap = async () => {
       await ensureGuestId();
@@ -184,11 +226,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!active) return;
 
-      if (nextSession?.user) {
-        await ensureFanProfile(nextSession.user);
-      }
-      setSession(nextSession);
-      const nextProfile = await loadProfile(nextSession?.user.id);
+      const nextProfile = await hydrateSession(nextSession, bootstrapEpoch);
       if (!active) return;
 
       let unlocked = storedStudio === '1';
@@ -213,31 +251,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) {
       return () => {
         active = false;
+        mounted.current = false;
+        ++sessionEpoch.current;
+        ++accountEpoch.current;
+        ++profileLoad.current;
       };
     }
 
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-      if (nextSession?.user) {
-        void ensureFanProfile(nextSession.user).then(() => loadProfile(nextSession.user.id));
-      } else {
-        setProfile(null);
-      }
+      if (!active) return;
+      void hydrateSession(nextSession).catch(() => undefined);
     });
 
     const stopDeepLinks = subscribeAuthDeepLinks((url) => {
       if (!url.includes('auth/callback') && !url.includes('access_token') && !url.includes('code=')) {
         return;
       }
+      const redirectEpoch = sessionEpoch.current;
       void completeAuthRedirect(url)
         .then((next) => {
-          if (next) void hydrateSession(next);
+          if (next) return hydrateSession(next, redirectEpoch);
         })
         .catch(() => undefined);
     });
 
     return () => {
       active = false;
+      mounted.current = false;
+      ++sessionEpoch.current;
+      ++accountEpoch.current;
+      ++profileLoad.current;
       data.subscription.unsubscribe();
       stopDeepLinks();
     };
@@ -289,32 +332,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    return loadProfile(session?.user.id);
-  }, [loadProfile, session?.user.id]);
+    return loadProfile(session?.user.id, renderedSessionEpoch);
+  }, [loadProfile, renderedSessionEpoch, session?.user.id]);
+
+  // Auth events can turn A→B→A before consumers render. Check the event boundary, not just the displayed UID.
+  const renderedAccountEpoch = accountEpoch.current;
+  const isSessionCurrent = useCallback(() => (
+    mounted.current && renderedAccountEpoch === accountEpoch.current
+  ), [renderedAccountEpoch]);
 
   const signInWithApple = useCallback(async () => {
+    const epoch = sessionEpoch.current;
     const next = await appleSignIn();
-    await hydrateSession(next);
+    await hydrateSession(next, epoch);
   }, [hydrateSession]);
 
   const signInWithGoogle = useCallback(async () => {
+    const epoch = sessionEpoch.current;
     const next = await googleSignIn();
-    await hydrateSession(next);
+    await hydrateSession(next, epoch);
   }, [hydrateSession]);
 
   const signInWithEmailPassword = useCallback(
     async (email: string, password: string, ageConfirmed13Plus?: boolean) => {
+      const epoch = sessionEpoch.current;
       const next = await passwordSignIn(email, password, ageConfirmed13Plus);
-      await hydrateSession(next);
+      await hydrateSession(next, epoch);
     },
     [hydrateSession],
   );
 
   const signUpWithEmailPassword = useCallback(
     async (email: string, password: string, birth: BirthMonth) => {
+      const epoch = sessionEpoch.current;
       const next = await passwordSignUp(email, password, birth);
       if (!next) return false;
-      await hydrateSession(next);
+      await hydrateSession(next, epoch);
       return true;
     },
     [hydrateSession],
@@ -325,19 +378,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithDemoAccount = useCallback(async () => {
+    const epoch = sessionEpoch.current;
     const next = await demoSignIn();
-    await hydrateSession(next);
+    await hydrateSession(next, epoch);
   }, [hydrateSession]);
 
   const signOut = useCallback(async () => {
+    const epoch = sessionEpoch.current;
     await signOutRemote();
-    setSession(null);
+    // A SIGNED_OUT event may already have cleared this owner; do not clear a newer sign-in.
+    if (!mounted.current || (epoch !== sessionEpoch.current && sessionRef.current)) return;
+    installSession(null);
     setProfile(null);
     setExtraRoles([]);
     setActiveRoleOverride(null);
     setRole('fan');
     await AsyncStorage.setItem(DEV_ROLE_KEY, 'fan');
-  }, []);
+  }, [installSession]);
 
   const roles = useMemo(() => {
     const merged = [...parseRoles(profile?.roles), ...extraRoles];
@@ -353,7 +410,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // stored `age_confirmed_13_plus` value — see `.claude/agents/backend.md` "do not retroactively block".
   // MINOR-01: the birth columns exist only once the minor-accounts update is applied; until then the 13+ card stays.
   const hasBirthColumns = Boolean(profile && 'birth_year' in profile);
-  const [birthPromptDismissed, setBirthPromptDismissed] = useState(false);
   const userIdForPrompt = session?.user?.id;
   useEffect(() => {
     if (!userIdForPrompt) return;
@@ -498,6 +554,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       user: session?.user ?? null,
       profile,
+      isSessionCurrent,
       loading,
       switchRole,
       previewAsRole,
@@ -528,6 +585,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAthlete,
       isAdmin,
       isGuest,
+      isSessionCurrent,
       isVerified,
       loading,
       lockStudio,

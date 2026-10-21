@@ -1,6 +1,7 @@
+<!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-10-18 · Environments page records the testing app: development catch-up is on, staging was not moved, production and a cache server are not created. The video ladder stays Mux, Bunny, or Cloudflare Stream, none selected. · Home pages uploaded Highlights once a clip has a file. Empty sample cards stay only while nothing uploaded can play. · Home keeps one decoded Highlight. A mounted neighbor is a poster. Uploads stop at 8 MB. Profile stats and the trivia notice wait until that part is open. The trivia database was not changed. · 2026-10-17 · Workout challenges moved from the profile scroll into Account settings. · Fan Zone and Beyond are on development. The extra storage indexes were skipped because postgres cannot own `storage.objects`; the write guards are triggers. Coach-level SQL stays unapplied. Home highlights share one surviving video. · Health lists syntax, logic, and glitches · Search filters stay one quoted value · Highlights profiles and Local stay open; trivia awards 5 Aura and can include an IQ question · Missing database updates stay on admin Home and portal Health, off the fan screen · Coach-level and Rally share handoff recorded (HIGHLIGHTS → ENGINEERING → CTO; docs synced; counsel and SQL still open) · Coach-level workout label and Rally / board share cards are local (SQL written, not applied; counsel still open) · Trivia names this week’s subject and sends one fact to dinner · Trivia teaches history, trades, and practice fuel · Highlight trivia invites a play · Trivia and Fan Zone keep the fan bar pinned · Trivia results sit on one phone screen · Trivia and Fan Zone play fit a phone width · Highlights trivia is a bright side notice; Fan Zone lives on Beyond · Live-match plays celebrate with Seki, Aura and Flex first; Donate opens the donation · Combined-branch check is green (196 suites / 1,744 tests) · Combined-branch Jest repair: fun-fact activity wording, operator live-game mock, one payout-flag catalog row, and Fan Zone windows that stay open on the clock · Fan Zone and trivia merged onto main (`de2d70d`); mobile typecheck repaired after the merge · PLAY-01 locally verified and closed (tag chip wired, claim released; browser/device/hosted/clean-install stay owner-gated) · Docs pass for Beyond follow-up: development catch-up runbook (not run), SAFETY-01 Coach-level label enrolled as planned, Beyond phrase test (Seki Set / Extra Rep / OT / Two-a-Day), legal row AC, tester steps; owner chose to commit everything now. · Beyond moved to the Highlights pill row (owner): Beyond switch plays workout/service Highlights, Beyond page keeps fan posts, Upload ＋ asks Highlight or Beyond moment while contributions are on; bottom bar Home · Activity · ＋ · Spotlight · Profile; `pnpm check` 150 suites / 1,197 tests. · Whole-team updates applied:107 role handoffs across17 department labels, current roadmap and generated Team flow reconciled. Full detection scan passes148 mobile suites/1,188 tests plus86 portal tests; independent prepared-source/Documentation reviews accepted. The owner approved keeping the Stripe-only Finance Operations §7 clarification; team records and final local checks are complete, with claims released in [TEAM_STATUS](agents/TEAM_STATUS.md); hosted/legal/device gates remain separate. · Calm Island colour refresh (owner chose direction A from the Figma comparison): one deep-jade brand colour, warm sand-white canvas, gold for awards, red for LIVE; unified chips, no page corner decoration, guest-hidden refresh buttons; `pnpm check` 148 suites / 1,188 tests; the published runtime theme still overrides five colours until Look → Daylight is republished. · UX-06 local first polish pass complete: compact Beyond categories, grouped consent composer, token-based workout controls and factual admin publication fallback. Full detection scan passes 148 mobile suites / 1,188 tests + 86 portal tests; visible category switches and 320/390 layout fit checked. Independent source/Documentation reviews and selected app-ready gate pass; claims released. Configured-state/native/accessibility and broader app/Figma polish remain open in [UX-06](agents/UX-06.md). · BEYOND-01 local implementation complete: dedicated tab, four categories, reviewed fan video/JPEG contributions and Drip Profile entry; CHAL-01a preset responses/friend invites/private badge/settings/export. Preserved admin-first checkpoints; independent source/Data/SUPPORT reviews and full detection scan pass148mobile suites/1,188tests +86portaltests. Both selected app-ready gates and independent Documentation/VP handoff pass; scoped claims released in [BEYOND-01](agents/BEYOND-01.md); migrations unapplied, server contribution/challenge switches off, hosted/device/Utah legal release pending. · PORT-01 follow-through: media references (expand, writer off), one shared money core for Node + Edge with a local JWKS token check (SECURITY approved), generated database types + drift test, exit drill runbook; `pnpm check` 135 suites / 1,076 tests · Infrastructure awareness (INFRA-01): new `INFRASTRUCTURE` agent (Engineering) is the scalability team's standing dev member; generated `INFRASTRUCTURE_REGISTER.md` + `pnpm infra:register:check` (CI) keep it aware of every hosting / service / integration change; direct Supabase calls moved into `lib/` (routes 16 → 0, rest 78 → 48); `pnpm check` 132 suites / 925 tests, 107 roles · Portability (PORT-01): owner accepts the hosting recommendation (stay on managed Supabase, self-hosted Supabase as the drilled exit); single source `docs/engineering/PORTABILITY.md`; boundary guard widened to the whole app and admin portal (78 + 16 direct Supabase uses recorded, may only shrink); `lib/media.ts` provider-neutral media refs · Payee verification (VERIFY-02): owner decided SSNs go to Stripe only (never stored), guardians need Stripe identity + the school's parent confirmation (two admins), Stripe Identity only for disputes, payout flags only by two admins with a reason; fourth migration written (not applied); replay 111/111; `pnpm check` 129 suites / 914 tests incl. new `security:no-ssn` · Minor accounts (MINOR-01): birth month and year replace the 13+ checkbox, teen-safe defaults, guardian link from a teen's code with teen confirmation, signed draft consent (public profile / payouts from the guardian on record), supervision and under-16 approvals, under-13 closure; replaces the PRIV-01 guardian lock; third migration written (not applied); schema replay 100/100; PRIV-01 and MINOR-01 app-ready; `pnpm check` 126 suites / 905 tests · Profile privacy (PRIV-01): public/private accounts, per-item audiences, two-way friends, blocking, hide from search, tag approval · Actual video scalability reviews recommend Mux as the provisional first technical experiment, with Bunny/Cloudflare in the initial equivalent quote/capability comparison; no selected provider or verified dollar winner. Documentation accepted; earlier recorded local gate passed 118 suites/867 tests, 186 docs and 106 roles. Owner-reported AI spending and separate infrastructure ceiling remain in Finance §6.1; actual video rates/usage/capacity and cash runway unknown. SCALE-02/admin-first integration, hosted/device/access/deletion/recovery and release remain pending. Next Growth review October 20; no new spending/hosted change/scheduler. Receipts: §4 and [video review](engineering/HOSTING_DECISION_BRIEF.md#11-video-scalability-team-review--2026-10-13). · Verification/consent/safe-growth source review and joint checkpoint established; proposed owner decisions and actual review/check receipts in GROWTH-01. Earlier safe-growth review checks failed on 28 MINOR type diagnostics and schema-doc drift; the newer user-growth run passes after concurrent integration. Fan/filmer follow-up: per-user growth plans and charter §10 added; mitigation proposals and current checks in GROWTH-01. Latest user-growth local check: exit 0, 126 suites/905 tests,191 doc destinations,106 roles; no hosted/counsel/financial release evidence from this pass.
+**Last updated:** 2026-10-21 · Full `pnpm check` run after NOTIFY-01: typecheck and 233 suites / 2,287 tests PASS; three stale gates repaired (infra register counts regenerated, exit plan announced twice, reviewed `test-server.env.example` allowed in source packages); whole chain now exits 0; exit scanner now sees media-adapter bucket calls (§4). · NOTIFY-01 local Profile notification settings, Activity inbox, staff controls and server contracts implemented:233 suites/2,287 tests and both app/shared typechecks PASS; optional email paused, SQL25 plus1 concurrency cases prepared/0 executed, payment authority false (§4). · APP-TEST-01 execution: three anonymous local money routes independently return401; Connect SQL replay exits2 with no engine/zero cases; owner confirms Google setup pending; callback Router-history cleanup repaired and browser-verified; final226suites/2,196tests and both app typechecks PASS (§4). · Roadmap/team refresh: current app testing lanes,115roles/17departments and aligned next-owner duties (§4). · Current app testing: explicit picker duration units and service revalidation; offline synthetic media fixtures; 226 suites / 2,193 tests and both app typechecks PASS. Google setup guide prepared; development Google disabled, local bank service key missing (§4). · Media transport/readers implemented locally: replaceable upload/sign/list/remove, public references/legacy playback and private Vault isolation; 225 suites / 2,154 tests, both app typechecks and scoped guards PASS; independent Security accepted; long videos off until costs are measured and live deferred (§4). · Account-to-bank local preparation reviewed: guardian per-athlete setup and confirmed current client Terms; final 223 suites / 2,103 tests, both app typechecks and 12 scoped checks PASS; SQL/provider execution remains unverified (§4). · Google account creation and callback reliability repaired locally; 217 suites / 1,986 tests, both app typechecks and scoped checks PASS; independent source and documentation reviews accepted (§4). · Connect client and shared profile freshness repaired locally: owner-bound status, guarded async work, early single-flight lock and memory-only auth lifetime guard; 215 suites / 1,947 tests, both app typechecks and scoped guards PASS (§4). · Web first-tab compilation repair: supported Expo Router development sync imports; production web splitting and lazy screen mounting retained; local import-mode/typecheck/guard checks and scoped browser tab verification PASS (§4). · Connect persistence repaired locally: server-only conditional account saves before links; database failures visible, KYC evidence gap explicit; 213 suites / 1,899 mobile tests, both app typechecks and scoped guards PASS; source review accepted (§4). · Failed photo-story cleanup implemented locally: owner-only SQL (unapplied), fresh retries, durable owner/reel removal intent and committed-story recovery; 213 suites / 1,877 mobile tests, both app typechecks and scoped guards pass; independent source/docs reviews accepted (§4). · UX-07 story/tab presentation implemented: existing public Story section, clearer screen/empty hierarchy, wrapping controls/rows, 44-point targets and Reduce Motion; scoped source review and final full check passed (212 suites / 1,849 tests); current-component browser review has bounded native/hosted coverage, source refresh deferred on concurrent capture lock; evidence in [tracker](agents/UX-07.md). · Funnel top: `trivia.view_prep`/`press_start` events + `prep_views_7d`/`start_presses_7d` RPC counts (migration written, not applied); 411 mobile + 106 portal tests pass. · Health surfacing (Step 3): `get_admin_reports` trivia + smoothness keys (migration written, not applied), portal Health tiles conditional, 106/106 portal + 159 Expo report tests pass. · Smoothness signals (Step 2): `screen_mount` + `app_start` migration (written, not applied), `layouts.telemetrySmoothness` flag off, Home/quiz/donate mounts + cold start wired. · Trivia funnel + error telemetry (behavior-logging Step 1): start/answer/next/complete/abandon/unavailable as `feature_tap` + `ui_issue`, zero SQL; 29 suites / 380 tests pass; Health surfacing is Step 3. · REDUNDANCY-07 report cleanup: readable helpers and accurate per-guard missing-prerequisite statuses;22 local Security tests pass, concurrent screen-mount test scheduling repaired with targeted3PASS/both-app typecheckPASS; full project checks210suites/1825tests passed; exact latest-source verification deferred per owner while concurrent work continues (tracker receipts). · REDUNDANCY-07 Security expanded to six specialists under SECURITY -> CTO; local registered-source security report/routing plus SSH-range, Compose environment and Docker credential-context source repairs. Actual scoped/current final evidence in [tracker](agents/REDUNDANCY-07.md); hosted security remains unverified. · REDUNDANCY-06 shared portable client connection, matching target profiles and local installed-SDK protocol tests; original verification custody in [tracker](agents/REDUNDANCY-06.md). · REDUNDANCY-05 private setup and source-bound backup/read-only health implemented; current execution receipts in [tracker](agents/REDUNDANCY-05.md); live backup config incomplete. · Guest Rally reads fixed locally (`20261020090000`, not applied). · REDUNDANCY-04 current-source automatic watcher/CI implementation; actual activation/check receipts in [tracker](agents/REDUNDANCY-04.md) · REDUNDANCY-03 exact source release, content-aware exit inventory, runtime image archives, historical Storage owner reconciliation and strict180-minute warm-cutover evidence checks implemented locally; no hosted readiness claim. · Redundancy & Exit team (REDUNDANCY-02): five agents, a generated exit infrastructure map that updates with every app change (Stop hook + `pnpm exit:map:check`), and routed change notices from `EXIT_SYNC`. · REDUNDANCY-01 database migration checks (`infrastructure/migration/`): restore-list proposal, source/target parity and privilege reconciliation; real pg_dump/pg_restore/psql 18.6 drill 12/12 found that a restore onto a Supabase stack reopens 2,059 revoked anon/authenticated rights. · REDUNDANCY-01 continuation: complete offsite backup jobs, guarded retries, snapshot-age health checks and protected-checksum retrieval built locally; service not activated. · Full check green again after the SDK 58 upgrade (205 suites / 1,805 tests): 18 Jest suites had been failing since 2026-10-16 (icon fonts, stale mocks, the poster neighbor); the trivia demo can no longer award Aura. Five hooks moved their database calls into `lib/` (48 → 39). · 2026-10-18 · SCALE-01 admin two-step sign-in (TOTP, `aal2`) built locally for the portal and Expo `/admin`, switch off; MFA not enabled on any hosted project. · SCALE-03 live scores over per-game Broadcast built locally behind a default-off switch; migration written, not applied. · Environments page records the testing app: development catch-up is on, staging was not moved, production and a cache server are not created. The video ladder stays Mux, Bunny, or Cloudflare Stream, none selected. · Home pages uploaded Highlights once a clip has a file. Empty sample cards stay only while nothing uploaded can play. · Home keeps one decoded Highlight. A mounted neighbor is a poster. Uploads stop at 8 MB. Profile stats and the trivia notice wait until that part is open. The trivia database was not changed. · 2026-10-17 · Workout challenges moved from the profile scroll into Account settings. · Fan Zone and Beyond are on development. The extra storage indexes were skipped because postgres cannot own `storage.objects`; the write guards are triggers. Coach-level SQL stays unapplied. Home highlights share one surviving video. · Health lists syntax, logic, and glitches · Search filters stay one quoted value · Highlights profiles and Local stay open; trivia awards 5 Aura and can include an IQ question · Missing database updates stay on admin Home and portal Health, off the fan screen · Coach-level and Rally share handoff recorded (HIGHLIGHTS → ENGINEERING → CTO; docs synced; counsel and SQL still open) · Coach-level workout label and Rally / board share cards are local (SQL written, not applied; counsel still open) · Trivia names this week’s subject and sends one fact to dinner · Trivia teaches history, trades, and practice fuel · Highlight trivia invites a play · Trivia and Fan Zone keep the fan bar pinned · Trivia results sit on one phone screen · Trivia and Fan Zone play fit a phone width · Highlights trivia is a bright side notice; Fan Zone lives on Beyond · Live-match plays celebrate with Seki, Aura and Flex first; Donate opens the donation · Combined-branch check is green (196 suites / 1,744 tests) · Combined-branch Jest repair: fun-fact activity wording, operator live-game mock, one payout-flag catalog row, and Fan Zone windows that stay open on the clock · Fan Zone and trivia merged onto main (`de2d70d`); mobile typecheck repaired after the merge · PLAY-01 locally verified and closed (tag chip wired, claim released; browser/device/hosted/clean-install stay owner-gated) · Docs pass for Beyond follow-up: development catch-up runbook (not run), SAFETY-01 Coach-level label enrolled as planned, Beyond phrase test (Seki Set / Extra Rep / OT / Two-a-Day), legal row AC, tester steps; owner chose to commit everything now. · Beyond moved to the Highlights pill row (owner): Beyond switch plays workout/service Highlights, Beyond page keeps fan posts, Upload ＋ asks Highlight or Beyond moment while contributions are on; bottom bar Home · Activity · ＋ · Spotlight · Profile; `pnpm check` 150 suites / 1,197 tests. · Whole-team updates applied:107 role handoffs across17 department labels, current roadmap and generated Team flow reconciled. Full detection scan passes148 mobile suites/1,188 tests plus86 portal tests; independent prepared-source/Documentation reviews accepted. The owner approved keeping the Stripe-only Finance Operations §7 clarification; team records and final local checks are complete, with claims released in [TEAM_STATUS](agents/TEAM_STATUS.md); hosted/legal/device gates remain separate. · Calm Island colour refresh (owner chose direction A from the Figma comparison): one deep-jade brand colour, warm sand-white canvas, gold for awards, red for LIVE; unified chips, no page corner decoration, guest-hidden refresh buttons; `pnpm check` 148 suites / 1,188 tests; the published runtime theme still overrides five colours until Look → Daylight is republished. · UX-06 local first polish pass complete: compact Beyond categories, grouped consent composer, token-based workout controls and factual admin publication fallback. Full detection scan passes 148 mobile suites / 1,188 tests + 86 portal tests; visible category switches and 320/390 layout fit checked. Independent source/Documentation reviews and selected app-ready gate pass; claims released. Configured-state/native/accessibility and broader app/Figma polish remain open in [UX-06](agents/UX-06.md). · BEYOND-01 local implementation complete: dedicated tab, four categories, reviewed fan video/JPEG contributions and Drip Profile entry; CHAL-01a preset responses/friend invites/private badge/settings/export. Preserved admin-first checkpoints; independent source/Data/SUPPORT reviews and full detection scan pass148mobile suites/1,188tests +86portaltests. Both selected app-ready gates and independent Documentation/VP handoff pass; scoped claims released in [BEYOND-01](agents/BEYOND-01.md); migrations unapplied, server contribution/challenge switches off, hosted/device/Utah legal release pending. · PORT-01 follow-through: media references (expand, writer off), one shared money core for Node + Edge with a local JWKS token check (SECURITY approved), generated database types + drift test, exit drill runbook; `pnpm check` 135 suites / 1,076 tests · Infrastructure awareness (INFRA-01): new `INFRASTRUCTURE` agent (Engineering) is the scalability team's standing dev member; generated `INFRASTRUCTURE_REGISTER.md` + `pnpm infra:register:check` (CI) keep it aware of every hosting / service / integration change; direct Supabase calls moved into `lib/` (routes 16 → 0, rest 78 → 48); `pnpm check` 132 suites / 925 tests, 107 roles · Portability (PORT-01): owner accepts the hosting recommendation (stay on managed Supabase, self-hosted Supabase as the drilled exit); single source `docs/engineering/PORTABILITY.md`; boundary guard widened to the whole app and admin portal (78 + 16 direct Supabase uses recorded, may only shrink); `lib/media.ts` provider-neutral media refs · Payee verification (VERIFY-02): owner decided SSNs go to Stripe only (never stored), guardians need Stripe identity + the school's parent confirmation (two admins), Stripe Identity only for disputes, payout flags only by two admins with a reason; fourth migration written (not applied); replay 111/111; `pnpm check` 129 suites / 914 tests incl. new `security:no-ssn` · Minor accounts (MINOR-01): birth month and year replace the 13+ checkbox, teen-safe defaults, guardian link from a teen's code with teen confirmation, signed draft consent (public profile / payouts from the guardian on record), supervision and under-16 approvals, under-13 closure; replaces the PRIV-01 guardian lock; third migration written (not applied); schema replay 100/100; PRIV-01 and MINOR-01 app-ready; `pnpm check` 126 suites / 905 tests · Profile privacy (PRIV-01): public/private accounts, per-item audiences, two-way friends, blocking, hide from search, tag approval · Actual video scalability reviews recommend Mux as the provisional first technical experiment, with Bunny/Cloudflare in the initial equivalent quote/capability comparison; no selected provider or verified dollar winner. Documentation accepted; earlier recorded local gate passed 118 suites/867 tests, 186 docs and 106 roles. Owner-reported AI spending and separate infrastructure ceiling remain in Finance §6.1; actual video rates/usage/capacity and cash runway unknown. SCALE-02/admin-first integration, hosted/device/access/deletion/recovery and release remain pending. Next Growth review October 20; no new spending/hosted change/scheduler. Receipts: §4 and [video review](engineering/HOSTING_DECISION_BRIEF.md#11-video-scalability-team-review--2026-10-13). · Verification/consent/safe-growth source review and joint checkpoint established; proposed owner decisions and actual review/check receipts in GROWTH-01. Earlier safe-growth review checks failed on 28 MINOR type diagnostics and schema-doc drift; the newer user-growth run passes after concurrent integration. Fan/filmer follow-up: per-user growth plans and charter §10 added; mitigation proposals and current checks in GROWTH-01. Latest user-growth local check: exit 0, 126 suites/905 tests,191 doc destinations,106 roles; no hosted/counsel/financial release evidence from this pass.
 
 **Current fun follow-up:** the owner clarified fan-video Game/Week/Month/Year recognition,
 awesome-fan badges and optional service with separate badge/Aura and money paths, then asked
@@ -294,6 +295,411 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-10-21 — Full check after NOTIFY-01 (Claude Code catch-up)
+
+The broad `pnpm check` the NOTIFY-01 session left unrun was run. Typecheck and mobile
+233 suites / 2,287 tests passed; three later gates had gone stale and were repaired.
+`infra:register:check`: register regenerated (SQL `auth.uid()` 267→275, `auth.role()` 114→117,
+grants 371→378 from the notification migrations; no new services). `exit:map:check`: 10 areas
+announced in [EXIT_CHANGE_LOG](agents/EXIT_CHANGE_LOG.md) with a note that the `reel_vault` and
+`stripe_webhook_events` "removals" are false (bucket passed via the media adapter, which the scanner
+does not resolve; webhook table now behind `apply_notification_payment_event`). `exit:sync ensure`:
+the empty template `apps/mobile/src/backend/api/test-server.env.example` added to the reviewed
+example list in `scripts/recovery-capsule.mjs` (recovery tests 14/14). Every step after the tests
+then passed individually; `RECOVERY_SECURITY` and `EXIT_SERVICES` own the follow-up review.
+Scanner gap closed the same day: `scripts/exit-inventory.mjs` now records calls through the imported
+`mediaStorage` or a `MediaStorageAdapter`-typed parameter as `storage.from` with `via`, so `reel_vault`
+and `reels` are listed again; three variable-bucket calls (avatar/highlight upload) stay review
+candidates. New regression test in `scripts/__tests__/exit-map.test.mjs` (15/15).
+
+### 2026-10-21 — NOTIFY-01 local notification controls and inbox
+
+Built Profile Account notification preferences, Activity read/unread and archive/restore inbox,
+shared safe templates, source/RPC/durable worker contracts and Expo staff controls/Health.
+All optional emails start off; security verification/reset remains separate. Unsupported sources
+show unavailable; production starts paused. Preference/config saves compare revision and captured
+actor to Auth. Complete Auth/view/effect lifetimes prevent stale data or follow-up work. Mark-all
+uses an account-bound active-inbox snapshot; Archived hides it and both callbacks refuse it.
+Existing donation history and Crew/workout queues retain their independent factual controls.
+
+Independent source reviews drove strict worker confirmations/provider-ID limits, delivery-first
+expiry/completion locks, NULL-role thank-you denial, current actor checks, Health population/
+unknown-provider wording, effect-generation recovery and Archived bulk-read correction. Seven
+payment-proof fields are in Finance catalog as controls/references, never journal postings;
+retained legacy webhook claims are explicitly not completed-processing proof. Canonical SQL and
+migrations match; actual SQL25 plus1 concurrency cases remain unexecuted because no engine exists.
+
+Final mobile233 suites/2,287 tests PASS; both app and shared typechecks PASS; worker/template21,
+hook19, fan UI15 and SDK/admin30 fixture tests pass. Local admin checkpoint preceded fan work
+at15:31:03UTC. Current local app evidence and gate are in [NOTIFY-01](engineering/evidence/NOTIFY-01-app.md).
+No hosted SQL, optional email send, provider/bank/payment or release acceptance is claimed.
+Email still needs unsubscribe/transport/deployed scheduler and reviewed retention/activation;
+donation notification authority remains false pending atomic canonical business/outbox wiring.
+Updated data/privacy/control/sensor maps, tester instructions,115-role/17-department handoff and
+[execution ledger](agents/COORD-01.md). Broad pnpm check remains unrun; scoped checks replace it.
+
+### 2026-10-21 — Email/inbox/preferences architectural draft (enrollment checkpoint)
+
+Owner requested account-creation and donation emails, notification review and Profile controls.
+Read-only source maps found no unified preferences/unread inbox; existing Activity is derived,
+game controls are local filters and Crew queue storage does not prove push delivery. The draft
+proposes server-authoritative events, recipient-only inbox/preferences, durable email delivery
+and Expo admin controls before fan UI. Donation intent/webhook attribution and commit gaps,
+plus a source-level NULL-role thank-you authorization gap, must be repaired before affected
+notification producers can send. No SQL exploit was run. Owner confirmed receipt email on with
+opt-out, social/game email and push off until opt-in, and verification/reset always available.
+The owner's later architecture answer approved building with **only security emails on by
+default**, superseding receipt-email-on: all optional category emails start off. NOTIFY-01 is
+enrolled `planned`; local backend/admin implementation is in progress. No migration application,
+provider setup or sends have occurred at this checkpoint.
+Design: [email and notification controls](engineering/design/EMAIL_NOTIFICATIONS_DESIGN.md).
+Actual read-only executor/review and documentation evidence: [COORD-01](agents/COORD-01.md).
+
+### 2026-10-21 — APP-TEST-01 operational execution
+
+Owner confirmed Google OAuth setup is not completed. Root exercised the current local HTTP
+routes for Connect, payment creation and payouts with POST `{}` and no Authorization: all three
+returned401 JSON with safe sign-in copy. Independent Security/Finance/QA reproduced all three
+at04:15:21UTC. These are anonymous-gate results, not signed-in ownership or provider acceptance.
+The actual offline Connect replay exited2 because its external PGlite engine was unavailable:
+35 prepared checks, zero executed SQL cases; no SQL or concurrency/locking acceptance.
+Browser testing found initial Router history replay could restore a failed return's query after
+the component cleared browser history. Recovery now also replaces the Router-owned path with
+the clean callback route. A clean-route guard retains failure without retrying the consumed
+return; when route inputs change, new query/fragment details still take the normal completion path. Native
+behavior remains unchanged. Three regression failures preceded the repair; a further fresh-
+fragment failure preceded narrowing the guard. Final root mobile226suites/2,196tests PASS
+(151.564s), both app typechecks and9scoped app/source guards PASS. Independent56focusedtests
+and data-map4regressions/0failures PASS; source accepted04:26:52UTC. The previous2,193-test
+baseline is dated earlier. Existing test-account normal email sign-in resumed the Highlight
+draft; guest Upload correctly opened sign-in. No account was created, birth data saved, fixture
+selected, upload performed or content published. Media picker boundary cases remain unrun.
+Actual synthetic failed-return browser testing now settles on a clean callback address with
+visible recovery, no diagnostic body, working Back to app, and clean browser Back/Forward.
+Google's additional public authorize probe was automatically rejected as sensitive auth traffic;
+it did not execute. File-input automation received a caution, executed, and was cleaned up;
+that was not a tool rejection. A blank private bank template was created outside the repo with
+mode600; credentials and activation remain pending. Restricted history/navigation APIs still
+permit only best-effort cleanup with recovery; this is not a provider/native acceptance.
+Google, configured test-bank/SQL/Edge, real upload, cleanup and native acceptance remain open.
+Claims and final test receipts are in
+[APP-TEST-01 execution](agents/COORD-01.md#app-test-01-execution--2026-10-21-utc).
+Final Documentation/VP accepted04:31:40UTC; independent final scope accepted04:32:29UTC and
+cleanup delta04:33:58UTC. Root verified frozen source/document bindings and released local claims.
+
+### 2026-10-21 — Roadmap and whole-team current-app handoff
+
+Owner requested a roadmap check and whole-team update. APP-TEST-01 now sequences Google test
+account setup, optional later adult/guardian test-bank attachment, actual short-video/photo
+rehearsals, independent public-beta security/minor/money gates, Legal-first telemetry IDs and
+athlete-story/usability checks. ROADMAP, queue, team briefing, department plans, call sheet and
+hierarchy use current implementation evidence and retain dated older checks as history.
+The registry contains115 definitions/17departments;51 affected app/testing specialist definitions
+and registry tasks received current next-owner instructions. Reporting leads, model pins and
+ownership paths are preserved. All-role assignments do not establish115 agent executions or
+messages delivered to human staff. Actual review/checks/claims are in
+[COORD-01](agents/COORD-01.md#current-app-roadmap-and-whole-team-refresh--2026-10-21-utc).
+Google remains disabled; prepared bank/cleanup code still needs approved configuration, SQL/Edge
+execution/readback and real provider/upload/device walkthroughs. Longer videos stay off until
+costs are measured; live streaming remains deferred. Corrected the legacy-public-Vault wording
+and historical blanket-profile-read claim without treating public free media as private or
+re-querying hosted policies. No new feature or hosted/provider change was performed.
+Latest app baseline remains226suites/2,193tests PASS; no app suites rerun for prose-only updates.
+Final Documentation/VP accepted03:27:47UTC; independent Security/Finance/QA accepted03:28:14UTC
+and bounded final roadmap revalidation03:29:21UTC. All115 assignment rows/17department totals
+and51 matched role/registry duties pass reconciliation. Scoped docs,links(289),agents(115),copy,
+comments,data-map(0failures) and whitespace checks PASS; local documentation claims are released.
+
+### 2026-10-21 — Current-app media and provider testing preparation
+
+Highlight pickers now normalize web seconds/native milliseconds once, reject unreadable or
+nonpositive duration before compression, and keep duration through draft submission. The service
+revalidates normalized metadata before progress/compression/Auth/file reads/Storage writes;
+exactly45seconds is accepted, over45seconds rejected. Client metadata cannot establish server
+media validation. Long videos remain off until costs are measured; live streaming stays deferred.
+Root full mobile226suites/2,193tests PASS(138.861s), both app typechecks and13scoped app/source
+guards PASS. Root focused10suites/177tests PASS; meaningful picker/payload16failed21passed and
+service13failed32passed preceded repairs. Independent Security/Data/QA accepted at03:06:27UTC
+with exact7suites/153tests plus2fixture safety tests PASS. Actual executors/source hashes:
+Final independent Documentation/Data and priority review accepted at03:09:54UTC;
+local documentation links(289activefiles),copy and scoped whitespace checks PASS.
+[media plan §6](engineering/design/MEDIA_SERVICE_PLAN.md#6-current-app-testing-preparation--2026-10-21-utc).
+Offline synthetic fixtures contain ten JPEGs,8s/46s H.264 videos and a valid oversized8s MP4;
+actual native decode/type/duration/frame checks passed before the complete manifest. Both
+reviewers independently matched all13filehashes/sizes. Use the complete -002 output; -001 records
+a failed compiler run. New `app:test:media` generates outside the repo without overwriting;
+`app:test:assets` runs its two safety regressions. Data map regenerated with0rulefailures.
+Read-only development Auth settings HTTP200 around03:00UTC confirmed Google disabled,Email
+enabled,signup not disabled. Requested [Google setup guide](ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21)
+is prepared; no provider/allowlist changes were made. Local bank fallback still lacks a service-role
+key; hosted SQL/Edge state and real Google/bank walkthrough remain unverified.
+Browser navigation atlocalhost8086 exercised Home,Activity,Spotlight,Profile,Upload and library
+cancel at390×844 in an existing signed-in browser context; Activity/Spotlight fit390px without
+horizontal document overflow. This does not verify fresh guest gates or successful sign-in,
+picker-file metadata, upload/publication, native app playback or bank onboarding. No account
+sign-out, media publication or provider configuration was performed.
+
+### 2026-10-20 — Portable current-app media service (local implementation)
+
+Existing video/photo upload and Expo playback now use a bound storage transport for upload,
+public URL construction, authorized signing, list and removal. Video readers accept `sb:` and
+legacy public URLs; private Vault upload never requires a public URL. Public readers allow only
+canonical public buckets and reject unsafe/unsupported references. Existing photo sanitization,
+owner/rights/row writes, private feature permissions and claimed cleanup stay in their feature.
+The same app remains on Supabase; no new host/credentials, writer switch or URL backfill is enabled.
+The owner chose short Highlights for everyone otherwise eligible; longer videos stay off until
+costs are measured and live streaming belongs in a later phase. Current 45-second/8-MiB Highlight client limits remain;
+server public-media quota gaps and future long-video requirements are explicit. Root owns integration;
+actual Codex worker/review ownership, tests and remaining host/device gates:
+[MEDIA_SERVICE_PLAN](engineering/design/MEDIA_SERVICE_PLAN.md). Final root mobile 225 suites / 2,154 tests PASS (129.383s), both app typechecks and14scoped
+app/source guards PASS; independent Security/Data/QA accepted02:45:56UTC with102focused tests.
+Media Documentation/Data reconciliation completed at02:50:27UTC; four lineage regressions,
+current data-map,289local documentation destinations, copy and scoped whitespace checks PASS.
+Hosted upload/decoder/access/removal/restore remain unverified.
+
+
+### 2026-10-20 — Google account to Stripe test bank preparation (local implementation)
+
+The owner chose the existing development project with Stripe test mode. The server derives the
+adult/self or guardian/per-athlete context from live Auth, saves through service-only SQL with
+current eligibility/binding checks before links, and never borrows a guardian own-profile account.
+New migration `20261021120000_connect_account_context.sql` is written, not applied; PostgreSQL
+execution remains unverified because local engine startup and engine download are blocked.
+Custodial and Terms hooks reject stale/invalid work; configured signed-in Terms writes require
+confirmed server persistence, and device-only acceptance cannot waive the current client Terms.
+Root focused server/hooks 5 suites / 214 tests PASS; final full mobile 223 suites / 2,103 tests
+PASS (114.837s), both app typechecks and 12 scoped app checks PASS. Final independent Security/Finance/Data
+source review accepted 2026-10-21 02:33:54 UTC with 8 client/custodial/Terms suites / 130 tests PASS;
+Documentation/Data accepted onboarding/tester scope at02:30:31UTC. Provider checks hit OS network EPERM; current Google/provider/redirect and deployed
+SQL/function state remain unverified. Local server service key is not available yet; the credential-free
+[private server template](../apps/mobile/src/backend/api/test-server.env.example) is prepared.
+[Plan §10](engineering/design/PAYEE_VERIFICATION_PLAN.md#10-google-account-to-stripe-test-bank-preparation--2026-10-21-in-progress)
+tracks actual ownership, evidence and remaining gates. Payouts remain503 and KYC evidence stays open.
+
+
+### 2026-10-20 — Google account creation and sign-in return (app repair)
+
+Google is offered in Sign in and Create an account; Apple only on supported iOS. Profile creation
+requires no bank details, and existing post-auth age/athlete/guardian rules remain. Web avoids the
+network authorize probe before opening its popup; native probing remains. Callback completion
+checks the generated return origin/scheme/path, rejects repeated credentials, shares simultaneous
+same-return work and masks provider diagnostics. Current route/browser inputs replace stale launch
+links; failed/empty returns show recovery and attempt to remove browser address query/fragment
+data when history access permits.
+Root focused 78 and full 217 / 1,986 PASS; both app typechecks and 12 scoped checks PASS.
+Independent Session Security/QA accepted 2026-10-21 01:39:30 UTC (46 independent tests).
+Independent Documentation/Data accepted 2026-10-21 01:45:08 UTC (read-only, no tests rerun).
+Actual executor/claims, source hashes, receipts and limits
+are in the [existing onboarding checkpoint](ONBOARDING.md#google-account-creation-and-later-bank-setup--local-repair-2026-10-20).
+Hosted Google configuration/real return remain unverified; web disabled-provider error pages,
+different concurrent sign-ins and separate-runtime races remain. Stripe stays test-only with payouts
+blocked; guardian setup has no Stripe launcher and current profile binding is not custodial routing.
+
+
+
+### 2026-10-20 — Connect client and shared profile freshness (app repair)
+
+Connect now locks before Terms lookup, requires matching user/session/profile ownership, masks
+outgoing status and rejects stale cache/API replies, including batched A → B → A transitions.
+An explicit profile false overrides cached true; cached status additionally needs the current Stripe
+binding and cannot waive first-onboarding Terms. Fresh API status may fill a missing profile only
+within that request's current account lifetime. Successful Edge/HTTP replies require boolean flags
+and reject an explicit error; malformed successful Edge replies are not retried through HTTP.
+Cache read/write and profile-refresh failures do not falsely report a confirmed server link as failed.
+The shared AuthContext masks old profiles, orders concurrent loads and guards query/team/local/
+bootstrap/sign-in/redirect completion. Its optional internal `isSessionCurrent` callback checks a
+memory-only account epoch immediately at auth events, while same-owner token refresh preserves the
+Stripe browser journey. Studio settings remain intentional local preview settings. No new telemetry,
+SQL, identity collection or payout enabling. Existing global onboarding-team cache is not owner-bound;
+other async profile/role/birth mutations remain separate. Final focused root suite 48 PASS; final mobile suite 215 / 1,947 PASS (81.253s), both app typechecks
+and 12 scoped app guards PASS. Independent Security/Finance/Data source acceptance at
+2026-10-20 21:32:12 UTC: client`14b036035ec2`, tests`7883f5d15c12`,
+AuthContext`462ea66370fa`, provider tests`3d945ed1407c` (SHA256 prefixes). Its independent narrow 47
+PASS preceded the small HTTP correction; root owns final 48 verification. Pending Connect flights
+are not canceled on same-owner binding replacement; local status rendering still checks current
+profile binding. Final independent Documentation/Data handoff accepted at 2026-10-20 21:35:48 UTC
+(actual Codex reviewer; read-only, no tests). Practical limits and receipts are in the [app repair contract](engineering/design/PAYEE_VERIFICATION_PLAN.md#9-connect-client-and-profile-freshness-repair--2026-10-20-local-app).
+
+
+
+### 2026-10-20 — First-visit web tab bundling (app repair)
+
+Owner reports a brief side spinner with build text on each tab's first visit after loading the
+web app. Installed SDK 58 Expo Router defaults web routes to asynchronous imports; its development
+Suspense fallback replaces the route with a bottom-left “Bundling...” toast and spinner during the
+first import. `apps/mobile/app.json` now sets the supported router option
+`asyncRoutes: { web: "production" }`: development web imports become synchronous, production web
+keeps splitting, and native defaults remain synchronous. Navigator lazy mounting and data fetching
+are unchanged. Tradeoff: development compiles more route code on startup. Restart Metro with
+`cd apps/mobile && ./node_modules/.bin/expo start --clear` and reload the browser; a running server
+will not reliably pick up changed plugin configuration. Root owns the config/docs; independent
+Expo source review accepted the actual config → CLI → Babel evaluation: web development `sync`,
+web production `lazy`, iOS/Android `sync` in both modes. Root independently reproduced all six
+import modes; mobile typecheck and docs/comments/client-key/whitespace guards PASS. Documentation
+source review accepted at 2026-10-20 20:57:21 UTC (actual Codex reviewer; no tests). Browser Bridge checked the fresh, unconfigured local Expo app on port 8084: actual Home →
+Activity → Spotlight → Profile → Home clicks, selected-tab/route DOM and screenshots confirmed
+rendered destinations; the mutation observer recorded no build/bundling toast, browser console
+errors were empty, and the selected page's bundle-resource snapshot contained only the startup entry bundle. Tab-control
+height remained 62px; viewport emulation reset during the browser tooling loop, so absolute-position
+samples across the whole loop do not prove uninterrupted layout stability. An initial malformed
+probe and a background animation-frame await timeout were harness failures; direct clicks/DOM/
+screenshot checks completed afterward. Source and Documentation acceptance are local only. Router
+error handling is retained. Original reported preview identity, live data loading and every-route/
+native/production visual behavior remain unconfirmed; no hosted deployment performed.
+
+
+### 2026-10-20 — Connect persistence (app repair)
+
+Existing Edge/Node Connect now requires trusted server database credentials, checks profile read/save
+errors and unmatched updates, and saves its account/flags before issuing links. Conditional updates
+match the original exact binding as well as own profile/session ids; competing/delayed requests cannot
+overwrite a newer account binding. Link failure after save now resumes that account on retry. No SQL
+change, new identity collection, live Stripe operation or payout enabling. Current focused dual-runtime handler suite 127 PASS (also independently executed). Final both-app
+typechecks PASS; full mobile suite PASS: 213 suites / 1,899 tests (103.824s); 12 scoped app guards PASS.
+Independent Security/Finance/Data source review accepted on 2026-10-20: core`83f0e7ecb9f0`,
+Node`8a9e19226a0c`, Edge`f7e60bf9b0af`, tests`7338ee58d189` (SHA256 prefixes).
+The mobile public template documents private server-role credential loading; client-key guard PASS.
+Independent Documentation/Data source review accepted at 2026-10-20 20:42:40 UTC; reviewer ran
+no tests. Hosted provider/deployed grants and full KYC evidence remain unverified. The
+[payee plan §8](engineering/design/PAYEE_VERIFICATION_PLAN.md#8-connect-persistence-repair--2026-10-20-local-app)
+records observed defects, actual RED/GREEN and provider/grants/unknown-save/status-order limitations.
+Installed Accounts v2 types expose no affirmative identity/TIN results. Inferred flags would be
+incorrect; calling the current `record_stripe_kyc` with unknown false values would supersede genuine
+verification and accumulate pending history. Authoritative evidence/snapshot preservation remains open.
+
+
+### 2026-10-20 — Failed photo-story cleanup (app repair)
+
+The existing upload flow retires failed row/files before fresh retry/retarget; Close saves minimal
+owner/reel intent before dismissing and the same account retries on Upload open. Stored committed
+stories/cover are recovered without attaching new draft mentions. Account/visibility epochs isolate
+callbacks; monotonic per-key intent revisions and late-hydration skip preserve explicit Retry.
+SQL source, canonical append, schema/functions ownership and local privacy inventory are synchronized.
+Independent Security/Backend/Data source review accepted the final client at 2026-10-20 18:52 UTC
+(queue`31a333129fc7`, data`f75a40ff7336`, modal`28a1906663dd`, SQL`37b0dfcf0dfc`),
+with SQL provisional only. Focused 3 suites / 62 tests PASS, both app typechecks PASS and 12 scoped app
+guards PASS (documentation, copy, data boundaries/map, comments, feature metadata, unused code and
+client-key/no-SSN checks). Full mobile suite PASS: 213 suites / 1,877 tests (105.399s).
+Independent Documentation/Data review accepted at 2026-10-20 18:54:08 UTC after verification
+wording/retention corrections; reviewers ran no tests. Exact canonical append and scoped whitespace
+checks PASS, replay Python syntax PASS. SQL replay has not run because PostgreSQL startup/network acquisition were blocked by local OS permissions.
+Migration is written, not applied; real Storage content/bookkeeping/deletion and races remain unverified.
+Known unknown-id/process-loss/abandoned/closed-account/historical-path gaps are in the
+[repair contract](engineering/design/PHOTO_STORIES_DESIGN.md#failed-upload-cleanup-repair--2026-10-20).
+
+
+### 2026-10-20 — Athlete Story and primary-tab clarity (UX-07)
+
+Shared headings, action feedback and fan navigation now support readable wrapping, header semantics,
+44-point existing targets and OS Reduce Motion. The existing Highlights pane names only the caller-visible
+authored biography/social fields as Story; its media empty copy describes public Highlights. Activity keeps
+full actor/body text and exact amounts; Spotlight separates initial loading from empty; Drip explains empty
+categories using published labels; Local/Beyond retain existing destinations and safeguards; Upload keeps
+both existing composers with clear story/review copy. No new data, business action or reporting contract.
+The original presentation exemption preceded implementation and the selected admin gate passed; the later selected local app-ready gate passed at its recorded UTC checkpoint.
+Actual scoped source/privacy/accessibility review and local test receipts are in [UX-07](agents/UX-07.md).
+Final post-Upload-scroll `pnpm check` passed: both app typechecks, 212 mobile suites / 1,849 tests and all included guards. Browser review uses current real components and synthetic subject data: Story wraps at390/320 CSS enlarged text; Upload choices and Cancel work with a44-point pinned Close and bounded scroll at320x640. A subsequent optional page open failed, with later DOM read successful; native/hosted, every-route visual coverage and engagement outcomes remain unverified.
+Concurrent telemetry changes in Home are separate from this presentation review. The owner continues
+other edits. The final source ensure and retry deferred on another capture lock (`sourceCurrent: null`, `readyToCutOver: false`); current-source backup verification retains the existing concurrency limits.
+
+- 2026-10-20 · **Trivia funnel top.** `SportQuizPreparation` emits `trivia.view_prep` (mount, kind only) and `trivia.press_start` (Start tap, kind + topic; group theme never logged) via two new `trackTriviaStep` actions — existing event types, no client migration needed; demo never mounts preparation. Migration `20261020174500_reports_trivia_funnel_top.sql` (written, not applied) adds `prep_views_7d` + `start_presses_7d` atop the trivia key (full-body rewrite incl. 20261020180000, byte-verified: only 2 comment + 2 count lines differ; inline `schema.sql` edit, README + `SCHEMA.md`; apply after/instead of 20261020180000, rollback re-applies it). Portal Buttons tab gains viewed/presses tiles + labels + parsers. Viewed-but-never-pressed reads as friction, pressed-but-never-confirmed as technical. Tests: manager +1, screen journeys updated +1 (6), portal assertions; 35 suites / 411 tests mobile + 106/106 portal pass, typechecks + docs/data-map/comments/copy green. Not verified: hosted DB, devices.
+- 2026-10-20 · **Health surfacing (behavior-logging Step 3).** Migration `20261020180000_reports_trivia_smoothness.sql` (written, not applied) adds `trivia` (7-day funnel counts, answers per question with a digit-guarded cast, starts per kind) and `smoothness` (mount/start counts, averages, avg mount per surface) keys to `get_admin_reports` — full-body rewrite including the 20261012180000 casts+bands (byte-verified: only the scroll comma + 53 new lines differ), inline `schema.sql` edit (no second copy, mirroring 20261012180000), README + `SCHEMA.md` updated; apply after/instead of 20261012180000, rollback re-applies it. Portal Health shows trivia funnel tiles on Buttons and smoothness tiles on Errors via conditional shared-model lenses (old callers byte-identical: 13 Expo suites / 159 tests pass unchanged), trivia key labels, and null-vs-zero parsers; 106/106 portal tests (7 new). Trivia keys fill on any DB; smoothness keys need 20261020173000 + the layouts flag. No data-map regen (same function/owner). Not verified: hosted DB, devices.
+- 2026-10-20 · **Smoothness signals (behavior-logging Step 2).** Migration `20261020173000_telemetry_smoothness_events.sql` (written, not applied) whitelists `screen_mount` + `app_start` in `telemetry_logs` (copied onto `schema.sql`, README + `SCHEMA.md` updated; value list mechanically verified: all 10 old values kept, exactly 2 added; PGlite replay unavailable on this Mac, runs in CI). Client emits only while new `layouts.telemetrySmoothness` (default off; admin flips in Features after applying, so pre-apply batches never die on the CHECK) — `useScreenMountTime` on Home / Sport Pop Quiz / donate sheet plus a root cold-start effect, all async-flag-safe and silent when layouts are missing. New suites: manager smoothness (4), hook (3); touched areas 42 suites / 462 tests + portal 99/99 pass, both typechecks + docs/data-map/comments/copy/agents guards green. No funnel surfacing yet (Step 3); no UX copy changed.
+### 2026-10-20 — Clearer Security report and accurate guard statuses (REDUNDANCY-07 continuation)
+
+The report now uses readable helpers for input validation, ownership, guard evidence, source binding
+and rendering while preserving its public functions and command contracts. A guard missing its
+configuration, command, full-check inclusion or evidence now reports `needs-attention` in JSON and
+Markdown; unrelated guards remain `source-linked`, all have `executed: false`. Four regressions
+reproduced the old failure before repair. Actual local22 Security tests pass, including the real CLI
+on synthetic inputs, private-input refusal and atomic/currentness checks. The report continues to
+refresh through source sweeps and fails project/CI checks on missing coverage or drift. Independent
+Security/Documentation review and new final full-project/source receipts are tracked in
+[REDUNDANCY-07](agents/REDUNDANCY-07.md); no operational acceptance follows this cleanup.
+
+The first complete gate failed at typecheck on a concurrent new screen-mount timing test using
+async React Native Testing Library helpers synchronously. The concurrent owner had already awaited
+renderHook/unmount before root read; root awaited only its two remaining rerenders. Actual targeted
+3tests and both-app typecheck pass, with independent source/API review. Runtime timing code was
+not changed by this repair. Original failure and new final retry receipts remain in the tracker;
+Watchman-dependent ad hoc execution did not supply a test receipt, so the explicit no-Watchman
+rerun above governs the scoped result.
+
+Complete `pnpm check` subsequently passed210mobile suites/1825tests and all infrastructure gates.
+Exact full-source capture refused the concurrent STATE change; the following attempt failed its
+Security report drift gate after another session added a Reports migration. Those original failures
+remain external. The owner chose to keep other edits running and report limits: local cleanup and
+independent reviews are complete, exact latest-source verification is deferred, and automatic raw
+source maintenance continues without inheriting the earlier successful code check. The watcher
+was explicitly restored after one failed immediate restart; final read-only source/watcher/report
+observations are governed by the tracker receipt, with missing/stale states kept explicit.
+
+- 2026-10-20 · **Trivia funnel + error telemetry (behavior-logging Step 1).** New `telemetry.trackTriviaStep`: start/answer/next/complete/abandon/unavailable stored as `feature_tap` (`trivia.*`, surface `sport-quiz`, kind/mode/position/counts in payload; no question text, options, athlete/group or account identity) so existing Reports features/issues lists pick it up with zero SQL changes; start/answer/next/explanation failures go to `ui_issue`. Wired into `useTimedSportQuizRound` (incl. receipt-recovery answers and a start→unavailable order for missing content) and a result-keyed `SportQuizScreen` summary effect (the dev-only demo never mounts it, so it stays silent). New suites: manager unit (6), hook timer paths (2), screen journeys (5); 29 suites / 380 tests pass alongside all existing trivia/telemetry suites, typecheck clean. A concurrent session repaired two expectations in the new screen test (chapter DTO, exact retry) and logged it under REDUNDANCY-07. Not verified: hosted DB, devices; funnel surfacing on Health is Step 3.
+### 2026-10-20 — Infrastructure Security ownership and current source report (REDUNDANCY-07)
+
+Three Security specialists join the existing team: infrastructure/IAM/network/TLS, supply chain/CI/images,
+and recovery/custody. All report to SECURITY -> CTO and coordinate with the existing Engineering owners.
+A deterministic report maps every registered service and exit component to reviewers, hashes current
+safe source/config, and keeps operational requirements unverified. Actual source notices carry Security
+partners; source sweeps refresh awareness without completing review. Full project/CI gates include the
+new local regressions and report drift/coverage check. Independent source review repaired host-bit IPv4
+wildcard range checks, bound effective Compose credential settings to reviewed private inputs, and kept
+nested registry credential config out of Docker source contexts. Actual local17 Security checks/115-role
+structure checks pass. First full gate exposed two stale concurrent Trivia funnel expectations;
+root repaired only the test to enforce the current chapter DTO and exact original uncertain-answer retry.
+Targeted5tests pass; failed/retry receipt custody remains in the tracker. Final full source verification uses original external receipts in
+[REDUNDANCY-07](agents/REDUNDANCY-07.md). No Terraform/Docker/provider execution, delivered incidents,
+live security acceptance or unattended Security specialist is established.
+
+### 2026-10-20 — Portable app connections and local contracts (REDUNDANCY-06)
+
+Both Expo and Next use one pure public connection validator at the current client boundaries;
+missing/unsafe config stays unconfigured, existing auth/session/cookie/MFA controls remain. A fresh
+private profile emits matching client/server origins and public keys without copying source secrets
+or installing configuration. Actual installed SDK protocol tests run entirely on synthetic loopback;
+full `pnpm check` now includes `pnpm portability:test`. Original source/export/watch/CI carries the
+new code and regression tests. Guide: [PORTABLE_INTEGRATIONS](engineering/PORTABLE_INTEGRATIONS.md).
+Actual local24 scoped tests and both app typechecks pass; build/full verification is governed by
+[REDUNDANCY-06](agents/REDUNDANCY-06.md) external receipts. Real SQL/RLS/Auth/OAuth/MFA/Realtime/Edge/
+provider interoperability and measured migration readiness remain separately unproven.
+
+
+### 2026-10-20 — Private backup setup and operational exit health (REDUNDANCY-05)
+
+Prepared a fresh private external setup at `/Users/seiuliian/Downloads/ala-sports-backup-setup-20261020`:
+organized config/credentials/state/data placeholders, exact initial template hashes and700/600 modes;
+no secrets or live source data copied. `pnpm exit:health` reads exact source/code/map/process/original
+sweep clocks, original-source-bound backup age and strict prepared evidence. Default/no private
+configuration stays NO-GO; reports always keep `readyToCutOver:false`. Backup jobs/status now reject
+same-path origin/PG routing drift and unbound/other-source retry proof. Actual code/full-check/review
+receipts in [REDUNDANCY-05](agents/REDUNDANCY-05.md). This machine lacks pg_dump/pg_restore/psql/age/Docker;
+backup credentials/encryption recipients/destinations/readiness and hosted rehearsal remain pending.
+
+
+- 2026-10-20 · **R4-03 first file split: ReelCard.** The video player (`components/Reels/ReelVideoLayer.tsx`) and the live play callout (`PlayBroadcastBanner.tsx`) moved out of `ReelCard.tsx` unchanged (1,341 → 1,124 lines); unused imports removed. Typecheck, `code:unused`, Reels 90/90 pass. Not verified: devices / browser playback (no behaviour change intended).
+- 2026-10-20 · **Guests can read live Rallies again (local, SQL not applied).** The rallies read policy called `rally_manager_role()`, which guests may not execute (revoked since the original Rally migration), so every guest read failed with 42501 and guests saw no Rally meter. `supabase/migrations/20261020090000_rallies_guest_read.sql` splits it into "Read public rallies" (anon + authenticated, live / filled / closed) and "Managers read own rallies" (authenticated); signed-in visibility is unchanged and the function stays closed to anon. Copied onto `schema.sql`; replay adds guest / fan / admin checks (123/123; the guest check failed before the fix). Found by the exit plan's access parity. Not verified: hosted databases, devices.
+- 2026-10-20 · **Exit plan: version tracking, same-data proof, production infrastructure (REDUNDANCY-02 follow-up, Claude).** `infrastructure/migration/access.sql` + `parity.py`: access parity reads every app table as guest / three users / admin through RLS and blocks any difference (PGlite 14/14 incl. an `auth.uid()` drift caught only by access parity; real PostgreSQL 18.6 client drill 12/12, re-run 2026-10-20 against Codex's REDUNDANCY-03 catalog, PASS with 82 identity reads). Fingerprints pin `search_path` and `row_security`. `exit-map.json`: 24 tiered components (load balancer, cache, CDN, WAF/DDoS, pooler, network, DB HA/PITR, replication, DNS indirection, CI/CD, cost guard), topology, migration strategies, T-30…T+7 cutover with rollback, protection controls. `pnpm exit:status` / `exit:preflight` (gate later hardened by Codex). Coordinated with Codex REDUNDANCY-03/04 after a concurrent-edit stop (owner chose: Codex finishes, Claude verifies); `pnpm check` exit 0 after both.
+**2026-10-20 — REDUNDANCY-04 final local source handoff:** direct `pnpm check` PASS205mobile suites/1,805tests and91exit checks; independent crash/process/retention/privacy review and Documentation handoff accepted. Current-login watcher restart/status and private latest source pointer recorded in [REDUNDANCY-04](agents/REDUNDANCY-04.md). OS login autostart remains blocked; live backup/cloud/runtime/timed readiness unproved.
+
+**2026-10-19 — REDUNDANCY-04 (Codex):** initial/restart+30s content source sweeps, exact external source snapshots, private latest/attempt/catalog, OS crash-safe lock and journaled keep3 retention; all-branch/PR/manual/default-daily CI preserves modes and run provenance. Raw source copies do not grant code/data/service readiness; actual activation/full checks in [REDUNDANCY-04](agents/REDUNDANCY-04.md).
+
+
+**2026-10-19 — REDUNDANCY-03 (Codex):** exact expanded source/capsule export and unchanged-name content drift, immutable runtime archives and optional stable API gateway, historical Storage bytes-before-guards/owner reconciliation, exact service/Auth parity coverage and strict original-evidence readiness. Same app/self-hosted Supabase exit A;180minutes unproved. [EXIT_READY_RUNBOOK](engineering/EXIT_READY_RUNBOOK.md), [actual assignments/reviews](agents/REDUNDANCY-03.md). No cloud/provider/live SQL or hosted restore run. Final local verification recorded in tracker.
+
+- 2026-10-19 · **Redundancy & Exit team and the self-updating exit plan (REDUNDANCY-02, owner request).** New registry agents (Engineering): `REDUNDANCY_LEAD` → `EXIT_SYNC` (keeps the backup version and exit plan current with every app change and tells the team), `EXIT_DATABASE` (the different database), `EXIT_SERVICES` (Auth / Storage / Realtime / functions replacements), `EXIT_CLOUD` (AWS / Azure build); roster 107 → 112, registry / TEAMS (contract item 13) / hierarchy / expert standards / department plans / AGENTS.md / queue updated, support Team flow topology regenerated. `scripts/exit-map.mjs` + hand-kept `docs/engineering/exit-map.json` generate [EXIT_INFRASTRUCTURE_MAP](engineering/EXIT_INFRASTRUCTURE_MAP.md): 12 components × exit A (self-hosted Supabase) / exit B (cloud-native) × AWS / Azure, owners, detected inventory, 11-step build order, plan version `6f6ff010e985`. Automation: a second project Stop hook (`scripts/exit-map-guard.sh`) regenerates the map at the end of every Claude session and asks once for an announcement; `pnpm exit:map:check` (in `pnpm check` and CI) fails on a stale map, an Edge Function outside the self-host allowlist, an unmapped Auth method or an unannounced change; `pnpm exit:map --acknowledge --by "<session>"` writes the routed notice to [EXIT_CHANGE_LOG](agents/EXIT_CHANGE_LOG.md). The recovery source capsule now carries `exit-map.json` and the baseline. Charter: [REDUNDANCY_TEAM](engineering/REDUNDANCY_TEAM.md). Change simulation proved detection and revert; `pnpm check` exit 0. Not done: hosted backups, cloud accounts, a hosted drill (owner gates unchanged); agents run only when a session performs them.
+- 2026-10-19 · **Database migration checks for the AWS / Azure exit (REDUNDANCY-01, local).** New `infrastructure/migration/`: `toc_review.py` drafts the reviewed `pg_restore` list `restore.py` requires (keeps application objects in every app schema, migration history and the app's policies/triggers on Supabase tables that the bare target lacks; comments out managed objects, Storage rows, Auth sessions and unknowns; refuses a list missing a source table or the Auth rows public foreign keys need). `parity.py fingerprint` reads one read-only snapshot (`catalog.sql`); `compare` blocks any structural, security, sequence, realtime, migration-history or row-hash difference; `grant-sync` writes privilege-only SQL. **Finding:** a restore onto a Supabase stack hands back what the source revoked, because `pg_dump` records privileges relative to PostgreSQL's default while the stack's default privileges grant everything (2,059 rights in the drill, e.g. anon DELETE on `athlete_birthdates`); the runbook now requires `grant-sync` and a parity PASS. Proofs: 27 unit tests (in `pnpm redundancy:test`), PGlite parity 13/13 (added to CI), real PostgreSQL 18.6 client drill 12/12 against PGlite servers (native PostgreSQL cannot start on this Mac: System V shared memory is blocked by policy). Runbook, implementation plan, `infrastructure/README` and [REDUNDANCY-01](agents/REDUNDANCY-01.md) updated; `pnpm check` exit 0. Not verified: a hosted source, the pinned Supabase images as target, Auth sign-in with restored users, a timed RTO.
+### 2026-10-19 — Backup job operations (REDUNDANCY-01 continuation)
+
+Continued the approved recovery build with one private-config capture/publication job, exclusive locking, atomic attempt/success records and all-destination completion. Added capture-time freshness monitoring, complete-record consistency checks and separate cloud-reader retrieval against a protected original checksum. Independent review found false healthy records and the Azure partial retry trap; fixes and fresh evidence are recorded in [REDUNDANCY-01](agents/REDUNDANCY-01.md). Registered bounded job/retrieval exports and a partial recovery sensor; operator setup is [BACKUP_OPERATIONS](engineering/BACKUP_OPERATIONS.md). Verification: fresh `pnpm check` passes205mobile suites/1,805tests,52backup/14deployment/7host checks and13source tests; private synthetic monitor CLI exercises exits0/2/3; full1,429-file source capture/verify/isolated restore includes all operational files. Independent operations/source review has no remaining concrete finding. No hosted backup, scheduler/alert activation, cloud resources or database movement ran.
+
+### 2026-10-19 — Supabase recovery and AWS/Azure migration preparation (REDUNDANCY-01)
+
+Owner confirmed backup **of** Supabase for restoration on owned AWS/Azure servers. New `infrastructure/` separates backup/verification/reviewed restore, web/API and standalone portal containers, upstream Supabase preparation and per-cloud Terraform. Source capsules now include reviewed infrastructure, dependency-layout config and required JSON while rejecting credentials/state. Full-data tools reconcile all Storage paths to database inventory and encrypt archives with age; restore records a committed-database receipt for guarded Storage-only retries. New operational exports are owned in the master data map; infrastructure register and recovery/portability/runbooks are linked. Current Supabase projects and existing unrelated dirty changes are preserved. Verification: `pnpm check` passes205mobile suites/1,805tests,13source recovery tests and39backup/deployment checks; full1,419-file source restore passes. Next standalone build and Expo production web/API export pass with synthetic public configuration; actual Expo host serves fan HTML and denies unauthenticated checkout. Hosted backup/restore, upstream version/image verification, Docker/Terraform validation, monitored scheduling and measured RPO/RTO remain pending; see [REDUNDANCY-01](agents/REDUNDANCY-01.md).
+
+
+- 2026-10-19 · **Full check green again; five hooks off the database (R4-03).** `pnpm check` had been red since the SDK 58 upgrade (`ccf2516`, 2026-10-16). Later sessions ran only targeted suites, so the 196 / 1,744 count above went stale. Found: a typecheck error in `highlights.test.ts` and 18 failing Jest suites (113 tests). Fixes, all test-side unless noted: `jest.setup.js` counts icon fonts as loaded (SDK 58 `expo-asset` threw "Module 1 is missing from the asset registry" on the first Ionicons mount, about half the failures); runtime mocks gained `layouts`, router mocks `useIsFocused`; the ReelCard test now expects an inactive neighbor to have no `VideoView`, and the photo-tier test expects the coach-label tier; the gesture handler 3 `FlatList` is mocked in `PhotoStoryMedia`; FamilyFun tests clear the saved Not now week between tests; the web report test mocks `expo/src/winter/fetch/fetch`. **App fix:** `SportQuizRound` called `useAuth` and awarded 5 Aura on a right answer, so the dev-only trivia demo ("nothing is saved") would add real Aura for a signed-in tester and crashed without an auth provider. The round now takes `auraUserId` from `SportQuizScreen`; the demo passes none (2 new tests). R4-03: `useFanTipHistory`, `useReceivedMalo`, `useRoster`, `useAthleteSubscription` and `useSubscriberRequests` now call `lib/donationHistory.ts`, `lib/subscriptions.ts` and `lib/roster.ts` (behaviour unchanged; `hookLibMoves.test.ts`, 10 tests). Direct calls outside `lib/` 48 → 39; register and data map regenerated. Final `pnpm check` exit 0 (205 suites / 1,805 tests, every guard) with another session's REDUNDANCY-01 files present and untouched; portal tests 99/99. Not verified: devices, browser.
+- 2026-10-18 · **Admin two-step sign-in (SCALE-01, switch off).** Owner approved the start. With `NEXT_PUBLIC_ADMIN_REQUIRE_MFA` on, portal `middleware.ts` (every request, decoding the `aal` of the token `getUser()` validated) and `(protected)/layout.tsx` (server re-check through `mfa.getAuthenticatorAssuranceLevel(jwt)`) send a non-`aal2` admin to new `/login/mfa`: set up an authenticator app (QR + setup key) or enter the code. With `EXPO_PUBLIC_ADMIN_REQUIRE_MFA` on, Expo `AdminShell` holds desks behind `Admin/AdminMfaGate` (Studio unlock without an account no longer opens desks). Shared rule `packages/shared-types/admin/adminMfa.ts`; Supabase calls in `lib/`. Off (default) = unchanged; an offline smoke of a built copy showed the same Auth / profile calls. Portal tests 99/99, new Jest suites pass. Not verified: TOTP is not on any hosted project, so enroll / verify never ran against Supabase; browser / device. RLS still accepts `aal1`; the off-host audit log and account MFA stay open. [ADMIN_MFA](engineering/ADMIN_MFA.md).
+- 2026-10-18 · **SCALE-03: live scores without the refetch storm (local, switch off).** `useLiveScores` now runs through `lib/liveScoreSync.ts`. With `EXPO_PUBLIC_LIVE_SCORES_BROADCAST=true` it joins private Broadcast `game_scores_index` plus `game_scores_{id}` per listed game (40 max, the rest poll once a minute) and merges each change by the new server-owned `games.live_seq`: duplicates and older messages are dropped, a gap, an unknown game, a membership notice or a reconnect schedules one jittered reread. Switch off (default), or a refused private topic, keeps the old `postgres_changes` → full reread. Migration `20261018120000_live_score_broadcast.sql` (BEFORE/AFTER triggers on `games`, receive-only `realtime.messages` policy, no client send) is written and copied onto `schema.sql`, **not applied**. RLS review written in [SCALE-03](agents/SCALE-03.md); hosted negative tests and the game-night load test still need hosted access. Not verified: any hosted Realtime behaviour, devices.
 - 2026-10-18 · **Environments plan matches the testing app.** [ENVIRONMENTS_AND_HOSTING](engineering/ENVIRONMENTS_AND_HOSTING.md) no longer says development lacks the September SQL. Development has the catch-up; staging does not. There is no production project and no cache server. The scalability ladder names the laptop, development, staging, production, a managed video host, and the AWS exit, with the role that tends each rung. `INFRASTRUCTURE` updates those facts when the testing app’s host or caps move. The capacity packet stays with `GROWTH_ANALYTICS` (next review 2026-10-20). Nothing was bought.
 - 2026-10-18 · **Home stops paging empty sample cards once a real clip exists.** The five built-in names stay for the spotlight fallback and for a feed that has no file yet. A photo story still needs at least one photo. Development rows still share one surviving video file.
 - 2026-10-18 · **Home plays one Highlight at a time.** The card on screen keeps the decoded video. A mounted neighbor drops that file and shows a poster. A new upload still stops at 45 seconds, and now also at 8 MB, with the compressor at about 1.2 Mbps so a full-length clip fits. On the web, the server and the first browser paint share a shell, then the feed mounts. Trivia on Home and profile stats, donations, and the Aura subscription wait until that screen is open. Activity already waited for its tab. No quiz SQL and no server Aura trigger. Not measured: real-device memory or frame time.
@@ -616,7 +1022,7 @@ Do not re-diagnose these. Fix them or leave them.
 | `telemetry_logs` INSERT policy is `with check (true)` for `anon` | **Shape-bounded on staging and, as of 2026-10-17, on development** (`20260929190000_telemetry_logs_bounds.sql`). Guest inserts stay on purpose. Still open: many small valid-looking rows. Closing that needs §6 item 1, not a silent drop of guest telemetry. |
 | `telemetry_logs` has no `user_id` / `session_id` | No funnels, retention, or per-user behaviour is possible. Owner chose "session + user id" but it is **not built** — it is a privacy change needing policy copy first (§6). |
 | Expo web bundle | Historical Lightning CSS loader failures; fresh web/server and iOS development bundles passed 2026-10-12 after a narrow quarantine cleanup and Metro restart. Browser Home/feed shell rendered. Historical first loader error not reproduced; playback/native/device and hosted photo SQL are not accepted by this launch check. Diagnosis in TROUBLESHOOTING §0b. |
-| Storage buckets `reels` / `game_highlights` / `avatars` are public | Vault-locked video is directly downloadable, bypassing entitlement. Accepted for internal testing only — ROADMAP Phase 5 hard blocker. |
+| Legacy Vault objects in public Storage | `reels` / `game_highlights` / `avatars` are public buckets. Older Vault-locked video stored there remains directly downloadable, bypassing entitlement. New Vault uploads use private `reel_vault` with authorized signing and no public fallback; that does not remove legacy bytes. Legacy private-content exposure remains an internal-only ROADMAP Phase5 hard blocker. |
 | `auth.role() = 'anon'` bypass on 8+ tables | Studio Unlock and Operator PIN have no real session. Accepted for internal testing, **not** for public beta. |
 | Staging and development both have the September SQL | Staging received it on 2026-09-30. Development received the same chain on 2026-10-17, plus the October trivia files. Preview builds may still point at either project. Confirm the installed build before device testing. |
 | Branch integration pending | **Committed locally 2026-10-16 as `5efdf57`** (owner chose one commit of all 688 changed files now, §6 item 15): admin, Books, data governance, support/detection, privacy/minors/payee, portability, Beyond/challenges, Calm Island and PLAY-01's in-progress patch. Not pushed or merged; `wave0-custodial-verification` is 63 commits ahead of the cached `origin/main` (remote freshness unverified). Still open: merging into `main`, pushing and branch protection (R1-02, owner). The root `screenshot.png` was left out on purpose (stray, unreferenced). |
@@ -625,9 +1031,9 @@ Do not re-diagnose these. Fix them or leave them.
 | School confirm link needs the app | `alasports://school-confirm` opens only where Tapua'i is installed (Edge Functions can't serve HTML on the default domain). A web page for staff without the app is not built. Schools desk confirmer management is built locally in DATA-01; the closures migration remains unapplied, so hosted staff setup still uses the SQL Editor. |
 | Report reasons built; strikes and appeals unbuilt | `20261001180000_content_rights_reports.sql` stores a reason and hides on athlete/guardian reports, high-risk reasons, or three distinct reporters. One ordinary rival report no longer hides a clip. Staging application is recorded in TEAMS; not re-queried here. Local Open flags columns show the reason, the clip, the reporter count, and whether an athlete or guardian reported it. Strikes and appeals remain unbuilt. This session did not query the hosted database. |
 | Storage write policies on `reels` check the folder owner on development | `20261007231000_reels_storage_owner_folder.sql` applied on development 2026-10-17. Confirm staging separately before testers post photos of minors. The `game_highlights` fallback bucket keeps bucket-only policies. |
-| Failed photo-story attempts leave hidden rows | `createPhotoStory` inserts the reel first; if a photo or `set_reel_photos` fails, the row stays at `photo_count = 0` (hidden everywhere by `isListableReel`; clients have no delete grant). Uploaded Storage objects from a failed attempt also remain. Needs a cleanup job or an owner-delete RPC. |
+| Failed photo-story cleanup — local repair, SQL not applied | Owner cleanup RPCs, terminal write guards, fresh retries and minimal owner/reel local removal intent are implemented. Same account resumes on Upload open; unexpected paths fail closed, committed stories are preserved. Migration `20261020190000` has not been applied; actual PostgreSQL replay/hosted Storage deletion and concurrency are unverified. Unknown-id/historical/abandoned/closed-account cleanup remains separate; [contract](engineering/design/PHOTO_STORIES_DESIGN.md#failed-upload-cleanup-repair--2026-10-20). |
 | Guest vote / hype stuffing (public beta blocker) | `cast_cheer_vote` and `increment_player_hype` stay guest-callable with no limit (by design for Wave 0); a guest can stuff poll votes and inflate hype counts that feed Spotlight. Needs a per-device / per-account limit or signed-in-only before public beta (WORK_QUEUE DATA-01-F11). |
-| Payee verification is on development (VERIFY-02) | `20261014120000_payee_verification.sql` applied on development 2026-10-17. Nobody is paid until Stripe's result is recorded by the server (`record_stripe_kyc` is not wired into `create-stripe-account` yet — CONNECT) and, for a guardian, the school confirmation is entered and confirmed by a second admin. Payouts stay blocked (503). Staging was not part of this apply. |
+| Payee verification is on development (VERIFY-02) | SQL applied on development 2026-10-17 per existing record; not re-queried. Connect persistence repaired locally (server credentials, confirmed conditional save before links). `record_stripe_kyc` automatic identity/TIN evidence remains unwired: Accounts v2 capabilities are insufficient, and unknown snapshots must not overwrite genuine checks. Guardians still need school confirmation by a second admin. Payouts remain503; staging/deployed Connect/Stripe behavior not verified here. [Plan §8](engineering/design/PAYEE_VERIFICATION_PLAN.md#8-connect-persistence-repair--2026-10-20-local-app). |
 | Minor accounts are on development (MINOR-01) | `20261014110000_minor_accounts.sql` applied on development 2026-10-17. The consent form is a **draft** for counsel (LEGAL row AA) — do not show it to real families. Future RLS tables must add the "Closed accounts" policy. Staging was not part of this apply. |
 | Profile privacy is on development (PRIV-01) | `20261014090000_profile_privacy.sql` and `20261014100000_tag_approval.sql` applied on development 2026-10-17 after `Public Read Profiles` and `Users can read own stripe data` were dropped. `Public Update Profiles` (UPDATE for everyone) was left in place. Avatar files stay public. Staging was not part of this apply. |
 | Profile photo overwrite closed on development | `20261013230000_avatars_owner_folder.sql` applied on development 2026-10-17. Whether minors' photos should be visible to guests at all is open (WORK_QUEUE P1-02). Confirm staging separately. |
@@ -637,6 +1043,7 @@ Do not re-diagnose these. Fix them or leave them.
 | Parent payout writes are closed on development | `20261013220000_disbursements_guardian_scope.sql` applied on development 2026-10-17 (admin-only writes; a paid payout stays final). Before live payouts (WORK_QUEUE DATA-01-F10a, with §6 item 8): link payouts to approved withdrawals, two-person approval, guardian access ending at handover. Confirm staging separately. |
 | Books migration is on development | `20261012210000_bookkeeping_ledger.sql` applied on development 2026-10-17. Stripe fees, refunds and disputes are still not recorded per charge until the webhook path (§6 item 3) exists. Confirm staging separately. |
 | Fan Zone and Beyond are on development without a partial storage index | Applied 2026-10-17 after the `create unique index` lines were removed. postgres cannot own `storage.objects`. Triggers `fan_zone_storage_guard` and `beyond_storage_guard` are in place. Buckets are private. Switches stay off until an admin turns them on. Coach-level `20261017090000` was not run. |
+| Guests cannot read Rallies once function-access hardening is applied | Found 2026-10-20 by access parity: the `Read public or own rallies` policy calls `rally_manager_role()`, which `anon` may not execute, so a guest read of `public.rallies` fails with 42501 instead of returning live rallies. Development has the hardening since 2026-10-17. Fix written 2026-10-20: `20261020090000_rallies_guest_read.sql` splits the policy (replay 123/123, guest/fan/admin checks); **not applied anywhere** — apply on staging and development, then confirm a guest sees a live Rally meter. |
 | Home highlights share one file | On 2026-10-17 the eight development highlight rows were pointed at `reels/guest/1790555709423.mp4` because the other objects are 14-byte “File not found” placeholders (one leftover QuickTime still served as text). The placeholders remain in the bucket. |
 
 ---

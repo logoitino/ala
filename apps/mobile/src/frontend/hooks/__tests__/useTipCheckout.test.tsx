@@ -69,6 +69,7 @@ describe('checkout payment settlement', () => {
     const onBacked = jest.fn();
     const { result } = await renderHook(() => useTipCheckout());
     await act(async () => { await result.current.startCheckout({ player, tipAmount: 5, coverFees: true, platformTipPercent: 10, onBacked }); });
+    expect(mockIntent).toHaveBeenCalledWith(650, player.id, 50, { giftCents: 500, coverFees: true, platformTipPercent: 10 });
     expect(mockInsert).toHaveBeenCalledTimes(2);
     const [first] = mockInsert.mock.calls[0];
     expect(first).toEqual(expect.objectContaining({ amount_cents: 500, stripe_payment_intent_id: 'pi_3QabcDEF12345678', platform_tip_cents: 50 }));
@@ -78,6 +79,14 @@ describe('checkout payment settlement', () => {
     expect(second).not.toHaveProperty('cover_fee_cents');
     expect(second).not.toHaveProperty('stripe_payment_intent_id');
     expect(onBacked).toHaveBeenCalledWith(2);
+  });
+  it('keeps a shared Exclusive/Vault purchase outside donation attribution', async () => {
+    const onPaid = jest.fn();
+    const { result } = await renderHook(() => useTipCheckout());
+    await act(async () => result.current.startCheckout({ player, tipAmount: 5, skipBacker: true, onPaid }));
+    expect(mockIntent).toHaveBeenCalledWith(500, player.id, 0, undefined);
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(onPaid).toHaveBeenCalledTimes(1);
   });
   it('keeps the donation and logs an issue when the database rejects only the fee or payment id', async () => {
     const { telemetry } = jest.requireMock('@/services/TelemetryManager');

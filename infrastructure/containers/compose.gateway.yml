@@ -1,0 +1,7 @@
+# Overlay for the explicit stable-domain gateway; mode/ref are private operator configuration.
+services:
+  proxy:
+    env_file:
+      - ${GATEWAY_ENV_FILE:?Set external private gateway environment file}
+    volumes:
+      - ./Caddyfile.backend-switch:/etc/caddy/Caddyfile:ro

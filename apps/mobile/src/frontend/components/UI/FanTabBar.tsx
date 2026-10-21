@@ -1,8 +1,8 @@
-/** Four fan destinations around the Upload slot. Beyond moved to the Highlights pill row (owner 2026-10-16). */
+/** Persistent fan destinations wrap labels and respect Reduce Motion while preserving SDK58 tab events. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef } from 'react';
 import { Platform, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -42,16 +42,19 @@ type TabButtonProps = {
  * @sideEffects Reanimated `withSequence`/`withSpring` icon bounce + `withTiming` mist fade on focus change.
  */
 function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accentColor, accentMist, onPress }: TabButtonProps) {
+  const reduceMotion = useReducedMotion();
   const iconScale = useSharedValue(1);
   const mist = useSharedValue(focused ? 1 : 0);
   const color = focused ? accentColor : colors.textMuted;
 
   useEffect(() => {
-    mist.value = withTiming(focused ? 1 : 0, { duration: 180 });
-    if (focused) {
+    mist.value = reduceMotion ? (focused ? 1 : 0) : withTiming(focused ? 1 : 0, { duration: 180 });
+    if (reduceMotion || !focused) {
+      iconScale.value = 1;
+    } else {
       iconScale.value = withSequence(withSpring(1.22, SPRING_BOUNCE), withSpring(1, SPRING_BOUNCE));
     }
-  }, [focused, iconScale, mist]);
+  }, [focused, iconScale, mist, reduceMotion]);
 
   const mistStyle = useAnimatedStyle(() => ({ opacity: mist.value }));
   const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: iconScale.value }] }));
@@ -70,7 +73,7 @@ function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accen
       <Animated.View style={iconStyle}>
         <Ionicons name={focused ? activeIcon : icon} size={20} color={color} />
       </Animated.View>
-      <Text style={[styles.tabLabel, { color }]} numberOfLines={1}>
+      <Text style={[styles.tabLabel, { color }]}>
         {label}
       </Text>
       <View style={styles.tabDotSpacer} />
@@ -88,6 +91,7 @@ function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accen
  * @sideEffects Opens `UploadSheetContext` on plus press; Reanimated spring on the indicator when focus changes.
  */
 export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
+  const reduceMotion = useReducedMotion();
   const { openUpload } = useUploadSheet();
   const { live } = useAppRuntime();
   const slots = useRef<Record<string, { x: number; width: number }>>({});
@@ -110,12 +114,12 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   const placeIndicator = (key: string, animate: boolean) => {
     const box = slots.current[key];
     if (!box || box.width <= 0 || !visibleKeys.has(key)) {
-      indicatorOp.value = withTiming(0, { duration: 120 });
+      indicatorOp.value = reduceMotion ? 0 : withTiming(0, { duration: 120 });
       return;
     }
     const width = Math.max(24, box.width * 0.5);
     const x = box.x + (box.width - width) / 2;
-    if (!animate || !placed.current) {
+    if (reduceMotion || !animate || !placed.current) {
       indicatorX.value = x;
       indicatorW.value = width;
       indicatorOp.value = 1;
@@ -131,7 +135,7 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
     placeIndicator(focusedKey, true);
     // `slots` is a ref filled by onLayout; focus and the visible route set are the reactive inputs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusedKey, routes.length]);
+  }, [focusedKey, routes.length, reduceMotion]);
 
   const indicatorStyle = useAnimatedStyle(() => ({
     opacity: indicatorOp.value,
@@ -217,9 +221,9 @@ const styles = StyleSheet.create({
   },
   bar: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     width: '100%',
-    minHeight: 58,
+    minHeight: 64,
     paddingHorizontal: 4,
     paddingTop: 4,
   },
@@ -249,11 +253,11 @@ const styles = StyleSheet.create({
     }),
   },
   tabInner: {
-    minHeight: 52,
+    minHeight: 56,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
-    paddingTop: 6,
+    paddingVertical: 6,
     paddingHorizontal: 2,
     borderRadius: radii.md,
     marginHorizontal: 2,
@@ -268,6 +272,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.1,
     textAlign: 'center',
+    flexShrink: 1,
   },
   tabDotSpacer: {
     width: 5,

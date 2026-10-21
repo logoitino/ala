@@ -1,0 +1,15 @@
+{
+ "planVersion": "14b092e40835",
+ "appSourceHash": "99b03be48749814f",
+ "commit": "2f26caaf1c23",
+ "branch": "main",
+ "dirty": true,
+ "appVersion": "1.0.0",
+ "latestMigration": "20261018120000_live_score_broadcast.sql",
+ "schemaHash": "ea329a97a0d5",
+ "scope": "local-drill",
+ "evidence": "REDUNDANCY-01/02 local proofs 2026-10-19: migration unit 29/29, PGlite parity 14/14 (incl. access parity and Auth drift), PostgreSQL 18.6 client drill 12/12 with access parity PASS (82 identity reads)",
+ "by": "Claude Code session (owner-run)",
+ "ownerApproval": null,
+ "recordedAt": "2026-10-20T04:35:50.565Z"
+}

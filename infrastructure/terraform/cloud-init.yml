@@ -1,0 +1,14 @@
+#cloud-config
+# Linux host preparation only: installing tools does not deploy services or restore data.
+package_update: true
+packages:
+  - docker.io
+  - docker-compose-v2
+  - age
+  - postgresql-client
+  - python3
+  - curl
+  - unzip
+runcmd:
+  - [systemctl, enable, --now, docker]
+  - [install, -d, -m, '0700', /etc/tapuai, /opt/tapuai, /var/lib/tapuai/backups]

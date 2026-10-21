@@ -1,5 +1,5 @@
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+/** Test-bank setup is optional and separate from account creation, identity checks and real payouts. */
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useState } from 'react';
 
 import { LegalAckToggle, LegalModal } from '@/components/Legal/LegalModal';
@@ -10,94 +10,60 @@ import { useLegalAck } from '@/hooks/useLegalAck';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
 
 /**
- * @purpose Athlete payout callout: Connect Express bank onboarding or Express dashboard.
- * @returns Setup card when onboarding is incomplete; **Payouts Active ✅** plus manage action when complete.
- * @sideEffects `useStripeConnect` → JWT Edge Function `create-stripe-account` (never mint Account Links or `sk_` in `src/frontend/`), `WebBrowser.openAuthSessionAsync`. Medium haptic on press. Legal ack required before first Connect.
+ * @purpose Server-authorized test-bank onboarding for an adult athlete or one guardian/athlete target.
+ * @sideEffects JWT Connect request and Stripe browser navigation; Terms acknowledgement through useLegalAck.
  */
-export function PayoutSetupCard() {
-  const { createStripeExpressAccount, busy, stripeOnboardingComplete, payoutsEnabled } = useStripeConnect();
-  const { accepted, accept } = useLegalAck();
+export function PayoutSetupCard({ playerId, athleteName, disabled = false }: { playerId?: string; athleteName?: string; disabled?: boolean } = {}) {
+  const { createStripeExpressAccount, busy, stripeOnboardingComplete, payoutsEnabled, statusLoading, statusReady, error, refresh } = useStripeConnect(playerId !== undefined ? { playerId } : undefined);
+  const { accepted, accept, ready, busy: legalBusy, error: legalError, refresh: refreshLegal } = useLegalAck();
   const [legalOpen, setLegalOpen] = useState(false);
+  const guardian = playerId !== undefined;
+  const waiting = disabled || busy || legalBusy || !ready || Boolean(playerId && (statusLoading || !statusReady));
+  const blocked = waiting || !!error || ((guardian || !stripeOnboardingComplete) && !accepted);
 
   const onPress = () => {
-    if (!stripeOnboardingComplete && !accepted) {
-      Alert.alert('Terms required', 'Agree to Terms of Service & NIL Compliance before connecting a bank.');
-      return;
-    }
-    if (!stripeOnboardingComplete) {
-      Alert.alert('Not a live payout', COMPLIANCE_PAYOUT, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Continue in test mode', onPress: () => void createStripeExpressAccount() },
-      ]);
-      return;
-    }
-    try {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch {
-      // Simulator / web may not expose haptics.
-    }
+    if (blocked) return;
+    // The visible test disclosure and named final action work on web, where native alert buttons are unavailable.
     void createStripeExpressAccount();
   };
 
-  if (stripeOnboardingComplete) {
-    return (
-      <View style={styles.card} accessibilityRole="summary">
-        <View style={styles.badge}>
-          <Text style={styles.badgeLabel}>Express connected</Text>
-        </View>
-        <Text style={styles.warn}>{COMPLIANCE_PAYOUT}</Text>
-        {payoutsEnabled ? (
-          <Text style={styles.lede}>Stripe reports transfers as enabled on this test account. This is still not a live custodial payout.</Text>
-        ) : (
-          <Text style={styles.lede}>
-            Express onboarding is in. Stripe still has to finish enabling transfers — open the dashboard if a
-            requirement is listed.
-          </Text>
-        )}
-        <AnimatedButton
-          accessibilityLabel="Manage bank account or view Express dashboard"
-          disabled={busy}
-          haptic="none"
-          onPress={onPress}
-          contentStyle={[styles.manageBtn, busy && styles.busy]}
-        >
-          {busy ? (
-            <ActivityIndicator color={colors.primary} />
-          ) : (
-            <Text style={styles.manageLabel}>Manage Bank Account / View Express Dashboard</Text>
-          )}
-        </AnimatedButton>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.card} accessibilityRole="summary">
-      <Text style={styles.title}>Set Up Payouts ⚡</Text>
-      <Text style={styles.lede}>Receive Donations & Subscription Direct Deposits</Text>
+      <Text style={styles.title}>{stripeOnboardingComplete ? 'Stripe test setup submitted' : 'Test bank setup'}</Text>
+      <Text style={styles.lede}>{playerId ? `Optional Stripe test setup for ${athleteName || 'this athlete'}.` : 'Optional Stripe test setup. Creating your account never requires a bank.'}</Text>
       <Text style={styles.warn}>{COMPLIANCE_PAYOUT}</Text>
-      <LegalAckToggle
+      <Text style={styles.lede}>Use synthetic test information only. Enter bank and identity details on Stripe, never in Tapua'i.</Text>
+      {stripeOnboardingComplete ? (
+        <Text style={styles.lede}>{payoutsEnabled ? 'Stripe reports test transfers enabled.' : 'Stripe still needs to finish enabling test transfers.'} Stripe setup does not establish identity, tax or relationship verification. Real payouts remain disabled.</Text>
+      ) : null}
+      {!stripeOnboardingComplete || (guardian && !accepted) ? <LegalAckToggle
         checked={accepted}
-        disabled={accepted}
+        disabled={accepted || waiting}
         onCheckedChange={(next) => {
-          if (next) void accept();
+          if (next) void accept().catch(() => undefined); // The hook supplies the fixed visible error.
         }}
         onOpenTerms={() => setLegalOpen(true)}
-      />
+      /> : null}
+      {legalBusy ? <Text style={styles.lede}>Saving Terms acknowledgement…</Text> : null}
+      {legalError ? <Text style={styles.warn} accessibilityRole="alert">{legalError}</Text> : null}
+      {legalError ? <AnimatedButton accessibilityLabel="Retry Terms status" onPress={() => void refreshLegal()} disabled={legalBusy || disabled} contentStyle={styles.manageBtn}><Text style={styles.manageLabel}>Retry Terms</Text></AnimatedButton> : null}
+      {playerId && statusLoading ? <Text style={styles.lede}>Checking test bank status…</Text> : null}
+      {error ? <Text style={styles.warn} accessibilityRole="alert">{error}</Text> : null}
+      {error ? <AnimatedButton accessibilityLabel="Retry bank status" onPress={() => void refresh()} disabled={busy || disabled} contentStyle={styles.manageBtn}><Text style={styles.manageLabel}>Retry bank status</Text></AnimatedButton> : null}
       <AnimatedButton
-        accessibilityLabel="Connect bank account"
-        disabled={busy || !accepted}
+        accessibilityLabel={stripeOnboardingComplete ? 'Manage test bank account' : 'Connect test bank account'}
+        disabled={blocked}
         haptic="none"
         onPress={onPress}
-        contentStyle={[styles.connectBtn, (busy || !accepted) && styles.busy]}
+        contentStyle={[styles.connectBtn, blocked && styles.busy]}
       >
-        {busy ? (
+        {busy || legalBusy ? (
           <ActivityIndicator color={colors.onAccent} />
         ) : (
-          <Text style={styles.connectLabel}>Connect Bank Account</Text>
+          <Text style={styles.connectLabel}>{stripeOnboardingComplete ? 'Manage test bank' : 'Continue to Stripe test bank setup'}</Text>
         )}
       </AnimatedButton>
-      <LegalModal visible={legalOpen} requireAck onClose={() => setLegalOpen(false)} />
+      <LegalModal visible={legalOpen} onClose={() => setLegalOpen(false)} />
     </View>
   );
 }
@@ -128,21 +94,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     lineHeight: 18,
-  },
-  badge: {
-    alignSelf: 'flex-start',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.accentSoft,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  badgeLabel: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.3,
   },
   connectBtn: {
     minHeight: 52,

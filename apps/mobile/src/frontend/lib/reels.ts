@@ -6,6 +6,7 @@
  * photos are fetched separately (`lib/photoStories.ts`, `hooks/useStoryPhotos.ts`).
  * Network/auth feed failures stop legacy fallback queries; opted-in safe reads recover at most once.
  * Screens call this, not Supabase. Uploading a clip is `services/MediaUploadService` plus `UploadVideoModal`.
+ * Upload inputs retain the normalized duration so the service can enforce the short-clip limit.
  * @sideEffects `reels`, `reel_hype_votes` and related RPCs; AsyncStorage for local hides and the peek hint.
  */
 
@@ -16,15 +17,19 @@ import type { ReportReasonId } from '@/data/contentRights';
 import { parseReelCategory, type HighlightClip, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
 import type { PlayReactionId } from '@/data/players';
 import { storyPhotoPublicUrl } from '@/lib/photoStories';
+import { resolveVideoMediaUrl } from '@/lib/media';
+import { mediaStorage, type MediaStorageAdapter } from '@/lib/mediaStorage';
 import { supportSignals } from '@/services/SupportSignalManager';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import { REEL_VAULT_BUCKET, REEL_VAULT_PREFIX, uploadHighlight } from '@/services/MediaUploadService';
+import { uploadHighlight } from '@/services/MediaUploadService';
 import type { Player, Reel, ReelWithPlayer } from '@/types/database';
 
 export type UploadSekiPlayInput = {
   uri: string;
   mimeType?: string | null;
   fileName?: string | null;
+  /** Milliseconds normalized by the platform picker; upload rejects missing or invalid duration. */
+  durationMs?: number | null;
   title: string;
   /** Null when the clip is posted before an athlete is tagged. Donate stays off until then. */
   playerId?: string | null;
@@ -310,19 +315,13 @@ export function formatReelDeepLink(reelId: string, playerId?: string | null): st
 }
 
 /**
- * @purpose Turn a Vault storage token into a one-hour signed URL. Public https URLs pass through.
- * @param videoUrl `reels.video_url` from `reels_feed` (`reelvault:{path}` or a public URL).
+ * @purpose Resolve references and legacy public URLs through the selected media host; sign Vault per viewer.
+ * @param videoUrl `reels.video_url` from `reels_feed` (a reference or public URL).
  * @returns Playable URL, or '' when the caller is not allowed to read the private object.
  * @sideEffects Storage `createSignedUrl` on `reel_vault` when the value is a vault token.
  */
-export async function resolvePlaybackUrl(videoUrl: string | null | undefined): Promise<string> {
-  const raw = videoUrl?.trim() ?? '';
-  if (!raw.startsWith(REEL_VAULT_PREFIX)) return raw;
-  if (!isSupabaseConfigured) return '';
-  const path = raw.slice(REEL_VAULT_PREFIX.length);
-  const { data, error } = await supabase.storage.from(REEL_VAULT_BUCKET).createSignedUrl(path, 60 * 60);
-  if (error || !data?.signedUrl) return '';
-  return data.signedUrl;
+export async function resolvePlaybackUrl(videoUrl: string | null | undefined, storage: MediaStorageAdapter = mediaStorage): Promise<string> {
+  return resolveVideoMediaUrl(videoUrl, storage);
 }
 
 async function withPlaybackUrls(rows: ReelWithPlayer[]): Promise<ReelWithPlayer[]> {

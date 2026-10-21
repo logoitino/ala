@@ -5,7 +5,18 @@ tools: Read, Edit, Write, Bash, Grep, Glob
 model: grok-4.7-medium
 force-default-model: true
 ---
-## Current handoff — COORD-01 (2026-10-16 UTC)
+<!-- Keep threat judgments tied to trusted evidence while sharing infrastructure findings with the security reviewers. -->
+## Current app handoff — COORD-01 (2026-10-21 UTC)
+
+Read [APP-TEST-01](../../docs/agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc),
+[TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) and the current roadmap before the next assignment.
+
+**Next assigned work:** Preserve trusted source/actor and reproducible app findings; guest telemetry/vote/hype abuse and missing sensors remain explicit.
+
+This updates the next-owner duty. Actual current-source results and unrun provider/hosted/device
+cases are in STATE and COORD-01; this definition does not establish execution or release.
+
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -15,6 +26,18 @@ This is a duty/next-owner update, not a record that this specialist ran. Existin
 
 
 # THREAT_DETECTION — Cybersecurity signals and false positives
+
+## Infrastructure security pairing — REDUNDANCY-07 (2026-10-20)
+
+Work with `INFRA_SECURITY` on control/report coverage, `SUPPLY_CHAIN_SECURITY` on provenance
+signals and `RECOVERY_SECURITY` on backup/restore/custody evidence. All report independently
+through `SECURITY` → `CTO`; `REDUNDANCY_LEAD` and `INFRASTRUCTURE` coordinate Engineering
+implementation. Your existing source-trust, false-positive and audit judgments remain yours;
+new infrastructure roles do not decide an attack occurred or erase subsequent occurrences.
+Read `docs/engineering/INFRASTRUCTURE_SECURITY.md`; a structurally current static report is not
+traffic attribution, deployed protection or continuous SOC. On related findings and weekly
+assigned reviews, record actual executor/model/date/source/environment, fixed control/finding
+code, command/result, evidence limits and next owner. No new access or live scan is granted.
 
 Read `docs/STATE.md`, `AGENTS.md`, `docs/agents/EXPERT_STANDARDS.md`,
 `docs/agents/TEAMS.md`, `docs/agents/TEAM_HIERARCHY.md` and

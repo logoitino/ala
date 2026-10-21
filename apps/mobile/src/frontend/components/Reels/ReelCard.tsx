@@ -11,9 +11,7 @@
  */
 
 import { fetchReelAccountTags } from '@/lib/accountTags';
-import { useEventListener } from 'expo';
 import { useIsFocused } from 'expo-router';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Platform, Share, StyleSheet, Text, View, type ViewInstance } from 'react-native';
 import { BlurTargetView, BlurView } from 'expo-blur';
@@ -26,19 +24,18 @@ import Reanimated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
 import { ReelActionOverlay } from '@/components/Reels/ReelActionOverlay';
 import { PhotoStoryMedia } from '@/components/Reels/PhotoStoryMedia';
-import { createReelPlaybackController } from '@/components/Reels/reelPlayback';
+import { PlayBroadcastBanner } from '@/components/Reels/PlayBroadcastBanner';
+import { ReelVideoLayer } from '@/components/Reels/ReelVideoLayer';
 import { FilmerSheet } from '@/components/Filmers/FilmerSheet';
 import { ReelMoreSheet } from '@/components/Reels/ReelMoreSheet';
 import { ReportContentModal } from '@/components/Reels/ReportContentModal';
 import type { ReportReasonId } from '@/data/contentRights';
 import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
-import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
 import { HypeBurst } from '@/components/Effects/HypeBurst';
 import { useReelViewTracker } from '@/hooks/useReelViewTracker';
 import { VIEW_PLAY_MS, viewThresholdMs } from '@/lib/leaderboards';
@@ -85,7 +82,7 @@ import { clearReelVote, loadReelVotes, markReelVote, type ReelVoteMap } from '@/
 import { isVaultSealed } from '@/lib/vault';
 import { telemetry } from '@/services/TelemetryManager';
 import { offlineQueue } from '@/services/OfflineQueue';
-import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 import type { UsageSurface } from '@/hooks/useSurfaceUsage';
 
 export type ReelCardProps = {
@@ -835,202 +832,6 @@ function ReelCardImpl({
   );
 }
 
-type ReelVideoLayerProps = {
-  clipId: string;
-  videoUrl: string;
-  /** Current page: load the source. Off-screen mounted cards never touch the decoder. */
-  active: boolean;
-  /** Current page on a focused route (or `playbackActive`): play. */
-  focused: boolean;
-  locked: boolean;
-  muted: boolean;
-  /** Real playback state for the view counter, with the clip length once known. */
-  onPlaybackChange: (playing: boolean, durationSec: number | null) => void;
-  /** Recovery is rendered above the card's tap gesture, so Retry remains reachable. */
-  onPlaybackFailure: (clipId: string, retry: (() => void) | null) => void;
-  /** Clip reached its end while focused ("Full replay" flash). */
-  onLoopEnd: () => void;
-};
-
-/**
- * @purpose The expo-video player for a video Highlight: lazy source load, play / pause with focus and
- *   lock, TTFF and stall telemetry. Split out of `ReelCardImpl` so a photo story never creates a player.
- * @sideEffects expo-video player; `TelemetryManager` first-frame and stall events.
- */
-function ReelVideoLayer({ clipId, videoUrl, active, focused, locked, muted, onPlaybackChange, onPlaybackFailure, onLoopEnd }: ReelVideoLayerProps) {
-  const loadedUriRef = useRef('');
-  const latest = useRef({ clipId, videoUrl, active, focused, locked, muted, onPlaybackChange, onPlaybackFailure, onLoopEnd });
-  latest.current = { clipId, videoUrl, active, focused, locked, muted, onPlaybackChange, onPlaybackFailure, onLoopEnd };
-  const loadStartedAtRef = useRef<number | null>(null);
-  const firstFrameLoggedRef = useRef(false);
-  const stallStartedAtRef = useRef<number | null>(null);
-  const appPausedRef = useRef(false);
-  const lastMutedRef = useRef(muted);
-  const controllerRef = useRef<ReturnType<typeof createReelPlaybackController> | null>(null);
-
-  // Only the card on screen is given a file. A mounted neighbor stays on an empty player.
-  const videoPlayer = useVideoPlayer(active && videoUrl ? videoUrl : null, (instance) => { instance.loop = true; instance.muted = true; });
-  const resetLoad = useCallback(() => {
-    loadStartedAtRef.current = Date.now();
-    firstFrameLoggedRef.current = false;
-    stallStartedAtRef.current = null;
-    latest.current.onPlaybackFailure(latest.current.clipId, null);
-  }, []);
-
-  useEffect(() => {
-    loadedUriRef.current = '';
-    const controller = createReelPlaybackController({
-      player: videoPlayer,
-      native: Platform.OS !== 'web',
-      currentUri: () => latest.current.videoUrl,
-      canPlay: () => latest.current.active && latest.current.focused && !latest.current.locked,
-      onPlaybackChange: (playing, duration) => latest.current.onPlaybackChange(playing, duration),
-      onReady: () => {
-        if (loadStartedAtRef.current != null && !firstFrameLoggedRef.current) {
-          telemetry.track({ event_type: 'video_first_frame', video_id: latest.current.clipId, duration_ms: Date.now() - loadStartedAtRef.current });
-          firstFrameLoggedRef.current = true;
-        }
-        if (stallStartedAtRef.current != null) {
-          telemetry.trackVideoStall(latest.current.clipId, Date.now() - stallStartedAtRef.current);
-          stallStartedAtRef.current = null;
-        }
-      },
-      onError: () => {
-        stallStartedAtRef.current = null;
-        // Stable issue code only: media URLs and browser error messages never enter telemetry.
-        telemetry.trackIssue('video.playback.failed');
-        latest.current.onPlaybackFailure(latest.current.clipId, () => {
-          const current = latest.current;
-          if (!current.active || !current.focused || current.locked || !current.videoUrl) return;
-          resetLoad();
-          void controller.load(current.videoUrl);
-        });
-      },
-    });
-    controllerRef.current = controller;
-    return () => { controller.dispose(); controllerRef.current = null; };
-  }, [videoPlayer, resetLoad]);
-
-  useEffect(() => {
-    const controller = controllerRef.current;
-    if (!controller) return;
-    // The player hook drops the file when this card is not the one on screen.
-    if (!active || !videoUrl) {
-      loadedUriRef.current = '';
-      controller.pause();
-      return;
-    }
-    if (loadedUriRef.current === videoUrl) return;
-    loadedUriRef.current = videoUrl;
-    resetLoad();
-    void controller.load(videoUrl);
-  }, [active, videoUrl, videoPlayer, resetLoad]);
-
-  useEffect(() => {
-    videoPlayer.loop = true;
-    videoPlayer.muted = muted;
-    const muteChanged = lastMutedRef.current !== muted;
-    lastMutedRef.current = muted;
-    if (active && focused && !locked) {
-      appPausedRef.current = false;
-      if (muteChanged) controllerRef.current?.retryPlay();
-      else controllerRef.current?.requestPlay();
-    } else {
-      appPausedRef.current = true;
-      stallStartedAtRef.current = null;
-      controllerRef.current?.pause();
-    }
-  }, [active, focused, locked, muted, videoUrl, videoPlayer]);
-
-  useEventListener(videoPlayer, 'sourceChange', ({ source }) => {
-    const uri = typeof source === 'string' ? source : source && typeof source === 'object' ? source.uri ?? null : null;
-    controllerRef.current?.sourceChanged(uri);
-  });
-  useEventListener(videoPlayer, 'sourceLoad', ({ videoSource }) => {
-    const uri = typeof videoSource === 'string' ? videoSource : videoSource && typeof videoSource === 'object' ? videoSource.uri ?? null : null;
-    controllerRef.current?.sourceLoaded(uri);
-  });
-  useEventListener(videoPlayer, 'statusChange', ({ status, oldStatus, error }) => {
-    if (status === 'loading' && controllerRef.current?.isCurrentReady() && firstFrameLoggedRef.current && oldStatus === 'readyToPlay' && latest.current.active && latest.current.focused && !latest.current.locked && !appPausedRef.current && stallStartedAtRef.current == null) {
-      stallStartedAtRef.current = Date.now();
-    }
-    controllerRef.current?.statusChanged(status, error);
-  });
-  useEventListener(videoPlayer, 'playingChange', ({ isPlaying, oldIsPlaying }) => {
-    controllerRef.current?.playingChanged(isPlaying);
-    if (!controllerRef.current?.isCurrentReady() || !latest.current.active || !latest.current.focused || latest.current.locked || appPausedRef.current) return;
-    if (oldIsPlaying && !isPlaying && firstFrameLoggedRef.current && stallStartedAtRef.current == null) stallStartedAtRef.current = Date.now();
-    if (isPlaying && stallStartedAtRef.current != null) {
-      telemetry.trackVideoStall(latest.current.clipId, Date.now() - stallStartedAtRef.current);
-      stallStartedAtRef.current = null;
-    }
-  });
-  useEventListener(videoPlayer, 'playToEnd', () => {
-    if (controllerRef.current?.isCurrentReady() && latest.current.active && latest.current.focused && !latest.current.locked) latest.current.onLoopEnd();
-  });
-
-  if (!active) return <View style={styles.videoFill} />;
-  return <VideoView player={videoPlayer} style={styles.videoFill} contentFit="cover" nativeControls={false} surfaceType="textureView" allowsVideoFrameAnalysis={false} allowsPictureInPicture={false} playsInline />;
-}
-
-const BANNER_HOLD_MS = 3000;
-const BANNER_FADE_MS = 280;
-
-/**
- * @purpose Spring-in live callout over the focused Reel; swipe up or tap ✕ to dismiss, else fades after 3s.
- * @param headline Copy such as "⚡ BIG PLAY: Westlake Thunder!".
- * @param top Offset under the live score overlay.
- * @param onDone Clears hook state after the fade or a manual dismiss.
- * @sideEffects Light `impactAsync` via `SwipeableBannerWrapper` on swipe/tap dismiss.
- */
-function PlayBroadcastBanner({
-  headline,
-  top,
-  onDone,
-}: {
-  headline: string;
-  top: number;
-  onDone: () => void;
-}) {
-  const opacity = useSharedValue(0);
-  const rise = useSharedValue(-18);
-  const scale = useSharedValue(0.92);
-
-  useEffect(() => {
-    opacity.value = withSpring(1, SPRING_CARD);
-    rise.value = withSpring(0, SPRING_CARD);
-    scale.value = withSpring(1, SPRING_BOUNCE);
-    const fade = setTimeout(() => {
-      opacity.value = withTiming(0, { duration: BANNER_FADE_MS });
-      rise.value = withTiming(-8, { duration: BANNER_FADE_MS });
-    }, BANNER_HOLD_MS);
-    const done = setTimeout(onDone, BANNER_HOLD_MS + BANNER_FADE_MS);
-    return () => {
-      clearTimeout(fade);
-      clearTimeout(done);
-    };
-  }, [onDone, opacity, rise, scale]);
-
-  const style = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: rise.value }, { scale: scale.value }],
-  }));
-
-  return (
-    <View pointerEvents="box-none" style={[styles.playBannerSlot, { top }]}>
-      <SwipeableBannerWrapper accessibilityLabel="Dismiss play callout" onDismiss={onDone}>
-        <Reanimated.View
-          style={[styles.playBanner, style]}
-          accessibilityLiveRegion="assertive"
-          accessibilityLabel={headline}
-        >
-          <Text style={styles.playBannerLabel}>{headline}</Text>
-        </Reanimated.View>
-      </SwipeableBannerWrapper>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   page: {
     backgroundColor: colors.night,
@@ -1199,29 +1000,6 @@ const styles = StyleSheet.create({
     color: FOCAL.electricGold,
     fontSize: 12,
     fontWeight: '800',
-  },
-  playBannerSlot: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    zIndex: 12,
-  },
-  playBanner: {
-    alignItems: 'center',
-    backgroundColor: palette.midnightObsidian,
-    borderRadius: radii.lg,
-    borderWidth: 1.5,
-    borderColor: FOCAL.electricGold,
-    paddingHorizontal: 14,
-    paddingRight: 36,
-    paddingVertical: 12,
-  },
-  playBannerLabel: {
-    color: FOCAL.electricGold,
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-    textAlign: 'center',
   },
 });
 

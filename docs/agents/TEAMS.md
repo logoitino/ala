@@ -1,6 +1,82 @@
+<!-- Callable responsibility and escalation routing; original task receipts establish actual execution and acceptance. -->
 # Tapua'i department call sheet
 
-## Current main-checkout handoff — COORD-01 (2026-10-16 UTC)
+## Notification implementation handoff — NOTIFY-01 (2026-10-21 UTC)
+
+The owner approved the [notification architecture](../engineering/design/EMAIL_NOTIFICATIONS_DESIGN.md)
+with **all optional email categories off by default**, including welcome and donation emails;
+Auth verification/reset remains separate and available. [NOTIFY-01](WORK_QUEUE.md#notify-01--email-notification-inbox-and-profile-controls--2026-10-21-utc)
+is in progress locally. Reporting remains **NOTIFICATIONS → CREW → PROFILE → ENGINEERING → CTO**.
+No role, model pin or reporting edge changes; this handoff does not record a pinned specialist run.
+
+NOTIFICATIONS owns reviewed optional events, account-bound preferences, recipient inbox state,
+deduplication, suppression and bounded delivery repair. AUTH retains account activation,
+verified email and security recovery; COMMERCE with RECEIPTS/LEDGER/RECONCILIATION retains
+committed donation/refund authority. Notification work does not create another credit writer.
+PROFILE and ACTIVITY integrate their account/inbox surfaces after the actual admin checkpoint;
+ADMIN owns Expo `/admin/features` and `/admin/health` integration, with Next read-only.
+BACKEND/API retain schema, authorization and adapter ownership. SUPPORT/TELEMETRY pair on safe
+failure signals and repair evidence. Security, Data/Privacy, Minor/Custodial, Finance,
+LEGAL/COMPLIANCE, VOICE and QA retain their independent domain reviews.
+
+Local shared core/templates, SDK, staff and fan controls are implemented and tested. The local disabled-source admin checkpoint passed15:31:03UTC; fan regression233 suites/2,287 tests passed and local app checkpoint recorded15:50:54UTC. SQL25 plus1 concurrency cases remain unexecuted. Provider configuration,
+scheduling, real email delivery, hosted/device checks and policy/release acceptance are separate
+unverified gates. Native push remains SCALE-07; queue persistence is not device delivery.
+DOCUMENTATION/VP_OPERATIONS reconcile this broadened duty in the definition, registry, call
+sheet and queue; the checked hierarchy retains the same routing. Actual executor and checks
+belong in COORD-01, not an inference from these assignments.
+
+## Current app roadmap handoff — 2026-10-21 UTC
+
+The current registry has **115 callable definitions across 17 department labels**. The owner
+requested current-app roadmap and whole-team reconciliation. Start with
+[APP-TEST-01](WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc),
+[TEAM_STATUS](TEAM_STATUS.md) and [department plans](DEPARTMENT_PLANS.md); dated earlier snapshots
+below preserve their original counts and evidence. Current role assignments do not establish
+that115 agents ran, staff received messages or continuous monitoring started.
+
+Current priorities: Google test account setup/return; adult and guardian Stripe test-bank
+attachment after protected server prerequisites; actual short-video/photo upload, playback and
+cleanup; independent public-beta Security/Finance/Minor gates; Legal-first telemetry IDs; and
+athlete-story/usability checks. Latest executed app baseline is226suites/2,193tests and both app
+typechecks PASS. Development Google is disabled; real Google/bank/upload/native walkthroughs
+remain unrun. Longer videos stay off until costs are measured; live streaming stays deferred.
+
+CTO assigns one accountable lead; specialists report to that lead; leads report to CTO.
+DOCUMENTATION synchronizes feature handoffs; VP_OPERATIONS reconciles role/protocol/priority
+changes. Domain reviewers retain independent acceptance. Actual outside-session Codex execution,
+checked source, results and claim release are recorded in [COORD-01](COORD-01.md).
+
+
+## Infrastructure security coordination — REDUNDANCY-07 (2026-10-20)
+
+The current registry has **115 callable definitions across 17 department labels**. Security adds
+`INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY` and `RECOVERY_SECURITY`, all reporting to `SECURITY` →
+`CTO`. `REDUNDANCY_LEAD` remains the Engineering migration coordinator, with `INFRASTRUCTURE`
+technical context. Existing RLS/session/threat, Recovery, Privacy/Data/Finance and independent QA
+authority remains. No second lead, access grant, provider operation or continuous SOC is created.
+
+Actual owner-authorized Codex `/root/cloud_deployment` performed this VP_OPERATIONS responsibility
+reconciliation in the three new definitions, four existing Security/Engineering definitions,
+registry, TEAMS, TEAM_HIERARCHY, DEPARTMENT_PLANS and EXPERT_STANDARDS. Exact checks/results,
+independent review, unresolved gaps and claim release belong in [REDUNDANCY-07](REDUNDANCY-07.md).
+This outside-session execution does not establish that the definitions' pinned Grok model ran.
+The dated COORD-01 counts and evidence below remain historical.
+
+| Security reviewer | Scope | Next owner / cadence |
+| --- | --- | --- |
+| `INFRA_SECURITY` | Network/IAM/TLS/host controls and complete infrastructure security inventory/report coverage | SECURITY accepts findings; Engineering domain owner implements through REDUNDANCY_LEAD/INFRASTRUCTURE; on related changes, weekly assigned review and before authorized deployment/cutover |
+| `SUPPLY_CHAIN_SECURITY` | Locked dependencies, upstream/image provenance, CI trust and offline material | SECURITY accepts trust findings; CI/RELEASE/EXIT_* implement; on supply-chain changes, weekly assigned review and before authorized build/offline move |
+| `RECOVERY_SECURITY` | Private backup/restore isolation, integrity, original evidence, rotation and custody | SECURITY accepts recovery findings; RECOVERY/EXIT_* implement; on recovery changes/receipts, weekly assigned review and before authorized cutover |
+
+Read [INFRASTRUCTURE_SECURITY](../engineering/INFRASTRUCTURE_SECURITY.md).
+`pnpm security:infra:report` reads fixed scoped findings; `pnpm security:infra:check` verifies
+source/report currency; `pnpm security:infra:test` runs local tests. Structural coverage keeps
+securityStatus=not-established, operationalAcceptance=false and readyToCutOver=false. Manual and
+hosted evidence remains independent. Each receipt records actual executor/tool/model/date,
+source/environment/paths, commands/results, control/severity/limits, gaps and next owner.
+
+## Earlier main-checkout handoff — COORD-01 (2026-10-16 UTC)
 
 [TEAM_STATUS](TEAM_STATUS.md) is the all-role briefing and job-function mapping; [COORD-01](COORD-01.md) records actual outside-session executors, reviewed paths, checks and remaining issues. There are **107 callable definitions across 17 department labels**. This review does not mean107 specialists ran, staff are hired or a scheduler is installed. Existing reporting, model pins and independent Finance/Legal/Privacy/Security/QA authority remain.
 
@@ -174,7 +250,7 @@ These are the departments a company actually has. The names under **Builds it** 
 | **Design (UX/UI)** | How every screen looks, moves, and reads. | `DESIGN` · `ACCESSIBILITY` · `MOTION` · `DESIGN_TOOLING`; `AURA` keeps tier math | Daylight canvas, tab colors, springs, one primary action per sheet, empty vs error. Local UX-06 followed by newer Calm Island source; configured-theme/native/accessibility checks remain open; TOOL-01 MCP tooling (`.mcp.json`, [TOOLING.md](../engineering/TOOLING.md)). Phone share sheet for a filled Rally and a board leader (M8-01, owner 2026-10-16) | Feel check on a real phone with Quality (M9) | Backer wall, first-backer and hometown badges, a bigger rivalry takeover (M8). Fan digital signature on the Aura card |
 | **Engineering** | The app and the admin tools — industry practice, no shortcuts. The database is its own team. | `ENGINEERING` lead (reports to `CTO`) · `FULLSTACK` · `DOCUMENTATION` · `SUPPORT` · screen squads (incl. `PHOTO_STORIES` under `HIGHLIGHTS`). Database: `BACKEND` | ADM-01/02 and consolidated Expo admin accepted locally; Finance & Books and DETECT-02 implemented locally. STANDARD-01 innovation/handoff standard documented and accepted; COORD-01 synchronizes actual evidence. Beyond/CHAL and earlier photo-story/account-tag SQL remain unapplied; Drip commerce is gated, with Profile entry retained | Integrate scoped repairs and evidence through assigned leads; approved staging SQL, real admin/operator sessions, device acceptance and video-host decision remain separate gates | Drip marketplace (Wave 1). Fan digital signature on the Aura card. Low-view lane (M3). CHAL-01b Vault/try-video/season extensions; Ask an athlete remains gated (M4). Showcase link (M6). Game-day gigs (M5, Wave 3). No licensed music picker |
 | **Database** | Schema, migrations, RPCs, Storage layout. | `BACKEND` (reports to `CTO`) · `DATABASE_MIGRATIONS` · `STORAGE`. `SECURITY` reviews RLS | Canonical `schema.sql`. Beyond/CHAL and earlier photo-story/account-tag SQL written, not applied | Hosted replay only when the owner asks | Domain-local export/erasure contracts exist; broader account/provider retention and deletion acceptance remains with counsel/Product |
-| **Security** | Authorization, sessions, secrets and independent cybersecurity review. | `SECURITY` (reports to `CTO`) · `RLS_SECURITY` · `SESSION_SECURITY` · `THREAT_DETECTION` | DETECT-02 source trust, protected false-positive review and transactional audit verified locally (144 SQL replay checks). Client `tips`, public profile fields, parent payout policy and unapplied GPS/storage policies remain open | Approved hosted SQL and negative authorization/delivery tests; protected review and unsigned-audit trust limits stay explicit | Repeat on new sensitive data or capabilities |
+| **Security** | Authorization, sessions, secrets and independent cybersecurity review. | `SECURITY` (reports to `CTO`) · `RLS_SECURITY` · `SESSION_SECURITY` · `THREAT_DETECTION` · `INFRA_SECURITY` · `SUPPLY_CHAIN_SECURITY` · `RECOVERY_SECURITY` | DETECT-02 source trust, protected false-positive review and transactional audit verified locally (144 SQL replay checks). Client `tips`, public profile fields, parent payout policy and unapplied GPS/storage policies remain open | Approved hosted SQL and negative authorization/delivery tests; protected review and unsigned-audit trust limits stay explicit | Repeat on new sensitive data or capabilities |
 | **IT infrastructure** | Staging, CI, releases, recovery, cost, game day; pairs with Engineering Support on service detection. | `OPERATIONS` (reports to `CTO`) · `OPERATOR` · `RELEASE` · `CI` · `RECOVERY` · `COST_OPERATIONS` | Sideline PIN, GPS check-in, score and clock. Expo `/admin` is where staff edit. The Next portal is read-only oversight | The operator PIN is for internal test only. It is not a public login | Paid game-day coverage and a light game line (M5). No published uptime SLA |
 | **Finance** | Money in, the split, receipts, and money out. | `COMMERCE` lead · `CHECKOUT` · `LEDGER` · `RECONCILIATION` · `REFUNDS` · `CONNECT` · `CUSTODIAL` · `RALLY` · `DONATION_THANKS` · `BILLING` · `DRIP` · `WISHLIST` · `RECEIPTS`, with `BACKEND` | Staged Amount → Options → Review Donate popup (90 / 10, optional tip for Tapua'i starts at No tip), gear goals, Rally, receipts. Payouts stay blocked. Drip is off | One credit path: the webhook writes the donation, then the app stops inserting it. Parent is the payee. A server balance before any payout | Drip marketplace (Wave 1). Team gift and booster match (counsel first). Pathway labels only, no fund held here (M7). Filmer cash from Tapua'i's own budget (M11) — nothing in the UI mentions cash |
 | **Finance and Accounting** (Office of the CFO, reports to the owner) | The books, every tax area, cash held for families and the financial plan. Taxes are owned by `TAX`. | `CFO` lead · `CONTROLLER` (`BOOKKEEPER`, `INTERNAL_CONTROLS`) · `TAX` (`INFO_RETURNS`, `SALES_TAX`) · `TREASURY` · `FPA`; data built by `FINANCE_DATA` (Engineering, assigned by the CTO). Chain of command and calendars: [FINANCE_OPERATIONS.md](../company/FINANCE_OPERATIONS.md) | Finance & Books hub at `/admin/books` (Overview, Transactions, Statements, Taxes, Reconcile, Data, Record & close, Export); data catalog and reconciliation tests in `pnpm check`; W0-10 staging rehearsal | P1-08: bank account, QuickBooks company, CPA, monthly close from the first live month | Outside audit, investor reporting, a staffed finance team |
@@ -224,7 +300,7 @@ The dev team produces the app to an industry bar: typed boundaries, least-privil
 | --- | --- | --- | --- |
 | **Engineering lead** | `ENGINEERING` | `CALL: ENGINEERING` | Takes the CTO's assignment and routes it to a specialist on this team. |
 | **Database team** | `BACKEND` | `CALL: BACKEND` | Reports to the CTO. Postgres, RLS files, RPCs, migrations, Storage, Realtime, Edge Functions, server Stripe secrets. |
-| **Security team** | `SECURITY` | `CALL: SECURITY` | Reports to the CTO. Assigns `RLS_SECURITY` and `SESSION_SECURITY`. |
+| **Security team** | `SECURITY` | `CALL: SECURITY` | Reports to the CTO. Assigns RLS/session/threat and INFRA_SECURITY/SUPPLY_CHAIN_SECURITY/RECOVERY_SECURITY review. |
 | **Full-stack developer** | `FULLSTACK` | `CALL: FULLSTACK` | Expo screens, hooks, lib clients, and Expo API routes end to end — without leaking secrets or inventing a second architecture. |
 | **Documentation specialist** | `DOCUMENTATION` | `CALL: DOCUMENTATION` | Synchronize affected system docs, all team contracts and code-documentation evidence in the same turn. |
 | **Screen squads** | `HIGHLIGHTS` · `LOCAL` · `SPOTLIGHT` · `PROFILE` · `AUTH` · `ADMIN` · `OPERATOR` · `AURA` | `CALL: <SQUAD>` | One surface when the change stays there. |
@@ -678,6 +754,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 9. Assign a task-triggered `DOCUMENTATION` handoff for every active feature/fix owner. Owners supply exact changed paths, behavior/APIs, source version/environment and dated verification evidence; DOCUMENTATION reconciles affected contracts, architecture, tester journeys and state/history through agreed shared claims. Assign `VP_OPERATIONS` when roles/protocols/priorities change, including a completed handoff changing next work. Record actual executor, checked docs/roles/priorities, changed paths, command/result/date, unresolved drift and next owner in the existing ledger; release claims after integration/checks. [COORD-01](COORD-01.md) records this pass's actual Codex executors. Definitions and CI passes do not prove specialist execution or continuous workers; no unattended scheduler is configured. Preserve generated facts and approved legal conclusions.
 11. **Data control point (2026-10-13).** `DATA_GOVERNANCE` (reports to the CTO) is the control person for data and functions. Before landing a new or changed table, column, view, database function, export or Storage path, the owning specialist adds or updates its entry in `docs/engineering/data-ownership.json`, regenerates `docs/engineering/DATA_MAP.md` (`node scripts/data-map.mjs`) and gets DATA_GOVERNANCE's review; `pnpm data:map:check` fails otherwise. Anything that looks dead goes to DATA_GOVERNANCE, never straight to deletion; archiving needs the owner. Handbook: [DATA_GOVERNANCE.md](../engineering/DATA_GOVERNANCE.md).
 12. **Infrastructure awareness (2026-10-14, owner).** `INFRASTRUCTURE` (Engineering, the scalability team's dev member) must always know what we run and how integrated it is. Any change that adds or removes a dependency, environment variable, Edge Function or API route, Storage bucket, database extension, Realtime publication, CI workflow or build profile — or changes how deeply the app calls Supabase — updates `docs/engineering/infrastructure.json` and regenerates `docs/engineering/INFRASTRUCTURE_REGISTER.md` in the same change (`pnpm infra:register:check` fails otherwise), and INFRASTRUCTURE reviews the diff. Agents who need infrastructure context ask INFRASTRUCTURE; when a register change affects a team that did not ask, INFRASTRUCTURE tells that team's lead. Scalability recommendations go through the Growth and Capacity Review with INFRASTRUCTURE's technical context; the CTO recommends and the owner decides.
+13. **Redundancy and exit plan stays current (2026-10-19, owner).** Any app change keeps the move-off-Supabase plan and backup version current automatically: `scripts/exit-map.mjs` regenerates `docs/engineering/EXIT_INFRASTRUCTURE_MAP.md` (plan version = what the app uses on Supabase), the project Stop hook runs it at the end of every Claude session, and `pnpm exit:map:check` (in `pnpm check` and CI) fails on a stale map, a coverage gap (Edge Function outside the self-host allowlist, unmapped Auth method) or an unannounced change. The session that made the change announces it with `pnpm exit:map --acknowledge --by "<session>"`; `EXIT_SYNC` owns that notice in `docs/agents/EXIT_CHANGE_LOG.md`, routed to `EXIT_DATABASE` / `EXIT_SERVICES` / `EXIT_CLOUD` and the partner roles, who record their review. `REDUNDANCY_LEAD` closes notices. Charter: [REDUNDANCY_TEAM](../engineering/REDUNDANCY_TEAM.md).
 10. **Concurrent sessions (2026-10-12).** Another tool's session (Codex, Cursor, a person) may edit the same tree while an agent works. Codex and people are not registry agents, and their edits do not change who owns a file.
     - **Claim.** Before editing a shared file, claim it in the task tracker's Status table (for example the Status table in `docs/agents/ADM-01.md`): name the session, the files, and the time. Release the claim in the same table when done.
     - **Check times.** Check the file's modified time (`stat` or `ls -l`) before each edit. If it changed since you read it, read it again before you write.
@@ -687,7 +764,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 
 ## Functional specialist roster
 
-**107 callable agents**. The CTO coordinates app and data work and the CFO coordinates Finance and Accounting (books, taxes, cash, plans); both report to the Facilitator. `VP_OPERATIONS` (VP of Operations) reports to the CTO and keeps roles, protocols, and priorities current. All rows map to actionable definitions; exact Now/Next/Later tasks live in each definition. Existing product surface sections above remain the route inventory.
+**115 callable agents**. The CTO coordinates app and data work and the CFO coordinates Finance and Accounting (books, taxes, cash, plans); both report to the Facilitator. `VP_OPERATIONS` (VP of Operations) reports to the CTO and keeps roles, protocols, and priorities current. All rows map to actionable definitions; exact Now/Next/Later tasks live in each definition. Existing product surface sections above remain the route inventory.
 
 | Call | Department | Reports to | Owns / primary function | Definition |
 | --- | --- | --- | --- | --- |
@@ -737,6 +814,11 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `GROWTH_ANALYTICS` | Marketing | `MARKETING` | Sole Growth and Capacity Review packet/follow-up owner: accepted product success, service capacity/recovery and costs; unknown sources stay unknown. | [growth-analytics.md](../../.claude/agents/growth-analytics.md) |
 | `HIGHLIGHTS` | Engineering | `ENGINEERING` | Highlights feed and media specialist integration | [highlights.md](../../.claude/agents/highlights.md) |
 | `INFRASTRUCTURE` | Engineering | `ENGINEERING` | Always aware of hosting, services, environments and integration depth (`INFRASTRUCTURE_REGISTER`, `PORTABILITY`); standing dev member of the Growth and Capacity Review; reviews every infrastructure diff and tells affected teams. | [infrastructure.md](../../.claude/agents/infrastructure.md) |
+| `REDUNDANCY_LEAD` | Engineering | `ENGINEERING` | Leads the Redundancy & Exit team: keeps the redundant database plan and the move off Supabase to AWS / Azure ready as the app changes (`REDUNDANCY_TEAM`, `EXIT_INFRASTRUCTURE_MAP`). | [redundancy-lead.md](../../.claude/agents/redundancy-lead.md) |
+| `EXIT_SYNC` | Engineering | `REDUNDANCY_LEAD` | Keeps the backup version and exit plan in step with every app change (generated map, Stop hook, CI) and announces each change to the agents who must act (`EXIT_CHANGE_LOG`). | [exit-sync.md](../../.claude/agents/exit-sync.md) |
+| `EXIT_DATABASE` | Engineering | `REDUNDANCY_LEAD` | The different database: target PostgreSQL (self-hosted or RDS / Aurora / Azure Flexible Server), restore list, parity and privilege reconciliation (`infrastructure/migration`). | [exit-database.md](../../.claude/agents/exit-database.md) |
+| `EXIT_SERVICES` | Engineering | `REDUNDANCY_LEAD` | Replacements for Auth, Data API, Storage, Realtime, functions and email on AWS / Azure; self-host allowlist and the `lib/` seam (`infrastructure/supabase`). | [exit-services.md](../../.claude/agents/exit-services.md) |
+| `EXIT_CLOUD` | Engineering | `REDUNDANCY_LEAD` | AWS / Azure infrastructure as code, hosts, containers, network, TLS, secrets and monitoring (`infrastructure/terraform`, `infrastructure/containers`). | [exit-cloud.md](../../.claude/agents/exit-cloud.md) |
 | `INCIDENT_TRIAGE` | Engineering support | `SUPPORT` | Own severity, sanitized issue fingerprints, duplicate grouping, reproduction and domain-owner handoff. | [incident-triage.md](../../.claude/agents/incident-triage.md) |
 | `INFO_RETURNS` | Finance and Accounting | `TAX` | CPA/provider tax-document and 1099 review; VERIFY-02 keeps SSNs only at Stripe, never Tapua'i; no collection/filing grant. | [info-returns.md](../../.claude/agents/info-returns.md) |
 | `INTERNAL_CONTROLS` | Finance and Accounting | `CONTROLLER` | Data completeness: finance data catalog coverage, source-to-ledger reconciliation, closed-month drift, sign-off before close. | [internal-controls.md](../../.claude/agents/internal-controls.md) |
@@ -749,7 +831,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `MOBILE_PERFORMANCE` | Engineering | `ENGINEERING` | Feed rendering, media memory, startup and measured interaction performance | [mobile-performance.md](../../.claude/agents/mobile-performance.md) |
 | `MODERATION` | Trust and Safety | `TRUST_SAFETY` | Own report reasons, immediate-hide versus review threshold, review evidence and appeals design. | [moderation.md](../../.claude/agents/moderation.md) |
 | `MOTION` | Design | `DESIGN` | Maintain motion tokens, haptics, sheet geometry and reduced-motion behavior. | [motion.md](../../.claude/agents/motion.md) |
-| `NOTIFICATIONS` | Engineering | `CREW` | crew_push_queue privacy, deduplication and authorized delivery design | [notifications.md](../../.claude/agents/notifications.md) |
+| `NOTIFICATIONS` | Engineering | `CREW` | Reviewed optional events, account-bound preferences, recipient inbox, suppression/deduplication and bounded delivery repair; admin/Health contract with source authority retained by AUTH/COMMERCE. | [notifications.md](../../.claude/agents/notifications.md) |
 | `OFFLINE` | Engineering | `ENGINEERING` | Own durable action queue, retry policy, duplicate prevention and logout boundary behavior. | [offline.md](../../.claude/agents/offline.md) |
 | `ONBOARDING` | Engineering | `AUTH` | Own first-open onboarding, birth-month/year age confirmation, athlete claim and pending action resume. | [onboarding.md](../../.claude/agents/onboarding.md) |
 | `OPERATIONS` | IT infrastructure | `CTO` | Coordinate staging readiness, releases, reliability, observability and game-day operations. | [operations.md](../../.claude/agents/operations.md) |
@@ -778,9 +860,12 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `RUNTIME_CONFIG` | Engineering | `ADMIN` | Own draft/published flag states, pause behavior, role lenses and fan control coverage. | [runtime-config.md](../../.claude/agents/runtime-config.md) |
 | `SALES_TAX` | Finance and Accounting | `TAX` | Sales and use tax for Drip and Vault: nexus watch, sales by month and the collection plan. | [sales-tax.md](../../.claude/agents/sales-tax.md) |
 | `SCHOOL_PARTNERS` | Partnerships | `PARTNERSHIPS` | Own school onboarding requirements, AD/coach confirmation workflow and marks permission records design. | [school-partners.md](../../.claude/agents/school-partners.md) |
-| `SECURITY` | Security | `CTO` | Critical review of RLS, sessions, secrets and storage authorization. Assigns `RLS_SECURITY`, `SESSION_SECURITY` and `THREAT_DETECTION`. | [security.md](../../.claude/agents/security.md) |
+| `SECURITY` | Security | `CTO` | Independent authorization/session/threat and infrastructure/supply-chain/recovery review; assigns all six Security specialists. | [security.md](../../.claude/agents/security.md) |
 | `SESSION_SECURITY` | Security | `SECURITY` | Own JWT/session handling, role boundaries, OAuth redirect integrity and server identity checks. | [session-security.md](../../.claude/agents/session-security.md) |
 | `THREAT_DETECTION` | Security | `SECURITY` | Trusted signals, false positives, audit integrity and safe recovery with Dev. | [threat-detection.md](../../.claude/agents/threat-detection.md) |
+| `INFRA_SECURITY` | Security | `SECURITY` | Network/IAM/TLS/host controls and complete portable-infrastructure security coverage/report. | [infra-security.md](../../.claude/agents/infra-security.md) |
+| `SUPPLY_CHAIN_SECURITY` | Security | `SECURITY` | Lockfiles, upstream/image provenance, CI trust and offline installation material. | [supply-chain-security.md](../../.claude/agents/supply-chain-security.md) |
+| `RECOVERY_SECURITY` | Security | `SECURITY` | Private backup/restore isolation, integrity, key rotation and independently held custody evidence. | [recovery-security.md](../../.claude/agents/recovery-security.md) |
 | `SHARED_CONTRACTS` | Engineering | `ENGINEERING` | Shared RPC/domain types, generated database type provenance and mobile/admin contract parity | [shared-contracts.md](../../.claude/agents/shared-contracts.md) |
 | `SHARING` | Engineering | `PROFILE` | Own public athlete QR, share links, deep links and safe preview content. | [sharing.md](../../.claude/agents/sharing.md) |
 | `SPONSOR_ADS` | Partnerships | `PARTNERSHIPS` | Own approved sponsor placement, booster tier display and role portal consistency. | [sponsor-ads.md](../../.claude/agents/sponsor-ads.md) |

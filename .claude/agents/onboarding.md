@@ -8,7 +8,17 @@ force-default-model: true
 
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current handoff — COORD-01 (2026-10-16 UTC)
+## Current app handoff — COORD-01 (2026-10-21 UTC)
+
+Read [APP-TEST-01](../../docs/agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc),
+[TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) and the current roadmap before the next assignment.
+
+**Next assigned work:** Verify Google creation with existing age rules and preserved drafts; bank attachment stays optional and later.
+
+This updates the next-owner duty. Actual current-source results and unrun provider/hosted/device
+cases are in STATE and COORD-01; this definition does not establish execution or release.
+
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 

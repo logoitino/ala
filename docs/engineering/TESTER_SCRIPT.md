@@ -1,3 +1,4 @@
+<!-- Test procedures distinguish historical wave checks from current source, provider and device acceptance. -->
 # Tester script — Phase 3 internal wave
 
 For the trusted first group (team, family, friendly coaches and boosters). Stripe is in **test
@@ -18,7 +19,413 @@ perfect. "This felt slow" counts as a bug.
 1. Install from the link you were sent (iPhone needs your device registered first).
 2. Check the installed build against STATE §0. The current internal preview offers the
    test account `demo@tapuai.app`; use its account-sheet action or create your own account.
-3. Confirm you are 13 or older when creating an account; sign-in does not ask again.
+3. On a current build, account creation uses birth month/year and the existing age rules;
+   ordinary sign-in does not repeat the completed check. Use synthetic dates for the focused rehearsal below.
+
+## APP-TEST-01 — local execution, partial checks — 2026-10-21 UTC
+
+The owner confirmed Google OAuth setup is **not completed**. Successful Google signup/sign-in
+and native return remain **UNRUN**. The prepared Google guide below is still the next operator
+step. Root Codex supplied these actual local results; they do not accept signed-in bank setup,
+Stripe operation, SQL behavior or public release.
+
+| Executed local check | Observed result | Scope accepted / remaining evidence |
+| --- | --- | --- |
+| `POST http://localhost:8086/api/create-stripe-account`, no Authorization header, JSON body `{}` | HTTP 401 JSON with safe sign-in recovery copy. | Unauthenticated local API request denied; signed-in adult/guardian target and provider cases remain unrun. |
+| `POST http://localhost:8086/api/create-payment-intent`, no Authorization header, JSON body `{}` | HTTP 401 JSON with safe sign-in recovery copy. | Unauthenticated local API request denied; quotes, payment creation, exactly-once credit and receipts remain separate gates. |
+| `POST http://localhost:8086/api/create-payout`, no Authorization header, JSON body `{}` | HTTP 401 JSON with safe sign-in recovery copy. | Unauthenticated local API request denied; this does not exercise the authenticated payout 503 gate or move money. |
+| Offline Connect SQL readiness attempt | Command exited 2: external PGlite engine missing; **0 SQL cases executed**, 35 checks prepared. | **BLOCKED**, with no SQL PASS or concurrency/locking acceptance. A prepared case count is not an executed result. |
+| Existing Demo Fan through the ordinary Email → Sign in app UI, in the owned `http://[::1]:8086` rehearsal | Sign-in succeeded, the account sheet closed and the interrupted Highlight upload draft resumed. | Existing email-account sign-in and that draft resume only. No Use test account/signup button or new account was used; Google sign-in remains unrun. The birth prompt used Not now, with no birth-record write. No upload/publication occurred in this check. |
+| Real library-picker opening from that resumed draft | The picker opened, then closed without selecting the 8s, 46s or padded over-8MiB fixtures. | **PARTIAL:** picker opening only. Actual file metadata, byte/duration rejection, app decoding, upload and publication remain **UNRUN**. |
+| Initial owned IPv6 browser `/auth/callback` with synthetic `access_denied` and diagnostic query fields | Safe failure/recovery controls rendered and the diagnostic was absent from the page body, but the query remained in the address. | **Original failure, repaired below.** Safe body text alone did not accept callback recovery. No real OAuth credential or successful Google return was used. |
+| Repaired synthetic failed callback, then Back to app and browser Back/Forward | Callback settled at `/auth/callback` with HTTP 200, query cleared, fragment empty, diagnostic absent and recovery visible. Back to app reached Home; browser Back reached the clean callback and Forward reached clean Home. | **PASS for this local synthetic recovery/navigation boundary.** Successful Google, native return and restricted-history cleanup remain separate unrun checks. Not now dismissed the birth overlay without a birth-record write. |
+
+Root's original local HTTP receipt is `/tmp/ala-app-http-auth-20261021.json`; the offline
+Connect readiness receipt is `/tmp/app-test-01-connect-readiness.json`, with its original log.
+Codex `/root/connect_kyc_review` independently reproduced the three HTTP 401 denials at
+**2026-10-21 04:15:21 UTC**. The actual isolated SQL attempt by Codex `/root/connect_client_flow`
+at **2026-10-21 04:12:17 UTC** used Node **24.21.0** and
+`node apps/mobile/src/backend/db/connectAccountContext.replay.mjs /tmp/tapuai-pglite-verified-dbtwu6km`.
+The required external engine was unavailable. Original source SHA256 prefixes were schema `d90fe5186cb3`, harness
+`1757aec78304`, and synthetic stubs `a077c5a3968d`.
+
+The isolated browser rehearsal uses `http://[::1]:8086`, because Metro's IPv6 binding refused
+`127.0.0.1`. It is distinct from the earlier signed-in `localhost:8086` navigation and from the
+Google guide's allowlisted-origin instructions. No successful Google return or acceptance of
+the IPv6 origin by the Google/Supabase allowlist is established. An additional Google authorize
+HTTP probe was blocked by automatic approval review and did not execute.
+
+Codex `/root/media_flow_map` performed the existing-email sign-in, draft resume and picker
+opening in owned tab `1335872973`; screenshot `/tmp/ala-media-existing-test-signin.png`.
+The temporary input-interception action executed with an automatic-review caution, not a
+rejection; no fixture was selected. The agent removed the handler, closed the picker/draft and
+confirmed no file input or password field remained before releasing the tab to root.
+
+Root Codex repaired `apps/mobile/app/auth/callback.tsx` and its tests, preserving browser history
+state and cleaning the Router's stored return path. Final callback SHA256 is
+`2e074a0cfc4deac4cda5bcbaddfaa8f80281ba616e82e18358b6bce8f250454c`; test SHA256 is
+`fe78b2681bc31d26582468db9bfd0f1e3bf08bf6f40c0536c1f0d5a58444f840`.
+Independent Codex `/root/connect_kyc_review` recorded **56 tests PASS in 1.788s**, accepted at
+**2026-10-21 04:26:52 UTC**. Root's actual full mobile run recorded **226 suites / 2,196 tests PASS
+in 151.564 seconds**, exit 0, in `/tmp/ala-app-callback-full-mobile.log`; both app typechecks and
+nine scoped app/documentation guards PASS. Independent data-map helper checks passed 4 tests,
+with 0 generated-map rule failures. These source checks do not execute Connect SQL or Stripe.
+
+Root viewed the final visible-recovery screenshot,
+`/tmp/ala-app-callback-recovery-fixed-20261021.png` (25,777 bytes, SHA256
+`35249508e3cd8c2aaa4b7ace146819476d143f1d35e554dcfa6920e85139d0e1`). The earlier failed
+screenshot is `/tmp/ala-app-callback-recovery-20261021.png`. Recovery remains available if history
+or navigation access is restricted, but address cleanup in that restricted environment is
+best-effort and was not verified by this browser run.
+This run used a query-based synthetic error; a warm fragment-only routing transition was not tested.
+
+Root also prepared the credential-free private bank template at
+`~/.config/ala-sports/app-test-server.env` with mode 0600; it was not filled or activated. Google
+configuration, compatible hosted SQL/Edge, signed-in bank/checkout/payout, selected-file media
+and native acceptance remain open. No roles, model pins, priorities, schema, Storage paths,
+exports or data collection changed in this repair. Actual final integration belongs in
+[COORD-01](../agents/COORD-01.md).
+
+The earlier 226-suite/2,193-test source baseline and signed-in localhost navigation remain dated
+separately below. Their original receipts are not the final callback repair run.
+
+## NOTIFY-01 — notification settings, inbox and staff rehearsal
+
+**Prepared 2026-10-21 UTC; this walkthrough is not a new execution or final acceptance receipt.**
+Use the current [implementation plan](design/EMAIL_NOTIFICATIONS_IMPLEMENTATION_PLAN.md) and
+[local admin checkpoint](evidence/NOTIFY-01-admin.md) for actual source/test evidence. The
+disabled-source local staff checkpoint preceded fan implementation. A local synthetic RPC
+fixture is different from the real connected development database: notification migrations
+are **written, not applied**, and their replay declares **25 SQL cases plus 1 concurrency
+case, 0 executed**. Missing PostgreSQL/PGlite prevented SQL execution; mocks do not accept
+RLS, triggers, transaction atomicity or locking.
+
+All optional email categories start **Off**, including welcome and donation emails.
+Verification/password reset uses the separate Auth service and is not disabled by optional
+choices; this does not establish configured Auth SMTP delivery. New preferences govern only
+the new connected notification sources. Currently only the account source is connected in
+local source, and all new delivery channels/categories start paused. Existing Crew alerts,
+workout invitations, donation history and pending tags retain their own controls and views.
+Phone push remains SCALE-07; there is no native delivery claim.
+
+### Read-only browser walkthrough against the current environment
+
+For root's browser run, inspect navigation and missing/paused states. **Do not save preferences,
+change staff configuration, retry jobs, create donations or invoke providers.** Keep private
+account addresses and diagnostics out of shared evidence. Real-environment mutation and
+delivery checks remain UNRUN unless a later explicitly authorized receipt records them.
+
+1. As the current signed-in account, open **Profile → Account → Notifications**. Check the
+   security explanation and read-only address/verification status; no change-email action is
+   offered. With missing notification SQL, expect **“Notifications are not available yet.”**,
+   a Reload settings action and no invented defaults or working Save choices. Close and reopen;
+   ordinary Profile/Account navigation must still work.
+2. Open **Activity → Notifications**. A missing source must show unavailable, not
+   “No notifications yet” or a fabricated unread count. Existing donation/invitation/tag
+   sections remain separate. Refresh must not erase their factual history. A guest must not
+   receive another account's inbox or preference controls.
+3. With an authorized test admin, open **`/admin/features` → Notifications** and
+   **`/admin/health` → Notification delivery**. Missing configuration/SQL must remain
+   unavailable rather than zero successful deliveries. The staff desk describes synthetic
+   previews, paused mail and missing unsubscribe support; it sends no email. Missing server
+   configuration must not produce working save/retry controls. Next oversight remains read-only.
+4. Record origin, build/source version, actor class, date, visible states and tool limitations.
+   A navigation screenshot does not prove preference persistence, database permissions,
+   provider delivery or native behavior.
+
+### Controlled local fixture checks, then separately authorized hosted checks
+
+Run mutations below only through synthetic test repositories/RPC fixtures, or later in an
+explicitly approved test environment with applied reviewed SQL and designated accounts.
+These procedures are prepared; no new manual result is claimed here.
+
+| Check | Expected behavior |
+| --- | --- |
+| Initial preferences and paused sources | Every optional category Email is Off; games In-app is Off. Master choices preserve category choices and do not prove delivery. Unconnected/paused categories cannot be switched on; an existing On choice can still be switched off. Unknown categories do not inherit On. |
+| Save, failure and revision conflict | Edits remain a draft until Save choices confirms them. Failed saves never claim Saved. A concurrent revision conflict requires Reload settings before reconfirming; no silent cross-device overwrite. Pausing preserves history/choices; resuming is future-only without suppressed-event backfill. |
+| Account lifetime | Delay a read/save, close/unmount, switch A→B→A or invoke an old callback. No old preferences, notice, inbox row or write may attach to the new Auth lifetime. A guest/other account cannot access private records. |
+| Inbox history and pagination | Use synthetic account items. Inbox/Archived, Mark read/Mark unread, Archive/Restore and Next page work on bounded 20-row pages. Archive removes the item from the default unread count and preserves its read state; restore preserves that state. Refresh returns to the newest page. Receipt/source/delivery records are not deleted. |
+| Mark all and opening | Mark all as read uses the last loaded server snapshot, leaving later arrivals unread; the Archived view cannot mark unseen current-inbox rows. Opening an update is separate from marking it read. Only allowed current-account destinations navigate; malformed/unsafe links must not open. Current-source/relationship denial checks are required before connecting future sensitive categories. |
+| Staff fixtures and repair | Synthetic previews name the version and say no email sent. Configuration saves use captured actor/revision. Only fixed known-retryable failures below three attempts expose retry; unknown outcomes need reconciliation. No arbitrary recipient, HTML composer or automatic backlog replay exists. |
+| Health meaning | “All queued now” includes paused/expired/ineligible jobs. Oldest eligible may be “none eligible.” Last-24-hour attempt/outcome populations overlap and must not be summed. Missing provider evidence makes delivery/bounces unknown; Accepted is not Delivered. Health is an on-demand snapshot, not background monitoring. |
+
+Current delivery gaps are deliberate gates: no configured optional-email provider, public
+unsubscribe endpoint, scheduled worker or deployed email entry point exists. Optional-email
+authorization refuses with `unsubscribe_unavailable` after stronger denials. No real send is
+established by choosing a checkbox or previewing a template. Donation proof preparation keeps
+notification authority **hard false**: trusted runtime quote/persist adapters and atomic
+canonical donation/Aura/backer/refund/outbox integration remain unwired. The client remains
+the sole credit writer; donation/payment receipt sources are unavailable. Do not create a
+second charge or credit to test this inbox.
+
+Focused local UI procedure (command prepared here; this documentation pass did not run it):
+
+```sh
+CI=1 pnpm --filter @tapuai/mobile test -- --watchman=false --runInBand src/frontend/hooks/__tests__/useNotifications.test.tsx src/frontend/components/Profile/__tests__/NotificationSettingsSheet.test.tsx src/frontend/components/Activity/__tests__/NotificationInbox.test.tsx
+```
+
+Route notification failures to NOTIFICATIONS/BACKEND with SUPPORT; AUTH owns account/security
+sources and COMMERCE/RECONCILIATION owns money truth. Security, Data/Privacy, Minor/Custodial,
+Finance and QA retain independent review. Root records final app/source/browser receipts in
+STATE/COORD-01; this procedure does not close hosted SQL, policy, provider, push or release gates.
+
+## Google setup acceptance — browser first, then native
+
+**Prepared 2026-10-21; successful Google signup/sign-in and native return UNRUN.** The actual
+read-only development Auth settings request returned HTTP 200 around **03:00 UTC**: Google
+disabled, Email enabled, signup not disabled. The owner has not supplied Google OAuth credentials.
+This observation does not verify redirect allowlists or successful email signup. Follow the
+concrete [Google operator setup](../ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21)
+before trying Google; preparing this script changed no hosted settings.
+
+1. Verify the saved development provider reports Google enabled after operator setup. The Web
+   client's Google redirect is `https://ulfapgtabidorgwfjvwz.supabase.co/auth/v1/callback`;
+   Supabase must separately allow `http://localhost:8086/auth/callback`. Keep credentials and
+   returned callback tokens out of evidence. Google setup requires no service-role or Stripe key.
+2. Start the current browser preview with Node 24 on PATH:
+
+   ```bash
+   BROWSER=none pnpm --filter @tapuai/mobile exec expo start --web --localhost --port 8086
+   ```
+
+   Open `http://localhost:8086` and allow the Google popup for that origin. Record the build/origin;
+   an already signed-in browser session is not evidence of a new Google signup.
+3. With a Google account allowed by the development testing audience, test **Create an account**
+   and **Sign in** separately. New accounts require the existing birth month/year check, create a
+   fan profile and require no bank details. Returning users must retain their own canonical profile.
+4. Start from an intercepted account-required action. Complete Google and verify the intended
+   action/draft resumes. Repeat cancellation and blocked popup recovery; the draft should remain
+   and retry should be usable. Check a failed/empty callback with a controlled fixture, without
+   pasting real tokens into the URL or bug report.
+5. Record successful browser account/session completion separately from provider enablement.
+   Provider-disabled or `redirect_uri_mismatch` errors require the setting checks in ONBOARDING;
+   they are failures, not accepted signup. Do not change unrelated account/provider settings.
+6. Install a current native development client and separately verify its actual generated return,
+   normally `alasports://auth/callback`, is allowed in Supabase. Test iOS and Android return,
+   cancellation, interrupted-action recovery and sign-out/account switching independently.
+   Browser completion does not accept native callbacks; an Expo Go URL may use a different scheme.
+
+Successful Google account completion, provider cancellation/blocked-popup recovery and native
+cases remain **UNRUN** until an executor records them. The local synthetic failed-callback
+cleanup/navigation result is recorded in APP-TEST-01 above. Bank onboarding has its own
+SQL/Edge/private-server prerequisites below; it is not part of creating a Google account.
+
+## Google account to later Stripe test bank — development rehearsal
+
+**Prepared 2026-10-21; manual walkthrough UNRUN.** This focused rehearsal uses the existing
+development project `ulfapgtabidorgwfjvwz` and Stripe **test mode**. It is separate from the older
+staging wave above. Use current source/build receipts in [STATE.md](../STATE.md) §4 and the
+[payee plan](design/PAYEE_VERIFICATION_PLAN.md) §10. Historical Google repair tests do not accept
+this new bank flow. The later read-only settings check found development Google disabled; app
+return allowlists and successful Google operation remain unverified. The new Connect SQL is
+unapplied and the updated Edge Function is undeployed. The local bank fallback still lacks its
+private service-role key; the template alone does not make bank setup ready.
+
+### Operator preparation
+
+1. Follow [ONBOARDING.md](../ONBOARDING.md#development-account-to-bank-preparation--2026-10-21)
+   for the reviewed migration, compatible Edge deployment, Google settings and exact callback
+   allowlists. Record each result before starting. A local fallback additionally needs the filled
+   private copy of `apps/mobile/src/backend/api/test-server.env.example`; hosted Edge already
+   receives Supabase's builtin service-role key. Keep server credentials outside Expo env files.
+2. Confirm both Stripe publishable and server keys are test keys. Use Stripe's published synthetic
+   Connect fixtures in Stripe's portal. Never enter real bank, tax or identity information for this
+   rehearsal, or copy it into Tapua'i, screenshots, logs or feedback.
+3. Prepare separate synthetic accounts: a new Google fan, an eligible adult athlete, an adult
+   guardian, two selected athletes with separate custodial records, an unrelated account and two
+   independent admins. Use existing setup/verification paths; do not toggle payout approval to
+   make a bank test pass. The guardian fixture needs a current confirmed link, donations consent,
+   a verified undisputed athlete, matching roster/custodial ownership, a future handover date and
+   current relationship evidence approved by two independent admins in Expo `/admin/people`.
+   Guardian consent remains a draft: these are internal synthetic fixtures, not real-family activation.
+4. Use a current SDK 58 browser build and a native development client. Older installed previews
+   may lack these repairs; Expo Go does not accept native Stripe modules. Record the exact build,
+   platform, selected athlete and server source. Use controlled local mocks for malformed responses,
+   server failures and delayed requests; do not alter shared hosted data to force those failures.
+
+### Account creation, then optional adult bank setup
+
+1. As a guest, open an account-required action and choose **Create an account → Continue with Google**.
+   No email/password fields or bank questions are required. Complete Google and the existing birth
+   month/year check with synthetic data; a fresh account is a fan, without an athlete claim or KYC.
+   The interrupted action/draft should remain in the browser popup flow. Repeat with **Sign in**.
+2. Cancel Google and simulate a blocked popup. Recovery/retry should remain usable, no bank should
+   be created and the interrupted draft should remain. A Google server error is not proof of enabled
+   provider configuration. On native, separately verify the actual app callback; web success does
+   not accept the native return.
+3. Sign in as the eligible adult athlete. Open the bank card in Profile management after the
+   canonical profile loads. It is optional and separate from account creation. Read Terms and use
+   the initially unchecked acknowledgement if needed. The button must wait for current, confirmed
+   acceptance; failed or old-version acceptance cannot be waived by a device cache.
+4. Choose **Continue to Stripe test bank setup** once. Only a confirmed server binding may produce
+   a Stripe portal link. Complete the synthetic portal, then return and refresh status. Describe the
+   result as **Stripe test setup submitted** when onboarding reports completion; it does not prove
+   bank ownership, identity, TIN or payout eligibility. Cancel and retry as a separate case.
+5. On web, verify a fixed `/profile` return. On native, verify the app resumes and requests current
+   status. Review **Manage test bank** separately from initial setup; a submitted status must not be
+   relabeled as independent verification.
+
+### Guardian setup for exactly one athlete
+
+1. Open `/parent` as the fixture's adult guardian and select the first athlete. Enter the synthetic
+   custodial birth date and bank-name answer, choose **Save**, review the handover date, then choose
+   **Confirm test record**. This is a record/attestation step, not a Stripe bank connection. Test **Back** before
+   confirming; the date correction warning must remain visible on the review step.
+2. The separate bank card must check current server status for this exact `playerId` before it
+   enables creation. For a compatible unlinked response, accept current Terms if needed and choose
+   **Continue to Stripe test bank setup**. Complete or cancel the synthetic Stripe portal.
+3. Verify the binding belongs only to that athlete's `custodial_accounts` row. The guardian's own
+   Profile binding and the second athlete's binding must remain unchanged. Browser return routes
+   to `/parent?playerId=<the selected UUID>`; returning to the second athlete cannot borrow the
+   first athlete's status. The custody record, bank-name answer, Stripe binding, provider flags
+   and relationship/identity decisions must remain distinguishable.
+4. Open the same card as an admin: inspection is read-only. Open it as the athlete before handover
+   or an unrelated account: guardian setup must be unavailable. After handover, guardian bank setup
+   must stay closed. Do not change real birth dates or relationships for these denial fixtures.
+
+### Required failure and ownership matrix
+
+Full bank/provider/device scenarios below remain **UNRUN manually** until an executor records
+actual evidence. The first row names its partial local callback result. Some cases are covered
+by synthetic source tests; those receipts belong separately in STATE §4.
+
+| Scenario | Expected result | Manual result |
+| --- | --- | --- |
+| Google create/sign-in; cancellation, blocked popup and empty/error callback | Bank-free account path; usable recovery; interrupted draft retained in the supported browser flow; no invented athlete/KYC approval. | PARTIAL: synthetic local failed-return cleanup and Back/Forward PASS; successful Google, provider cancellation and blocked-popup cases UNRUN. |
+| New account age check; minor attempts self bank setup | Birth month/year rules apply; blocked age/minor cannot open a self bank portal. | UNRUN |
+| Terms missing/old version, failed write or stale device acceptance | Current client read and matching account write confirmation required; Retry Terms available; no link on failure. Server first-binding policy still checks a nonnull timestamp only. | UNRUN |
+| Guardian status from older Edge, wrong/missing `playerId`, malformed flags, failed status or Edge disappearing after a successful check | Target-specific handshake fails closed; no own-profile fallback or creation replay to an unchecked route. Compatible unlinked responses echo the same athlete; creation stays on the route that passed status. | UNRUN |
+| Missing guardian link/consent, revoked or expired evidence, latest relationship pending/failed, dispute, wrong custodian or handover reached | Server denies the selected target; no new binding/link. Existing relationship review is not fabricated from bank status. | UNRUN |
+| Missing SQL/local service key, network failure, eligibility change or failed binding save | Fixed actionable error; no portal before confirmed save; retry remains possible. No raw database/provider diagnostics or credentials. | UNRUN |
+| Double press; delayed status/setup/Terms/custodial response | One action in flight; stale responses cannot override a newer selection or confirmed status. | UNRUN |
+| Sign out, A → B → A account lifetime, athlete switch and unmount while pending | No late navigation, cache write, bank action or displayed result crosses account lifetime/athlete. | UNRUN |
+| Cancel portal; submitted setup with transfers disabled; stale cached true versus server false | Refresh actual status, preserve the correct binding, offer truthful retry/manage state; explicit server false wins. | UNRUN |
+| Valid native/web return; malformed/repeated athlete return params; non-Stripe portal URL | Valid guardian UUID returns to that athlete; adult/malformed return goes to fixed Profile; arbitrary redirect/portal rejected. | UNRUN |
+| Onboarding/transfer capabilities true | No `record_stripe_kyc` inference, bank ownership claim or newly approved identity/TIN/relationship. Existing payout route still returns 503. | UNRUN |
+| Keyboard, narrow screen, larger text and VoiceOver/TalkBack | Reach inline birth-date confirmation, Back, Terms and bank retries; labels/disabled state are clear and controls retain at least 44-point targets. Mocked tests do not accept native fit. | UNRUN |
+| Optional test checkout/receipt | Separate verified single-credit gate; no new webhook deployment, duplicate credit, live donation or payout inferred from bank setup. | UNRUN |
+
+Bank-only testing does not need a webhook signing secret. A verified payment receipt additionally
+needs the correct endpoint signing secret and one reviewed credit path; the existing client-side
+donation record and a webhook must not both credit the same payment. Keep that acceptance separate.
+Card `4242 4242 4242 4242` is a Stripe **test checkout** card, not a Connect bank or identity fixture.
+No real payout, balance verification or handover transfer is accepted by this rehearsal.
+
+### Scoped local checks and evidence
+
+Run from the repository root; these commands check current app source without provider changes:
+
+```bash
+pnpm --filter @tapuai/mobile exec jest --runInBand --watchman=false \
+  src/backend/api/moneyHandlers.test.ts \
+  src/backend/api/session.test.ts \
+  src/backend/api/accessToken.test.ts \
+  src/frontend/hooks/__tests__/useStripeConnect.test.tsx \
+  src/frontend/hooks/__tests__/useCustodial.test.tsx \
+  src/frontend/hooks/__tests__/useLegalAck.test.tsx \
+  src/frontend/lib/__tests__/custodial.test.ts \
+  src/frontend/lib/__tests__/legal.test.ts \
+  src/frontend/components/Profile/__tests__/PayoutSetupCard.test.tsx \
+  src/frontend/components/Profile/__tests__/StripeConnectReturn.test.tsx \
+  src/frontend/components/Custodial/__tests__/GuardianCustodialCard.test.tsx \
+  src/frontend/components/Custodial/__tests__/AthleteMoneyCard.test.tsx \
+  src/frontend/lib/__tests__/auth.test.ts \
+  src/frontend/lib/__tests__/authOAuth.test.ts \
+  app/auth/__tests__/callback.test.tsx \
+  src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx
+pnpm typecheck
+pnpm docs:check
+pnpm docs:links
+pnpm copy:check
+pnpm app:data-boundaries
+pnpm security:client-keys
+pnpm security:no-ssn
+```
+
+`moneyHandlers.test.ts` exercises the actual shared money core and Node/Edge adapters with synthetic
+providers. It does not execute PostgreSQL. SQL replay for this migration remains blocked locally
+by OS PostgreSQL shared-memory permissions and the PGlite download; neither SQL execution nor
+concurrent database locking has a passing receipt. Use ONBOARDING §5 for the remaining app guards.
+
+For each executed case record: executor/date, source hash/build, development project, browser/device,
+synthetic actor/selected athlete labels, scenario, expected/observed result and redacted screenshot
+or log reference. Record failures and UNRUN prerequisites explicitly. Do not attach tokens, callback
+credentials, service keys, bank/identity values or raw provider responses. Current source tests and
+these prepared steps do not certify hosted Google, deployed Edge/SQL or native Stripe completion.
+
+## Synthetic photo and video upload fixtures — local preparation
+
+The verified fixture folder on the owner's Mac is:
+
+```text
+/Users/seiuliian/Downloads/ala-sports-test-media-20261020-002
+```
+
+Its `manifest.json` reports **complete**, 13 verified files and no failures, created at
+**2026-10-21T03:00:16.329Z** in **14.957 seconds**. The generator used actual macOS ImageIO and
+AVFoundation encoding/decoding. This is local file evidence; it does not accept the app's picker,
+upload, server rules, decoder playback, object removal or cloud restore. The files contain labelled
+synthetic graphics and no real people. The earlier `-001` folder is a partial run and must not be
+used as the completed fixture set.
+
+| Fixture | Verified local file | Intended manual case |
+| --- | --- | --- |
+| `synthetic-story-01.jpg` through `synthetic-story-10.jpg` | Ten distinct 1080 × 1350 JPEGs | One-photo and ten-photo story selection, paging and sanitized upload. |
+| `synthetic-video-8s.mp4` | 8-second H.264, 118,185 bytes, 96 decoded frames | A short video within the current client duration/byte caps. |
+| `synthetic-video-46s.mp4` | 46-second H.264, 683,984 bytes, 552 decoded frames | Duration rejection when the returned picker asset is still longer than 45 seconds. |
+| `synthetic-video-8s-over-8MiB.mp4` | Valid 8-second H.264 with MP4 free-box padding, 8,388,609 bytes, 96 decoded frames | Byte-cap rejection when the bytes submitted remain above 8 MiB. |
+
+On another supported Mac with Xcode Command Line Tools, generate a fresh folder outside the repo:
+
+```bash
+pnpm app:test:media --out "$HOME/Downloads/ala-sports-test-media-fresh"
+```
+
+The command refuses an existing path and exits with a partial/failure result when native creation
+or verification fails. Choose a new path for each run and use only a **complete** manifest; retain
+its hashes with the test receipt. Generation is local and does not upload files.
+
+Current local source normalizes web picker seconds and native picker milliseconds explicitly,
+carries the normalized duration through submit, and checks it again before compression/Storage.
+Unknown, nonfinite, zero or over-45-second metadata is rejected. These client metadata checks do
+not establish server file-duration enforcement; actual platform/picker behavior still needs testing.
+
+Manual upload steps, all **UNRUN**:
+
+1. After the appropriate app account/Storage prerequisites are met, select the short MP4 and
+   confirm Review/Publish and actual playback. For native selection, import synthetic files into
+   the device's photo library. Confirm keyboard/navigation and current rights checks remain usable.
+2. Select one JPEG, then all ten; verify ordering, preview/paging, caption/credit and published
+   photos. Fail/close an upload and retry as the same owner; actual hidden-row and physical object
+   cleanup need the applied cleanup SQL and their own observed receipt.
+3. Select the 46-second file without trimming. Verify rejection if the picker returns an asset
+   still over 45 seconds. An editor can trim it to 45 seconds or less; acceptance of that shorter
+   returned clip is not a duration failure. Record the returned duration/platform for this case.
+4. Test the oversized MP4 in the browser, where native compression does not remove its padding,
+   or verify the actual resulting byte count before asserting rejection. Native compression may
+   produce a valid smaller file that the app should accept. The enforced client byte cap is
+   **8 MiB after processing**, not a promise to reject every originally oversized source file.
+5. Keep longer-video uploads **off until costs are measured** and live streaming deferred.
+   Negative fixtures do not enable either feature. Record actual upload/playback errors and
+   platform/build evidence separately from these local file-generation results.
+
+### Observed local navigation — 2026-10-21 UTC
+
+Root checked `http://localhost:8086` at **390 × 844** in a browser with a **previously signed-in
+session**; account settings offered Sign out. This was not a fresh guest, signup or auth-gate test.
+The observed path was Home → Activity → Spotlight → Profile → Upload → library modal → Cancel
+→ account settings. Activity and Spotlight each had a 390-pixel document width; the Activity
+screenshot was reviewed. These checks accept only those observed navigation/layout states.
+
+The file dialog was cancelled and left no file input to drive. No media was selected/published,
+and actual picker metadata, upload, browser decoding, Google sign-in and Stripe bank writes were
+not tested. Their manual cases above remain **UNRUN**.
+
+The original root log `/tmp/app-testing-mobile-final.log` records **226 suites / 2,193 tests PASS**
+in **138.861 seconds**. Root also reported both app typechecks and 13 scoped app/source guards
+PASS. These are local source checks, separate from the navigation receipt and provider/device
+acceptance. Current source hashes and independent review are in
+[media plan §6](design/MEDIA_SERVICE_PLAN.md#6-current-app-testing-preparation--2026-10-21-utc).
 
 ## Everyone — Watch (does it feel like TikTok?)
 
@@ -79,7 +486,7 @@ Use a build containing PLAY-01; the older queued previews do not contain this re
 
 ## Sports identity — Local, Profile and Highlights (UX-03)
 
-Current local verification passes `pnpm check` (both typechecks, 55 suites / 261 tests and all guards).
+Historical UX-03 verification passed `pnpm check` (both typechecks, 55 suites / 261 tests and all guards).
 Browser Bridge checks and controlled 320/390-pixel fixtures are recorded in [AUDIT_REPORT.md](AUDIT_REPORT.md).
 CSS 200% text checks do not certify native font scaling; native checks below remain pending.
 Record build, device/viewport, text scale and reader

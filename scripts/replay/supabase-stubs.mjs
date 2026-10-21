@@ -1,6 +1,6 @@
 /**
  * Supabase stand-ins for a local Postgres (PGlite): the roles, the auth / storage / realtime schemas, the functions
- * schema.sql calls (auth.uid(), auth.role(), auth.jwt(), storage.foldername(), realtime.topic()) and Supabase's default
+ * schema.sql calls (auth.uid(), auth.role(), auth.jwt(), storage.foldername(), realtime.topic(), realtime.send()) and Supabase's default
  * privileges. Shared by scripts/replay/schema-replay.mjs (security replay) and scripts/gen-db-types.mjs (database types)
  * so both build the schema on the same base. `auth.role()` behaves like Supabase's: empty when the request carries no
  * JWT claims.
@@ -23,6 +23,8 @@ export const SUPABASE_STUBS = String.raw`
   create table realtime.messages (id bigserial primary key, topic text, extension text, payload jsonb, event text, private boolean default false, inserted_at timestamptz default now());
   alter table realtime.messages enable row level security;
   create function realtime.topic() returns text language sql stable as $$ select current_setting('realtime.topic', true) $$;
+  -- Like Supabase's realtime.send: one Broadcast row per call (SCALE-03 trigger). Runs as the caller; the trigger is definer.
+  create function realtime.send(payload jsonb, event text, topic text, private boolean default true) returns void language sql as $$ insert into realtime.messages (topic, extension, payload, event, private) values (topic, 'broadcast', payload, event, private) $$;
   do $$ begin create publication supabase_realtime; exception when duplicate_object then null; end $$;
   grant usage on schema auth, storage, realtime, public to anon, authenticated, service_role;
   grant select, insert, update, delete on storage.objects, storage.buckets to anon, authenticated, service_role;

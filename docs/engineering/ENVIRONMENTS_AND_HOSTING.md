@@ -56,6 +56,11 @@ a paid plan or automatic migration. Actual setup: [GROWTH-01](../agents/GROWTH-0
 
 ## 2. The hosting options
 
+**2026-10-19 preparation:** [REDUNDANCY_PLAN.md](REDUNDANCY_PLAN.md) and
+[CLOUD_MIGRATION_RUNBOOK.md](CLOUD_MIGRATION_RUNBOOK.md) describe the owner's confirmed Supabase
+backup requirement and the new local AWS/Azure deployment folders. Current managed hosting stays
+as recorded above; this change creates tooling/templates, not a production project or a cloud VM.
+
 | | **A. Stay on managed Supabase** (recommended now) | **B. Self-host Supabase on AWS EC2 or an Azure VM** | **C. AWS or Azure managed services** (RDS / Azure Database for PostgreSQL + Cognito / Entra + S3 / Blob + own API) |
 | --- | --- | --- | --- |
 | App code change | None | No app code change, but: a new URL and keys (new build or OTA update); move `auth.users` and Storage objects; rewrite stored public URLs (`reels.video_url`); everyone signs in again (new JWT secret); our own SMTP for magic links; Apple / Google redirect setup; an S3 Storage backend; Edge Functions as an edge-runtime container; backups and PITR are ours | Large: new auth, storage, realtime and API layer; RLS kept or rewritten; the same URL rewrite; months |

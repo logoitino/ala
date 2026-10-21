@@ -134,7 +134,9 @@ export function useTipCheckout() {
       const checkoutStartedAt = Date.now();
       try {
         const intentStartedAt = Date.now();
-        const clientSecret = await createPaymentIntent(amountCents, player?.id ?? null, platformTipCents);
+        // skipBacker marks the existing Vault/Exclusive/Drip/sponsorship purchase paths. It cannot provide donation receipt authority.
+        const clientSecret = await createPaymentIntent(amountCents, player?.id ?? null, platformTipCents,
+          !skipBacker && player ? { giftCents: Math.round(tipAmount * 100), coverFees, platformTipPercent } : undefined);
         telemetry.trackCheckoutLatency('payment_intent', Date.now() - intentStartedAt);
 
         const initStartedAt = Date.now();

@@ -1,4 +1,4 @@
-/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
+/** Google supports new and existing accounts; bank setup is separate and age rules remain with account confirmation. */
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -34,7 +34,7 @@ const SHEET_TRAVEL = 480;
 type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | 'signup' | null;
 
 /**
- * @purpose Account sheet when a guest uploads, keeps swiping Highlights, donates, joins Crew, or starts a gear goal. Sign-in stays Apple, Google, email, and password. Creating an account is a second step and is where the birth month and year live (MINOR-01: an under-13 date gets a neutral refusal and pauses account creation on this device for 24 hours). Resumes the stashed action after sign-in.
+ * @purpose Account sheet for guest actions. Google and native Apple support existing/new accounts with post-auth age confirmation; email creation collects birth month/year here. Resumes the stashed action after sign-in and required age confirmation.
  * @sideEffects Email/password, Apple / Google / Magic Link / Demo Fan via AuthContext; telemetry `auth.*`.
  */
 export function SoftWallModal() {
@@ -106,7 +106,7 @@ export function SoftWallModal() {
 
   const body =
     mode === 'create'
-      ? 'Use your email and your birth month and year.'
+      ? 'Use Google, or create an account with email and your birth month and year.'
       : intent?.kind === 'upload'
         ? 'An account is required to post a Highlight.'
         : intent?.kind === 'browse'
@@ -116,7 +116,7 @@ export function SoftWallModal() {
             : intent?.kind === 'wishlist'
               ? 'Sign in to donate toward the gear they need.'
               : intent?.kind === 'signin'
-                ? 'Apple, Google, or email.'
+                ? Platform.OS === 'ios' ? 'Apple, Google, or email.' : 'Google or email.'
                 : 'Sign in to donate toward their season.';
   const title = mode === 'create' ? 'Create an account' : 'Sign in';
 
@@ -200,8 +200,8 @@ export function SoftWallModal() {
               <Text style={styles.title}>{title}</Text>
               <Text style={styles.subtitle}>{body}</Text>
 
-              {mode === 'signin' ? (
-                <View style={styles.group}>
+              <View style={styles.group}>
+                {Platform.OS === 'ios' ? (
                   <AnimatedButton
                     accessibilityLabel="Continue with Apple"
                     disabled={Boolean(busy)}
@@ -215,29 +215,29 @@ export function SoftWallModal() {
                       <Text style={styles.appleLabel}>Continue with Apple</Text>
                     )}
                   </AnimatedButton>
-                  <AnimatedButton
-                    accessibilityLabel="Continue with Google"
-                    disabled={Boolean(busy)}
-                    haptic="medium"
-                    onPress={() => void run('google', signInWithGoogle)}
-                    contentStyle={[styles.providerBtn, styles.googleBtn, busy && styles.disabled]}
-                  >
-                    {busy === 'google' ? (
-                      <ActivityIndicator color={FOCAL.ink} />
-                    ) : (
-                      <Text style={styles.googleLabel}>Continue with Google</Text>
-                    )}
-                  </AnimatedButton>
-                </View>
-              ) : null}
+                ) : null}
+                <AnimatedButton
+                  accessibilityLabel="Continue with Google"
+                  disabled={Boolean(busy)}
+                  haptic="medium"
+                  onPress={() => void run('google', signInWithGoogle)}
+                  contentStyle={[styles.providerBtn, styles.googleBtn, busy && styles.disabled]}
+                >
+                  {busy === 'google' ? (
+                    <ActivityIndicator color={FOCAL.ink} />
+                  ) : (
+                    <Text style={styles.googleLabel}>Continue with Google</Text>
+                  )}
+                </AnimatedButton>
+                <Text style={styles.demoHint}>Google works for new and existing accounts.</Text>
+                <Text style={styles.demoHint}>No bank details are needed to create your profile.</Text>
+              </View>
 
-              {mode === 'signin' ? (
-                <View style={styles.orRow}>
-                  <View style={styles.orLine} />
-                  <Text style={styles.orLabel}>or email</Text>
-                  <View style={styles.orLine} />
-                </View>
-              ) : null}
+              <View style={styles.orRow}>
+                <View style={styles.orLine} />
+                <Text style={styles.orLabel}>or email</Text>
+                <View style={styles.orLine} />
+              </View>
 
               <View style={styles.group}>
                 <TextInput

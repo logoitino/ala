@@ -3,7 +3,7 @@
  * totals, stream basis points, stream names and split text (Vault "recorded for the athlete", never
  * "family account"), the donation-breakdown source, report labels/notes, and VOICE money words.
  * `donation_bands` (owner decision 2026-10-12): present, missing, partial and malformed payloads,
- * with missing never read as zero.
+ * with missing never read as zero. `trivia` + `smoothness` (20261020180000): same null semantics.
  * Run: `node --import ./lib/analytics-resolver.mjs --test lib/*.test.ts`.
  */
 import assert from 'node:assert/strict';
@@ -27,6 +27,8 @@ import {
   parseDonationBands,
   parseReportsPayload,
   parseRevenueSummary,
+  parseSmoothnessReport,
+  parseTriviaReport,
   streamName,
   streamSplitText,
 } from './reports.ts';
@@ -224,6 +226,45 @@ test('donation_bands partial: a band not in the read is null, the others keep th
   assert.match(donationBandsSentence(bands!), /\$50–\$250: not in this read/);
   // A bad value in one band is treated as missing, not 0.
   assert.deepEqual(parseDonationBands({ under_50: 7, '50_to_250': 'lots', '250_plus': -1 }), { under50: 7, from50to250: null, over250: null });
+});
+
+test('trivia/smoothness present: counts parse, lists keep order, zeros stay measured', () => {
+  const payload = parseReportsPayload({
+    trivia: {
+      prep_views_7d: 40, start_presses_7d: 22,
+      starts_7d: 20, answers_7d: 80, nexts_7d: 60, completes_7d: 15, abandons_7d: 4, unavailable_7d: 0,
+      start_failed_7d: 0, answer_failed_7d: 2, next_failed_7d: 1, explanation_failed_7d: 0,
+      by_position_7d: [{ label: 'Question 1', value: 20 }, { label: 'Question 2', value: 18 }],
+      starts_by_kind_7d: [{ label: 'personal', value: 12 }],
+    },
+    smoothness: {
+      mounts_7d: 300, avg_mount_ms_7d: 180.7,
+      by_surface_7d: [{ label: 'home', value: 210 }],
+      app_starts_7d: 120, avg_start_ms_7d: 900,
+    },
+  });
+  assert.equal(payload.trivia?.prepViews7d, 40);
+  assert.equal(payload.trivia?.startPresses7d, 22);
+  assert.equal(payload.trivia?.starts7d, 20);
+  assert.equal(payload.trivia?.unavailable7d, 0);
+  assert.deepEqual(payload.trivia?.byPosition7d, [{ label: 'Question 1', value: 20 }, { label: 'Question 2', value: 18 }]);
+  assert.deepEqual(payload.trivia?.startsByKind7d, [{ label: 'personal', value: 12 }]);
+  assert.equal(payload.smoothness?.avgMountMs7d, 181);
+  assert.equal(payload.smoothness?.appStarts7d, 120);
+});
+
+test('trivia/smoothness missing or malformed is null, partial keeps per-count nulls', () => {
+  assert.equal(parseReportsPayload({}).trivia, null);
+  assert.equal(parseReportsPayload({}).smoothness, null);
+  assert.equal(parseTriviaReport('12'), null);
+  assert.equal(parseTriviaReport([]), null);
+  assert.equal(parseTriviaReport({}), null);
+  assert.equal(parseTriviaReport({ starts_7d: 'x', by_position_7d: {} }), null);
+  assert.equal(parseSmoothnessReport({ mounts_7d: null }), null);
+  const partial = parseTriviaReport({ starts_7d: 5 });
+  assert.equal(partial?.starts7d, 5);
+  assert.equal(partial?.completes7d, null);
+  assert.equal(partial?.byPosition7d, null);
 });
 
 test('donation_bands malformed: not an object, a list, or none of the three counts is null', () => {

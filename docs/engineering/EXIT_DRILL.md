@@ -23,6 +23,11 @@ Record the date, executor, results and gaps in §5.
 
 ## Step 1–6 — full drill (after E1; quarterly)
 
+The [cloud migration runbook](CLOUD_MIGRATION_RUNBOOK.md) and
+[infrastructure folder](../../infrastructure/README.md) now provide executable preparation for
+these steps. Their local synthetic tests do not replace this drill; the operator must supply a
+reviewed upstream commit/checksum/image inventory and compatible isolated PostgreSQL target.
+
 | Step | Do | Pass when | Who |
 | --- | --- | --- | --- |
 | 1. Prepare | Approve a temporary VM: owner approval for its cost (a few dollars), US region, synthetic data only. Install Docker and the self-hosted Supabase stack (current upstream instructions; verify the version) | Stack starts; Studio reachable only from the drill machine | `RELIABILITY`, `COST_OPERATIONS` |

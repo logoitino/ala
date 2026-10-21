@@ -1,0 +1,72 @@
+# Tapua'i web services on one Linux host. Only Caddy publishes ports; this is not HA.
+name: tapuai-app
+services:
+  fan-web:
+    image: tapuai/fan-web:${RELEASE_TAG:?Set an immutable release tag}
+    build:
+      context: ../..
+      dockerfile: infrastructure/containers/Dockerfile.expo
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:?Set a reviewed official Node 24 image digest}
+        EXPO_PUBLIC_SUPABASE_URL: ${SUPABASE_PUBLIC_URL:?Set public API URL}
+        EXPO_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:?Set public anonymous key}
+        EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:?Set public Stripe key}
+        EXPO_PUBLIC_API_ORIGIN: https://${FAN_DOMAIN:?Set fan domain}
+        EXPO_PUBLIC_APP_ENV: ${APP_ENV:-production}
+        EXPO_PUBLIC_ADMIN_REQUIRE_MFA: ${ADMIN_REQUIRE_MFA:-true}
+        EXPO_PUBLIC_LIVE_SCORES_BROADCAST: ${LIVE_SCORES_BROADCAST:-false}
+        EXPO_PUBLIC_SUPPORT_ENVIRONMENT: ${APP_ENV:-production}
+        EXPO_PUBLIC_SUPPORT_RELEASE: ${RELEASE_TAG}
+        EXPO_PUBLIC_SUPPORT_SENSORS_ENABLED: ${SUPPORT_SENSORS_ENABLED:-false}
+    env_file:
+      - ${FAN_RUNTIME_ENV_FILE:?Use an external runtime env file}
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    networks: [frontend, backend]
+  admin-portal:
+    image: tapuai/admin-portal:${RELEASE_TAG}
+    build:
+      context: ../..
+      dockerfile: infrastructure/containers/Dockerfile.admin
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:?Set a reviewed official Node 24 image digest}
+        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_PUBLIC_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_ADMIN_REQUIRE_MFA: ${ADMIN_REQUIRE_MFA:-true}
+    env_file:
+      - ${ADMIN_RUNTIME_ENV_FILE:?Use an external runtime env file}
+    restart: unless-stopped
+    read_only: true
+    # Cache contents are disposable; explicit ownership supports the unprivileged Node user.
+    tmpfs:
+      - /tmp
+      - /app/apps/admin-portal/.next/cache:uid=1000,gid=1000,mode=1770
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    networks: [frontend, backend]
+  proxy:
+    image: ${CADDY_IMAGE:?Set reviewed Caddy image digest}
+    environment:
+      FAN_DOMAIN: ${FAN_DOMAIN}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:?Set portal domain}
+      API_DOMAIN: ${API_DOMAIN:?Set API domain}
+      ACME_EMAIL: ${ACME_EMAIL:?Set certificate contact}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    networks: [frontend, backend]
+networks:
+  frontend:
+  backend:
+    external: true
+    name: tapuai-backend
+volumes:
+  caddy_data:
+  caddy_config:

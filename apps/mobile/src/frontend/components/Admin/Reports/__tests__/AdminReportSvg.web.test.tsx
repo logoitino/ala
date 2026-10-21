@@ -12,7 +12,7 @@ import type { AnalyticsChart } from '@tapuai/shared-types/admin';
 jest.mock('react-native', () => jest.requireActual('react-native-web'));
 jest.mock('react-native-svg', () => jest.requireActual('react-native-svg/src/elements.web'));
 // Expo's native Jest bootstrap installs a lazy native fetch. This DOM-only test performs no reads.
-jest.mock('expo/src/winter/fetch', () => ({ fetch: jest.fn() }));
+jest.mock('expo/src/winter/fetch/fetch', () => ({ fetch: jest.fn() }));
 jest.mock('expo-router', () => ({ Link: ({ children }: { children: React.ReactElement }) => children }));
 // Figure meaning remains tested in native UI tests; only the installed web SVG prop boundary is under test here.
 jest.mock('../AdminReportData', () => ({ AdminReportData: () => null }));

@@ -1,0 +1,23 @@
+{
+  "_comment": "Copy outside Git with mode600; real accepted evidence and protected original hashes are required. This example cannot declare readiness.",
+  "schemaVersion": 1,
+  "targetId": "aws-rehearsal",
+  "platform": "linux/amd64",
+  "source": {
+    "supabaseUrl": "https://reviewed-source.supabase.co",
+    "databaseIdentity": {"PGHOST": "reviewed-source-database", "PGPORT": "5432", "PGDATABASE": "postgres"}
+  },
+  "target": {
+    "supabaseUrl": "https://api.rehearsal.example.com",
+    "databaseIdentity": {"PGHOST": "reviewed-isolated-database", "PGPORT": "5432", "PGDATABASE": "postgres"}
+  },
+  "releaseDirectory": "/var/lib/tapuai/exit/releases/reviewed-release",
+  "evidenceDirectory": "/var/lib/tapuai/exit/evidence/reviewed-release",
+  "runtimeReceipt": "/var/lib/tapuai/exit/images/runtime-receipt.json",
+  "backup": {
+    "archive": "/var/lib/tapuai/backups/tapuai-TIMESTAMP-ID.tar.age",
+    "expectedSha256": "replace-with-independently-protected-original-sha256"
+  },
+  "maxEvidenceAgeHours": 168,
+  "maxBackupAgeHours": 7
+}

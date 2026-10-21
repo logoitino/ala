@@ -1,4 +1,4 @@
-/** Shared page heading with compact accent punctuation; Look-desk text and per-tab colors stay authoritative. */
+/** Shared, wrapping page hierarchy keeps published Look-desk copy and colors authoritative. */
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/constants/theme';
@@ -33,8 +33,8 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
           <Text style={[styles.kicker, compact && styles.kickerCompact, { color: mark }]}>{kicker}</Text>
         </View>
       ) : null}
-      <Text style={[styles.title, compact && styles.titleCompact, { color: live.theme.text }]}>{title}</Text>
-      {compact ? null : <View style={[styles.underline, { backgroundColor: mark }]} />}
+      <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact, { color: live.theme.text }]}>{title}</Text>
+      {compact ? null : <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.underline, { backgroundColor: mark }]} />}
       {lede ? <Text style={[styles.lede, compact && styles.ledeCompact]}>{lede}</Text> : null}
     </View>
   );
@@ -44,11 +44,13 @@ const styles = StyleSheet.create({
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   accentDot: { width: 6, height: 6, borderRadius: 3 },
   wrap: {
-    gap: 6,
+    gap: 8,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   wrapCompact: {
-    gap: 2,
-    paddingTop: 2,
+    gap: 5,
+    paddingTop: 6,
   },
   kicker: {
     fontSize: 12,
@@ -56,6 +58,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: colors.gold,
+    flexShrink: 1,
   },
   kickerCompact: {
     fontSize: 10,
@@ -68,7 +71,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
   },
   titleCompact: {
-    fontSize: 22,
+    fontSize: 26,
     letterSpacing: -0.3,
   },
   underline: {
@@ -85,7 +88,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   ledeCompact: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

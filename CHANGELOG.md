@@ -1,4 +1,206 @@
+<!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
+
+## 2026-10-21 — Notification settings, inbox and staff/source contracts
+
+- Add Profile channel/category choices and Activity read/unread, active-inbox snapshot mark-all, archive/restore and bounded pages.
+- Keep every optional email off initially, Auth recovery separate and unsupported sources visibly unavailable.
+- Add server-owned event/preferences/inbox/delivery contracts, safe templates and Expo staff previews/pause/known-failure repair/Health.
+- Guard revisions, captured actors and complete Auth/view/effect lifetimes; correct Archived bulk-read scope.
+- Repair strict worker evidence, delivery lock ordering and NULL-role thank-you denial; prepare payment proof with authority false.
+- Register Finance/data/privacy/control/sensor ownership and reconcile tester/team documentation without changing role pins.
+- Pass233 mobile suites/2,287 tests, both app/shared typechecks and independent scoped source reviews.
+- Keep unapplied SQL, actual emails, atomic donation/outbox wiring, native push and hosted release gates explicit in [local evidence](docs/engineering/evidence/NOTIFY-01-app.md).
+
+## 2026-10-21 — Email and notification design draft
+
+- Map existing Activity, Crew, Auth mail and feature-specific controls before proposing unified preferences.
+- Draft Profile category/channel settings, an unread inbox, safe email delivery and Expo staff monitoring.
+- Identify donation attribution/commit and thank-you authorization repairs needed before those sources can send alerts.
+- Record the later approved architecture/default choice: only security email on by default; all optional email categories off.
+- Enroll NOTIFY-01 as planned and start local backend/admin implementation before Profile/Activity UI; provider/hosted work remains separate.
+- Design and implementation sequence: [email and notifications](docs/engineering/design/EMAIL_NOTIFICATIONS_DESIGN.md).
+
+## 2026-10-21 — Current-app operational test execution
+
+- Exercise the local Connect, payment and payout HTTP routes without Authorization; all three return401 with safe sign-in copy.
+- Repair failed OAuth return cleanup after actual browser testing found Router history could restore error query details.
+- Keep recovery on a clean callback route without retrying its consumed return; preserve new return handling and native behavior.
+- Verify ordinary existing-test-account email sign-in resumes the draft; verify clean failed-return recovery and browser Back/Forward.
+- Pass226 mobile suites/2,196 tests, both app typechecks and independent56 focused tests; actual media selection/provider tests remain open.
+- Independently reproduce those anonymous denials; signed-in bank, Stripe and payout checks remain separate.
+- Record the failed local Connect SQL replay honestly: missing PGlite engine, exit2 and zero executed SQL cases.
+- Keep Google setup pending after the owner's confirmation; do not equate the prepared guide with provider acceptance.
+- Original executor evidence and remaining cases: [APP-TEST-01 execution](docs/agents/COORD-01.md#app-test-01-execution--2026-10-21-utc).
+
+## 2026-10-21 — Roadmap and whole-team app-testing handoff
+
+- Reconcile current app implementation against Google, Stripe test-bank and media walkthrough prerequisites.
+- Prioritize APP-TEST-01 and update the115-role/17-department briefing, with51 app/testing specialist duties synchronized.
+- Preserve earlier checks as dated evidence and keep long videos off/live deferred.
+- Correct legacy-public-Vault, profile access and environment/migration status wording.
+- Actual ownership, checks and remaining gates: [coordination receipt](docs/agents/COORD-01.md#current-app-roadmap-and-whole-team-refresh--2026-10-21-utc).
+
+## 2026-10-21 — Current-app testing preparation
+
+- Normalize web/native video duration units and preserve duration through publishing.
+- Reject invalid and over-limit duration before compression or upload; keep long videos off and live deferred.
+- Add an offline generator for ten synthetic images, short/overlong videos and a valid oversized MP4.
+- Prepare Google setup instructions; read-only development settings confirm Google is disabled.
+- Full mobile226suites/2,193tests and both app typechecks pass; independent media review153tests passes.
+- Local test assets and checks do not complete Google, bank, hosted upload or native device acceptance.
+- Current sources and actual evidence: [media testing checkpoint](docs/engineering/design/MEDIA_SERVICE_PLAN.md#6-current-app-testing-preparation--2026-10-21-utc).
+
+## 2026-10-20 — Replaceable video and photo storage
+
+- Bind upload, public URL, signing, listing and deletion behind a media storage adapter.
+- Read Highlight references and old public URLs on the selected host, preserving legacy URL suffixes.
+- Keep private Vault upload/signing independent of public URL construction; reject unsafe/private public references.
+- Preserve photo sanitization, published-story recovery and owner-claimed cleanup.
+- Keep current limits and writers; longer videos stay off until costs are measured and live streaming is deferred.
+- Full mobile225suites/2,154tests, both app typechecks and scoped guards pass; independent Security reviewed102focused tests.
+- Contracts, tests and migration limits: [media service plan](docs/engineering/design/MEDIA_SERVICE_PLAN.md).
+
+## 2026-10-20 — Guardian and adult Stripe test bank preparation
+
+- Derive the selected payee from live Auth and service-only SQL; save current eligibility/binding before issuing links.
+- Let eligible guardians explicitly manage the selected athlete's test setup without borrowing their own account.
+- Preserve current account/athlete context through status, Terms, portal navigation and native return token refresh.
+- Require server-confirmed current Terms in the client; keep capability flags distinct from KYC and payouts blocked.
+- Final local mobile 223 suites / 2,103 tests and both app typechecks pass; SQL replay/provider walkthrough remain unrun.
+- Actual source/review receipts and configuration prerequisites: [payee plan §10](docs/engineering/design/PAYEE_VERIFICATION_PLAN.md#10-google-account-to-stripe-test-bank-preparation--2026-10-21-in-progress).
+
+## 2026-10-20 — Clearer Google account creation and sign-in recovery
+
+- Offer Google from both account sheet modes; keep age confirmation and bank-free profile creation.
+- Avoid the web authorize network probe before opening Google; preserve native flow and interrupted actions.
+- Validate callback location/credentials, share concurrent return completion and mask provider diagnostics.
+- Show recovery for failed returns and use the current route rather than an unrelated app launch link.
+- Local verification and hosted/payment limits: [sign-in checkpoint](docs/ONBOARDING.md#google-account-creation-and-later-bank-setup--local-repair-2026-10-20).
+
+
+## 2026-10-20 — Reliable account switching and Connect setup
+
+- Bind pending Connect actions to the initiating account lifetime; require matching profile binding for legacy cached payout status.
+- Prevent duplicate onboarding taps while checking Terms; preserve normal browser return/token refresh.
+- Reject late profile loads and stale auth hydration, including account switches batched into one render.
+- Treat device cache as a convenience and handle Edge/HTTP account errors consistently.
+- App scope, verification and remaining limits: [repair contract](docs/engineering/design/PAYEE_VERIFICATION_PLAN.md#9-connect-client-and-profile-freshness-repair--2026-10-20-local-app).
+
+
+
+## 2026-10-20 — Smoother first web tab visits
+
+- Compile routes at startup in the Expo web development preview to remove first-visit “Bundling...” interruptions.
+- Keep production web route splitting and existing lazy screen mounting.
+- Restart Metro with `--clear` and reload the browser to use the updated router configuration.
+- Local verification and scope: [STATE §4](docs/STATE.md#4-recent-changes-rolling--newest-first).
+
+
+## 2026-10-20 — Reliable Connect account saves
+
+- Require server credentials for protected Connect profile writes in both runtimes.
+- Report database read/save failures and unmatched updates instead of returning unpersisted success.
+- Save account bindings before issuing links; conditional updates protect against competing bindings.
+- Keep identity/TIN verification separate from onboarding and transfer flags; authoritative KYC wiring remains open.
+- Details and verification limits: [payee plan](docs/engineering/design/PAYEE_VERIFICATION_PLAN.md#8-connect-persistence-repair--2026-10-20-local-app).
+
+## 2026-10-20 — Failed photo-story cleanup
+
+- Added owner-only cleanup SQL and Storage guards; migration written, not applied.
+- Retire failed attempts before a fresh retry so earlier uploaded files do not accumulate.
+- Save minimal owner/story removal intent before Close; retry cleanup when that account opens Upload.
+- Preserve already-published stories and recover their stored cover without applying new draft mentions.
+- App contract and verification limits: [photo stories](docs/engineering/design/PHOTO_STORIES_DESIGN.md#failed-upload-cleanup-repair--2026-10-20).
+
+## 2026-10-20 — Athlete stories and clearer tabs
+
+- Added a named Story section for existing visible profile biographies and social links.
+- Improved headings, empty-state guidance, activity text wrapping and tab readability.
+- Kept Spotlight loading distinct from empty and made Drip category empties clearer.
+- Enlarged existing controls and respected Reduce Motion for shared button/tab feedback.
+- Made the existing Upload chooser scroll within the window height when text is tall.
+- Preserved existing data/privacy, navigation, published settings and composer/payment safeguards.
+- Local review and verification scope: [UX-07](docs/agents/UX-07.md).
+
+## 2026-10-20 — Clearer Security checks and accurate report statuses
+
+- Simplified source reporting into readable helpers without changing public function or CLI contracts.
+- Missing guard prerequisites now show `needs-attention` in both JSON and Markdown; unrelated guards retain their own status.
+- Added four regressions and actual CLI coverage. Local22 Security tests pass; final integrated/source evidence is retained outside source in the [existing tracker](docs/agents/REDUNDANCY-07.md).
+- Awaited two async screen-timing test rerenders found during the integrated gate; targeted3tests and both-app typecheck pass, with independent API/source review.
+
+## 2026-10-20 — Security partners for portable infrastructure
+
+- Added infrastructure, supply-chain and recovery Security roles under SECURITY -> CTO, with actual VP/Documentation reconciliation.
+- Added current registered-source coverage/report and independent Security notice routing to the existing exit workflow and project/CI gates.
+- Fixed local SSH wildcard-range checks, inherited Compose credential overrides and nested Docker registry-credential inclusion policy.
+- Aligned current Trivia funnel regression with the exact chapter DTO and original uncertain-answer retry; no runtime authorization changed.
+- Actual scoped evidence and final verification custody: [REDUNDANCY-07](docs/agents/REDUNDANCY-07.md). Live controls and continuous monitoring remain unverified.
+
+## 2026-10-20 — Portable app connection contract and local compatibility
+
+- Both apps validate one shared public backend connection before SDK creation, preserving session/cookie/MFA behavior.
+- Added matching private target profile generation and actual installed-SDK synthetic loopback protocol checks to the full project gate.
+- Reject build-time dotenv interpolation, unsafe public keys and ambiguous routing; no live provider/configuration installation performed.
+- Actual local tests/build/source verification custody: [REDUNDANCY-06](docs/agents/REDUNDANCY-06.md).
+
+## 2026-10-20 — Rally meters show for guests (after the database update)
+
+People browsing without an account could not see an athlete's Rally meter: the database refused the read. Once update `20261020090000` is applied, guests see live, filled and closed Rallies again. Signed-in families see exactly what they saw before.
+
+<!-- Record actual local source automation separately from hosted/data readiness. -->
+
+## 2026-10-20 — Private backup setup and operational exit health
+
+- Added fresh private external setup templates with exact hashes/modes and empty sensitive inputs.
+- Added read-only combined source/process/sweep, source-bound backup freshness and prepared-evidence health; missing setup remains NO-GO.
+- Backup records now bind the actual source origin and PG endpoint/user; same-path connection drift and unbound retries fail closed.
+- Actual local setup/review/check evidence: [REDUNDANCY-05](docs/agents/REDUNDANCY-05.md). Live backups/cloud rehearsal remain pending.
+
+## 2026-10-20 — Current source updater verified
+
+- Full project check passes205mobile suites/1,805tests and91exit checks; independent crash/process/retention review accepted.
+- Exact source refreshed by current-login watcher and project/Stop catch-up; private latest/attempt receipts remain honest.
+- macOS login service installation blocked; restart with `pnpm exit:sync start` after process/login ends. Live data and cloud rehearsal remain pending.
+
+## 2026-10-19 — Automatically current exit source
+
+- Added initial/restart and30s content-polled exact-source cache, atomic freshness/failure status, OS lock and resumable keep3 retention.
+- Extended source CI to every branch/PR/manual/daily default sweep with run provenance and permission-preserving tar transport.
+- Activation/check receipts: [REDUNDANCY-04](docs/agents/REDUNDANCY-04.md); live backups/cloud rehearsal remain pending.
+
+## 2026-10-19 — Current owned-cloud exit preparation
+
+- Exact expanded app/SQL/source releases and content-aware migration inventory; prepared source-only CI export.
+- Immutable runtime image archives, optional stable API gateway, historical Storage ownership reconciliation and strict original-evidence readiness.
+- Same-interface self-hosted Supabase exit; future180-minute target remains unproved. Execution: [REDUNDANCY-03](docs/agents/REDUNDANCY-03.md).
+
+## 2026-10-19 — Complete backup jobs, freshness checks and cloud retrieval
+
+- Added one private-config job for capture and every configured independent copy, with locking, atomic evidence and guarded archive retries.
+- Added snapshot-age health checks and cloud-reader retrieval validated against a protected original checksum before decryption.
+- Corrected inconsistent success-record monitoring and Azure partial-publication retries; documented operator setup in [BACKUP_OPERATIONS](docs/engineering/BACKUP_OPERATIONS.md).
+- Scheduler and alert delivery remain inactive; no cloud or live data operation ran.
+
+## 2026-10-19 — Supabase backup and own-server migration kit
+
+- Owner confirmed backup of Supabase for AWS/Azure recovery; added organized infrastructure operator folders and full database/Auth + Storage byte capture, encrypted packaging, verification, isolated reviewed restore and offsite publishing.
+- Added guarded Storage-only retries, strict PostgreSQL target routing and reviewed source recovery policy including dependency layout, infrastructure and required configuration.
+- Prepared Expo SDK58 and Next standalone containers, private Supabase bootstrap/configuration and independent AWS S3/Azure Blob plus optional VM templates. No cloud resources, live backup, SQL application, schedule or cutover executed.
+- Added architecture, operator runbooks, owned data exports and actual verification tracker: [REDUNDANCY-01](docs/agents/REDUNDANCY-01.md).
+
+## 2026-10-19 — Trivia demo no longer awards Aura
+
+The dev-only trivia preview says nothing is saved. It now also awards no Aura: a right answer in the demo used to add 5 Aura to a signed-in tester's card. Real weekly rounds still award 5 Aura for a right answer.
+
+## 2026-10-18 — Two-step sign-in for admin desks (off for now)
+
+The web admin portal and Expo `/admin` can require an authenticator app code before an admin desk opens. An admin sets it up once with a QR code or setup key, then enters a 6-digit code at each sign-in. It stays off until TOTP is turned on in Supabase and the owner sets the switch; until then sign-in is unchanged. Steps: `docs/engineering/ADMIN_MFA.md`.
+
+## 2026-10-18 — Live scores can update one game at a time (off for now)
+
+The Local scoreboard can follow each game on its own channel and change just that score, instead of every fan reloading every game. It stays off until the database update `20261018120000` is applied and a build turns it on; until then nothing changes for fans.
 
 ## 2026-10-18 — Home shows a clip that has a file
 

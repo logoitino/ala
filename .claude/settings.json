@@ -9,6 +9,12 @@
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/state-doc-guard.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/exit-map-guard.sh\"",
+            "timeout": 60,
+            "statusMessage": "Updating the exit plan map"
           }
         ]
       }

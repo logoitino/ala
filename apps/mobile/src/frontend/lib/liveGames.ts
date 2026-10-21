@@ -2,8 +2,12 @@
  * Fan-side live game data: the Local scoreboard list, the featured live match, one game row, and the Realtime channels
  * that keep them current. Moved out of `hooks/useLiveScores` and `hooks/useLiveGame` (PORT-01) so a host change
  * rewrites lib/, not the hooks.
- * @sideEffects SELECT on `games`; Realtime `postgres_changes` on `games` and `game_events`.
+ * SCALE-03 (2026-10-18) adds the switch and the shared private Broadcast topics behind `lib/liveScoreSync`.
+ * @sideEffects SELECT on `games`; Realtime `postgres_changes` on `games` and `game_events`; private Broadcast
+ *   `game_scores_*` topics when the SCALE-03 switch is on.
  */
+
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 import { realtimeEq } from '@/lib/postgrestFilter';
 import { nextRealtimeTopic, supabase } from '@/lib/supabase';
@@ -83,6 +87,58 @@ export function subscribeGamesChanges(topicPrefix: string, onChange: () => void)
     .subscribe();
   return () => {
     supabase.removeChannel(channel);
+  };
+}
+
+/**
+ * @purpose SCALE-03 switch: per-game Broadcast for the Local scoreboard. Off unless the build sets
+ *   `EXPO_PUBLIC_LIVE_SCORES_BROADCAST=true`; leave it off until migration `20261018120000_live_score_broadcast.sql`
+ *   is applied on the project the build points at. Even when on, a refused private topic drops back to today's path.
+ */
+export function isLiveScoresBroadcastEnabled(): boolean {
+  return process.env.EXPO_PUBLIC_LIVE_SCORES_BROADCAST === 'true';
+}
+
+type ScoreTopicListener = { onMessage: (event: string, payload: unknown) => void; onStatus: (status: string) => void };
+type ScoreTopicEntry = { channel: RealtimeChannel; listeners: Set<ScoreTopicListener>; status: string | null };
+const scoreTopics = new Map<string, ScoreTopicEntry>();
+
+/**
+ * @purpose Join one private SCALE-03 Broadcast topic (`game_scores_{id}` or `game_scores_index`), shared across every
+ *   mounted scoreboard. supabase-js returns the existing channel for a topic name it already holds, so a second
+ *   `.on()` after `subscribe()` would throw; one ref-counted channel per topic avoids that.
+ * @param topic Exact topic the database trigger sends on (no sequence suffix, unlike `nextRealtimeTopic`).
+ * @param listener Gets every message (`event`, `payload`) and every channel status; a late joiner gets the last status.
+ * @returns Leave; the channel is removed when its last listener leaves.
+ * @sideEffects Realtime private channel (`realtime.messages` RLS decides who may join); `removeChannel` on last leave.
+ */
+export function subscribeScoreTopic(topic: string, listener: ScoreTopicListener): () => void {
+  let entry = scoreTopics.get(topic);
+  if (!entry) {
+    const listeners = new Set<ScoreTopicListener>();
+    const created: ScoreTopicEntry = { channel: null as unknown as RealtimeChannel, listeners, status: null };
+    created.channel = supabase
+      .channel(topic, { config: { private: true } })
+      .on('broadcast', { event: '*' }, (message) => {
+        const event = typeof message.event === 'string' ? message.event : '';
+        for (const fan of listeners) fan.onMessage(event, message.payload);
+      })
+      .subscribe((status) => {
+        created.status = status;
+        for (const fan of listeners) fan.onStatus(status);
+      });
+    scoreTopics.set(topic, created);
+    entry = created;
+  } else if (entry.status) {
+    const last = entry.status;
+    queueMicrotask(() => listener.onStatus(last));
+  }
+  const joined = entry;
+  joined.listeners.add(listener);
+  return () => {
+    if (!joined.listeners.delete(listener) || joined.listeners.size > 0) return;
+    if (scoreTopics.get(topic) === joined) scoreTopics.delete(topic);
+    void supabase.removeChannel(joined.channel);
   };
 }
 

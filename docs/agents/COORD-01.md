@@ -1,6 +1,285 @@
 <!-- Actual documentation/team-coordination execution record, separate from callable role definitions. -->
 # COORD-01 — Documentation and team coordination
 
+## Email/inbox/preferences design — 2026-10-21 UTC
+
+Owner requests welcome/account emails, donation transaction emails, notification review and
+Profile controls. The owner's later architecture answer approved building with **only security
+emails on by default**, superseding receipt-email-on. All optional email categories start off.
+NOTIFY-01 enrolled planned at2026-10-21T06:08:30.639Z; selected planned gate passes18records.
+At initial design enrollment, implementation was in progress; no hosted SQL, provider
+configuration or sends occurred. Later implementation checkpoints and claim releases follow.
+
+| Responsibility | Actual outside-session executor | Owned scope | Disposition |
+| --- | --- | --- | --- |
+| Design integration and documentation writes | Root Codex | EMAIL_NOTIFICATIONS_DESIGN, docs index, STATE/CHANGELOG and this ledger | Draft prepared; root retains integration claim pending review/checks |
+| Client/Auth/Profile source and design review | Codex `/root/auth_profile_freshness` | Read-only existing UI/Auth/preferences map and draft review | Source map complete; independent draft review requested |
+| Independent Security/Finance/Data source and design review | Codex `/root/connect_kyc_review` | Read-only payment/recipient/thank-you authority and draft review | Source map completed05:30:58UTC; independent draft review requested |
+| DOCUMENTATION/VP_OPERATIONS-shaped review | Codex `/root/photo_cleanup_review` | Read-only roles, feature-admin, Support and draft reconciliation | Source map completed05:28:21UTC; independent draft review requested |
+
+NOTIFICATIONS remains under CREW → PROFILE → ENGINEERING → CTO. AUTH owns account source,
+COMMERCE/RECEIPTS/LEDGER/RECONCILIATION donation truth, PROFILE user controls and ADMIN/BACKEND
+staff/server execution. Actual Codex reviews are separate from repository-pinned specialists,
+counsel decisions, provider evidence and release approval. A dispatch alone is not review acceptance.
+
+The source review found intent metadata/purpose and webhook durable-commit gaps, as well as
+`thank_donation`'s NULL-role denial gap. Those are read-only source findings: no hosted query,
+SQL exploit, provider call, credential read, test send or notification code execution occurred.
+Initial independent client/Product/QA and Security/Finance/Data reviews accepted draft hash
+`6dee03fb76edcbb391fbf45e77dedf62fbd7a1508c12d8e7cfd75575e45424e4` at06:05:03UTC and
+06:05:07UTC respectively. Root then resolved Doc/VP's concrete master-default/in-flight and
+role-duty/route clarifications. The Doc/VP agent's final turn failed with a transport error;
+its earlier findings are recorded, not invented as final acceptance. Root owns final review.
+
+Initial implementation claim snapshot at enrollment (historical; releases and current checkpoints are recorded below):
+
+| Implementation responsibility | Actual executor | Exclusive source ownership | Status |
+| --- | --- | --- | --- |
+| Notification SQL/data/Auth source | Codex `/root/notification_sql` | Notifications migration, canonical notification schema/NULL-role guard and SQL replay | Claimed; implementation in progress |
+| Shared contracts/templates/delivery | Codex `/root/notification_delivery` | Shared notification types, `_shared/notifications` core and tests | Claimed; implementation in progress |
+| Donation proof and durable application | Codex `/root/notification_money` | Payment context migration, money core/webhook/checkout and focused tests | Claimed; implementation in progress |
+| Client/staff integration and shared docs | Root Codex | Notification SDK, staff controls/Health, later Profile/Activity, registry/data map/docs | Claimed; fan UI waits for actual admin checkpoint |
+
+Existing-current-tree ruling: build in the owner's shared current app, preserve concurrent edits
+and make no commits; an isolated checkout would omit current authorized app work. Source reviews
+and metadata gates do not prove SQL/provider behavior. The official Expo58 docs fetch failed
+connection (curl exit7); UI uses installed SDK references with that documentation limit.
+
+### Actual local admin checkpoint — 2026-10-21T15:31:03Z
+
+Notification SQL/shared/donation-preparation owners released bounded implementation claims.
+SDK/admin30 and core21 tests plus mobile/portal/shared typechecks PASS. Independent client
+source review accepted15:28:17UTC. Security reviewed actor/grants/data ownership15:28:21UTC,
+found a lock-order inversion, and accepted the corrected bounded source15:30:42UTC. SQL25
+plus1 concurrency cases prepared,0 executed; no live provider, SQL or money action.
+Doc/VP role reconciliation accepted14:29:37UTC. Root records disabled-source local admin
+readiness in [evidence](../engineering/evidence/NOTIFY-01-admin.md); fan implementation follows
+only the selected gate. This is not hosted, SQL, payment, email or release acceptance.
+
+### Actual fan implementation and review — 2026-10-21 UTC
+
+Root built the recipient hooks; Codex `/root/notification_ui` owned Profile/Activity components,
+their unit fixtures and narrow route mounts. Hook scaffold RED16 failed/1 absence case passed;
+base17 passed. Independent QA identified effect replay and Archived bulk-read scope; explicit
+replay RED showed revision5→0, generation fix passed. The native StrictMode wrapper did not
+replay and is not claimed as behavioral RED. Archived hook RED2 unwanted RPCs→GREEN19 PASS;
+UI RED exposed the active-inbox bulk button, correction hides it/labels active-inbox counts,
+final15 UI cases PASS. Final source guard review accepted15:42:04UTC.
+
+Initial full mobile run found4 suites/15 failing cases, including a newly added regression before
+its patch, existing Profile/Health test fixture boundaries and7 missing Finance catalog fields.
+Focused4 suites/66 cases passed after integration, then full233 suites/2,287 tests passed130.649s.
+Both apps/shared typechecks PASS. Finance/Data accepted final7 quote/reference meanings and
+retired legacy-claim semantics15:45:55UTC. Root retained domain ownership; no alternate credit
+writer or receipt authority was enabled. All production notifications remain paused.
+
+Doc/VP owned TESTER_SCRIPT and checked115 roles/17 departments/pins/routing at15:43:44UTC.
+It identified stale approval-time/design/queue/admin status and draft-as-saved wording; root
+corrected them in current docs/copy. Root owns final [app evidence](../engineering/evidence/NOTIFY-01-app.md),
+metadata/checkpoint and scoped final guards. Team declarations do not establish unattended
+agent execution or provider delivery. SQL25 plus1 concurrency cases remain prepared/0 executed.
+
+### Local app handoff — 2026-10-21 16:06 UTC
+
+The local disabled-source app-ready checkpoint is2026-10-21T15:50:54Z, preserving admin-ready
+15:31:03UTC. Independent Documentation/VP accepted current source/status contracts15:53:08UTC
+and verified115 roles/17 departments/pins/reporting. Root corrected the lone final copy-guard
+finding by naming Tapua'i in the quoted optional-tip allocation; no accounting behavior changed.
+Copy, roles and selected feature-admin rechecks passed. Other scoped guards passed with their
+documented inventory/baseline limits; final appended-doc checks follow actual execution.
+
+Root's fresh owned8087 browser run used ordinary existing Demo Fan sign-in and verified phone-width
+Profile settings/Activity missing-service states. The earlier disconnected8086 error overlay is
+not acceptance evidence. No new account, birth write, real notification send or financial action
+ran. Root reset and closed only its owned tab1335872983; local8087 preview remains available.
+Actual artifacts/hashes and exact limits are in [app evidence](../engineering/evidence/NOTIFY-01-app.md).
+
+SQL/shared/money/UI/QA/Security/Finance/Documentation bounded local claims are released; root
+retains only final appendix/check integration until the receipt below. Hosted SQL execution,
+trusted donation business/outbox wiring, public unsubscribe, provider/worker/scheduler and
+retention/legal/device/release acceptance remain with their declared owners. This handoff
+does not claim notifications are delivering or that115 repository roles ran as agents.
+
+Final read-only appendix acceptance:2026-10-21 16:08:39UTC. Root matched the reviewed app
+evidence, plan and COORD hashes before recording this receipt; the bindings are retained in
+app evidence. Final post-append docs/links/roles/feature/whitespace checks passed within their
+declared scopes. Root's remaining local integration/documentation claim is released. Hosted,
+business-event and operational delivery work remains open under the owners above.
+
+## APP-TEST-01 execution — 2026-10-21 UTC
+
+Owner said to execute the current-app test sequence and confirmed Google OAuth setup is not
+completed. Scope is local app testing; no provider configuration, hosted SQL, deployment,
+publication or financial action follows from these test receipts.
+
+| Responsibility | Actual outside-session executor | Owned scope | Disposition |
+| --- | --- | --- | --- |
+| Integration, callback repair and operational checks | Root Codex | `apps/mobile/app/auth/callback.tsx`, its callback tests, local anonymous HTTP checks, owned background browser tab, this ledger and STATE/CHANGELOG | Local repair/checks accepted; claim released |
+| Offline Connect SQL replay | Codex `/root/connect_client_flow` | Read-only canonical replay and local engine availability | Finished: engine missing; 0 SQL cases executed |
+| Browser media rehearsal | Codex `/root/media_flow_map` | Isolated browser attempt, then explicitly owned background app tab only | Existing email/draft/guest gate verified; selected-file cases unrun; claim released |
+| Documentation synchronization / existing-priority review | Codex `/root/photo_cleanup_review` | TESTER_SCRIPT; focused Google guide and unchanged role-duty review | Accepted04:31:40UTC; claim released |
+| Independent Security/Finance/QA review | Codex `/root/connect_kyc_review` | Read-only local anonymous reproduction and final test-claim review | Source/data/QA accepted04:26:52UTC; final scope04:32:29UTC, cleanup delta04:33:58UTC; claim released |
+
+Actual root requests to `http://localhost:8086/api/create-stripe-account`,
+`/api/create-payment-intent` and `/api/create-payout` used POST, body `{}` and no Authorization.
+All three returned401 JSON with their sign-in messages. This proves the anonymous HTTP gates;
+it does not verify signed-in eligibility, persistence, Stripe onboarding, KYC or payout readiness.
+The sanitized receipt is `/tmp/ala-app-http-auth-20261021.json`.
+Independent Codex `/root/connect_kyc_review` reproduced all three401 JSON results at04:15:21UTC
+with no Authorization or provider/authenticated branch exercised.
+
+The actual Connect replay command exited2 because the required external PGlite engine was
+missing. There are35 prepared checks and **0 executed SQL cases**. Canonical SQL was unchanged.
+Native PostgreSQL and PGlite execution, hosted application/readback and concurrency/locking
+acceptance remain open. Executor evidence: `/tmp/app-test-01-connect-replay.log` and
+`/tmp/app-test-01-connect-readiness.json`, dated2026-10-21T04:12:17.429378Z.
+
+Fresh headless Chrome failed its macOS bootstrap permission check; a separate LaunchServices
+launch also failed. Escalation was accepted, so these were execution failures, not approval
+rejections. The syntax-checked isolated runner `/tmp/ala-isolated-browser-app-test.cjs` has not
+executed browser cases. Root subsequently opened a background agent tab at `http://[::1]:8086/`:
+HTTP200, first-open welcome UI visible, distinct origin from the existing localhost session.
+That origin is not evidence that Google's localhost redirect allowlist is configured.
+
+No new role duties or model pins changed. Actual Codex executors are recorded separately from
+the repository's pinned role definitions. Long videos remain off; live streaming stays deferred.
+
+Actual local browser testing found failure UI in the DOM but the synthetic error query still
+in the address after initial navigation. The first screenshot was obscured by the existing
+birth prompt; it is not a visible recovery acceptance image. Installed Router58.0.23 commits
+its own stored path after navigation, independently of direct browser history replacement.
+Root repaired the callback by cleaning both history and Router path and guarding cleanup's
+empty-route update; new return details still use normal completion. Meaningful regression RED:
+3failed/8passed, then fresh-fragment RED1failed/11passed before narrowing that guard. Focused
+GREEN3suites/56tests4.497s; original logs are `/tmp/ala-callback-router-red.log`,
+`/tmp/ala-callback-fragment-red.log` and `/tmp/ala-callback-router-green.log`.
+Final root mobile226suites/2,196tests PASS151.564s/exit0, both app typechecks and9scoped app/source
+guards PASS. Full test log: `/tmp/ala-app-callback-full-mobile.log`. This is new execution;
+the older226/2,193 baseline is not substituted. Independent focused3suites/56tests PASS1.788s
+and data-map4regressions/0failures PASS, accepted04:26:52UTC. The first independent Jest attempt
+emitted Watchman startup EPERM and ran no cases; it is not a test PASS. The accepted repeat used
+`--watchman=false`. No schema/RPC/export/Storage/persistent-identity resource changed; existing
+Data Governance ownership remains, independently reviewed.
+
+| Frozen callback source | SHA-256 |
+| --- | --- |
+| `apps/mobile/app/auth/callback.tsx` | `2e074a0cfc4deac4cda5bcbaddfaa8f80281ba616e82e18358b6bce8f250454c` |
+| `apps/mobile/app/auth/__tests__/callback.test.tsx` | `fe78b2681bc31d26582468db9bfd0f1e3bf08bf6f40c0536c1f0d5a58444f840` |
+
+Root reissued the synthetic failed-return URL on the frozen source; it settled HTTP200 at
+`http://[::1]:8086/auth/callback` with query/hash cleared and no synthetic diagnostic in the body.
+The optional birth prompt was dismissed with Not now, with no birth write. The final visible
+recovery screenshot `/tmp/ala-app-callback-recovery-fixed-20261021.png` is25777bytes, SHA-256
+`35249508e3cd8c2aaa4b7ace146819476d143f1d35e554dcfa6920e85139d0e1`.
+Root viewed it; independent reviewer viewed/reconciled it at04:29:58UTC. Back to app returned
+Home with a clean address. Browser Back returned the clean callback; Forward returned clean
+Home; neither showed synthetic diagnostic text. These are root's original browser observations;
+the independent screenshot supports rendered content and the source/tests support cleanup.
+Blocked history/navigation APIs still allow only best-effort cleanup with safe recovery.
+
+The actual media executor verified guest Upload opens sign-in and ordinary email sign-in to
+the existing test account resumes the draft and opens its picker. No new account, Demo Fan
+signup shortcut, birth write, fixture selection, upload or publication occurred. A temporary
+file-input action executed with an automatic-review caution, not a rejection; the handler,
+picker and draft were closed and no file input/password field remained. The8s/46s/oversize
+picker boundaries, image selection, physical upload/cleanup and native playback remain unrun.
+The isolated Playwright helper remains a syntax-checked preparation, not browser acceptance.
+
+The extra public Google authorize fetch was automatically rejected as sensitive authentication
+traffic and did not execute; no bypass was attempted and the user was told the stated reason.
+Successful Google/new-account/native-return cases remain unrun. The blank private test-bank
+template was actually created at `~/.config/ala-sports/app-test-server.env`, mode600, preserving
+any existing file. No credentials were supplied or server/provider configuration activated.
+Configured signed-in bank/SQL/Edge/KYC and authenticated503 remain unverified; payouts stay blocked.
+
+The owned background tab was closed at04:31:57UTC after returning Home; the local Metro preview
+remains running. User tabs/windows were not changed by these operations.
+
+No full `pnpm check`, CI/provider/native or hosted acceptance is claimed. Scoped app gates were
+used because the full command includes unrelated infrastructure work.
+
+Final Documentation/VP acceptance:04:31:40UTC. Independent Security/Finance/QA accepted the final
+scope at04:32:29UTC and revalidated the final cleanup paragraph at04:33:58UTC. Root verified all
+four frozen source/document hashes and the reviewed ledger before adding these final receipts;
+the reviewed ledger SHA-256 was `16ccf563fddde8574083b78e40df61afd765dddadbca224c63197c33d06b12c4`.
+All local claims in this execution are released; no required local repair or documentation
+correction remains. Outstanding configured-provider, SQL, media and native tests remain with
+the existing APP-TEST-01 owners; this is not their completion or release approval.
+
+| Frozen operational documents | SHA-256 |
+| --- | --- |
+| `docs/ONBOARDING.md` | `b2524465f3508e542bc6c168de7e93ab2e0c01899077f5ce4d8c36b74357be28` |
+| `docs/engineering/TESTER_SCRIPT.md` | `1d2f73909f7c34b016b6e7e18f512edd661d05f1b4834f17ac2ae2e3a3a9e4d0` |
+
+## Current app roadmap and whole-team refresh — 2026-10-21 UTC
+
+Owner requested a roadmap check and whole-team update after current-app testing preparation.
+Scope is the current app, repository team assignments and truthful testing/release handoffs.
+The roster contains115 definitions across17 department labels; this is not115 executed agents.
+Actual latest app evidence is226 mobile suites/2,193 tests and both app typechecks PASS
+(media plan §6). Google development is disabled; local bank credentials and hosted SQL/Edge
+acceptance remain open. Long videos stay off until costs are measured; live streaming is deferred.
+
+| Assigned function | Actual executor | Shared-file claim | Current disposition |
+| --- | --- | --- | --- |
+| Roadmap reconciliation | Codex `/root/auth_profile_freshness` | `docs/product/ROADMAP.md` | Complete locally; integrated, claim released |
+| Documentation and VP team coverage | Codex `/root/photo_cleanup_review` | `docs/agents/TEAM_STATUS.md`, `docs/agents/DEPARTMENT_PLANS.md` | Complete locally; accepted, claims released |
+| Independent Security/Finance/QA scope review | Codex `/root/connect_kyc_review` | Read-only roadmap, task/source evidence and team metadata | Accepted03:28:14UTC; bounded roadmap revalidation03:29:21UTC; claim released |
+| Integration and priority routing | Root Codex | Registry, affected app role definitions, TEAMS, TEAM_HIERARCHY, WORK_QUEUE, this ledger, STATE and CHANGELOG | Complete locally; scoped checks passed, claims released |
+
+Model pins, reporting leads and independent domain authority are existing contracts. Actual
+executors above are outside-session Codex; a definition, assignment or document update does
+not establish that a pinned model ran, a human received a message or a recurring service started.
+The actual receipts and disposition below close these documentation claims.
+
+### Actual current-app reconciliation receipts
+
+Roadmap worker corrected local-versus-hosted Connect/media status, historical self-link/profile
+guard claims, environment-specific custodial/ladder/Rally application and actual owner routing.
+Its final scoped link/whitespace checks passed at03:27:51UTC. Root then clarified the elapsed
+October20 Growth packet's missing execution evidence and named COMMERCE/PRIVACY_ENGINEERING
+reviewers; independent bounded revalidation accepted those two final changes at03:29:21UTC.
+No fee choice, legal decision, migration application or release gate was changed.
+
+Documentation/VP executor accepted the current115-role assignment table and17-department
+deliverables at03:27:47UTC. Each current row matches its registry call, file, department and lead;
+each department has a deliverable, dependencies, next owner and missing evidence. Older107-role
+reviews remain in dated history. Conflicting older Books/staging/guardian snapshots were corrected
+or explicitly qualified. No new infrastructure execution or external team delivery was performed.
+
+Independent Security/Finance/QA accepted the team, role and roadmap scope at03:28:14UTC and
+revalidated the final roadmap at03:29:21UTC. Required semantic findings are resolved. Root
+independently checked all115 identity/file/department/lead/model/ownership records against the
+pre-edit signature; all are unchanged. Exactly51 app/testing definitions and matching registry
+tasks have new next-owner duties. Root verified115 unique assignment rows and exact17 department
+totals; definitions/assignments do not establish execution by115 specialists.
+
+Actual root scoped checks passed on2026-10-21UTC: `pnpm agents:check`(115), `pnpm docs:check`,
+`pnpm docs:links`(289activefiles), `pnpm copy:check`, `pnpm comments:check`, `pnpm data:map:check`
+(4lineage regressions;111tables/3views/6buckets/41switches/569functions/39triagedexports;0failures),
+one-time Python role/department/signature reconciliation and scoped `git diff --check`.
+The original226suite/2,193test app baseline is historical execution evidence for current source;
+no app suites, full `pnpm check`, CI job, browser/provider operation or hosted/device acceptance
+were rerun for these prose and assignment changes.
+
+Accepted source bindings:
+
+| File | SHA-256 |
+| --- | --- |
+| `docs/product/ROADMAP.md` | `990c773e787c4fac5ba2e2d30474f2dddf031a45278899e38f29477a1fbe5bf2` |
+| `docs/agents/TEAM_STATUS.md` | `c726ecaa9aab2c38ec2335083e6e84c22ca9d435b37ffc598fa1ea06542cec00` |
+| `docs/agents/DEPARTMENT_PLANS.md` | `cba7f1409552390d921d856d3256fe58cd618bb640e4372449f6b4f49535b45b` |
+| `docs/agents/TEAMS.md` | `63801c2ad701215c03883bd4cb5d36578d3ed80549173ff7a25458d7d6144889` |
+| `docs/agents/TEAM_HIERARCHY.md` | `8f807785226bbd263c321c85262af1c4a174221ef575895590711ced0e7f5c94` |
+| `docs/agents/WORK_QUEUE.md` | `9801dddaaf88dd10a63a19ca84ef6748f303e7e53e5922bce16a850dd94135a0` |
+| `.claude/agents/registry.json` | `10859d852684689bdf02c57a0ccabfbe8163303dff934fbe66767d48c073f774` |
+
+No required documentation correction remains open in this scope. Claims above are released.
+Next operational owners remain AUTH/operator/QA for Google; CONNECT/CUSTODIAL/BACKEND/Security/
+QA for approved test-bank setup; HIGHLIGHTS/UPLOAD/PHOTO_STORIES/PLAYBACK/Storage/QA for actual
+media rehearsal. Counsel/Privacy precede telemetry IDs; Finance/Safety/Security retain public-beta,
+positive KYC, authoritative ledger and payout gates. Long videos remain off; live stays deferred.
+
 Owner request: 2026-10-13, make the documentation and team-update functions active and accountable.
 This task runs outside-session Codex passes for those functions. Repository Cursor model pins
 remain intact; a role definition or CI pass does not mean a pinned specialist ran.

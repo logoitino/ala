@@ -82,3 +82,20 @@ test('labelRows names each row, merges rows with the same words, and sorts large
   assert.deepEqual(input[0], { label: 'crew.join', value: 2 }, 'input is not changed');
   assert.deepEqual(labelRows([], issueLabel), []);
 });
+
+test('trivia funnel steps, failures and the quiz surface read as words', () => {
+  assert.equal(featureLabel('trivia.view_prep'), 'View trivia preparation');
+  assert.equal(featureLabel('trivia.press_start'), 'Tap Start on a trivia round');
+  assert.equal(featureLabel('trivia.start'), 'Start a trivia round');
+  assert.equal(featureLabel('trivia.answer'), 'Answer a trivia question');
+  assert.equal(featureLabel('trivia.next'), 'Next trivia question');
+  assert.equal(featureLabel('trivia.complete'), 'Finish a trivia round');
+  assert.equal(featureLabel('trivia.abandon'), 'Leave a trivia round');
+  assert.equal(featureLabel('trivia.unavailable'), 'Trivia question unavailable');
+  assert.equal(issueLabel('trivia.start_failed'), 'Trivia Start failed');
+  assert.equal(issueLabel('trivia.answer_failed'), 'Trivia answer failed');
+  assert.equal(issueLabel('trivia.next_failed'), 'Trivia Next failed');
+  assert.equal(issueLabel('trivia.explanation_failed'), 'Trivia explanation failed');
+  assert.equal(surfaceLabel('sport-quiz'), 'Sport Pop Quiz');
+  assert.equal(readableKey('trivia.mystery_step'), 'Trivia mystery step');
+});

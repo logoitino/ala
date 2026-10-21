@@ -16,6 +16,7 @@ import { PLATFORM_TIP_HINT, PLATFORM_TIP_PERCENTS, PLATFORM_TIP_TITLE, TAGLINE_H
 import { AURA_PER_DOLLAR, MALO_DISCLAIMER, auraPointsForTip, displayValue, type Player } from '@/data/players';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
+import { useScreenMountTime } from '@/hooks/useScreenMountTime';
 import type { TipEntry, TipOrigin } from '@/lib/finance';
 
 type TipCheckoutProps = {
@@ -41,6 +42,7 @@ function parseCustomTip(value: string): number | null {
  * @sideEffects Opens Stripe only on final Donate; a synchronous ref prevents duplicate payments and early dismissal.
  */
 export function TipCheckout({ player, compact = false, hideHeader = false, embedded = false, reelId, origin, entry, wishlistItemId, rallyId, sourceLabel, onBacked, onTipped, onBusyChange, canInteract }: TipCheckoutProps) {
+  useScreenMountTime('donate-sheet');
   const [step, setStep] = useState(1);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [coverFees, setCoverFees] = useState(false);

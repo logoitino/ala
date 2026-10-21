@@ -1,11 +1,18 @@
 import 'server-only';
 
+import { readAdminMfaStep, type AdminMfaStep } from '@/lib/adminMfa';
 import { getSupabaseServerClient } from '@/lib/supabase.server';
 
 export type PortalSession = {
   userId: string;
   email: string | null;
   isAdmin: boolean;
+  /**
+   * SCALE-01 second step for an admin: `off` while `NEXT_PUBLIC_ADMIN_REQUIRE_MFA` is off (no extra call),
+   * `pass` for an `aal2` session, else `enroll` / `verify`. Always `off` for a non-admin, who sees Access
+   * Restricted instead.
+   */
+  mfaStep: AdminMfaStep;
 };
 
 function parseRoles(raw: unknown): string[] {
@@ -33,7 +40,8 @@ function parseRoles(raw: unknown): string[] {
  *   otherwise the session plus whether that profile is an admin (caller should render Access Restricted when
  *   `isAdmin` is `false`).
  * @sideEffects `supabase.auth.getUser()` (re-validates the session with Supabase, not just the local cookie) and
- *   a `profiles` SELECT scoped to `id = auth.uid()`.
+ *   a `profiles` SELECT scoped to `id = auth.uid()`. With the MFA switch on, an admin's token is re-checked once
+ *   more for its `aal` (`readAdminMfaStep`, `fresh`).
  */
 export async function getPortalSession(): Promise<PortalSession | null> {
   const supabase = await getSupabaseServerClient();
@@ -55,5 +63,7 @@ export async function getPortalSession(): Promise<PortalSession | null> {
   const isAdmin =
     profile?.is_admin === true || profile?.role === 'admin' || roles.includes('admin');
 
-  return { userId: user.id, email: user.email ?? null, isAdmin };
+  const mfaStep = isAdmin ? await readAdminMfaStep(supabase, user, 'fresh') : 'off';
+
+  return { userId: user.id, email: user.email ?? null, isAdmin, mfaStep };
 }

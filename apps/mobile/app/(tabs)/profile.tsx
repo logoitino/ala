@@ -1,4 +1,4 @@
-/** Own profile shares the public sports layout; only the exact linked athlete supplies selected sport stats. */
+/** Own profile shares the public sports layout; current-account notification settings open after the Account menu dismisses. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { type Href, useFocusEffect, useIsFocused, useRouter } from 'expo-router';
@@ -43,6 +43,7 @@ import { fetchRecentTips } from '@/lib/finance';
 import { FOCAL } from '@/theme/motion';
 import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
 import { PrivacySettingsSheet } from '@/components/Profile/PrivacySettingsSheet';
+import { NotificationSettingsSheet } from '@/components/Profile/NotificationSettingsSheet';
 import { ChallengeSettingsSheet } from '@/components/Challenges/ChallengeSettingsSheet';
 
 const FAN_SELF_PREFIX = 'fan-self';
@@ -72,6 +73,7 @@ export default function MyHubTab() {
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [challengesOpen, setChallengesOpen] = useState(false);
   const [flipOpen, setFlipOpen] = useState(false);
@@ -297,6 +299,15 @@ export default function MyHubTab() {
         hint: 'Mute invites, private badges, and your data',
         onPress: () => setChallengesOpen(true),
       });
+      items.push({
+        id: 'notifications',
+        label: 'Notifications',
+        hint: 'Email choices and your Activity inbox',
+        onPress: () => {
+          trackFeature('notifications.settings');
+          setNotificationsOpen(true);
+        },
+      });
     }
     items.push({
       id: 'capability',
@@ -487,6 +498,7 @@ export default function MyHubTab() {
       <VerifyAthleteModal visible={verifyOpen} onClose={() => setVerifyOpen(false)} />
       <EditProfileModal visible={editProfileOpen} onClose={() => setEditProfileOpen(false)} onOpenPrivacy={() => setPrivacyOpen(true)} />
       <PrivacySettingsSheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      <NotificationSettingsSheet visible={notificationsOpen && profileOpen && !isGuest} onClose={() => setNotificationsOpen(false)} />
       <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />
       <ChallengeSettingsSheet visible={challengesOpen} onClose={() => setChallengesOpen(false)} />
     </TabScreen>

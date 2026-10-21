@@ -1,3 +1,4 @@
+<!-- Canonical schema inventory; notification entries are local unapplied source contracts. -->
 # Tapua'i database schema
 
 Canonical SQL: [`apps/mobile/src/backend/db/schema.sql`](../../apps/mobile/src/backend/db/schema.sql)  
@@ -167,6 +168,7 @@ Highlight / Seki clips. Files in Storage **`reels`** (fallback **`game_highlight
 | `rights_version` | text | Which confirmation text they agreed to (`2026-10-01`). Incremental: `supabase/migrations/20261001180000_content_rights_reports.sql`. |
 | `media_type` | text not null default `video` | `video` \| `photo_story` (constraint `reels_media_type_check`). A photo story stores `video_url = ''`; its photos live in `reel_photos`. Not in the column UPDATE grant, so a published clip cannot change type. Constraint `reels_photo_story_public_check`: a story can never be `is_vault_only` or `is_exclusive` (v1 stories are public only), so `toggle_reel_vault_status` and the client column UPDATE both fail for a story. A story with `photo_count = 0` is **unpublished**: hidden from the pending-tag queue and filmer rewards (and by the client's `isListableReel`). Incremental: `supabase/migrations/20261007230000_photo_stories.sql` (not applied). |
 | `photo_count` | smallint not null default 0 | Photos in a story, 0–10 (`reels_photo_count_check`). Server-owned: trigger `reels_reset_photo_count()` zeroes it on every INSERT and only `set_reel_photos` sets it; not in the column UPDATE grant. Same migration. |
+| `photo_cleanup_pending` | boolean not null default false | Server-owned terminal failed-upload claim. Owner cleanup RPCs mark only zero-count stories; INSERT forces false and clients cannot update it. A claimed story cannot be reopened/published or receive late Storage content writes. `20261020190000_failed_photo_story_cleanup.sql`, written locally, not applied. |
 | `created_at` | timestamptz | |
 
 **RLS (2026-09 audit — reels RLS tightening):** base-table SELECT is **not** public (**2026-09 paywall-bypass fix**, see below) — only the uploader's own row, or an admin. INSERT requires `authenticated` and `uploaded_by` to equal the caller's own `profiles.id` (the `reels_apply_tag_defaults` BEFORE INSERT trigger fills `uploaded_by` from the session before this check runs, so a real upload always satisfies it; a client cannot attribute a row to someone else's profile). UPDATE is two policies — the uploader may update their own row, or an admin (`current_user_role() = 'admin'`) may update any row — **and** a column-level `GRANT` on top of that narrows a raw client UPDATE to `title` / `category` / `is_exclusive` / `is_vault_only` / `flash_unlock_until` only. Counters (`seki_count` / `aura_count` / `flex_count` / `total_tips_cents`), `is_flagged` / `is_removed` / `reported_by`, and the tag fields are **not** in that grant — they only move through the SECURITY DEFINER RPCs (`increment_reel_hype`, `increment_reel_tips`, `moderate_flagged_reel`, `confirm_reel_player_tag`, `report_reel`), which bypass the column grant because they run as the function owner. Previously `with check (true)` on both INSERT and UPDATE — any anon/authenticated client could insert a Highlight attributed to any player, or vandalize any reel row (caption, video, hype counts, tip totals, vault flags, moderation flags) via a raw REST call.
@@ -370,8 +372,13 @@ Live scoreboard. Realtime. Operator console writes score / `clock` / `quarter` /
 | `claimed_by` | uuid FK → `profiles(id)` ON DELETE SET NULL | Set after valid operator PIN |
 | `is_active` | boolean | Local discovery |
 | `created_at`, `updated_at` | timestamptz | |
+| `live_seq` | bigint default 0 | SCALE-03 (`20261018120000`, **not applied**). Server-owned per-game change number: trigger `games_live_seq_bump` sets 0 on insert and adds 1 only when a scoreboard column changes; a client value is ignored |
 
 **RLS (demo):** public SELECT; UPDATE `anon` or operator/admin; INSERT admin/operator (`Admin insert games`). Client: `/admin/games`.
+
+### `games_live_seq_bump` / `games_broadcast_score_change` (SCALE-03 triggers, not applied)
+
+Trigger functions, not RPCs (EXECUTE revoked from API roles). `games_live_seq_bump` (BEFORE INSERT/UPDATE) keeps `games.live_seq`. `games_broadcast_score_change` (AFTER INSERT/UPDATE/DELETE, SECURITY DEFINER, `search_path = ''`) calls `realtime.send` on private topic `game_scores_{id}` with event `score` and payload `{v:1, id, seq, changes}` (only the changed scoreboard columns; never `claimed_by`), and on `game_scores_index` with event `membership` and payload `{v:1, id, op}` for insert / delete / `is_active` flips. A send failure only raises a warning. Policy `Fans receive game score changes` on `realtime.messages`: anon + authenticated SELECT, Broadcast only, topic exactly `game_scores_<uuid>` or `game_scores_index`; no INSERT policy, so clients cannot send. Client: `lib/liveScoreSync.ts` behind `EXPO_PUBLIC_LIVE_SCORES_BROADCAST` (default off).
 
 ### `update_game_score`
 
@@ -754,7 +761,7 @@ Batched client performance **and** product-usage events (Reel stalls, Realtime r
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | uuid PK | |
-| `event_type` | text | `video_stall` \| `video_first_frame` \| `socket_reconnect` \| `checkout_latency` \| `tab_dwell` \| `surface_scroll` \| `feature_tap` \| `ui_issue` \| `flash_unlock` \| `stripe_webhook_payment_succeeded` |
+| `event_type` | text | `video_stall` \| `video_first_frame` \| `socket_reconnect` \| `checkout_latency` \| `tab_dwell` \| `surface_scroll` \| `feature_tap` \| `ui_issue` \| `flash_unlock` \| `stripe_webhook_payment_succeeded` \| `screen_mount` \| `app_start` (last two: `20261020173000`, written, not applied; client sends them only while `layouts.telemetrySmoothness` is on) |
 | `video_id` | text | `reels.id` for video events |
 | `channel` | text | Realtime channel, or fan surface (`home` / `local` / `spotlight` / `drip` / `profile`) |
 | `step` | text | Checkout phase, feature id (`hype.seki`, `malo`, `cheer_poll`), or failed control (`checkout`, `report`) |
@@ -996,8 +1003,13 @@ get_admin_reports() returns jsonb
   -- generated_at, engagement, money, content, audience, live, reliability,
   -- usage, tabs, features, issues, scroll, leaders,
   -- donation_bands { under_50, 50_to_250, 250_plus },
-  -- series { clips, malo, stalls, dwell }
+  -- series { clips, malo, stalls, dwell },
+  -- trivia { prep_views/start_presses/starts/answers/nexts/completes/abandons/unavailable_7d,
+  --   start/answer/next/explanation_failed_7d, by_position_7d, starts_by_kind_7d },
+  -- smoothness { mounts_7d, avg_mount_ms_7d, by_surface_7d, app_starts_7d, avg_start_ms_7d }
 ```
+
+**2026-10-20 (`supabase/migrations/20261020180000_reports_trivia_smoothness.sql`, written, not applied anywhere):** new top-level `trivia` and `smoothness` keys (behavior-logging Step 3). Trivia counts the Step-1 funnel over 7 days (starts, answers, Nexts, completions, abandonments, missing-content ends, the four failure controls, answers per question position with a digit-guarded cast, starts per round kind). Smoothness counts `screen_mount` / `app_start` rows (Step 2): mounts and cold starts, both averages, average mount per surface. Counts only, never names, ids, question text or account data; on a database without the `20261020173000` whitelist the smoothness keys read zero. Full-body rewrite that includes the 20261012180000 casts and bands — apply after (or instead of) that file, never before it; rollback re-applies 20261012180000. Trivia keys fill as soon as clients log; smoothness keys fill after 20261020173000 + `layouts.telemetrySmoothness`. **2026-10-20 (`20261020174500_reports_trivia_funnel_top.sql`, written, not applied anywhere):** trivia gains `prep_views_7d` + `start_presses_7d` (preparation views and Start taps, the funnel top). Full-body rewrite including 20261020180000 — apply after (or instead of) it, rollback re-applies it.
 
 **2026-10-12 (owner decisions; `supabase/migrations/20261012180000_admin_reports_bigint_and_donation_bands.sql`, written, not applied anywhere):** every milliseconds or cents sum is cast to `bigint` instead of `int` (`usage.dwell_ms_24h` / `dwell_ms_7d`, `tabs[].value`, `series.dwell`, `series.malo`, the `money.*_cents` sums, `leaders.malo[].value`). A 7-day tab-dwell sum passed 2^31 ms at about 596 hours and the cast failed the whole RPC. Values below 2^31 are unchanged. New top-level `donation_bands` (owner decision 3C) counts athletes by all-time donation total in cents: `under_50` is more than 0 and under 5000, `50_to_250` is 5000 to under 25000, `250_plus` is 25000 and up. Counts only, never names or ids; same source as `leaders.malo` (every `tips` row, grouped per player), so the numbers agree; `{"under_50": 0, "50_to_250": 0, "250_plus": 0}` when there are no donations. `leaders.malo` (top-5 names) is still returned so existing readers keep working; the portal stops showing names, and dropping the key is a later call. EXECUTE is revoked from `public` and `anon` and granted to `authenticated`.
 
@@ -1169,7 +1181,7 @@ Migration `supabase/migrations/20260929180000_rally_goals_thanks_platform_tip.sq
 
 | Object | Who | What |
 | --- | --- | --- |
-| `rallies` | RLS SELECT: `live` / `filled` / `closed` for everyone, every row (pending too) for a manager; no client writes | `id`, `player_id`, `created_by`, `title` (3–60), `story` (≤600), `cost_kind` (`season` / `gear` / `travel` / `camps` / `college_prep` / `other`), `target_cents` (500–2,500,000), `raised_cents`, `donation_count`, `ends_on`, `status` (`pending_guardian` / `live` / `filled` / `closed`), `approved_by` / `approved_at`, `filled_at`, `thanks_key`, `thanks_reel_id`, `thanked_at`, timestamps. One open (`pending_guardian` / `live`) Rally per athlete (partial unique index). |
+| `rallies` | RLS SELECT: `live` / `filled` / `closed` for everyone ("Read public rallies"), every row (pending too) for a signed-in manager ("Managers read own rallies"; split in `20261020090000` so guests never call `rally_manager_role`); no client writes | `id`, `player_id`, `created_by`, `title` (3–60), `story` (≤600), `cost_kind` (`season` / `gear` / `travel` / `camps` / `college_prep` / `other`), `target_cents` (500–2,500,000), `raised_cents`, `donation_count`, `ends_on`, `status` (`pending_guardian` / `live` / `filled` / `closed`), `approved_by` / `approved_at`, `filled_at`, `thanks_key`, `thanks_reel_id`, `thanked_at`, timestamps. One open (`pending_guardian` / `live`) Rally per athlete (partial unique index). |
 | `donation_thanks` | RLS on, no grants (RPCs only) | `tip_id` PK → `tips`, `player_id`, `thanked_by`, `message_key` (`malo` / `season` / `gear` / `family` / `work` — presets only, no free text), `created_at`. One thank-you per donation. |
 | `rally_manager_role(target_player_id)` | authenticated | `admin`, `guardian` (`players.guardian_id`), `athlete` (own verified `profiles.player_id`), else null. |
 | `create_rally(target_player_id, rally_title, rally_story, rally_cost_kind, rally_target_cents, rally_ends_on)` | manager | Live at once for a guardian / admin, or an athlete who already controls their own money (`athlete_controls_money`); otherwise `pending_guardian`. Refuses a frozen athlete, a second open Rally, or an end date outside 1–180 days. Returns the row. |
@@ -1327,7 +1339,7 @@ Created in `supabase/media_upload.sql`; consolidated into `schema.sql` (2026-09)
 
 ## Realtime
 
-Published: `games`, `game_events`, `cheer_polls`, `app_runtime_config`. Fan hook `useLiveGame` filters `games` `id=eq.{gameId}` and `game_events` INSERT `game_id=eq.{gameId}` (featured live match when `gameId` is omitted). Operator callouts also Broadcast on public channel `game_events_${gameId}` with event `play` and payload `{ type, timestamp, team }`; focused `ReelCard` joins via `useGameEventBroadcast`. Aura / `profiles` are fetch + in-app event bus. Fan chrome (`AppRuntimeContext`) listens to `app_runtime_config` UPDATE.
+Published: `games`, `game_events`, `cheer_polls`, `app_runtime_config`. Fan hook `useLiveGame` filters `games` `id=eq.{gameId}` and `game_events` INSERT `game_id=eq.{gameId}` (featured live match when `gameId` is omitted). Operator callouts also Broadcast on public channel `game_events_${gameId}` with event `play` and payload `{ type, timestamp, team }`; focused `ReelCard` joins via `useGameEventBroadcast`. SCALE-03 (written, not applied): with `EXPO_PUBLIC_LIVE_SCORES_BROADCAST=true`, `useLiveScores` joins private Broadcast `game_scores_index` plus `game_scores_{id}` per listed game (at most 40; the rest poll once a minute) and merges each change by `live_seq`; it rereads only on reconnect, a gap, an unknown game or a membership notice. Switch off, or a refused private topic, keeps the earlier `postgres_changes` on `games` → full reread. Aura / `profiles` are fetch + in-app event bus. Fan chrome (`AppRuntimeContext`) listens to `app_runtime_config` UPDATE.
 
 ---
 
@@ -1464,7 +1476,9 @@ server or an override approved by an independent second admin; the custodial hol
 | Function | What it does |
 | --- | --- |
 | `payee_for_player(target_player_id)` (payee, role, account) · `current_payee_check(subject, target_player_id, check_methods, stripe_account)` · `payee_missing_checks(target_player_id)` · `payee_hold_reason(target_player_id)` | Who the payee is, which account would be paid, and what they still need (`payee` / `identity` / `relationship`). Server only. |
-| `record_stripe_kyc(account_id, identity_verified, tin_verified, transfers_active, details_due)` | Server only (future `account.updated` webhook): records Stripe's result and mirrors "transfers active". |
+| `record_stripe_kyc(account_id, identity_verified, tin_verified, transfers_active, details_due)` | Server only: records provider identity/TIN check results as verified, pending or requires-input and mirrors transfers. Automatic Accounts v2 evidence wiring remains unbuilt; capability/onboarding flags are not identity proof. Every call supersedes a current same-provider record and inserts history, so unknown/polling snapshots need preservation/deduplication before wiring. See PAYEE_VERIFICATION_PLAN §8. |
+| `stripe_connect_context(actor_user_id, target_player_id = null)` | New `20261021120000_connect_account_context.sql`, local/unapplied. Service-only caller context: `id`, exact `stripe_connect_id`, `legal_terms_accepted_at`, `owner_user_id`, `target_player_id`, `target_kind` (`self` / `guardian`). Caller id comes from live Auth validation. Self requires recorded adult age, athlete role and no custodial handover hold; guardian requires verified nonself athlete, actual guardian on record, matching existing custodial record/DOB before handover, confirmed link, unrevoked donations consent, reviewed two-admin relationship and no disputed claim. Both reject age-blocked callers. Short transaction locks protect relied-on rows. No new KYC evidence. |
+| `save_stripe_connect_account(actor_user_id, target_player_id, expected_profile_id, expected_account_id, account_id, onboarding_complete, transfers_enabled)` | New service-only RPC, local/unapplied. Returns saved account id text. Repeats context authorization after the Stripe await; exact captured profile/binding CAS permits only first binding or the same existing account. Rejects cross-profile/custodial account reuse. Guardian writes only `custodial_accounts` binding/transfer flag; self writes existing profile binding/status fields. Requires Terms before first save. Provider account advisory locks serialize reuse checks between application writers. No client write grant, payout enabling or identity/TIN inference. |
 | `supersede_payee_checks(subject, target_player_id, check_methods)` · `guard_payee_verifications()` · `guard_payee_truncate()` · `guard_payout_flags()` · `payee_changes_supersede()` | Internal. |
 | `admin_record_payee_check(target_player_id, subject, check_method, passed, p_reason, provider_ref)` · `admin_confirm_payee_check(verification_id)` · `admin_revoke_payee_check(verification_id, p_reason)` | Admin: school confirmation, document review (not kept), Stripe Identity for disputes — never about yourself; a second admin confirms; revoke. |
 | `admin_request_payout_override(subject, target_player_id, enable, p_reason)` · `admin_decide_payout_override(override_id, approve)` | Two-admin payout override (the requester, the person it affects and the athlete's guardian cannot decide). |
@@ -1999,3 +2013,54 @@ are generic for the school and team check.
 ## SAFETY-01 Coach-level label (`20261017090000_coach_level_label.sql`, written 2026-10-16, not applied)
 
 `reels.safety_label` and `beyond_posts.safety_label`: `none` or `coach_level`, default `none`. `safety_label_events` is append-only (target, old, new, actor, reason, time), RLS on, admin select, restrictive Closed accounts policy, no client writes. `guard_coach_label` refuses a direct update. `set_own_coach_label` lets the uploader mark a new Train Like Me clip (20 minutes) or a workout still in draft or pending. `set_coach_label` is admin-only and requires a reason. `coach_label_desk` returns labelled counts, open "Risky without a coach" suggestions, median review hours for the UTC week (null when there are none) and the latest events. `report_reel` accepts `coach_level` and does not flag or count that reason toward the three-report hide. `reels_feed` and `beyond_post_json` include `safety_label`. Missing SQL reads as unknown on the desk, never as zero unlabelled clips.
+
+
+## Failed photo-story upload cleanup — app repair (2026-10-20)
+
+Incremental migration: `supabase/migrations/20261020190000_failed_photo_story_cleanup.sql`, copied exactly into canonical schema; written, not applied.
+
+- **`begin_failed_photo_story_cleanup(uuid)`**: authenticated, active canonical uploader only; same reel lock as `set_reel_photos`. Returns `pending` with exact owner/story prefix, `published` without marking/deleting a committed story, or `discarded` for an absent row. Other owners (including an admin acting as nonowner) and videos are denied.
+- **`finish_failed_photo_story_cleanup(uuid)`**: same owner/lock, zero-count terminal claim required; refuses while any Storage object under the exact prefix remains. Deletes the hidden reel only once exact-prefix Storage metadata is empty; the client uses the Storage remove API when files are present. Physical bytes/CDN deletion remains unverified. Never deletes `storage.objects` through SQL. Missing rows are idempotent.
+- **`guard_failed_photo_story_state()`**, **`can_delete_failed_photo_story_object(text,text)`** and **`guard_photo_story_storage_write()`**: terminal insert/update marker, exact claimed owner-prefix DELETE permission, locked late-content-write guard respectively. All functions pin empty search paths; only the two cleanup RPCs and policy helper are client executable. The existing Closed accounts restriction remains. Timestamp-only `updated_at`/`last_accessed_at` updates remain allowed, while name/bucket/version/metadata/owner changes remain guarded.
+
+The client retires a failed attempt before every retry or athlete/game retarget, then inserts the preserved local draft as a fresh story. Closing persists owner/reel removal intent locally before dismissal; network cleanup retries on the next originating-account Upload open. Failed local persistence keeps the draft visible. A lost publish response recovers actual stored fields/cover, never applies newly edited mentions to that earlier story, and leaves the edited local draft unsubmitted. No bulk cleanup job or live provider operation is introduced. Historical unknown-id rows, termination before received-id persistence, app data loss, never reopening Upload, unexpected historical filenames and closed-account cleanup remain separate gaps. Source review/static checks and client tests do not prove hosted Storage deletion/CDN behavior or real PostgreSQL locking; actual local engine execution was blocked by OS IPC/network permissions.
+
+## NOTIFY-01 — notifications and payment proof preparation (unapplied)
+
+[Notification migration](../../supabase/migrations/20261021140000_notifications.sql) and
+[payment-context migration](../../supabase/migrations/20261021150000_notification_payment_context.sql)
+are copied exactly into canonical SQL. No local SQL engine cases executed. All notification
+production paused, optional email blocked pending unsubscribe/provider support, and payment
+notification authority false. [Design](design/EMAIL_NOTIFICATIONS_DESIGN.md) and
+[admin evidence](evidence/NOTIFY-01-admin.md) carry behavior and execution limits.
+
+| Table | Source contract |
+| --- | --- |
+| `notification_config` | Singleton server pauses, allowlisted categories and revision |
+| `notification_preferences` | Own revisioned masters/category choices; optional emails off |
+| `notification_events` | Stable dedup key and allowlisted source/payload reference |
+| `notification_account_activations` | New-account-only eligible activation, no returning-login replay |
+| `notification_inbox` | Own read/archive state with current source authorization |
+| `notification_inbox_snapshots` | Opaque account-bound cutoff,1h TTL, at most10 active/account |
+| `notification_deliveries` | Durable per-recipient intent/lease/status, no blind unknown retries |
+| `notification_delivery_attempts` | Durable before-send attempts and acceptance/outcome evidence |
+| `notification_admin_audit` | Auth-derived staff actor/fixed audited action reason |
+| `notification_payment_contexts` | Server-owned purpose/actor/quote allocation, adapters unwired |
+| `notification_payment_observations` | Verified processor-event observations; no canonical credit authority |
+
+| RPC/helper | Scope |
+| --- | --- |
+| `notification_categories`, `notification_actor`, `notification_source_eligible` | Allowlist/Auth actor/current source rights |
+| `get_notification_preferences`, `save_notification_preferences`, `get_notification_availability` | Own preferences; save revision plus expected_actor equal to Auth |
+| `get_notification_inbox`, `set_notification_read`, `mark_all_notifications_read`, `set_notification_archived` | Own bounded page, separate state and account-bound cutoff |
+| `notification_require_service`, `notification_require_admin` | Role checks for privileged execution |
+| `get_admin_notification_config`, `set_admin_notification_config`, `get_admin_notification_jobs`, `retry_notification_job`, `get_admin_notification_health` | Admin-only source/jobs/Health; saves/retries compare captured actor to Auth; known failures below3 attempts only |
+| `notification_activate_account`, `emit_notification_event`, `notification_auth_activation`, `notification_profile_activation` | Eligible new confirmed account producer, service-only emit, triggers |
+| `claim_notification_jobs`, `authorize_notification_send`, `begin_notification_attempt`, `release_notification_job`, `complete_notification_attempt` | Service-only bounded delivery→attempt locks, fresh eligibility, durable attempt and exact evidence |
+| `record_notification_payment_context`, `apply_notification_payment_event` | Service-only context/observation preparation; money authority false |
+| `thank_donation` | Existing preset thank-you repaired to reject NULL role before writes |
+
+New definers use empty search paths and schema-qualified relations; direct table grants are
+revoked with RLS/RPC boundaries. Old actor-unguarded save/config/retry overloads are dropped.
+Written grants/policies are not deployed security evidence. Generated DB catalog remains
+unchanged until the SQL engine can regenerate it; the client uses the existing bound RPC SDK.

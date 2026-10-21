@@ -1,0 +1,8 @@
+# Non-secret sample only: place reviewed actual values outside Git and pass -var-file.
+region                      = "us-west-2"
+backup_bucket_name          = "replace-with-globally-unique-private-backup-bucket"
+backup_writer_principal_arn = "arn:aws:iam::123456789012:role/reviewed-backup-operator"
+recovery_principal_arn      = "arn:aws:iam::123456789012:role/separate-reviewed-recovery-operator"
+enable_vm                   = false
+admin_ipv4_cidrs             = []
+retention_days               = 90

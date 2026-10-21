@@ -1,11 +1,95 @@
+<!-- Current priorities and dated task evidence; queue assignments do not authorize hosted operations or release. -->
 # Specialist work queue
 
-Last updated: 2026-10-17. Entry point: [STATE.md](../STATE.md). Owners and executable
+## NOTIFY-01 — Email, notification inbox and Profile controls — 2026-10-21 UTC
+
+**Status: local disabled-source app-ready at15:50:54UTC, after admin checkpoint15:31:03UTC.233 suites/2,287 tests and both app/shared typechecks pass. Hosted SQL and live delivery remain unavailable.** The owner approved
+the [architecture](../engineering/design/EMAIL_NOTIFICATIONS_DESIGN.md) and chose **only security
+emails on by default**: every optional email category starts off, including welcome and donation
+emails. The optional email master permits explicitly opted-in categories; unknown/new categories
+default off in both channels. Auth verification/reset remains separate and available. This is
+approval to build locally, not approved policy, provider activation or proof of email delivery.
+
+**Accountable specialist:** NOTIFICATIONS → CREW → PROFILE → ENGINEERING → CTO. AUTH owns
+eligible account activation/verified email/security recovery. COMMERCE with RECEIPTS, LEDGER and
+RECONCILIATION owns committed donation/refund attribution; BACKEND/API own schema, authorization
+and adapters. PROFILE/ACTIVITY retain account and Activity surfaces; ADMIN integrates Expo writes
+and read-only Next oversight. Existing source owners and independent reviewers retain authority.
+
+| Work / order | Next owner and acceptance | Current boundary |
+| --- | --- | --- |
+| Shared contracts, safe templates and delivery core | NOTIFICATIONS with BACKEND/API; Data/Privacy and Security review exact resources, recipient permissions, revision conflicts, suppression, leases and ambiguous send outcomes | Local source and focused tests pass; no configured provider or active scheduler. Accepted does not mean delivered, and in-flight mail cannot be recalled. |
+| Authoritative source events | AUTH and COMMERCE/RECEIPTS/LEDGER/RECONCILIATION; committed eligible events only, replay/reordering and rollback evidence | Donation contexts are prepared behind authority=false. The existing client remains the sole credit writer; notification work adds no second financial writer. Welcome/donation producers stay off until reviewed sources are enabled. |
+| SQL and own-account client SDK | BACKEND/DATABASE_MIGRATIONS with RLS_SECURITY, SESSION_SECURITY and DATA_GOVERNANCE; canonical migration parity, grants/RPC denials and actual engine replay | SQL source is written/canonical with actor/grant/lock-order review;25 plus1 concurrency cases prepared,0 executed. Local mocks or TypeScript tests do not establish SQL, races or hosted authorization. |
+| Admin controls and Health before fan UI | ADMIN with NOTIFICATIONS and SUPPORT/TELEMETRY; safe fixtures, availability/pause, bounded known-retryable handling and current-source report/repair evidence | Expo `/admin/features` and `/admin/health` are the write/report destinations; Next remains read-only. Local admin checkpoint passed15:31:03UTC before Profile/Activity implementation. |
+| Profile/Activity integration | PROFILE/ACTIVITY with NOTIFICATIONS, ACCESSIBILITY and QA after the admin checkpoint | Own-account controls, read/unread/archive, saved/conflict/error feedback and A→B→A lifetime guards require focused current-source tests. Fan implementation and233-suite/2,287-test regression passed; local checkpoint15:50:54UTC recorded; hosted/provider gates remain open. |
+| Designated test delivery | Owner/operator after approved setup; AUTH for SMTP/security flow, NOTIFICATIONS for optional delivery, Finance/Minor/Privacy/Security/QA for their domains | Provider configuration, reviewed hosted SQL, deployment/scheduling, actual designated-recipient mail, native/device and policy/release evidence remain unrun. Native push remains SCALE-07. |
+
+Independent RLS_SECURITY/SESSION_SECURITY, DATA_GOVERNANCE/PRIVACY_ENGINEERING,
+MINOR_SAFETY/CUSTODIAL, Finance, LEGAL/COMPLIANCE, VOICE and QA review their domains. Safe
+enqueue failures, stuck leases, unknown outcomes, preference-save failures and provider
+suppression need named Support owners and regression/recovery evidence before admin-ready.
+No arbitrary-recipient bulk composer, free-text fan-athlete messaging or suppressed-event
+backfill is added. This task does not close APP-TEST-01's existing Google/bank/media gates.
+
+Documentation/VP duty reconciliation: actual executor Codex `/root/photo_cleanup_review`,
+2026-10-21 UTC; owned paths `.claude/agents/notifications.md`, its registry entry,
+the corresponding TEAMS handoff/duty and this NOTIFY-01 task. Role count/model/reporting stay
+unchanged; hierarchy is checked, not rewritten. Exact final checks and claim release are
+integrated by root in [COORD-01](COORD-01.md). These assignments do not establish pinned-model
+execution or a continuous delivery service.
+
+## APP-TEST-01 — Current app testing priorities — 2026-10-21 UTC
+
+Owner asked to check the roadmap and update the whole team. This is the current app execution
+order; dated task sections below retain their own evidence. [Roadmap](../product/ROADMAP.md),
+[TEAM_STATUS](TEAM_STATUS.md) and [department plans](DEPARTMENT_PLANS.md) carry the same handoff.
+The current registry contains115 definitions/17 department labels. Leads retain their reporting
+and domain authority; this update does not mean115 specialists executed or received messages.
+
+Latest executed app baseline:226 mobile suites/2,193 tests PASS,138.861s; both app typechecks PASS.
+Original source/reviewer evidence is in [media plan §6](../engineering/design/MEDIA_SERVICE_PLAN.md#6-current-app-testing-preparation--2026-10-21-utc).
+Existing-session browser navigation was checked; fresh guest, Google, bank, selected-file upload,
+hosted cleanup and native decoder acceptance remain separate unrun checks.
+
+| Order / lane | Accountable lead and specialists | Ready locally / remaining dependency | Next concrete handoff |
+| --- | --- | --- | --- |
+| A. Google account rehearsal | AUTH with ONBOARDING, SESSION_SECURITY, PROFILE, QA | Account creation/return repairs and operator guide prepared. Development Google disabled on the read-only21Oct check; credentials/redirect setup not completed. | Owner/operator configures Google using ONBOARDING; AUTH/QA record fresh signup, returning account, cancel/popup/error recovery and resumed action. Native return is a separate DEVICE_QA result. |
+| B. Later test bank attachment | COMMERCE/CONNECT with CUSTODIAL, API, BACKEND, DATABASE_MIGRATIONS, SESSION_SECURITY, RECONCILIATION, QA | Adult/guardian per-athlete context, guarded Terms and confirmed save built locally. Connect-context SQL is written, not applied; updated Edge deployment unverified. Local fallback service key missing. KYC evidence recording remains unwired; payouts stay503. | Prepare reviewed development SQL/Edge prerequisites, then operator performs approved setup. CONNECT/QA rehearse the adult and two-athlete guardian portal/status/return independently; capability flags never establish KYC or permission to move money. |
+| C. Short video and photo rehearsal | HIGHLIGHTS with UPLOAD, PHOTO_STORIES, PLAYBACK, STORAGE, VAULT, RLS_SECURITY, QA | Bound storage and explicit duration guards built. Complete synthetic media fixtures available; failed-story cleanup SQL is written, not applied. Current limits45s/8MiB after compression and1–10JPEGs. | After approved hosted prerequisites, record actual selection/upload/playback, malformed/overlong/oversize outcomes, photo reorder/description, interrupted publish and physical owner-claimed cleanup; test unrelated/expired private access. Web/iOS/Android each need real media evidence. |
+| D. Public-beta prerequisites | SECURITY, TRUST_SAFETY, COMPLIANCE and COMMERCE with domain specialists | Internal-only public Storage/legacy Vault bytes, guest vote/hype abuse, minor policy and authoritative payment/refund/held-ledger gaps remain. Unit tests do not close them. | Assign and review each ROADMAP Phase1a/5 blocker with its owner and negative readback; QA keeps public release and live payouts gated until original evidence exists. |
+| E. Useful, lawful instrumentation | SUPPORT/TELEMETRY and GROWTH_ANALYTICS with ANALYST, LEGAL, PRIVACY_ENGINEERING, DATA_GOVERNANCE | Current behavior logging exists; session/user IDs and per-user funnels remain unbuilt. Owner chose IDs but policy wording and review precede collection. | LEGAL/Privacy prepare the scoped policy copy; TELEMETRY/Data propose the approved schema/client/Health change. Growth reports unknown denominators/costs honestly and supplies measured capacity before any long-video pilot. |
+| F. Athlete story and app usability | PRODUCT/DESIGN with PROFILE, ACTIVITY, DISCOVERY, SPOTLIGHT, ACCESSIBILITY, MOBILE_PERFORMANCE, VISUAL_QA, RESEARCH | Existing tab/story improvements and first-visit web compilation repair are local.390px Activity/Spotlight navigation checked in an existing session. Broader narrow/large-text/keyboard/native tests remain open. | Run the tester's browse → athlete story → create account → permitted short post → optional later bank journeys. File reproducible issues through Support, assign one owner and require current-source visual/device evidence for each fix. |
+
+Short Highlights stay open to otherwise eligible users under existing rights/age rules. Longer
+videos remain off until costs are measured; live streaming stays in a later roadmap phase.
+No follower threshold, new provider choice, private configuration, SQL apply, deployment, runtime
+publication, external team message, purchase or live financial action is performed by this refresh.
+Documentation and VP Operations reconcile subsequent assigned changes in COORD-01; no unattended
+agent scheduler is established. Current claims and actual checks are in [COORD-01](COORD-01.md).
+
+## REDUNDANCY-01 — Supabase backup and AWS/Azure migration preparation (2026-10-19)
+
+Owner confirmed backup of Supabase and continued the build. Local all-destination jobs, guarded retry, capture-time health checks and protected-checksum cloud retrieval now accompany backup/restore, source capsule, container and per-cloud Terraform work is recorded in [REDUNDANCY-01](REDUNDANCY-01.md); operator sequence is [CLOUD_MIGRATION_RUNBOOK](../engineering/CLOUD_MIGRATION_RUNBOOK.md). Operational runner setup is [BACKUP_OPERATIONS](../engineering/BACKUP_OPERATIONS.md). Next: INFRASTRUCTURE / RECOVERY prepare the private runner/identities and run an approved isolated backup-and-restore drill after source migration inventory, service versions and upstream pins are verified. DATABASE_MIGRATIONS / RLS_SECURITY review Auth/Storage schemas, TOC and access; QA / RELEASE measure client move and RPO/RTO; Finance reconciles provider events before cutover. No new role, scheduler, cloud purchase or production change follows from the local kit.
+
+Last updated: 2026-10-21. Entry point: [STATE.md](../STATE.md). Owners and executable
 instructions: [TEAMS.md](TEAMS.md), [TEAM_HIERARCHY.md](TEAM_HIERARCHY.md), and the agent registry.
 
 An app fix is assigned by `CTO`. The CTO names one lead. That lead names one specialist.
 The specialist reports to the lead. The lead reports the fix to the CTO. `VP_OPERATIONS` reports to the CTO, checks that each team is still doing its defined job, and updates roles, protocols, and this queue in the same turn they change. `QA` can reject the result.
 The owner (`FACILITATOR`) still decides applying SQL, merging, live money, prices, and counsel.
+
+## REDUNDANCY-02 — Redundancy & Exit team, self-updating exit plan (owner 2026-10-19)
+
+Standing team `REDUNDANCY_LEAD` → `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD` ([charter](../engineering/REDUNDANCY_TEAM.md), [record](REDUNDANCY-02.md)).
+
+| Work | Owner | Next concrete check |
+| --- | --- | --- |
+| Announce every exit-plan change and route reviews | `EXIT_SYNC` | `pnpm exit:map:check` green; open notices in `EXIT_CHANGE_LOG` reviewed by the named agents |
+| Exit B mappings for Auth, Storage, Realtime (Cognito / Entra, S3 / Blob, AppSync / Web PubSub) | `EXIT_SERVICES` | Design note per service with the RLS claims bridge; no provider account |
+| Target database for exit B (roles, `auth.*` functions, JWT-claims settings) | `EXIT_DATABASE` | Role/claims script replayed on PGlite with the parity proof |
+| Terraform and container validation on a machine with registry access | `EXIT_CLOUD` | `terraform validate` for AWS and Azure; Docker image builds |
+| Hosted isolated drill packet (provider, region, synthetic or real data, budget) | `REDUNDANCY_LEAD` | Owner decision; COST_OPERATIONS dated quote |
 
 ## Beyond on the Highlights bar, development catch-up, SAFETY-01 and phrase test (owner 2026-10-16)
 
@@ -79,7 +163,7 @@ STORAGE with RLS_SECURITY/Data/Privacy/QA/Recovery prepare SCALE-02 admin-first 
 deletion and rollback verification. Implementation and host selection remain pending;
 actual review receipts/claims are in the GROWTH-01 video follow-up.
 
-### Standing joint checkpoint — next packet October 20, 2026
+### Standing joint checkpoint — October20 packet evidence still needed
 
 Follow [Growth charter §9](../engineering/GROWTH_CAPACITY_REVIEW.md#9-verification-consent-and-safe-engagement)
 and [Verification, consent and safe growth](../legal/VERIFICATION_AND_SAFE_GROWTH_REVIEW.md).
@@ -219,7 +303,7 @@ accepted current-source Security proof (schema 35/35 and five cap boundaries), i
 shared close-out and records final claim release in HEALTH-01. Hosted SQL/device/
 durable recovery/counsel/owner gates remain assigned; no scheduler or release was started.
 
-## Current Documentation and team-coordination checkpoint (COORD-01, 2026-10-16)
+## Earlier Documentation and team-coordination checkpoint (COORD-01, 2026-10-16)
 
 Whole-team refresh covers107 registered roles and17 department labels, current role definitions,
 requested job-function mapping and existing reporting/domain controls. Actual outside-session Codex
@@ -436,11 +520,11 @@ phases in ROADMAP. R3 (production) waits on R2 and on the Wave 1 owner decisions
 | PRIV-01 | `PROFILE` (via ENGINEERING); reviews RLS_SECURITY, PRIVACY_ENGINEERING, MINOR_SAFETY, CUSTODIAL, HIGHLIGHTS, SPOTLIGHT, ACCOUNT_TAGS | Profile privacy, friends, blocking, hide from search, tag approval (guardian lock replaced by MINOR-01) | App-ready (feature-admin); stage 2 re-reviews applied; schema replay 100/100 | Owner applies `20261014090000` then `20261014100000`; PLAYBACK wires `tagState` in ReelCard when PLAY-01 releases it; counsel on LEGAL row Z; follow-ups: private avatar files, leaderboard speed |
 | MINOR-01 | `PROFILE` (via ENGINEERING) with AUTH, ONBOARDING, CUSTODIAL; reviews MINOR_SAFETY, CUSTODIAL, PRIVACY_ENGINEERING, RLS_SECURITY, LEGAL | Minor accounts: birth month and year, teen defaults, guardian link + signed consent, supervision, under-16 approvals, under-13 closure | App-ready (feature-admin); design + SQL reviews applied; schema replay 100/100 | Owner applies `20261014110000` after the PRIV-01 files; counsel writes the consent form and answers LEGAL row AA (and F, Z); owner decides the optional 72-hour guardian wait / 7-day guardian account age; COMMERCE re-checks consent at transfer time when payouts are built; SUPPORT deletes listed under-13 sign-ins in Supabase |
 | VERIFY-02 | `CONNECT` (via COMMERCE) with CUSTODIAL, ATHLETE_VERIFICATION, ADMIN; reviews RLS_SECURITY, SECURITY, PRIVACY_ENGINEERING, INFO_RETURNS, LEGAL | Payee verification: SSN to Stripe only, guardian proof (Stripe + school, two admins), payout gate on the actual payee and account, two-admin payout override, `security:no-ssn` | App-ready (feature-admin); RLS review applied; replay 111/111 | Owner applies `20261014120000` after MINOR-01; CONNECT wires `record_stripe_kyc` into `create-stripe-account` (account.updated webhook) and makes `createPayout.ts` pay `payee_for_player`'s account; owner + CONNECT confirm Stripe TIN check / account-holder age with Stripe; counsel (document review, retention) and CPA (whose TIN on 1099-K); ATHLETE_VERIFICATION adds parent confirmation to the school confirmer form; THREAT_DETECTION adds the new tables to the support audit scope |
-| PORT-01 | `CTO` with BACKEND, DATABASE_MIGRATIONS, OPERATIONS, STORAGE; `CODE_HYGIENE` tracks the guard | Portability: single source `docs/engineering/PORTABILITY.md`; widened `app:data-boundaries` guard (routes, hooks, components, context, services, admin portal; `@supabase/*` imports; may only shrink); `lib/media.ts` first slice of provider-neutral media refs; `lib/cheerPoll.ts` | Local, `pnpm check` green; CTO review applied | SCALE-02 writes `sb:` refs + backfill; move remaining direct calls into lib/ as files are touched (operator Realtime → `lib/operator.ts`); local JWT session check (SCALE-04); E3 exit drill after E1 (BACKEND, RELIABILITY, COST_OPERATIONS); generated DB types (DATABASE_MIGRATIONS); `lib/reels.ts` playback onto `lib/media.ts` after PLAY-01 releases |
+| PORT-01 | `CTO` with BACKEND, DATABASE_MIGRATIONS, OPERATIONS, STORAGE; `CODE_HYGIENE` tracks the guard | Portability: single source `docs/engineering/PORTABILITY.md`; widened `app:data-boundaries` guard (routes, hooks, components, context, services, admin portal; `@supabase/*` imports; may only shrink); `lib/media.ts` first slice of provider-neutral media refs; `lib/cheerPoll.ts` | Local, `pnpm check` green; CTO review applied | SCALE-02 writes `sb:` refs + backfill; move remaining direct calls into lib/ as files are touched (operator Realtime → `lib/operator.ts`); local JWT session check (SCALE-04); E3 exit drill after E1 (BACKEND, RELIABILITY, COST_OPERATIONS); generated DB types (DATABASE_MIGRATIONS); `lib/reels.ts` now delegates compatible video references to `lib/media.ts` locally; actual uploaded playback/private expiry still needs hosted/device checks |
 | INFRA-01 | `INFRASTRUCTURE` (new, Engineering → ENGINEERING → CTO); VP_OPERATIONS reconciles the roster | Owner 2026-10-14: a dev team member and agent on the scalability team always aware of hosting, services and integration depth. `docs/engineering/infrastructure.json` + generated `INFRASTRUCTURE_REGISTER.md` (`pnpm infra:register:check` in `pnpm check` and CI); TEAMS contract item 12; standing member of the Growth and Capacity Review; wired into CTO, ENGINEERING, GROWTH_ANALYTICS and COST_OPERATIONS definitions | Local, `agents:check` 107 roles | INFRASTRUCTURE brings the register to the next Growth packet (Oct 20) and tracks PORT-01 next steps; every infrastructure change updates the inventory in the same change |
-| SCALE-01 | `SECURITY` → `SESSION_SECURITY`, `ADMIN` | MFA (`aal2`) on admin desks; MFA on Supabase / GitHub / Expo accounts; append-only audit log off the database host (HOSTING_DECISION_BRIEF §7.2) | Admin desks refuse a session without a second factor; tests | Not started; no MFA anywhere today |
-| SCALE-02 | `HIGHLIGHTS` → `PLAYBACK`, `UPLOAD`, `STORAGE`; `BACKEND`, `RLS_SECURITY`, Data/Privacy/QA/Recovery review | Provider-neutral references and batched authorized signer; resumable/idempotent upload jobs and verified ready/error lifecycle; removal/visibility/deletion/legacy access and recovery handling (hosting brief §11) | Admin-first enrollment and handling; expand-only migration/old-client compatibility; actor/expiry/removed-state denials; duplicate/out-of-order provider events; actual native/web and media restore/rollback evidence | Implementation not started. Actual GROWTH-01 video review recommends Mux as provisional first experiment with Bunny/Cloudflare in initial comparison; terms/owner selection pending. Source-backed public-URL lock/removal and byte-purge caveats require domain review · **2026-10-14 (PORT-01):** expand step done locally — avatars and booster logos display through `lib/media.ts` (legacy URLs and `sb:` refs); writer switch `MEDIA_WRITE_REFERENCES` off; contract steps (tester build, flip, PLAY-01 releases `lib/reels.ts`, backfill) owner-gated in PORTABILITY §4 |
-| SCALE-03 | `ENGINEERING` → `REALTIME`, `LOCAL` | `useLiveScores` onto a filtered per-game Broadcast topic carrying the change only (§7.5) | No full refetch per change; game-night load test | Not started; today every fan refetches every game on every score change |
+| SCALE-01 | `SECURITY` → `SESSION_SECURITY`, `ADMIN` | MFA (`aal2`) on admin desks; MFA on Supabase / GitHub / Expo accounts; append-only audit log off the database host (HOSTING_DECISION_BRIEF §7.2) | Admin desks refuse a session without a second factor; tests | **Admin-desk part built locally 2026-10-18, switch OFF** (owner approved the start). Portal: `middleware.ts` (every request) + `(protected)/layout.tsx` (server re-check) send a non-`aal2` admin to `/login/mfa` (TOTP enroll / verify); Expo `/admin`: `AdminShell` → `AdminMfaGate`. Switches `NEXT_PUBLIC_ADMIN_REQUIRE_MFA` / `EXPO_PUBLIC_ADMIN_REQUIRE_MFA`, off unless `true`/`1`/`on`/`yes`; off = unchanged (offline built-copy smoke: same Auth/profile calls). Tests: portal 99/99 (11 new), Jest 3 suites / 15 tests. How to turn on: [ADMIN_MFA](../engineering/ADMIN_MFA.md). **Unverified:** TOTP is not enabled on any hosted project and no admin has a factor, so enroll/challenge/verify never ran against Supabase Auth; no browser/device/screen-reader check; Expo QR on web/native. **Open:** RLS / `is_admin()` still accept `aal1` (BACKEND + RLS_SECURITY migration after every admin enrolls); off-host append-only audit log (needs hosted infrastructure, not built); MFA on Supabase / GitHub / Expo accounts (owner). |
+| SCALE-02 | `HIGHLIGHTS` → `PLAYBACK`, `UPLOAD`, `STORAGE`; `BACKEND`, `RLS_SECURITY`, Data/Privacy/QA/Recovery review | Provider-neutral references and batched authorized signer; resumable/idempotent upload jobs and verified ready/error lifecycle; removal/visibility/deletion/legacy access and recovery handling (hosting brief §11) | Admin-first enrollment and handling; expand-only migration/old-client compatibility; actor/expiry/removed-state denials; duplicate/out-of-order provider events; actual native/web and media restore/rollback evidence | 2026-10-21 local transport/readers implemented: bound media upload/sign/list/remove adapter, legacy/reference playback, private Vault no-public-URL upload; writers remain off. Long-video admission/processing/quotas and host integration remain unbuilt; owner keeps long videos off until costs are measured and defers live streaming. Evidence: MEDIA_SERVICE_PLAN. Actual GROWTH-01 video review recommends Mux as provisional first experiment with Bunny/Cloudflare in initial comparison; terms/owner selection pending. Source-backed public-URL lock/removal and byte-purge caveats require domain review · **2026-10-14 (PORT-01):** expand step done locally — avatars and booster logos display through `lib/media.ts` (legacy URLs and `sb:` refs); writer switch `MEDIA_WRITE_REFERENCES` off; contract steps (tester build, flip, PLAY-01 releases `lib/reels.ts`, backfill) owner-gated in PORTABILITY §4 |
+| SCALE-03 | `ENGINEERING` → `REALTIME`, `LOCAL` | `useLiveScores` onto a filtered per-game Broadcast topic carrying the change only (§7.5) | No full refetch per change; game-night load test | **Built locally 2026-10-18 (owner approved start), switch off.** `lib/liveScoreSync.ts` merges per-game private Broadcast `game_scores_{id}` changes by `live_seq` (duplicate / out-of-order / gap / unknown game / reconnect handled; rereads coalesced with jitter); falls back to the old `postgres_changes` reread when `EXPO_PUBLIC_LIVE_SCORES_BROADCAST` is not `true` or the private topic is refused. Migration `20261018120000_live_score_broadcast.sql` **written, not applied** (trigger + receive-only `realtime.messages` policy; RLS_SECURITY review written in [SCALE-03](SCALE-03.md), separate sign-off pending). Unit tests and PGlite replay pass. Still needed: apply on development/staging (owner), hosted negative tests (RLS_SECURITY), the game-night load test (needs hosted access), then turn the switch on in a build |
 | SCALE-04 | `COMMERCE` → `LEDGER`, `CONNECT`, `CHECKOUT`; `ENGINEERING` → `API` | One server runtime for money (shared `src/backend/api` handlers with Edge / Metro adapters, payout included); webhook-authoritative crediting; retire the client `tips` insert (§7.6) | Same handler code on every runtime; webhook tests | Gated with P1-05 / STATE §6 item 3 · **2026-10-14 (PORT-01):** shared runtime-neutral money core in `supabase/functions/_shared/money/` used by the Node handlers and the Edge Functions (96 characterization tests pin behaviour); local JWKS token check for checkout only; SECURITY approved (issuer fallback, live-key refusal applied). Not verified: Deno run, deploy bundling of `_shared`, real JWKS; `stripe-webhook` (Deno-only) and `createPayout` (Node-only) still single-runtime |
 | SCALE-05 | `BACKEND` → `DATABASE_MIGRATIONS`; `DATA_GOVERNANCE` | Scale-safe schema pass: `(select auth.uid())` in policies, partitioned `reel_views` / `telemetry_logs`, `state_code` / `country_code` / `currency` (§7.7) | One expand-only migration; schema replay green | After R2 baseline |
 | SCALE-06 | `SUPPORT` → `RELIABILITY`, `TELEMETRY`; `OPERATIONS` → `RECOVERY` | Restore drill into an isolated project; error monitoring, uptime check and status feed to a named phone; game-day runbook; telemetry off the main database by S2 (§7.8) | Drill recorded; alert reaches a phone | Needs hosted access |
@@ -448,7 +532,7 @@ phases in ROADMAP. R3 (production) waits on R2 and on the Wave 1 owner decisions
 | SCALE-08 | `ADMIN` → `ANALYST`; `FINANCE_DATA` | Append-only journal / event export and daily rollups so a replica or warehouse is a pipe (§7.10) | Reports read rollups, not live tables | S2 trigger (ANALYST wants earlier) |
 | R4-01 | `API`, `BACKEND`; `QA` review | Retire Expo API routes in `apps/mobile/src/backend/api/` in favour of the Edge Functions | Checkout, Connect and payouts work on every project with the routes removed; tests updated | Not started; confirm Edge Function secrets on each project first |
 | R4-02 | `CI`, `ENGINEERING` | ESLint + Prettier enforced in CI | Config committed; CI lint step green; formatting PR is behaviour-free | Not started; needs a machine with npm registry access |
-| R4-03 | `ENGINEERING`, feature owners; `TEST_AUTOMATION` | Split 900+ line files; route data debt to zero; screen tests for donate/upload/sign-in; admin-portal tests | One behaviour-free PR per split; `app:data-boundaries` baseline at 0; new suites green | Started 2026-10-10. Route debt is the two operator screens (7 calls). Athlete, parent, Profile, and the public athlete sheet moved into `lib/`. File splits and screen tests are still open |
+| R4-03 | `ENGINEERING`, feature owners; `TEST_AUTOMATION` | Split 900+ line files; route data debt to zero; screen tests for donate/upload/sign-in; admin-portal tests | One behaviour-free PR per split; `app:data-boundaries` baseline at 0; new suites green | Started 2026-10-10. **2026-10-20:** first file split — `ReelCard.tsx` 1,341 → 1,124 lines (`ReelVideoLayer.tsx`, `PlayBroadcastBanner.tsx`; behaviour-free, Reels 90/90). Still over 900: `ReelCard.tsx`, `AthleteProfileView.tsx`, `AdminChrome.tsx`, `app/(tabs)/index.tsx`, `app/operator/[gameId].tsx`. **2026-10-19:** route debt is 0 (`app:data-boundaries`: 0 route files); five hooks moved into `lib/` (calls outside `lib/` 48 → 39, `hookLibMoves.test.ts`); after the SDK 58 upgrade the full Jest run was red (18 suites) and is green again (205 suites / 1,805 tests). Earlier note: route debt was the two operator screens (7 calls). Athlete, parent, Profile, and the public athlete sheet moved into `lib/`. File splits and screen tests are still open |
 
 ### Organization review evidence — 2026-10-07
 
@@ -469,7 +553,7 @@ phases in ROADMAP. R3 (production) waits on R2 and on the Wave 1 owner decisions
 | Function | Accountable specialist | Next bounded assignment |
 | --- | --- | --- |
 | Search and low-view discovery | `DISCOVERY` | Verify existing query/filter empty/error behavior; low-view lane remains later |
-| Notification queue | `NOTIFICATIONS` | Inventory `crew_push_queue` producers/consumers and delivery guarantees; do not add unsolicited messaging |
+| Notification queue | `NOTIFICATIONS` | NOTIFY-01 optional events/preferences/inbox/delivery and admin/Health build in progress; all optional email defaults off. Preserve Crew queue versus actual push distinction; no unsolicited messaging. |
 | Shared schema contracts | `SHARED_CONTRACTS` | Map manually maintained types to current RPCs and prepare generation check without pretending a live dump exists |
 | Video/feed performance | `MOBILE_PERFORMANCE`, `PLAYBACK` | Capture real-device load, player teardown, dropped frames and memory for enabled feed |
 | Backup and restore | `RECOVERY` | DETECT-02 source package/isolated restore verified for its captured version; next rehearse an approved synthetic database backup and deployed compatibility with stated RPO/RTO inputs; no uptime promise |

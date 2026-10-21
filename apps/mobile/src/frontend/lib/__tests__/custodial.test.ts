@@ -1,3 +1,4 @@
+/** Family account parsing and exact RPC boundaries, including rejecting a returned account for another athlete. */
 const mockRpc = jest.fn();
 
 jest.mock('@/lib/supabase', () => ({
@@ -100,6 +101,10 @@ describe('input parsing', () => {
 });
 
 describe('RPC calls', () => {
+  it('rejects a returned summary whose player does not match the requested athlete', async () => {
+    mockRpc.mockResolvedValue({ data: { ...RAW, player_id: 'different-player' }, error: null });
+    await expect(fetchCustodialSummary(PLAYER)).resolves.toEqual({ state: 'error', message: 'Could not load the family account. Please try again.' });
+  });
   it('reports unavailable when the custodial SQL is not applied', async () => {
     mockRpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'Could not find the function' } });
     await expect(fetchCustodialSummary(PLAYER)).resolves.toEqual({ state: 'unavailable' });

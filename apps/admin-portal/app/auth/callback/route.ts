@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { resolveBackendConnection } from '@tapuai/shared-types/backendConnection';
 
 /**
  * @purpose Magic-link landing route for the Next admin portal's login page (`app/login`). Exchanges the
@@ -13,12 +14,14 @@ export async function GET(request: Request) {
   const code = searchParams.get('code');
   const next = searchParams.get('next') || '/';
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  const backend = resolveBackendConnection({
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    publicKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  });
 
-  if (code && url && anon) {
+  if (code && backend.connection) {
     const cookieStore = await cookies();
-    const supabase = createServerClient(url, anon, {
+    const supabase = createServerClient(backend.connection.url, backend.connection.publicKey, {
       cookies: {
         getAll() {
           return cookieStore.getAll();

@@ -3,6 +3,7 @@ import 'server-only';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { resolveBackendConnection } from '@tapuai/shared-types/backendConnection';
 
 /**
  * @purpose Server Supabase client for Overview / Reports / Money / Soft-Wall / Profile / Features / People
@@ -10,17 +11,19 @@ import { cookies } from 'next/headers';
  *   (`lib/authz.ts`).
  * @returns A client that reads the signed-in admin's session from request cookies (RLS runs as `authenticated`,
  *   not `anon`) when a session exists, and an anonymous client when it does not (e.g. the login page itself is
- *   outside the `(protected)` group and never calls this). `null` when env is missing.
+ *   outside the `(protected)` group and never calls this). `null` when public connection env is missing/invalid.
  * @sideEffects Reads `NEXT_PUBLIC_SUPABASE_*`; reads (and best-effort refreshes) the Supabase auth cookies via
  *   `next/headers`. Server Components cannot write cookies — that refresh happens in `middleware.ts` instead, so
  *   a failed `set`/`remove` here is expected and swallowed. `server-only` keeps this out of client bundles.
  */
 export async function getSupabaseServerClient(): Promise<SupabaseClient | null> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  if (!url || !anon) return null;
+  const backend = resolveBackendConnection({
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    publicKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  });
+  if (!backend.connection) return null;
   const cookieStore = await cookies();
-  return createServerClient(url, anon, {
+  return createServerClient(backend.connection.url, backend.connection.publicKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

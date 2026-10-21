@@ -4788,6 +4788,11 @@ drop function if exists public.get_admin_reports();
 -- not applied anywhere): ms and cents sums are bigint (a 7-day tab-dwell sum overflowed int at about
 -- 596 hours and failed the RPC), and a new top-level donation_bands key counts athletes by all-time
 -- donation total with no names (owner decision 3C). leaders.malo stays for existing readers.
+-- 2026-10-20 (supabase/migrations/20261020180000_reports_trivia_smoothness.sql, written, not applied
+-- anywhere): new top-level trivia (funnel counts, answers per question, starts per kind) and smoothness
+-- (mount/start counts, averages, average mount per surface) keys. Counts only. Apply after 20261012180000.
+-- 2026-10-20 (supabase/migrations/20261020174500_reports_trivia_funnel_top.sql, written, not applied
+-- anywhere): trivia gains prep_views_7d + start_presses_7d at the top of the funnel. Apply after 20261020180000.
 create or replace function public.get_admin_reports()
 returns jsonb
 language sql
@@ -5051,6 +5056,63 @@ as $$
         order by value desc
         limit 8
       ) ranked
+    ),
+    -- 2026-10-20 (supabase/migrations/20261020180000_reports_trivia_smoothness.sql, written, not
+    -- applied anywhere): trivia funnel + smoothness slices for the Health page. Counts only, never
+    -- names, ids, question text or account data. A database without the 20261020173000 whitelist
+    -- has no screen_mount/app_start rows, so the smoothness keys read zero there.
+    -- 2026-10-20 (supabase/migrations/20261020174500_reports_trivia_funnel_top.sql, written, not
+    -- applied anywhere): trivia gains prep_views_7d + start_presses_7d at the top of the funnel.
+    'trivia', jsonb_build_object(
+      'prep_views_7d', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and step = 'trivia.view_prep' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'start_presses_7d', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and step = 'trivia.press_start' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'starts_7d', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and step = 'trivia.start' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'answers_7d', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and step = 'trivia.answer' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'nexts_7d', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and step = 'trivia.next' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'completes_7d', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and step = 'trivia.complete' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'abandons_7d', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and step = 'trivia.abandon' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'unavailable_7d', (select count(*)::int from public.telemetry_logs where event_type = 'feature_tap' and step = 'trivia.unavailable' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'start_failed_7d', (select count(*)::int from public.telemetry_logs where event_type = 'ui_issue' and step = 'trivia.start_failed' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'answer_failed_7d', (select count(*)::int from public.telemetry_logs where event_type = 'ui_issue' and step = 'trivia.answer_failed' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'next_failed_7d', (select count(*)::int from public.telemetry_logs where event_type = 'ui_issue' and step = 'trivia.next_failed' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'explanation_failed_7d', (select count(*)::int from public.telemetry_logs where event_type = 'ui_issue' and step = 'trivia.explanation_failed' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'by_position_7d', (
+        select coalesce(jsonb_agg(jsonb_build_object('label', 'Question ' || bucket.position, 'value', bucket.n) order by bucket.position), '[]'::jsonb)
+        from (
+          select (payload->>'position')::int as position, count(*)::int as n
+          from public.telemetry_logs
+          where event_type = 'feature_tap' and step = 'trivia.answer'
+            and created_at >= timezone('utc', now()) - interval '7 days'
+            and (payload->>'position') ~ '^[0-9]{1,9}$'
+          group by 1
+        ) bucket
+      ),
+      'starts_by_kind_7d', (
+        select coalesce(jsonb_agg(jsonb_build_object('label', bucket.kind, 'value', bucket.n) order by bucket.n desc), '[]'::jsonb)
+        from (
+          select coalesce(nullif(payload->>'kind', ''), 'unknown') as kind, count(*)::int as n
+          from public.telemetry_logs
+          where event_type = 'feature_tap' and step = 'trivia.start'
+            and created_at >= timezone('utc', now()) - interval '7 days'
+          group by 1
+        ) bucket
+      )
+    ),
+    'smoothness', jsonb_build_object(
+      'mounts_7d', (select count(*)::int from public.telemetry_logs where event_type = 'screen_mount' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'avg_mount_ms_7d', (select coalesce(avg(duration_ms), 0)::int from public.telemetry_logs where event_type = 'screen_mount' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'by_surface_7d', (
+        select coalesce(jsonb_agg(jsonb_build_object('label', bucket.surface, 'value', bucket.ms) order by bucket.ms desc), '[]'::jsonb)
+        from (
+          select coalesce(nullif(channel, ''), 'other') as surface, coalesce(avg(duration_ms), 0)::int as ms
+          from public.telemetry_logs
+          where event_type = 'screen_mount'
+            and created_at >= timezone('utc', now()) - interval '7 days'
+          group by 1
+        ) bucket
+      ),
+      'app_starts_7d', (select count(*)::int from public.telemetry_logs where event_type = 'app_start' and created_at >= timezone('utc', now()) - interval '7 days'),
+      'avg_start_ms_7d', (select coalesce(avg(duration_ms), 0)::int from public.telemetry_logs where event_type = 'app_start' and created_at >= timezone('utc', now()) - interval '7 days')
     )
   );
 $$;
@@ -9684,7 +9746,7 @@ create or replace function public.thank_donation(target_tip_id uuid, message_key
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   t public.tips;
@@ -9695,7 +9757,7 @@ begin
     raise exception 'Donation not found';
   end if;
   role := public.rally_manager_role(t.player_id);
-  if role not in ('athlete', 'guardian') then
+  if role is null or role not in ('athlete', 'guardian') then
     raise exception 'Only the athlete or their parent / guardian can say thanks';
   end if;
   if t.fan_id is null then
@@ -28783,3 +28845,1228 @@ from (values
   ('a1b2c3d4-e5f6-4789-a012-000000000006'::uuid, 'What letter comes next: A, C, E, G?', '["I","H","J","F"]', 0, 'The letters skip one each time: A, C, E, G, then I.')
 ) as v(key, prompt, options, correct_option, explanation)
 where not exists (select 1 from public.sport_quiz_questions q where q.question_key = v.key);
+
+-- ---------------------------------------------------------------------------------------------------------------
+-- Live score Broadcast (SCALE-03, 20261018120000). Written, not applied. Copy of the migration file.
+-- ---------------------------------------------------------------------------------------------------------------
+-- SCALE-03 · Live score Broadcast (2026-10-18). Written locally, NOT applied anywhere.
+--
+-- Purpose: stop the game-night refetch storm (HOSTING_DECISION_BRIEF §7 item 5). Today `useLiveScores` listens to
+-- `postgres_changes` on every `games` row and rereads the whole list on any change, so every fan rereads every game
+-- on every score. After this file, each scoreboard change is sent once on a private per-game Broadcast topic
+-- (`game_scores_{id}`) carrying only the changed columns and a per-game sequence number; game add / remove /
+-- active flips go to `game_scores_index` so the list rereads only then.
+--
+-- What it adds:
+--   1. `games.live_seq bigint` — bumped by a BEFORE trigger only when a scoreboard column changes, so a client can
+--      drop duplicates / older messages and detect a missed one (gap → reread). Clients cannot set it.
+--   2. AFTER trigger `games_broadcast_score_change` → `realtime.send(..., private => true)`. Payload
+--      `{v:1, id, seq, changes:{<changed scoreboard columns>}}`, event `score`. `claimed_by` and other columns are
+--      never sent. Membership payload `{v:1, id, op:'insert'|'delete'|'active'}`, event `membership`.
+--      A failed send never blocks the score update (warning only).
+--   3. `realtime.messages` SELECT policy: anon + authenticated may receive Broadcast on exactly
+--      `game_scores_<uuid>` and `game_scores_index` (the same people who can already read `games`: "Public read
+--      games" is `using (true)`). No INSERT policy is added, so no client can send on these topics; only the
+--      definer trigger writes them. Presence is not allowed (extension must be 'broadcast').
+--
+-- Client: `apps/mobile/src/frontend/lib/liveScoreSync.ts`. The app uses these topics only when the build sets
+-- `EXPO_PUBLIC_LIVE_SCORES_BROADCAST=true`; if the policy is missing it falls back to today's path on its own.
+-- Apply order: after every earlier file (needs `games.sport` and `games.is_active`). Staging first.
+--
+-- Rollback (safe at any time; turn the app switch off first):
+--   drop trigger if exists games_broadcast_score_change on public.games;
+--   drop trigger if exists games_live_seq_bump on public.games;
+--   drop function if exists public.games_broadcast_score_change();
+--   drop function if exists public.games_live_seq_bump();
+--   drop policy if exists "Fans receive game score changes" on realtime.messages;
+--   -- optional, only once no build reads it: alter table public.games drop column if exists live_seq;
+
+alter table public.games add column if not exists live_seq bigint not null default 0;
+
+-- Clients (operator console, admin desk) write `games` directly; this keeps `live_seq` server-owned and moves it only
+-- when something a fan sees changes, so the AFTER trigger and the client agree on "one change = one number".
+create or replace function public.games_live_seq_bump()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if tg_op = 'INSERT' then
+    new.live_seq := 0;
+    return new;
+  end if;
+  if (new.home_score, new.away_score, new.quarter, new.status, new.clock, new.is_clock_running, new.is_active,
+      new.home_team, new.away_team, new.home_school, new.away_school, new.venue, new.sport)
+     is distinct from
+     (old.home_score, old.away_score, old.quarter, old.status, old.clock, old.is_clock_running, old.is_active,
+      old.home_team, old.away_team, old.home_school, old.away_school, old.venue, old.sport) then
+    new.live_seq := coalesce(old.live_seq, 0) + 1;
+  else
+    new.live_seq := old.live_seq;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists games_live_seq_bump on public.games;
+create trigger games_live_seq_bump
+  before insert or update on public.games
+  for each row execute function public.games_live_seq_bump();
+
+-- Security definer: `realtime.send` writes `realtime.messages`, which clients may not insert into on these topics.
+-- Same pattern as Supabase's documented Broadcast-from-database triggers.
+create or replace function public.games_broadcast_score_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  fields constant text[] := array['home_score', 'away_score', 'quarter', 'status', 'clock', 'is_clock_running',
+    'is_active', 'home_team', 'away_team', 'home_school', 'away_school', 'venue', 'sport', 'updated_at'];
+  field text;
+  next_row jsonb;
+  prev_row jsonb;
+  changes jsonb := '{}'::jsonb;
+begin
+  begin
+    if tg_op = 'UPDATE' then
+      if new.live_seq is not distinct from old.live_seq then
+        return null; -- e.g. a claimed_by-only update: nothing a fan sees changed
+      end if;
+      next_row := to_jsonb(new);
+      prev_row := to_jsonb(old);
+      foreach field in array fields loop
+        if next_row -> field is distinct from prev_row -> field then
+          changes := changes || jsonb_build_object(field, next_row -> field);
+        end if;
+      end loop;
+      perform realtime.send(
+        jsonb_build_object('v', 1, 'id', new.id, 'seq', new.live_seq, 'changes', changes),
+        'score', 'game_scores_' || new.id::text, true);
+      if new.is_active is distinct from old.is_active then
+        perform realtime.send(jsonb_build_object('v', 1, 'id', new.id, 'op', 'active'),
+          'membership', 'game_scores_index', true);
+      end if;
+    elsif tg_op = 'INSERT' then
+      perform realtime.send(jsonb_build_object('v', 1, 'id', new.id, 'op', 'insert'),
+        'membership', 'game_scores_index', true);
+    elsif tg_op = 'DELETE' then
+      perform realtime.send(jsonb_build_object('v', 1, 'id', old.id, 'op', 'delete'),
+        'membership', 'game_scores_index', true);
+    end if;
+  exception when others then
+    -- A scoreboard update must never fail because Realtime could not take the message; fans reread on reconnect.
+    raise warning 'games_broadcast_score_change: % (%)', sqlerrm, sqlstate;
+  end;
+  return null;
+end;
+$$;
+
+drop trigger if exists games_broadcast_score_change on public.games;
+create trigger games_broadcast_score_change
+  after insert or update or delete on public.games
+  for each row execute function public.games_broadcast_score_change();
+
+-- Trigger functions are never RPCs; keep them off the API roles (Supabase default privileges grant EXECUTE).
+revoke all on function public.games_live_seq_bump() from public, anon, authenticated;
+revoke all on function public.games_broadcast_score_change() from public, anon, authenticated;
+
+-- Receive-only, exact topic shapes. `realtime.messages` already has RLS on (platform-owned; do not alter it).
+drop policy if exists "Fans receive game score changes" on realtime.messages;
+create policy "Fans receive game score changes"
+  on realtime.messages for select
+  to anon, authenticated
+  using (
+    realtime.messages.extension = 'broadcast'
+    and realtime.topic() ~ '^game_scores_([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|index)$'
+  );
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- RALLY · Guests can read live Rallies again (2026-10-20). Copied from supabase/migrations/20261020090000_rallies_guest_read.sql
+-- (not applied anywhere). The old single policy called rally_manager_role(), which anon may not execute, so guest reads
+-- failed with 42501. Split: public statuses for everyone, managed rows for signed-in managers only.
+drop policy if exists "Read public or own rallies" on public.rallies;
+
+drop policy if exists "Read public rallies" on public.rallies;
+create policy "Read public rallies"
+  on public.rallies for select
+  to anon, authenticated
+  using (status in ('live', 'filled', 'closed'));
+
+drop policy if exists "Managers read own rallies" on public.rallies;
+create policy "Managers read own rallies"
+  on public.rallies for select
+  to authenticated
+  using (public.rally_manager_role(player_id) is not null);
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Smoothness telemetry (2026-10-20). Copied from supabase/migrations/20261020173000_telemetry_smoothness_events.sql
+-- (not applied anywhere). Extends the telemetry_logs event whitelist with screen_mount + app_start; client emits
+-- only while layouts.telemetrySmoothness is on (default off; flip after applying, so pre-apply batches survive).
+alter table public.telemetry_logs drop constraint if exists telemetry_logs_event_type_check;
+alter table public.telemetry_logs add constraint telemetry_logs_event_type_check
+  check (event_type in (
+    'video_stall', 'video_first_frame', 'socket_reconnect', 'checkout_latency',
+    'tab_dwell', 'surface_scroll', 'feature_tap', 'ui_issue',
+    'flash_unlock', 'stripe_webhook_payment_succeeded',
+    'screen_mount', 'app_start'
+  ));
+
+-- Migration: 20261020190000_failed_photo_story_cleanup.sql
+-- Retire failed photo-story drafts without deleting published media or Storage metadata directly.
+-- Existing-upload repair: docs/engineering/design/PHOTO_STORIES_DESIGN.md (Privacy and safety).
+-- Requires photo stories (20261007230000), owner folders (20261007231000), and minor-account guards.
+-- Written locally, not applied. Rollback requires pausing photo uploads first: remove the two
+-- triggers, cleanup policy/functions and constraint/column below. Do not clear a pending marker
+-- while uploads run: a stale request could publish references to objects already deleted.
+begin;
+
+alter table public.reels add column if not exists photo_cleanup_pending boolean not null default false;
+-- The existing set_reel_photos writer locks this row before publishing. This constraint makes
+-- publication fail atomically after cleanup won that lock, without replacing applied SQL.
+alter table public.reels drop constraint if exists reels_photo_cleanup_pending_check;
+alter table public.reels add constraint reels_photo_cleanup_pending_check
+  check (not photo_cleanup_pending or (media_type = 'photo_story' and photo_count = 0));
+revoke update (photo_cleanup_pending) on public.reels from public, anon, authenticated, service_role;
+
+create or replace function public.guard_failed_photo_story_state()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if TG_OP = 'INSERT' then
+    -- INSERT is table-granted to uploaders: no caller may pre-claim a new draft for deletion.
+    NEW.photo_cleanup_pending := false;
+  elsif OLD.photo_cleanup_pending and not NEW.photo_cleanup_pending then
+    raise exception 'A retired photo story cannot be reopened' using errcode = '55000';
+  end if;
+  return NEW;
+end;
+$$;
+revoke all on function public.guard_failed_photo_story_state() from public, anon, authenticated, service_role;
+drop trigger if exists guard_failed_photo_story_state on public.reels;
+create trigger guard_failed_photo_story_state before insert or update on public.reels
+  for each row execute function public.guard_failed_photo_story_state();
+
+create or replace function public.begin_failed_photo_story_cleanup(p_reel_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  actor uuid;
+  story public.reels%rowtype;
+begin
+  if auth.uid() is null or auth.role() is distinct from 'authenticated'
+     or not public.caller_not_age_blocked() then
+    raise exception 'An active signed-in account is required' using errcode = '42501';
+  end if;
+  if p_reel_id is null then
+    raise exception 'Pick a photo story first' using errcode = '22023';
+  end if;
+  select p.id into actor from public.profiles p where p.user_id = auth.uid() limit 1;
+  if actor is null then
+    raise exception 'An account is required' using errcode = '42501';
+  end if;
+  select r.* into story from public.reels r where r.id = p_reel_id for update;
+  if not found then return pg_catalog.jsonb_build_object('status', 'discarded'); end if;
+  if story.uploaded_by is distinct from actor then
+    raise exception 'Only the uploader may discard this photo story' using errcode = '42501';
+  end if;
+  if story.media_type is distinct from 'photo_story' then
+    raise exception 'This Highlight is not a photo story' using errcode = '22023';
+  end if;
+  if story.photo_count <> 0 then
+    if coalesce(story.is_removed, false) then
+      raise exception 'This photo story was removed' using errcode = '42501';
+    end if;
+    -- A lost publish response must never turn a successful story into a failed draft.
+    return pg_catalog.jsonb_build_object('status', 'published');
+  end if;
+  update public.reels set photo_cleanup_pending = true where id = p_reel_id;
+  return pg_catalog.jsonb_build_object('status', 'pending',
+    'prefix', auth.uid()::text || '/stories/' || p_reel_id::text || '/');
+end;
+$$;
+revoke all on function public.begin_failed_photo_story_cleanup(uuid) from public, anon, authenticated, service_role;
+grant execute on function public.begin_failed_photo_story_cleanup(uuid) to authenticated;
+
+create or replace function public.finish_failed_photo_story_cleanup(p_reel_id uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  actor uuid;
+  story public.reels%rowtype;
+  story_prefix text;
+begin
+  if auth.uid() is null or auth.role() is distinct from 'authenticated'
+     or not public.caller_not_age_blocked() then
+    raise exception 'An active signed-in account is required' using errcode = '42501';
+  end if;
+  if p_reel_id is null then
+    raise exception 'Pick a photo story first' using errcode = '22023';
+  end if;
+  select p.id into actor from public.profiles p where p.user_id = auth.uid() limit 1;
+  if actor is null then raise exception 'An account is required' using errcode = '42501'; end if;
+  select r.* into story from public.reels r where r.id = p_reel_id for update;
+  if not found then return pg_catalog.jsonb_build_object('status', 'discarded'); end if;
+  if story.uploaded_by is distinct from actor then
+    raise exception 'Only the uploader may discard this photo story' using errcode = '42501';
+  end if;
+  if story.media_type is distinct from 'photo_story' or story.photo_count <> 0
+     or not story.photo_cleanup_pending then
+    raise exception 'This photo story is not awaiting cleanup' using errcode = '55000';
+  end if;
+  story_prefix := auth.uid()::text || '/stories/' || p_reel_id::text || '/';
+  -- Use the Storage API for object deletion. Physical-byte/CDN deletion requires hosted
+  -- verification; SQL only observes metadata. An unexpected old filename also blocks finish.
+  if exists (select 1 from storage.objects o where o.bucket_id = 'reels'
+    and pg_catalog.left(o.name, pg_catalog.length(story_prefix)) = story_prefix) then
+    raise exception 'Photo story files still require cleanup' using errcode = '55000';
+  end if;
+  delete from public.reels where id = p_reel_id;
+  return pg_catalog.jsonb_build_object('status', 'discarded');
+end;
+$$;
+revoke all on function public.finish_failed_photo_story_cleanup(uuid) from public, anon, authenticated, service_role;
+grant execute on function public.finish_failed_photo_story_cleanup(uuid) to authenticated;
+
+-- A policy helper sees the claimed row through its owner's RLS, never through admin scope.
+-- FOR SHARE serializes a Storage deletion with finish's row lock until metadata removal commits.
+create or replace function public.can_delete_failed_photo_story_object(p_bucket text, p_name text)
+returns boolean language plpgsql security definer set search_path = '' as $$
+declare
+  actor uuid;
+  story public.reels%rowtype;
+  reel_text text;
+  story_prefix text;
+begin
+  if p_bucket is distinct from 'reels' or auth.uid() is null
+     or auth.role() is distinct from 'authenticated' or not public.caller_not_age_blocked() then
+    return false;
+  end if;
+  reel_text := pg_catalog.split_part(p_name, '/', 3);
+  if reel_text is null or reel_text !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    return false;
+  end if;
+  story_prefix := auth.uid()::text || '/stories/' || reel_text || '/';
+  if pg_catalog.left(p_name, pg_catalog.length(story_prefix)) is distinct from story_prefix then
+    return false;
+  end if;
+  select p.id into actor from public.profiles p where p.user_id = auth.uid() limit 1;
+  if actor is null then return false; end if;
+  select r.* into story from public.reels r where r.id = reel_text::uuid for share;
+  return found and story.uploaded_by = actor and story.media_type = 'photo_story'
+    and story.photo_count = 0 and story.photo_cleanup_pending;
+end;
+$$;
+revoke all on function public.can_delete_failed_photo_story_object(text, text) from public, anon, authenticated, service_role;
+grant execute on function public.can_delete_failed_photo_story_object(text, text) to authenticated;
+drop policy if exists "Delete claimed failed photo story objects" on storage.objects;
+create policy "Delete claimed failed photo story objects" on storage.objects for delete to authenticated
+  using (public.can_delete_failed_photo_story_object(bucket_id, name));
+-- Existing restrictive Closed accounts policy and other buckets' policies remain in force.
+
+create or replace function public.guard_photo_story_storage_write()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare
+  candidate storage.objects%rowtype;
+  actor uuid;
+  story public.reels%rowtype;
+  path_pattern text;
+  check_old boolean := false;
+begin
+  if TG_OP = 'UPDATE' then
+    -- Storage may record an access/update timestamp when serving an existing object. That
+    -- bookkeeping changes no bytes, ownership or path and must work for published stories.
+    -- Compare every other column, including future version/content fields, before allowing it.
+    if (pg_catalog.to_jsonb(NEW) - array['updated_at', 'last_accessed_at']::text[])
+       is not distinct from
+       (pg_catalog.to_jsonb(OLD) - array['updated_at', 'last_accessed_at']::text[]) then
+      return NEW;
+    end if;
+  end if;
+  -- Check OLD too: an UPDATE must not move a retired/live story object into a video folder.
+  -- Non-story names and buckets keep their existing Storage policy behavior.
+  if TG_OP = 'UPDATE' then check_old := true; end if;
+  loop
+    if check_old then candidate := OLD; else candidate := NEW; end if;
+    if candidate.bucket_id = 'reels' and pg_catalog.split_part(candidate.name, '/', 2) = 'stories' then
+      if auth.uid() is null or auth.role() is distinct from 'authenticated'
+         or not public.caller_not_age_blocked() then
+        raise exception 'An active signed-in uploader is required for story photos' using errcode = '42501';
+      end if;
+      path_pattern := '^' || auth.uid()::text || '/stories/'
+        || '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+        || '/[0-9]{1,2}-[0-9]{10,16}[.]jpg$';
+      if candidate.name !~ path_pattern then
+        raise exception 'This is not an owned story photo path' using errcode = '42501';
+      end if;
+      select p.id into actor from public.profiles p where p.user_id = auth.uid() limit 1;
+      -- Hold the parent lock until the upload metadata transaction commits. Cleanup waits
+      -- for an already-running upload; later uploads wait and then see the terminal marker.
+      select r.* into story from public.reels r
+        where r.id = pg_catalog.split_part(candidate.name, '/', 3)::uuid for share;
+      if not found or actor is null or story.uploaded_by is distinct from actor
+         or story.media_type is distinct from 'photo_story' or story.photo_count <> 0
+         or story.photo_cleanup_pending or coalesce(story.is_removed, false) then
+        raise exception 'This photo story no longer accepts uploads' using errcode = '42501';
+      end if;
+    end if;
+    exit when not check_old;
+    check_old := false;
+  end loop;
+  return NEW;
+end;
+$$;
+revoke all on function public.guard_photo_story_storage_write() from public, anon, authenticated, service_role;
+drop trigger if exists guard_photo_story_storage_write on storage.objects;
+create trigger guard_photo_story_storage_write before insert or update on storage.objects
+  for each row execute function public.guard_photo_story_storage_write();
+commit;
+
+-- Canonical append: 20261021120000_connect_account_context.sql
+-- Caller-bound Stripe test onboarding for adult athletes and a guardian's separate account per athlete.
+-- Requires MINOR-01, VERIFY-02 and custodial_money.sql. No new table, client grant or KYC evidence.
+-- The server passes the user id from live Auth getUser, never from the request body. Both RPCs are
+-- service-role-only; service RLS bypass is compensated by explicit age/owner/consent/handover checks.
+-- Context locks are short database transactions; never hold them across Stripe requests. Save repeats
+-- authorization after the provider await and compares the exact captured profile/binding before writing.
+-- Test fixtures only while the guardian consent form awaits counsel; payouts remain blocked separately.
+-- Rollback: stop the new onboarding path and use a reviewed forward migration. Do not restore the old
+-- minor bypass, broaden client grants, erase bindings/history or infer identity/TIN from transfer flags.
+
+create or replace function public.stripe_connect_context(actor_user_id uuid, target_player_id uuid default null)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  actor public.profiles%rowtype;
+  athlete public.profiles%rowtype;
+  athlete_ids uuid[];
+  player public.players%rowtype;
+  custodial public.custodial_accounts%rowtype;
+  birth_date date;
+  link public.guardian_links%rowtype;
+  consent public.guardian_consents%rowtype;
+  relationship public.payee_verifications%rowtype;
+  binding text;
+  initial_player_id uuid;
+begin
+  if auth.role() is distinct from 'service_role' or actor_user_id is null then
+    raise exception using errcode = '42501', message = 'Only the server can load a bank setup context.';
+  end if;
+  select p.* into actor from public.profiles p where p.user_id = actor_user_id;
+  if not found then
+    raise exception using errcode = '42501', message = 'Create your profile before bank setup.';
+  end if;
+
+  initial_player_id := actor.player_id;
+  if target_player_id is null then
+    -- Verification decisions lock requests before profiles; keep that order to avoid a cycle.
+    perform 1 from public.verification_requests v where v.player_id = initial_player_id
+      order by v.id for share;
+    select p.* into actor from public.profiles p where p.id = actor.id and p.user_id = actor_user_id for update;
+    if not found or actor.age_blocked_at is not null or public.profile_age_band(actor.id) <> 'adult'
+       or not (actor.role = 'athlete' or coalesce(actor.roles, array[]::text[]) @> array['athlete']::text[]) then
+      raise exception using errcode = '42501', message = 'Bank setup is available to an adult athlete or their guardian on record.';
+    end if;
+    if actor.player_id is distinct from initial_player_id then
+      raise exception using errcode = '40001', message = 'The athlete claim changed. Reload before bank setup.';
+    end if;
+    if actor.player_id is not null then
+      -- Lock existing claim rows as well as the player so an in-flight dispute update cannot pass unnoticed.
+      perform 1 from public.players pl where pl.id = actor.player_id for update;
+      select ca.* into custodial from public.custodial_accounts ca where ca.player_id = actor.player_id for update;
+      perform 1 from public.athlete_birthdates b where b.player_id = actor.player_id for share;
+      if custodial.player_id is not null and not public.athlete_controls_money(actor.player_id) then
+        raise exception using errcode = '42501', message = 'The guardian on record manages bank setup until the handover date.';
+      end if;
+      if exists (select 1 from public.verification_requests v where v.player_id = actor.player_id and v.status = 'disputed') then
+        raise exception using errcode = '42501', message = 'This athlete account needs review before bank setup.';
+      end if;
+    end if;
+    binding := actor.stripe_connect_id;
+  else
+    select array_agg(p.id order by p.id) into athlete_ids from public.profiles p
+    where p.player_id = target_player_id and p.verification_status = 'verified' and p.is_verified;
+    if coalesce(array_length(athlete_ids, 1), 0) <> 1 or athlete_ids[1] = actor.id then
+      raise exception using errcode = '42501', message = 'A verified athlete and a separate guardian on record are required.';
+    end if;
+    -- Link/consent precede profile locks, matching consent revocation's existing order. These rows
+    -- are held until commit; every current predicate is checked again after acquiring the locks.
+    select l.* into link from public.guardian_links l
+    where l.minor_id = athlete_ids[1] and l.guardian_id = actor.id and l.ended_at is null
+      and l.confirmed_at is not null order by l.id limit 1 for share;
+    if not found then
+      raise exception using errcode = '42501', message = 'Confirm the guardian link before bank setup.';
+    end if;
+    select c.* into consent from public.guardian_consents c
+    where c.link_id = link.id and c.guardian_id = actor.id and c.minor_id = athlete_ids[1]
+      and c.revoked_at is null and c.allows_donations order by c.signed_at desc, c.id desc limit 1 for share;
+    if not found then
+      raise exception using errcode = '42501', message = 'Current guardian donations consent is required for bank setup.';
+    end if;
+    -- Match admin approval/revocation's request-before-profile order after link/consent locks.
+    perform 1 from public.verification_requests v where v.player_id = target_player_id
+      order by v.id for share;
+    select p.* into actor from public.profiles p where p.id = actor.id and p.user_id = actor_user_id for update;
+    if not found or actor.age_blocked_at is not null or public.profile_age_band(actor.id) <> 'adult' then
+      raise exception using errcode = '42501', message = 'An adult guardian account is required for bank setup.';
+    end if;
+    select p.* into athlete from public.profiles p where p.id = athlete_ids[1] for update;
+    if not found or athlete.player_id is distinct from target_player_id or athlete.verification_status <> 'verified'
+       or not athlete.is_verified or athlete.age_blocked_at is not null then
+      raise exception using errcode = '42501', message = 'This athlete account needs review before bank setup.';
+    end if;
+    select pl.* into player from public.players pl where pl.id = target_player_id for update;
+    if not found or player.guardian_id is distinct from actor.id then
+      raise exception using errcode = '42501', message = 'Only the guardian on record can set up this athlete bank account.';
+    end if;
+    select ca.* into custodial from public.custodial_accounts ca where ca.player_id = target_player_id for update;
+    if not found or custodial.guardian_id is distinct from actor.id then
+      raise exception using errcode = '42501', message = 'Set up the matching custodial record before connecting a bank.';
+    end if;
+    select b.birth_date into birth_date from public.athlete_birthdates b where b.player_id = target_player_id for share;
+    if not found or birth_date is null or public.athlete_controls_money(target_player_id) then
+      raise exception using errcode = '42501', message = 'Guardian bank setup requires a birth date and a future handover date.';
+    end if;
+    if exists (select 1 from public.verification_requests v where v.player_id = target_player_id and v.status = 'disputed') then
+      raise exception using errcode = '42501', message = 'This athlete account needs review before bank setup.';
+    end if;
+    -- Latest live relationship outcome wins; a newer pending/failed outcome cannot borrow an older pass.
+    select v.* into relationship from public.payee_verifications v
+    where v.subject_profile_id = actor.id and v.player_id = target_player_id
+      and v.method in ('school_parent_confirmation', 'document_review') and v.status <> 'superseded'
+    order by v.created_at desc, v.id desc limit 1 for share;
+    if not found or relationship.status <> 'verified' or relationship.checks ->> 'relationship' is distinct from 'true'
+       or (relationship.expires_at is not null and relationship.expires_at <= pg_catalog.now())
+       or relationship.reviewer_id is null or relationship.second_reviewer_id is null
+       or relationship.reviewer_id = relationship.second_reviewer_id or relationship.reviewer_id = actor.id
+       or relationship.second_reviewer_id = actor.id then
+      raise exception using errcode = '42501', message = 'Reviewed guardian relationship evidence is required before bank setup.';
+    end if;
+    binding := custodial.stripe_connect_id;
+  end if;
+  return jsonb_build_object('id', actor.id, 'stripe_connect_id', binding,
+    'legal_terms_accepted_at', actor.legal_terms_accepted_at, 'owner_user_id', actor_user_id,
+    'target_player_id', target_player_id, 'target_kind', case when target_player_id is null then 'self' else 'guardian' end);
+end;
+$$;
+
+create or replace function public.save_stripe_connect_account(
+  actor_user_id uuid, target_player_id uuid, expected_profile_id uuid, expected_account_id text,
+  account_id text, onboarding_complete boolean, transfers_enabled boolean
+)
+returns text
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  context jsonb;
+  saved text;
+begin
+  if auth.role() is distinct from 'service_role' then
+    raise exception using errcode = '42501', message = 'Only the server can save a bank setup account.';
+  end if;
+  if account_id is null or account_id !~ '^acct_[A-Za-z0-9]{6,64}$'
+     or onboarding_complete is null or transfers_enabled is null then
+    raise exception using errcode = '22023', message = 'The bank setup response is incomplete.';
+  end if;
+  -- Every application account writer uses this same lock: simultaneous profile/custodial saves
+  -- cannot both pass a cross-table reuse check for the same provider account. Privileged manual
+  -- writes remain a separate administrative boundary, not an authorization path for clients.
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(account_id, 0));
+  context := public.stripe_connect_context(actor_user_id, target_player_id);
+  if (context ->> 'id')::uuid is distinct from expected_profile_id
+     or (context ->> 'stripe_connect_id') is distinct from expected_account_id
+     or (expected_account_id is not null and account_id is distinct from pg_catalog.btrim(expected_account_id)) then
+    raise exception using errcode = '40001', message = 'The bank account binding changed. Reload before continuing.';
+  end if;
+  if expected_account_id is null and context ->> 'legal_terms_accepted_at' is null then
+    raise exception using errcode = '42501', message = 'Agree to the current bank setup terms before continuing.';
+  end if;
+  if exists (select 1 from public.profiles p where pg_catalog.btrim(p.stripe_connect_id) = account_id
+      and (target_player_id is not null or p.id <> expected_profile_id))
+     or exists (select 1 from public.custodial_accounts ca where pg_catalog.btrim(ca.stripe_connect_id) = account_id
+      and (target_player_id is null or ca.player_id <> target_player_id)) then
+    raise exception using errcode = '23505', message = 'That bank account is already linked elsewhere.';
+  end if;
+  if target_player_id is null then
+    update public.profiles p set stripe_connect_id = account_id,
+      stripe_onboarding_complete = onboarding_complete, payouts_enabled = transfers_enabled
+    where p.id = expected_profile_id and p.user_id = actor_user_id
+      and p.stripe_connect_id is not distinct from expected_account_id
+    returning p.stripe_connect_id into saved;
+  else
+    update public.custodial_accounts ca set stripe_connect_id = account_id,
+      payouts_enabled = transfers_enabled, updated_at = pg_catalog.now()
+    where ca.player_id = target_player_id and ca.guardian_id = expected_profile_id
+      and ca.stripe_connect_id is not distinct from expected_account_id
+    returning ca.stripe_connect_id into saved;
+  end if;
+  if not found or saved is distinct from account_id then
+    raise exception using errcode = '40001', message = 'The bank account binding changed. Reload before continuing.';
+  end if;
+  return saved;
+end;
+$$;
+
+-- An account change invalidates that account's checks, not the guardian's other athletes/accounts.
+-- Preserve the original athlete-scoped relationship invalidation when the guardian on record changes.
+create or replace function public.payee_changes_supersede()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_table_name = 'players' then
+    if new.guardian_id is distinct from old.guardian_id and old.guardian_id is not null then
+      perform public.supersede_payee_checks(old.guardian_id, new.id,
+        array['school_parent_confirmation', 'document_review', 'stripe_identity']);
+    end if;
+  elsif tg_table_name = 'profiles' then
+    if pg_catalog.btrim(new.stripe_connect_id) is distinct from pg_catalog.btrim(old.stripe_connect_id)
+       and old.stripe_connect_id is not null then
+      update public.payee_verifications v set status = 'superseded', superseded_at = pg_catalog.now()
+      where v.subject_profile_id = old.id and v.method = 'stripe_connect_kyc' and v.provider_ref = pg_catalog.btrim(old.stripe_connect_id)
+        and v.status in ('pending', 'verified', 'requires_input');
+    end if;
+  elsif tg_table_name = 'custodial_accounts' then
+    if (pg_catalog.btrim(new.stripe_connect_id) is distinct from pg_catalog.btrim(old.stripe_connect_id)
+        or new.guardian_id is distinct from old.guardian_id)
+       and old.stripe_connect_id is not null then
+      update public.payee_verifications v set status = 'superseded', superseded_at = pg_catalog.now()
+      where v.subject_profile_id = old.guardian_id and v.method = 'stripe_connect_kyc' and v.provider_ref = pg_catalog.btrim(old.stripe_connect_id)
+        and v.status in ('pending', 'verified', 'requires_input');
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.stripe_connect_context(uuid, uuid) from public, anon, authenticated;
+revoke all on function public.save_stripe_connect_account(uuid, uuid, uuid, text, text, boolean, boolean) from public, anon, authenticated;
+revoke all on function public.payee_changes_supersede() from public, anon, authenticated;
+grant execute on function public.stripe_connect_context(uuid, uuid) to service_role;
+grant execute on function public.save_stripe_connect_account(uuid, uuid, uuid, text, text, boolean, boolean) to service_role;
+grant execute on function public.payee_changes_supersede() to service_role;
+
+
+-- Canonical app notification integration: 20261021140000_notifications.sql
+-- NOTIFY-01: recipient-owned optional notifications and service-only delivery evidence.
+-- Requires PRIV-01/MINOR-01 and existing admin guards. Local source; no provider activation.
+-- Rollback: pause both channels, preserve event dedup/attempt history, use reviewed forward repair.
+-- Optional email remains unavailable until a reviewed unsubscribe POST/token contract is present.
+create table if not exists public.notification_config (
+ singleton boolean primary key default true check(singleton), revision bigint not null default 0,
+ email_enabled boolean not null default false, in_app_enabled boolean not null default false,
+ categories jsonb not null default '{"account":false,"donation_receipts":false,"donations_received":false,"payment_updates":false,"social":false,"crew":false,"workouts":false,"games":false}'
+);
+insert into public.notification_config(singleton) values(true) on conflict do nothing;
+create table if not exists public.notification_preferences (
+ recipient_id uuid primary key references auth.users(id) on delete cascade, revision bigint not null default 0,
+ email_enabled boolean not null default true,in_app_enabled boolean not null default true,
+ categories jsonb not null default '{"account":{"email":false,"inApp":true},"donation_receipts":{"email":false,"inApp":true},"donations_received":{"email":false,"inApp":true},"payment_updates":{"email":false,"inApp":true},"social":{"email":false,"inApp":true},"crew":{"email":false,"inApp":true},"workouts":{"email":false,"inApp":true},"games":{"email":false,"inApp":false}}'
+);
+create table if not exists public.notification_events (
+ id uuid primary key default gen_random_uuid(),event_key text not null unique check(length(event_key)<=200),
+ event_type text not null check(event_type='account_welcome'),category text not null check(category='account'),
+ reference_id uuid not null,payload jsonb not null check(jsonb_typeof(payload)='object'),created_at timestamptz not null default now()
+);
+create table if not exists public.notification_account_activations (
+ recipient_id uuid primary key references auth.users(id) on delete cascade,enrolled_at timestamptz not null default now(),activated_at timestamptz
+);
+create table if not exists public.notification_inbox (
+ id uuid primary key default gen_random_uuid(),event_id uuid not null references public.notification_events(id),
+ recipient_id uuid not null references auth.users(id) on delete cascade,created_at timestamptz not null default now(),
+ read_at timestamptz,archived_at timestamptz,unique(event_id,recipient_id)
+);
+create index if not exists notification_inbox_owner on public.notification_inbox(recipient_id,created_at desc,id desc);
+create table if not exists public.notification_inbox_snapshots (
+ id uuid primary key default gen_random_uuid(),recipient_id uuid not null references auth.users(id) on delete cascade,
+ cutoff_at timestamptz not null default now(),expires_at timestamptz not null default now()+interval '1 hour',
+ -- The exact ID set prevents a later transaction with an older timestamp being marked read.
+ inbox_ids uuid[] not null default '{}'
+);
+create table if not exists public.notification_deliveries (
+ id uuid primary key default gen_random_uuid(),event_id uuid not null references public.notification_events(id),
+ -- Preserve sanitized attempt/dedup evidence without preventing account erasure.
+ recipient_id uuid references auth.users(id) on delete set null,category text not null check(category='account'),
+ status text not null default 'queued' check(status in ('queued','attempting','accepted','delivered','suppressed','failed','unknown','bounced')),
+ attempts integer not null default 0 check(attempts between 0 and 3),last_error_code text,
+ retryable boolean not null default false,lease_token uuid,lease_until timestamptz,started_at timestamptz,
+ created_at timestamptz not null default now(),updated_at timestamptz not null default now(),unique(event_id,recipient_id)
+);
+create index if not exists notification_deliveries_queue on public.notification_deliveries(status,created_at,id);
+create table if not exists public.notification_delivery_attempts (
+ id uuid primary key default gen_random_uuid(),job_id uuid not null references public.notification_deliveries(id),
+ attempt_number integer not null check(attempt_number between 1 and 3),lease_token uuid not null,
+ outcome text not null check(outcome in ('attempting','accepted','delivered','suppressed','failed','unknown','bounced')),
+ error_code text,provider_message_id text check(provider_message_id is null or provider_message_id ~ '^[A-Za-z0-9_-]{1,120}$'),
+ created_at timestamptz not null default now(),finished_at timestamptz,unique(job_id,attempt_number)
+);
+create table if not exists public.notification_admin_audit (
+ id uuid primary key default gen_random_uuid(),actor_id uuid references auth.users(id) on delete set null,
+ action text not null check(action in ('config','retry')),job_id uuid references public.notification_deliveries(id),
+ reason text not null check(reason in ('reviewed_change','pause_delivery','resume_future_events','retry_known_failure')),
+ before_revision bigint,after_revision bigint,created_at timestamptz not null default now()
+);
+create or replace function public.notification_categories() returns text[] language sql immutable set search_path='' as $$
+ select array['account','donation_receipts','donations_received','payment_updates','social','crew','workouts','games']::text[] $$;
+create or replace function public.notification_actor() returns uuid language plpgsql stable security definer set search_path='' as $$
+begin
+ if auth.uid() is null or public.my_profile_id() is null then raise exception using errcode='42501',message='recipient_ineligible'; end if;
+ return auth.uid();
+end $$;
+-- Eligibility is deliberately narrow: unsupported financial/social/content references never authorize.
+create or replace function public.notification_source_eligible(event_id uuid,recipient_id uuid) returns boolean language sql stable security definer set search_path='' as $$
+ select exists(select 1 from public.notification_events e join auth.users u on u.id=e.reference_id
+ join public.profiles p on p.user_id=u.id where e.id=event_id and e.event_type='account_welcome' and e.category='account'
+ and e.reference_id=recipient_id and p.age_blocked_at is null and public.profile_age_band(p.id) in ('adult','teen_13_15','teen_16_17')
+ and p.role<>'guest' and nullif(to_jsonb(u)->>'email_confirmed_at','') is not null) $$;
+create or replace function public.get_notification_inbox(archived boolean default false,cursor text default null,page_size integer default 20)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.notification_actor(); cursor_id uuid; cursor_at timestamptz; cutoff uuid; items jsonb; next_cursor text; unread integer;
+begin
+ if archived is null or page_size is null or page_size not between 1 and 50 then raise exception using errcode='22023',message='invalid_page'; end if;
+ if cursor is not null then
+  begin cursor_id:=cursor::uuid; exception when invalid_text_representation then raise exception using errcode='22023',message='invalid_cursor'; end;
+  select created_at into cursor_at from public.notification_inbox where id=cursor_id and recipient_id=me;
+  if not found then raise exception using errcode='42501',message='invalid_cursor'; end if;
+ end if;
+ -- Cap active capabilities; expired rows are retained until reviewed retention is authorized.
+ if (select count(*) from public.notification_inbox_snapshots where recipient_id=me and expires_at>now())>=10 then
+  update public.notification_inbox_snapshots set expires_at=now() where id=(select id from public.notification_inbox_snapshots
+  where recipient_id=me and expires_at>now() order by cutoff_at,id limit 1);
+ end if;
+ insert into public.notification_inbox_snapshots(recipient_id,inbox_ids)
+ select me,coalesce(array_agg(id),'{}'::uuid[]) from public.notification_inbox where recipient_id=me and archived_at is null and read_at is null returning id into cutoff;
+ select count(*)::integer into unread from public.notification_inbox where recipient_id=me and archived_at is null and read_at is null;
+ with page as (
+  select i.*,e.category,public.notification_source_eligible(i.event_id,me) eligible from public.notification_inbox i join public.notification_events e on e.id=i.event_id
+  where i.recipient_id=me and (i.archived_at is not null)=archived and (cursor is null or (i.created_at,i.id)<(cursor_at,cursor_id))
+  order by i.created_at desc,i.id desc limit page_size+1
+ ),visible as (select * from page order by created_at desc,id desc limit page_size)
+ select coalesce(jsonb_agg(jsonb_build_object('id',id,'category',category,'title',case when eligible then 'Welcome to Tapua’i' else 'Notification unavailable' end,
+ 'body',case when eligible then 'Your account is ready. You can manage notifications in Profile.' else 'This update is no longer available.' end,
+ 'createdAt',created_at,'readAt',read_at,'archivedAt',archived_at,'href',case when eligible then '/profile' else null end) order by created_at desc,id desc),'[]'::jsonb),
+ case when (select count(*) from page)>page_size then (select id::text from visible order by created_at,id limit 1) else null end into items,next_cursor from visible;
+ return jsonb_build_object('items',items,'unreadCount',unread,'cutoff',cutoff,'nextCursor',next_cursor);
+end $$;
+create or replace function public.set_notification_read(notification_id uuid,is_read boolean) returns boolean language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.notification_actor();
+begin
+ if is_read is null then raise exception using errcode='22023',message='invalid_read'; end if;
+ update public.notification_inbox set read_at=case when is_read then coalesce(read_at,now()) else null end where id=notification_id and recipient_id=me;
+ if not found then raise exception using errcode='42501',message='notification_not_owned'; end if;return true;
+end $$;
+create or replace function public.mark_all_notifications_read(cutoff text) returns integer language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.notification_actor(); capability uuid; snapshot public.notification_inbox_snapshots; affected integer;
+begin
+ begin capability:=cutoff::uuid; exception when invalid_text_representation then raise exception using errcode='22023',message='invalid_cutoff'; end;
+ select * into snapshot from public.notification_inbox_snapshots where id=capability and recipient_id=me and expires_at>now() for update;
+ if not found then raise exception using errcode='42501',message='invalid_cutoff'; end if;
+ update public.notification_inbox set read_at=now() where recipient_id=me and id=any(snapshot.inbox_ids) and archived_at is null and read_at is null;
+ get diagnostics affected=row_count;return affected;
+end $$;
+create or replace function public.set_notification_archived(notification_id uuid,is_archived boolean) returns boolean language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.notification_actor();
+begin
+ if is_archived is null then raise exception using errcode='22023',message='invalid_archive'; end if;
+ update public.notification_inbox set archived_at=case when is_archived then coalesce(archived_at,now()) else null end where id=notification_id and recipient_id=me;
+ if not found then raise exception using errcode='42501',message='notification_not_owned'; end if;return true;
+end $$;
+create or replace function public.notification_require_service() returns void language plpgsql stable security definer set search_path='' as $$
+begin
+ if auth.role() is distinct from 'service_role' then raise exception using errcode='42501',message='service_only'; end if;
+end $$;
+create or replace function public.notification_require_admin() returns void language plpgsql stable security definer set search_path='' as $$
+begin
+ if not public.is_admin_or_db() then raise exception using errcode='42501',message='admin_only'; end if;
+end $$;
+create or replace function public.get_notification_preferences() returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.notification_actor(); p public.notification_preferences;
+begin
+ insert into public.notification_preferences(recipient_id) values(me) on conflict do nothing;
+ select * into p from public.notification_preferences where recipient_id=me;
+ return jsonb_build_object('revision',p.revision,'emailEnabled',p.email_enabled,'inAppEnabled',p.in_app_enabled,'categories',p.categories);
+end $$;
+drop function if exists public.save_notification_preferences(bigint,jsonb);
+create or replace function public.save_notification_preferences(expected_revision bigint,preferences jsonb,expected_actor uuid) returns jsonb language plpgsql security definer set search_path='' as $$
+declare me uuid:=public.notification_actor(); c text; p public.notification_preferences;
+begin
+ -- Compare the captured session actor; ownership still comes from Auth, never this argument.
+ if expected_actor is null or expected_actor is distinct from auth.uid() then raise exception using errcode='42501',message='actor_changed'; end if;
+ if expected_revision is null or preferences is null or jsonb_typeof(preferences) is distinct from 'object'
+ or jsonb_typeof(preferences->'emailEnabled') is distinct from 'boolean' or jsonb_typeof(preferences->'inAppEnabled') is distinct from 'boolean'
+ or jsonb_typeof(preferences->'categories') is distinct from 'object' then raise exception using errcode='22023',message='invalid_preferences'; end if;
+ if exists(select 1 from jsonb_object_keys(preferences) k where k not in ('revision','emailEnabled','inAppEnabled','categories'))
+ or (select count(*) from jsonb_object_keys(preferences->'categories'))<>8 then raise exception using errcode='22023',message='invalid_category'; end if;
+ foreach c in array public.notification_categories() loop
+  if jsonb_typeof(preferences->'categories'->c) is distinct from 'object' or jsonb_typeof(preferences->'categories'->c->'email') is distinct from 'boolean'
+  or jsonb_typeof(preferences->'categories'->c->'inApp') is distinct from 'boolean'
+  or (select count(*) from jsonb_object_keys(preferences->'categories'->c))<>2 then raise exception using errcode='22023',message='invalid_category'; end if;
+ end loop;
+ insert into public.notification_preferences(recipient_id) values(me) on conflict do nothing;
+ update public.notification_preferences set revision=revision+1,email_enabled=(preferences->>'emailEnabled')::boolean,
+ in_app_enabled=(preferences->>'inAppEnabled')::boolean,categories=preferences->'categories' where recipient_id=me and revision=expected_revision returning * into p;
+ if not found then raise exception using errcode='40001',message='preference_conflict'; end if;
+ return jsonb_build_object('revision',p.revision,'emailEnabled',p.email_enabled,'inAppEnabled',p.in_app_enabled,'categories',p.categories);
+end $$;
+create or replace function public.get_notification_availability() returns jsonb language plpgsql security definer set search_path='' as $$
+declare c public.notification_config;
+begin
+ perform public.notification_actor();select * into c from public.notification_config where singleton;
+ return jsonb_build_object('emailEnabled',c.email_enabled,'inAppEnabled',c.in_app_enabled,'categories',c.categories,
+ 'sourceAvailability','{"account":true,"donation_receipts":false,"donations_received":false,"payment_updates":false,"social":false,"crew":false,"workouts":false,"games":false}'::jsonb);
+end $$;
+create or replace function public.get_admin_notification_config() returns jsonb language plpgsql security definer set search_path='' as $$
+declare c public.notification_config;
+begin
+ perform public.notification_require_admin();select * into c from public.notification_config where singleton;
+ return jsonb_build_object('revision',c.revision,'emailEnabled',c.email_enabled,'inAppEnabled',c.in_app_enabled,'categories',c.categories,
+ 'sourceAvailability','{"account":true,"donation_receipts":false,"donations_received":false,"payment_updates":false,"social":false,"crew":false,"workouts":false,"games":false}'::jsonb);
+end $$;
+drop function if exists public.set_admin_notification_config(bigint,jsonb,text);
+create or replace function public.set_admin_notification_config(expected_revision bigint,config jsonb,expected_actor uuid,reason text default 'reviewed_change')
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare c text; old_revision bigint;
+begin
+ -- Compare the captured session actor; ownership still comes from Auth, never this argument.
+ if expected_actor is null or expected_actor is distinct from auth.uid() then raise exception using errcode='42501',message='actor_changed'; end if;
+ perform public.notification_require_admin();
+ if expected_revision is null or config is null or reason is null or reason not in ('reviewed_change','pause_delivery','resume_future_events')
+ or jsonb_typeof(config) is distinct from 'object' or jsonb_typeof(config->'emailEnabled') is distinct from 'boolean'
+ or jsonb_typeof(config->'inAppEnabled') is distinct from 'boolean' or jsonb_typeof(config->'categories') is distinct from 'object'
+ then raise exception using errcode='22023',message='invalid_config'; end if;
+ if exists(select 1 from jsonb_object_keys(config) k where k not in ('revision','emailEnabled','inAppEnabled','categories','sourceAvailability'))
+ or (select count(*) from jsonb_object_keys(config->'categories'))<>8 then raise exception using errcode='22023',message='invalid_category'; end if;
+ foreach c in array public.notification_categories() loop
+  if jsonb_typeof(config->'categories'->c) is distinct from 'boolean' then raise exception using errcode='22023',message='invalid_category'; end if;
+  if c<>'account' and (config->'categories'->>c)::boolean then raise exception using errcode='22023',message='source_unavailable'; end if;
+ end loop;
+ select revision into old_revision from public.notification_config where singleton for update;
+ if old_revision is distinct from expected_revision then raise exception using errcode='40001',message='config_conflict'; end if;
+ update public.notification_config set revision=revision+1,email_enabled=(config->>'emailEnabled')::boolean,
+ in_app_enabled=(config->>'inAppEnabled')::boolean,categories=config->'categories' where singleton;
+ -- Pause suppresses queued work permanently: resuming applies to future events only.
+ update public.notification_deliveries set status='suppressed',last_error_code='channel_paused',updated_at=now(),lease_token=null,lease_until=null
+ where (status='queued' or (status='attempting' and started_at is null)) and
+ (not (config->>'emailEnabled')::boolean or not coalesce((config->'categories'->>category)::boolean,false));
+ insert into public.notification_admin_audit(actor_id,action,reason,before_revision,after_revision) values(auth.uid(),'config',reason,old_revision,old_revision+1);
+ return public.get_admin_notification_config();
+end $$;
+create or replace function public.get_admin_notification_jobs(cursor text default null,page_size integer default 20)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare cursor_id uuid; cursor_at timestamptz; items jsonb; next_cursor text;
+begin
+ perform public.notification_require_admin();
+ if page_size is null or page_size not between 1 and 50 then raise exception using errcode='22023',message='invalid_page'; end if;
+ if cursor is not null then
+  begin cursor_id:=cursor::uuid; exception when invalid_text_representation then raise exception using errcode='22023',message='invalid_cursor'; end;
+  select created_at into cursor_at from public.notification_deliveries where id=cursor_id;
+  if not found then raise exception using errcode='22023',message='invalid_cursor'; end if;
+ end if;
+ with page as(select * from public.notification_deliveries where (status in ('failed','unknown','bounced') or (status='attempting' and started_at is not null and lease_until<=now()))
+ and (cursor is null or (created_at,id)<(cursor_at,cursor_id)) order by created_at desc,id desc limit page_size+1),
+ visible as(select * from page order by created_at desc,id desc limit page_size)
+ select coalesce(jsonb_agg(jsonb_build_object('id',id,'category',category,'status',case when status='attempting' then 'unknown' else status end,'attempts',attempts,
+ 'lastErrorCode',case when status='failed' and retryable and attempts<3 then 'NOTIF_RETRYABLE'
+ when status in ('attempting','unknown') then 'NOTIF_UNKNOWN' when status='bounced' then 'NOTIF_PROVIDER_SUPPRESSION' else 'NOTIF_FAILED' end,
+ 'createdAt',created_at,'updatedAt',updated_at) order by created_at desc,id desc),'[]'::jsonb),
+ case when (select count(*) from page)>page_size then (select id::text from visible order by created_at,id limit 1) else null end into items,next_cursor from visible;
+ return jsonb_build_object('items',items,'nextCursor',next_cursor);
+end $$;
+drop function if exists public.retry_notification_job(uuid,text);
+create or replace function public.retry_notification_job(job_id uuid,expected_actor uuid,reason text default 'retry_known_failure') returns boolean language plpgsql security definer set search_path='' as $$
+declare d public.notification_deliveries; c public.notification_config;
+begin
+ -- Compare the captured session actor; ownership still comes from Auth, never this argument.
+ if expected_actor is null or expected_actor is distinct from auth.uid() then raise exception using errcode='42501',message='actor_changed'; end if;
+ perform public.notification_require_admin();
+ if reason is distinct from 'retry_known_failure' then raise exception using errcode='22023',message='invalid_retry_reason'; end if;
+ select * into d from public.notification_deliveries where id=job_id for update;
+ select * into c from public.notification_config where singleton;
+ if d.id is null or d.status<>'failed' or not d.retryable or d.attempts>=3 or not c.email_enabled
+ or not coalesce((c.categories->>d.category)::boolean,false) or d.created_at<now()-interval '24 hours'
+ or not public.notification_source_eligible(d.event_id,d.recipient_id) then raise exception using errcode='42501',message='retry_denied'; end if;
+ update public.notification_deliveries set status='queued',retryable=false,last_error_code=null,lease_token=null,lease_until=null,started_at=null,updated_at=now() where id=job_id;
+ insert into public.notification_admin_audit(actor_id,action,job_id,reason) values(auth.uid(),'retry',job_id,reason);return true;
+end $$;
+create or replace function public.get_admin_notification_health() returns jsonb language plpgsql security definer set search_path='' as $$
+declare result jsonb;
+begin
+ perform public.notification_require_admin();
+ select jsonb_build_object('asOf',now(),'windowStart',now()-interval '24 hours',
+ 'pending',(select count(*) from public.notification_deliveries where status='queued'),
+ 'oldestPendingSeconds',(select max(extract(epoch from now()-d.created_at)) from public.notification_deliveries d
+ join public.notification_preferences p on p.recipient_id=d.recipient_id cross join public.notification_config c
+ where d.status='queued' and d.created_at>=now()-interval '24 hours' and c.singleton and c.email_enabled and p.email_enabled
+ and coalesce((c.categories->>d.category)::boolean,false) and coalesce((p.categories->d.category->>'email')::boolean,false)
+ and public.notification_source_eligible(d.event_id,d.recipient_id)),
+ 'attempted',(select count(*) from public.notification_delivery_attempts where created_at>=now()-interval '24 hours'),
+ 'accepted',(select count(*) from public.notification_delivery_attempts where outcome in ('accepted','delivered','bounced') and finished_at>=now()-interval '24 hours'),
+ 'delivered',(select count(*) from public.notification_delivery_attempts where outcome='delivered' and finished_at>=now()-interval '24 hours'),
+ 'suppressed',(select count(*) from public.notification_deliveries where status='suppressed' and updated_at>=now()-interval '24 hours'),
+ 'failed',(select count(*) from public.notification_delivery_attempts where outcome='failed' and finished_at>=now()-interval '24 hours'),
+ 'bounced',(select count(*) from public.notification_delivery_attempts where outcome='bounced' and finished_at>=now()-interval '24 hours'),
+ 'unknown',(select count(*) from public.notification_deliveries where (status='unknown' and updated_at>=now()-interval '24 hours')
+ or (status='attempting' and started_at is not null and lease_until<=now() and lease_until>=now()-interval '24 hours')),
+ 'providerEvidence',false) into result;return result;
+end $$;
+create or replace function public.notification_activate_account(recipient_id uuid) returns uuid language plpgsql security definer set search_path='' as $$
+declare activation public.notification_account_activations; e uuid; p public.notification_preferences; c public.notification_config;
+begin
+ select * into activation from public.notification_account_activations a where a.recipient_id=notification_activate_account.recipient_id for update;
+ if not found then return null; end if;
+ if not exists(select 1 from auth.users u join public.profiles f on f.user_id=u.id where u.id=recipient_id and f.age_blocked_at is null
+ and f.role<>'guest' and public.profile_age_band(f.id) in ('adult','teen_13_15','teen_16_17')
+ and nullif(to_jsonb(u)->>'email_confirmed_at','') is not null) then return null; end if;
+ if activation.activated_at is not null then
+  select id into e from public.notification_events where event_key='account_welcome:'||recipient_id::text;return e;
+ end if;
+ insert into public.notification_events(event_key,event_type,category,reference_id,payload)
+ values('account_welcome:'||recipient_id::text,'account_welcome','account',recipient_id,
+ jsonb_build_object('version',1,'kind','account_welcome','referenceId',recipient_id)) on conflict(event_key) do nothing;
+ select id into e from public.notification_events where event_key='account_welcome:'||recipient_id::text;
+ update public.notification_account_activations a set activated_at=now() where a.recipient_id=notification_activate_account.recipient_id;
+ insert into public.notification_preferences(recipient_id) values(recipient_id) on conflict do nothing;
+ select * into p from public.notification_preferences n where n.recipient_id=notification_activate_account.recipient_id;
+ select * into c from public.notification_config where singleton;
+ if c.in_app_enabled and coalesce((c.categories->>'account')::boolean,false) and p.in_app_enabled and (p.categories->'account'->>'inApp')::boolean then
+  insert into public.notification_inbox(event_id,recipient_id) values(e,recipient_id) on conflict do nothing;
+ end if;
+ if c.email_enabled and coalesce((c.categories->>'account')::boolean,false) and p.email_enabled and (p.categories->'account'->>'email')::boolean then
+  insert into public.notification_deliveries(event_id,recipient_id,category) values(e,recipient_id,'account') on conflict do nothing;
+ end if;
+ return e;
+end $$;
+create or replace function public.emit_notification_event(event_key text,event_type text,reference_id uuid) returns uuid language plpgsql security definer set search_path='' as $$
+begin
+ perform public.notification_require_service();
+ if event_type is distinct from 'account_welcome' or reference_id is null or event_key is distinct from 'account_welcome:'||reference_id::text
+ then raise exception using errcode='22023',message='invalid_source'; end if;
+ return public.notification_activate_account(reference_id);
+end $$;
+create or replace function public.notification_auth_activation() returns trigger language plpgsql security definer set search_path='' as $$
+begin
+ -- INSERT enrollment only prevents welcoming returning accounts or profile repairs after migration.
+ if tg_op='INSERT' then insert into public.notification_account_activations(recipient_id) values(new.id) on conflict do nothing; end if;
+ perform public.notification_activate_account(new.id);return new;
+end $$;
+create or replace function public.notification_profile_activation() returns trigger language plpgsql security definer set search_path='' as $$
+begin
+ perform public.notification_activate_account(new.user_id);return new;
+end $$;
+drop trigger if exists zz_notification_auth_activation on auth.users;
+create trigger zz_notification_auth_activation after insert or update on auth.users for each row execute function public.notification_auth_activation();
+drop trigger if exists zz_notification_profile_activation on public.profiles;
+create trigger zz_notification_profile_activation after insert or update on public.profiles for each row execute function public.notification_profile_activation();
+create or replace function public.claim_notification_jobs(worker_id uuid,batch_size integer default 20,lease_seconds integer default 60)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare jobs jsonb; expired_job public.notification_deliveries;
+begin
+ perform public.notification_require_service();
+ if worker_id is null or batch_size is null or batch_size not between 1 and 50 or lease_seconds is null or lease_seconds not between 10 and 300
+ then raise exception using errcode='22023',message='invalid_lease'; end if;
+ -- Completion also locks delivery before attempt; recovery must keep that order to avoid deadlocks.
+ -- A started send may have reached its provider, so expiry records unknown and never grants another send.
+ for expired_job in select * from public.notification_deliveries where status='attempting' and lease_until<=now()
+ order by lease_until,id limit batch_size for update skip locked loop
+  if expired_job.started_at is not null then
+   update public.notification_delivery_attempts a set outcome='unknown',error_code='transport_unknown',finished_at=now()
+   where a.job_id=expired_job.id and a.lease_token=expired_job.lease_token and a.outcome='attempting';
+   update public.notification_deliveries set status='unknown',last_error_code='transport_unknown',retryable=false,updated_at=now()
+   where id=expired_job.id;
+  else
+   update public.notification_deliveries set status='queued',lease_token=null,lease_until=null,updated_at=now()
+   where id=expired_job.id;
+  end if;
+ end loop;
+ update public.notification_deliveries set status='suppressed',last_error_code='event_expired',updated_at=now()
+ where status='queued' and created_at<now()-interval '24 hours';
+ update public.notification_deliveries set status='suppressed',last_error_code='recipient_ineligible',updated_at=now()
+ where status='queued' and not public.notification_source_eligible(event_id,recipient_id);
+ with candidates as(select id from public.notification_deliveries where status='queued' and attempts<3 order by created_at,id limit batch_size for update skip locked),
+ leased as(update public.notification_deliveries d set status='attempting',lease_token=gen_random_uuid(),lease_until=now()+make_interval(secs=>lease_seconds),started_at=null,updated_at=now()
+ from candidates c where d.id=c.id returning d.*)
+ select coalesce(jsonb_agg(jsonb_build_object('id',d.id,'eventId',d.event_id,'recipientId',d.recipient_id,'category',d.category,'payload',e.payload,
+ 'leaseToken',d.lease_token,'attemptNumber',d.attempts+1,'idempotencyKey','notification:'||d.id::text)),'[]'::jsonb) into jobs from leased d join public.notification_events e on e.id=d.event_id;
+ return jobs;
+end $$;
+create or replace function public.authorize_notification_send(job_id uuid,lease_token uuid) returns jsonb language plpgsql security definer set search_path='' as $$
+declare d public.notification_deliveries; c public.notification_config; p public.notification_preferences; reason text; verified_email text;
+begin
+ perform public.notification_require_service();
+ if job_id is null or lease_token is null then raise exception using errcode='22023',message='invalid_lease'; end if;
+ select * into d from public.notification_deliveries where id=job_id;
+ if d.id is null or d.status<>'attempting' or d.lease_token is distinct from lease_token or d.lease_until<=now() then reason:='lease_lost';
+ else
+  select * into c from public.notification_config where singleton;select * into p from public.notification_preferences where recipient_id=d.recipient_id;
+  if d.created_at<now()-interval '24 hours' then reason:='event_expired';
+  elsif not c.email_enabled then reason:='channel_paused';
+  elsif not coalesce((c.categories->>d.category)::boolean,false) then reason:='category_paused';
+  elsif d.category<>'account' then reason:='source_unavailable';
+  elsif not public.notification_source_eligible(d.event_id,d.recipient_id) then reason:='recipient_ineligible';
+  elsif p.recipient_id is null or not p.email_enabled then reason:='email_opt_out';
+  elsif not coalesce((p.categories->d.category->>'email')::boolean,false) then reason:='category_opt_out';
+  else
+   select u.email into verified_email from auth.users u where u.id=d.recipient_id and nullif(to_jsonb(u)->>'email_confirmed_at','') is not null;
+   if verified_email is null or length(verified_email)>320 or verified_email !~ '^[^[:space:]@]+@[^[:space:]@]+$' then reason:='email_unverified';
+   elsif exists(select 1 from public.notification_deliveries old where old.recipient_id=d.recipient_id and old.status='bounced') then reason:='provider_suppression';
+   else reason:='unsubscribe_unavailable'; end if;
+  end if;
+ end if;
+ -- No application email may send until a separately reviewed unsubscribe contract exists.
+ return jsonb_build_object('allowed',false,'reason',reason);
+end $$;
+create or replace function public.begin_notification_attempt(job_id uuid,lease_token uuid) returns jsonb language plpgsql security definer set search_path='' as $$
+declare d public.notification_deliveries; authorization jsonb;
+begin
+ if job_id is null or lease_token is null then raise exception using errcode='22023',message='invalid_lease'; end if;
+ perform public.notification_require_service();select * into d from public.notification_deliveries where id=job_id for update;
+ if d.started_at is not null then return jsonb_build_object('allowed',false,'reason','lease_lost'); end if;
+ authorization:=public.authorize_notification_send(job_id,lease_token);
+ if not coalesce((authorization->>'allowed')::boolean,false) then
+  -- The worker persists suppression through complete; preserve its lease until that write.
+  return authorization;
+ end if;
+ -- Only a fresh authorization snapshot may be handed to a future configured transport.
+ if d.attempts>=3 then return jsonb_build_object('allowed',false,'reason','lease_lost'); end if;
+ update public.notification_deliveries set attempts=attempts+1,started_at=now(),updated_at=now() where id=job_id;
+ insert into public.notification_delivery_attempts(job_id,attempt_number,lease_token,outcome) values(job_id,d.attempts+1,lease_token,'attempting');
+ return authorization;
+end $$;
+create or replace function public.release_notification_job(job_id uuid,lease_token uuid) returns boolean language plpgsql security definer set search_path='' as $$
+declare d public.notification_deliveries; authorization jsonb;
+begin
+ if job_id is null or lease_token is null then raise exception using errcode='22023',message='invalid_lease'; end if;
+ perform public.notification_require_service();select * into d from public.notification_deliveries where id=job_id for update;
+ if d.id is null or d.lease_token is distinct from lease_token or d.status<>'attempting' or d.started_at is not null or d.lease_until<=now() then return false; end if;
+ authorization:=public.authorize_notification_send(job_id,lease_token);
+ update public.notification_deliveries set status=case when authorization->>'reason'='unsubscribe_unavailable' then 'queued' else 'suppressed' end,
+ last_error_code=case when authorization->>'reason'='unsubscribe_unavailable' then null else authorization->>'reason' end,lease_token=null,lease_until=null,updated_at=now() where id=job_id;
+ return true;
+end $$;
+create or replace function public.complete_notification_attempt(job_id uuid,lease_token uuid,outcome text,error_code text default null,provider_message_id text default null,safe_retry boolean default false)
+returns boolean language plpgsql security definer set search_path='' as $$
+declare d public.notification_deliveries; retry boolean;
+begin
+ perform public.notification_require_service();
+ if job_id is null or lease_token is null then raise exception using errcode='22023',message='invalid_lease'; end if;
+ if outcome is null or outcome not in ('accepted','suppressed','failed','unknown') or safe_retry is null
+ or (provider_message_id is not null and provider_message_id !~ '^[A-Za-z0-9_-]{1,120}$')
+ or (error_code is not null and error_code not in ('transport_unknown','invalid_authorization','invalid_payload','email_opt_out','category_opt_out','channel_paused','category_paused',
+ 'source_unavailable','recipient_ineligible','email_unverified','provider_suppression','business_state_changed','event_expired','lease_lost','unsubscribe_unavailable',
+ 'provider_unavailable','provider_rejected','provider_rate_limited')) then raise exception using errcode='22023',message='invalid_attempt'; end if;
+ select * into d from public.notification_deliveries where id=job_id for update;
+ if d.id is null or d.lease_token is distinct from lease_token or d.status<>'attempting' then return false; end if;
+ -- No acceptance without a durable start; expired started work can only become unknown.
+ if d.started_at is null and outcome<>'suppressed' then raise exception using errcode='42501',message='attempt_not_started'; end if;
+ if d.started_at is not null and d.lease_until<=now() and outcome<>'unknown' then raise exception using errcode='42501',message='lease_lost'; end if;
+ if outcome in ('failed','unknown','suppressed') and error_code is null then raise exception using errcode='22023',message='invalid_attempt'; end if;
+ if outcome='accepted' and (error_code is not null or provider_message_id is null) then raise exception using errcode='22023',message='invalid_attempt'; end if;
+ retry:=outcome='failed' and safe_retry and error_code in ('provider_unavailable','provider_rate_limited') and d.attempts<3;
+ if d.started_at is not null then
+  update public.notification_delivery_attempts a set outcome=complete_notification_attempt.outcome,error_code=complete_notification_attempt.error_code,
+  provider_message_id=complete_notification_attempt.provider_message_id,finished_at=now() where a.job_id=complete_notification_attempt.job_id and a.lease_token=complete_notification_attempt.lease_token and a.outcome='attempting';
+  if not found then raise exception using errcode='42501',message='attempt_not_started'; end if;
+ end if;
+ update public.notification_deliveries set status=outcome,last_error_code=error_code,retryable=coalesce(retry,false),lease_token=null,lease_until=null,updated_at=now() where id=job_id;
+ return true;
+end $$;
+-- Tables remain RPC-only even under Supabase's default table/function grants.
+do $$
+declare t text; fn record;
+begin
+ foreach t in array array['notification_config','notification_preferences','notification_events','notification_account_activations','notification_inbox',
+ 'notification_inbox_snapshots','notification_deliveries','notification_delivery_attempts','notification_admin_audit'] loop
+  execute format('alter table public.%I enable row level security',t);
+  execute format('revoke all on public.%I from public,anon,authenticated,service_role',t);
+  execute format('drop policy if exists "Closed accounts" on public.%I',t);
+  execute format('create policy "Closed accounts" on public.%I as restrictive for all to authenticated using (public.my_profile_id() is not null) with check (public.my_profile_id() is not null)',t);
+ end loop;
+ for fn in select p.oid::regprocedure signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'
+ and (p.proname like 'notification_%' or p.proname in ('get_notification_preferences','save_notification_preferences','get_notification_availability',
+ 'get_notification_inbox','set_notification_read','mark_all_notifications_read','set_notification_archived','get_admin_notification_config',
+ 'set_admin_notification_config','get_admin_notification_jobs','retry_notification_job','get_admin_notification_health','emit_notification_event',
+ 'claim_notification_jobs','authorize_notification_send','begin_notification_attempt','release_notification_job','complete_notification_attempt')) loop
+  execute format('revoke all on function %s from public,anon,authenticated,service_role',fn.signature);
+ end loop;
+end $$;
+grant execute on function public.get_notification_preferences(),public.save_notification_preferences(bigint,jsonb,uuid),public.get_notification_availability(),
+ public.get_notification_inbox(boolean,text,integer),public.set_notification_read(uuid,boolean),public.mark_all_notifications_read(text),public.set_notification_archived(uuid,boolean) to authenticated;
+grant execute on function public.get_admin_notification_config(),public.set_admin_notification_config(bigint,jsonb,uuid,text),public.get_admin_notification_jobs(text,integer),
+ public.retry_notification_job(uuid,uuid,text),public.get_admin_notification_health() to authenticated,service_role;
+grant execute on function public.emit_notification_event(text,text,uuid),public.claim_notification_jobs(uuid,integer,integer),public.authorize_notification_send(uuid,uuid),
+ public.begin_notification_attempt(uuid,uuid),public.release_notification_job(uuid,uuid),public.complete_notification_attempt(uuid,uuid,text,text,text,boolean) to service_role;
+
+-- Reject NULL manager roles before any thank-you write; this does not enroll a social source.
+create or replace function public.thank_donation(target_tip_id uuid, message_key text)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  t public.tips;
+  role text;
+begin
+  select * into t from public.tips where id = target_tip_id;
+  if t.id is null then
+    raise exception 'Donation not found';
+  end if;
+  role := public.rally_manager_role(t.player_id);
+  if role is null or role not in ('athlete', 'guardian') then
+    raise exception 'Only the athlete or their parent / guardian can say thanks';
+  end if;
+  if t.fan_id is null then
+    raise exception 'This donor can''t receive a thank-you';
+  end if;
+  if message_key not in ('malo', 'season', 'gear', 'family', 'work') then
+    raise exception 'Pick one of the thank-you messages';
+  end if;
+  insert into public.donation_thanks (tip_id, player_id, thanked_by, message_key)
+  values (t.id, t.player_id, (select id from public.profiles where user_id = auth.uid() limit 1), message_key)
+  on conflict (tip_id) do nothing;
+  return found;
+end;
+$$;
+revoke all on function public.thank_donation(uuid,text) from public,anon;
+grant execute on function public.thank_donation(uuid,text) to authenticated;
+
+
+-- Canonical app notification integration: 20261021150000_notification_payment_context.sql
+-- NOTIFY-01 prepared, immutable test-mode donation quotes and provider observations. This migration neither
+-- writes tips/Aura nor enqueues receipts. Every row is constrained notification_authority=false; canonical
+-- business/refund accounting plus outbox integration and client-writer retirement require a separate review.
+begin;
+
+create table if not exists public.notification_payment_contexts (
+  id uuid primary key,
+  payment_intent_id text not null unique check (payment_intent_id ~ '^pi_[A-Za-z0-9_]+$'),
+  donor_user_id uuid not null,
+  athlete_id uuid not null,
+  purpose text not null default 'donation' check (purpose = 'donation'),
+  currency text not null check (currency = 'usd'),
+  gift_cents bigint not null check (gift_cents between 50 and 9007199254740991),
+  cover_fee_cents bigint not null check (cover_fee_cents between 0 and 9007199254740991),
+  platform_tip_cents bigint not null check (platform_tip_cents between 0 and 9007199254740991),
+  total_cents bigint not null check (total_cents between 50 and 9007199254740991),
+  livemode boolean not null default false check (livemode = false),
+  notification_authority boolean not null default false check (notification_authority = false),
+  observation_state text not null default 'pending' check (observation_state in ('pending','succeeded','partially_refunded','refunded','disputed')),
+  success_observed boolean not null default false,
+  dispute_observed boolean not null default false,
+  refunded_cents bigint not null default 0 check (refunded_cents >= 0 and refunded_cents <= total_cents),
+  created_at timestamptz not null default statement_timestamp(),
+  updated_at timestamptz not null default statement_timestamp(),
+  check (total_cents = gift_cents + cover_fee_cents + platform_tip_cents)
+);
+comment on table public.notification_payment_contexts is 'Prepared server quote attribution only; notification authority is always false and observations never credit money/Aura.';
+alter table public.notification_payment_contexts enable row level security;
+revoke all on public.notification_payment_contexts from public, anon, authenticated, service_role;
+
+create table if not exists public.notification_payment_observations (
+  provider_event_id text primary key check (provider_event_id ~ '^evt_[A-Za-z0-9_]+$'),
+  context_id uuid not null references public.notification_payment_contexts(id),
+  observation_kind text not null check (observation_kind in ('success','refund','dispute')),
+  refunded_cents bigint not null check (refunded_cents >= 0),
+  observed_at timestamptz not null default statement_timestamp()
+);
+comment on table public.notification_payment_observations is 'Unique verified provider observation IDs, committed with the observation transition; never claims canonical financial application.';
+alter table public.notification_payment_observations enable row level security;
+revoke all on public.notification_payment_observations from public, anon, authenticated, service_role;
+
+-- The optional server quote adapter is unwired. A service call may preserve a reviewed quote but cannot enable delivery.
+create or replace function public.record_notification_payment_context(
+  context_id uuid, provider_intent_id text, donor_user_id uuid, athlete_id uuid,
+  gift_cents bigint, cover_fee_cents bigint, platform_tip_cents bigint,
+  currency_code text, provider_livemode boolean
+) returns boolean language plpgsql security definer set search_path = '' as $$
+declare existing public.notification_payment_contexts%rowtype;
+begin
+  if auth.role() is distinct from 'service_role' then raise exception 'payment_context_denied' using errcode='42501'; end if;
+  if context_id is null or provider_intent_id is null or provider_intent_id !~ '^pi_[A-Za-z0-9_]+$'
+    or donor_user_id is null or athlete_id is null or currency_code is distinct from 'usd'
+    or provider_livemode is distinct from false or gift_cents is null or gift_cents < 50
+    or cover_fee_cents is null or cover_fee_cents < 0 or platform_tip_cents is null or platform_tip_cents < 0
+    or gift_cents > 9007199254740991 or cover_fee_cents > 9007199254740991 or platform_tip_cents > 9007199254740991
+    or gift_cents + cover_fee_cents + platform_tip_cents > 9007199254740991
+    or not exists(select 1 from auth.users u where u.id=donor_user_id)
+    or not exists(select 1 from public.players p where p.id=athlete_id)
+    then raise exception 'payment_context_invalid' using errcode='22023'; end if;
+  insert into public.notification_payment_contexts(id,payment_intent_id,donor_user_id,athlete_id,currency,
+    gift_cents,cover_fee_cents,platform_tip_cents,total_cents)
+    values(context_id,provider_intent_id,donor_user_id,athlete_id,currency_code,
+      gift_cents,cover_fee_cents,platform_tip_cents,gift_cents+cover_fee_cents+platform_tip_cents)
+    on conflict do nothing;
+  select * into existing from public.notification_payment_contexts c where c.id=context_id for update;
+  if not found or existing.payment_intent_id is distinct from provider_intent_id
+    or existing.donor_user_id is distinct from donor_user_id or existing.athlete_id is distinct from athlete_id
+    or existing.gift_cents is distinct from gift_cents or existing.cover_fee_cents is distinct from cover_fee_cents
+    or existing.platform_tip_cents is distinct from platform_tip_cents or existing.currency is distinct from currency_code
+    then raise exception 'payment_context_conflict' using errcode='22023'; end if;
+  return true;
+end $$;
+revoke all on function public.record_notification_payment_context(uuid,text,uuid,uuid,bigint,bigint,bigint,text,boolean) from public, anon, authenticated;
+grant execute on function public.record_notification_payment_context(uuid,text,uuid,uuid,bigint,bigint,bigint,text,boolean) to service_role;
+
+-- One transaction owns unique event insertion AND observation state. A failed update rolls the insertion back.
+-- Refund input is the provider's cumulative charge.amount_refunded: greatest(), never additive accounting.
+create or replace function public.apply_notification_payment_event(
+  provider_event_id text, provider_intent_id text, observation_kind text, provider_livemode boolean,
+  currency_code text, total_cents bigint, refunded_cents bigint, context_metadata jsonb
+) returns jsonb language plpgsql security definer set search_path = '' as $$
+declare context public.notification_payment_contexts%rowtype;
+  prior public.notification_payment_observations%rowtype;
+  next_refunded bigint;
+  next_disputed boolean;
+begin
+  if auth.role() is distinct from 'service_role' then raise exception 'payment_observation_denied' using errcode='42501'; end if;
+  if provider_event_id is null or provider_event_id !~ '^evt_[A-Za-z0-9_]+$'
+    or provider_intent_id is null or provider_intent_id !~ '^pi_[A-Za-z0-9_]+$'
+    or observation_kind is null or observation_kind not in ('success','refund','dispute')
+    or provider_livemode is distinct from false or currency_code is distinct from 'usd'
+    or total_cents is null or total_cents < 50 or total_cents > 9007199254740991
+    or refunded_cents is null or refunded_cents < 0 or refunded_cents > total_cents
+    or (observation_kind <> 'refund' and refunded_cents <> 0)
+    or context_metadata is null or jsonb_typeof(context_metadata) <> 'object'
+    then raise exception 'payment_observation_invalid' using errcode='22023'; end if;
+  select * into context from public.notification_payment_contexts c where c.payment_intent_id=provider_intent_id for update;
+  if not found then return jsonb_build_object('status','source_unavailable','notification','unavailable','observed',false); end if;
+  if context.notification_authority is distinct from false or context.total_cents is distinct from total_cents
+    or context.currency is distinct from currency_code or context.livemode is distinct from provider_livemode
+    or context_metadata->>'tapuai_context_id' is distinct from context.id::text
+    or context_metadata->>'tapuai_purpose' is distinct from context.purpose
+    or context_metadata->>'tapuai_user_id' is distinct from context.donor_user_id::text
+    or context_metadata->>'tapuai_player_id' is distinct from context.athlete_id::text
+    or context_metadata->>'tapuai_gift_cents' is distinct from context.gift_cents::text
+    or context_metadata->>'tapuai_cover_fee_cents' is distinct from context.cover_fee_cents::text
+    or context_metadata->>'tapuai_platform_tip_cents' is distinct from context.platform_tip_cents::text
+    or context_metadata->>'tapuai_notification_authority' is distinct from 'false'
+    then raise exception 'payment_observation_mismatch' using errcode='22023'; end if;
+  select * into prior from public.notification_payment_observations o where o.provider_event_id=apply_notification_payment_event.provider_event_id;
+  if found then
+    if prior.context_id is distinct from context.id or prior.observation_kind is distinct from observation_kind
+      or prior.refunded_cents is distinct from refunded_cents
+      then raise exception 'payment_observation_conflict' using errcode='22023'; end if;
+    return jsonb_build_object('status','source_unavailable','notification','unavailable','observed',true,'duplicate',true);
+  end if;
+  insert into public.notification_payment_observations(provider_event_id,context_id,observation_kind,refunded_cents)
+    values(provider_event_id,context.id,observation_kind,refunded_cents);
+  next_refunded := greatest(context.refunded_cents,refunded_cents);
+  next_disputed := context.dispute_observed or observation_kind='dispute';
+  update public.notification_payment_contexts c set
+    refunded_cents=next_refunded, dispute_observed=next_disputed,
+    success_observed=context.success_observed or observation_kind='success',
+    observation_state=case when next_disputed then 'disputed' when next_refunded=context.total_cents then 'refunded'
+      when next_refunded>0 then 'partially_refunded' when context.success_observed or observation_kind='success' then 'succeeded' else 'pending' end,
+    updated_at=statement_timestamp() where c.id=context.id;
+  return jsonb_build_object('status','source_unavailable','notification','unavailable','observed',true,'duplicate',false);
+end $$;
+revoke all on function public.apply_notification_payment_event(text,text,text,boolean,text,bigint,bigint,jsonb) from public, anon, authenticated;
+grant execute on function public.apply_notification_payment_event(text,text,text,boolean,text,bigint,bigint,jsonb) to service_role;
+commit;

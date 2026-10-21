@@ -352,6 +352,30 @@
       ]
     },
     {
+      "id": "EXIT_CLOUD",
+      "department": "Engineering",
+      "lead": "REDUNDANCY_LEAD",
+      "paths": []
+    },
+    {
+      "id": "EXIT_DATABASE",
+      "department": "Engineering",
+      "lead": "REDUNDANCY_LEAD",
+      "paths": []
+    },
+    {
+      "id": "EXIT_SERVICES",
+      "department": "Engineering",
+      "lead": "REDUNDANCY_LEAD",
+      "paths": []
+    },
+    {
+      "id": "EXIT_SYNC",
+      "department": "Engineering",
+      "lead": "REDUNDANCY_LEAD",
+      "paths": []
+    },
+    {
       "id": "FILMER_REWARDS",
       "department": "Engineering",
       "lead": "HIGHLIGHTS",
@@ -417,6 +441,12 @@
       "paths": [
         "packages/shared-types/admin/financeTax.ts"
       ]
+    },
+    {
+      "id": "INFRA_SECURITY",
+      "department": "Security",
+      "lead": "SECURITY",
+      "paths": []
     },
     {
       "id": "INFRASTRUCTURE",
@@ -521,6 +551,10 @@
       "lead": "CREW",
       "paths": [
         "apps/mobile/src/frontend/lib/crew.ts",
+        "apps/mobile/src/frontend/lib/notifications.ts",
+        "packages/shared-types/notifications.ts",
+        "supabase/functions/_shared/notifications",
+        "apps/mobile/src/frontend/components/Admin/Notifications",
         "apps/mobile/src/backend/db/schema.sql"
       ]
     },
@@ -696,6 +730,18 @@
       ]
     },
     {
+      "id": "RECOVERY_SECURITY",
+      "department": "Security",
+      "lead": "SECURITY",
+      "paths": []
+    },
+    {
+      "id": "REDUNDANCY_LEAD",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "paths": []
+    },
+    {
       "id": "REFUNDS",
       "department": "Finance",
       "lead": "COMMERCE",
@@ -855,6 +901,12 @@
         "apps/mobile/src/backend/db/schema.sql",
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ]
+    },
+    {
+      "id": "SUPPLY_CHAIN_SECURITY",
+      "department": "Security",
+      "lead": "SECURITY",
+      "paths": []
     },
     {
       "id": "SUPPORT",
@@ -1130,7 +1182,8 @@
       "sqlReaders": [
         "athlete_handover_date",
         "minor_payout_hold_reason",
-        "payee_for_player"
+        "payee_for_player",
+        "stripe_connect_context"
       ],
       "removers": [],
       "triggers": [],
@@ -1139,10 +1192,12 @@
         "/activity",
         "/admin/athletes",
         "/admin/people",
+        "/api/create-stripe-account+api",
         "/parent",
         "/profile",
         "/spotlight",
-        "/user/[id]"
+        "/user/[id]",
+        "edge:create-stripe-account"
       ]
     },
     {
@@ -1804,7 +1859,8 @@
         "admin_decide_payout_override",
         "admin_set_custodial_terms",
         "guardian_setup_custodial",
-        "record_stripe_kyc"
+        "record_stripe_kyc",
+        "save_stripe_connect_account"
       ],
       "sqlReaders": [
         "admin_request_payout_override",
@@ -1813,7 +1869,8 @@
         "get_custodial_summary",
         "payee_for_player",
         "report_reel",
-        "request_custodial_withdrawal"
+        "request_custodial_withdrawal",
+        "stripe_connect_context"
       ],
       "removers": [],
       "triggers": [
@@ -1828,11 +1885,13 @@
         "/admin/people",
         "/admin/qa",
         "/admin/spotlight",
+        "/api/create-stripe-account+api",
         "/local",
         "/parent",
         "/profile",
         "/spotlight",
-        "/user/[id]"
+        "/user/[id]",
+        "edge:create-stripe-account"
       ]
     },
     {
@@ -2376,7 +2435,10 @@
         "update_game_score"
       ],
       "removers": [],
-      "triggers": [],
+      "triggers": [
+        "games_live_seq_bump → games_live_seq_bump",
+        "games_broadcast_score_change → games_broadcast_score_change"
+      ],
       "screens": [
         "/",
         "/admin",
@@ -2520,7 +2582,8 @@
         "admin_minor_overview",
         "guardian_list_minors",
         "minor_has_consent",
-        "minor_status_json"
+        "minor_status_json",
+        "stripe_connect_context"
       ],
       "removers": [],
       "triggers": [
@@ -2568,6 +2631,7 @@
         "/admin/support",
         "/admin/trends",
         "/admin/wishlist",
+        "/api/create-stripe-account+api",
         "/athlete",
         "/beyond",
         "/booster",
@@ -2585,7 +2649,8 @@
         "/sponsor",
         "/sport-quiz",
         "/spotlight",
-        "/user/[id]"
+        "/user/[id]",
+        "edge:create-stripe-account"
       ]
     },
     {
@@ -2673,6 +2738,7 @@
         "request_friend",
         "respond_guardian_link",
         "revoke_guardian_consent",
+        "stripe_connect_context",
         "user_blocks_end_guardian_links"
       ],
       "removers": [],
@@ -2720,6 +2786,7 @@
         "/admin/support",
         "/admin/trends",
         "/admin/wishlist",
+        "/api/create-stripe-account+api",
         "/api/fan-zone-media+api",
         "/api/fan-zone-remove+api",
         "/api/fan-zone-upload+api",
@@ -2740,7 +2807,8 @@
         "/sponsor",
         "/sport-quiz",
         "/spotlight",
-        "/user/[id]"
+        "/user/[id]",
+        "edge:create-stripe-account"
       ]
     },
     {
@@ -2844,6 +2912,312 @@
       ]
     },
     {
+      "name": "notification_account_activations",
+      "kind": "table",
+      "owner": "AUTH",
+      "purpose": "New-account enrollment and one confirmed eligible welcome activation; historical accounts are not replay-enrolled.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "notification_activate_account",
+        "notification_auth_activation"
+      ],
+      "sqlReaders": [],
+      "removers": [],
+      "triggers": [],
+      "screens": []
+    },
+    {
+      "name": "notification_admin_audit",
+      "kind": "table",
+      "owner": "ADMIN",
+      "purpose": "Actor/time/fixed-reason notification configuration and safe-repair audit, with identity nulled on account erasure.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "retry_notification_job",
+        "set_admin_notification_config"
+      ],
+      "sqlReaders": [],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/admin/features"
+      ]
+    },
+    {
+      "name": "notification_config",
+      "kind": "table",
+      "owner": "NOTIFICATIONS",
+      "purpose": "Server channel/category pause configuration and revision; implemented source availability cannot be changed by staff or clients.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "set_admin_notification_config"
+      ],
+      "sqlReaders": [
+        "authorize_notification_send",
+        "get_admin_notification_config",
+        "get_admin_notification_health",
+        "get_notification_availability",
+        "notification_activate_account",
+        "retry_notification_job"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/activity",
+        "/admin",
+        "/admin/analytics",
+        "/admin/audience",
+        "/admin/departments",
+        "/admin/features",
+        "/admin/health",
+        "/admin/product",
+        "/admin/product/coverage",
+        "/admin/product/features",
+        "/admin/product/people",
+        "/admin/product/profile",
+        "/admin/product/sign-in",
+        "/admin/revenue",
+        "/admin/trends",
+        "/profile",
+        "edge:_shared"
+      ]
+    },
+    {
+      "name": "notification_deliveries",
+      "kind": "table",
+      "owner": "NOTIFICATIONS",
+      "purpose": "Durable per-event/recipient email intent, lease/outcome and safe retry evidence; erased Auth identities are nulled while operational evidence remains.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "begin_notification_attempt",
+        "claim_notification_jobs",
+        "complete_notification_attempt",
+        "notification_activate_account",
+        "release_notification_job",
+        "retry_notification_job",
+        "set_admin_notification_config"
+      ],
+      "sqlReaders": [
+        "authorize_notification_send",
+        "get_admin_notification_health",
+        "get_admin_notification_jobs"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/admin",
+        "/admin/analytics",
+        "/admin/audience",
+        "/admin/departments",
+        "/admin/features",
+        "/admin/health",
+        "/admin/product",
+        "/admin/product/coverage",
+        "/admin/product/features",
+        "/admin/product/people",
+        "/admin/product/profile",
+        "/admin/product/sign-in",
+        "/admin/revenue",
+        "/admin/trends",
+        "edge:_shared"
+      ]
+    },
+    {
+      "name": "notification_delivery_attempts",
+      "kind": "table",
+      "owner": "NOTIFICATIONS",
+      "purpose": "Attempt-before-send and accepted/suppressed/failed/unknown evidence; no provider address or message body, and no blind retry after uncertain outcomes.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "begin_notification_attempt",
+        "claim_notification_jobs",
+        "complete_notification_attempt"
+      ],
+      "sqlReaders": [
+        "get_admin_notification_health"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/admin",
+        "/admin/analytics",
+        "/admin/audience",
+        "/admin/departments",
+        "/admin/health",
+        "/admin/product",
+        "/admin/product/coverage",
+        "/admin/product/features",
+        "/admin/product/people",
+        "/admin/product/profile",
+        "/admin/product/sign-in",
+        "/admin/revenue",
+        "/admin/trends",
+        "edge:_shared"
+      ]
+    },
+    {
+      "name": "notification_events",
+      "kind": "table",
+      "owner": "NOTIFICATIONS",
+      "purpose": "Allowlisted minimal source references and stable dedup keys; account activation only initially, recipient inbox and delivery evidence separate.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "notification_activate_account"
+      ],
+      "sqlReaders": [
+        "claim_notification_jobs",
+        "get_notification_inbox",
+        "notification_source_eligible"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/activity",
+        "/admin",
+        "/admin/analytics",
+        "/admin/audience",
+        "/admin/departments",
+        "/admin/features",
+        "/admin/health",
+        "/admin/product",
+        "/admin/product/coverage",
+        "/admin/product/features",
+        "/admin/product/people",
+        "/admin/product/profile",
+        "/admin/product/sign-in",
+        "/admin/revenue",
+        "/admin/trends",
+        "/profile",
+        "edge:_shared"
+      ]
+    },
+    {
+      "name": "notification_inbox",
+      "kind": "table",
+      "owner": "NOTIFICATIONS",
+      "purpose": "Recipient inbox read/archive state, with current referenced-source permission enforced by RPC; archive never erases receipt/delivery evidence.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "mark_all_notifications_read",
+        "notification_activate_account",
+        "set_notification_archived",
+        "set_notification_read"
+      ],
+      "sqlReaders": [
+        "get_notification_inbox"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/activity",
+        "/profile"
+      ]
+    },
+    {
+      "name": "notification_inbox_snapshots",
+      "kind": "table",
+      "owner": "NOTIFICATIONS",
+      "purpose": "Account-bound bounded one-hour bulk-read snapshots; later arrivals remain unread. Expired-record retention awaits reviewed policy.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "get_notification_inbox"
+      ],
+      "sqlReaders": [
+        "mark_all_notifications_read"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/activity",
+        "/profile"
+      ]
+    },
+    {
+      "name": "notification_payment_contexts",
+      "kind": "table",
+      "owner": "COMMERCE",
+      "purpose": "Immutable server-bound test payment purpose/actor/athlete/quote allocation evidence. Notification authority is constrained false; no donation credit source.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "apply_notification_payment_event",
+        "record_notification_payment_context"
+      ],
+      "sqlReaders": [
+        "apply_notification_payment_event",
+        "record_notification_payment_context"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "edge:stripe-webhook"
+      ]
+    },
+    {
+      "name": "notification_payment_observations",
+      "kind": "table",
+      "owner": "RECONCILIATION",
+      "purpose": "Unique validated processor event observations and conservative refund/dispute ordering. No receipt, ledger, Aura or funds-available authority.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "apply_notification_payment_event"
+      ],
+      "sqlReaders": [
+        "apply_notification_payment_event"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "edge:stripe-webhook"
+      ]
+    },
+    {
+      "name": "notification_preferences",
+      "kind": "table",
+      "owner": "PROFILE",
+      "purpose": "Recipient-owned revisioned category/channel preferences; every optional email off initially, Auth recovery separate.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "get_notification_preferences",
+        "notification_activate_account",
+        "save_notification_preferences"
+      ],
+      "sqlReaders": [
+        "authorize_notification_send",
+        "get_admin_notification_health"
+      ],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/activity",
+        "/admin",
+        "/admin/analytics",
+        "/admin/audience",
+        "/admin/departments",
+        "/admin/health",
+        "/admin/product",
+        "/admin/product/coverage",
+        "/admin/product/features",
+        "/admin/product/people",
+        "/admin/product/profile",
+        "/admin/product/sign-in",
+        "/admin/revenue",
+        "/admin/trends",
+        "/profile",
+        "edge:_shared"
+      ]
+    },
+    {
       "name": "operator_checkins",
       "kind": "table",
       "owner": "OPERATOR",
@@ -2891,6 +3265,7 @@
         "admin_confirm_payee_check",
         "admin_record_payee_check",
         "admin_revoke_payee_check",
+        "payee_changes_supersede",
         "record_stripe_kyc",
         "supersede_payee_checks"
       ],
@@ -2898,7 +3273,8 @@
         "admin_confirm_payee_check",
         "admin_payee_overview",
         "admin_payee_report",
-        "current_payee_check"
+        "current_payee_check",
+        "stripe_connect_context"
       ],
       "removers": [],
       "triggers": [
@@ -2909,10 +3285,12 @@
         "/",
         "/activity",
         "/admin/people",
+        "/api/create-stripe-account+api",
         "/parent",
         "/profile",
         "/spotlight",
-        "/user/[id]"
+        "/user/[id]",
+        "edge:create-stripe-account"
       ]
     },
     {
@@ -2950,7 +3328,6 @@
         "apps/mobile/src/frontend/lib/vault.ts"
       ],
       "readers": [
-        "apps/mobile/src/frontend/hooks/useRoster.ts",
         "apps/mobile/src/frontend/lib/admin.ts",
         "apps/mobile/src/frontend/lib/athleteStats.ts",
         "apps/mobile/src/frontend/lib/bookkeeping.ts",
@@ -3004,9 +3381,11 @@
         "quiz_fact_month_bucket",
         "quiz_fact_text_problems",
         "rally_manager_role",
+        "record_notification_payment_context",
         "record_stripe_kyc",
         "report_reel",
         "search_local_entities",
+        "stripe_connect_context",
         "sync_company_revenue_logs",
         "tag_party",
         "toggle_crew_follow"
@@ -3056,6 +3435,7 @@
         "/admin/support",
         "/admin/trends",
         "/admin/wishlist",
+        "/api/create-stripe-account+api",
         "/athlete",
         "/beyond",
         "/booster",
@@ -3076,7 +3456,7 @@
         "/sport-quiz",
         "/spotlight",
         "/user/[id]",
-        "edge:stripe-webhook",
+        "edge:create-stripe-account",
         "portal:/",
         "portal:/analytics",
         "portal:/audience",
@@ -3090,34 +3470,30 @@
       "name": "profiles",
       "kind": "table",
       "owner": "PROFILE",
-      "purpose": "Account profiles, roles and settings.",
+      "purpose": "Account profiles, roles and settings; trusted Connect adapters conditionally persist the own-account binding/onboarding/capability flags before links. These flags do not assert identity/TIN verification.",
       "writers": [
-        "apps/mobile/src/backend/api/createStripeAccount.ts",
         "apps/mobile/src/frontend/context/AuthContext.tsx",
         "apps/mobile/src/frontend/lib/adminCatalog.ts",
         "apps/mobile/src/frontend/lib/auth.ts",
         "apps/mobile/src/frontend/lib/legal.ts",
         "apps/mobile/src/frontend/lib/teams.ts",
-        "apps/mobile/src/frontend/services/MediaUploadService.ts",
-        "supabase/functions/create-stripe-account/index.ts"
+        "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "readers": [
         "apps/admin-portal/lib/authz.ts",
         "apps/admin-portal/lib/profile.ts",
         "apps/admin-portal/lib/softWall.ts",
         "apps/mobile/src/backend/api/createPayout.ts",
-        "apps/mobile/src/backend/api/createStripeAccount.ts",
         "apps/mobile/src/frontend/context/AuthContext.tsx",
         "apps/mobile/src/frontend/lib/admin.ts",
         "apps/mobile/src/frontend/lib/adminCatalog.ts",
         "apps/mobile/src/frontend/lib/adminReports.ts",
         "apps/mobile/src/frontend/lib/aura.ts",
         "apps/mobile/src/frontend/lib/auth.ts",
+        "apps/mobile/src/frontend/lib/legal.ts",
         "apps/mobile/src/frontend/lib/roster.ts",
         "apps/mobile/src/frontend/lib/teams.ts",
-        "apps/mobile/src/frontend/lib/verification.ts",
-        "apps/mobile/src/frontend/services/MediaUploadService.ts",
-        "supabase/functions/create-stripe-account/index.ts"
+        "apps/mobile/src/frontend/lib/verification.ts"
       ],
       "sqlWriters": [
         "add_user_aura",
@@ -3134,6 +3510,7 @@
         "handle_new_auth_user",
         "record_stripe_kyc",
         "redeem_team_code",
+        "save_stripe_connect_account",
         "school_confirm_athlete",
         "set_malo_freeze",
         "set_my_birth_month"
@@ -3158,6 +3535,7 @@
         "athlete_profile_for_player",
         "athlete_school_badge",
         "athlete_stats_visible",
+        "begin_failed_photo_story_cleanup",
         "beyond_actor",
         "beyond_can_view",
         "beyond_legacy_posts",
@@ -3165,6 +3543,7 @@
         "block_user",
         "caller_not_age_blocked",
         "can_confirm_player_tag",
+        "can_delete_failed_photo_story_object",
         "can_read_reel_vault",
         "cancel_custodial_withdrawal",
         "challenge_counts_json",
@@ -3185,6 +3564,7 @@
         "decide_custodial_withdrawal",
         "enforce_minor_consent",
         "filmer_stats",
+        "finish_failed_photo_story_cleanup",
         "first_name_of",
         "fun_eligible",
         "fun_snapshot",
@@ -3206,6 +3586,7 @@
         "get_teammates_to_vouch",
         "get_top_filmers",
         "give_filmer_props",
+        "guard_photo_story_storage_write",
         "guardian_list_minors",
         "guardian_setup_custodial",
         "is_guardian_of_profile",
@@ -3220,6 +3601,8 @@
         "my_claimed_player_id",
         "my_profile_id",
         "my_vouching_school_id",
+        "notification_activate_account",
+        "notification_source_eligible",
         "parent_set_player_consent",
         "payee_for_player",
         "player_hidden_from_viewer",
@@ -3262,6 +3645,7 @@
         "set_reel_flash_unlock",
         "set_reel_photos",
         "start_school_check",
+        "stripe_connect_context",
         "supervision_json",
         "sync_spotlight_period",
         "tag_party",
@@ -3287,7 +3671,8 @@
         "challenge_profile_identity_redaction → challenge_on_profile_delete",
         "beyond_profile_erasure → beyond_profile_erasure",
         "quiz_groups_profile_rules → quiz_groups_on_profile",
-        "quiz_facts_profile_rules → quiz_facts_on_profile"
+        "quiz_facts_profile_rules → quiz_facts_on_profile",
+        "zz_notification_profile_activation → notification_profile_activation"
       ],
       "screens": [
         "/",
@@ -3359,13 +3744,14 @@
         "/sport-quiz",
         "/spotlight",
         "/user/[id]",
+        "edge:_shared",
         "edge:create-payment-intent",
         "edge:create-stripe-account",
-        "edge:stripe-webhook",
         "portal:/",
         "portal:/analytics",
         "portal:/audience",
         "portal:/auth",
+        "portal:/login/mfa",
         "portal:/manage",
         "portal:/money",
         "portal:/operations",
@@ -3546,7 +3932,9 @@
       "owner": "PHOTO_STORIES",
       "purpose": "Photos inside a photo-story Highlight.",
       "writers": [],
-      "readers": [],
+      "readers": [
+        "apps/mobile/src/frontend/lib/photoStories.ts"
+      ],
       "sqlWriters": [
         "set_reel_photos"
       ],
@@ -3700,7 +4088,6 @@
       "writers": [
         "apps/mobile/src/frontend/lib/adminCatalog.ts",
         "apps/mobile/src/frontend/lib/crew.ts",
-        "apps/mobile/src/frontend/lib/photoStories.ts",
         "apps/mobile/src/frontend/lib/reels.ts",
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
@@ -3708,10 +4095,10 @@
         "apps/mobile/src/frontend/lib/admin.ts",
         "apps/mobile/src/frontend/lib/adminCatalog.ts",
         "apps/mobile/src/frontend/lib/photoStories.ts",
-        "apps/mobile/src/frontend/lib/reels.ts",
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "sqlWriters": [
+        "begin_failed_photo_story_cleanup",
         "block_user",
         "clear_reel_hype",
         "close_under_13_account",
@@ -3730,6 +4117,8 @@
       "sqlReaders": [
         "admin_challenge_post_counts",
         "athlete_highlight_views",
+        "begin_failed_photo_story_cleanup",
+        "can_delete_failed_photo_story_object",
         "can_read_reel_vault",
         "challenge_inbox",
         "challenge_reel_check",
@@ -3748,6 +4137,7 @@
         "get_spotlight_standings",
         "get_top_filmers",
         "give_filmer_props",
+        "guard_photo_story_storage_write",
         "increment_reel_hype",
         "moderate_flagged_reel",
         "publish_spotlight_award",
@@ -3763,13 +4153,16 @@
         "view:reels_feed",
         "view:reel_photos_feed"
       ],
-      "removers": [],
+      "removers": [
+        "finish_failed_photo_story_cleanup"
+      ],
       "triggers": [
         "reels_apply_tag_defaults → reels_apply_tag_defaults",
         "reels_filmer_rewards → reels_filmer_rewards",
         "reels_reset_photo_count → reels_reset_photo_count",
         "reels_apply_tag_defaults → reels_apply_tag_defaults",
-        "reels_guard_coach_label → guard_coach_label"
+        "reels_guard_coach_label → guard_coach_label",
+        "guard_failed_photo_story_state → guard_failed_photo_story_state"
       ],
       "screens": [
         "/",
@@ -4030,7 +4423,6 @@
         "/spotlight",
         "/user/[id]",
         "edge:create-payment-intent",
-        "edge:stripe-webhook",
         "portal:/",
         "portal:/analytics",
         "portal:/audience",
@@ -5029,6 +5421,7 @@
         "quiz_round_begin",
         "quiz_round_hard_count",
         "quiz_round_items_dto",
+        "quiz_round_pick",
         "quiz_round_settle",
         "quiz_round_view",
         "quiz_season_recap",
@@ -5246,20 +5639,14 @@
       "name": "stripe_webhook_events",
       "kind": "table",
       "owner": "LEDGER",
-      "purpose": "Stripe events the webhook already processed (deduplication).",
-      "writers": [
-        "supabase/functions/stripe-webhook/index.ts"
-      ],
-      "readers": [
-        "supabase/functions/stripe-webhook/index.ts"
-      ],
+      "purpose": "Retained legacy PaymentIntent claim/dedup evidence from the retired pre-claim webhook writer. Not proof of completed business application, donation credits or receipt delivery; current webhook no longer writes this table. Owner-reviewed retention/reconciliation required.",
+      "writers": [],
+      "readers": [],
       "sqlWriters": [],
       "sqlReaders": [],
       "removers": [],
       "triggers": [],
-      "screens": [
-        "edge:stripe-webhook"
-      ]
+      "screens": []
     },
     {
       "name": "subscriber_requests",
@@ -5267,10 +5654,10 @@
       "owner": "BILLING",
       "purpose": "Requests to subscribe to an athlete's Vault.",
       "writers": [
-        "apps/mobile/src/frontend/hooks/useSubscriberRequests.ts"
+        "apps/mobile/src/frontend/lib/subscriptions.ts"
       ],
       "readers": [
-        "apps/mobile/src/frontend/hooks/useSubscriberRequests.ts"
+        "apps/mobile/src/frontend/lib/subscriptions.ts"
       ],
       "sqlWriters": [],
       "sqlReaders": [
@@ -5309,11 +5696,11 @@
       "owner": "BILLING",
       "purpose": "Vault / Exclusive purchases.",
       "writers": [
-        "apps/mobile/src/frontend/hooks/useAthleteSubscription.ts"
+        "apps/mobile/src/frontend/lib/subscriptions.ts"
       ],
       "readers": [
-        "apps/mobile/src/frontend/hooks/useAthleteSubscription.ts",
-        "apps/mobile/src/frontend/lib/bookkeeping.ts"
+        "apps/mobile/src/frontend/lib/bookkeeping.ts",
+        "apps/mobile/src/frontend/lib/subscriptions.ts"
       ],
       "sqlWriters": [],
       "sqlReaders": [
@@ -5614,8 +6001,7 @@
       "owner": "TELEMETRY",
       "purpose": "App events: taps, dwell, errors, checkout latency.",
       "writers": [
-        "apps/mobile/src/frontend/services/TelemetryManager.ts",
-        "supabase/functions/stripe-webhook/index.ts"
+        "apps/mobile/src/frontend/services/TelemetryManager.ts"
       ],
       "readers": [
         "apps/mobile/src/frontend/lib/admin.ts"
@@ -5688,7 +6074,6 @@
         "/sport-quiz",
         "/spotlight",
         "/user/[id]",
-        "edge:stripe-webhook",
         "portal:/",
         "portal:/analytics",
         "portal:/audience",
@@ -5704,15 +6089,14 @@
       "owner": "LEDGER",
       "purpose": "Donations (code name tips), with channel, Rally, tip for Tapua'i and covered fee.",
       "writers": [
-        "apps/mobile/src/frontend/hooks/useTipCheckout.ts",
-        "supabase/functions/stripe-webhook/index.ts"
+        "apps/mobile/src/frontend/hooks/useTipCheckout.ts"
       ],
       "readers": [
         "apps/admin-portal/lib/reports.ts",
-        "apps/mobile/src/frontend/hooks/useFanTipHistory.ts",
         "apps/mobile/src/frontend/lib/admin.ts",
         "apps/mobile/src/frontend/lib/adminReports.ts",
         "apps/mobile/src/frontend/lib/bookkeeping.ts",
+        "apps/mobile/src/frontend/lib/donationHistory.ts",
         "apps/mobile/src/frontend/lib/finance.ts"
       ],
       "sqlWriters": [],
@@ -5767,7 +6151,6 @@
         "/receipts",
         "/spotlight",
         "/user/[id]",
-        "edge:stripe-webhook",
         "portal:/",
         "portal:/analytics",
         "portal:/audience",
@@ -5902,6 +6285,7 @@
         "my_vouching_school_id",
         "school_confirm_athlete",
         "start_school_check",
+        "stripe_connect_context",
         "vouch_for_teammate"
       ],
       "removers": [],
@@ -5947,6 +6331,7 @@
         "/admin/support",
         "/admin/trends",
         "/admin/wishlist",
+        "/api/create-stripe-account+api",
         "/athlete",
         "/beyond",
         "/booster",
@@ -5966,6 +6351,7 @@
         "/sport-quiz",
         "/spotlight",
         "/user/[id]",
+        "edge:create-stripe-account",
         "portal:/",
         "portal:/analytics",
         "portal:/audience",
@@ -6203,8 +6589,7 @@
       "callers": [
         "apps/mobile/src/frontend/lib/aura.ts",
         "sql:check constraint",
-        "sql:chip_in_wishlist_item",
-        "supabase/functions/stripe-webhook/index.ts"
+        "sql:chip_in_wishlist_item"
       ],
       "manual": null,
       "writes": [
@@ -6888,6 +7273,22 @@
       "reads": []
     },
     {
+      "name": "apply_notification_payment_event",
+      "owner": "RECONCILIATION",
+      "callers": [
+        "supabase/functions/stripe-webhook/index.ts"
+      ],
+      "manual": "Service-only unique validated processor observation with mode/currency/allocation and refund/dispute ordering; no donation, Aura, ledger or notification intent writes.",
+      "writes": [
+        "notification_payment_contexts",
+        "notification_payment_observations"
+      ],
+      "reads": [
+        "notification_payment_contexts",
+        "notification_payment_observations"
+      ]
+    },
+    {
       "name": "apply_privacy_settings",
       "owner": "PROFILE",
       "callers": [
@@ -6976,7 +7377,8 @@
         "sql:create_rally",
         "sql:guardian_setup_custodial",
         "sql:payee_for_player",
-        "sql:request_custodial_withdrawal"
+        "sql:request_custodial_withdrawal",
+        "sql:stripe_connect_context"
       ],
       "manual": null,
       "writes": [],
@@ -7114,6 +7516,22 @@
       "reads": []
     },
     {
+      "name": "authorize_notification_send",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "sql:begin_notification_attempt",
+        "sql:release_notification_job",
+        "supabase/functions/_shared/notifications/worker.ts"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [],
+      "reads": [
+        "notification_config",
+        "notification_deliveries",
+        "notification_preferences"
+      ]
+    },
+    {
       "name": "award_filmer_aura",
       "owner": "FILMER_REWARDS",
       "callers": [
@@ -7124,6 +7542,34 @@
       "writes": [
         "filmer_rewards",
         "profiles"
+      ],
+      "reads": []
+    },
+    {
+      "name": "begin_failed_photo_story_cleanup",
+      "owner": "PHOTO_STORIES",
+      "callers": [
+        "apps/mobile/src/frontend/lib/photoStoryCleanup.ts"
+      ],
+      "manual": "Authenticates the exact uploader, locks and retires an unpublished story; preserves committed stories.",
+      "writes": [
+        "reels"
+      ],
+      "reads": [
+        "profiles",
+        "reels"
+      ]
+    },
+    {
+      "name": "begin_notification_attempt",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "supabase/functions/_shared/notifications/worker.ts"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [
+        "notification_deliveries",
+        "notification_delivery_attempts"
       ],
       "reads": []
     },
@@ -7461,8 +7907,12 @@
       "owner": "PROFILE",
       "callers": [
         "sql:RLS policy",
+        "sql:begin_failed_photo_story_cleanup",
+        "sql:can_delete_failed_photo_story_object",
         "sql:challenge_missing_dependencies",
-        "sql:check constraint"
+        "sql:check constraint",
+        "sql:finish_failed_photo_story_cleanup",
+        "sql:guard_photo_story_storage_write"
       ],
       "manual": null,
       "writes": [],
@@ -7484,6 +7934,19 @@
         "players",
         "profiles",
         "schools_and_teams"
+      ]
+    },
+    {
+      "name": "can_delete_failed_photo_story_object",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "sql:RLS policy"
+      ],
+      "manual": "Allows Storage deletion only inside the current uploader claimed zero-count photo story prefix.",
+      "writes": [],
+      "reads": [
+        "profiles",
+        "reels"
       ]
     },
     {
@@ -7926,6 +8389,21 @@
       ]
     },
     {
+      "name": "claim_notification_jobs",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "supabase/functions/_shared/notifications/worker.ts"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [
+        "notification_deliveries",
+        "notification_delivery_attempts"
+      ],
+      "reads": [
+        "notification_events"
+      ]
+    },
+    {
       "name": "claimed_player_ids",
       "owner": "PROFILE",
       "callers": [
@@ -8059,6 +8537,19 @@
       ],
       "manual": null,
       "writes": [],
+      "reads": []
+    },
+    {
+      "name": "complete_notification_attempt",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "supabase/functions/_shared/notifications/worker.ts"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [
+        "notification_deliveries",
+        "notification_delivery_attempts"
+      ],
       "reads": []
     },
     {
@@ -8270,6 +8761,14 @@
       "reads": []
     },
     {
+      "name": "emit_notification_event",
+      "owner": "NOTIFICATIONS",
+      "callers": [],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "end_guardian_link",
       "owner": "PROFILE",
       "callers": [
@@ -8336,6 +8835,18 @@
         "filmer_rewards",
         "profiles",
         "reels"
+      ]
+    },
+    {
+      "name": "finish_failed_photo_story_cleanup",
+      "owner": "PHOTO_STORIES",
+      "callers": [
+        "apps/mobile/src/frontend/lib/photoStoryCleanup.ts"
+      ],
+      "manual": "Deletes only the owner claimed hidden row once its exact Storage prefix has no objects.",
+      "writes": [],
+      "reads": [
+        "profiles"
       ]
     },
     {
@@ -8871,6 +9382,26 @@
       ]
     },
     {
+      "name": "games_broadcast_score_change",
+      "owner": "REALTIME",
+      "callers": [
+        "trigger:games_broadcast_score_change on games"
+      ],
+      "manual": "SCALE-03 trigger: sends only the changed scoreboard columns on private Broadcast game_scores_{id}, and add/remove/active notices on game_scores_index.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "games_live_seq_bump",
+      "owner": "REALTIME",
+      "callers": [
+        "trigger:games_live_seq_bump on games"
+      ],
+      "manual": "SCALE-03 trigger: keeps games.live_seq server-owned; adds 1 only when a scoreboard column changes.",
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "get_active_rally",
       "owner": "RALLY",
       "callers": [
@@ -8911,6 +9442,46 @@
         "players",
         "profiles",
         "tips"
+      ]
+    },
+    {
+      "name": "get_admin_notification_config",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts",
+        "sql:set_admin_notification_config"
+      ],
+      "manual": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried.",
+      "writes": [],
+      "reads": [
+        "notification_config"
+      ]
+    },
+    {
+      "name": "get_admin_notification_health",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried.",
+      "writes": [],
+      "reads": [
+        "notification_config",
+        "notification_deliveries",
+        "notification_delivery_attempts",
+        "notification_preferences"
+      ]
+    },
+    {
+      "name": "get_admin_notification_jobs",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried.",
+      "writes": [],
+      "reads": [
+        "notification_deliveries"
       ]
     },
     {
@@ -9061,7 +9632,7 @@
       "name": "get_fan_tip_history",
       "owner": "ROSTERS",
       "callers": [
-        "apps/mobile/src/frontend/hooks/useFanTipHistory.ts"
+        "apps/mobile/src/frontend/lib/donationHistory.ts"
       ],
       "manual": null,
       "writes": [],
@@ -9177,6 +9748,45 @@
       ]
     },
     {
+      "name": "get_notification_availability",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [],
+      "reads": [
+        "notification_config"
+      ]
+    },
+    {
+      "name": "get_notification_inbox",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [
+        "notification_inbox_snapshots"
+      ],
+      "reads": [
+        "notification_events",
+        "notification_inbox"
+      ]
+    },
+    {
+      "name": "get_notification_preferences",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Own Auth-derived category/channel settings with expected revision conflict handling, optional email off and no direct client writes.",
+      "writes": [
+        "notification_preferences"
+      ],
+      "reads": []
+    },
+    {
       "name": "get_pending_player_tags",
       "owner": "ROSTERS",
       "callers": [
@@ -9218,7 +9828,7 @@
       "name": "get_received_malo",
       "owner": "LEDGER",
       "callers": [
-        "apps/mobile/src/frontend/hooks/useReceivedMalo.ts"
+        "apps/mobile/src/frontend/lib/donationHistory.ts"
       ],
       "manual": null,
       "writes": [],
@@ -9383,6 +9993,16 @@
       "reads": []
     },
     {
+      "name": "guard_failed_photo_story_state",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "trigger:guard_failed_photo_story_state on reels"
+      ],
+      "manual": "Forces new photo cleanup markers false and keeps an owner cleanup claim terminal.",
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "guard_payee_truncate",
       "owner": "BACKEND",
       "callers": [
@@ -9413,6 +10033,19 @@
       "manual": null,
       "writes": [],
       "reads": []
+    },
+    {
+      "name": "guard_photo_story_storage_write",
+      "owner": "RLS_SECURITY",
+      "callers": [
+        "trigger:guard_photo_story_storage_write on storage"
+      ],
+      "manual": "Serializes content/path writes against draft cleanup; allows only harmless timestamp bookkeeping on live objects.",
+      "writes": [],
+      "reads": [
+        "profiles",
+        "reels"
+      ]
     },
     {
       "name": "guard_profiles_admin_escalation",
@@ -9701,6 +10334,7 @@
         "sql:check constraint",
         "sql:delete_sport_config",
         "sql:guard_profiles_verification",
+        "sql:notification_require_admin",
         "sql:triage_app_feedback",
         "sql:upsert_sport_config"
       ],
@@ -9988,6 +10622,20 @@
       ]
     },
     {
+      "name": "mark_all_notifications_read",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [
+        "notification_inbox"
+      ],
+      "reads": [
+        "notification_inbox_snapshots"
+      ]
+    },
+    {
       "name": "minor_guardian_count",
       "owner": "PROFILE",
       "callers": [
@@ -10146,6 +10794,7 @@
         "sql:list_my_blocks",
         "sql:list_my_friends",
         "sql:log_supervision_event",
+        "sql:notification_actor",
         "sql:preview_guardian_invite",
         "sql:quiz_actor",
         "sql:quiz_fact_actor",
@@ -10206,6 +10855,122 @@
       "reads": []
     },
     {
+      "name": "notification_activate_account",
+      "owner": "AUTH",
+      "callers": [
+        "sql:emit_notification_event",
+        "sql:notification_auth_activation",
+        "sql:notification_profile_activation"
+      ],
+      "manual": "New enrolled account activation producer; confirmed eligible source only, stable key and no returning-login/historical replay.",
+      "writes": [
+        "notification_account_activations",
+        "notification_deliveries",
+        "notification_events",
+        "notification_inbox",
+        "notification_preferences"
+      ],
+      "reads": [
+        "notification_config",
+        "profiles"
+      ]
+    },
+    {
+      "name": "notification_actor",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "sql:get_notification_availability",
+        "sql:get_notification_inbox",
+        "sql:get_notification_preferences",
+        "sql:mark_all_notifications_read",
+        "sql:save_notification_preferences",
+        "sql:set_notification_archived",
+        "sql:set_notification_read"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "notification_auth_activation",
+      "owner": "AUTH",
+      "callers": [
+        "trigger:zz_notification_auth_activation on auth"
+      ],
+      "manual": "New enrolled account activation producer; confirmed eligible source only, stable key and no returning-login/historical replay.",
+      "writes": [
+        "notification_account_activations"
+      ],
+      "reads": []
+    },
+    {
+      "name": "notification_categories",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "sql:save_notification_preferences",
+        "sql:set_admin_notification_config"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "notification_profile_activation",
+      "owner": "AUTH",
+      "callers": [
+        "trigger:zz_notification_profile_activation on profiles"
+      ],
+      "manual": "New enrolled account activation producer; confirmed eligible source only, stable key and no returning-login/historical replay.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "notification_require_admin",
+      "owner": "ADMIN",
+      "callers": [
+        "sql:get_admin_notification_config",
+        "sql:get_admin_notification_health",
+        "sql:get_admin_notification_jobs",
+        "sql:retry_notification_job",
+        "sql:set_admin_notification_config"
+      ],
+      "manual": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "notification_require_service",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "sql:authorize_notification_send",
+        "sql:begin_notification_attempt",
+        "sql:claim_notification_jobs",
+        "sql:complete_notification_attempt",
+        "sql:emit_notification_event",
+        "sql:release_notification_job"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [],
+      "reads": []
+    },
+    {
+      "name": "notification_source_eligible",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "sql:authorize_notification_send",
+        "sql:claim_notification_jobs",
+        "sql:get_admin_notification_health",
+        "sql:get_notification_inbox",
+        "sql:retry_notification_job"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [],
+      "reads": [
+        "notification_events",
+        "profiles"
+      ]
+    },
+    {
       "name": "operator_checkins_minimize",
       "owner": "BACKEND",
       "callers": [
@@ -10243,15 +11008,17 @@
     },
     {
       "name": "payee_changes_supersede",
-      "owner": "BACKEND",
+      "owner": "CONNECT",
       "callers": [
         "sql:check constraint",
         "trigger:custodial_payee_supersede on custodial_accounts",
         "trigger:players_payee_supersede on players",
         "trigger:profiles_payee_supersede on profiles"
       ],
-      "manual": null,
-      "writes": [],
+      "manual": "Trigger invalidates only the changed account provider reference, retaining unrelated guardian accounts and athlete-scoped relationship invalidation on guardian changes.",
+      "writes": [
+        "payee_verifications"
+      ],
       "reads": []
     },
     {
@@ -10387,6 +11154,8 @@
         "sql:log_supervision_event",
         "sql:minor_payout_hold_reason",
         "sql:minor_status_json",
+        "sql:notification_activate_account",
+        "sql:notification_source_eligible",
         "sql:payee_for_player",
         "sql:quiz_actor",
         "sql:quiz_admin_fact_decide",
@@ -10411,7 +11180,8 @@
         "sql:request_friend",
         "sql:set_my_birth_month",
         "sql:set_my_privacy",
-        "sql:sign_guardian_consent"
+        "sql:sign_guardian_consent",
+        "sql:stripe_connect_context"
       ],
       "manual": null,
       "writes": [],
@@ -13019,7 +13789,8 @@
         "sport_quiz_attempts",
         "sport_quiz_exposures",
         "sport_quiz_group_sets",
-        "sport_quiz_questions"
+        "sport_quiz_questions",
+        "sport_quiz_round_items"
       ]
     },
     {
@@ -13444,6 +14215,19 @@
       ]
     },
     {
+      "name": "record_notification_payment_context",
+      "owner": "COMMERCE",
+      "callers": [],
+      "manual": "Service-only immutable server quote context, actor/purpose/athlete/currency/integer allocation bound; notification authority hard false.",
+      "writes": [
+        "notification_payment_contexts"
+      ],
+      "reads": [
+        "notification_payment_contexts",
+        "players"
+      ]
+    },
+    {
       "name": "record_reel_view",
       "owner": "HIGHLIGHTS",
       "callers": [
@@ -13583,6 +14367,18 @@
       "manual": "Admin manifest registration; never executes restore.",
       "writes": [
         "support_releases"
+      ],
+      "reads": []
+    },
+    {
+      "name": "release_notification_job",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "supabase/functions/_shared/notifications/worker.ts"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [
+        "notification_deliveries"
       ],
       "reads": []
     },
@@ -13740,6 +14536,21 @@
       ]
     },
     {
+      "name": "retry_notification_job",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried.",
+      "writes": [
+        "notification_admin_audit",
+        "notification_deliveries"
+      ],
+      "reads": [
+        "notification_config"
+      ]
+    },
+    {
       "name": "revoke_guardian_consent",
       "owner": "CUSTODIAL",
       "callers": [
@@ -13752,6 +14563,32 @@
       "reads": [
         "guardian_links"
       ]
+    },
+    {
+      "name": "save_notification_preferences",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Own Auth-derived category/channel settings with expected revision conflict handling, optional email off and no direct client writes.",
+      "writes": [
+        "notification_preferences"
+      ],
+      "reads": []
+    },
+    {
+      "name": "save_stripe_connect_account",
+      "owner": "CONNECT",
+      "callers": [
+        "apps/mobile/src/backend/api/createStripeAccount.ts",
+        "supabase/functions/create-stripe-account/index.ts"
+      ],
+      "manual": "Service-only conditional account save after provider await; rechecks actor/athlete eligibility, captured profile/binding and cross-context account reuse; guardian custodial row or adult profile only.",
+      "writes": [
+        "custodial_accounts",
+        "profiles"
+      ],
+      "reads": []
     },
     {
       "name": "school_confirm_athlete",
@@ -13822,6 +14659,20 @@
       ]
     },
     {
+      "name": "set_admin_notification_config",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried.",
+      "writes": [
+        "notification_admin_audit",
+        "notification_config",
+        "notification_deliveries"
+      ],
+      "reads": []
+    },
+    {
       "name": "set_allow_challenges",
       "owner": "HIGHLIGHTS",
       "callers": [
@@ -13889,6 +14740,30 @@
       "reads": [
         "profiles"
       ]
+    },
+    {
+      "name": "set_notification_archived",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [
+        "notification_inbox"
+      ],
+      "reads": []
+    },
+    {
+      "name": "set_notification_read",
+      "owner": "NOTIFICATIONS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/notifications.ts"
+      ],
+      "manual": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified.",
+      "writes": [
+        "notification_inbox"
+      ],
+      "reads": []
     },
     {
       "name": "set_own_coach_label",
@@ -14015,6 +14890,27 @@
         "verification_requests"
       ],
       "reads": [
+        "profiles",
+        "verification_requests"
+      ]
+    },
+    {
+      "name": "stripe_connect_context",
+      "owner": "CONNECT",
+      "callers": [
+        "apps/mobile/src/backend/api/createStripeAccount.ts",
+        "sql:save_stripe_connect_account",
+        "supabase/functions/create-stripe-account/index.ts"
+      ],
+      "manual": "Service-only bank setup context derived from live authenticated actor and optional athlete; age, custody, consent, relationship and handover gates. No client grant or new stored data.",
+      "writes": [],
+      "reads": [
+        "athlete_birthdates",
+        "custodial_accounts",
+        "guardian_consents",
+        "guardian_links",
+        "payee_verifications",
+        "players",
         "profiles",
         "verification_requests"
       ]
@@ -14172,7 +15068,7 @@
       "callers": [
         "apps/mobile/src/frontend/lib/donationThanks.ts"
       ],
-      "manual": null,
+      "manual": "Preset donation thanks with explicit NULL/unrelated-role denial; no thank-you notification producer is enabled by this repair.",
       "writes": [
         "donation_thanks"
       ],
@@ -14441,6 +15337,7 @@
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "readers": [
+        "apps/mobile/src/frontend/lib/media.ts",
         "apps/mobile/src/frontend/lib/sponsorships.ts",
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
@@ -14546,6 +15443,7 @@
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "readers": [
+        "apps/mobile/src/frontend/lib/media.ts",
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "screens": [
@@ -14610,12 +15508,12 @@
     {
       "name": "reel_vault",
       "owner": "VAULT",
-      "purpose": "Private Vault clips, read only through short-lived signed URLs.",
+      "purpose": "Private Vault clips; authorized one-hour signing through lib/media.ts/mediaStorage.ts. Upload never requests a public URL or a public fallback. Existing paths/entitlement rules are unchanged; source adapter tests do not prove hosted policy/removal parity.",
       "writers": [
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "readers": [
-        "apps/mobile/src/frontend/lib/reels.ts",
+        "apps/mobile/src/frontend/lib/media.ts",
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "screens": [
@@ -14680,12 +15578,15 @@
     {
       "name": "reels",
       "owner": "UPLOAD",
-      "purpose": "Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…).",
+      "purpose": "Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). Existing paths/rights/row metadata are unchanged by the 2026-10-21 replaceable media transport; public URL readers allow canonical public buckets only.",
       "writers": [
+        "apps/mobile/src/frontend/lib/photoStoryCleanup.ts",
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "readers": [
+        "apps/mobile/src/frontend/lib/media.ts",
         "apps/mobile/src/frontend/lib/photoStories.ts",
+        "apps/mobile/src/frontend/lib/photoStoryCleanup.ts",
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "screens": [
@@ -15049,6 +15950,16 @@
         "apps/mobile/src/frontend/components/BeyondGame/BeyondGameComposer.tsx",
         "apps/mobile/src/frontend/components/Reels/ReelCard.tsx",
         "apps/mobile/src/frontend/components/Reels/UploadVideoModal.tsx"
+      ]
+    },
+    {
+      "group": "layouts",
+      "key": "telemetrySmoothness",
+      "path": "layouts.telemetrySmoothness",
+      "readers": [
+        "apps/mobile/app/_layout.tsx",
+        "apps/mobile/src/frontend/hooks/useScreenMountTime.ts",
+        "apps/mobile/src/frontend/services/TelemetryManager.ts"
       ]
     },
     {

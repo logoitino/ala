@@ -512,9 +512,14 @@ GROWTH_ANALYTICS packet function. Repository pinned specialists did not run on a
 Existing reporting, model pins and owner/domain authority remain intact. Claims, review
 receipts and next owners: [GROWTH-01 video follow-up](../agents/GROWTH-01.md#video-scalability-recommendation-follow-up--2026-10-13).
 
-### 11.2 Current source facts and integration conditions
+### 11.2 Source facts at the 2026-10-13 review and integration conditions
 
-The reviews checked current source, not a hosted media or device experiment:
+The reviews checked source at that date, not a hosted media or device experiment. The bullet
+snapshot below is historical. Subsequent local work uses 1.2 Mbit/s compression and an 8-MiB
+client cap, one active decoded Expo Highlight, and bound reference/legacy playback readers.
+See [MEDIA_SERVICE_PLAN](design/MEDIA_SERVICE_PLAN.md) for the current transport and remaining
+authorization/processing/device limits; this update does not establish provider validation:
+
 
 - The client Highlight flow declares a 45-second cap. Native compression targets a 1080
   longest edge /2.5 Mbit/s when linked;
@@ -655,3 +660,13 @@ Actual private technical/cost reports, independent Documentation acceptance, loc
 results, source hashes and claims release are recorded in the GROWTH-01 follow-up. Current
 review is source/arithmetic/documentation evidence only; provider prices, native/browser media,
 hosted entitlement/load/deletion/export/recovery and financial rollout are not verified here.
+
+
+### Owner media follow-through — 2026-10-20 America/Denver
+
+Short Highlights stay open to otherwise eligible users. The owner keeps longer uploads off until
+costs are measured; any later pilot requires bounded server admission, private staging and review; live streaming is a later feature and
+is not part of the near-term build. The local storage adapter/reference readers use today's
+Supabase client and add no selected or purchased streaming provider. Proposed limits and actual
+verification are tracked in [MEDIA_SERVICE_PLAN](design/MEDIA_SERVICE_PLAN.md). This does not
+change §11's Mux/Bunny/Cloudflare comparison or establish a provider cost/capacity winner.

@@ -1,0 +1,23 @@
+# Optional Linux backup schedule. Install only after a successful manual backup and recovery rehearsal.
+[Unit]
+Description=Tapuai encrypted Supabase backup
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=tapuai-backup
+Group=tapuai-backup
+WorkingDirectory=/opt/tapuai/ala-sports
+UMask=0077
+# Put AWS profile paths / AZURE_CONFIG_DIR in this private optional operator file.
+EnvironmentFile=-/etc/tapuai/cloud-cli.env
+ExecStart=/usr/bin/python3 infrastructure/backup/job.py --config-file /etc/tapuai/backup-job.json
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/tapuai/backups /var/lib/tapuai/backup-status /var/lib/tapuai/cloud-cli
+
+# Configure the monitored failure handler and rehearse every destination before activation.
+# Provider-command upload success is recorded privately; remote readback/restore remains separate.

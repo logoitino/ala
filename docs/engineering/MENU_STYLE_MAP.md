@@ -1,6 +1,7 @@
+<!-- Current shared UI source coverage is separate from dated rendered/native acceptance. -->
 # Menu and page style coverage
 
-**Current source alignment:** 2026-10-15 America/Denver · Calm Island after UX-06; earlier UX-02/UX-03 evidence below remains dated history. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
+**Current source alignment:** 2026-10-20 America/Denver · Calm Island after UX-07; UX-06 retained; earlier UX-02/UX-03 evidence below remains dated history. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
 `ACCESSIBILITY`, `DEVICE_QA` review; `DOCUMENTATION` keeps this map current.
 
 This is a source inventory of shared presentation coverage. It is not a rendered-device audit.
@@ -18,7 +19,8 @@ Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATU
 | `UI/MenuChrome.tsx` → `MenuStepIndicator({ labels, current })` | Named, non-clickable step chips; one-based current stage announced to assistive technology |
 | `hooks/useSheetFrame.ts` | Centered sheets up to 440px, compact gutters, home-indicator clearance, common radius/border/shadow |
 | `ScreenShell.tsx` / `TabScreen.tsx` | Calm Island light page canvas without MenuBackdrop/corner decoration; dark video layouts retain contrast |
-| `ScreenHeading.tsx` | Existing kicker/accent dot and heading underline; caller accent or published gold remains authoritative |
+| `ScreenHeading.tsx` | Wrapping screen header, readable supporting text and decorative accent; published text/gold and caller accent remain authoritative |
+| `UI/FanTabBar.tsx` / `UI/AnimatedButton.tsx` | Existing fan destinations/actions, wrapping labels, selected/disabled semantics, 44-point targets and OS Reduce Motion feedback |
 
 Donation uses Amount → Options → Review in the same popup. Upload uses Video → Details →
 Review with optional settings/selection subpages. Persistent navigation stays outside page
@@ -68,7 +70,7 @@ wash are rendered by its child `UploadVideoComposer`; donation steps live in chi
 | `Verification/SchoolCrest.tsx` | accent wash, shared metrics | Proof sheet receives shared accents; crest colors remain school-owned. |
 ## Additional shared consumers
 
-`Reels/UploadChoiceSheet.tsx` (2026-10-16): the Upload ＋ chooser uses the shared sheet chrome (`useSheetFrame`, `SheetRise`, `SheetHandle`, one jade `MenuBackdrop` wash) with two full-width options and Cancel; it only chooses which existing composer opens.
+`Reels/UploadChoiceSheet.tsx` (2026-10-16): the Upload ＋ chooser uses the shared sheet chrome (`useSheetFrame`, `SheetRise`, `SheetHandle`, one jade `MenuBackdrop` wash) with two full-width options and Cancel; it only chooses which existing composer opens. UX-07 caps it to90% of the current window, scrolls tall text/options/Cancel and leaves its44-point Close handle outside that scroll. Bounded current-component web320x640 CSS-text-scaling/callback review passed; native safe-area/Dynamic Type checks remain separate.
 
 UX-06's dated first pass, followed by Calm Island: `BeyondGame/BeyondGameStyles.ts` binds discovery, composer, legacy athlete cards and
 the existing `BeyondButton` to the shared Calm Island colors and MENU_METRICS. `BeyondButton` adds
@@ -210,3 +212,17 @@ dismissal. Profile has a generic Fan Zone entry, not an all-campaign inbox/histo
 Stack header is suppressed; Back/account Home remain explicit. Source errors stay independent.
 No new bottom tab, forced modal, push permission or money control accompanies these activities.
 Device sizing, keyboard/screen-reader and full layout redirects remain release verification.
+
+## UX-07 — athlete story and primary-tab source coverage (2026-10-20)
+
+The shared Profile Highlights pane names caller-visible authored biography/links as Story, without
+viewer/private fallbacks. Home, Activity, Spotlight, Local, Beyond, Drip and Upload retain existing
+sources/destinations with readable headings, factual empty/loading copy and wrapping existing controls.
+No new collector or action was added; existing control-map ownership, flags and telemetry remain.
+Source review, specific rendered states, failures and native/hosted limits live in [UX-07](../agents/UX-07.md).
+Shared primitive changes cover their consumers; this does not claim every desk or sheet was visually audited.
+
+
+### Current UX-07 rendered follow-up
+
+Actual independent outside Codex review accepted synthetic current-component Story at390px and320px enlarged CSS text, plus normal/enlarged Upload at320x640. Capture URL, viewport and PNG widths match. Existing Highlight/Beyond callback assertions and Cancel event wait completed before a later optional page open failed. A subsequent hidden-subject DOM read succeeded at desktop width; it supplies no narrow visual or hosted-policy acceptance. Final post-scroll `pnpm check` passed212mobile suites/1849tests and all included gates; selected local app-ready passed. Native/assistive checks, configured-theme/full-route visual coverage and engagement outcomes remain unverified. Exact receipts and failure limits: [UX-07](../agents/UX-07.md).

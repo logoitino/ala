@@ -1,3 +1,4 @@
+<!-- Photo-story app contract and dated cleanup repair evidence; hosted and device verification remain separate. -->
 # Photo stories in Highlights ⚡ — design and build contract
 
 **Status:** approved by the owner 2026-10-07; implemented locally (WORK_QUEUE `UX-05a–d`).
@@ -78,7 +79,7 @@ create table if not exists public.reel_photos (
   → null, ≤ 200. Replaces the rows in array order (`position` 0..n-1) and sets `reels.photo_count`.
   Returns the count. Granted to `authenticated` only. **Publish-once:** succeeds only while
   `photo_count = 0`, so a published story cannot be swapped after tag confirmation, hype or donations
-  (a failed attempt can be retried on the same reel id).
+  (failed attempts now retire their old row/files before a fresh retry; see the repair below).
 - **`reel_photos_feed` view** (granted to `anon, authenticated`): `id, reel_id, position,
   description, width, height, image_path`, joined to `reels`, excluding removed reels; `image_path`
   gated with the same expression `reels_feed` uses for `video_url` (vault/flash/admin/owner/
@@ -142,7 +143,7 @@ caller's own folder by the separate migration `20261007231000_reels_storage_owne
   later** buttons (44-point targets, labelled for screen readers) and Remove; per-photo optional
   description on Details. Required: ≥ 1 photo, caption, athlete tag, rights confirmation with photo
   wording ("I took these photos or have permission from the people in them"); Vault hidden.
-  Progress `Uploading photo 2 of 5`. Partial failure: nothing published, retry keeps the draft.
+  Progress `Uploading photo 2 of 5`. Partial upload failure keeps the draft; an uncertain publish reply is checked before replacement.
   Draft survives Back (UX-01 rule).
 - **Feed (HIGHLIGHTS / PLAYBACK):** `components/Reels/PhotoStoryMedia.tsx` replaces the video area
   when `isPhotoStory(clip)`. Horizontal paging inside the vertical feed; counter chip `2 / 5` and
@@ -181,3 +182,69 @@ caller's own folder by the separate migration `20261007231000_reels_storage_owne
 
 Video + photo mixed stories, photo filters/editing, Vault photo stories, comments, captions on
 the image itself, tagging athletes per photo.
+
+## Failed-upload cleanup repair — 2026-10-20
+
+**Decision:** repair the existing failed/discarded upload flow (STATE §5). Retrying the same hidden row
+left earlier timestamped files behind, while immediate dismissal lost its cleanup target. The adopted
+flow retires the prior attempt before a fresh insert and persists only removal intent before dismissal.
+A network-blocking Close was revised after review because it trapped the sheet offline. No upload
+rights, required photo athlete, photo publication, or Donate behavior changes.
+
+### App behavior and local retention
+
+- Retry/athlete or game retarget passes the earlier id into `createPhotoStory`. Owner cleanup first
+  claims that zero-count story, removes its full exact Storage prefix through the API, then deletes
+  the hidden reel only when the server confirms no matching Storage metadata remains. Any failure
+  prevents the replacement insert and keeps the local draft for explicit Retry.
+- Close saves `@tapuai/photo-cleanup/{auth-user-uuid}/{reel-uuid}` = `1` in AsyncStorage before
+  dismissing. Known failed ids are also saved as soon as the failure is received. No caption,
+  description, local URI, media bytes or analytics identifiers are stored in this queue.
+- The originating account resumes up to 25 queued stories per Upload open; other accounts' keys
+  are ignored. Local metadata writes serialize per key with monotonic revisions, so an old network
+  completion cannot erase newer intent. Keys are removed only after confirmed `discarded` or
+  `published`; failed auth, SQL, Storage or local persistence leaves intent for another attempt.
+  A late queue read skips the visible failed draft, preserving explicit Retry and recovery behavior.
+- Local storage is unencrypted. Intent lasts until confirmation or device/app data removal; sign-out
+  retains that account's keys for its next sign-in, never processes them as the next account. A
+  permanently abandoned/closed account needs the separate governed cleanup path. This functional
+  queue does not add session/per-user telemetry collection or change behavior logging.
+- An earlier committed story is recovered from stored reel fields and the actual position-zero cover.
+  It is preserved without applying newly edited caption or mentions; the edited local draft stays
+  unsubmitted. Owner/visibility epochs suppress stale UI/feed callbacks after account change/hiding.
+
+### Database boundary and remaining verification
+
+Migration `20261020190000_failed_photo_story_cleanup.sql` is appended exactly to canonical schema.
+Its terminal `reels.photo_cleanup_pending` flag, row locks, owner-delete predicate and OLD/NEW Storage
+content guard prevent publishing or writing new content after cleanup is claimed. Timestamp-only
+Storage bookkeeping remains allowed. Published stories, videos, other owners and closed accounts
+cannot be removed through these owner RPCs. RLS and function ownership are recorded in the data map.
+
+Migration source review is provisional: PostgreSQL17 startup failed on local OS IPC permission;
+engine acquisition also failed on network permission. The retained standalone replay
+`apps/mobile/src/backend/db/failedPhotoStoryCleanup.replay.py` has not executed its SQL assertions.
+Its synthetic catalog would still not prove physical object/CDN deletion. Before an owner-authorized staging apply, DATABASE_MIGRATIONS/RLS_SECURITY must execute the local
+replay and source review. After staging apply, STORAGE/RLS_SECURITY must verify real Storage INSERT,
+bookkeeping, DELETE bytes/catalog results and concurrent publication/upload behavior before production rollout. No migration
+has been applied by this work.
+
+Known gaps: historical rows without a returned id, an unknown insert outcome, termination before
+received-id persistence, never reopening Upload, app data loss, closed-account cleanup, and unusual
+historical filenames require separate reconciliation/cleanup. The client deliberately fails closed
+on unexpected paths; it never deletes arbitrary bucket objects or SQL-only Storage metadata.
+
+### Actual local evidence
+
+- Existing retry/recovery regressions failed against the previous client before implementation.
+- Focused cleanup/data/composer tests and both-app typechecks are run locally; final counts and
+  independent review outcomes are recorded in STATE §4. Current focused result: 3 suites / 62 tests PASS;
+  full mobile suite: 213 suites / 1,877 tests PASS (105.399s);
+  both app typechecks and 12 scoped app guards PASS. Independent Security/Backend/Data source review
+  accepted at 2026-10-20 18:52 UTC: queue`31a333129fc7`, data`f75a40ff7336`,
+  modal`28a1906663dd`, migration`37b0dfcf0dfc` (SHA256 prefixes). Reviewer ran no tests;
+  these counts come from the primary runner. Independent Documentation/Data source review
+  accepted at 2026-10-20 18:54:08 UTC after wording/retention corrections; exact canonical migration
+  append and scoped whitespace checks PASS. SQL remains unexecuted. Tests use external auth/Storage/database
+  and AsyncStorage boundaries, including offline Close, account isolation, interrupted deletion,
+  stale completion, late hydration and stored-cover recovery. They do not assert hosted readiness.

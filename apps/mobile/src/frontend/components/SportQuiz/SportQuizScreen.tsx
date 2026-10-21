@@ -32,6 +32,8 @@ import { LIFE_LEVELS, type LifeChapterId, type LifeLevel } from '@shared/lifePla
 import { ROLE_HOME } from '@/lib/roles';
 import { TIMED_QUIZ_NOTICE_VERSION, type TimedQuizTopic } from '@shared/timedSportQuiz';
 import { FOCAL } from '@/theme/motion';
+import { telemetry } from '@/services/TelemetryManager';
+import { useScreenMountTime } from '@/hooks/useScreenMountTime';
 import { QuizButton } from './QuizButton';
 import { SportQuizPreparation } from './SportQuizPreparation';
 import { SportQuizPreferences } from './SportQuizPreferences';
@@ -71,6 +73,7 @@ function SportQuizContent({ quiz, initialSport, learnAthlete, autoPlay }: {
     learnAthlete: string | null;
     autoPlay: boolean;
 }) {
+    useScreenMountTime('sport-quiz');
     const auth = useAuth();
     const router = useRouter();
     const focused = useIsFocused();
@@ -204,6 +207,17 @@ function SportQuizContent({ quiz, initialSport, learnAthlete, autoPlay }: {
     };
     const inRound = !!round.live || !!round.between || round.closing;
     const roundSummary = round.ended && round.mode === 'round' && !round.unavailableQuestion;
+    // Funnel: the terminal summary shown (completion, a server-ended week/pool, or a left round — the outcome
+    // and counts tell them apart; abandonment itself was counted when the round was left). Keyed by receipt
+    // so a re-render never double-counts. The dev-only demo never mounts this screen, so it stays silent.
+    const completedReceipt = useRef<string | null>(null);
+    useEffect(() => {
+        const receipt = roundSummary && round.result ? round.result.request_id : null;
+        if (receipt && completedReceipt.current !== receipt) {
+            completedReceipt.current = receipt;
+            telemetry.trackTriviaStep('complete', { kind: round.kind, answered: round.entries.length, planned: round.planned, outcome: round.result?.outcome ?? null });
+        }
+    }, [roundSummary, round.result, round.kind, round.entries.length, round.planned]);
     const timedResult = round.result?.result && round.mode !== 'round' ? round.result.result : null;
     const idle = !inRound && !round.pendingStart;
     const autoPlayOnce = useRef(false);
@@ -235,7 +249,7 @@ function SportQuizContent({ quiz, initialSport, learnAthlete, autoPlay }: {
     return <View style={[styles.phone, (inRound || round.pendingStart) && styles.stage]}><ScrollView style={styles.scroll} contentContainerStyle={styles.page}>
  <View style={styles.stageBar}><QuizButton label="Back" quiet onPress={back}/><QuizButton label="Account Home" quiet onPress={home}/><QuizSoundToggle/></View>
  <View style={styles.hero}><Text style={styles.heroKicker}>Trivia</Text><Text ref={titleRef} accessibilityRole="header" style={styles.heroTitle}>Sport Pop Quiz</Text><Text style={styles.heroCopy}>Optional timed trivia · Testing only</Text></View>
- {(inRound || round.pendingStart) ? <SportQuizRound round={round} busy={busy} reports={reports}/> : null}
+ {(inRound || round.pendingStart) ? <SportQuizRound round={round} busy={busy} reports={reports} auraUserId={auth.user?.id ?? null}/> : null}
  {quiz.loading && !s ? <Text>Checking quiz availability…</Text> : null}{!s && !quiz.loading && !quiz.error ? <Text>Trivia is not available for this account. You can keep browsing.</Text> : null}
  {quiz.error ? <Text accessibilityRole="alert">{quiz.error}</Text> : null}{round.error ? <Text accessibilityRole="alert">{round.error}</Text> : null}
  {life.error && !life.switchedOff ? <Text accessibilityRole="alert">{life.error}</Text> : null}

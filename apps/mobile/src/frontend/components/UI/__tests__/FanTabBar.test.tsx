@@ -26,3 +26,13 @@ it('respects published destination/upload disable even with a still-routable Dri
  expect(screen.queryByRole('tab',{name:'Drip'})).toBeNull();expect(screen.queryByLabelText('Upload')).toBeNull();
  expect(screen.getAllByRole('tab')).toHaveLength(3);
 });
+it('preserves prevented tab presses and focused-tab stack events', async () => {
+ await render(<FanTabBar {...props}/>);
+ mockEmit.mockReturnValueOnce({ defaultPrevented: true });
+ await fireEvent.press(screen.getByRole('tab', { name: 'Activity' }));
+ expect(mockNavigate).not.toHaveBeenCalled();
+ expect(mockEmit).toHaveBeenCalledWith({ type: 'tabPress', target: 'activity', canPreventDefault: true });
+ await fireEvent.press(screen.getByRole('tab', { name: 'Home', selected: true }));
+ expect(mockNavigate).not.toHaveBeenCalled();
+ expect(mockEmit).toHaveBeenLastCalledWith({ type: 'tabPress', target: 'index', canPreventDefault: true });
+});

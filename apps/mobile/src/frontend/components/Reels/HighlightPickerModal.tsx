@@ -1,4 +1,4 @@
-/** Highlight library page shares Daylight menu style; picker permissions, duration cap and optimization stay unchanged. */
+/** Highlight library page normalizes platform duration units before enforcing the cap and optimizing a clip. */
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -6,6 +6,7 @@ import {
   Alert,
   Animated,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   View,
@@ -20,6 +21,7 @@ import { SheetHandle } from '@/components/UI/SheetHandle';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import {
   HIGHLIGHT_LIBRARY_CTA,
+  HIGHLIGHT_LENGTH_UNREADABLE,
   HIGHLIGHT_MAX_SECONDS,
   HIGHLIGHT_OPTIMIZING,
   HIGHLIGHT_PICKER_LEDE,
@@ -77,7 +79,13 @@ export function HighlightPickerModal({ visible, onClose, onPicked }: HighlightPi
   }, [visible]);
 
   const applyAsset = async (asset: ImagePicker.ImagePickerAsset) => {
-    if (isHighlightTooLong(asset.duration)) {
+    // Expo 58's web picker reports seconds; native pickers report milliseconds.
+    const durationMs = assetDurationMs(asset.duration, Platform.OS === 'web' ? 'seconds' : 'milliseconds');
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
+      Alert.alert('Clip length unavailable', HIGHLIGHT_LENGTH_UNREADABLE);
+      return;
+    }
+    if (isHighlightTooLong(durationMs)) {
       Alert.alert('Clip too long', HIGHLIGHT_TOO_LONG);
       return;
     }
@@ -91,7 +99,7 @@ export function HighlightPickerModal({ visible, onClose, onPicked }: HighlightPi
         uri: compressedUri,
         mimeType: asset.mimeType ?? 'video/mp4',
         fileName: asset.fileName,
-        durationMs: assetDurationMs(asset.duration),
+        durationMs,
         compressed: true,
       });
       onClose();

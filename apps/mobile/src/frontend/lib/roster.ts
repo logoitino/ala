@@ -12,6 +12,17 @@ import { getPublicProfiles } from '@/lib/privacy';
 import { untypedRpc } from '@/lib/rpc';
 
 /**
+ * @purpose Load every roster row for tagging, donations and the athlete sheet (`players` including `vault_locked`).
+ * @returns Players, or an empty list plus the database message when the read fails.
+ * @sideEffects `players` SELECT.
+ */
+export async function fetchRosterPlayers(): Promise<{ players: Player[]; error: string | null }> {
+  const { data, error } = await supabase.from('players').select('*');
+  if (error) return { players: [], error: error.message };
+  return { players: (data as Player[] | null) ?? [], error: null };
+}
+
+/**
  * @purpose Load one public athlete for the guest profile without needing a signed-in session.
  * @param playerId Public roster id from the route.
  * @returns Athlete or the existing configuration, database, or missing-player error.

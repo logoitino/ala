@@ -3,11 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 
 import { useAuth } from '@/context/AuthContext';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-
-function isPlayerUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
+import { fetchActiveSubscription, insertSubscription, isPlayerUuid } from '@/lib/subscriptions';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 function storageKey(playerId: string, userId?: string | null) {
   return userId ? `tapuai.exclusiveSub.${userId}.${playerId}` : `tapuai.exclusiveSub.guest.${playerId}`;
@@ -34,22 +31,16 @@ export function useAthleteSubscription(playerId: string | undefined) {
     setLoading(true);
     try {
       if (user?.id && isSupabaseConfigured && isPlayerUuid(playerId)) {
-        const { data, error } = await supabase
-          .from('subscriptions')
-          .select('id, status')
-          .eq('subscriber_id', user.id)
-          .eq('athlete_id', playerId)
-          .eq('status', 'active')
-          .maybeSingle();
+        const { active, failed } = await fetchActiveSubscription(user.id, playerId);
 
-        if (!error && data) {
+        if (!failed && active) {
           setSubscribed(true);
           await AsyncStorage.setItem(storageKey(playerId, user.id), '1');
           setLoading(false);
           return;
         }
 
-        if (!error && !data) {
+        if (!failed && !active) {
           const local = await AsyncStorage.getItem(storageKey(playerId, user.id));
           setSubscribed(local === '1');
           setLoading(false);
@@ -90,13 +81,9 @@ export function useAthleteSubscription(playerId: string | undefined) {
       return;
     }
 
-    const { error } = await supabase.from('subscriptions').insert({
-      subscriber_id: user.id,
-      athlete_id: playerId,
-      status: 'active',
-    });
+    const { ok } = await insertSubscription(user.id, playerId);
 
-    if (error && error.code !== '23505') {
+    if (!ok) {
       // A genuine rejection (frozen athlete via RLS, network failure, etc.) — do NOT unlock
       // locally. Table may also be missing until `supabase/subscriptions.sql` is applied, in
       // which case this same generic message applies.
@@ -107,7 +94,7 @@ export function useAthleteSubscription(playerId: string | undefined) {
       return;
     }
 
-    // Insert succeeded, or `23505` duplicate-key (fan is already subscribed) — both are success.
+    // Saved, or already subscribed (`23505` duplicate key) — both count as success.
     setSubscribed(true);
     await AsyncStorage.setItem(storageKey(playerId, user.id), '1');
   }, [playerId, user?.id]);

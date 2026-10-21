@@ -1,5 +1,7 @@
 /**
  * Provider rows follow the open report format and wrap labels/redirects at enlarged text.
+ * Config keys (flag paths, telemetry ids, provider ids, code names) sit only inside a closed "Keys"
+ * disclosure, like the chart kit's Data toggle, so the page itself reads as words (ADM-01 P3, 2026-10-18).
  * Sign-in desk (`/auth`, under Product). Read-only Soft-Wall oversight: which actions ask a guest
  * to create an account, and the sign-in providers. Changes happen only in Expo /admin. Browser tab
  * title "Sign-in · Tapua'i Admin". Section headings under the shell's h1 are h2 and the Panels
@@ -7,13 +9,39 @@
  * @sideEffects `fetchSoftWallOversight` (read-only).
  */
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 
-import { Badge, Panel, PortalShell, SectionHeading, StatCard } from '@/components/PortalShell';
+import { Panel, PortalShell, SectionHeading, StatCard } from '@/components/PortalShell';
 import { fetchSoftWallOversight } from '@/lib/softWall';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = { title: 'Sign-in' };
+
+/** Closed native disclosure holding config keys; same look as the chart kit's Data toggle. */
+function Keys({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <details className="chart-disclosure group mt-3 w-full min-w-0">
+      <summary className="inline-flex min-h-6 cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-extrabold text-[var(--ink-soft)] select-none hover:bg-[var(--surface-muted)]">
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 12 12" className="chart-disclosure-icon size-3">
+          <path d="M4.5 2.5 8 6l-3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Keys
+        <span className="sr-only"> for {title}</span>
+      </summary>
+      <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 font-mono text-xs text-[var(--text-muted)]">{children}</dl>
+    </details>
+  );
+}
+
+function Key({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="contents">
+      <dt className="font-sans font-bold">{label}</dt>
+      <dd className="min-w-0 break-words">{value}</dd>
+    </div>
+  );
+}
 
 /**
  * @purpose Soft-Wall gate + provider oversight for the web control plane.
@@ -25,29 +53,32 @@ export default async function SoftWallAuthPage() {
   return (
     <PortalShell active="/auth">
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Donate Soft Wall" value={oversight.maloLive ? 'Armed' : 'Paused'} hint="buttons.malo" tone={oversight.maloLive ? 'ok' : 'warn'} />
-        <StatCard label="Crew Soft Wall" value={oversight.crewLive ? 'Armed' : 'Paused'} hint="buttons.crew" tone={oversight.crewLive ? 'ok' : 'warn'} />
+        <StatCard label="Donate Soft Wall" value={oversight.maloLive ? 'Armed' : 'Paused'} hint="Donate buttons, Features desk" tone={oversight.maloLive ? 'ok' : 'warn'} />
+        <StatCard label="Crew Soft Wall" value={oversight.crewLive ? 'Armed' : 'Paused'} hint="Crew buttons, Features desk" tone={oversight.crewLive ? 'ok' : 'warn'} />
         <StatCard
           label="Gear goal Soft Wall"
           value={oversight.wishlistLive ? 'Armed' : 'Paused'}
-          hint="layouts.wishlist"
+          hint="Gear goal layout, Features desk"
           tone={oversight.wishlistLive ? 'ok' : 'warn'}
         />
       </div>
 
       <Panel title="Zero lost context" kicker="Product lock">
         <p className="text-sm leading-6 text-[var(--ink-soft)]">
-          After SoftWallModal completes Apple / Google / Magic Link, SoftWallContext replays the stashed resume
-          (open donate sheet, Crew toggle, or gear-goal donation). Telemetry ids: soft_wall.malo · soft_wall.crew · soft_wall.wishlist
-          (Coverage desk in Expo).
+          After a guest signs in with Apple, Google or a Magic Link, the app reopens what they were doing: the donate
+          sheet, the Crew toggle, or the gear-goal donation. Each gate is counted on the Coverage desk in Expo.
         </p>
+        <Keys title="Zero lost context">
+          <Key label="Code" value="SoftWallModal · SoftWallContext" />
+          <Key label="Telemetry" value={oversight.softWallGates.map((gate) => gate.telemetry).join(' · ')} />
+        </Keys>
       </Panel>
 
       <div className="mt-8">
         <SectionHeading level={2} title="Gates" hint={`${oversight.softWallGates.length} configured`} />
         <div className="grid gap-4">
           {oversight.softWallGates.map((gate) => (
-            <Panel key={gate.id} level={3} title={gate.label} kicker={gate.id}>
+            <Panel key={gate.id} level={3} title={gate.label} kicker="Gate">
               <p className="text-sm text-[var(--ink-soft)]">{gate.hint}</p>
               <dl className="grid gap-2 text-sm sm:grid-cols-2">
                 <div>
@@ -58,15 +89,12 @@ export default async function SoftWallAuthPage() {
                   <dt className="font-bold text-[var(--text-muted)]">Expo desk</dt>
                   <dd>{gate.adminDesk}</dd>
                 </div>
-                <div>
-                  <dt className="font-bold text-[var(--text-muted)]">Flag</dt>
-                  <dd>{gate.flagPath ?? 'code'}</dd>
-                </div>
-                <div>
-                  <dt className="font-bold text-[var(--text-muted)]">Telemetry</dt>
-                  <dd>{gate.telemetry}</dd>
-                </div>
               </dl>
+              <Keys title={gate.label}>
+                <Key label="Gate" value={gate.id} />
+                <Key label="Flag" value={gate.flagPath ?? 'Set in code'} />
+                <Key label="Telemetry" value={gate.telemetry} />
+              </Keys>
             </Panel>
           ))}
         </div>
@@ -78,15 +106,17 @@ export default async function SoftWallAuthPage() {
           <ul className="grid gap-2 sm:grid-cols-2">
             {oversight.authProviders.map((provider) => (
               <li key={provider.id} className="min-w-0 border-b border-[var(--border)] py-3">
-                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-                  <p className="min-w-0 flex-1 basis-[10rem] font-bold">{provider.label}</p>
-                  <Badge tone="neutral">{provider.id}</Badge>
-                </div>
+                <p className="min-w-0 font-bold">{provider.label}</p>
                 <p className="text-xs text-[var(--text-muted)]">Redirect {provider.redirect}</p>
               </li>
             ))}
           </ul>
-          <p className="text-sm leading-6 text-[var(--ink-soft)]">
+          <Keys title="Sign-in providers">
+            {oversight.authProviders.map((provider) => (
+              <Key key={provider.id} label={provider.label} value={provider.id} />
+            ))}
+          </Keys>
+          <p className="mt-3 text-sm leading-6 text-[var(--ink-soft)]">
             Last Publish to app:{' '}
             {oversight.publishedAt ? new Date(oversight.publishedAt).toLocaleString() : 'Never / unknown'}. Toggle
             Soft-Wall related flags on the Features desk, then Publish.

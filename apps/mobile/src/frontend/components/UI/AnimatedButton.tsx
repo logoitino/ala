@@ -1,3 +1,4 @@
+/** Shared action feedback respects OS Reduce Motion without changing actions or haptics. */
 import { type ReactNode } from 'react';
 import {
   Pressable,
@@ -6,7 +7,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { impactPress, type PressHaptic } from '@/lib/haptics';
 import { SPRING_BOUNCE } from '@/theme/motion';
 
@@ -43,6 +44,7 @@ export function AnimatedButton({
   accessibilityLabel,
   accessibilityState,
 }: AnimatedButtonProps) {
+  const reduceMotion = useReducedMotion();
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -55,14 +57,16 @@ export function AnimatedButton({
       accessibilityRole={accessibilityRole}
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ ...accessibilityState, disabled }}
+      aria-selected={accessibilityState?.selected}
+      aria-disabled={disabled}
       disabled={disabled}
       onPressIn={() => {
-        scale.value = withSpring(scaleTo, SPRING_BOUNCE);
-        opacity.value = withSpring(0.82, SPRING_BOUNCE);
+        scale.value = reduceMotion ? 1 : withSpring(scaleTo, SPRING_BOUNCE);
+        opacity.value = reduceMotion ? 0.82 : withSpring(0.82, SPRING_BOUNCE);
       }}
       onPressOut={() => {
-        scale.value = withSpring(1, SPRING_BOUNCE);
-        opacity.value = withSpring(1, SPRING_BOUNCE);
+        scale.value = reduceMotion ? 1 : withSpring(1, SPRING_BOUNCE);
+        opacity.value = reduceMotion ? 1 : withSpring(1, SPRING_BOUNCE);
       }}
       onPress={(event) => {
         if (disabled) return;

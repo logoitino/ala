@@ -1,9 +1,11 @@
-import { useRouter } from 'expo-router';
+/** Account notification inbox adds read/archive state while factual Activity and invitation queues retain their own history. */
+import { useIsFocused, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { CrewAlertsCard } from '@/components/Activity/CrewAlertsCard';
+import { NotificationInbox } from '@/components/Activity/NotificationInbox';
 import { AthleteMoneyCard } from '@/components/Custodial/AthleteMoneyCard';
 import { AthleteVerificationCard } from '@/components/Verification/AthleteVerificationCard';
 import { TeammateVouchCard } from '@/components/Verification/TeammateVouchCard';
@@ -57,6 +59,7 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${item.title}. ${item.body}`}
+      accessibilityState={{ disabled: !onPress }}
       disabled={!onPress}
       onPress={onPress}
       style={({ pressed }) => [styles.row, item.actionable && styles.rowActionable, pressed && styles.rowPressed]}
@@ -65,20 +68,18 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
         <Ionicons name={meta.icon} size={18} color={meta.tint} />
       </View>
       <View style={styles.rowBody}>
-        <View style={styles.rowTopLine}>
-          <Text style={styles.rowTitle} numberOfLines={1}>
-            {item.title}
-          </Text>
-          <Text style={styles.rowAgo}>{shortAgo(item.at)}</Text>
-        </View>
-        <Text style={styles.rowLede} numberOfLines={2}>
+        <Text style={styles.rowTitle}>{item.title}</Text>
+        <Text style={styles.rowLede}>
           {item.body}
         </Text>
+        <View style={styles.rowDetails}>
+          <Text style={styles.rowAgo}>{shortAgo(item.at)}</Text>
+          {typeof item.amountCents === 'number' ? (
+            <Text style={[styles.rowAmount, { color: meta.tint }]}>{formatUsd(item.amountCents)}</Text>
+          ) : null}
+        </View>
         {item.actionable ? <Text style={[styles.rowCta, { color: ACCENT.color }]}>Needs your confirmation</Text> : null}
       </View>
-      {typeof item.amountCents === 'number' ? (
-        <Text style={[styles.rowAmount, { color: meta.tint }]}>{formatUsd(item.amountCents)}</Text>
-      ) : null}
     </Pressable>
   );
 }
@@ -86,8 +87,8 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
 /**
  * @purpose Activity — everything that happened to this fan's account recently: Mālo received,
  * Mālo they sent, and highlight tags waiting on a decision, newest first.
- * @remarks Derived from existing tables (see `useActivityFeed`), so there is no read/unread
- * state and no push yet. Rows needing an action sort to the top instead.
+ * @remarks Existing factual rows derive from `useActivityFeed`; the separate notification inbox
+ * owns read/archive state. Native push is deferred. Rows needing an action sort to the top.
  * @sideEffects `useActivityFeed` refetches its three sources on focus; rows deep-link into
  * the tagged highlight or the receipts screen. CHAL-01 adds actor-isolated accepted-friend workout invitations
  * through its verified admin contract; no free-text replies or money actions.
@@ -95,7 +96,8 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
 export default function ActivityTab() {
   const router = useRouter();
   const { live } = useAppRuntime();
-  const { user, profile, isAthlete } = useAuth();
+  const { user, profile, isAthlete, isGuest } = useAuth();
+  const activityFocused = useIsFocused();
   const { requireAuth } = useSoftWall();
   const { onScroll, trackFeature } = useSurfaceUsage('activity');
   const { items, loading, error, refresh } = useActivityFeed();
@@ -114,7 +116,7 @@ export default function ActivityTab() {
     return <RuntimePaused title="Activity" lede="Activity is off right now." adminHref="/admin/features" />;
   }
 
-  if (!user) {
+  if (!user || isGuest) {
     return (
       <TabScreen>
         <ScrollFxScrollView contentContainerStyle={styles.content} onScroll={onScroll}>
@@ -163,6 +165,7 @@ export default function ActivityTab() {
           />
         </ScrollFxParallax>
 
+        <NotificationInbox enabled={activityFocused} />
         {user ? <AthleteVerificationCard isAthlete={isAthlete} /> : null}
         {user ? <TeammateVouchCard /> : null}
         {user ? <FriendRequestsCard /> : null}
@@ -196,6 +199,7 @@ export default function ActivityTab() {
           />
         ) : null}
 
+        {items.length > 0 ? <Text accessibilityRole="header" style={styles.sectionTitle}>Your updates</Text> : null}
         {items.map((item, index) => (
           <ScrollFxItem key={item.id} index={index} variant="rise">
             <ActivityRow
@@ -235,8 +239,16 @@ export default function ActivityTab() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
-    paddingBottom: 32,
-    gap: 10,
+    paddingTop: 8,
+    paddingBottom: 120,
+    gap: 16,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: '800',
+    marginTop: 8,
   },
   boot: {
     paddingVertical: 32,
@@ -244,13 +256,14 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
+    minHeight: 44,
     alignItems: 'flex-start',
     gap: 12,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 12,
+    padding: 16,
     ...cardShadow,
   },
   rowActionable: {
@@ -270,28 +283,31 @@ const styles = StyleSheet.create({
   },
   rowBody: {
     flex: 1,
-    gap: 2,
-  },
-  rowTopLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    minWidth: 0,
+    gap: 6,
   },
   rowTitle: {
-    flex: 1,
     color: colors.text,
-    fontSize: 14,
+    fontSize: 15,
+    lineHeight: 21,
     fontWeight: '800',
   },
   rowAgo: {
     color: colors.textMuted,
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 18,
     fontWeight: '700',
   },
   rowLede: {
     color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  rowDetails: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 12,
   },
   rowCta: {
     fontSize: 11,
@@ -300,6 +316,8 @@ const styles = StyleSheet.create({
   },
   rowAmount: {
     fontSize: 15,
+    lineHeight: 21,
+    flexShrink: 1,
     fontWeight: '900',
   },
 });

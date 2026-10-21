@@ -1,4 +1,5 @@
 {
+  "_comment": "Shared app contracts and pure notification previews; provider secrets and delivery stay server-only.",
   "name": "@tapuai/shared-types",
   "version": "1.0.0",
   "private": true,
@@ -12,7 +13,10 @@
     "./admin/supportTopology.json": "./admin/supportTopology.json",
     "./beyondGame": "./beyondGame.ts",
     "./fan-zone": "./fanZone.ts",
-    "./sport-quiz": "./sportQuiz.ts"
+    "./sport-quiz": "./sportQuiz.ts",
+    "./backendConnection": "./backendConnection.ts",
+    "./notifications": "./notifications.ts",
+    "./notificationTemplates": "./notificationTemplates.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

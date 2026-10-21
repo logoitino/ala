@@ -28,6 +28,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sqlFunctionBodies } from './lib/sql-functions.mjs';
+import { mediaStorageUses } from './lib/media-storage-lineage.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rel = (file) => path.relative(root, file).split(path.sep).join('/');
@@ -240,6 +241,13 @@ for (const [, text] of source) for (const m of text.matchAll(/(?:export\s+)?cons
 const bucketUse = new Map(bucketNames.map((name) => [name, { writers: new Set(), readers: new Set(), refs: new Set() }]));
 for (const [file, rawText] of source) {
   const text = blankComments(rawText);
+  // The media transport takes bucket as its first argument. Keep these real feature operations visible
+  // after SDK calls move behind the adapter; dynamic buckets retain the existing file-constant approximation.
+  for (const { bucket, writer, index } of mediaStorageUses(text, bucketNames, bucketConstants)) {
+    const use = bucketUse.get(bucket);
+    (writer ? use.writers : use.readers).add(file);
+    use.refs.add(`${file}::${enclosingExport(text, index) ?? ''}`);
+  }
   for (const m of text.matchAll(/storage\s*\.\s*from\(\s*(?:['"`](\w+)['"`]|([A-Za-z_]\w*))\s*\)([\s\S]{0,120})/g)) {
     let bucket = m[1] ?? bucketConstants.get(m[2]);
     // `storage.from(bucket)` with a parameter: the file names its buckets through constants.
@@ -434,6 +442,13 @@ for (const file of archiveFiles) {
 for (const file of CODE_ROOTS.flatMap(walk)) if (/(?:from\s+|require\(|import\()\s*['"][^'"]*\barchive\//.test(read(file))) problems.push(`${file} imports from archive/. Archived code is reference only; restore it instead.`);
 
 // ---------------------------------------------------------------- render
+// Disaster-recovery exports run outside the app graph but still carry owned sensitive data.
+const operationalExports = ownership.operationalExports ?? [];
+for (const row of operationalExports) {
+  if (!row.id || !calls.has(row.owner) || !row.purpose || !row.data || !row.destination || !row.retention || !row.source || !fs.existsSync(path.join(root, row.source))) {
+    problems.push('Operational export needs an id, registered owner, existing source, purpose, data, destination and retention');
+  }
+}
 const list = (items, max = 6) => (items.length ? items.slice(0, max).map((item) => `\`${item}\``).join(', ') + (items.length > max ? ` +${items.length - max} more` : '') : '—');
 const short = (file) => file.replace('apps/mobile/src/frontend/', '@/').replace('apps/admin-portal/', 'portal/').replace('packages/shared-types/', 'shared/');
 const byOwner = new Map();
@@ -459,6 +474,7 @@ const md = [
   `| Tables reached by at least one screen or server route | ${lineage.filter((row) => row.screens.length).length} of ${relations.length} |`,
   `| Code files that read or write the database | ${new Set([...[...codeTable.values()].flatMap((e) => [...e.readers, ...e.writers]), ...[...codeRpc.values()].flatMap((s) => [...s])]).size} |`,
   `| Exported symbols nothing imports | ${deadExports.length} (${archiveCount} proposed for archive, ${deadExports.length - archiveCount} kept on purpose) |`,
+  `| Operational data exports | ${operationalExports.length} |`,
   `| Rule failures | ${problems.length} |`,
   '',
   '## Owners',
@@ -466,6 +482,14 @@ const md = [
   '| Owner | Tables and views | Functions |',
   '| --- | --- | --- |',
   ...[...byOwner.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([owner, names]) => `| \`${owner}\` | ${names.map((n) => `\`${n}\``).join(', ')} | ${fnByOwner.get(owner) ?? 0} |`),
+  '',
+  '## Operational data exports',
+  '',
+  'These operator tools are outside the app import graph. Source registration records responsibility; it does not prove that a scheduled backup or restore has run.',
+  '',
+  '| Export | Owner | Data and purpose | Destination | Retention | Source |',
+  '| --- | --- | --- | --- | --- | --- |',
+  ...operationalExports.map(row => `| \`${row.id}\` | \`${row.owner}\` | ${row.data}; ${row.purpose} | ${row.destination} | ${row.retention} | \`${row.source}\` |`),
   '',
   '## Tables and views',
   '',

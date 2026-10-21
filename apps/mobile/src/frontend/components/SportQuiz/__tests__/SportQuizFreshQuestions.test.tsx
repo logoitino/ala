@@ -18,6 +18,8 @@ import type { TimedQuizQuestion, TimedQuizResult } from '@shared/timedSportQuiz'
 jest.mock('@/lib/quizSound', () => ({ playQuizCue: jest.fn(), armQuizSound: jest.fn(() => () => {}) }));
 jest.mock('react-native-confetti-cannon', () => { const { View } = require('react-native'); return () => <View testID="confetti-cannon"/>; });
 jest.mock('@/lib/privacy', () => ({ ...jest.requireActual('@/lib/privacy'), getPublicProfiles: jest.fn(async () => []) }));
+const mockAddAura = jest.fn(async (..._args: unknown[]) => ({ ok: true }));
+jest.mock('@/lib/aura', () => ({ addUserAura: (...args: unknown[]) => mockAddAura(...args) }));
 type Handler = (fn: string, args: Record<string, unknown>) => unknown;
 const mockClient = { calls: [] as { fn: string; args: Record<string, unknown> }[], handler: (() => null) as Handler,
     async rpc(fn: string, args: Record<string, unknown>) {
@@ -209,5 +211,22 @@ describe('History', () => {
         expect(screen.getByText('This fun fact isn’t available anymore.')).toBeTruthy();
         expect(screen.queryByText(/Correction: Fun fact/)).toBeNull();
         expect(within(screen.getByText('Question 1: right').parent!).queryByText(/Fun fact/)).toBeNull();
+    });
+});
+
+describe('Trivia Aura', () => {
+    it('a right answer awards Aura once to the signed-in account; a wrong answer awards nothing', async () => {
+        const right = fakeRound({ between: between(fresh(1), roundResult(1, 1)) });
+        const view = await render(<QuizFxProvider focused><SportQuizRound round={right} busy={false} auraUserId="user-a"/></QuizFxProvider>);
+        await view.rerender(<QuizFxProvider focused><SportQuizRound round={right} busy={false} auraUserId="user-a"/></QuizFxProvider>);
+        expect(mockAddAura).toHaveBeenCalledTimes(1);
+        expect(mockAddAura).toHaveBeenCalledWith('user-a', 5);
+        await view.rerender(<QuizFxProvider focused><SportQuizRound round={fakeRound({ between: between(fresh(2), roundResult(2, 0), 2) })} busy={false} auraUserId="user-a"/></QuizFxProvider>);
+        expect(mockAddAura).toHaveBeenCalledTimes(1);
+    });
+
+    it('the demo round (no account) never awards Aura', async () => {
+        await render(<QuizFxProvider focused><SportQuizRound round={fakeRound({ between: between(fresh(1), roundResult(1, 1)) })} busy={false}/></QuizFxProvider>);
+        expect(mockAddAura).not.toHaveBeenCalled();
     });
 });

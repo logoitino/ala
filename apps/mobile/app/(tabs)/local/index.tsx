@@ -2,6 +2,7 @@
  * Local tab (game day): Matches, School Polls and Top Boosters hubs, plus search (`SearchResultsOverlay`).
  * Booster logos display through `mediaUri` from lib/media (legacy full URL or `sb:` reference, SCALE-02).
  * Reached from the Home pill, not the tab bar. The `tabs.local` runtime flag can pause it (`RuntimePaused`).
+ * UX-07 keeps school/actor labels readable and directs fans through existing filters without desk instructions.
  */
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -181,11 +182,11 @@ function SponsorRailCard({
             <Text style={styles.sponsorInitials}>{initialsForBusiness(sponsor.business_name)}</Text>
           )}
         </View>
-        <Text style={styles.sponsorName} numberOfLines={2}>
+        <Text style={styles.sponsorName}>
           {sponsor.business_name}
         </Text>
         {sponsor.school_team ? (
-          <Text style={styles.sponsorSchool} numberOfLines={1}>
+          <Text style={styles.sponsorSchool}>
             {sponsor.school_team}
           </Text>
         ) : null}
@@ -407,7 +408,7 @@ export default function LocalTab() {
               style={styles.search}
             />
             {searchQuery.length > 0 ? (
-              <Pressable accessibilityLabel="Clear search" onPress={closeExplore} hitSlop={8}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={closeExplore} style={styles.clearButton}>
                 <Text style={styles.searchClear}>✕</Text>
               </Pressable>
             ) : null}
@@ -432,7 +433,7 @@ export default function LocalTab() {
               <EmptyState
                 kicker="Local"
                 title="Local boards are paused"
-                lede="Turn Live Matches, School Polls, or Top Boosters on in Features, then Publish to app."
+                lede="Local matchups, polls and booster boards are unavailable right now."
                 adminHref="/admin/features"
                 adminLabel="Open Features"
                 accent={TAB_ACCENTS.local.color}
@@ -451,7 +452,7 @@ export default function LocalTab() {
                 accessibilityLabel="Region filters"
               />
 
-              <Text style={styles.sectionTitle}>Live matchups</Text>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>Live matchups</Text>
 
               {loading ? (
                 <View style={styles.loadingBlock}>
@@ -477,7 +478,7 @@ export default function LocalTab() {
                   title={games.length === 0 ? live.copy.localEmpty : 'No games in this region'}
                   lede={
                     games.length === 0
-                      ? 'Publish a match on Live games so Friday night lands here.'
+                      ? 'Games appear here when a matchup is available.'
                       : 'Try another regional tag, or clear the chip.'
                   }
                   adminHref="/admin/games"
@@ -503,7 +504,7 @@ export default function LocalTab() {
               style={[styles.pollStack, hub !== 'polls' ? styles.hubPaneHidden : undefined]}
               pointerEvents={hub === 'polls' ? 'auto' : 'none'}
             >
-              <Text style={styles.sectionTitle}>Local Team Boosters & Sponsors 🏆</Text>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>Team boosters & sponsors</Text>
               <ScrollView
                 ref={sponsorRailRef}
                 horizontal
@@ -538,19 +539,19 @@ export default function LocalTab() {
               </ScrollView>
 
               <View style={styles.pollHead}>
-                <Text style={styles.sectionTitle}>School polls</Text>
+                <Text accessibilityRole="header" style={styles.sectionTitle}>School polls</Text>
                 {schoolFilter ? (
                   <View style={styles.schoolChip}>
-                    <Text style={styles.schoolChipLabel} numberOfLines={1}>
+                    <Text style={styles.schoolChipLabel}>
                       Polls for {schoolFilter}
                     </Text>
-                    <Pressable accessibilityLabel="Clear school poll filter" onPress={() => setSchoolFilter(null)}>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Clear school poll filter" onPress={() => setSchoolFilter(null)} style={styles.clearButton}>
                       <Text style={styles.schoolChipClear}>✕</Text>
                     </Pressable>
                   </View>
                 ) : null}
               </View>
-              <Text style={styles.hubCopy}>Tap a side to lock in your cheer. Bars spring to the live share.</Text>
+              <Text style={styles.hubCopy}>Choose a team to add your cheer and see the community’s support.</Text>
               {visiblePolls.length === 0 ? (
                 <EmptyState
                   kicker="School polls"
@@ -558,7 +559,7 @@ export default function LocalTab() {
                   lede={
                     schoolFilter
                       ? 'Clear the school chip or search another high school.'
-                      : 'Create a cheer matchup on the Polls desk to fill this board.'
+                      : 'School matchups appear here when a poll is available.'
                   }
                   adminHref="/admin/polls"
                   adminLabel="Open Polls"
@@ -626,8 +627,8 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 24,
-    gap: 14,
+    paddingBottom: 120,
+    gap: 20,
   },
   searchWrap: {
     flexDirection: 'row',
@@ -645,6 +646,7 @@ const styles = StyleSheet.create({
   },
   search: {
     flex: 1,
+    minWidth: 0,
     fontSize: 16,
     color: colors.text,
     paddingVertical: 12,
@@ -655,8 +657,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     paddingHorizontal: 4,
   },
+  clearButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
   sectionTitle: {
     fontSize: 18,
+    lineHeight: 24,
     fontWeight: '800',
     color: colors.text,
     marginTop: 4,
@@ -666,12 +676,12 @@ const styles = StyleSheet.create({
   },
   hubCopy: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
-    lineHeight: 18,
+    lineHeight: 20,
   },
   pollStack: {
-    gap: 12,
+    gap: 16,
   },
   pollHead: {
     flexDirection: 'row',

@@ -9,10 +9,45 @@ This page is the single source on portability; `CODE_ORGANIZATION_PLAN.md` and t
 [INFRASTRUCTURE_REGISTER.md](INFRASTRUCTURE_REGISTER.md) — the live list of what we run and how deeply it is integrated.
 CTO review with BACKEND, DATABASE_MIGRATIONS, OPERATIONS and STORAGE: changes needed → applied (2026-10-14).
 
+**2026-10-19 execution kit:** owner confirmed a backup **of** Supabase for restoration on AWS/Azure.
+[REDUNDANCY_PLAN.md](REDUNDANCY_PLAN.md) and [CLOUD_MIGRATION_RUNBOOK.md](CLOUD_MIGRATION_RUNBOOK.md)
+now point to the local [infrastructure tooling](../../infrastructure/README.md): database/Auth plus
+Storage file capture, encrypted archives, integrity verification, reviewed isolated restores and
+separate app/container/cloud folders. This supplies preparation for exit A. The source project has
+not been backed up with these tools, no new cloud infrastructure is provisioned, and the live exit
+drill remains pending. The upstream version pin and actual PostgreSQL/service compatibility need
+operator verification before launching the self-hosted target.
+
+**2026-10-20 connection preparation:** [PORTABLE_INTEGRATIONS](PORTABLE_INTEGRATIONS.md) describes the
+REDUNDANCY-06 shared connection resolver, matching private target profiles and local SDK protocol checks.
+This keeps one app while validating another compatible backend's URL/public key. A target still needs the
+PostgREST/Auth/Storage/Realtime/function interfaces and matching database security; a cloud SQL server alone
+cannot replace them. Execution receipts and hosted gaps remain separate from the prepared interface.
+
+## Media transport preparation — 2026-10-21
+
+The owner asked to keep video/image uploads and playback ready for a future AWS/Azure move.
+`lib/mediaStorage.ts` now binds public URL construction, upload, authorized signing, listing and
+removal behind `MediaStorageAdapter`. The default binds the existing Supabase session/client;
+`createMediaUploadService(adapter)` and photo cleanup's optional adapter support another transport
+without changing screens, bucket paths, rights or row writes. `lib/media.ts` and `lib/reels.ts`
+read `sb:` references and legacy public URLs through that host. Private Vault upload never asks
+for a public URL; playback signs for one hour. Beyond and Fan Zone retain their own access readers.
+Public helpers allow only the canonical public buckets; unsafe/unsupported references fail closed.
+
+The writer switch remains **off**. Installed-reader rollout, video/reference writer changes, URL
+backfill, legacy Vault byte retirement, provider selection and actual target access/restore tests
+remain separate steps. A storage adapter does not replace PostgREST, Auth, RLS or cleanup SQL.
+Azure/S3 support is a target requirement, not an assertion that those providers are configured.
+See [MEDIA_SERVICE_PLAN](design/MEDIA_SERVICE_PLAN.md) for contracts, current checks, proposed longer
+video requirements and the migration verification matrix. The owner keeps long videos off until costs
+are measured and defers live streaming.
+
 ## Short answer
 
-**Do not wrap the whole database — it is already the portable part.** Our tables, security rules and about 265
-functions are plain **PostgreSQL**, which every host offers. Building our own layer that hides Postgres (an ORM or a
+**Keep the database in PostgreSQL.** Our application tables, security rules and functions use PostgreSQL;
+a target must also support the required roles, extensions, Auth helpers and compatible service schemas.
+Building our own layer that hides Postgres (an ORM or a
 private database API) would cost months, move the security rules out of the database, and become a trap of its own.
 
 What ties us to Supabase is **the services around Postgres**: the API the app talks to (PostgREST), sign-in (GoTrue),
@@ -22,7 +57,7 @@ are open source, which gives us two honest exits:
 | Exit | What it is | Effort (estimate, unverified) |
 | --- | --- | --- |
 | **A. Self-hosted Supabase** (AWS, Azure or our own server) | Same Postgres, PostgREST, GoTrue, Realtime and Storage, run by us | Weeks of plumbing: copy the database and files, move secrets, re-point the app's URL and keys, rehearse. No app rewrite. This is the exit the brief recommends drilling. |
-| **B. A different provider** (e.g. RDS / Aurora plus other services) | Postgres elsewhere, and replacements for the API, sign-in, live updates and storage | A real project: rewrite `lib/` data calls off PostgREST (or run PostgREST ourselves), migrate users and password hashes and OAuth, replace Realtime and Storage, port the server functions. The database itself moves as is. |
+| **B. A different provider** (e.g. RDS / Aurora plus other services) | Postgres elsewhere, and replacements for the API, sign-in, live updates and storage | A real project: rewrite `lib/` data calls off PostgREST (or run PostgREST ourselves), migrate users and password hashes and OAuth, replace Realtime and Storage, port the server functions. SQL moves after role/extension/security and service-schema compatibility review. |
 
 The work below keeps both exits cheap: the database stays standard, and everything vendor-specific sits behind
 `lib/` so exit B rewrites one folder, not the app.
@@ -49,7 +84,9 @@ The work below keeps both exits cheap: the database stays standard, and everythi
   of exit B's compatibility layer. Not yet proven on a hosted Postgres 15+.
 - **Everything is documented and owned:** every table, function and column (`SCHEMA.md`, `data-ownership.json`,
   `DATA_MAP.md`; `pnpm docs:check`, `pnpm data:map:check`), every change a dated migration with a rollback.
-- **Config is environment variables,** not code (`security:client-keys`).
+- **Config uses environment variables** (`security:client-keys`); Expo/Next inline public URL/key values into
+  builds, so an installed client needs a preparatory release/rebuild for changed settings. REDUNDANCY-06 shares
+  connection validation at client boundaries; matching generated profiles do not replace backend protocols.
 - **Reports read shared contracts** (`packages/shared-types/admin/`), not tables, so a replica or warehouse is a pipe
   later (SCALE-08).
 - **Recovery packages** carry source, locked dependencies and migration hashes (`pnpm recovery:package`).
@@ -64,20 +101,22 @@ The work below keeps both exits cheap: the database stays standard, and everythi
   the one public-URL builder. It also recognises legacy full Supabase URLs and rebuilds them for the current host, so old
   rows follow a host move. Uploads (`MediaUploadService`), booster logos (`useSponsorships`) and story photos now build
   URLs only through it. Uploads still *write* full URLs until enough app builds read references (expand, then contract);
-  `lib/reels.ts` playback resolution moves to it after PLAY-01 releases that file.
+  `lib/reels.ts` playback now resolves through it (local expand step 2026-10-21); video writers/backfill remain gated.
 - **`lib/cheerPoll.ts`** — the duplicated `cast_cheer_vote` call and its fallback moved out of a hook and the offline
   queue into one lib module.
 - **Direct calls moved into `lib/`** (CODE_HYGIENE with BACKEND): all three operator routes (queries and Realtime into
   `lib/operator.ts`), the offline queue (`lib/reelVotes.ts`, new `lib/savedReels.ts`) and seven hooks (new
   `lib/liveGames.ts`, `lib/localSearch.ts`, `lib/sponsorships.ts`; `lib/cheerPoll.ts`, `lib/aura.ts`). Routes 16 → 0,
-  everything else 78 → 48; behaviour unchanged, 6 new tests.
+  everything else 78 → 48; behaviour unchanged, 6 new tests. 2026-10-19 (R4-03): five more hooks (donation history,
+  received donations, roster, exclusive passes, subscriber requests) moved into new `lib/donationHistory.ts`,
+  `lib/subscriptions.ts` and `lib/roster.ts`; everything else 48 → 39, 10 new tests.
 - The guard widened as above; this page replaces the older counts in `CODE_ORGANIZATION_PLAN.md`.
 
 ## 4. Next, in order (owners from WORK_QUEUE)
 
 | # | Gap | Fix | Owner | When |
 | --- | --- | --- | --- | --- |
-| 1 | Full host URLs in rows | SCALE-02, expand then contract. **Done (expand, 2026-10-14):** every avatar and booster-logo display (`ProfileAvatarPicker`, which draws the own and public profile heroes, `GameCard`, the Local tab's Top Boosters) reads through `mediaUri` in `lib/media.ts`, which takes a legacy full URL or an `sb:` reference; uploads (`uploadAvatar`, `uploadSponsorLogo`) write through `mediaValueToStore` behind `MEDIA_WRITE_REFERENCES = false`, so rows still get full URLs. **Remaining, in order, each owner-gated:** (a) a build containing these readers is installed for testers; (b) flip `MEDIA_WRITE_REFERENCES` to `true`, so new avatars and booster logos store `sb:avatars/...`; (c) PLAY-01 releases `lib/reels.ts`, then playback (and the avatars drawn in `components/Reels/*`: `ReelOwnerPeek`, `uploader_avatar_url`) reads through `lib/media.ts` and video uploads store references; (d) a backfill migration rewrites old full Supabase URLs in `profiles.avatar_url`, `sponsorships.logo_url` and `reels.video_url` to `sb:` references (not written yet; needs a rollback and the E1 baseline first) | `HIGHLIGHTS` → `PLAYBACK`, `UPLOAD`, `STORAGE`; `BACKEND` | Before the video host change and before data grows |
+| 1 | Full host URLs in rows | SCALE-02, expand then contract. **Done (expand, 2026-10-14):** every avatar and booster-logo display (`ProfileAvatarPicker`, which draws the own and public profile heroes, `GameCard`, the Local tab's Top Boosters) reads through `mediaUri` in `lib/media.ts`, which takes a legacy full URL or an `sb:` reference; uploads (`uploadAvatar`, `uploadSponsorLogo`) write through `mediaValueToStore` behind `MEDIA_WRITE_REFERENCES = false`, so rows still get full URLs. **Remaining, in order, each owner-gated:** (a) a build containing these readers is installed for testers; (b) flip `MEDIA_WRITE_REFERENCES` to `true`, so new avatars and booster logos store `sb:avatars/...`; (c) PLAY-01 released its claim; video playback readers now use `lib/media.ts` locally (2026-10-21), while remaining Reel avatar readers and video reference writes still need their rollout checkpoint; (d) a backfill migration rewrites old full Supabase URLs in `profiles.avatar_url`, `sponsorships.logo_url` and `reels.video_url` to `sb:` references (not written yet; needs a rollback and the E1 baseline first) | `HIGHLIGHTS` → `PLAYBACK`, `UPLOAD`, `STORAGE`; `BACKEND` | Before the video host change and before data grows |
 | 2 | 48 direct calls (routes now 0) | Move the rest into `lib/` when each file is next touched (`useGameEventBroadcast`, `useFanTipHistory`, `MediaUploadService`, `AuthContext`, the admin portal's sign-in pages; `UploadVideoModal` after PLAY-01); the guard only lets numbers fall | Each feature owner; `CODE_HYGIENE` tracks; `INFRASTRUCTURE` watches | Ongoing, no big-bang refactor |
 | 3 | Identity seam | New SQL uses `my_profile_id()` / `is_trusted_server()`, not raw `auth.uid()`. **Server token check done locally 2026-10-14:** `_shared/money/accessToken.ts` verifies ES256 / RS256 session tokens against the project's JWKS with WebCrypto (any GoTrue-compatible issuer works); HS256, unknown keys, an unreachable JWKS or a different issuer fall back to the auth server; checkout only — Connect and payouts always confirm the live session. SECURITY review: approved (issuer fallback and a live-Stripe-key refusal applied). Not yet run on Deno or against a real JWKS | `BACKEND`, `SESSION_SECURITY`; `RLS_SECURITY` reviews | Every new migration. Token check **done locally 2026-10-14** (`_shared/money/accessToken.ts`): checkout only; money-moving routes keep the live `getUser` check |
 | 4 | Two copies of the money server code | One handler set with Deno / Node adapters (SCALE-04). **First step done locally 2026-10-14:** validation, quote math, freeze check, Connect gates, payout decision and response shapes live in `supabase/functions/_shared/money/`; characterization tests (`moneyHandlers.test.ts`) pin both runtimes. `stripe-webhook` stays Deno-only and `createPayout` Node-only (no twin built); webhook crediting and the client `tips` retirement remain gated | `COMMERCE`, `API` | Before live money |

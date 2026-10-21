@@ -6,19 +6,23 @@
  * GPS / camera data out of public photos (PHOTO_STORIES_DESIGN.md "Privacy and safety"). Process-wide helper, so it
  * lives in services/ (PascalCase) rather than lib/.
  * Avatar uploads write through `mediaValueToStore` (SCALE-02 switch in lib/media, off for now).
- * @sideEffects Reads device media; writes Supabase Storage; inserts `reels` rows.
+ * Storage transport is bound by `createMediaUploadService`; authentication, rights and row writes stay here.
+ * @sideEffects Reads device media; writes through the media storage adapter; inserts `reels` rows.
  */
 
 import { Platform, TurboModuleRegistry } from 'react-native';
 
 import { RIGHTS_VERSION } from '@/data/contentRights';
 import {
+  HIGHLIGHT_LENGTH_UNREADABLE,
   HIGHLIGHT_MAX_BYTES,
   HIGHLIGHT_MAX_MS,
   HIGHLIGHT_OPTIMIZING,
-  HIGHLIGHT_TOO_BIG } from '@/data/media';
+  HIGHLIGHT_TOO_BIG,
+  HIGHLIGHT_TOO_LONG } from '@/data/media';
 import { parseReelCategory, type HighlightMediaType, type ReelCategory } from '@/data/highlights';
-import { mediaValueToStore, publicMediaUrl } from '@/lib/media';
+import { mediaValueToStore } from '@/lib/media';
+import { mediaStorage, type MediaStorageAdapter } from '@/lib/mediaStorage';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Database, Reel } from '@/types/database';
 
@@ -43,6 +47,7 @@ export type PickedHighlight = {
   uri: string;
   mimeType?: string | null;
   fileName?: string | null;
+  /** Normalized milliseconds from the platform picker boundary; required and validated for upload. */
   durationMs?: number | null;
   compressed?: boolean;
 };
@@ -60,19 +65,20 @@ export type UploadHighlightInput = PickedHighlight & {
 };
 
 /**
- * @purpose ImagePicker `duration` is milliseconds; some camera apps report seconds. Normalize to ms.
+ * @purpose Normalize the picker's declared unit without guessing from the length of a clip.
  * @param duration Raw `ImagePickerAsset.duration`.
+ * @param unit Native ImagePicker uses milliseconds; the web picker reports seconds.
  */
-export function assetDurationMs(duration: number | null | undefined): number {
-  if (!duration || duration <= 0) return 0;
-  return duration > 1000 ? duration : duration * 1000;
+export function assetDurationMs(duration: number | null | undefined, unit: 'milliseconds' | 'seconds' = 'milliseconds'): number {
+  if (typeof duration !== 'number' || !Number.isFinite(duration) || duration <= 0) return 0;
+  return unit === 'seconds' ? duration * 1000 : duration;
 }
 
 /**
  * @purpose True when a camera-roll clip is longer than the 45s Highlight cap.
  */
-export function isHighlightTooLong(duration: number | null | undefined): boolean {
-  const ms = assetDurationMs(duration);
+export function isHighlightTooLong(duration: number | null | undefined, unit: 'milliseconds' | 'seconds' = 'milliseconds'): boolean {
+  const ms = assetDurationMs(duration, unit);
   return ms > HIGHLIGHT_MAX_MS;
 }
 
@@ -162,7 +168,14 @@ export async function compressHighlight(uri: string, onProgress?: CompressProgre
   }
 }
 
+function storageUploadErrorMessage(bucket: string, message: string): string {
+  return message.includes('Bucket not found')
+    ? `Storage bucket ${bucket} is missing. Run supabase/media_upload.sql in the SQL editor.`
+    : message;
+}
+
 async function uploadToBucket(
+  storage: MediaStorageAdapter,
   buckets: string[],
   path: string,
   body: ArrayBuffer,
@@ -173,19 +186,17 @@ async function uploadToBucket(
 ): Promise<{ bucket: string; publicUrl: string }> {
   let lastError = 'Upload failed.';
   for (const bucket of buckets) {
-    const { error } = await supabase.storage.from(bucket).upload(path, body, {
+    const { error } = await storage.upload(bucket, path, body, {
       contentType,
       upsert,
     });
     if (!error) {
-      const publicUrl = publicMediaUrl(bucket, path);
+      const publicUrl = storage.publicUrl(bucket, path);
       if (publicUrl) return { bucket, publicUrl };
       lastError = 'Upload succeeded but no public URL was returned.';
       continue;
     }
-    lastError = error.message.includes('Bucket not found')
-      ? `Storage bucket ${bucket} is missing. Run supabase/media_upload.sql in the SQL editor.`
-      : error.message;
+    lastError = storageUploadErrorMessage(bucket, error.message);
   }
   throw new Error(lastError);
 }
@@ -272,9 +283,10 @@ export async function insertReelRow(baseRow: ReelInsertRow): Promise<Reel> {
  * @returns Inserted reel row. A locked clip's `video_url` on this object is a one-hour signed URL for immediate playback; the database keeps the `reelvault:` token.
  * @sideEffects `react-native-compressor`; Storage `reels` or `reel_vault`; `reels` INSERT; signed URL for exclusive playback.
  */
-export async function uploadHighlight({
+async function uploadHighlightWithStorage(storage: MediaStorageAdapter, {
   uri,
   title,
+  durationMs,
   playerId,
   gameId,
   isExclusive = false,
@@ -287,6 +299,12 @@ export async function uploadHighlight({
   if (!isSupabaseConfigured) {
     throw new Error('Supabase is not configured. Add EXPO_PUBLIC keys to .env.local.');
   }
+
+  // This DTO is already in milliseconds. Compression cannot make an overlong or unknown clip eligible.
+  if (typeof durationMs !== 'number' || !Number.isFinite(durationMs) || durationMs <= 0) {
+    throw new Error(HIGHLIGHT_LENGTH_UNREADABLE);
+  }
+  if (durationMs > HIGHLIGHT_MAX_MS) throw new Error(HIGHLIGHT_TOO_LONG);
 
   const caption = title.trim();
   if (!caption) throw new Error('Add a title / hype caption.');
@@ -316,11 +334,14 @@ export async function uploadHighlight({
   let vaultPath = '';
   if (isExclusive) {
     vaultPath = `${owner}/${Date.now()}.mp4`;
-    await uploadToBucket([REEL_VAULT_BUCKET], vaultPath, body, 'video/mp4');
+    // Private upload success comes from Storage; private files have no public URL and never fall back to a public bucket.
+    const { error } = await storage.upload(REEL_VAULT_BUCKET, vaultPath, body, { contentType: 'video/mp4', upsert: true });
+    if (error) throw new Error(storageUploadErrorMessage(REEL_VAULT_BUCKET, error.message));
     videoUrl = `${REEL_VAULT_PREFIX}${vaultPath}`;
   } else {
     const filePath = `reels/${owner}/${Date.now()}.mp4`;
     const uploaded = await uploadToBucket(
+      storage,
       [REELS_BUCKET, HIGHLIGHTS_FALLBACK_BUCKET],
       filePath,
       body,
@@ -349,9 +370,9 @@ export async function uploadHighlight({
   onProgress?.(1);
   onStatus?.('Seki play uploaded.');
   if (!vaultPath) return reel;
-  const signed = await supabase.storage.from(REEL_VAULT_BUCKET).createSignedUrl(vaultPath, 60 * 60);
-  if (signed.error || !signed.data?.signedUrl) return reel;
-  return { ...reel, video_url: signed.data.signedUrl };
+  const signed = await storage.sign(REEL_VAULT_BUCKET, vaultPath, 60 * 60);
+  if (signed.error || !signed.data) return reel;
+  return { ...reel, video_url: signed.data };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -561,7 +582,8 @@ async function compressStoryPhoto(uri: string): Promise<string> {
  *   position, or on Storage errors.
  * @sideEffects Native image encode; Storage `reels/{auth.uid}/stories/{reelId}/{position}-{ts}.jpg`.
  */
-export async function uploadStoryPhoto(
+async function uploadStoryPhotoWithStorage(
+  storage: MediaStorageAdapter,
   uri: string,
   reelId: string,
   position: number,
@@ -585,7 +607,7 @@ export async function uploadStoryPhoto(
   }
   const cleaned = buildCleanJpeg(raw, parsed);
   const imagePath = `${userId}/stories/${reelId}/${position}-${Date.now()}.jpg`;
-  const { publicUrl } = await uploadToBucket([REELS_BUCKET], imagePath, cleaned.buffer, 'image/jpeg', false);
+  const { publicUrl } = await uploadToBucket(storage, [REELS_BUCKET], imagePath, cleaned.buffer, 'image/jpeg', false);
   const quarterTurn = (parsed.orientation ?? 1) >= 5;
   return {
     imagePath,
@@ -602,7 +624,7 @@ export async function uploadStoryPhoto(
  *   once `MEDIA_WRITE_REFERENCES` is on (SCALE-02). Display it through `mediaUri` from lib/media.
  * @sideEffects Storage `avatars` upload; `profiles` UPDATE on `user_id = auth.uid()`.
  */
-export async function uploadAvatar(uri: string, onProgress?: CompressProgress): Promise<string> {
+async function uploadAvatarWithStorage(storage: MediaStorageAdapter, uri: string, onProgress?: CompressProgress): Promise<string> {
   if (!isSupabaseConfigured) {
     throw new Error('Supabase is not configured. Add EXPO_PUBLIC keys to .env.local.');
   }
@@ -617,7 +639,7 @@ export async function uploadAvatar(uri: string, onProgress?: CompressProgress): 
   onProgress?.(0.4);
 
   const path = `${userId}/${Date.now()}.jpg`;
-  const { bucket, publicUrl } = await uploadToBucket([AVATARS_BUCKET], path, body, imageContentType(uri));
+  const { bucket, publicUrl } = await uploadToBucket(storage, [AVATARS_BUCKET], path, body, imageContentType(uri));
   const stored = mediaValueToStore(bucket, path, publicUrl);
   onProgress?.(0.8);
 
@@ -633,3 +655,15 @@ export async function uploadAvatar(uri: string, onProgress?: CompressProgress): 
   onProgress?.(1);
   return stored;
 }
+
+/** Bind only storage transport; all existing media validation, ownership and row-writing rules are shared. */
+export function createMediaUploadService(storage: MediaStorageAdapter = mediaStorage) {
+  return {
+    uploadHighlight: (input: UploadHighlightInput) => uploadHighlightWithStorage(storage, input),
+    uploadStoryPhoto: (uri: string, reelId: string, position: number) => uploadStoryPhotoWithStorage(storage, uri, reelId, position),
+    uploadAvatar: (uri: string, onProgress?: CompressProgress) => uploadAvatarWithStorage(storage, uri, onProgress),
+  };
+}
+
+// Existing consumers keep their named functions; alternative transports are bound without altering this instance.
+export const { uploadHighlight, uploadStoryPhoto, uploadAvatar } = createMediaUploadService();

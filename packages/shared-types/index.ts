@@ -337,6 +337,7 @@ export const APP_RUNTIME_FLAG_GROUPS: AppRuntimeFlagGroup[] = [
       { path: 'layouts.wishlist', label: 'Locker Room Wishlist', hint: 'Gear-goal donations on Stats 📊' },
       { path: 'layouts.leaderboards', label: 'Leaderboards', hint: 'Spotlight Boards — hype and views, never donations' },
       { path: 'layouts.coachLevel', label: 'Coach-level label', hint: 'Uploader switch and the Risky without a coach report. Labels already set stay visible.' },
+      { path: 'layouts.telemetrySmoothness', label: 'Smoothness telemetry', hint: 'Cold-start + screen-mount timing into telemetry_logs. Turn on only after applying 20261020173000.' },
       {
         path: 'layouts.operatorConsole',
         label: 'Operator console',

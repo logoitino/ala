@@ -292,6 +292,106 @@
       ],
       "limitation": "No hosted lifecycle/retention/rate/content-review-backlog delivery or passive new Growth tracking; real native/web interruption and accessibility review, counsel notices and active cohort remain pending.",
       "next": "POLLS/Content/VOICE with SUPPORT and Privacy verifies timed facts, original deadline/recovery/End/Off/erasure/correction and aggregate optional completion/return/support burden before widening an approved cohort."
+    },
+    {
+      "id": "supabase-backup-freshness",
+      "area": "tooling",
+      "owner": "RECOVERY",
+      "status": "partial",
+      "detects": "Invoked status CLI rejects missing, malformed, failed, overdue, mismatched or incomplete job records and stale snapshot capture times; checks private evidence directory. Synthetic tests cover partial multi-cloud uploads, retry accounting and protected-checksum retrieval. Current env origin and explicit PG host/port/database/user must match protected original capture identity, including retries; same-path config changes and unbound legacy records fail closed.",
+      "evidence": [
+        "infrastructure/backup/job.py",
+        "infrastructure/backup/status.py",
+        "infrastructure/backup/fetch.py",
+        "infrastructure/backup/tests/test_job.py",
+        "infrastructure/backup/tests/test_operations.py",
+        "docs/engineering/BACKUP_OPERATIONS.md",
+        "infrastructure/backup/tests/test_source_identity.py"
+      ],
+      "limitation": "Private local upload-command evidence is not independent cloud retrieval, cryptographic decrypt or database recovery proof. Six-hour timer and alert routing are not installed or observed; RPO/RTO unmeasured.",
+      "next": "RECOVERY + INFRASTRUCTURE + RELIABILITY install the approved runner, wire nonzero status to named incident routing and rehearse independent retrieval/decrypt/isolated restore with QA/Data/Finance."
+    },
+    {
+      "id": "current-exit-release-readiness",
+      "area": "tooling",
+      "owner": "EXIT_SYNC",
+      "status": "partial",
+      "detects": "Content-polled local source snapshots and invoked status detect actual working-source drift, failed capture, corrupt/private-state violations and invalid latest-attempt evidence; exact releases and strict evidence gates reject stale source and incomplete database/Storage/service/runtime/timed cutover proof. Invoked exit:health separates exact watcher process liveness, last actual scan age, code verification, expected-project backup freshness and strict prepared acceptance; every output keeps readyToCutOver false. Configured current app public URLs must all match the expected backup project; missing or ambiguous origin observations fail closed. Both public-client origins and optional server SUPABASE_URL declarations across standard dotenv modes/process inputs must agree; prepared evidence source URL and PG host/port/database must match current source-bound backup.",
+      "evidence": [
+        "scripts/exit-inventory.mjs",
+        "scripts/exit-map.mjs",
+        "infrastructure/exit/release.mjs",
+        "infrastructure/exit/readiness.py",
+        "infrastructure/exit/runtime_images.py",
+        "infrastructure/migration/storage_reconcile.py",
+        "docs/engineering/EXIT_READY_RUNBOOK.md",
+        "infrastructure/exit/sync.mjs",
+        "infrastructure/exit/sync_lock.py",
+        ".github/workflows/exit-release.yml",
+        "docs/agents/REDUNDANCY-04.md",
+        "infrastructure/exit/watcher.mjs",
+        "infrastructure/exit/health.py",
+        "infrastructure/exit/health_source.mjs",
+        "infrastructure/exit/tests/test_health.py",
+        "infrastructure/exit/setup.mjs",
+        "infrastructure/exit/tests/setup.test.mjs",
+        "infrastructure/exit/tests/health-source.test.mjs"
+      ],
+      "limitation": "Current-login detached watcher is active; macOS login startup is blocked as recorded in REDUNDANCY-04. Successful project checks and Claude Stop also request source catch-up; busy captures defer freshness. Source freshness is not daemon liveness, a hosted service check or database freshness; raw snapshots are unverified. No live data schedule, prepared image cache, hosted rehearsal or alert delivery established; CI workflow has not run remotely.",
+      "next": "EXIT_SYNC with EXIT_DATABASE/EXIT_SERVICES/EXIT_CLOUD and independent QA/Data/Auth/Finance prepares target, deployed stable-origin clients, current backups/images and timed hosted acceptance."
+    },
+    {
+      "id": "portable-backend-contracts",
+      "area": "tooling",
+      "owner": "EXIT_SYNC",
+      "status": "partial",
+      "detects": "Full project portability gate validates normalized public connections, unsafe key/interpolation rejection, actual client auth/cookie/MFA behavior, matching generated dotenv files and actual installed SDK REST/RPC/Auth/Storage/Functions protocol over synthetic loopback.",
+      "evidence": [
+        "packages/shared-types/backendConnection.ts",
+        "infrastructure/portability/profile.mjs",
+        "infrastructure/portability/protocol.mjs",
+        "infrastructure/portability/tests/connection.test.mjs",
+        "infrastructure/portability/tests/consumers.test.mjs",
+        "infrastructure/portability/tests/profile.test.mjs",
+        "infrastructure/portability/tests/protocol.test.mjs",
+        "docs/engineering/PORTABLE_INTEGRATIONS.md"
+      ],
+      "limitation": "Synthetic API protocol shapes do not implement or prove real SQL/RLS/password/OAuth/MFA/Realtime sockets/Edge runtime/Stripe/hosted parity. Client public settings compile into builds; installed-client and session transition evidence remains separate.",
+      "next": "EXIT_SERVICES/EXIT_CLOUD with independent QA/Auth/Data/Finance runs current source/target deployment and full original acceptance when infrastructure is available."
+    },
+    {
+      "id": "infrastructure-security-coverage",
+      "area": "tooling",
+      "owner": "INFRA_SECURITY",
+      "status": "partial",
+      "detects": "Invoked local guard rejects uncovered registered services/exit components, broken Security reporting/mappings, missing source evidence/mandatory guards and stale source-bound report. Current source sweeps regenerate awareness without completing review. Synthetic regressions cover no-private-input/link/atomic-output boundaries and actual Security route integration; source policy checks catch normalized wildcard IPv4 masks and nested registry credential build-context inclusion. Supabase render tests bind effective reviewed credentials against inherited override.",
+      "evidence": [
+        "infrastructure/security/controls.json",
+        "infrastructure/security/report.mjs",
+        "infrastructure/security/routing.mjs",
+        "infrastructure/security/tests/report.test.mjs",
+        "infrastructure/security/tests/network.test.mjs",
+        "infrastructure/security/tests/build-context.test.mjs",
+        "infrastructure/supabase/configure.py",
+        "infrastructure/supabase/tests/test_deployment.py",
+        "docs/engineering/INFRASTRUCTURE_SECURITY.md"
+      ],
+      "limitation": "Registered-source governance and mocked/source policy tests do not prove complete assets, Terraform/Docker execution, vulnerability-free dependencies, hosted IAM/firewall/TLS/Auth/RLS/Storage, independent custody or delivered incidents. All operational requirements remain unverified; no unattended Security specialist installed.",
+      "next": "SECURITY dispatches INFRA_SECURITY/SUPPLY_CHAIN_SECURITY/RECOVERY_SECURITY with existing RLS/SESSION/THREAT specialists; actual findings/revalidation go to CTO and the shared REDUNDANCY_LEAD/INFRASTRUCTURE packet."
+    },
+    {
+      "id": "notification-delivery",
+      "area": "app",
+      "owner": "NOTIFICATIONS",
+      "status": "partial",
+      "detects": "On-demand admin queue and last24-hour attempted/accepted/suppressed/failed/unknown counts; fixed notifications.admin_source_failed/admin_jobs_failed/admin_action_failed/health_failed client observations. Accepted is not delivered; unavailable data is unknown.",
+      "evidence": [
+        "apps/mobile/src/frontend/components/Admin/Notifications/NotificationAdminPanel.tsx",
+        "apps/mobile/src/frontend/components/Admin/Notifications/NotificationHealthSummary.tsx",
+        "supabase/migrations/20261021140000_notifications.sql"
+      ],
+      "limitation": "SQL unapplied and engine unavailable; no provider feedback, scheduled worker or verified telemetry intake. Optional email blocked until unsubscribe/provider support; all sources paused.",
+      "next": "NOTIFICATIONS with SUPPORT/BACKEND reviews NOTIF_RETRYABLE only below three attempts; unknown sends require provider reconciliation. AUTH owns account source; COMMERCE/RECONCILIATION owns donation business truth."
     }
   ]
 }

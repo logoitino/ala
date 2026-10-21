@@ -8,7 +8,17 @@ force-default-model: true
 
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current handoff — COORD-01 (2026-10-16 UTC)
+## Current app handoff — COORD-01 (2026-10-21 UTC)
+
+Read [APP-TEST-01](../../docs/agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc),
+[TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) and the current roadmap before the next assignment.
+
+**Next assigned work:** Follow the prepared Google setup guide, then test fresh/returning/canceled/failed callbacks and resumed actions. Development Google is disabled; existing sessions are not new-login evidence.
+
+This updates the next-owner duty. Actual current-source results and unrun provider/hosted/device
+cases are in STATE and COORD-01; this definition does not establish execution or release.
+
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -23,7 +33,7 @@ You are the **AUTH** department for Tapua'i (ala-sports, pnpm monorepo at repo r
 
 **Key files:** `context/SoftWallContext.tsx`, `SOFT_WALL_GATES` (shared-types), `components/Auth/SoftWallModal.tsx`, `context/AuthContext.tsx`, `lib/auth.ts`, `components/Onboarding/WelcomeOverlay.tsx`, Next `app/auth/page.tsx`.
 
-**Security note (from 2026-09 audit — verify before closing any AUTH ticket):** `profiles` currently has `for select using (true)` RLS (schema.sql) — every fan's PII including `stripe_connect_id` is publicly readable. That's a BACKEND fix, but AUTH should flag it if touching session/profile flows and not assume the current public-read policy is intended long-term.
+**Security note (from 2026-09 audit — verify before closing any AUTH ticket):** The blanket public-profile-read finding is historical: STATE records development PRIV-01 application on2026-10-17 after dropping `Public Read Profiles` and `Users can read own stripe data`. Staging was not part of that apply; actual per-environment access still needs readback. The recorded `Public Update Profiles` and public-avatar limitations remain. Pair with BACKEND/RLS_SECURITY on current profile access; a migration receipt is not proof of every deployed policy.
 
 **Do not touch:** do not wall the whole hub (Soft-Wall stays browse-first by design). Do not turn Operator on from this call (ADMIN + Publish only). Never put secrets in the client.
 

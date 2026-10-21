@@ -1,0 +1,26 @@
+{
+  "_comment": "Private unattended job template; replace external paths and reviewed cloud destinations before installation. Upload evidence does not prove remote integrity or restore readiness.",
+  "version": 1,
+  "state_dir": "/var/lib/tapuai/backup-status",
+  "backup": {
+    "env_file": "/etc/tapuai/backup.env",
+    "output_dir": "/var/lib/tapuai/backups",
+    "recipients_file": "/etc/tapuai/recipients.txt",
+    "custody_file": "/etc/tapuai/recovery-custody.json",
+    "consistency": "online"
+  },
+  "destinations": [
+    {
+      "id": "aws-independent",
+      "provider": "aws",
+      "destination": "s3://replace-with-reviewed-private-bucket/backups",
+      "kms_key_id": "arn:aws:kms:us-west-2:123456789012:key/00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "id": "azure-independent",
+      "provider": "azure",
+      "account_name": "replacereviewedaccount",
+      "container": "backups"
+    }
+  ]
+}

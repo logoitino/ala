@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { subscribePlayerAura } from '@/lib/aura';
 import { hydratePlayerHype, type PlayerHype } from '@/lib/hype';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { fetchRosterPlayers } from '@/lib/roster';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import type { Player } from '@/types/database';
 
 const CONFIG_ERROR =
@@ -11,7 +12,7 @@ const CONFIG_ERROR =
 /**
  * @purpose Live roster for tagging, Mālo, and the athlete sheet (`players` including `vault_locked`).
  * @returns `{ players, loading, error, refresh, applyBackerCount, applyHype, applyAuraPoints, applyVaultLocked, setPlayers }`.
- * @sideEffects `players` SELECT; `hydratePlayerHype`; Aura Realtime.
+ * @sideEffects `players` SELECT (`lib/roster`); `hydratePlayerHype`; Aura Realtime.
  */
 export function useRoster() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -29,15 +30,14 @@ export function useRoster() {
       return;
     }
 
-    const { data, error: queryError } = await supabase.from('players').select('*');
+    const { players: rows, error: queryError } = await fetchRosterPlayers();
     if (queryError) {
       setPlayers([]);
-      setError(queryError.message);
+      setError(queryError);
       setLoading(false);
       return;
     }
 
-    const rows = (data as Player[] | null) ?? [];
     const hydrated = await Promise.all(rows.map((player) => hydratePlayerHype(player)));
     setPlayers(hydrated);
     setLoading(false);

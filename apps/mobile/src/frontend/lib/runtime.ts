@@ -59,6 +59,8 @@ export type AppRuntimeLayouts = {
   leaderboards: boolean;
   /** Hides the uploader switch and the coach-level report. A label already set still shows. */
   coachLevel: boolean;
+  /** Sends cold-start + screen-mount timing. Stays off until 20261020173000 is applied (pre-apply rows die on the CHECK). */
+  telemetrySmoothness: boolean;
 };
 
 export type AppRuntimeTheme = {
@@ -229,6 +231,7 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     wishlist: true,
     leaderboards: true,
     coachLevel: true,
+    telemetrySmoothness: false,
   },
   theme: { ...DAYLIGHT_THEME },
   catalog: {

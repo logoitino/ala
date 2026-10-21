@@ -1,4 +1,68 @@
+<!-- Current app duties cover every registered department; dated source and runtime evidence remain distinct. -->
 # Department plans — where we are, and what each team will do
+
+## Current app testing handoff — APP-TEST-01 (2026-10-21 UTC)
+
+**115 registered roles / 17 department labels; all 115 current assignments are listed once in [TEAM_STATUS](TEAM_STATUS.md#current-all-role-assignment-coverage--115-roles).** The [registry](../../.claude/agents/registry.json) owns the calls, pins and reporting leads. This is a responsibility and dependency update, not 115 executed agents, a staffing claim or external team delivery. Actual Documentation/VP and independent review receipts belong to [COORD-01](COORD-01.md#current-app-roadmap-and-whole-team-refresh--2026-10-21-utc).
+
+The [APP-TEST-01 queue](WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc) controls current priority: **A Google account → B optional later Stripe test bank → C short-media rehearsal**, with D public-beta prerequisites, E Legal-first instrumentation and F current athlete-story/tab/accessibility/performance regression duties. [STATE](../STATE.md) and the [roadmap](../product/ROADMAP.md) distinguish locally prepared code from actual provider/native release evidence. No new feature, policy or infrastructure execution is assigned by this handoff; existing domain and standby duties remain.
+
+**Supplied current evidence:** 226 mobile suites / 2,193 tests PASS in 138.861s, both app typechecks PASS; independent media/duration 153-test PASS and Documentation/Data acceptance at 03:09:54 UTC are recorded in [media plan §6](../engineering/design/MEDIA_SERVICE_PLAN.md#6-current-app-testing-preparation--2026-10-21-utc). Browser navigation at 390×844 used a previously signed-in localhost:8086 session and cancelled the library dialog. Fresh guest/Google, actual picker upload/decoding, bank/provider, hosted SQL and native acceptance remain unrun. This department update does not rerun those tests.
+
+Google development Auth was disabled on the read-only 21 October check; credentials and redirect configuration remain pending. The Google operator guide is prepared in [ONBOARDING](../ONBOARDING.md). Bank context and failed-story cleanup migrations are written but unapplied, updated Edge is undeployed, and the local fallback service key is missing; hosted built-in keys are a separate context. KYC recording remains unwired and payouts 503. Synthetic internal guardian cases do not activate real families under draft consent. The [tester script](../engineering/TESTER_SCRIPT.md) and [Connect plan](../engineering/design/PAYEE_VERIFICATION_PLAN.md) retain exact instructions and limitations.
+
+Short media retains 45s/8MiB processed Highlights and 1–10 JPEG photo stories. Metadata guards are client-side and do not prove server file duration. The complete synthetic fixture set has generator encode/decode evidence; actual app selection, upload, playback, owner-claimed physical cleanup and private-access negatives need separate runtime evidence. Reference writers stay false. **Long videos remain off until costs are measured; live streaming is deferred.** Current behavior logging remains; session/user IDs require policy copy and Legal/Privacy review before any new collection. No per-user retention/funnel result exists today.
+
+## Current app deliverables by department
+
+The 17 labels below use the registry's actual department membership. Counts sum to 115. Named owners are current routing and review roles; the linked all-role table supplies each specialist's exact assignment. Each department returns source/build/environment, original result/date, gaps and next owner to its existing lead. Independent QA/Security/Legal/Privacy/Finance authority and CFO routing remain intact.
+
+| Department / registered roles | Accountable roles and reviewers | Current deliverable | Dependencies | Next owner / handoff | Missing evidence |
+| --- | --- | --- | --- | --- | --- |
+| Office of the CTO (2) | CTO, VP_OPERATIONS | A–F: accept the app rehearsal order, 115-role coverage and domain findings. | Current source/task receipts and independent reviews. | CTO routes repairs to the lead; owner decides configuration/release. | Google/provider/native and beta acceptance remain open. |
+| Product (2) | PRODUCT, RESEARCH | A/F: one tester journey from browsing an athlete story to account/post and optional later bank. | Existing app/source and consented tester observations. | PRODUCT → DESIGN/feature owner for one reproduced repair. | Fresh user friction and engagement effects have not been observed. |
+| Design (4) | DESIGN, ACCESSIBILITY, DESIGN_TOOLING, MOTION | A/B/C/F: readable account, guardian, upload and athlete-story states, including recovery and reduced motion. | Current build/screens and separate browser/native journeys. | DESIGN → feature owner; VISUAL_QA/DEVICE_QA review. | 390px existing-session navigation is not large-text, keyboard or native acceptance. |
+| Engineering (42) | ENGINEERING, AUTH, ONBOARDING, PROFILE, HIGHLIGHTS, API, SHARED_CONTRACTS; remaining feature owners in the linked roster | A/B/C/F: exact callback/target/media contracts and current tab/story regression handoffs. Infrastructure-related roles remain standby. | Operator Google configuration; reviewed SQL/Edge prerequisites; actual picker/device cases. | ENGINEERING → assigned feature owner → QA; DOCUMENTATION receives each receipt. | Fresh/returning auth, provider status, selected uploads and native playback remain unrun. |
+| Database (3) | BACKEND, DATABASE_MIGRATIONS, STORAGE | B/C/D: ordered Connect-context and terminal photo-cleanup SQL, canonical parity, owner/private permission negative readback. | 20261020190000 and 20261021120000 written migrations; approved development setup. | BACKEND/Security review → operator applies approved prerequisites → QA records behavior. | Actual SQL/race execution blocked locally; hosted apply and physical Storage deletion unrun. |
+| Security (7) | SECURITY, RLS_SECURITY, SESSION_SECURITY, THREAT_DETECTION; INFRA_SECURITY, SUPPLY_CHAIN_SECURITY, RECOVERY_SECURITY on standby | A/B/C/D/E: independent redirects/session, guardian target, cleanup/private grants and public-beta findings. | Original current source and fresh runtime negatives; existing support signals. | SECURITY → domain owner; QA retains release rejection. | Source tests do not establish hosted OAuth/Storage, complete detection or public-beta security. |
+| IT infrastructure (6) | OPERATIONS, CI, RELEASE, COST_OPERATIONS, OPERATOR, RECOVERY | A/B/C/E/F: existing development preview/build binding, scoped app checks, actual device eligibility and measured short-media costs. Recovery infrastructure duty is standby. | Node 24; approved private operator setup; actual usage/invoices/device run. | OPERATIONS → operator/RELEASE/QA; COST_OPERATIONS → existing Growth packet. | No native build acceptance, measured current media cost or new deployment/recovery run. |
+| Engineering support (4) | SUPPORT, INCIDENT_TRIAGE, RELIABILITY, TELEMETRY | A/B/C/E: sanitized reproductions, lost-reply/cancel/retry recovery and Legal-first telemetry proposal. | Current behavior logging; actual failing journey/build; approved policy before IDs. | SUPPORT → feature owner; TELEMETRY → Legal/Privacy/Data review. | No complete runtime coverage, per-user funnels, retention or continuous service claim. |
+| Data Governance (3) | DATA_GOVERNANCE, DATA_LINEAGE, CODE_HYGIENE | B/C/E/F: trace current guardian/media ownership and later ID proposal; report confusing/unused app contracts without deleting unrelated code. | Current source ownership/maps; scoped future schema proposal. | DATA_GOVERNANCE → BACKEND/feature owner; archiving needs owner approval. | This refresh adds no data collection; runtime/private physical deletion remains unverified. |
+| Quality (4) | QA, TEST_AUTOMATION, DEVICE_QA, VISUAL_QA | A/B/C/D/F: original success/cancel/denial/turnover media and bank results, native callbacks and current-source visual checks. | Google/provider prerequisites; complete synthetic fixtures; actual web/iOS/Android build. | QA → accountable domain lead with result/issue; reject release until gates are met. | Local226/2,193 baseline is executed; fresh guest/Google/bank/file/native acceptance is not. |
+| Legal and Compliance (4) | LEGAL, COMPLIANCE, CONTENT_RIGHTS, PRIVACY_ENGINEERING | B/C/D/E: existing test-family, rights and disclosure limits; policy wording before per-user IDs; truthful release claims. | Current data/source and draft consent; counsel decisions remain separate. | LEGAL/COMPLIANCE → CTO; approved implementation scope → Data/Engineering. | Guardian consent remains draft; real families, youth/public release and telemetry collection are not approved. |
+| Trust and Safety (4) | TRUST_SAFETY, ATHLETE_VERIFICATION, MINOR_SAFETY, MODERATION | A/B/C/D: action-specific age, verified-athlete/current guardian relation and synthetic report/removal negatives. | Existing approved synthetic relationships; actual permission/readback evidence. | TRUST_SAFETY → domain owner and QA; real-family approval remains gated. | Google/Stripe status proves no school/athlete badge; staffed public moderation unverified. |
+| Finance (13) | COMMERCE, CONNECT, CUSTODIAL, CHECKOUT, BILLING, LEDGER, RECONCILIATION, RECEIPTS, REFUNDS, DONATION_THANKS, RALLY, WISHLIST, DRIP | B/D/F: optional test-bank target/status/return; protect no-credit/no-payout invariants and existing profile money displays. | Applied compatible development SQL/Edge and test secrets; synthetic contexts. | COMMERCE/CONNECT → operator/QA; settlement/refund/KYC blockers → existing domain lead. | KYC recording unwired, payout 503, authoritative credit/settlement/refund/held-ledger evidence open. |
+| Finance and Accounting (9) | CFO, CONTROLLER, BOOKKEEPER, FPA, INTERNAL_CONTROLS, TAX, INFO_RETURNS, SALES_TAX, TREASURY | B/D/E: non-sensitive payee/receipt and no-posting evidence; measured short-media economics; held funds and tax gates. | Original provider/ledger/receipt evidence and measured costs, not capability flags. | CONTROLLER/TREASURY → CFO; FPA/cost evidence → existing Growth packet. | No real posting, payout or tax acceptance; test setup proves no identity/TIN verification. |
+| Marketing (3) | MARKETING, GROWTH_ANALYTICS, BRAND | E/F: one existing Growth packet with observed friction, authorized source metrics and measured costs; honest app readiness copy. | Consented feedback and accepted denominator/cost provenance. | GROWTH_ANALYTICS → MARKETING → CTO → owner. | Per-user conversion/retention and media costs remain unknown; no campaign or external delivery. |
+| Partnerships (4) | PARTNERSHIPS, ROLE_HQ, SCHOOL_PARTNERS, SPONSOR_ADS | A/B/D/F: synthetic parent/booster/sponsor return and separate school-confirm/marks permission requirements. | Current role/token access and documented school/guardian rules. | PARTNERSHIPS → AUTH/PROFILE/verification owner; permission gaps → Legal/Safety. | No school/family outreach or real institutional approval performed. |
+| Brand (1) | VOICE | A/B/C/F: simple approved account, Stripe test setup and upload recovery words that tell the athlete story. | Current UI/source and Legal/Finance claim boundaries. | VOICE → DESIGN/feature owner; Legal reviews changed promises. | No unmeasured engagement, identity proof or live-money readiness claim. |
+
+## Bounded next steps and completion evidence
+
+Use the [three rehearsals](TEAM_STATUS.md#three-bounded-next-rehearsals), not a second backlog:
+
+1. **Configure and rehearse Google** through the prepared development instructions, then record fresh/returning/cancel/error callbacks and bank-free account creation. Native return is a separate result.
+2. **Prepare approved development bank prerequisites and rehearse synthetic adult/guardian cases**, with exact target/status, account turnover, cancellation and negative missing-prerequisite checks. Setup submission never proves KYC or permits payouts.
+3. **Run actual short-video/photo selection and recovery with synthetic assets**, including returned-duration/processed-byte boundaries, playback, lost publish reply, owner/private denial and claimed physical cleanup after approved SQL. Capture current story/layout issues through Support and measure costs without enabling long uploads.
+
+A local automated result closes only its named local check. Manual/provider/device runs close only the original environment and journey they exercise. Each absent result remains assigned to the department/next owner above. Future telemetry and public-beta blocker implementation use their existing reviewed task scope; this handoff does not add a collector, launch, new vendor or background worker.
+
+## Standing domain plans and dated history
+
+The retained records below keep their original dates, counts and receipts. Their old “current” labels and next-work choices belong to those checkpoints; the115-role APP-TEST-01 handoff above controls current app testing. Existing non-app support duties remain standing or standby according to their original scope, without new execution here.
+
+<details>
+<summary>Read standing department plans and earlier dated checkpoints</summary>
+
+## Current infrastructure security assignment — REDUNDANCY-07 (2026-10-20)
+
+The registry now contains **115 callable definitions across 17 department labels**. Three new
+Security specialists report through SECURITY → CTO; Engineering implementation remains with
+REDUNDANCY_LEAD/INFRASTRUCTURE and the assigned domain owner. The actual outside-session Codex
+`/root/cloud_deployment` reconciled responsibilities, routing, model pins and current next owners
+in the registry/definitions/TEAMS/hierarchy/department plans/expert standards. Original execution
+checks and independent review are recorded in [REDUNDANCY-07](REDUNDANCY-07.md), not inferred from
+this roster. Historical COORD-01 counts and original receipts remain dated below.
 
 ## Current main-checkout handoff — COORD-01 (2026-10-16 UTC)
 
@@ -181,9 +245,11 @@ source versions and limits. The historical boards below do not reopen completed 
 
 ## How far along the app is
 
+**Historical readiness board, before the recorded 2026-10-17 development catch-up.** Its environment and unapplied-migration statements are retained as the earlier snapshot. [STATE §5](../STATE.md) and [development catch-up receipt](../engineering/DEV_DATABASE_CATCHUP.md) record later development application; staging and current runtime acceptance need separate confirmation.
+
 Use these five levels. A feature can be at more than one level at once (in the app, and also written as SQL that no database has yet).
 
-| Level | Meaning today |
+| Level | Meaning at the historical checkpoint |
 | --- | --- |
 | **In the app** | The screen or rule exists in this branch. Local checks have passed for many of these. That is not a phone test. |
 | **On staging** | The September SQL and the content-rights SQL are on `ala-sports-staging`. Testers only see Rally, thanks, custodial cards, Spotlight boards, and view counts on a build that points there. |
@@ -353,9 +419,9 @@ Later the same day, every agent was connected to a model, and each department le
 
 **Lead:** `BACKEND`. **With:** `DATABASE_MIGRATIONS`, `STORAGE`.
 
-**Where we are.** `schema.sql` is the canonical database. Staging has the September set and content-rights reports. Development does not. `reel_vault` is missing on staging.
+**Historical environment snapshot, before the recorded 2026-10-17 development catch-up.** `schema.sql` is canonical. The earlier board reported the September set/content-rights reports on staging, not development, and missing staging `reel_vault`. Those are dated observations, not a current query. [STATE §5](../STATE.md) and [DEV_DATABASE_CATCHUP](../engineering/DEV_DATABASE_CATCHUP.md) record later development application; current staging status needs rechecking.
 
-**What we have, unapplied.** Photo stories (`20261007230000`), reels owner-folder (`20261007231000`), account tags (`20261002160000`), public profile sport (`20261007211500`), operator check-in role policy (`20261002120000`), reports bigint (`20261012180000`), bookkeeping (`20261012210000`, local replay 72), data closures (`20261013120000`, latest replay 46), Engineering Support (`20261013190000`, local replay 144) and function access hardening (`20261013210000`, schema replay 22/22; apply first after authorization), CHAL (`20261016100000`, retained local 46/46), and Beyond (`20261016120000`, retained local 57/57). Local replay is separate from hosted application. Full Supabase reset/baseline/auth/Storage/history acceptance remains R2 work.
+**Written migration inventory at the retained earlier checkpoint; this is not today’s apply list.** Photo stories (`20261007230000`), reels owner-folder (`20261007231000`), account tags (`20261002160000`), public profile sport (`20261007211500`), operator check-in role policy (`20261002120000`), reports bigint (`20261012180000`), bookkeeping (`20261012210000`, local replay 72), data closures (`20261013120000`, latest replay 46), Engineering Support (`20261013190000`, local replay 144) and function access hardening (`20261013210000`, schema replay 22/22; apply first after authorization), CHAL (`20261016100000`, retained local 46/46), and Beyond (`20261016120000`, retained local 57/57). Local replay is separate from hosted application. Full Supabase reset/baseline/auth/Storage/history acceptance remains R2 work.
 
 **What we will do.**
 
@@ -368,7 +434,23 @@ Later the same day, every agent was connected to a model, and each department le
 
 ## Security
 
-**Lead:** `SECURITY`. **With:** `RLS_SECURITY`, `SESSION_SECURITY`, `THREAT_DETECTION`.
+**Lead:** `SECURITY`. **With:** `RLS_SECURITY`, `SESSION_SECURITY`, `THREAT_DETECTION`, `INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `RECOVERY_SECURITY`.
+
+**Portable infrastructure (REDUNDANCY-07).** INFRA_SECURITY owns network/IAM/TLS/host review and
+complete control/report coverage; SUPPLY_CHAIN_SECURITY owns locked dependency/image/upstream/CI
+and offline trust; RECOVERY_SECURITY owns private backup/restore isolation, integrity, rotation
+and custody evidence. All report to SECURITY → CTO. Existing SQL/session/incident domain authority
+and RECOVERY/EXIT_* implementation remain unchanged; REDUNDANCY_LEAD integrates one Engineering
+exit packet with INFRASTRUCTURE technical context.
+
+Use [INFRASTRUCTURE_SECURITY](../engineering/INFRASTRUCTURE_SECURITY.md) and the exact source
+report (`pnpm security:infra:report`, `pnpm security:infra:check`, `pnpm security:infra:test`).
+Current structural coverage is local bookkeeping with securityStatus=not-established,
+operationalAcceptance=false and readyToCutOver=false; it does not certify live network/IAM,
+provenance, custody, restore or any compliance claim. Preserve every manual/hosted evidence gap.
+Review on relevant changes, weekly assigned packets and before authorized deployments/cutovers;
+each receipt names actual executor/model/date/source/environment, paths, commands/results,
+findings/limits, remediation and next owner. No role definition grants access or activates a SOC.
 
 **Where we are.** Known public-beta holes are named and still open on purpose for internal test. They are not fixed by hiding a button.
 
@@ -378,10 +460,12 @@ current schema 35/35 replay passed, with hashes/date and independent review in H
 The older failure-before probe is not an active defect finding after that source change. Function access hardening closes identified revenue/Aura/admin RPC exposure
 locally; current replay35/35 includes actual Supabase-like default grants and server compatibility.
 Hosted application and denial checks remain owner-gated.
-Concurrent DATA-01-F10 guardian payout scope is fixed locally in the unapplied disbursements
+The original DATA-01-F10 checkpoint recorded a local guardian payout-scope repair in the then-unapplied disbursements
 migration (recorded schema replay 30/30); F10a withdrawal-linked/two-person/handover/audit
 requirements remain gated on owner/payments counsel before live payouts. Public profile fields,
 client crediting and other explicit public gaps retain their separate owners. A passing local schema replay does not close hosted gaps.
+
+**Later recorded state:** `20261013220000_disbursements_guardian_scope.sql` was applied on development on2026-10-17 per [STATE §5](../STATE.md); it was not re-queried in this team refresh. Confirm staging separately.
 
 **What we have.** Session JWT on the Connect link, the prior admin escalation guard and content-rights reports on staging. DETECT-02 implements bounded authenticated capture, client/trusted source separation, protected false-positive review and transactional audits, locally reviewed/replayed (144 checks). GPS/storage/Support policies remain unapplied; unsigned audit hashes and privileged DB authority remain explicit limits.
 
@@ -409,6 +493,23 @@ client crediting and other explicit public gaps retain their separate owners. A 
 4. After R2, plan the production project as R3. Do not create it in this wave.
 
 **What we will not do.** A public operator login. A paid game-day program (Wave 3).
+
+### Redundancy & Exit team (REDUNDANCY-02, 2026-10-19, owner)
+
+**Lead:** `REDUNDANCY_LEAD` (Engineering). **Members:** `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD`.
+**Partners:** `INFRASTRUCTURE`, `RECOVERY`, `DATABASE_MIGRATIONS`, `RLS_SECURITY`, service owners;
+independent `INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `RECOVERY_SECURITY` review through SECURITY → CTO.
+
+**Where we are.** Encrypted backup tools, restore list, parity and privilege reconciliation are built and locally proven
+(REDUNDANCY-01); the exit map regenerates from the code on every change and unannounced changes fail `pnpm check`.
+No cloud account, hosted backup schedule, hosted restore or cutover exists.
+
+**What we will do.** 1. Review every routed notice in `EXIT_CHANGE_LOG`. 2. Keep `exit-map.json` complete (exit A and B,
+AWS and Azure) and the build order honest. 3. Prepare the isolated hosted drill packet for the owner (provider, region,
+synthetic or real data, budget from COST_OPERATIONS). 4. After approval: monthly archive checks, quarterly full restore.
+
+**What we will not do.** Buy, provision, apply Terraform, change DNS or cut over without the owner; claim high availability
+from one VM.
 
 ## Design
 
@@ -470,7 +571,7 @@ client crediting and other explicit public gaps retain their separate owners. A 
 
 **Lead:** `CFO`, reporting to the owner. **Owns taxes:** `TAX`. Chain of command and calendars: [FINANCE_OPERATIONS.md](../company/FINANCE_OPERATIONS.md).
 
-**Where we are.** The Finance & Books hub (`/admin/books`) builds double-entry books from the money tables: profit and loss, money held for families, trial balance, journal, a filterable transactions list, the tax pack and calendar, source-to-ledger reconciliation, the finance data catalog, recording and month close, and QuickBooks / general-ledger exports. The bookkeeping migration replays cleanly on Postgres (72/72, 2026-10-13, after review fixes) and is not applied anywhere. Stripe is in test mode, so every figure is practice data.
+**Where we are.** The Finance & Books hub (`/admin/books`) builds double-entry books from the money tables: profit and loss, money held for families, trial balance, journal, a filterable transactions list, the tax pack and calendar, source-to-ledger reconciliation, the finance data catalog, recording and month close, and QuickBooks / general-ledger exports. The retained bookkeeping replay is72/72 on Postgres (2026-10-13, after review fixes). The earlier unapplied snapshot was superseded by the recorded development apply of `20261012210000_bookkeeping_ledger.sql` on2026-10-17 in [STATE §5](../STATE.md); this refresh did not re-query it. Confirm staging separately. Stripe remains in test mode; a test figure is not a cash or settlement receipt.
 
 | Piece | Have | Before live money |
 | --- | --- | --- |
@@ -666,3 +767,5 @@ Real baselines remain unknown; recommendations route through Growth → Marketin
 Defaults remain paused/testing-only/empty cohort. Hosted/device/accessibility, reviewed
 seed facts, counsel/age-region/retention, staffing and owner release are separate gates.
 No money/service expansion, spending, scheduler or external outreach is authorized here.
+
+</details>

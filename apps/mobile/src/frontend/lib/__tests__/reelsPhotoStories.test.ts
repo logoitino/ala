@@ -95,9 +95,10 @@ describe('fetchReels media tier', () => {
     );
     const rows = await fetchReelsForPlayer('p1');
     expect(rows.map((row) => row.id)).toEqual(['v1']);
-    expect(mockSelect).toHaveBeenCalledTimes(2);
-    expect(mockSelect.mock.calls[1][0]).toContain('view_count');
-    expect(mockSelect.mock.calls[1][0]).not.toContain('media_type');
+    // Coach-level label tier, then the photo tier, then the credit tier.
+    expect(mockSelect).toHaveBeenCalledTimes(3);
+    expect(mockSelect.mock.calls[2][0]).toContain('view_count');
+    expect(mockSelect.mock.calls[2][0]).not.toContain('media_type');
     expect(reelToClip(rows[0], sione).mediaType).toBe('video');
   });
 });

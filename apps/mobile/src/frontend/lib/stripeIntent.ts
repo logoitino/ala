@@ -1,3 +1,4 @@
+/** Shared checkout transport; donation declarations distinguish gifts from purchases but never prove settlement. */
 import { apiUrl } from '@/lib/apiUrl';
 import { isMissingEdgeFunction } from '@/lib/edgeFunction';
 import { requireAccessToken } from '@/lib/sessionToken';
@@ -23,12 +24,14 @@ export async function createPaymentIntent(
   amount: number,
   playerId?: string | null,
   platformTipCents = 0,
+  donation?: { giftCents: number; coverFees: boolean; platformTipPercent: number },
 ): Promise<string> {
   const accessToken = await requireAccessToken('Sign in to complete payment.');
   const body = {
     amount,
     ...(playerId ? { playerId } : {}),
     ...(platformTipCents > 0 ? { platformTipCents } : {}),
+    ...(donation ? { donation } : {}),
   };
 
   const { data: fnData, error: fnError } = await supabase.functions.invoke('create-payment-intent', {

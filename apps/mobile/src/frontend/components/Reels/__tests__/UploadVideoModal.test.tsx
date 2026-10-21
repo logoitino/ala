@@ -2,11 +2,10 @@
  * Staged upload drafts, explicit rights and navigation protect uploads and optional mention failures.
  * Photo stories (UX-05): Photos appears only when the SQL exists, picks with privacy options, reorders with
  * labelled buttons, keeps per-photo descriptions, uses photo rights wording, hides Vault, keeps the draft
- * on failure and across Video ↔ Photos switches, and retries a failed story on the same hidden reel (publish-once
- * RPC) unless the athlete changed — the athlete decides who receives donations and is fixed after insert.
+ * on failure and across Video ↔ Photos switches, and passes the failed server id for safe retirement before a fresh retry, even if the athlete changes — the athlete decides who receives donations and is fixed after insert.
  */
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { Alert, Animated } from 'react-native';
+import { Alert, Animated, Platform } from 'react-native';
 import { UploadVideoModal } from '@/components/Reels/UploadVideoModal';
 import { HIGHLIGHT_PUBLISH_LABEL, REEL_CATEGORY_GAME } from '@/data/highlights';
 import { PHOTO_RIGHTS_VERSION, rightsChecksFor, shareConfirmationLabel } from '@/data/contentRights';
@@ -27,28 +26,45 @@ jest.mock('@/lib/supabase', () => ({
     order: async () => ({ data: [], error: null }),
   }) }) },
 }));
+let mockOwnerId = '11111111-1111-4111-8111-111111111111';
 let mockOwnPlayerId: string | null = 'p1';
-jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ profile: { player_id: mockOwnPlayerId } }) }));
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: mockOwnerId }, profile: { user_id: mockOwnerId, player_id: mockOwnPlayerId } }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({
-  useAppRuntime: () => ({ live: { catalog: { reelCategories: [], exclusiveDollars: 5 } } }),
+  useAppRuntime: () => ({ live: { catalog: { reelCategories: [], exclusiveDollars: 5 }, layouts: {} } }),
 }));
 let mockPhotosAvailable = false;
 const mockCreateStory = jest.fn();
+const mockCleanupStory = jest.fn();
+const mockRememberCleanup = jest.fn();
+const mockQueuedCleanup = jest.fn();
+jest.mock('@/lib/photoStoryCleanup', () => ({
+  cleanupFailedPhotoStory: (...args: unknown[]) => mockCleanupStory(...args),
+  rememberPhotoStoryCleanup: (...args: unknown[]) => mockRememberCleanup(...args),
+  queuedPhotoStoryCleanups: (...args: unknown[]) => mockQueuedCleanup(...args),
+}));
 const mockLaunchLibrary = jest.fn();
+const mockLaunchCamera = jest.fn();
+let mockClipDurationMs = 1000;
+jest.mock('expo-constants', () => ({ __esModule: true, default: { isDevice: true } }));
 jest.mock('@/lib/photoStories', () => ({
   photoStoriesAvailable: async () => mockPhotosAvailable,
   createPhotoStory: (...args: unknown[]) => mockCreateStory(...args),
   movePhoto: jest.requireActual('@/lib/photoStories').movePhoto,
   PhotoStoryPublishError: jest.requireActual('@/lib/photoStories').PhotoStoryPublishError,
+  PhotoStoryAlreadyPublishedError: jest.requireActual('@/lib/photoStories').PhotoStoryAlreadyPublishedError,
 }));
 const { PhotoStoryPublishError: StoryError } = jest.requireActual('@/lib/photoStories');
 jest.mock('expo-image-picker', () => ({
   launchImageLibraryAsync: (...args: unknown[]) => mockLaunchLibrary(...args),
-  requestCameraPermissionsAsync: jest.fn(), launchCameraAsync: jest.fn(),
+  requestCameraPermissionsAsync: async () => ({ granted: true }),
+  launchCameraAsync: (...args: unknown[]) => mockLaunchCamera(...args),
   MediaTypeOptions: { Videos: 'Videos' },
 }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn(), trackIssue: jest.fn() } }));
-jest.mock('@/services/MediaUploadService', () => ({ assetDurationMs: () => 1000, isHighlightTooLong: () => false }));
+jest.mock('@/services/MediaUploadService', () => {
+  const actual = jest.requireActual('@/services/MediaUploadService');
+  return { assetDurationMs: actual.assetDurationMs, isHighlightTooLong: actual.isHighlightTooLong };
+});
 jest.mock('@/components/Effects/CardShine', () => ({ CardShine: () => null }));
 jest.mock('expo-video', () => ({
   useVideoPlayer: () => ({ replaceAsync: async () => {}, pause: () => {} }), VideoView: () => null,
@@ -69,7 +85,7 @@ jest.mock('@/components/Reels/AccountTagField', () => ({
 jest.mock('@/components/Reels/HighlightPickerModal', () => ({
   HighlightPickerModal: ({ visible, onPicked, onClose }: { visible: boolean; onClose: () => void; onPicked: (clip: unknown) => void }) => {
     const { Pressable, Text } = jest.requireActual('react-native');
-    return visible ? <><Pressable onPress={() => onPicked({ uri: 'file:///clip.mp4', compressed: true })}><Text>Pick test clip</Text></Pressable><Pressable onPress={onClose}><Text>Cancel picking</Text></Pressable></> : null;
+    return visible ? <><Pressable onPress={() => onPicked({ uri: 'file:///clip.mp4', durationMs: mockClipDurationMs, compressed: true })}><Text>Pick test clip</Text></Pressable><Pressable onPress={onClose}><Text>Cancel picking</Text></Pressable></> : null;
   },
 }));
 
@@ -90,7 +106,10 @@ const confirmRights = async () => {
 
 describe('staged Highlight upload', () => {
   beforeEach(() => {
-    jest.clearAllMocks(); mockOwnPlayerId = 'p1';
+    mockClipDurationMs = 1000;
+    mockLaunchCamera.mockReset();
+    mockUpload.mockReset();
+    jest.clearAllMocks(); mockCleanupStory.mockReset().mockResolvedValue('discarded'); mockRememberCleanup.mockReset().mockResolvedValue(undefined); mockQueuedCleanup.mockReset().mockResolvedValue([]); mockOwnerId = '11111111-1111-4111-8111-111111111111'; mockOwnPlayerId = 'p1';
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     // Decorative native animation must not outlive the draft/I/O scenarios.
     for (const method of ['timing', 'spring', 'loop'] as const) {
@@ -98,6 +117,42 @@ describe('staged Highlight upload', () => {
     }
   });
   afterEach(() => jest.restoreAllMocks());
+
+  it('keeps the library duration in milliseconds when publishing an exactly 45-second clip', async () => {
+    mockClipDurationMs = 45000;
+    mockUpload.mockResolvedValueOnce({ id: 'duration-reel' });
+    await render(<UploadVideoModal {...props} />);
+    await details(); await confirmRights();
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    await waitFor(() => expect(mockUpload).toHaveBeenCalledWith(expect.objectContaining({ durationMs: 45000 })));
+    await waitFor(() => expect(props.onClose).toHaveBeenCalled());
+  });
+
+  it.each([['ios', 500, 500], ['android', 1000, 1000], ['web', 0.5, 500]] as const)(
+    'publishes a short %s camera clip using its declared duration unit', async (platform, raw, expectedMs) => {
+      jest.replaceProperty(Platform, 'OS', platform);
+      mockLaunchCamera.mockResolvedValueOnce({ canceled: false, assets: [{ uri: 'file:///camera.mp4', duration: raw }] });
+      mockUpload.mockResolvedValueOnce({ id: 'camera-reel' });
+      await render(<UploadVideoModal {...props} />);
+      await fireEvent.press(screen.getByLabelText('Record a video'));
+      await waitFor(() => expect(screen.getByLabelText('Highlight caption')).toBeTruthy());
+      await fireEvent.changeText(screen.getByLabelText('Highlight caption'), 'Short camera clip');
+      await fireEvent.press(screen.getByLabelText('Next')); await confirmRights();
+      await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+      await waitFor(() => expect(mockUpload).toHaveBeenCalledWith(expect.objectContaining({ durationMs: expectedMs })));
+      await waitFor(() => expect(props.onClose).toHaveBeenCalled());
+    },
+  );
+
+  it.each([45.001, null, 0])('keeps an unreadable or over-limit web camera clip out of the draft (%s)', async (duration) => {
+    jest.replaceProperty(Platform, 'OS', 'web');
+    mockLaunchCamera.mockResolvedValueOnce({ canceled: false, assets: [{ uri: 'file:///camera.mp4', duration }] });
+    await render(<UploadVideoModal {...props} />);
+    await fireEvent.press(screen.getByLabelText('Record a video'));
+    await waitFor(() => expect(Alert.alert).toHaveBeenCalled());
+    expect(screen.queryByLabelText('Highlight caption')).toBeNull();
+    expect(mockUpload).not.toHaveBeenCalled();
+  });
 
   it('shows only the active short page and reaches review with a caption, athlete optional', async () => {
     mockOwnPlayerId = null;
@@ -248,7 +303,7 @@ const confirmPhotoRights = async () => {
 
 describe('photo story upload', () => {
   beforeEach(() => {
-    jest.clearAllMocks(); mockOwnPlayerId = 'p1'; mockPhotosAvailable = true;
+    jest.clearAllMocks(); mockCleanupStory.mockReset().mockResolvedValue('discarded'); mockRememberCleanup.mockReset().mockResolvedValue(undefined); mockQueuedCleanup.mockReset().mockResolvedValue([]); mockOwnerId = '11111111-1111-4111-8111-111111111111'; mockOwnPlayerId = 'p1'; mockPhotosAvailable = true;
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     for (const method of ['timing', 'spring', 'loop'] as const) {
       jest.spyOn(Animated, method).mockReturnValue({ start: jest.fn(), stop: jest.fn(), reset: jest.fn() });
@@ -361,7 +416,7 @@ describe('photo story upload', () => {
     await fireEvent.press(screen.getByLabelText('Next'));
     await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
     await waitFor(() => expect(mockCreateStory).toHaveBeenCalledTimes(2));
-    expect(mockCreateStory.mock.calls[1][0]).toEqual(expect.objectContaining({ playerId: 'p2', existingReelId: null }));
+    expect(mockCreateStory.mock.calls[1][0]).toEqual(expect.objectContaining({ playerId: 'p2', existingReelId: 'story-hidden' }));
   });
 
   it('keeps both drafts when switching Video and Photos, and Back keeps the photos', async () => {
@@ -379,4 +434,107 @@ describe('photo story upload', () => {
     await fireEvent.press(screen.getByLabelText('Photos'));
     expect(screen.getByText('3 of 10 photos')).toBeTruthy();
   });
+  const failStory = async () => {
+    mockCreateStory.mockRejectedValueOnce(new StoryError('Photo upload failed. Try again.', 'story-hidden'));
+    await render(<UploadVideoModal {...props} />);
+    await openPhotos(); await pickThree();
+    await fireEvent.press(screen.getByLabelText('Next'));
+    await fireEvent.changeText(screen.getByLabelText('Highlight caption'), 'Practice');
+    await fireEvent.press(screen.getByLabelText('Next')); await confirmPhotoRights();
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    await waitFor(() => expect(screen.getByText('Photo upload failed. Try again.')).toBeTruthy());
+  };
+
+  it('saves removal intent before closing and blocks duplicate close taps while saving', async () => {
+    let finish!: (result: string) => void;
+    await failStory();
+    mockRememberCleanup.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    await fireEvent.press(screen.getByLabelText('Close upload'));
+    expect(props.onClose).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Close upload')).toBeDisabled();
+    await fireEvent.press(screen.getByLabelText('Close upload'));
+    expect(mockCleanupStory).not.toHaveBeenCalled();
+    await act(() => finish('saved'));
+    await waitFor(() => expect(props.onClose).toHaveBeenCalledTimes(1));
+  });
+
+  it('keeps the local draft when saving cleanup intent fails, then retries Close', async () => {
+    await failStory();
+    mockRememberCleanup.mockRejectedValueOnce(new Error('Device storage full.')).mockResolvedValueOnce(undefined);
+    await fireEvent.press(screen.getByLabelText('Close upload'));
+    await waitFor(() => expect(screen.getByText(/Could not save unfinished-story removal/)).toBeTruthy());
+    expect(props.onClose).not.toHaveBeenCalled();
+    expect(screen.getByText('Photo story · 3 photos')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Close upload'));
+    await waitFor(() => expect(props.onClose).toHaveBeenCalledTimes(1));
+    expect(mockCleanupStory).toHaveBeenCalledWith('story-hidden', mockOwnerId);
+  });
+
+  it('closes offline after persisting intent and resumes only the active account on reopening', async () => {
+    mockCleanupStory.mockRejectedValue(new Error('Offline.'));
+    await failStory();
+    await fireEvent.press(screen.getByLabelText('Close upload'));
+    await waitFor(() => expect(props.onClose).toHaveBeenCalledTimes(1));
+    expect(mockRememberCleanup).toHaveBeenCalledWith('story-hidden', mockOwnerId);
+    const owner = mockOwnerId;
+    mockOwnerId = '33333333-3333-4333-8333-333333333333';
+    mockQueuedCleanup.mockImplementation(async (id: string) => id === owner ? ['story-hidden'] : []);
+    await screen.rerender(<UploadVideoModal {...props} />);
+    await chooseClip();
+    expect(screen.getByLabelText('Highlight caption').props.value).toBe('');
+    await fireEvent.changeText(screen.getByLabelText('Highlight caption'), 'New account clip');
+    await fireEvent.press(screen.getByLabelText('Next')); await confirmRights();
+    mockUpload.mockResolvedValue({ id: 'new-owner-video' });
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    await waitFor(() => expect(mockUpload).toHaveBeenCalled());
+    expect(mockCleanupStory.mock.calls.every((call) => call[1] === owner)).toBe(true);
+    expect(mockQueuedCleanup).toHaveBeenLastCalledWith(mockOwnerId);
+  });
+
+  it('allows a fresh video after closing a failed story even when queued cleanup is unavailable', async () => {
+    mockCleanupStory.mockRejectedValue(new Error('Cleanup database update missing.'));
+    await failStory();
+    await fireEvent.press(screen.getByLabelText('Close upload'));
+    await waitFor(() => expect(props.onClose).toHaveBeenCalledTimes(1));
+    await screen.rerender(<UploadVideoModal {...props} visible={false} />);
+    mockQueuedCleanup.mockResolvedValue(['story-hidden']);
+    await screen.rerender(<UploadVideoModal {...props} />);
+    await details(); await confirmRights();
+    mockUpload.mockResolvedValue({ id: 'fresh-video' });
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    await waitFor(() => expect(props.onUploaded).toHaveBeenCalledWith({ id: 'fresh-video' }), { timeout: 2000 });
+    expect(mockCreateStory).toHaveBeenCalledTimes(1);
+    expect(mockRememberCleanup).toHaveBeenCalledWith('story-hidden', mockOwnerId);
+  });
+
+  it('keeps the active failed attempt for explicit retry when an earlier queue read resolves late', async () => {
+    let hydrate!: (ids: string[]) => void;
+    mockQueuedCleanup.mockImplementationOnce(() => new Promise((resolve) => { hydrate = resolve; }));
+    await failStory();
+    mockCleanupStory.mockResolvedValue('published');
+    await act(() => hydrate(['story-hidden']));
+    expect(mockCleanupStory).not.toHaveBeenCalled();
+    const stored = { id: 'story-hidden', title: 'Original caption' };
+    const { PhotoStoryAlreadyPublishedError } = jest.requireActual('@/lib/photoStories');
+    mockCreateStory.mockRejectedValueOnce(new PhotoStoryAlreadyPublishedError(stored));
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    await waitFor(() => expect(props.onUploaded).toHaveBeenCalledWith(stored));
+    expect(mockCreateStory.mock.calls[1][0].existingReelId).toBe('story-hidden');
+  });
+
+  it('does not apply newly edited mentions to an already-published earlier story', async () => {
+    await failStory();
+    const stored = { id: 'story-hidden', title: 'Original caption', player_id: 'original-athlete', cover_path: 'original.jpg' };
+    const { PhotoStoryAlreadyPublishedError } = jest.requireActual('@/lib/photoStories');
+    mockCreateStory.mockRejectedValueOnce(new PhotoStoryAlreadyPublishedError(stored));
+    await fireEvent.press(screen.getByLabelText('More options'));
+    await fireEvent.press(screen.getByText('Choose Sina'));
+    await fireEvent.press(screen.getByLabelText('Done'));
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    await waitFor(() => expect(props.onUploaded).toHaveBeenCalledWith(stored));
+    expect(mockAttach).not.toHaveBeenCalled();
+    expect(props.onClose).not.toHaveBeenCalled();
+    expect(screen.getByText('Photo story · 3 photos')).toBeTruthy();
+  });
+
 });

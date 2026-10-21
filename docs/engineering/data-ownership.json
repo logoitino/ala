@@ -172,7 +172,7 @@
     },
     "profiles": {
       "owner": "PROFILE",
-      "purpose": "Account profiles, roles and settings."
+      "purpose": "Account profiles, roles and settings; trusted Connect adapters conditionally persist the own-account binding/onboarding/capability flags before links. These flags do not assert identity/TIN verification."
     },
     "profiles_public": {
       "owner": "PROFILE",
@@ -256,7 +256,7 @@
     },
     "stripe_webhook_events": {
       "owner": "LEDGER",
-      "purpose": "Stripe events the webhook already processed (deduplication)."
+      "purpose": "Retained legacy PaymentIntent claim/dedup evidence from the retired pre-claim webhook writer. Not proof of completed business application, donation credits or receipt delivery; current webhook no longer writes this table. Owner-reviewed retention/reconciliation required."
     },
     "subscriber_requests": {
       "owner": "BILLING",
@@ -432,7 +432,7 @@
     },
     "sport_quiz_life_chapters": {
       "owner": "POLLS",
-      "purpose": "QUIZ-04 Life Playbook chapters (4 seeded closed, all 13+: Money Huddle, Savings Season, Scam Defense, Smart Plays): title, framing, position, admin open switch. Opens only with 5 approved items (one round); owner simplification 2026-10-15 (design §8)."
+      "purpose": "QUIZ-04 Life Playbook chapters (4 seeded closed, all 13+: Money Huddle, Savings Season, Scam Defense, Smart Plays): title, framing, position, admin open switch. Opens only with 5 approved items (one round); owner simplification 2026-10-15 (design \u00a78)."
     },
     "sport_quiz_levels": {
       "owner": "AURA",
@@ -457,12 +457,56 @@
     "safety_label_events": {
       "owner": "HIGHLIGHTS",
       "purpose": "Append-only record of who added or removed a Coach-level workout label, with the reason and time. Admin read. RPC writes only."
+    },
+    "notification_config": {
+      "owner": "NOTIFICATIONS",
+      "purpose": "Server channel/category pause configuration and revision; implemented source availability cannot be changed by staff or clients."
+    },
+    "notification_preferences": {
+      "owner": "PROFILE",
+      "purpose": "Recipient-owned revisioned category/channel preferences; every optional email off initially, Auth recovery separate."
+    },
+    "notification_events": {
+      "owner": "NOTIFICATIONS",
+      "purpose": "Allowlisted minimal source references and stable dedup keys; account activation only initially, recipient inbox and delivery evidence separate."
+    },
+    "notification_account_activations": {
+      "owner": "AUTH",
+      "purpose": "New-account enrollment and one confirmed eligible welcome activation; historical accounts are not replay-enrolled."
+    },
+    "notification_inbox": {
+      "owner": "NOTIFICATIONS",
+      "purpose": "Recipient inbox read/archive state, with current referenced-source permission enforced by RPC; archive never erases receipt/delivery evidence."
+    },
+    "notification_inbox_snapshots": {
+      "owner": "NOTIFICATIONS",
+      "purpose": "Account-bound bounded one-hour bulk-read snapshots; later arrivals remain unread. Expired-record retention awaits reviewed policy."
+    },
+    "notification_deliveries": {
+      "owner": "NOTIFICATIONS",
+      "purpose": "Durable per-event/recipient email intent, lease/outcome and safe retry evidence; erased Auth identities are nulled while operational evidence remains."
+    },
+    "notification_delivery_attempts": {
+      "owner": "NOTIFICATIONS",
+      "purpose": "Attempt-before-send and accepted/suppressed/failed/unknown evidence; no provider address or message body, and no blind retry after uncertain outcomes."
+    },
+    "notification_admin_audit": {
+      "owner": "ADMIN",
+      "purpose": "Actor/time/fixed-reason notification configuration and safe-repair audit, with identity nulled on account erasure."
+    },
+    "notification_payment_contexts": {
+      "owner": "COMMERCE",
+      "purpose": "Immutable server-bound test payment purpose/actor/athlete/quote allocation evidence. Notification authority is constrained false; no donation credit source."
+    },
+    "notification_payment_observations": {
+      "owner": "RECONCILIATION",
+      "purpose": "Unique validated processor event observations and conservative refund/dispute ordering. No receipt, ledger, Aura or funds-available authority."
     }
   },
   "buckets": {
     "reels": {
       "owner": "UPLOAD",
-      "purpose": "Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…)."
+      "purpose": "Public Highlight videos (reels/<uid>/\u2026) and photo-story photos (<uid>/stories/\u2026). Existing paths/rights/row metadata are unchanged by the 2026-10-21 replaceable media transport; public URL readers allow canonical public buckets only."
     },
     "game_highlights": {
       "owner": "UPLOAD",
@@ -474,7 +518,7 @@
     },
     "reel_vault": {
       "owner": "VAULT",
-      "purpose": "Private Vault clips, read only through short-lived signed URLs."
+      "purpose": "Private Vault clips; authorized one-hour signing through lib/media.ts/mediaStorage.ts. Upload never requests a public URL or a public fallback. Existing paths/entitlement rules are unchanged; source adapter tests do not prove hosted policy/removal parity."
     },
     "beyond_game": {
       "owner": "UPLOAD",
@@ -486,6 +530,14 @@
     }
   },
   "functions": {
+    "games_live_seq_bump": {
+      "owner": "REALTIME",
+      "use": "SCALE-03 trigger: keeps games.live_seq server-owned; adds 1 only when a scoreboard column changes."
+    },
+    "games_broadcast_score_change": {
+      "owner": "REALTIME",
+      "use": "SCALE-03 trigger: sends only the changed scoreboard columns on private Broadcast game_scores_{id}, and add/remove/active notices on game_scores_index."
+    },
     "guard_coach_label": {
       "owner": "RLS_SECURITY",
       "use": "Blocks a client update of safety_label. The review RPCs set a transaction flag first."
@@ -1244,7 +1296,7 @@
     },
     "quiz_life_copy_problems": {
       "owner": "VOICE",
-      "use": "QUIZ-04 Life copy ruleset at approval (v4, design §8): lookalike letters, advice, brands, Tapua'i money words, NIL / eligibility, tax / loan / credit score / APR, money figures, years, the Scam Defense line, prompt <= 120 and explanation <= 200 characters."
+      "use": "QUIZ-04 Life copy ruleset at approval (v4, design \u00a78): lookalike letters, advice, brands, Tapua'i money words, NIL / eligibility, tax / loan / credit score / APR, money figures, years, the Scam Defense line, prompt <= 120 and explanation <= 200 characters."
     },
     "quiz_guard_life_chapter": {
       "owner": "POLLS",
@@ -1273,6 +1325,154 @@
     "quiz_life_open_at": {
       "owner": "POLLS",
       "use": "QUIZ-04 the number of approved items that opens a Life chapter (5, one round; owner simplification 2026-10-15)."
+    },
+    "guard_failed_photo_story_state": {
+      "owner": "RLS_SECURITY",
+      "use": "Forces new photo cleanup markers false and keeps an owner cleanup claim terminal."
+    },
+    "begin_failed_photo_story_cleanup": {
+      "owner": "PHOTO_STORIES",
+      "use": "Authenticates the exact uploader, locks and retires an unpublished story; preserves committed stories."
+    },
+    "finish_failed_photo_story_cleanup": {
+      "owner": "PHOTO_STORIES",
+      "use": "Deletes only the owner claimed hidden row once its exact Storage prefix has no objects."
+    },
+    "can_delete_failed_photo_story_object": {
+      "owner": "RLS_SECURITY",
+      "use": "Allows Storage deletion only inside the current uploader claimed zero-count photo story prefix."
+    },
+    "guard_photo_story_storage_write": {
+      "owner": "RLS_SECURITY",
+      "use": "Serializes content/path writes against draft cleanup; allows only harmless timestamp bookkeeping on live objects."
+    },
+    "stripe_connect_context": {
+      "owner": "CONNECT",
+      "use": "Service-only bank setup context derived from live authenticated actor and optional athlete; age, custody, consent, relationship and handover gates. No client grant or new stored data."
+    },
+    "save_stripe_connect_account": {
+      "owner": "CONNECT",
+      "use": "Service-only conditional account save after provider await; rechecks actor/athlete eligibility, captured profile/binding and cross-context account reuse; guardian custodial row or adult profile only."
+    },
+    "payee_changes_supersede": {
+      "owner": "CONNECT",
+      "use": "Trigger invalidates only the changed account provider reference, retaining unrelated guardian accounts and athlete-scoped relationship invalidation on guardian changes."
+    },
+    "notification_categories": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "notification_actor": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "notification_source_eligible": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "get_notification_inbox": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "set_notification_read": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "mark_all_notifications_read": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "set_notification_archived": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "notification_require_service": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "notification_require_admin": {
+      "owner": "ADMIN",
+      "use": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried."
+    },
+    "get_notification_preferences": {
+      "owner": "PROFILE",
+      "use": "Own Auth-derived category/channel settings with expected revision conflict handling, optional email off and no direct client writes."
+    },
+    "save_notification_preferences": {
+      "owner": "PROFILE",
+      "use": "Own Auth-derived category/channel settings with expected revision conflict handling, optional email off and no direct client writes."
+    },
+    "get_notification_availability": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "get_admin_notification_config": {
+      "owner": "ADMIN",
+      "use": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried."
+    },
+    "set_admin_notification_config": {
+      "owner": "ADMIN",
+      "use": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried."
+    },
+    "get_admin_notification_jobs": {
+      "owner": "ADMIN",
+      "use": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried."
+    },
+    "retry_notification_job": {
+      "owner": "ADMIN",
+      "use": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried."
+    },
+    "get_admin_notification_health": {
+      "owner": "ADMIN",
+      "use": "Existing admin guard, server-derived source availability and bounded sanitized configuration/job/Health/known-failure operations; unknown outcome cannot be blindly retried."
+    },
+    "notification_activate_account": {
+      "owner": "AUTH",
+      "use": "New enrolled account activation producer; confirmed eligible source only, stable key and no returning-login/historical replay."
+    },
+    "emit_notification_event": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "notification_auth_activation": {
+      "owner": "AUTH",
+      "use": "New enrolled account activation producer; confirmed eligible source only, stable key and no returning-login/historical replay."
+    },
+    "notification_profile_activation": {
+      "owner": "AUTH",
+      "use": "New enrolled account activation producer; confirmed eligible source only, stable key and no returning-login/historical replay."
+    },
+    "claim_notification_jobs": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "authorize_notification_send": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "begin_notification_attempt": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "release_notification_job": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "complete_notification_attempt": {
+      "owner": "NOTIFICATIONS",
+      "use": "Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified."
+    },
+    "thank_donation": {
+      "owner": "DONATION_THANKS",
+      "use": "Preset donation thanks with explicit NULL/unrelated-role denial; no thank-you notification producer is enabled by this repair."
+    },
+    "record_notification_payment_context": {
+      "owner": "COMMERCE",
+      "use": "Service-only immutable server quote context, actor/purpose/athlete/currency/integer allocation bound; notification authority hard false."
+    },
+    "apply_notification_payment_event": {
+      "owner": "RECONCILIATION",
+      "use": "Service-only unique validated processor observation with mode/currency/allocation and refund/dispute ordering; no donation, Aura, ledger or notification intent writes."
     }
   },
   "exceptions": {
@@ -1298,6 +1498,16 @@
     },
     "fan_zone_requests": {
       "noReader": "fun_vote actually selects caller/request retry receipts while also writing them; the map classifies this mixed function as a writer. Raw retry signatures are intentionally not exported to admin/fan reports."
+    },
+    "notification_account_activations": {
+      "noReader": "Read internally by notification_activate_account for new-account enrollment/once-only welcome; no direct client table reader or screen export."
+    },
+    "notification_admin_audit": {
+      "noReader": "Write-only bounded-action audit retained for authorized database-owner review; no client/table export. Notification jobs/Health do not erase audit evidence. Operational retention needs review before hosted collection."
+    },
+    "stripe_webhook_events": {
+      "noWriter": "Historical PaymentIntent claims retained after unsafe claim-before-business-commit path retired; current notification payment observations do not treat these as financial or send authority. Owner-controlled archival/retention only.",
+      "noReader": "Historical claims retained as evidence; no current receipt or financial code consumes them. Do not delete or reuse them as notification proof."
     }
   },
   "exportsTriage": [
@@ -1564,14 +1774,35 @@
       "file": "packages/shared-types/freshQuestions.ts",
       "name": "FUN_FACT_MAX_LIVE",
       "decision": "keep",
-      "reason": "QUIZ-05 wire constant mirroring the SQL rule (limits, report labels per design §6.13, self-heal defaults) for the app screens and tests; one place for the copy.",
+      "reason": "QUIZ-05 wire constant mirroring the SQL rule (limits, report labels per design \u00a76.13, self-heal defaults) for the app screens and tests; one place for the copy.",
       "status": "kept"
     },
     {
       "file": "packages/shared-types/freshQuestions.ts",
       "name": "FRESH_SELF_HEAL_DEFAULTS",
       "decision": "keep",
-      "reason": "QUIZ-05 wire constant mirroring the SQL rule (limits, report labels per design §6.13, self-heal defaults) for the app screens and tests; one place for the copy.",
+      "reason": "QUIZ-05 wire constant mirroring the SQL rule (limits, report labels per design \u00a76.13, self-heal defaults) for the app screens and tests; one place for the copy.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/notifications.ts",
+      "name": "makeDefaultNotificationPreferences",
+      "decision": "keep",
+      "reason": "Public canonical policy helpers exercised by offline synthetic fixtures/defaults/unknown-category tests; never replace a missing server response with a simulated success.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/notifications.ts",
+      "name": "makeDefaultNotificationConfig",
+      "decision": "keep",
+      "reason": "Public canonical policy helpers exercised by offline synthetic fixtures/defaults/unknown-category tests; never replace a missing server response with a simulated success.",
+      "status": "kept"
+    },
+    {
+      "file": "packages/shared-types/notifications.ts",
+      "name": "resolveNotificationChoice",
+      "decision": "keep",
+      "reason": "Public canonical policy helpers exercised by offline synthetic fixtures/defaults/unknown-category tests; never replace a missing server response with a simulated success.",
       "status": "kept"
     }
   ],
@@ -2302,7 +2533,7 @@
       "kind": "export",
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
       "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
-      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336\u2026e46108)."
     },
     {
       "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
@@ -2310,7 +2541,7 @@
       "kind": "export",
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
       "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
-      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336\u2026e46108)."
     },
     {
       "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
@@ -2318,7 +2549,7 @@
       "kind": "export",
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
       "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
-      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336\u2026e46108)."
     },
     {
       "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
@@ -2326,7 +2557,7 @@
       "kind": "export",
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
       "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
-      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336\u2026e46108)."
     },
     {
       "file": "apps/mobile/src/frontend/lib/sportQuiz.ts",
@@ -2334,14 +2565,14 @@
       "kind": "export",
       "to": "archive/superseded-2026-10-14/apps/mobile/src/frontend/lib/sportQuiz-untimed.archived.ts",
       "reason": "QUIZ-02 replaces unsupported untimed RPC wrappers with actual timed consumers; preserve historical wire source and actor evidence outside runtime. Shared historical types/content helpers remain.",
-      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336…e46108)."
+      "approved": "Owner-approved local QUIZ-02 plan/POLLS retirement scope; actual independent participant Data source acceptance 2026-10-14T18:04:33Z, task3-fix1-review.md (876e2336\u2026e46108)."
     },
     {
       "file": "supabase/migrations/20261014180000_life_playbook.sql",
       "name": "quiz_life_signoffs",
       "kind": "database table",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "CPA sign-off records per chapter (Credit Clock / Tax Timeout no longer exist; no CPA gate). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "CPA sign-off records per chapter (Credit Clock / Tax Timeout no longer exist; no CPA gate). Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2349,7 +2580,7 @@
       "name": "quiz_content_reviewers",
       "kind": "database table",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Named finance / tax reviewer grants (approval is now one admin, like sports trivia). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Named finance / tax reviewer grants (approval is now one admin, like sports trivia). Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2357,7 +2588,7 @@
       "name": "quiz_life_band_rank",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Item / chapter age bands 13 / 16 / 18 removed: every chapter is 13+. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Item / chapter age bands 13 / 16 / 18 removed: every chapter is 13+. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2365,7 +2596,7 @@
       "name": "quiz_life_age_cap",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Per-band age cap replaced by quiz_life_band_ok (all chapters 13+). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Per-band age cap replaced by quiz_life_band_ok (all chapters 13+). Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2373,7 +2604,7 @@
       "name": "quiz_life_source_ok",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Allow-listed source URLs removed (no source_url column). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Allow-listed source URLs removed (no source_url column). Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2381,7 +2612,7 @@
       "name": "quiz_life_field_marked",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "The illustrative figure marker is gone: Life content has no money figures at all. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "The illustrative figure marker is gone: Life content has no money figures at all. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2389,7 +2620,7 @@
       "name": "quiz_life_due_on",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Yearly / January re-review dates removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Yearly / January re-review dates removed. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2397,7 +2628,7 @@
       "name": "quiz_life_today",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Only the January withdrawal and sign-off expiry used it. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Only the January withdrawal and sign-off expiry used it. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2405,7 +2636,7 @@
       "name": "quiz_life_item_current",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "The January withdrawal of dated items is gone (no tax years, nothing goes stale). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "The January withdrawal of dated items is gone (no tax years, nothing goes stale). Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2413,7 +2644,7 @@
       "name": "quiz_life_tax_year_ok",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "as_of_tax_year removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "as_of_tax_year removed. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2421,7 +2652,7 @@
       "name": "quiz_life_signoff_current",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "CPA sign-off removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "CPA sign-off removed. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2429,7 +2660,7 @@
       "name": "quiz_life_is_author",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Life-specific author exclusion removed (normal trivia approval). Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Life-specific author exclusion removed (normal trivia approval). Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2437,7 +2668,7 @@
       "name": "quiz_life_active_grant",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Named reviewer grants removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Named reviewer grants removed. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2445,7 +2676,7 @@
       "name": "quiz_guard_life_signoff",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Trigger of the removed quiz_life_signoffs table. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Trigger of the removed quiz_life_signoffs table. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2453,7 +2684,7 @@
       "name": "quiz_guard_reviewer",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Trigger of the removed quiz_content_reviewers table. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Trigger of the removed quiz_content_reviewers table. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2461,7 +2692,7 @@
       "name": "quiz_admin_life_signoff",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "CPA sign-off entry removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "CPA sign-off entry removed. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2469,7 +2700,7 @@
       "name": "quiz_admin_life_signoff_confirm",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Second-admin CPA sign-off confirmation removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Second-admin CPA sign-off confirmation removed. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2477,7 +2708,7 @@
       "name": "quiz_life_signoff_dto",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "CPA sign-off read shape removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "CPA sign-off read shape removed. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2485,7 +2716,7 @@
       "name": "quiz_admin_reviewer",
       "kind": "database function",
       "to": "archive/superseded-2026-10-15/sql/life_playbook_review.archived.sql",
-      "reason": "Reviewer grant / confirm / revoke removed. Owner 2026-10-15 (QUIZ-04 design §8): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
+      "reason": "Reviewer grant / confirm / revoke removed. Owner 2026-10-15 (QUIZ-04 design \u00a78): Life Playbook uses normal one-admin trivia approval and simple facts only; removed from the draft migration before it was applied anywhere.",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2493,7 +2724,7 @@
       "name": "LifeDomain",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: no finance / tax domains or named reviewers; Life questions use normal one-admin trivia approval (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: no finance / tax domains or named reviewers; Life questions use normal one-admin trivia approval (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2501,7 +2732,7 @@
       "name": "LIFE_ILLUSTRATIVE_MARKER",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: no money figures are allowed in Life content, so the illustrative-figure marker is gone (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: no money figures are allowed in Life content, so the illustrative-figure marker is gone (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2509,7 +2740,7 @@
       "name": "LifeSignoff",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2517,7 +2748,7 @@
       "name": "LifeSignoffInput",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2525,7 +2756,7 @@
       "name": "LifeReviewer",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2533,7 +2764,7 @@
       "name": "LifeReviewerGrantInput",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2541,7 +2772,7 @@
       "name": "LifeReviewerReceipt",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2549,7 +2780,7 @@
       "name": "LifeRereviewItem",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/packages/shared-types/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2557,7 +2788,7 @@
       "name": "recordLifeSignoff",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2565,7 +2796,7 @@
       "name": "confirmLifeSignoff",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2573,7 +2804,7 @@
       "name": "grantLifeReviewer",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2581,7 +2812,7 @@
       "name": "confirmLifeReviewer",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2589,7 +2820,7 @@
       "name": "revokeLifeReviewer",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2597,7 +2828,7 @@
       "name": "signoffReceipt",
       "kind": "helper",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2605,7 +2836,7 @@
       "name": "reviewerReceipt",
       "kind": "helper",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/lifePlaybook-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2613,7 +2844,7 @@
       "name": "SportQuizLife CPA sign-off panel",
       "kind": "helper",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife-review.archived.tsx",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2621,7 +2852,7 @@
       "name": "SportQuizLife reviewer grants panel",
       "kind": "helper",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife-review.archived.tsx",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2629,7 +2860,7 @@
       "name": "SportQuizLife re-review list panel",
       "kind": "helper",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLife-review.archived.tsx",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2637,7 +2868,7 @@
       "name": "lifeQuestionIssue",
       "kind": "export",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLifeQuestion-review.archived.tsx",
-      "reason": "Owner 2026-10-15: no age bands above 13, source links, retrieval dates or tax years on Life questions, so the draft check is gone (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: no age bands above 13, source links, retrieval dates or tax years on Life questions, so the draft check is gone (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2645,7 +2876,7 @@
       "name": "SportQuizLifeQuestion source / band / tax-year fields",
       "kind": "helper",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizLifeQuestion-review.archived.tsx",
-      "reason": "Owner 2026-10-15: Life questions keep only chapter and the education-only attestation; band, source link, retrieval date and tax year removed (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life questions keep only chapter and the education-only attestation; band, source link, retrieval date and tax year removed (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2653,7 +2884,7 @@
       "name": "SportQuizBank re-review and reviewer display",
       "kind": "helper",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizBank-review.archived.tsx",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2661,7 +2892,7 @@
       "name": "SportQuizTool sign-off and reviewer handlers",
       "kind": "helper",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/SportQuizTool-review.archived.tsx",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2669,7 +2900,7 @@
       "name": "SportQuizLife sign-off / reviewer / source tests",
       "kind": "tests",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/__tests__/SportQuizLife.test-review.archived.tsx",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2677,7 +2908,7 @@
       "name": "SportQuizBank source / re-review tests",
       "kind": "tests",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/components/Admin/SportQuiz/__tests__/SportQuizBank.test-review.archived.tsx",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     },
     {
@@ -2685,7 +2916,7 @@
       "name": "lifePlaybook sign-off / reviewer adapter tests",
       "kind": "tests",
       "to": "archive/superseded-2026-10-15/apps/mobile/src/frontend/lib/__tests__/lifePlaybook.test-review.archived.ts",
-      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 §8).",
+      "reason": "Owner 2026-10-15: Life Playbook uses normal one-admin trivia approval; CPA sign-off / named reviewers / re-review removed before anything was applied (QUIZ-04 \u00a78).",
       "approved": "owner, 2026-10-15"
     }
   ],
@@ -2701,6 +2932,143 @@
       "name": "view",
       "owner": "UPLOAD",
       "reason": "Two unused `view` bindings in tests under PLAY-01's Reels test claim; drop the bindings when that claim is released."
+    }
+  ],
+  "operationalExports": [
+    {
+      "id": "supabase-recovery-archive",
+      "owner": "RECOVERY",
+      "purpose": "Restore the existing Supabase app on isolated AWS/Azure self-hosted services.",
+      "data": "All logical database schemas including Auth, all Storage bucket metadata and bytes, reviewed source, optional encrypted configuration custody",
+      "destination": "age-encrypted archive outside repository; independently controlled private AWS S3 or Azure Blob copy",
+      "retention": "Proposed90-day current/180-day old cloud versions; operator-reviewed personal-data retention and local-stage cleanup before activation",
+      "source": "infrastructure/backup/backup.py"
+    },
+    {
+      "id": "supabase-isolated-restore",
+      "owner": "RECOVERY",
+      "purpose": "Operator-reviewed TOC import and verified object restoration; preserve UUIDs, access rules and finance reconciliation.",
+      "data": "Verified archive database selection and all bucket file paths/bytes",
+      "destination": "Explicit isolated target PostgreSQL and Supabase Storage; no automatic live cutover",
+      "retention": "Private staging removed after accepted rehearsal under operator policy; restore target lifetime approved separately",
+      "source": "infrastructure/backup/restore.py"
+    },
+    {
+      "id": "encrypted-offsite-copy",
+      "owner": "INFRASTRUCTURE",
+      "purpose": "Retain encrypted recovery copies outside the application failure domain.",
+      "data": "age-encrypted archives and SHA256 sidecars only",
+      "destination": "Named private AWS S3 backups/ prefix or Azure backups container; distinct writer/recovery identities",
+      "retention": "Reviewed provider lifecycle plus remote restore-rehearsal and custody evidence",
+      "source": "infrastructure/backup/publish.py"
+    },
+    {
+      "id": "backup-job-evidence",
+      "owner": "RECOVERY",
+      "purpose": "Detect failed, incomplete, overdue or stale backups and retain exact archive/configuration/destination accounting for guarded retries.",
+      "data": "Bounded job IDs, timestamps, encrypted archive filename/hash, configuration fingerprint and publication receipt references; no database records or provider error payloads",
+      "destination": "Private external runner state directory with atomic latest attempt/success and retained per-run JSON; status CLI emits bounded health evidence",
+      "retention": "Operator-defined evidence retention before activation; keep matched run and publication receipts through retry/recovery acceptance",
+      "source": "infrastructure/backup/job.py"
+    },
+    {
+      "id": "retrieved-encrypted-backup",
+      "owner": "RECOVERY",
+      "purpose": "Retrieve an independent cloud copy using a recovery reader and compare against a separately protected original checksum before decrypt/restore.",
+      "data": "Encrypted archive and checksum plus bounded retrieval receipt; no decryption identity or plaintext in cloud retrieval",
+      "destination": "New private external directory on the recovery machine; verified ciphertext only",
+      "retention": "Operator-approved rehearsal lifetime and cleanup after independently accepted decrypt/restore",
+      "source": "infrastructure/backup/fetch.py"
+    },
+    {
+      "id": "current-exit-source",
+      "owner": "EXIT_SYNC",
+      "purpose": "Preserve exact app/SQL/migration/toolkit source and identify changes that invalidate a prepared migration.",
+      "data": "Safe source bytes, path/size/content hashes, Git provenance and static SDK callsites; no runtime credential or customer records",
+      "destination": "New private external expanded release/capsule; source-only GitHub Actions tar transport on every branch push/PR/manual/default-branch daily sweep, with thirty-day artifact retention",
+      "retention": "Independent operator source retention and reviewed access; CI transport expires after30days and is not an independent durable backup",
+      "source": "infrastructure/exit/release.mjs"
+    },
+    {
+      "id": "exit-runtime-images",
+      "owner": "EXIT_CLOUD",
+      "purpose": "Keep exact service/app image contents independently available for an owned target and architecture.",
+      "data": "Immutable image references, content IDs, platform, verified upstream hashes and Docker-loadable image archives",
+      "destination": "Private external runner/target image directory; no provider upload automatic",
+      "retention": "Retain currently accepted release images and rollback set under operator policy",
+      "source": "infrastructure/exit/runtime_images.py"
+    },
+    {
+      "id": "storage-reconciliation-evidence",
+      "owner": "EXIT_DATABASE",
+      "purpose": "Preserve historical file ownership while retaining target physical backend identities and app guard authority.",
+      "data": "Full Storage catalog including private paths/owners/metadata inside encrypted backup; isolated target catalog, generated owner-only SQL and logical comparison report",
+      "destination": "Private external staging/operator evidence; source catalog inside age-encrypted archive",
+      "retention": "Personal-data retention and stage/plan cleanup approved before activation",
+      "source": "infrastructure/migration/storage_reconcile.py"
+    },
+    {
+      "id": "exit-readiness-evidence",
+      "owner": "RECOVERY",
+      "purpose": "Block stale/partial migration proof and report required independent acceptance for a measured180-minute warm cutover.",
+      "data": "Private original attachment hashes, release/target/version/time, independent reviewer identity and bounded gate details; validated safe source API/PG host-port-database binding from the exact protected readiness configuration",
+      "destination": "Private external acceptance directory; bounded read-only CLI output",
+      "retention": "Keep current acceptance and rollback proof under operator policy; default168h freshness",
+      "source": "infrastructure/exit/readiness.py"
+    },
+    {
+      "id": "automatic-exit-source-cache",
+      "owner": "EXIT_SYNC",
+      "purpose": "Keep a current exact safe working-source exit copy after app changes, with honest latest-attempt and code-check status.",
+      "data": "Safe source bytes, original capture time, full source/runtime hashes, source-only release/provenance, private current pointer/catalog/last attempt; excludes runtime credentials and customer data; private scoped watcher PID/command/launch-start receipt",
+      "destination": "Private external per-user source cache; active detached process sweeps30s plus capture latency; successful pnpmcheck/ClaudeStop also ensure capture; user login autostart OS-blocked",
+      "retention": "Keep3 exact indexed generated source cache releases by default; journaled pruning never scans or deletes independent backups, arbitrary exports or unowned files; uninstall preserves snapshots",
+      "source": "infrastructure/exit/sync.mjs"
+    },
+    {
+      "id": "private-exit-setup-template",
+      "owner": "EXIT_CLOUD",
+      "purpose": "Prepare a fresh private external operator layout and integrity manifest with incomplete backup connection/encryption/destination placeholders.",
+      "data": "Public observed source origin, private external path references, blank connection/service-key inputs, placeholder passfile example, empty public encryption recipients, template hashes and owned file modes; no live source secrets or data copied.",
+      "destination": "Owner-selected fresh external private directory;700 directories and600 files.",
+      "retention": "Preserve under operator custody; generator never overwrites existing paths or activates jobs.",
+      "source": "infrastructure/exit/setup.mjs"
+    },
+    {
+      "id": "exit-operational-health",
+      "owner": "EXIT_SYNC",
+      "purpose": "Report exact current source/code/sweep/process, original-source-bound backup freshness and original prepared evidence without mutating state or permitting cutover.",
+      "data": "Bounded source/release hashes and clocks, scoped watcher liveness/PID, source match boolean, snapshot age and fixed health reason codes, installed-tool availability; no credentials, SQL rows or Storage bytes. Current per-app public and optional server API origin equality boolean across standard dotenv modes and process inputs (only public URL fields parsed; no private key values returned).",
+      "destination": "Read-only local CLI stdout; private external operator receipt if explicitly retained.",
+      "retention": "Observations are point-in-time; manual reads never refresh original capture/sweep clocks; operator controls retained report custody.",
+      "source": "infrastructure/exit/health.py"
+    },
+    {
+      "id": "portable-target-connection-profile",
+      "owner": "EXIT_CLOUD",
+      "purpose": "Generate matching target public connection settings for both clients and server routes from explicit operator data.",
+      "data": "Normalized backend/API origins, public API key only, exact original file hashes/modes; server privilege blank; excludes source private env and customer data.",
+      "destination": "Fresh private external700 folder/600 files; no automatic environment installation or source rewrite.",
+      "retention": "Preserve under operator custody; generator never overwrites/adopts prior profiles; regenerated source tooling remains current via existing exit cache/CI.",
+      "source": "infrastructure/portability/profile.mjs"
+    },
+    {
+      "id": "portable-sdk-local-contract-report",
+      "owner": "EXIT_SYNC",
+      "purpose": "Detect SDK request/response/host/config drift using actual installed SDK against bounded synthetic loopback fixture.",
+      "data": "Fixed gates/status/request counts and unexercised feature names; no provider keys/user tokens/credential payloads or customer data; local app build/check receipts may be kept privately.",
+      "destination": "Local CLI stdout or explicitly retained private external verification receipts.",
+      "retention": "Point-in-time synthetic compatibility evidence; original runtime/data acceptance still separately required.",
+      "source": "infrastructure/portability/protocol.mjs"
+    },
+    {
+      "id": "infrastructure-security-source-report",
+      "owner": "INFRA_SECURITY",
+      "purpose": "Maintain current registered infrastructure and exit Security review coverage and safe source/config binding.",
+      "data": "Source hashes/counts, registered identifiers and reviewers, existing command/evidence links, fixed guard prerequisite statuses/structural issues and explicitly unverified operational requirements; no private env/customer payloads or provider output.",
+      "destination": "Generated public docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md or read-only local JSON stdout; original sensitive observations remain protected outside source.",
+      "retention": "Source-controlled deterministic current awareness report plus dated scoped findings; does not inherit completed review or operational acceptance. Original full-check receipts stay private and source-bound.",
+      "source": "infrastructure/security/report.mjs"
     }
   ]
 }

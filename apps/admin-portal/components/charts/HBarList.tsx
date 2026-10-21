@@ -92,10 +92,12 @@ export function HBarList({ title, rows, format, accent = 'jade', limit = 8, empt
               const pct = isNum(row.value) ? Math.max(0, Math.min(100, (row.value / max) * 100)) : 0;
               return (
                 <li key={`${row.label}-${index}`} className="min-w-0">
-                  <div className="flex items-baseline gap-2 text-sm">
+                  {/* The row wraps: when label (at least 8rem) and value do not fit, the value drops to its own
+                      line, right-aligned, instead of squeezing the label to one character per line. */}
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
                     {keepOrder ? null : <span className="chart-tabular w-5 shrink-0 text-right text-xs font-bold text-[var(--text-muted)]">{index + 1}</span>}
-                    <span className="min-w-0 flex-1 break-words text-[var(--ink-soft)]">{row.label}</span>
-                    <span className={`chart-tabular shrink-0 font-extrabold ${isNum(row.value) ? 'text-[var(--ink)]' : 'text-[var(--text-muted)]'}`}>
+                    <span className="min-w-0 flex-1 basis-[8rem] break-words text-[var(--ink-soft)]">{row.label}</span>
+                    <span className={`chart-tabular ml-auto shrink-0 font-extrabold whitespace-nowrap ${isNum(row.value) ? 'text-[var(--ink)]' : 'text-[var(--text-muted)]'}`}>
                       {show(row.value, format)}
                     </span>
                   </div>

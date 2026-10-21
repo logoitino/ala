@@ -1,0 +1,166 @@
+# Preserve current source on every branch/PR; run-bound artifacts never certify runtime/data readiness.
+name: Portable Exit Source Release
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  # GitHub schedules sweep only the default branch; push/PR triggers cover other branches.
+  schedule:
+    - cron: '23 17 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: exit-source-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  source-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      # Capture first so a failing code check still leaves a current source artifact with honest status.
+      - name: Capture current source and generated exit plan
+        id: capture
+        env:
+          EXIT_SYNC_STATE_DIRECTORY: ${{ runner.temp }}/tapuai-exit-source-state
+        run: |
+          umask 077
+          pnpm exit:sync sync --state-dir "$EXIT_SYNC_STATE_DIRECTORY" --target-id source-review --keep 3
+      - name: Verify code without discarding the current source capture
+        id: verify_code
+        if: steps.capture.outcome == 'success'
+        continue-on-error: true
+        env:
+          EXIT_SYNC_STATE_DIRECTORY: ${{ runner.temp }}/tapuai-exit-source-state
+        run: |
+          umask 077
+          pnpm exit:sync sync --state-dir "$EXIT_SYNC_STATE_DIRECTORY" --target-id source-review --keep 3 --verify-code
+      - name: Bind the source pointer and manifest to this workflow run
+        id: provenance
+        if: always() && steps.capture.outcome == 'success'
+        env:
+          EXIT_SYNC_STATE_DIRECTORY: ${{ runner.temp }}/tapuai-exit-source-state
+          EXIT_PROVENANCE_FILE: ${{ runner.temp }}/tapuai-exit-source-provenance.json
+          EXIT_VERIFICATION_OUTCOME: ${{ steps.verify_code.outcome }}
+          EXIT_EXPECTED_COMMIT: ${{ github.sha }}
+          EXIT_PR_HEAD_COMMIT: ${{ github.event.pull_request.head.sha }}
+          EXIT_PR_BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
+        run: |
+          umask 077
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs/promises';
+          import path from 'node:path';
+          import { createHash } from 'node:crypto';
+          import { execFileSync } from 'node:child_process';
+          const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+          const sha = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+          const gitSha = value => typeof value === 'string' && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(value);
+          const state = path.resolve(process.env.EXIT_SYNC_STATE_DIRECTORY);
+          const readPrivate = async filename => {
+            const info = await fs.lstat(filename);
+            if (!info.isFile() || info.isSymbolicLink() || info.mode & 0o077 || info.size > 1024 * 1024) throw Error('Invalid private CI metadata');
+            const bytes = await fs.readFile(filename);
+            return { value: JSON.parse(bytes), sha256: hash(bytes) };
+          };
+          const latest = await readPrivate(path.join(state, 'latest.json'));
+          const status = await readPrivate(path.join(state, 'status.json'));
+          const pointer = latest.value;
+          if (pointer.schemaVersion !== 1 || pointer.owner !== 'tapuai-exit-sync/1' || pointer.targetId !== 'source-review'
+              || !/^releases\/[a-f0-9-]{36}$/.test(pointer.releasePath ?? '')
+              || !sha(pointer.releaseVersion) || !sha(pointer.sourceTreeHash) || !sha(pointer.manifestSha256)
+              || !['not-run', 'passed'].includes(pointer.codeVerification)) throw Error('Invalid CI source pointer');
+          if (await fs.realpath(pointer.repositoryRoot) !== await fs.realpath(process.cwd())) throw Error('CI pointer belongs to another checkout');
+          const releases = path.join(state, 'releases');
+          if ((await fs.lstat(releases)).isSymbolicLink()) throw Error('Linked release root refused');
+          const release = path.join(state, pointer.releasePath);
+          const info = await fs.lstat(release);
+          if (!info.isDirectory() || info.isSymbolicLink() || info.mode & 0o077) throw Error('Invalid CI release directory');
+          const manifest = await readPrivate(path.join(release, 'manifest.json'));
+          const value = manifest.value;
+          if (value.format !== 'tapuai-exit-release/1' || value.targetId !== pointer.targetId
+              || value.releaseVersion !== pointer.releaseVersion || value.sourceTreeHash !== pointer.sourceTreeHash
+              || value.manifestSha256 !== pointer.manifestSha256 || value.codeVerification !== pointer.codeVerification) throw Error('CI pointer does not match its source manifest');
+          const commit = execFileSync('git', ['rev-parse', '--verify', 'HEAD'], { encoding: 'utf8' }).trim();
+          if (!gitSha(commit) || commit !== process.env.EXIT_EXPECTED_COMMIT) throw Error('Checkout differs from the event commit');
+          const outcome = process.env.EXIT_VERIFICATION_OUTCOME;
+          if (!['success', 'failure', 'cancelled', 'skipped'].includes(outcome)
+              || outcome === 'success' && pointer.codeVerification !== 'passed'
+              || outcome !== 'success' && pointer.codeVerification !== 'not-run') throw Error('CI code verification evidence contradicts its outcome');
+          const optionalCommit = key => { const value = process.env[key]; if (!value) return null; if (!gitSha(value)) throw Error('Invalid PR identity'); return value; };
+          const evidence = {
+            schemaVersion: 1, kind: 'tapuai-exit-source-ci', createdAt: new Date().toISOString(),
+            repository: process.env.GITHUB_REPOSITORY, event: process.env.GITHUB_EVENT_NAME,
+            ref: process.env.GITHUB_REF, runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.GITHUB_RUN_ATTEMPT,
+            checkedOutCommit: commit, pullRequestHeadCommit: optionalCommit('EXIT_PR_HEAD_COMMIT'),
+            pullRequestBaseCommit: optionalCommit('EXIT_PR_BASE_COMMIT'),
+            generatedPlanIncluded: true, latestPointerSha256: latest.sha256, lastAttemptSha256: status.sha256,
+            releasePath: pointer.releasePath, releaseVersion: pointer.releaseVersion, sourceTreeHash: pointer.sourceTreeHash,
+            manifestSha256: pointer.manifestSha256, manifestFileSha256: manifest.sha256,
+            codeVerification: pointer.codeVerification, codeCheckOutcome: outcome,
+            readyToCutOver: false, databaseData: 'not-included', runtimeImages: 'not-included',
+            provenance: 'workflow-context-and-artifact-hashes-not-a-signature',
+          };
+          await fs.writeFile(process.env.EXIT_PROVENANCE_FILE, JSON.stringify(evidence, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
+          NODE
+      # Artifact ZIPs normalize permissions; this fixed-input transport preserves private/executable source modes.
+      - name: Preserve source modes in a checked transport archive
+        id: transport
+        if: always() && steps.capture.outcome == 'success' && steps.provenance.outcome == 'success'
+        run: |
+          umask 077
+          cd "$RUNNER_TEMP"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs/promises';
+          import path from 'node:path';
+          let count = 0;
+          const inspect = async filename => {
+            const info = await fs.lstat(filename);
+            if (++count > 100000 || info.isSymbolicLink() || info.mode & 0o077) throw Error('Unsafe CI transport input');
+            if (info.isDirectory()) for (const child of await fs.readdir(filename)) await inspect(path.join(filename, child));
+            else if (!info.isFile()) throw Error('Special CI transport input refused');
+          };
+          await inspect('tapuai-exit-source-state');
+          await inspect('tapuai-exit-source-provenance.json');
+          for (const filename of ['tapuai-exit-source-bundle.tar.gz', 'tapuai-exit-source-bundle.tar.gz.sha256']) {
+            try { await fs.lstat(filename); throw Error('CI transport output already exists'); }
+            catch (error) { if (error.code !== 'ENOENT') throw error; }
+          }
+          NODE
+          tar --create --gzip --file tapuai-exit-source-bundle.tar.gz -- tapuai-exit-source-state tapuai-exit-source-provenance.json
+          node --input-type=module <<'NODE'
+          import { createReadStream } from 'node:fs';
+          import fs from 'node:fs/promises';
+          import { createHash } from 'node:crypto';
+          const filename = 'tapuai-exit-source-bundle.tar.gz', hash = createHash('sha256');
+          for await (const bytes of createReadStream(filename)) hash.update(bytes);
+          await fs.writeFile(filename + '.sha256', hash.digest('hex') + '  ' + filename + '\n', { mode: 0o600, flag: 'wx' });
+          NODE
+      # No database exports, runtime environment, private keys, image layers or credential inputs enter this source artifact.
+      - name: Retain current source, plan and honest check outcome
+        if: always() && steps.capture.outcome == 'success' && steps.provenance.outcome == 'success' && steps.transport.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: exit-source-${{ github.event_name }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/tapuai-exit-source-bundle.tar.gz
+            ${{ runner.temp }}/tapuai-exit-source-bundle.tar.gz.sha256
+          retention-days: 30
+          include-hidden-files: true
+          if-no-files-found: error
+      # Uploading unverified source is useful; a failed full check must still make the workflow fail.
+      - name: Require successful code verification for CI success
+        if: always()
+        env:
+          EXIT_VERIFICATION_OUTCOME: ${{ steps.verify_code.outcome }}
+        run: test "$EXIT_VERIFICATION_OUTCOME" = success

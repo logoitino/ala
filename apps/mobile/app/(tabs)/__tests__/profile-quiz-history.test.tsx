@@ -4,7 +4,7 @@ import Profile from '../profile';
 let mockGuest = false;
 let mockRole = 'parent';
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }), useFocusEffect: (callback: () => void) => { const { useEffect } = require('react'); useEffect(callback, [callback]); } }));
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }), useIsFocused: () => true, useFocusEffect: (callback: () => void) => { const { useEffect } = require('react'); useEffect(callback, [callback]); } }));
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'auth' }, profile: { id: 'profile', user_id: 'auth', full_name: 'Owner' }, role: mockRole, roles: [mockRole], activeRole: mockRole, isGuest: mockGuest, isAthlete: false, isAdmin: false, signOut: jest.fn() }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: jest.requireActual('@/lib/runtime').DEFAULT_APP_RUNTIME }) }));
 jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: jest.fn() }) }));
@@ -23,6 +23,8 @@ jest.mock('@/components/Profile/PayoutSetupCard', () => ({ PayoutSetupCard: () =
 jest.mock('@/components/Profile/RoleSwitcherModal', () => ({ RoleSwitcherModal: () => null }));
 jest.mock('@/components/Profile/VerifyAthleteModal', () => ({ CLAIM_VERIFY_CTA: 'Verify Athlete', VerifyAthleteModal: () => null }));
 jest.mock('@/components/Profile/PrivacySettingsSheet', () => ({ PrivacySettingsSheet: () => null }));
+// Notification settings have their own owner, source and UI fixtures.
+jest.mock('@/components/Profile/NotificationSettingsSheet', () => ({ NotificationSettingsSheet: () => null }));
 jest.mock('@/components/Feedback/SuggestionSheet', () => ({ SuggestionSheet: () => null }));
 jest.mock('@/components/Legal/LegalModal', () => ({ LegalModal: () => null }));
 jest.mock('@/hooks/useRoster', () => ({ useRoster: () => ({ players: [], applyBackerCount: jest.fn(), applyVaultLocked: jest.fn() }) }));

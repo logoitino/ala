@@ -161,7 +161,7 @@ Repeatable diagnosis is in [TROUBLESHOOTING.md](TROUBLESHOOTING.md) §0b.
 
 **Not verified:** Enter on a Data `<summary>` (Browser Bridge cannot send that keypress; Space works), native devices, and hosted data.
 
-**P3s left open:** source and config keys show outside a Data disclosure, worst on the Sign-in desk (`auth/page.tsx`); `LedgerTables.tsx:87` detail values use the old wrap pattern but did not split. Owner decisions of 2026-10-12: the `get_admin_reports` `bigint` overflow fix is approved (migration written, staging application pending the owner's paste); Vault money in the custodial summary takes direction A, built after counsel with STATE §6 item 8; counts by donation band, with no names, replace the all-time donation-total list (VOICE #26).
+**P3s (closed locally 2026-10-18, uncommitted):** Sign-in desk config keys moved into closed "Keys" disclosures (`auth/page.tsx`); `LedgerTables.tsx` time and amount details break only at spaces. Owner decisions of 2026-10-12: the `get_admin_reports` `bigint` overflow fix is approved (migration written, staging application pending the owner's paste); Vault money in the custodial summary takes direction A, built after counsel with STATE §6 item 8; counts by donation band, with no names, replace the all-time donation-total list (VOICE #26).
 
 ---
 

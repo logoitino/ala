@@ -11,17 +11,43 @@ const mockUpload = jest.fn();
 const mockGetPublicUrl = jest.fn();
 const mockInsert = jest.fn();
 const mockGetUser = jest.fn();
+const mockSignedUrl = jest.fn();
+const mockProfileUpdate = jest.fn();
+const mockStorageFrom = jest.fn();
 
 jest.mock('@/lib/supabase', () => ({
   isSupabaseConfigured: true,
   supabase: {
     auth: { getUser: () => mockGetUser() },
-    storage: { from: () => ({ upload: (...args: unknown[]) => mockUpload(...args), getPublicUrl: (...args: unknown[]) => mockGetPublicUrl(...args) }) },
-    from: () => ({ insert: (row: unknown) => ({ select: () => ({ single: () => mockInsert(row) }) }) }),
+    storage: { from: (bucket: string) => {
+      mockStorageFrom(bucket);
+      return { upload: (...args: unknown[]) => mockUpload(...args), getPublicUrl: (...args: unknown[]) => mockGetPublicUrl(...args), createSignedUrl: (...args: unknown[]) => mockSignedUrl(...args) };
+    } },
+    from: () => ({ insert: (row: unknown) => ({ select: () => ({ single: () => mockInsert(row) }) }), update: (row: unknown) => ({ eq: (column: string, id: string) => mockProfileUpdate(row, column, id) }) }),
   },
 }));
 
-import { insertReelRow, stripJpegMetadata, uploadStoryPhoto } from '@/services/MediaUploadService';
+import { assetDurationMs, createMediaUploadService, insertReelRow, isHighlightTooLong, stripJpegMetadata, uploadStoryPhoto } from '@/services/MediaUploadService';
+import { HIGHLIGHT_TOO_LONG } from '@/data/media';
+
+describe('explicit clip duration units', () => {
+  it.each([500, 1000])('keeps a native %sms clip in milliseconds by default', (duration) => {
+    expect(assetDurationMs(duration)).toBe(duration);
+    expect(isHighlightTooLong(duration)).toBe(false);
+  });
+  it.each([
+    [500, 'milliseconds', 500, false],
+    [1000, 'milliseconds', 1000, false],
+    [0.5, 'seconds', 500, false],
+    [45, 'seconds', 45000, false],
+    [45.001, 'seconds', 45001, true],
+    [45000, 'milliseconds', 45000, false],
+    [45001, 'milliseconds', 45001, true],
+  ] as const)('normalizes %s %s explicitly and checks the 45s boundary', (raw, unit, expected, overlong) => {
+    expect(assetDurationMs(raw, unit)).toBe(expected);
+    expect(isHighlightTooLong(raw, unit)).toBe(overlong);
+  });
+});
 
 const ascii = (text: string) => Array.from(text, (char) => char.charCodeAt(0));
 /** A marker segment: FF, marker, 2-byte big-endian length (which counts itself), payload. */
@@ -74,6 +100,127 @@ const dirtyJpeg = () => new Uint8Array([
   ...DQT, ...SOF0, ...DHT, ...SOS, ...SCAN, ...EOI, ...TRAILER,
 ]);
 const cleanJpeg = () => new Uint8Array([...SOI, ...APP0, ...APP14_ADOBE, ...DQT, ...SOF0, ...DHT, ...SOS, ...SCAN, ...EOI]);
+
+describe('replaceable upload storage', () => {
+  const realFetch = global.fetch;
+  const storage = () => ({
+    publicUrl: jest.fn((bucket: string, path: string) => `https://media.example/${bucket}/${path}`),
+    upload: jest.fn(async (_bucket: string, _path: string, _body: ArrayBuffer, _options: { contentType: string; upsert: boolean }) => ({ data: null, error: null as { message: string } | null })),
+    sign: jest.fn(async () => ({ data: 'https://media.example/private/playback', error: null })),
+    list: jest.fn(async () => ({ data: [], error: null })),
+    remove: jest.fn(async () => ({ data: null, error: null })),
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(Date, 'now').mockReturnValue(1700000000000);
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
+    mockInsert.mockImplementation(async (row: unknown) => ({ data: { id: 'r1', ...(row as object) }, error: null }));
+    mockProfileUpdate.mockResolvedValue({ error: null });
+    global.fetch = jest.fn(async () => ({ arrayBuffer: async () => dirtyJpeg().buffer })) as unknown as typeof fetch;
+  });
+  afterEach(() => { global.fetch = realFetch; jest.restoreAllMocks(); });
+  const service = (adapter: ReturnType<typeof storage>) => {
+    expect(createMediaUploadService).toEqual(expect.any(Function));
+    return createMediaUploadService(adapter);
+  };
+
+  it('keeps public video fallback order, overwrite options, rights and row fields with another backend', async () => {
+    const adapter = storage();
+    adapter.upload.mockResolvedValueOnce({ data: null, error: { message: 'Bucket not found' } });
+    const result = await service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: '  A great play  ', durationMs: 1000, compressed: true, playerId: 'p1', gameId: 'g1' });
+    const path = 'reels/user-1/1700000000000.mp4';
+    expect(adapter.upload.mock.calls).toEqual([
+      ['reels', path, expect.any(ArrayBuffer), { contentType: 'video/mp4', upsert: true }],
+      ['game_highlights', path, expect.any(ArrayBuffer), { contentType: 'video/mp4', upsert: true }],
+    ]);
+    expect(result.video_url).toBe(`https://media.example/game_highlights/${path}`);
+    expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ title: 'A great play', player_id: 'p1', game_id: 'g1', is_exclusive: false, is_vault_only: false, rights_version: expect.any(String), attested_at: expect.any(String) }));
+    expect(mockStorageFrom).not.toHaveBeenCalled();
+  });
+
+  it('keeps Vault storage private, stores its token and signs for exactly one hour', async () => {
+    const adapter = storage();
+    const result = await service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Private play', durationMs: 1000, playerId: 'p1', isExclusive: true, compressed: true });
+    const path = 'user-1/1700000000000.mp4';
+    expect(adapter.upload).toHaveBeenCalledWith('reel_vault', path, expect.any(ArrayBuffer), { contentType: 'video/mp4', upsert: true });
+    expect(adapter.upload).toHaveBeenCalledTimes(1);
+    expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ video_url: `reelvault:${path}`, is_exclusive: true, is_vault_only: true }));
+    expect(adapter.sign).toHaveBeenCalledWith('reel_vault', path, 3600);
+    expect(result.video_url).toBe('https://media.example/private/playback');
+    expect(mockStorageFrom).not.toHaveBeenCalled();
+  });
+
+  it('does not broaden Vault failure to a public bucket', async () => {
+    const adapter = storage(); adapter.upload.mockResolvedValue({ data: null, error: { message: 'denied' } });
+    await expect(service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Private play', durationMs: 1000, playerId: 'p1', isExclusive: true, compressed: true })).rejects.toThrow('denied');
+    expect(adapter.upload).toHaveBeenCalledTimes(1);
+    expect(mockInsert).not.toHaveBeenCalled(); expect(adapter.sign).not.toHaveBeenCalled();
+  });
+
+  it.each(['empty', 'throws'] as const)('never constructs a public URL for private upload even when that URL builder %s', async (behavior) => {
+    const adapter = storage(); adapter.publicUrl.mockImplementation(() => {
+      if (behavior === 'throws') throw new Error('Private media has no public URL.');
+      return '';
+    });
+    const result = await service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Private play', durationMs: 1000, playerId: 'p1', isExclusive: true, compressed: true });
+    const path = 'user-1/1700000000000.mp4';
+    expect(adapter.publicUrl).not.toHaveBeenCalled();
+    expect(adapter.upload).toHaveBeenCalledTimes(1);
+    expect(adapter.upload).toHaveBeenCalledWith('reel_vault', path, expect.any(ArrayBuffer), { contentType: 'video/mp4', upsert: true });
+    expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ video_url: `reelvault:${path}`, is_exclusive: true, is_vault_only: true }));
+    expect(adapter.sign).toHaveBeenCalledWith('reel_vault', path, 3600);
+    expect(result.video_url).toBe('https://media.example/private/playback');
+  });
+
+  it('still removes metadata before sending a story photo to another backend without overwrite', async () => {
+    const adapter = storage();
+    const result = await service(adapter).uploadStoryPhoto('file:///photo.jpg', 'reel-9', 2);
+    const path = 'user-1/stories/reel-9/2-1700000000000.jpg';
+    expect(adapter.upload).toHaveBeenCalledWith('reels', path, cleanJpeg().buffer, { contentType: 'image/jpeg', upsert: false });
+    expect(result).toEqual({ imagePath: path, imageUrl: `https://media.example/reels/${path}`, width: 640, height: 480 });
+    expect(mockStorageFrom).not.toHaveBeenCalled();
+  });
+
+  it('keeps avatar MIME, overwrite and profile ownership and leaves reference writes off', async () => {
+    const adapter = storage();
+    const result = await service(adapter).uploadAvatar('file:///avatar.png');
+    expect(adapter.upload).toHaveBeenCalledWith('avatars', 'user-1/1700000000000.jpg', expect.any(ArrayBuffer), { contentType: 'image/png', upsert: true });
+    expect(result).toBe('https://media.example/avatars/user-1/1700000000000.jpg');
+    expect(mockProfileUpdate).toHaveBeenCalledWith({ avatar_url: result }, 'user_id', 'user-1');
+    expect(mockStorageFrom).not.toHaveBeenCalled();
+  });
+
+  it('binds two independent backends without a mutable process-wide override', async () => {
+    const first = storage(), second = storage();
+    const a = service(first), b = service(second);
+    await a.uploadStoryPhoto('file:///a.jpg', 'reel-9', 0);
+    await b.uploadStoryPhoto('file:///b.jpg', 'reel-9', 1);
+    expect(first.upload).toHaveBeenCalledTimes(1); expect(second.upload).toHaveBeenCalledTimes(1);
+    expect(first.upload.mock.calls[0][1]).toContain('/0-');
+    expect(second.upload.mock.calls[0][1]).toContain('/1-');
+  });
+
+  it.each([undefined, null, NaN, Infinity, -Infinity, -1, 0])('rejects unreadable normalized duration %s before compression, file, auth or storage work', async (durationMs) => {
+    const adapter = storage(); const onStatus = jest.fn(), onProgress = jest.fn();
+    await expect(service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Short play', durationMs, onStatus, onProgress })).rejects.toThrow('Could not read this clip’s length. Pick it again.');
+    expect(onStatus).not.toHaveBeenCalled(); expect(onProgress).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled(); expect(mockGetUser).not.toHaveBeenCalled();
+    expect(adapter.upload).not.toHaveBeenCalled(); expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])('rejects a normalized overlong clip before side effects (already compressed: %s)', async (compressed) => {
+    const adapter = storage(); const onStatus = jest.fn();
+    await expect(service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Long play', durationMs: 45001, compressed, onStatus })).rejects.toThrow(HIGHLIGHT_TOO_LONG);
+    expect(onStatus).not.toHaveBeenCalled(); expect(global.fetch).not.toHaveBeenCalled();
+    expect(mockGetUser).not.toHaveBeenCalled(); expect(adapter.upload).not.toHaveBeenCalled(); expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it.each([500, 1000, 45000])('accepts validated %sms directly, including the exact 45s boundary when compressed', async (durationMs) => {
+    const adapter = storage();
+    await expect(service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Short play', durationMs, compressed: true })).resolves.toEqual(expect.objectContaining({ id: 'r1' }));
+    expect(adapter.upload).toHaveBeenCalledTimes(1); expect(mockInsert).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('stripJpegMetadata', () => {
   it('removes EXIF/GPS, XMP, ICC, Photoshop/IPTC, APP15, comments and trailing bytes, keeping image segments intact', () => {

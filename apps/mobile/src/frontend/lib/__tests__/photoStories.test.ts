@@ -12,6 +12,9 @@ const mockInsertReelRow = jest.fn();
 const mockUploadStoryPhoto = jest.fn();
 const mockUpdate = jest.fn();
 const mockRowQuery = jest.fn();
+const mockCoverQuery = jest.fn();
+const mockCleanup = jest.fn();
+jest.mock('@/lib/photoStoryCleanup', () => ({ cleanupFailedPhotoStory: (...args: unknown[]) => mockCleanup(...args) }), { virtual: true });
 
 jest.mock('@/lib/supabase', () => ({
   isSupabaseConfigured: true,
@@ -25,7 +28,10 @@ jest.mock('@/lib/supabase', () => ({
           order: (orderColumn: string, orderOptions: unknown) => mockFeedQuery({ relation, columns, column, values, orderColumn, orderOptions }),
         }),
         limit: () => mockHeadQuery({ relation, columns, options }),
-        eq: (column: string, value: string) => ({ maybeSingle: () => mockRowQuery({ relation, columns, column, value }) }),
+        eq: (column: string, value: string) => ({
+          maybeSingle: () => mockRowQuery({ relation, columns, column, value }),
+          eq: (secondColumn: string, secondValue: unknown) => ({ maybeSingle: () => mockCoverQuery({ relation, columns, column, value, secondColumn, secondValue }) }),
+        }),
       }),
     }),
   },
@@ -49,6 +55,8 @@ import {
 beforeEach(() => {
   jest.clearAllMocks();
   resetPhotoStoriesProbe();
+  mockCleanup.mockResolvedValue('discarded');
+  mockCoverQuery.mockResolvedValue({ data: { image_path: 'original.jpg' }, error: null });
 });
 
 describe('movePhoto', () => {
@@ -115,10 +123,11 @@ describe('fetchStoryPhotos', () => {
 });
 
 describe('setStoryPhotos', () => {
-  it('treats "already published" as success when the row shows the photos landed (lost reply)', async () => {
+  it('recovers the actual stored story and cover on already-published instead of attempted photos', async () => {
     mockRpc.mockResolvedValue({ data: null, error: { code: '55000', message: 'This photo story is already published' } });
-    mockRowQuery.mockResolvedValue({ data: { id: 'r1', photo_count: 3 }, error: null });
-    await expect(setStoryPhotos('r1', [{ imagePath: 'u1/stories/r1/0-1700000000000.jpg', description: null }])).resolves.toBe(3);
+    mockRowQuery.mockResolvedValue({ data: { id: 'r1', media_type: 'photo_story', photo_count: 3, title: 'Original' }, error: null });
+    const failure = await setStoryPhotos('r1', [{ imagePath: 'u1/stories/r1/0-1700000000000.jpg', description: null }]).catch((caught: unknown) => caught);
+    expect(failure).toMatchObject({ name: 'PhotoStoryAlreadyPublishedError', reel: { id: 'r1', title: 'Original', cover_path: 'original.jpg', photo_count: 3 } });
     expect(mockRowQuery).toHaveBeenCalledWith(expect.objectContaining({ relation: 'reels', column: 'id', value: 'r1' }));
   });
 
@@ -204,6 +213,8 @@ describe('createPhotoStory', () => {
   };
 
   beforeEach(() => {
+    mockUpdate.mockResolvedValue({ error: null });
+    mockRpc.mockResolvedValue({ data: 2, error: null });
     mockInsertReelRow.mockResolvedValue({ id: 'reel-1', video_url: '', title: 'Serving at the food bank', media_type: 'photo_story', photo_count: 0 });
     mockUploadStoryPhoto.mockImplementation(async (_uri: string, reelId: string, position: number) => ({
       imagePath: `u1/stories/${reelId}/${position}-1700000000000.jpg`,
@@ -252,25 +263,39 @@ describe('createPhotoStory', () => {
     const failure = await createPhotoStory(input).catch((caught: unknown) => caught);
     expect(failure).toBeInstanceOf(PhotoStoryPublishError);
     expect((failure as PhotoStoryPublishError).reelId).toBe('reel-1');
-    expect((failure as Error).message).toMatch(/nothing was published.*own folder/);
+    expect((failure as Error).message).toMatch(/could not confirm.*own folder/);
   });
 
-  it('retries on the same reel: no second insert, caption/category refreshed, photos re-uploaded into its folder', async () => {
-    mockUpdate.mockResolvedValue({ error: null });
+  it('retires all earlier failed uploads before inserting a fresh retry, preserving edited draft values', async () => {
     mockRpc.mockResolvedValue({ data: 2, error: null });
     const reel = await createPhotoStory({ ...input, title: 'Food bank, round two', existingReelId: 'reel-old' });
-    expect(mockInsertReelRow).not.toHaveBeenCalled();
-    expect(mockUpdate).toHaveBeenCalledWith({ relation: 'reels', values: { title: 'Food bank, round two', category: 'serve_like_me' }, column: 'id', value: 'reel-old' });
-    expect(mockUploadStoryPhoto.mock.calls.map((call) => call[1])).toEqual(['reel-old', 'reel-old']);
-    expect(mockRpc).toHaveBeenCalledWith('set_reel_photos', expect.objectContaining({ p_reel_id: 'reel-old' }));
-    expect(reel).toEqual(expect.objectContaining({ id: 'reel-old', photo_count: 2, media_type: 'photo_story' }));
+    expect(mockCleanup).toHaveBeenCalledWith('reel-old');
+    expect(mockCleanup.mock.invocationCallOrder[0]).toBeLessThan(mockInsertReelRow.mock.invocationCallOrder[0]);
+    expect(mockInsertReelRow).toHaveBeenCalledWith(expect.objectContaining({ title: 'Food bank, round two' }));
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockUploadStoryPhoto.mock.calls.map((call) => call[1])).toEqual(['reel-1', 'reel-1']);
+    expect(reel).toEqual(expect.objectContaining({ id: 'reel-1', photo_count: 2 }));
   });
 
-  it('keeps the same reel id when the retry fails again', async () => {
-    mockUpdate.mockResolvedValue({ error: null });
-    mockRpc.mockResolvedValue({ data: null, error: { code: 'P0001', message: 'already published' } });
+  it('keeps the earlier id and uploads nothing when retirement cannot finish', async () => {
+    mockCleanup.mockRejectedValue(new Error('Cleanup needs a connection.'));
     const failure = await createPhotoStory({ ...input, existingReelId: 'reel-old' }).catch((caught: unknown) => caught);
+    expect(failure).toBeInstanceOf(PhotoStoryPublishError);
     expect((failure as PhotoStoryPublishError).reelId).toBe('reel-old');
+    expect((failure as Error).message).toContain('Cleanup needs a connection');
+    expect(mockInsertReelRow).not.toHaveBeenCalled();
+    expect(mockUploadStoryPhoto).not.toHaveBeenCalled();
+  });
+
+  it('recovers the stored story after a lost publish reply without publishing the edited draft', async () => {
+    const stored = { id: 'reel-old', media_type: 'photo_story', photo_count: 2, title: 'Original caption', player_id: 'original-athlete', cover_path: 'original.jpg' };
+    mockCleanup.mockResolvedValue('published');
+    mockRowQuery.mockResolvedValue({ data: stored, error: null });
+    const failure = await createPhotoStory({ ...input, title: 'Edited caption', existingReelId: 'reel-old' }).catch((caught: unknown) => caught);
+    expect(failure).toMatchObject({ name: 'PhotoStoryAlreadyPublishedError', reel: stored });
+    expect(mockInsertReelRow).not.toHaveBeenCalled();
+    expect(mockUploadStoryPhoto).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 
   it('does not wrap an insert failure (no row exists to retry)', async () => {

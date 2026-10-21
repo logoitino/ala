@@ -4,11 +4,12 @@
  * Edge Function `create-payment-intent` and the Metro route `POST /api/create-payment-intent`; each runtime injects
  * its own database call and Stripe client and keeps its own session / configuration order in front of this.
  *
- * This creates the intent only. It writes no ledger row: the app still writes `tips` after PaymentSheet, and the
- * webhook's crediting branch stays off until that client insert is retired (STATE §0, §6 item 3).
+ * This creates the intent only. The app still owns `tips`/Aura. Optional server quote/persistence is prepared,
+ * unwired in both runtimes; even a stored context has notificationAuthority=false until atomic business integration.
  */
 
 import { errorResult, type CoreResult } from './http.ts';
+import { donationContextMetadata, validDonationContext, type DonationContextAdapter, type DonationPaymentContext, type DonationRequest } from './paymentContext.ts';
 
 /** 401 copy when the Bearer header is missing on checkout. */
 export const PAYMENT_SIGN_IN_MESSAGE = 'Sign in to complete payment.';
@@ -27,6 +28,8 @@ type PaymentIntentBody = {
   playerId?: string;
   /** Optional tip to Tapua'i included in `amount` (cents). Metadata only. */
   platformTipCents?: number;
+  /** Client checkout declaration only; the server quote adapter must supply the authoritative allocation. */
+  donation?: DonationRequest;
 };
 
 /** Exactly what is sent to `stripe.paymentIntents.create`. */
@@ -39,7 +42,7 @@ export type PaymentIntentParams = {
 
 /** The one Stripe call checkout needs; the runtime's Stripe SDK instance satisfies it. */
 export type PaymentIntentStripe = {
-  paymentIntents: { create(params: PaymentIntentParams): Promise<{ client_secret: string | null }> };
+  paymentIntents: { create(params: PaymentIntentParams): Promise<{ id?: string; livemode?: boolean; client_secret: string | null }> };
 };
 
 /**
@@ -57,6 +60,7 @@ export async function runCreatePaymentIntent(input: {
   body: unknown;
   isTargetFrozen: (playerId: string) => PromiseLike<{ data: unknown; error: unknown }>;
   getStripe: () => PaymentIntentStripe;
+  donationContext?: DonationContextAdapter;
 }): Promise<CoreResult> {
   // Property reads on the raw body on purpose: a `null` body throws the same TypeError the handlers always reported.
   const body = input.body as PaymentIntentBody;
@@ -64,11 +68,24 @@ export async function runCreatePaymentIntent(input: {
   const playerId = typeof body.playerId === 'string' ? body.playerId.trim() : '';
   const platformTipCents = Number(body.platformTipCents ?? 0);
 
-  if (!Number.isInteger(amount) || amount < PAYMENT_MIN_CENTS) {
+  if (!Number.isSafeInteger(amount) || amount < PAYMENT_MIN_CENTS) {
     return errorResult('amount must be an integer number of cents (min 50).', 400);
   }
-  if (!Number.isInteger(platformTipCents) || platformTipCents < 0 || platformTipCents >= amount) {
+  if (!Number.isSafeInteger(platformTipCents) || platformTipCents < 0 || platformTipCents >= amount) {
     return errorResult('platformTipCents must be whole cents, less than amount.', 400);
+  }
+
+  let context: DonationPaymentContext | null = null;
+  if (body.donation !== undefined) {
+    const request = body.donation;
+    if (!request || !playerId || !Number.isSafeInteger(request.giftCents) || request.giftCents < PAYMENT_MIN_CENTS
+      || typeof request.coverFees !== 'boolean' || !Number.isFinite(request.platformTipPercent)
+      || request.platformTipPercent < 0 || request.platformTipPercent > 100
+      || request.giftCents + platformTipCents > amount
+      || (!request.coverFees && request.giftCents + platformTipCents !== amount)
+      || Math.round(request.giftCents * request.platformTipPercent / 100) !== platformTipCents) {
+      return errorResult('Invalid donation allocation.', 400);
+    }
   }
 
   if (playerId) {
@@ -83,6 +100,16 @@ export async function runCreatePaymentIntent(input: {
     }
   }
 
+  if (body.donation && input.donationContext) {
+    // This capability comes from the server runtime, never request JSON. Validate/freeze the target before quoting.
+    try {
+      const request = body.donation;
+      context = await input.donationContext.quote({ ...request, donorId: input.userId, athleteId: playerId });
+      if (!validDonationContext(context, { donorId: input.userId, athleteId: playerId, giftCents: request.giftCents,
+        amount, platformTipCents, coverFees: request.coverFees })) return errorResult('Payment context unavailable.', 503);
+    } catch { return errorResult('Payment context unavailable.', 503); }
+  }
+
   const paymentIntent = await input.getStripe().paymentIntents.create({
     amount,
     currency: 'usd',
@@ -91,8 +118,18 @@ export async function runCreatePaymentIntent(input: {
       tapuai_user_id: input.userId,
       ...(playerId ? { tapuai_player_id: playerId } : {}),
       ...(platformTipCents > 0 ? { tapuai_platform_tip_cents: String(platformTipCents) } : {}),
+      ...(body.donation ? { tapuai_purpose: 'donation', tapuai_notification_authority: 'false' } : {}),
+      ...(context ? donationContextMetadata(context) : {}),
     },
   });
+
+  if (context && input.donationContext) {
+    if (!paymentIntent.id || paymentIntent.livemode !== false) return errorResult('Payment context unavailable.', 503);
+    try {
+      const result = await input.donationContext.persist(context, paymentIntent.id);
+      if (result.error || result.data !== true) return errorResult('Payment context unavailable.', 503);
+    } catch { return errorResult('Payment context unavailable.', 503); }
+  }
 
   return { status: 200, body: { clientSecret: paymentIntent.client_secret } };
 }

@@ -1,4 +1,6 @@
+/** Account creation keeps Google available without email fields or bank setup; age rules remain separate. */
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { Platform } from 'react-native';
 
 import { SoftWallModal } from '@/components/Auth/SoftWallModal';
 
@@ -6,6 +8,7 @@ import { SoftWallModal } from '@/components/Auth/SoftWallModal';
 const mockSignInWithEmailPassword = jest.fn(async () => undefined);
 const mockSignUpWithEmailPassword = jest.fn(async () => undefined);
 const mockSignInWithMagicLink = jest.fn(async () => undefined);
+const mockSignInWithGoogle = jest.fn(async () => undefined);
 
 // The sheet only needs to be open and to hand back the auth calls it fires. Everything
 // else stubbed here is a native module or a layout hook with no Node implementation.
@@ -21,7 +24,7 @@ jest.mock('@/context/SoftWallContext', () => ({
 jest.mock('@/context/AuthContext', () => ({
   useAuth: () => ({
     signInWithApple: jest.fn(),
-    signInWithGoogle: jest.fn(),
+    signInWithGoogle: mockSignInWithGoogle,
     signInWithMagicLink: mockSignInWithMagicLink,
     signInWithEmailPassword: mockSignInWithEmailPassword,
     signUpWithEmailPassword: mockSignUpWithEmailPassword,
@@ -76,6 +79,31 @@ beforeEach(() => {
 });
 
 describe('SoftWallModal email form', () => {
+  it('lets a new user choose Google from Create an account without filling the email form', async () => {
+    await openSheet();
+    await openCreate();
+    expect(createButton()).toBeDisabled();
+    await fireEvent.press(screen.getByLabelText('Continue with Google'));
+    expect(mockSignInWithGoogle).toHaveBeenCalledTimes(1);
+    expect(mockSignUpWithEmailPassword).not.toHaveBeenCalled();
+  });
+
+  it('offers Google on web without an unsupported Apple button or requiring email fields', async () => {
+    const originalOS = Platform.OS;
+    try {
+      Object.defineProperty(Platform, 'OS', { configurable: true, value: 'web' });
+      await openSheet();
+      expect(screen.queryByLabelText('Continue with Apple')).toBeNull();
+      expect(screen.getByText('Google works for new and existing accounts.')).toBeTruthy();
+      expect(screen.getByText('No bank details are needed to create your profile.')).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Continue with Google'));
+      expect(mockSignInWithGoogle).toHaveBeenCalledTimes(1);
+      expect(mockSignUpWithEmailPassword).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(Platform, 'OS', { configurable: true, value: originalOS });
+    }
+  });
+
   it('enables Sign in without an age checkbox, and actually signs in', async () => {
     await openSheet();
     await typeEmail();

@@ -7,14 +7,17 @@
  * Video and photo drafts are kept separately, so switching Video ↔ Photos never discards either; switching clears the
  * rights confirmations because they belong to the media. Videos publish through `lib/reels.ts`; photo stories through
  * `lib/photoStories.ts` (nothing is published unless every photo uploads); after a failed story attempt the hidden reel id
- * is kept so the retry reuses that row (the RPC is publish-once). Account mentions are pending until confirmed.
+ * is kept until its files and row are retired before retry; Close persists removal intent before dismissing. Lost publication replies recover the stored
+ * story without replacing it or attaching new mentions. Account mentions are pending until confirmed.
+ * Picker durations become milliseconds at the boundary and stay attached through publication.
  * @sideEffects Reads `games`; device photo library; uploads to Storage bucket `reels`; inserts a `reels` row;
- *   `set_reel_photos`; `tag_reel_accounts`.
+ *   `set_reel_photos`; `tag_reel_accounts`; owner failed-story cleanup RPCs, Storage list/remove and local owner/story cleanup keys.
  */
 
 import { UploadVideoComposer, type UploadStep } from '@/components/Reels/UploadVideoComposer';
 import type { DraftStoryPhoto } from '@/components/Reels/PhotoStoryPicker';
-import { createPhotoStory, movePhoto, photoStoriesAvailable, PhotoStoryPublishError } from '@/lib/photoStories';
+import { createPhotoStory, movePhoto, photoStoriesAvailable, PhotoStoryPublishError, PhotoStoryAlreadyPublishedError } from '@/lib/photoStories';
+import { cleanupFailedPhotoStory, rememberPhotoStoryCleanup, queuedPhotoStoryCleanups } from '@/lib/photoStoryCleanup';
 import { attachAccountTags, type AccountTagHit } from '@/lib/accountTags';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -35,6 +38,7 @@ import {
 } from '@/data/highlights';
 import {
   HIGHLIGHT_MAX_SECONDS,
+  HIGHLIGHT_LENGTH_UNREADABLE,
   HIGHLIGHT_OPTIMIZING,
   HIGHLIGHT_TOO_LONG,
 } from '@/data/media';
@@ -117,7 +121,14 @@ function fireSuccess() {
  */
 export function UploadVideoModal({ visible, players, onClose, onUploaded }: UploadVideoModalProps) {
   const { live } = useAppRuntime();
-  const { profile, isGuest } = useAuth();
+  const { profile, isGuest, user } = useAuth();
+  const ownerId = user?.id ?? profile?.user_id ?? undefined;
+  const ownerRef = useRef(ownerId);
+  ownerRef.current = ownerId;
+  const visibleRef = useRef(visible);
+  visibleRef.current = visible;
+  const draftEpoch = useRef(0);
+  const previousOwner = useRef(ownerId);
   const categoryPills = labeledReelCategories(live.catalog.reelCategories);
   const exclusiveDollars = live.catalog.exclusiveDollars;
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -149,9 +160,53 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const [photos, setPhotos] = useState<DraftStoryPhoto[]>([]);
   const [photosAvailable, setPhotosAvailable] = useState(false);
   const photoKey = useRef(0);
-  // Hidden reel left by a failed story attempt. Reused on retry only while the athlete and game match, because
-  // those columns cannot change after insert; cleared when the draft is published or discarded.
-  const pendingStory = useRef<{ reelId: string; playerId: string; gameId: string } | null>(null);
+  // Hidden server attempt left by a failed story. Retired before retry/retarget; Close saves cleanup
+  // intent before discarding the local draft. Published stories are recovered without replacing their caption or mentions.
+  type PendingStory = { reelId: string; playerId: string; gameId: string; ownerId?: string };
+  const pendingStory = useRef<PendingStory | null>(null);
+  // Keep every unfinished operation until cleanup confirms completion, including forced hiding/reopening.
+  const unfinishedStories = useRef(new Map<string, PendingStory>());
+  const forgetPending = (pending: PendingStory) => {
+    if (unfinishedStories.current.get(pending.reelId) === pending) unfinishedStories.current.delete(pending.reelId);
+    if (pendingStory.current === pending) pendingStory.current = null;
+  };
+  const retirePending = async (pending: PendingStory) => {
+    const result = await cleanupFailedPhotoStory(pending.reelId, pending.ownerId);
+    forgetPending(pending);
+    return result;
+  };
+  const isCurrentDraft = (epoch: number, owner: string | undefined) =>
+    visibleRef.current && draftEpoch.current === epoch && ownerRef.current === owner;
+  const closeUpload = async () => {
+    if (uploading || submitLock.current) return;
+    const epoch = draftEpoch.current;
+    const owner = ownerId;
+    const pending = [...unfinishedStories.current.values()].filter((item) => item.ownerId === owner);
+    if (!pending.length) { onClose(); return; }
+    submitLock.current = true;
+    setUploading(true);
+    setStatusLabel('Saving unfinished-story removal…');
+    try {
+      if (!owner) throw new Error('Sign in again to save unfinished-story removal.');
+      for (const item of pending) await rememberPhotoStoryCleanup(item.reelId, owner);
+      if (!isCurrentDraft(epoch, owner)) return;
+      onClose();
+      // Network cleanup can fail offline; saved intent resumes next time this owner opens Upload.
+      for (const item of pending) void retirePending(item).catch(() => telemetry.trackIssue('upload', 'home'));
+    } catch {
+      if (!isCurrentDraft(epoch, owner)) return;
+      const message = 'Could not save unfinished-story removal on this device. Your draft is still here. Try closing again.';
+      setUploadError(message);
+      setStatusLabel('Removal not saved');
+      telemetry.trackIssue('upload', 'home');
+      Alert.alert('Could not save removal', message);
+    } finally {
+      if (draftEpoch.current === epoch && ownerRef.current === owner) {
+        submitLock.current = false;
+        setUploading(false);
+      }
+    }
+  };
   const isPhotos = mediaKind === 'photo_story';
 
   const selectedGame = games.find((game) => game.id === gameId) ?? null;
@@ -210,7 +265,19 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   }, [uploading, pulse]);
 
   useEffect(() => {
-    if (!visible) {
+    draftEpoch.current += 1;
+    const accountChanged = previousOwner.current !== ownerId;
+    previousOwner.current = ownerId;
+    if (!visible || accountChanged) pendingStory.current = null;
+    if (!visible || accountChanged) {
+      for (const pending of unfinishedStories.current.values()) {
+        if (pending.ownerId === ownerRef.current) {
+          void retirePending(pending).catch(() => {
+            // Durable intent and the server claim remain; opening Upload retries it.
+            telemetry.trackIssue('upload', 'home');
+          });
+        }
+      }
       setStep('clip');
       submitLock.current = false;
       setAsset(null);
@@ -233,11 +300,21 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       successAnim.setValue(0);
       setMediaKind('video');
       setPhotos([]);
-      pendingStory.current = null;
-      return;
+      if (!visible) return;
     }
 
     let active = true;
+    if (ownerId) void queuedPhotoStoryCleanups(ownerId).then(async (ids) => {
+      for (const reelId of ids) {
+        if (!active || ownerRef.current !== ownerId) return;
+        // A late queue read must not retire the visible failed attempt behind explicit Retry.
+        if (pendingStory.current?.reelId === reelId && pendingStory.current.ownerId === ownerId) continue;
+        const pending = unfinishedStories.current.get(reelId) ?? { reelId, ownerId, playerId: '', gameId: '' };
+        unfinishedStories.current.set(reelId, pending);
+        try { await retirePending(pending); }
+        catch { telemetry.trackIssue('upload', 'home'); }
+      }
+    }).catch(() => telemetry.trackIssue('upload', 'home'));
     // Photos appear only once the photo-story SQL exists (cached per session in lib/photoStories).
     void photoStoriesAvailable().then((available) => {
       if (!active) return;
@@ -271,7 +348,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     return () => {
       active = false;
     };
-  }, [visible]);
+  }, [visible, ownerId]);
 
   // Mālo follows the tag, so never guess it: an athlete posting their own clip starts tagged as
   // themself; everyone else must pick who is in the video. (This used to preselect a demo athlete,
@@ -283,7 +360,13 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   }, [visible, players, ownPlayerId]);
 
   const applyPickedAsset = (source: PickSource, next: ImagePicker.ImagePickerAsset) => {
-    if (isHighlightTooLong(next.duration)) {
+    // The platform declares the unit; a short native clip must never be mistaken for seconds.
+    const durationMs = assetDurationMs(next.duration, Platform.OS === 'web' ? 'seconds' : 'milliseconds');
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
+      Alert.alert('Clip length unavailable', HIGHLIGHT_LENGTH_UNREADABLE);
+      return;
+    }
+    if (isHighlightTooLong(durationMs)) {
       Alert.alert('Clip too long', HIGHLIGHT_TOO_LONG);
       return;
     }
@@ -291,7 +374,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       uri: next.uri,
       mimeType: next.mimeType,
       fileName: next.fileName,
-      durationMs: assetDurationMs(next.duration),
+      durationMs,
       compressed: false,
     });
     setPickSource(source);
@@ -375,16 +458,29 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       return;
     }
     if (isPhotos ? photos.length === 0 : !asset) return;
+    const epoch = draftEpoch.current;
+    const owner = ownerId;
+    const candidate = pendingStory.current;
+    const pending = candidate?.ownerId === owner ? candidate : null;
     submitLock.current = true;
     setUploading(true);
     setUploadError(null);
     setStatusLabel(isPhotos ? 'Preparing your story…' : asset?.compressed ? 'Uploading to Tapua\'i…' : HIGHLIGHT_OPTIMIZING);
     setProgress(0.04);
     try {
-      const pending = pendingStory.current;
-      const reuse = pending && pending.playerId === playerId && pending.gameId === gameId ? pending.reelId : null;
+      if (!isCurrentDraft(epoch, owner)) return;
+      if (!isPhotos && pending) {
+        const result = await retirePending(pending);
+        if (!isCurrentDraft(epoch, owner)) return;
+        if (result === 'published') {
+          setUploadError('Your earlier photo story was already shared. Your video draft is still here; review it before sharing.');
+          return;
+        }
+      }
+      const reuse = pending?.reelId ?? null;
       const reel = isPhotos ? await createPhotoStory({
         existingReelId: reuse,
+        expectedUserId: owner,
         photos: photos.map(({ uri, width, height, description }) => ({ uri, width, height, description })),
         title: caption,
         playerId,
@@ -392,6 +488,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         category,
         rightsVersion: PHOTO_RIGHTS_VERSION,
         onProgress: (done, total) => {
+          if (!isCurrentDraft(epoch, owner)) return;
           setProgress(0.08 + 0.84 * (done / total));
           setStatusLabel(done < total ? `Uploading photo ${done + 1} of ${total}` : 'Saving your story…');
         },
@@ -399,6 +496,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         uri: asset!.uri,
         mimeType: asset!.mimeType,
         fileName: asset!.fileName,
+        durationMs: asset!.durationMs,
         title: caption,
         playerId,
         gameId,
@@ -406,10 +504,11 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         category,
         coachLevel,
         compressed: asset!.compressed,
-        onProgress: setProgress,
-        onStatus: setStatusLabel,
+        onProgress: (value) => { if (isCurrentDraft(epoch, owner)) setProgress(value); },
+        onStatus: (label) => { if (isCurrentDraft(epoch, owner)) setStatusLabel(label); },
       });
-      if (isPhotos) pendingStory.current = null;
+      if (pending) forgetPending(pending);
+      if (!isCurrentDraft(epoch, owner)) return;
       let mentionsFailed = false;
       if (reel.id && accountTags.length > 0) {
         try {
@@ -419,6 +518,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
           mentionsFailed = true;
         }
       }
+      if (!isCurrentDraft(epoch, owner)) return;
       setProgress(1);
       setStatusLabel(isPhotos ? 'Photo story published.' : 'Seki play uploaded.');
       fireSuccess();
@@ -433,6 +533,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         useNativeDriver: true,
       }).start();
       await new Promise((resolve) => setTimeout(resolve, 700));
+      if (!isCurrentDraft(epoch, owner)) return;
       onClose();
       onUploaded(reel);
       if (mentionsFailed) {
@@ -441,9 +542,29 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
           : 'Your clip is published, but we could not save the account mentions.');
       }
     } catch (caught) {
+      if (caught instanceof PhotoStoryPublishError) {
+        if (pending && pending.reelId !== caught.reelId) forgetPending(pending);
+        const residue = { reelId: caught.reelId, playerId, gameId, ownerId: owner };
+        unfinishedStories.current.set(residue.reelId, residue);
+        if (isCurrentDraft(epoch, owner)) pendingStory.current = residue;
+        if (owner) {
+          try { await rememberPhotoStoryCleanup(residue.reelId, owner); }
+          catch { telemetry.trackIssue('upload', 'home'); } // In-memory intent remains; Close retries persistence.
+        }
+        if (!isCurrentDraft(epoch, owner)) void retirePending(residue).catch(() => telemetry.trackIssue('upload', 'home'));
+      }
+      if (!isCurrentDraft(epoch, owner)) return;
       setProgress(0);
-      // The draft (clip or photos, caption, tags, confirmations) stays so a retry is one tap.
-      if (caught instanceof PhotoStoryPublishError) pendingStory.current = { reelId: caught.reelId, playerId, gameId };
+      if (caught instanceof PhotoStoryAlreadyPublishedError) {
+        if (pending) forgetPending(pending);
+        // Recover only committed fields; edited caption/mentions stay in this unsubmitted draft.
+        onUploaded(caught.reel);
+        setUploadError(caught.message);
+        setStatusLabel('Earlier story already shared');
+        Alert.alert('Story already shared', caught.message);
+        return;
+      }
+      // Local photos, caption, tags and confirmations stay intact while retirement is retried.
       const message =
         caught instanceof Error ? caught.message : isPhotos ? 'Could not share those photos. Try again.' : 'Could not upload that clip. Try picking it again.';
       setUploadError(message);
@@ -451,6 +572,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       telemetry.trackIssue('upload', 'home');
       Alert.alert('Upload failed', message);
     } finally {
+      if (draftEpoch.current !== epoch || ownerRef.current !== owner) return;
       submitLock.current = false;
       setUploading(false);
       setShowSuccess(false);
@@ -468,7 +590,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         if (uploading || submitLock.current) return;
         if (libraryOpen) setLibraryOpen(false);
         else if (openSelect) setOpenSelect(null);
-        else if (step === 'clip') onClose();
+        else if (step === 'clip') void closeUpload();
         else setStep(step === 'details' ? 'clip' : step === 'options' ? 'review' : 'details');
       }}>
       <UploadVideoComposer
@@ -488,7 +610,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         onMovePhoto={(from, to) => setPhotos((current) => movePhoto(current, from, to))}
         onRemovePhoto={(index) => setPhotos((current) => current.filter((_, at) => at !== index))}
         onPhotoDescription={(index, text) => setPhotos((current) => current.map((photo, at) => (at === index ? { ...photo, description: text } : photo)))}
-        uploadError={uploadError} loadError={loadError} onClose={onClose} onSubmit={() => void submit()}
+        uploadError={uploadError} loadError={loadError} onClose={() => void closeUpload()} onSubmit={() => void submit()}
         progress={progress} barWidth={barWidth} pulse={pulse} statusLabel={statusLabel}
         showSuccess={showSuccess} successAnim={successAnim}
       />

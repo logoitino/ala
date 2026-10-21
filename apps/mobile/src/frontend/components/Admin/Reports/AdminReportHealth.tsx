@@ -8,6 +8,7 @@ import { AdminReportLink, AdminReportSection } from './AdminReportSection';
 import { buildReportHealthChecks } from './reportHealthChecks';
 import { ranking, trend, type ReportSection } from './reportPages';
 import { reportStyles as s } from './reportStyles';
+import { NotificationHealthSummary } from '../Notifications/NotificationHealthSummary';
 
 const format = (kind: OperationsKind): MeasureUnit => kind === 'ms' ? 'milliseconds' : kind === 'ratio' ? 'count' : kind;
 /** @purpose Render the selected operations lens with every row retained in a Data disclosure. */
@@ -38,6 +39,7 @@ export function AdminReportHealth({ data }: { data: AdminReportData }) {
     <AdminReportLink label="Published menus in Product" href="/admin/product" /></View>
     <View nativeID="health-panel" role="tabpanel" aria-labelledby={`health-tab-${selected}`} style={s.section}>
       {selected === 'overview' ? <>
+        <NotificationHealthSummary />
         <Text accessibilityRole="header" aria-level={2} style={s.h2}>Operational checks</Text>
         <Text style={s.sentence}>{checks.filter(c => c.status === 'fail').length} failed · {checks.filter(c => c.status === 'warn').length} need a check · {checks.filter(c => c.status === 'unknown').length} not read · {checks.filter(c => c.status === 'ok').length} pass</Text>
         <Text style={s.small}>Current counts and rolling 24-hour checks. A quiet window may need review; these rules do not certify a release.</Text>

@@ -4,9 +4,10 @@
  * QUIZ-04: on servers with separate weekly rounds, it names the spot Start uses (your round or the group round), and the
  * group preparation says group play never uses up your own round.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { TimedQuizSnapshot, TimedQuizTopic } from '@shared/timedSportQuiz';
+import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
 import { QuizButton } from './QuizButton';
 const key = (topic: TimedQuizTopic, sport: string | null) => JSON.stringify([topic, sport]);
@@ -32,6 +33,12 @@ export function SportQuizPreparation({ snapshot, busy, onStart, initialSport = n
     const selected = pools.find(p => key(p.topic_category, p.sport) === selection);
     const size = snapshot.round_size ?? 5;
     const ready = group ? true : !!selection && (!!selected || selection === key('sport', null));
+  // Funnel top: one view per preparation shown, one press per Start tap. Views precede presses precede
+  // confirmed starts, so viewed-but-never-pressed is friction and pressed-but-never-confirmed is technical.
+  // Depend on the kind string (stable), not the group object (rebuilt every render). The dev-only demo
+  // never mounts this component, so scripted rounds stay out of the funnel.
+  const funnelKind = group ? 'group' : 'personal';
+  useEffect(() => { telemetry.trackTriviaStep('view_prep', { kind: funnelKind }); }, [funnelKind]);
   // QUIZ-04 servers keep a separate spot per kind, so name the one this Start uses.
   const separate = !!snapshot.week_spent_by_kind;
   const startSpot = !separate ? 'this UTC week’s opportunity' : group ? 'this UTC week’s group round' : 'your round for this UTC week';
@@ -50,7 +57,7 @@ export function SportQuizPreparation({ snapshot, busy, onStart, initialSport = n
   {!group ? pools.map(p => <QuizButton key={key(p.topic_category, p.sport)} label={`Choose ${p.sport}`} quiet selected={selection === key(p.topic_category, p.sport)} disabled={busy} onPress={() => setSelection(key(p.topic_category, p.sport))}/>) : null}
   {!group && !pools.length ? <Text>No unseen reviewed question is available for this week’s topic. No repeat or alternative topic will be forced.</Text> : null}
   <Pressable accessibilityRole="checkbox" accessibilityLabel="I understand the trivia notice" accessibilityState={{ checked: accepted, disabled: busy }} disabled={busy} onPress={() => setAccepted(v => !v)} style={{ minHeight: 44, justifyContent: 'center' }}><Text>{accepted ? '✓ ' : '□ '}I understand the trivia notice and choose to participate.</Text></Pressable>
-  <QuizButton label={group ? 'Start group round' : 'Start trivia'} disabled={busy || !accepted || !ready} onPress={() => { if (group)
+  <QuizButton label={group ? 'Start group round' : 'Start trivia'} disabled={busy || !accepted || !ready} onPress={() => { telemetry.trackTriviaStep('press_start', { kind: funnelKind, topic: group ? null : (selected?.topic_category ?? 'sport') }); if (group)
         onStart('sport', null, duration);
     else if (selection === key('sport', null))
         onStart('sport', null, duration);

@@ -12,6 +12,7 @@ import type { ChartColor } from './measureColors';
 import { formatCount, formatMinutes, formatMs, formatPercent, isMeasured, tapsPerOpen } from './dashboard';
 import { featureLabel, issueLabel, labelRows } from './eventLabels';
 import { measureColor } from './measureColors';
+import type { SmoothnessReport, TriviaReport } from './reports';
 
 export type OperationsTabId = 'where' | 'buttons' | 'errors' | 'menus';
 
@@ -107,6 +108,10 @@ export type OperationsInput = {
   reportsOk?: boolean;
   /** False when the published flags were not read. Menus are then missing, not "all on". */
   runtimeOk?: boolean;
+  /** `get_admin_reports.trivia` (20261020180000). Absent = caller predates it: no trivia tiles. */
+  trivia?: TriviaReport | null;
+  /** `get_admin_reports.smoothness`. Absent = caller predates it: no smoothness tiles. */
+  smoothness?: SmoothnessReport | null;
 };
 
 function ranked(rows: OperationsBar[]): OperationsBar[] {
@@ -172,6 +177,38 @@ const DETAIL_LABELS: Record<string, string> = {
   checkouts_24h: 'Checkout step timings · 24h',
   avg_checkout_ms_24h: 'Average checkout step · 24h',
   events_24h: 'Telemetry events · 24h',
+  trivia_prep_views_7d: 'Trivia preparations viewed · 7d',
+  trivia_start_presses_7d: 'Trivia Start presses · 7d',
+  trivia_starts_7d: 'Trivia starts · 7d',
+  trivia_answers_7d: 'Trivia answers · 7d',
+  trivia_nexts_7d: 'Trivia Nexts · 7d',
+  trivia_completes_7d: 'Trivia completions · 7d',
+  trivia_abandons_7d: 'Trivia abandonments · 7d',
+  trivia_unavailable_7d: 'Trivia missing-content ends · 7d',
+  trivia_start_failed_7d: 'Trivia Start failures · 7d',
+  trivia_answer_failed_7d: 'Trivia answer failures · 7d',
+  trivia_next_failed_7d: 'Trivia Next failures · 7d',
+  trivia_explanation_failed_7d: 'Trivia explanation failures · 7d',
+  mounts_7d: 'Screen mounts · 7d',
+  avg_mount_ms_7d: 'Average screen mount · 7d',
+  app_starts_7d: 'Cold starts · 7d',
+  avg_start_ms_7d: 'Average cold start · 7d',
+};
+
+/** Round kinds people read on the Buttons tab. */
+const TRIVIA_KIND_LABELS: Record<string, string> = {
+  personal: 'Personal rounds',
+  group: 'Group rounds',
+  life: 'Life Playbook rounds',
+  unknown: 'Unknown kind',
+};
+
+/** Mount surfaces people read on the Errors tab. */
+const MOUNT_SURFACE_LABELS: Record<string, string> = {
+  home: 'Home',
+  'sport-quiz': 'Sport Pop Quiz',
+  'donate-sheet': 'Donate sheet',
+  other: 'Other',
 };
 
 function detailsFromCounts(section: Record<string, number>): OperationsDetail[] {
@@ -212,6 +249,103 @@ export function menuSplits(published: Record<string, unknown>, runtimeOk: boolea
   });
 }
 
+/** Trivia funnel tiles. Empty when the caller predates the key, so older output is unchanged. */
+function triviaStats(trivia: TriviaReport | null): OperationsStat[] {
+  if (!trivia) return [];
+  const starts = trivia.starts7d;
+  const completes = trivia.completes7d;
+  const rate = isMeasured(starts) && isMeasured(completes) && starts > 0 ? (completes / starts) * 100 : null;
+  return [
+    { key: 'trivia_prep_views_7d', label: 'Trivia preparations viewed · 7d', value: trivia.prepViews7d, kind: 'count', hint: 'Preparation screens shown; viewed-but-never-pressed is friction', goodDirection: 'none' },
+    { key: 'trivia_start_presses_7d', label: 'Trivia Start presses · 7d', value: trivia.startPresses7d, kind: 'count', hint: 'Start taps, including attempts that never confirmed', goodDirection: 'none' },
+    { key: 'trivia_starts_7d', label: 'Trivia starts · 7d', value: starts, kind: 'count', hint: 'Confirmed round starts, all kinds', goodDirection: 'none' },
+    { key: 'trivia_completes_7d', label: 'Trivia completions · 7d', value: completes, kind: 'count', hint: 'Terminal summaries shown', goodDirection: 'none' },
+    { key: 'trivia_complete_rate_7d', label: 'Trivia completion · 7d', value: rate, kind: 'percent', hint: 'Completions per 100 starts, same 7 days; a week boundary can straddle', goodDirection: 'none' },
+    { key: 'trivia_abandons_7d', label: 'Trivia abandonments · 7d', value: trivia.abandons7d, kind: 'count', hint: 'Open rounds left behind', goodDirection: 'none' },
+  ];
+}
+
+/** Answers per question (position order: a falling tail is drop-off) and starts per kind. */
+function triviaRankings(trivia: TriviaReport | null): OperationsRanking[] {
+  if (!trivia) return [];
+  return [
+    {
+      title: 'Answers by question',
+      caption: 'Last 7 days · confirmed answers per question position, in order.',
+      source: 'get_admin_reports.trivia.by_position_7d',
+      rows: trivia.byPosition7d,
+      kind: 'count',
+      accent: measureColor('featureTaps'),
+      emptyText: 'No trivia answers in the last 7 days.',
+    },
+    {
+      title: 'Rounds by kind',
+      caption: 'Last 7 days · confirmed starts per round kind, most first.',
+      source: 'get_admin_reports.trivia.starts_by_kind_7d',
+      rows: trivia.startsByKind7d ? trivia.startsByKind7d.map((row) => ({ label: TRIVIA_KIND_LABELS[row.label] ?? row.label, value: row.value })) : null,
+      kind: 'count',
+      accent: measureColor('featureTaps'),
+      emptyText: 'No trivia starts in the last 7 days.',
+    },
+  ];
+}
+
+function triviaDetails(trivia: TriviaReport | null): OperationsDetail[] {
+  if (!trivia) return [];
+  const counts: Record<string, number> = {};
+  const put = (key: string, value: number | null) => { if (value != null) counts[key] = value; };
+  put('trivia_prep_views_7d', trivia.prepViews7d);
+  put('trivia_start_presses_7d', trivia.startPresses7d);
+  put('trivia_starts_7d', trivia.starts7d);
+  put('trivia_answers_7d', trivia.answers7d);
+  put('trivia_nexts_7d', trivia.nexts7d);
+  put('trivia_completes_7d', trivia.completes7d);
+  put('trivia_abandons_7d', trivia.abandons7d);
+  put('trivia_unavailable_7d', trivia.unavailable7d);
+  put('trivia_start_failed_7d', trivia.startFailed7d);
+  put('trivia_answer_failed_7d', trivia.answerFailed7d);
+  put('trivia_next_failed_7d', trivia.nextFailed7d);
+  put('trivia_explanation_failed_7d', trivia.explanationFailed7d);
+  return detailsFromCounts(counts);
+}
+
+/** Smoothness tiles. Empty when the caller predates the key. */
+function smoothnessStats(smoothness: SmoothnessReport | null): OperationsStat[] {
+  if (!smoothness) return [];
+  return [
+    { key: 'avg_mount_ms_7d', label: 'Average screen mount · 7d', value: smoothness.avgMountMs7d, kind: 'ms', hint: 'Mount to first effect on Home, Sport Pop Quiz and the donate sheet', goodDirection: 'down' },
+    { key: 'mounts_7d', label: 'Screen mounts · 7d', value: smoothness.mounts7d, kind: 'count', hint: 'Mount timings logged', goodDirection: 'none' },
+    { key: 'avg_start_ms_7d', label: 'Average cold start · 7d', value: smoothness.avgStartMs7d, kind: 'ms', hint: 'Bundle eval to first render', goodDirection: 'down' },
+    { key: 'app_starts_7d', label: 'Cold starts · 7d', value: smoothness.appStarts7d, kind: 'count', hint: 'App launches that logged a time', goodDirection: 'none' },
+  ];
+}
+
+function smoothnessRankings(smoothness: SmoothnessReport | null): OperationsRanking[] {
+  if (!smoothness) return [];
+  return [
+    {
+      title: 'Mount time by screen',
+      caption: 'Last 7 days · average mount per surface, slowest first.',
+      source: 'get_admin_reports.smoothness.by_surface_7d',
+      rows: smoothness.bySurface7d ? smoothness.bySurface7d.map((row) => ({ label: MOUNT_SURFACE_LABELS[row.label] ?? row.label, value: row.value })) : null,
+      kind: 'ms',
+      accent: measureColor('stalls'),
+      emptyText: 'No screen mounts in the last 7 days.',
+    },
+  ];
+}
+
+function smoothnessDetails(smoothness: SmoothnessReport | null): OperationsDetail[] {
+  if (!smoothness) return [];
+  const counts: Record<string, number> = {};
+  const put = (key: string, value: number | null) => { if (value != null) counts[key] = value; };
+  put('mounts_7d', smoothness.mounts7d);
+  put('avg_mount_ms_7d', smoothness.avgMountMs7d);
+  put('app_starts_7d', smoothness.appStarts7d);
+  put('avg_start_ms_7d', smoothness.avgStartMs7d);
+  return detailsFromCounts(counts);
+}
+
 /**
  * @purpose Four operations lenses: where people spend time, which buttons they use, errors, and which menus are on.
  * @param input Report rows and series, portal read failures, and the published menu flags.
@@ -219,6 +353,8 @@ export function menuSplits(published: Record<string, unknown>, runtimeOk: boolea
  */
 export function buildOperations(input: OperationsInput): OperationsLens[] {
   const reportsOk = input.reportsOk ?? true;
+  const trivia = reportsOk ? input.trivia ?? null : null;
+  const smoothness = reportsOk ? input.smoothness ?? null : null;
   const runtimeOk = input.runtimeOk ?? true;
   const tabs = ranked(input.tabs ?? []);
   const buttons = ranked(input.buttons ?? []);
@@ -318,6 +454,7 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           hint: isMeasured(taps24h) && isMeasured(sessions24h) && perOpen == null ? 'No tab opens in 24 hours, so no ratio' : 'Feature taps divided by tab opens',
           goodDirection: 'none',
         },
+        ...triviaStats(trivia),
       ],
       series: [],
       rankings: [
@@ -330,10 +467,11 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           accent: measureColor('featureTaps'),
           emptyText: 'No button taps in the last 7 days.',
         },
+        ...triviaRankings(trivia),
       ],
       splits: [],
       bars: buttonsNamed,
-      details: buttonsNamed.map((row) => ({ label: row.label, value: formatCount(row.value) })),
+      details: [...buttonsNamed.map((row) => ({ label: row.label, value: formatCount(row.value) })), ...triviaDetails(trivia)],
     },
     {
       id: 'errors',
@@ -389,6 +527,7 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           tone: !isMeasured(openBugs) ? 'neutral' : openBugs > 0 ? 'warn' : 'ok',
           goodDirection: 'down',
         },
+        ...smoothnessStats(smoothness),
       ],
       series: [
         { title: 'Video stalls', source: 'get_admin_reports.series.stalls', points: series(input.stallSeries), kind: 'count', variant: 'columns', accent: measureColor('stalls') },
@@ -403,6 +542,7 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           accent: measureColor('issues'),
           emptyText: 'No app errors in this window.',
         },
+        ...smoothnessRankings(smoothness),
       ],
       splits: [],
       bars: appErrors,
@@ -410,6 +550,7 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
         ...input.portalErrors.map((message) => ({ label: 'Portal', value: message })),
         ...appErrors.map((row) => ({ label: row.label, value: formatCount(row.value) })),
         ...detailsFromCounts(reportsOk ? input.reliability : {}),
+        ...smoothnessDetails(smoothness),
       ],
     },
     {

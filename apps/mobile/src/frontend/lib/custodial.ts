@@ -1,13 +1,14 @@
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import { ATHLETE_SHARE_PERCENT, PLATFORM_SHARE_PERCENT } from '@/data/malo';
-import { isMissingFunction } from '@/lib/dbErrors';
-
 /**
  * Custodial money rules (owner decision 2026-09-29, `docs/engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md` §7):
  * the guardian holds one payout account per athlete, the athlete sees every gift and approves
  * every guardian withdrawal, and control passes to the athlete at the handover age (default 18).
  * The server enforces all of it (`supabase/custodial_money.sql`); this file only reads and asks.
+ * Returned summaries must match the requested athlete before they reach the app.
  */
+
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { ATHLETE_SHARE_PERCENT, PLATFORM_SHARE_PERCENT } from '@/data/malo';
+import { isMissingFunction } from '@/lib/dbErrors';
 
 export type CustodialViewerRole = 'admin' | 'guardian' | 'athlete';
 
@@ -238,7 +239,11 @@ export async function fetchCustodialSummary(playerId: string | null | undefined)
   const { data, error } = await supabase.rpc('get_custodial_summary', { target_player_id: playerId });
   if (isMissingFunction(error)) return { state: 'unavailable' };
   if (error) return { state: 'error', message: error.message || 'Could not load the account.' };
-  return { state: 'ok', summary: parseCustodialSummary(data) };
+  const summary = parseCustodialSummary(data);
+  if (summary && summary.playerId !== playerId) {
+    return { state: 'error', message: 'Could not load the family account. Please try again.' };
+  }
+  return { state: 'ok', summary };
 }
 
 type CustodialRpc =

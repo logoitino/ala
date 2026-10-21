@@ -2,11 +2,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.116.0';
 import Stripe from 'https://esm.sh/stripe@22.6.2?target=deno';
 
 import {
-  CONNECT_PROFILE_COLUMNS,
+  CONNECT_FAILURE_MESSAGE,
+  ConnectContextError,
   CONNECT_SIGN_IN_MESSAGE,
   runCreateStripeAccount,
 } from '../_shared/money/connect.ts';
-import { INVALID_SESSION_MESSAGE, errorResult, refuseLiveStripeKey, readBearerLoose, thrownMessage, type CoreResult } from '../_shared/money/http.ts';
+import { INVALID_SESSION_MESSAGE, errorResult, refuseLiveStripeKey, readBearerLoose, type CoreResult } from '../_shared/money/http.ts';
 import { resolveSession } from '../_shared/money/session.ts';
 
 /**
@@ -14,9 +15,10 @@ import { resolveSession } from '../_shared/money/session.ts';
  *
  * SCALE-04: the mode, Terms / linked-account gates, account shape, links and stored flags are the shared money core
  * (`../_shared/money/connect.ts`), the same code the Metro route runs. This file keeps only what is Deno-specific:
- * `Deno.env`, `Deno.serve`, CORS, the `esm.sh` SDKs, the service-role profile client and this function's order of
+ * `Deno.env`, `Deno.serve`, CORS, the `esm.sh` SDKs, the service-role context client and this function's order of
  * checks (all configuration before the session). Creating a payee account is money-moving, so the session is
  * always confirmed live with `getUser` — never the local token check, which cannot see a sign-out before expiry.
+ * Profile errors/zero-row updates stop the flow; the core confirms the saved binding before minting any link.
  */
 
 const corsHeaders = {
@@ -80,7 +82,7 @@ Deno.serve(async (req) => {
     }
 
     const body: unknown = await req.json();
-    // Built once the request passes validation (first profile read), as before.
+    // Built once the request passes validation (first context read), as before.
     const makeAdminDb = () =>
       createClient(supabaseUrl, serviceKey, {
         auth: { persistSession: false, autoRefreshToken: false },
@@ -92,21 +94,26 @@ Deno.serve(async (req) => {
       await runCreateStripeAccount({
         user: session.user,
         body,
-        loadProfile: async (userId) => {
-          const { data: profile } = await adminDb()
-            .from('profiles')
-            .select(CONNECT_PROFILE_COLUMNS)
-            .eq('user_id', userId)
-            .maybeSingle();
-          return profile;
+        loadContext: async (userId, playerId) => {
+          const { data, error } = await adminDb().rpc('stripe_connect_context', {
+            actor_user_id: userId, target_player_id: playerId,
+          });
+          if (error) throw new ConnectContextError(error.code === '42501');
+          return data;
         },
-        saveFlags: async (profileId, userId, flags) => {
-          await adminDb().from('profiles').update(flags).eq('id', profileId).eq('user_id', userId);
+        saveAccount: async (profileId, userId, flags, expectedAccountId, playerId) => {
+          // The service-only function rechecks current guardianship/consent after the Stripe await.
+          const { data, error } = await adminDb().rpc('save_stripe_connect_account', {
+            actor_user_id: userId, target_player_id: playerId, expected_profile_id: profileId,
+            expected_account_id: expectedAccountId, account_id: flags.stripe_connect_id,
+            onboarding_complete: flags.stripe_onboarding_complete, transfers_enabled: flags.payouts_enabled,
+          });
+          if (error || data !== flags.stripe_connect_id) throw new Error('Connect account save was not confirmed.');
         },
         stripe: () => new Stripe(stripeSecret, { httpClient: Stripe.createFetchHttpClient() }),
       }),
     );
-  } catch (error) {
-    return respond(errorResult(thrownMessage(error), 400));
+  } catch {
+    return respond(errorResult(CONNECT_FAILURE_MESSAGE, 400));
   }
 });

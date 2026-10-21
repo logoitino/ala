@@ -1,11 +1,11 @@
 /**
  * Money server core (SCALE-04): Stripe Connect Express set-up for a payee (Accounts v2). Reads the request mode,
- * applies the Terms and linked-account gates, creates or resumes the caller's own account, mints an onboarding /
- * update / dashboard link and reports the flags to store on `profiles`. Used by the Edge Function
+ * applies Terms and service-only adult/guardian context gates, creates or resumes the selected account, mints an onboarding /
+ * update / dashboard link after confirming the profile or athlete custodial binding is saved. Used by the Edge Function
  * `create-stripe-account` and the Metro route `POST /api/create-stripe-account`; each runtime injects its database
  * reads/writes and its Stripe client and keeps its own session / configuration order in front of this.
  *
- * The account is always the caller's (`profiles.stripe_connect_id` for the session user), never a client-supplied id.
+ * The destination is derived by service-only SQL from the live actor and optional athlete UUID; never a request account id.
  * Creating a payee account is a money-moving step, so adapters confirm the live session with `getUser` first.
  * Payouts stay blocked regardless (`payout.ts`). Wave 0 is Stripe test mode.
  */
@@ -15,8 +15,6 @@ import type { SessionUser } from './session.ts';
 
 /** 401 copy when the Bearer header is missing on Connect set-up. */
 export const CONNECT_SIGN_IN_MESSAGE = 'Sign in to connect payouts.';
-/** Columns the Connect gates read from the caller's `profiles` row. */
-export const CONNECT_PROFILE_COLUMNS = 'id, stripe_connect_id, legal_terms_accepted_at, legal_terms_version';
 /** Who the payee account is for (US individual Express); `sync-front-docs` publishes this as a product fact. */
 export const CONNECT_ACCOUNT_IDENTITY = { country: 'us', entity_type: 'individual' } as const;
 
@@ -26,16 +24,20 @@ type AccountInclude = (typeof ACCOUNT_INCLUDE)[number];
 /** `onboarding` (default), `dashboard` (Express login when finished) or `status` (flags only, no link). */
 export type ConnectMode = 'onboarding' | 'dashboard' | 'status';
 
-/** The response body and the flags stored on `profiles`. */
+/** Existing response plus the selected athlete for guardian responses; flags are provider capabilities, not KYC. */
 export type StripeConnectPayload = {
   url: string | null;
   accountId: string;
+  playerId?: string;
   stripe_onboarding_complete: boolean;
   payouts_enabled: boolean;
 };
 
-/** The caller's `profiles` row as the gates read it (`null` when there is none). */
-export type ConnectProfile = {
+/** Context returned only by stripe_connect_context; actor/target echoes are checked before Stripe. */
+export type ConnectContext = {
+  owner_user_id?: unknown;
+  target_player_id?: unknown;
+  target_kind?: unknown;
   id?: unknown;
   stripe_connect_id?: unknown;
   legal_terms_accepted_at?: unknown;
@@ -64,6 +66,19 @@ type LinkUseCase = {
   refresh_url: string;
   collection_options: { fields: 'eventually_due' };
 };
+
+/** Distinguish an unconfirmed database save from a Stripe failure without leaking provider diagnostics. */
+class ConnectSaveError extends Error {}
+/** Runtime adapters discard raw database messages, retaining only the authorization error category. */
+export class ConnectContextError extends Error {
+  constructor(public readonly denied: boolean) { super('Bank setup context unavailable.'); }
+}
+export const CONNECT_FAILURE_MESSAGE = 'Bank setup could not be completed. Try again.';
+const PLAYER_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ineligible = (): CoreResult => ({ status: 403, body: {
+  error: 'This account is not eligible for bank setup. Check your age, athlete and guardian verification.',
+  code: 'connect_ineligible',
+} });
 
 /** Exactly what is sent to `stripe.v2.core.accounts.create`. */
 export type ConnectAccountCreateParams = {
@@ -134,11 +149,12 @@ export function flagsFromAccount(
 }
 
 /**
- * @purpose Create or resume the caller's Express account and mint the right link for the mode.
+ * @purpose Create or resume the server-derived payee's Express account and mint the right link for the mode.
  * @param stripe Stripe client (secret key on the server only).
  * @param input Session user id / email, the stored account id (never a client id), return URLs and mode.
  * @returns `{ url, accountId, stripe_onboarding_complete, payouts_enabled }`; `url` is null for `status`.
- * @sideEffects Stripe `v2.core.accounts` retrieve or create; Express login link or v2 Account Link.
+ * @sideEffects Stripe `v2.core.accounts` retrieve or create; optional caller-scoped persistence callback
+ *   before Express login link or v2 Account Link. The server request wrapper always supplies persistence.
  */
 export async function runStripeConnectForUser(
   stripe: ConnectStripeClient,
@@ -149,6 +165,9 @@ export async function runStripeConnectForUser(
     returnUrl: string;
     refreshUrl: string;
     mode: ConnectMode;
+    playerId?: string;
+    payeeProfileId?: string;
+    persistAccount?: (payload: StripeConnectPayload) => Promise<void>;
   },
 ): Promise<StripeConnectPayload> {
   const account = input.storedAccountId
@@ -161,15 +180,24 @@ export async function runStripeConnectForUser(
         defaults: {
           currency: 'usd',
           responsibilities: { fees_collector: 'application', losses_collector: 'application' },
-          profile: { product_description: "Tapua'i athlete receiving Mālo tips and subscriptions" },
+          profile: { product_description: "Tapua'i athlete receiving donations and subscriptions" },
         },
         configuration: { recipient: { capabilities: { stripe_balance: { stripe_transfers: { requested: true } } } } },
-        metadata: { tapuai_user_id: input.userId },
+        metadata: { tapuai_user_id: input.userId, ...(input.playerId ? {
+          tapuai_player_id: input.playerId, tapuai_payee_profile_id: input.payeeProfileId!,
+        } : {}) },
         include: [...ACCOUNT_INCLUDE],
       });
 
+  if (typeof account.id !== 'string' || !account.id.trim()
+      || (input.storedAccountId && account.id !== input.storedAccountId)) {
+    throw new Error('Stripe did not return the linked account. Try again.');
+  }
   const flags = flagsFromAccount(account);
   const payload: StripeConnectPayload = { url: null, accountId: account.id, ...flags };
+
+  // A link request may fail independently. Save the binding first so the next attempt resumes it.
+  await input.persistAccount?.(payload);
 
   if (input.mode === 'status') return payload;
 
@@ -200,60 +228,85 @@ export async function runStripeConnectForUser(
 }
 
 /**
- * @purpose The whole Connect request after the session is confirmed: read the body, apply the gates, run Stripe and
- *   store the flags on the caller's own profile row.
- * @param input Live-session `user`; parsed JSON `body`; `loadProfile` / `saveFlags` (the runtime's `profiles` read and
- *   update, scoped to the user id); `stripe` (called only after the gates pass).
- * @returns 400 (missing return URL, no linked account), 403 (Terms not accepted) or 200 with the payload.
- * @sideEffects One `profiles` read, Stripe calls, one `profiles` update when the row exists. Throws for the adapter's
- *   catch-all when the body is not an object or Stripe fails.
+ * @purpose After live session validation, resolve service-only context, run Stripe and atomically save before any link.
+ * @param input Runtime-injected session, body, SQL context/save callbacks and server Stripe client.
+ * @returns Safe errors or account/capability flags; guardian success echoes the selected athlete.
+ * @sideEffects SQL repeats ownership/age/consent/relationship checks after Stripe awaits. No KYC or transfer is performed.
  */
 export async function runCreateStripeAccount(input: {
   user: SessionUser;
   body: unknown;
-  loadProfile: (userId: string) => Promise<ConnectProfile>;
-  saveFlags: (
-    profileId: unknown,
+  loadContext: (userId: string, playerId: string | null) => Promise<ConnectContext>;
+  saveAccount: (
+    profileId: string,
     userId: string,
     flags: Pick<StripeConnectPayload, 'stripe_onboarding_complete' | 'payouts_enabled'> & { stripe_connect_id: string },
+    expectedAccountId: string | null,
+    playerId: string | null,
   ) => Promise<unknown>;
   stripe: () => ConnectStripeClient;
 }): Promise<CoreResult> {
-  const body = input.body as { returnUrl?: unknown; refreshUrl?: unknown; mode?: unknown };
+  if (!input.body || typeof input.body !== 'object' || Array.isArray(input.body)) {
+    return errorResult('A bank setup request must be an object.', 400);
+  }
+  const body = input.body as { returnUrl?: unknown; refreshUrl?: unknown; mode?: unknown; playerId?: unknown };
+  let playerId: string | null = null;
+  // An explicitly malformed target must not accidentally open the guardian's own-profile account.
+  if (Object.prototype.hasOwnProperty.call(body, 'playerId')) {
+    if (typeof body.playerId !== 'string' || !PLAYER_UUID.test(body.playerId.trim())) {
+      return errorResult('playerId must be a uuid for guardian bank setup.', 400);
+    }
+    playerId = body.playerId.trim().toLowerCase();
+  }
   const mode: ConnectMode = body.mode === 'dashboard' || body.mode === 'status' ? body.mode : 'onboarding';
   const returnUrl = typeof body.returnUrl === 'string' ? body.returnUrl.trim() : '';
   const refreshUrl = (typeof body.refreshUrl === 'string' ? body.refreshUrl.trim() : '') || returnUrl;
-
   if (mode !== 'status' && (!returnUrl || !refreshUrl)) {
     return errorResult('returnUrl is required for Connect onboarding.', 400);
   }
 
-  const profile = await input.loadProfile(input.user.id);
+  let profile: ConnectContext;
+  try { profile = await input.loadContext(input.user.id, playerId); }
+  catch (error) {
+    if (error instanceof ConnectContextError && error.denied) return ineligible();
+    return errorResult('Could not load your payout account. Try again.', 503);
+  }
+  if (typeof profile?.id !== 'string' || !profile.id.trim()) {
+    return errorResult('Create your Tapua\'i profile before connecting payouts.', 403);
+  }
+  if (profile.owner_user_id !== input.user.id || profile.target_player_id !== playerId
+    || profile.target_kind !== (playerId === null ? 'self' : 'guardian')) return ineligible();
+  const profileId = profile.id;
+  // Preserve the exact database value for SQL CAS, separately from the trimmed retrieval id.
+  const expectedAccountId = typeof profile.stripe_connect_id === 'string' ? profile.stripe_connect_id : null;
   const storedAccountId = storedConnectAccountId(profile);
-
-  if (mode === 'onboarding' && !storedAccountId && !profile?.legal_terms_accepted_at) {
+  if (mode === 'onboarding' && !storedAccountId && !profile.legal_terms_accepted_at) {
     return errorResult('Agree to Terms of Service & NIL Compliance before connecting a bank.', 403);
   }
   if ((mode === 'dashboard' || mode === 'status') && !storedAccountId) {
-    return errorResult('No Stripe Express account is linked to this athlete yet.', 400);
+    return { status: 400, body: { error: 'No Stripe Express account is linked to this athlete yet.',
+      code: 'connect_not_linked', ...(playerId ? { playerId } : {}) } };
   }
 
-  const payload = await runStripeConnectForUser(input.stripe(), {
-    userId: input.user.id,
-    email: input.user.email?.trim() ?? '',
-    storedAccountId,
-    returnUrl,
-    refreshUrl,
-    mode,
-  });
-
-  if (profile?.id) {
-    await input.saveFlags(profile.id, input.user.id, {
-      stripe_connect_id: payload.accountId,
-      stripe_onboarding_complete: payload.stripe_onboarding_complete,
-      payouts_enabled: payload.payouts_enabled,
+  try {
+    const payload = await runStripeConnectForUser(input.stripe(), {
+      userId: input.user.id, email: input.user.email?.trim() ?? '', storedAccountId,
+      returnUrl, refreshUrl, mode, playerId: playerId ?? undefined, payeeProfileId: profileId,
+      persistAccount: async (account) => {
+        try {
+          await input.saveAccount(profileId, input.user.id, {
+            stripe_connect_id: account.accountId,
+            stripe_onboarding_complete: account.stripe_onboarding_complete,
+            payouts_enabled: account.payouts_enabled,
+          }, expectedAccountId, playerId);
+        } catch { throw new ConnectSaveError(); }
+      },
     });
+    return { status: 200, body: { ...payload, ...(playerId ? { playerId } : {}) } };
+  } catch (error) {
+    if (error instanceof ConnectSaveError) {
+      return errorResult('Could not confirm your Stripe account was saved. Try again before continuing.', 503);
+    }
+    return errorResult(CONNECT_FAILURE_MESSAGE, 400);
   }
-
-  return { status: 200, body: payload };
 }

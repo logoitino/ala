@@ -1,0 +1,10 @@
+{
+  "purpose": "Approved upstream Supabase source pin must be supplied on an internet-enabled operator machine before launch.",
+  "status": "unverified_offline",
+  "repository": "https://github.com/supabase/supabase",
+  "commit": null,
+  "archive_sha256": null,
+  "checked_at": null,
+  "images": {},
+  "reason": "This implementation session could not fetch official upstream compose or Expo web documentation. No image versions or source revision were invented."
+}

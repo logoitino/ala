@@ -1,11 +1,14 @@
 /** Max highlight length (seconds). Camera `videoMaxDuration` uses this. */
 export const HIGHLIGHT_MAX_SECONDS = 45;
 
-/** ImagePicker `duration` is milliseconds; this is the same cap. */
+/** Upload DTOs use normalized milliseconds; picker seconds are converted at the web boundary. */
 export const HIGHLIGHT_MAX_MS = HIGHLIGHT_MAX_SECONDS * 1000;
 
 export const HIGHLIGHT_TOO_LONG =
   'Highlight clips must be 45 seconds or less to showcase your best plays!';
+
+/** Unknown duration cannot establish that a picked clip meets the short-Highlight limit. */
+export const HIGHLIGHT_LENGTH_UNREADABLE = 'Could not read this clip’s length. Pick it again.';
 
 /** Hard stop before Storage. A compressed 45s clip at the upload bitrate stays under this. */
 export const HIGHLIGHT_MAX_BYTES = 8 * 1024 * 1024;

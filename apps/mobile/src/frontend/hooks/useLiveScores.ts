@@ -1,11 +1,20 @@
 /**
  * Local tab scoreboard: active games, kept current over Realtime, filtered by a ZIP / school search. Database reads and
- * the live channel go through `lib/liveGames`.
+ * the live channels go through `lib/liveGames`; the merge and refetch decisions live in `lib/liveScoreSync`.
+ * SCALE-03 (2026-10-18): with `EXPO_PUBLIC_LIVE_SCORES_BROADCAST=true` each listed game is followed on its own private
+ * Broadcast topic and a score change is merged in place. With the switch off (the default), or when the database
+ * refuses the topic (migration not applied), it keeps the earlier behaviour: any `games` change rereads the list.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { gameMatchesQuery } from '@/data/players';
-import { fetchDiscoveryGames, subscribeGamesChanges } from '@/lib/liveGames';
+import {
+  fetchDiscoveryGames,
+  isLiveScoresBroadcastEnabled,
+  subscribeGamesChanges,
+  subscribeScoreTopic,
+} from '@/lib/liveGames';
+import { createLiveScoreSync, type LiveScoreSyncMode } from '@/lib/liveScoreSync';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import type { Game } from '@/types/database';
 
@@ -19,21 +28,20 @@ const FRIENDLY_ERROR = 'We can’t reach the scoreboard right now. Check your co
 
 /**
  * @purpose Subscribe to live `games` rows for Local discovery (Realtime + ZIP / school search).
- * @returns `{ games, visibleGames, query, setQuery, loading, error, refresh }`.
- * @sideEffects Supabase SELECT + Realtime `postgres_changes` on `games`.
+ * @returns `{ games, visibleGames, query, setQuery, loading, error, refresh, liveMode }`. `liveMode` says whether
+ *   per-game Broadcast or the earlier refetch path is running.
+ * @sideEffects Supabase SELECT; Realtime private Broadcast `game_scores_*` (switch on) or `postgres_changes` on
+ *   `games` (switch off / fallback). Every channel is removed on unmount.
  */
 export function useLiveScores() {
-  const mountedRef = useRef(true);
   const [games, setGames] = useState<Game[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [liveMode, setLiveMode] = useState<LiveScoreSyncMode>('legacy');
+  const syncRef = useRef<ReturnType<typeof createLiveScoreSync> | null>(null);
 
-  const refresh = useCallback(async (showSpinner = true) => {
-    if (!mountedRef.current) return;
-    if (showSpinner) setLoading(true);
-    setError(null);
-
+  useEffect(() => {
     if (!isSupabaseConfigured) {
       console.warn('[useLiveScores]', CONFIG_ERROR);
       setGames([]);
@@ -42,46 +50,35 @@ export function useLiveScores() {
       return;
     }
 
-    const source = await fetchDiscoveryGames();
-
-    if (!mountedRef.current) return;
-
-    if (source.error) {
-      console.warn('[useLiveScores]', source.error);
-      setGames([]);
-      setError(FRIENDLY_ERROR);
-      setLoading(false);
-      return;
-    }
-
-    setGames(source.games);
-    setLoading(false);
+    const sync = createLiveScoreSync({
+      broadcastEnabled: isLiveScoresBroadcastEnabled(),
+      fetchGames: fetchDiscoveryGames,
+      subscribeTopic: subscribeScoreTopic,
+      subscribeLegacy: (onChange) => subscribeGamesChanges('games_discovery', onChange),
+      onState: (snapshot) => {
+        if (snapshot.error) console.warn('[useLiveScores]', snapshot.error);
+        setGames(snapshot.games);
+        setLoading(snapshot.loading);
+        setError(snapshot.error ? FRIENDLY_ERROR : null);
+        setLiveMode(snapshot.mode);
+      },
+    });
+    syncRef.current = sync;
+    sync.start();
+    return () => {
+      syncRef.current = null;
+      sync.stop();
+    };
   }, []);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    void refresh();
-
-    if (!isSupabaseConfigured) {
-      return () => {
-        mountedRef.current = false;
-      };
-    }
-
-    const unsubscribe = subscribeGamesChanges('games_discovery', () => {
-      void refresh(false);
-    });
-
-    return () => {
-      mountedRef.current = false;
-      unsubscribe();
-    };
-  }, [refresh]);
+  const refresh = useCallback(async (showSpinner = true) => {
+    await syncRef.current?.refresh(showSpinner);
+  }, []);
 
   const visibleGames = useMemo(
     () => games.filter((game) => gameMatchesQuery(game, query)),
     [games, query],
   );
 
-  return { games, visibleGames, query, setQuery, loading, error, refresh };
+  return { games, visibleGames, query, setQuery, loading, error, refresh, liveMode };
 }

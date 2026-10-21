@@ -1,0 +1,252 @@
+{
+  "_comment": "Reviewed source Security ownership, existing local guard links and mandatory operational reviewer groups. No credential values or operational acceptance; source report regeneration is bookkeeping only.",
+  "schemaVersion": 1,
+  "serviceReviewers": {
+    "supabase": [
+      "RLS_SECURITY",
+      "SESSION_SECURITY",
+      "INFRA_SECURITY"
+    ],
+    "stripe": [
+      "SESSION_SECURITY",
+      "THREAT_DETECTION"
+    ],
+    "expo-eas": [
+      "SUPPLY_CHAIN_SECURITY",
+      "SESSION_SECURITY"
+    ],
+    "sign-in-providers": [
+      "SESSION_SECURITY"
+    ],
+    "video-host": [
+      "INFRA_SECURITY",
+      "RLS_SECURITY"
+    ],
+    "github-actions": [
+      "SUPPLY_CHAIN_SECURITY",
+      "INFRA_SECURITY"
+    ],
+    "admin-portal-hosting": [
+      "INFRA_SECURITY",
+      "SESSION_SECURITY"
+    ],
+    "engineering-support": [
+      "THREAT_DETECTION",
+      "RECOVERY_SECURITY"
+    ],
+    "portable-recovery": [
+      "RECOVERY_SECURITY",
+      "SUPPLY_CHAIN_SECURITY"
+    ],
+    "self-hosted-exit": [
+      "INFRA_SECURITY",
+      "SUPPLY_CHAIN_SECURITY",
+      "RECOVERY_SECURITY"
+    ]
+  },
+  "componentReviewers": {
+    "database": [
+      "RLS_SECURITY",
+      "RECOVERY_SECURITY"
+    ],
+    "data-api": [
+      "RLS_SECURITY",
+      "SESSION_SECURITY"
+    ],
+    "auth": [
+      "SESSION_SECURITY"
+    ],
+    "storage": [
+      "RLS_SECURITY",
+      "RECOVERY_SECURITY"
+    ],
+    "realtime": [
+      "RLS_SECURITY",
+      "SESSION_SECURITY"
+    ],
+    "functions": [
+      "SESSION_SECURITY",
+      "SUPPLY_CHAIN_SECURITY"
+    ],
+    "app-hosting": [
+      "INFRA_SECURITY",
+      "SUPPLY_CHAIN_SECURITY"
+    ],
+    "edge-network": [
+      "INFRA_SECURITY"
+    ],
+    "secrets": [
+      "INFRA_SECURITY",
+      "SESSION_SECURITY",
+      "RECOVERY_SECURITY"
+    ],
+    "backup": [
+      "RECOVERY_SECURITY"
+    ],
+    "monitoring": [
+      "THREAT_DETECTION",
+      "INFRA_SECURITY"
+    ],
+    "external": [
+      "SESSION_SECURITY",
+      "INFRA_SECURITY"
+    ],
+    "network": [
+      "INFRA_SECURITY"
+    ],
+    "load-balancer": [
+      "INFRA_SECURITY"
+    ],
+    "cdn": [
+      "INFRA_SECURITY",
+      "RLS_SECURITY"
+    ],
+    "waf-ddos": [
+      "INFRA_SECURITY",
+      "THREAT_DETECTION"
+    ],
+    "cache": [
+      "INFRA_SECURITY",
+      "RLS_SECURITY"
+    ],
+    "pooler": [
+      "INFRA_SECURITY",
+      "RLS_SECURITY"
+    ],
+    "db-ha": [
+      "RECOVERY_SECURITY",
+      "INFRA_SECURITY"
+    ],
+    "migration-replication": [
+      "RECOVERY_SECURITY",
+      "RLS_SECURITY"
+    ],
+    "dns-traffic": [
+      "INFRA_SECURITY",
+      "SESSION_SECURITY"
+    ],
+    "admin-access": [
+      "INFRA_SECURITY",
+      "SESSION_SECURITY"
+    ],
+    "ci-cd": [
+      "SUPPLY_CHAIN_SECURITY"
+    ],
+    "cost-guard": [
+      "INFRA_SECURITY",
+      "THREAT_DETECTION"
+    ]
+  },
+  "guards": [
+    {
+      "id": "client-boundary",
+      "evidence": [
+        "scripts/check-client-keys.mjs",
+        "packages/shared-types/backendConnection.ts"
+      ]
+    },
+    {
+      "id": "no-ssn",
+      "evidence": [
+        "scripts/check-no-ssn.mjs"
+      ]
+    },
+    {
+      "id": "restore-contracts",
+      "evidence": [
+        "infrastructure/backup/tests/test_operations.py",
+        "infrastructure/migration/parity.py",
+        "infrastructure/supabase/configure.py"
+      ]
+    },
+    {
+      "id": "source-custody",
+      "evidence": [
+        "infrastructure/exit/release.mjs",
+        "infrastructure/exit/setup.mjs",
+        "infrastructure/exit/runtime_images.py"
+      ]
+    },
+    {
+      "id": "connection-contracts",
+      "evidence": [
+        "infrastructure/portability/profile.mjs",
+        "infrastructure/portability/protocol.mjs"
+      ]
+    },
+    {
+      "id": "source-recovery",
+      "evidence": [
+        "scripts/recovery-capsule.mjs"
+      ]
+    },
+    {
+      "id": "infra-inventory",
+      "evidence": [
+        "scripts/infra-register.mjs"
+      ]
+    },
+    {
+      "id": "data-governance",
+      "evidence": [
+        "scripts/data-map.mjs"
+      ]
+    },
+    {
+      "id": "role-routing",
+      "evidence": [
+        "scripts/check-agents.mjs",
+        "infrastructure/security/routing.mjs"
+      ]
+    }
+  ],
+  "operationalReviewers": {
+    "network-iam-tls": [
+      "INFRA_SECURITY"
+    ],
+    "host-patching": [
+      "INFRA_SECURITY"
+    ],
+    "ci-supply-chain": [
+      "SUPPLY_CHAIN_SECURITY"
+    ],
+    "runtime-images": [
+      "SUPPLY_CHAIN_SECURITY",
+      "RECOVERY_SECURITY"
+    ],
+    "secret-custody": [
+      "RECOVERY_SECURITY",
+      "SESSION_SECURITY",
+      "INFRA_SECURITY"
+    ],
+    "auth-sessions": [
+      "SESSION_SECURITY"
+    ],
+    "database-authorization": [
+      "RLS_SECURITY"
+    ],
+    "storage-access": [
+      "RLS_SECURITY",
+      "RECOVERY_SECURITY"
+    ],
+    "backup-offsite": [
+      "RECOVERY_SECURITY"
+    ],
+    "restore-isolation": [
+      "RECOVERY_SECURITY",
+      "RLS_SECURITY"
+    ],
+    "incident-response": [
+      "THREAT_DETECTION",
+      "INFRA_SECURITY"
+    ],
+    "payment-boundaries": [
+      "SESSION_SECURITY",
+      "RLS_SECURITY"
+    ],
+    "retention-privacy": [
+      "RECOVERY_SECURITY",
+      "RLS_SECURITY"
+    ]
+  }
+}

@@ -1,3 +1,4 @@
+/** Donation declarations survive the shared Edge/Metro boundary; they do not confer server receipt authority. */
 import { createPaymentIntent } from '@/lib/stripeIntent';
 
 const mockInvoke = jest.fn();
@@ -50,5 +51,13 @@ describe('createPaymentIntent', () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ clientSecret: 'pi_metro' }) });
     await expect(createPaymentIntent(700)).resolves.toBe('pi_metro');
     expect(fetchMock).toHaveBeenCalledWith('/api/create-payment-intent', expect.objectContaining({ method: 'POST' }));
+  });
+  it('preserves donation gift and fee choice across the Metro fallback', async () => {
+    mockInvoke.mockResolvedValue({ data: null, error: { message: 'Not Found', context: { status: 404 } } });
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ clientSecret: 'pi_metro' }) });
+    const donation = { giftCents: 500, coverFees: true, platformTipPercent: 10 };
+    await expect(createPaymentIntent(650, 'player-1', 50, donation)).resolves.toBe('pi_metro');
+    expect(mockInvoke.mock.calls[0][1].body.donation).toEqual(donation);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).donation).toEqual(donation);
   });
 });

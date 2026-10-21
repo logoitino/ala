@@ -1,0 +1,904 @@
+{
+  "version": 1,
+  "about": "REDUNDANCY-02 hand-kept half of the exit infrastructure map. scripts/exit-map.mjs joins it with what the code actually uses and writes docs/engineering/EXIT_INFRASTRUCTURE_MAP.md. Owners must be registry calls. Prices are deliberately absent: they are unverified until COST_OPERATIONS supplies dated quotes.",
+  "exits": {
+    "A": "Self-hosted Supabase on owned cloud servers (AWS EC2 or Azure VM). Same service interfaces; the app changes only its URL and keys. Recommended exit (PORTABILITY, HOSTING_DECISION_BRIEF).",
+    "B": "Cloud-native services (managed PostgreSQL plus provider Auth, object storage, messaging and functions). New adapters behind lib/; a separate project, used only if exit A is ruled out."
+  },
+  "components": [
+    {
+      "id": "database",
+      "name": "PostgreSQL database (tables, RLS, functions, triggers, sequences)",
+      "today": "Supabase managed Postgres",
+      "exitA": {
+        "aws": "Supabase Postgres image on EC2 with encrypted EBS gp3 data volume",
+        "azure": "Supabase Postgres image on a Linux VM with encrypted Premium SSD"
+      },
+      "exitB": {
+        "aws": "Amazon RDS for PostgreSQL or Aurora PostgreSQL",
+        "azure": "Azure Database for PostgreSQL Flexible Server"
+      },
+      "owner": "EXIT_DATABASE",
+      "with": [
+        "DATABASE_MIGRATIONS",
+        "RLS_SECURITY",
+        "BACKEND",
+        "RECOVERY_SECURITY"
+      ],
+      "repo": [
+        "apps/mobile/src/backend/db/schema.sql",
+        "supabase/migrations",
+        "infrastructure/migration"
+      ],
+      "notes": "Exit B must recreate the Supabase roles (anon, authenticated, service_role), auth.uid()/auth.role()/auth.jwt() and the JWT-claims session settings RLS reads, or every policy fails closed.",
+      "tier": "drill"
+    },
+    {
+      "id": "data-api",
+      "name": "Data API (REST and RPC over the database)",
+      "today": "Supabase PostgREST",
+      "exitA": {
+        "aws": "PostgREST container in the self-hosted stack",
+        "azure": "PostgREST container in the self-hosted stack"
+      },
+      "exitB": {
+        "aws": "PostgREST container on ECS Fargate, or an API layer behind lib/",
+        "azure": "PostgREST container on Azure Container Apps, or an API layer behind lib/"
+      },
+      "owner": "EXIT_SERVICES",
+      "with": [
+        "API",
+        "BACKEND",
+        "SHARED_CONTRACTS",
+        "RLS_SECURITY",
+        "SESSION_SECURITY"
+      ],
+      "repo": [
+        "apps/mobile/src/frontend/lib",
+        "apps/admin-portal/lib"
+      ],
+      "notes": "Direct Supabase calls outside lib/ are the places an exit-B adapter change must touch (app:data-boundaries ratchet).",
+      "tier": "drill"
+    },
+    {
+      "id": "auth",
+      "name": "Auth (email/password, email link, Apple/Google, TOTP MFA, sessions, JWT/JWKS)",
+      "today": "Supabase Auth (GoTrue)",
+      "exitA": {
+        "aws": "GoTrue container; SMTP through Amazon SES",
+        "azure": "GoTrue container; SMTP through Azure Communication Services"
+      },
+      "exitB": {
+        "aws": "Amazon Cognito user pools (TOTP MFA, Apple/Google federation) with a token bridge that issues the role/sub claims RLS expects",
+        "azure": "Microsoft Entra External ID with the same token bridge"
+      },
+      "owner": "EXIT_SERVICES",
+      "with": [
+        "AUTH",
+        "SESSION_SECURITY",
+        "SECURITY"
+      ],
+      "repo": [
+        "apps/mobile/src/frontend/lib/auth.ts",
+        "apps/mobile/src/frontend/context/AuthContext.tsx",
+        "apps/admin-portal/middleware.ts"
+      ],
+      "notes": "Password hashes move only to the same GoTrue (exit A). Exit B needs a password-reset or migration-on-login plan; MFA factors must be re-enrolled.",
+      "tier": "drill"
+    },
+    {
+      "id": "storage",
+      "name": "File storage (public and private buckets, owner folders, storage.objects policies)",
+      "today": "Supabase Storage",
+      "exitA": {
+        "aws": "Supabase Storage API container backed by S3",
+        "azure": "Supabase Storage API container backed by Azure Blob Storage"
+      },
+      "exitB": {
+        "aws": "S3 with CloudFront signed URLs; bucket rules re-implemented in the API",
+        "azure": "Blob Storage with SAS URLs; bucket rules re-implemented in the API"
+      },
+      "owner": "EXIT_SERVICES",
+      "with": [
+        "STORAGE",
+        "UPLOAD",
+        "PLAYBACK",
+        "RLS_SECURITY",
+        "RECOVERY_SECURITY"
+      ],
+      "repo": [
+        "apps/mobile/src/frontend/lib/media.ts",
+        "apps/mobile/src/frontend/services/MediaUploadService.ts",
+        "infrastructure/backup",
+        "apps/mobile/src/frontend/lib/mediaStorage.ts",
+        "apps/mobile/src/frontend/lib/photoStoryCleanup.ts"
+      ],
+      "notes": "2026-10-21 local media transport: lib/mediaStorage.ts binds upload/public URL/sign/list/remove; lib/media.ts resolves public references and legacy URLs, with authorized Vault signing. MediaUploadService factories and photo cleanup accept bound adapters; current Supabase remains default. Full-URL writers/backfill remain gated. Alternate hosts must preserve actor authorization, exact object paths, Storage catalog/owner metadata, SQL cleanup protocol and physical byte removal; no hosted restore/parity/drill is established by local adapter tests. See design/MEDIA_SERVICE_PLAN.md.",
+      "tier": "drill"
+    },
+    {
+      "id": "realtime",
+      "name": "Live updates (postgres_changes, private Broadcast topics, realtime.messages policies)",
+      "today": "Supabase Realtime",
+      "exitA": {
+        "aws": "Realtime container in the self-hosted stack",
+        "azure": "Realtime container in the self-hosted stack"
+      },
+      "exitB": {
+        "aws": "AWS AppSync Events or API Gateway WebSockets fed by database triggers",
+        "azure": "Azure Web PubSub fed by database triggers"
+      },
+      "owner": "EXIT_SERVICES",
+      "with": [
+        "REALTIME",
+        "LOCAL",
+        "RLS_SECURITY",
+        "SESSION_SECURITY"
+      ],
+      "repo": [
+        "apps/mobile/src/frontend/lib/liveScoreSync.ts",
+        "apps/mobile/src/frontend/lib/liveGames.ts",
+        "apps/mobile/src/frontend/lib/cheerPoll.ts"
+      ],
+      "notes": "Publication membership and realtime.messages policies are verified by parity after a restore.",
+      "tier": "drill"
+    },
+    {
+      "id": "functions",
+      "name": "Server functions (Stripe checkout and Connect)",
+      "today": "Supabase Edge Functions (Deno) plus Expo API routes (Node)",
+      "exitA": {
+        "aws": "Supabase edge-runtime container (allowlisted functions only)",
+        "azure": "Supabase edge-runtime container (allowlisted functions only)"
+      },
+      "exitB": {
+        "aws": "AWS Lambda running the runtime-neutral money core",
+        "azure": "Azure Functions running the runtime-neutral money core"
+      },
+      "owner": "EXIT_SERVICES",
+      "with": [
+        "API",
+        "COMMERCE",
+        "CONNECT",
+        "SESSION_SECURITY",
+        "SUPPLY_CHAIN_SECURITY"
+      ],
+      "repo": [
+        "supabase/functions",
+        "apps/mobile/src/backend/api",
+        "infrastructure/supabase/configure.py"
+      ],
+      "notes": "stripe-webhook stays undeployed until P1-05 (one authoritative credit path).",
+      "tier": "drill"
+    },
+    {
+      "id": "app-hosting",
+      "name": "Expo web app and Node API routes; Next admin portal",
+      "today": "Not hosted in production (local and preview only)",
+      "exitA": {
+        "aws": "Containers from infrastructure/containers on the EC2 host",
+        "azure": "Containers from infrastructure/containers on the Azure VM"
+      },
+      "exitB": {
+        "aws": "ECS Fargate services behind an Application Load Balancer",
+        "azure": "Azure Container Apps"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "RELEASE",
+        "CI",
+        "ADMIN",
+        "INFRA_SECURITY",
+        "SUPPLY_CHAIN_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/containers"
+      ],
+      "notes": "Native apps keep compiled URLs/keys; old installs need a release plan before any endpoint move.",
+      "tier": "drill"
+    },
+    {
+      "id": "edge-network",
+      "name": "TLS, gateway and DNS",
+      "today": "Supabase project domain; no app domain in production",
+      "exitA": {
+        "aws": "Caddy TLS on the host; Route 53 records",
+        "azure": "Caddy TLS on the VM; Azure DNS records"
+      },
+      "exitB": {
+        "aws": "ALB with ACM certificates; Route 53",
+        "azure": "Azure Front Door or Application Gateway; Azure DNS"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "SECURITY",
+        "RELEASE",
+        "INFRA_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/containers/Caddyfile",
+        "infrastructure/terraform"
+      ],
+      "notes": "Studio, database and admin ports stay private.",
+      "tier": "drill"
+    },
+    {
+      "id": "secrets",
+      "name": "Secrets and keys (service keys, JWT secret, Stripe, SMTP, OAuth)",
+      "today": "Supabase project settings, EAS environment, local files outside the repo",
+      "exitA": {
+        "aws": "AWS Secrets Manager with KMS; files under /etc/tapuai on the host",
+        "azure": "Azure Key Vault; files under /etc/tapuai on the VM"
+      },
+      "exitB": {
+        "aws": "AWS Secrets Manager with KMS",
+        "azure": "Azure Key Vault"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "SECURITY",
+        "SESSION_SECURITY",
+        "INFRA_SECURITY",
+        "RECOVERY_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/backup/backup.env.example",
+        "infrastructure/containers/runtime.env.example"
+      ],
+      "notes": "Database dumps never contain project keys, signing keys, SMTP, OAuth or webhook settings: inventory them in the encrypted custody file.",
+      "tier": "drill"
+    },
+    {
+      "id": "backup",
+      "name": "Backups, independent copies and point-in-time recovery",
+      "today": "Supabase project backups; REDUNDANCY-01 encrypted archive tools prepared, not scheduled",
+      "exitA": {
+        "aws": "infrastructure/backup to versioned S3 (second account or Azure copy); WAL archiving for PITR",
+        "azure": "infrastructure/backup to versioned Blob (second subscription or S3 copy); WAL archiving for PITR"
+      },
+      "exitB": {
+        "aws": "RDS automated backups and PITR plus the same encrypted archives",
+        "azure": "Flexible Server backups and PITR plus the same encrypted archives"
+      },
+      "owner": "RECOVERY",
+      "with": [
+        "EXIT_DATABASE",
+        "RELIABILITY",
+        "RECOVERY_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/backup",
+        "infrastructure/migration"
+      ],
+      "notes": "A restore onto a Supabase stack reopens revoked grants: grant-sync and a parity PASS are mandatory (CLOUD_MIGRATION_RUNBOOK).",
+      "tier": "drill"
+    },
+    {
+      "id": "monitoring",
+      "name": "Monitoring, alerts and logs",
+      "today": "Supabase dashboard; app telemetry table; no uptime monitor",
+      "exitA": {
+        "aws": "CloudWatch agent, alarms and log groups",
+        "azure": "Azure Monitor agent, alerts and Log Analytics"
+      },
+      "exitB": {
+        "aws": "CloudWatch",
+        "azure": "Azure Monitor"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "RELIABILITY",
+        "TELEMETRY",
+        "SUPPORT",
+        "THREAT_DETECTION",
+        "INFRA_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/backup/status.py"
+      ],
+      "notes": "Backup-age and failed-copy alarms are required before any cutover.",
+      "tier": "production"
+    },
+    {
+      "id": "external",
+      "name": "External providers that do not move (Stripe, Expo EAS, Apple, Google)",
+      "today": "Stripe test mode, EAS builds/updates, App Store / Play accounts",
+      "exitA": {
+        "aws": "Unchanged; update webhook/redirect URLs only",
+        "azure": "Unchanged; update webhook/redirect URLs only"
+      },
+      "exitB": {
+        "aws": "Unchanged; update webhook/redirect URLs only",
+        "azure": "Unchanged; update webhook/redirect URLs only"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "COMMERCE",
+        "RELEASE",
+        "SESSION_SECURITY",
+        "INFRA_SECURITY"
+      ],
+      "repo": [
+        "apps/mobile/eas.json"
+      ],
+      "notes": "Provider accounts and their data are not in any database backup.",
+      "tier": "drill"
+    },
+    {
+      "id": "network",
+      "name": "Private network (two availability zones, private subnets, NAT, security rules)",
+      "tier": "production",
+      "today": "Supabase-managed",
+      "exitA": {
+        "aws": "VPC with public subnets (load balancer only) and private subnets for hosts and database across 2 AZs; NAT gateway; security groups allow only LB \u2192 app \u2192 database",
+        "azure": "VNet with the same subnet split across 2 zones; NAT Gateway; NSGs"
+      },
+      "exitB": {
+        "aws": "Same VPC layout; RDS in private subnets; VPC endpoints for S3 and Secrets Manager",
+        "azure": "Same VNet layout; Flexible Server with private access (VNet integration); private endpoints for Blob and Key Vault"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "SECURITY",
+        "RELIABILITY",
+        "INFRA_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/terraform"
+      ],
+      "notes": "Database, Studio, Realtime and admin ports never get public addresses. The current Terraform templates are a single-VM drill footprint; the two-zone layout is the production target."
+    },
+    {
+      "id": "load-balancer",
+      "name": "Load balancer and health checks",
+      "tier": "production",
+      "today": "Supabase-managed (no app load balancer; app not hosted)",
+      "exitA": {
+        "aws": "Application Load Balancer: HTTPS listener (ACM), target groups for Supabase gateway (Kong), Expo web/API and the Next portal, /health checks, 2+ instances in an Auto Scaling group",
+        "azure": "Application Gateway v2 (or Front Door) with the same backend pools and probes; VM Scale Set"
+      },
+      "exitB": {
+        "aws": "ALB in front of ECS Fargate services",
+        "azure": "Container Apps built-in ingress behind Front Door"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "RELIABILITY",
+        "RELEASE",
+        "INFRA_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/containers"
+      ],
+      "notes": "The drill uses Caddy on one host. Production needs at least two app instances behind the balancer so a host can be replaced without downtime; Realtime WebSockets need idle timeouts above 60 s and sticky-free reconnect."
+    },
+    {
+      "id": "cdn",
+      "name": "CDN for the web app and public media",
+      "tier": "production",
+      "today": "Supabase Storage CDN for public buckets; no app CDN",
+      "exitA": {
+        "aws": "CloudFront: static web export, public bucket objects (avatars, public Highlights); signed URLs / origin access control for private buckets",
+        "azure": "Azure Front Door (Standard/Premium) caching the same paths; SAS for private objects"
+      },
+      "exitB": {
+        "aws": "CloudFront in front of S3",
+        "azure": "Front Door in front of Blob Storage"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "STORAGE",
+        "PLAYBACK",
+        "MOBILE_PERFORMANCE",
+        "INFRA_SECURITY",
+        "RLS_SECURITY"
+      ],
+      "repo": [
+        "apps/mobile/src/frontend/lib/media.ts"
+      ],
+      "notes": "Never cache private or Vault media publicly. Video delivery may move to the separately chosen video host (Mux / Bunny / Cloudflare Stream, HOSTING_DECISION_BRIEF \u00a711) instead."
+    },
+    {
+      "id": "waf-ddos",
+      "name": "Web application firewall, DDoS protection and rate limits",
+      "tier": "production",
+      "today": "Supabase-managed edge protections; app-level caps in SQL",
+      "exitA": {
+        "aws": "AWS WAF on CloudFront and the ALB (managed rule groups, per-IP rate rules on /auth/v1 and guest RPCs); AWS Shield Standard (Advanced optional)",
+        "azure": "Front Door WAF policy with managed and rate-limit rules; Azure DDoS Network Protection on the VNet"
+      },
+      "exitB": {
+        "aws": "Same",
+        "azure": "Same"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "SECURITY",
+        "TRUST_SAFETY",
+        "INFRA_SECURITY",
+        "THREAT_DETECTION"
+      ],
+      "repo": [
+        "infrastructure/containers/Caddyfile"
+      ],
+      "notes": "Rate rules must cover sign-in, sign-up, password reset and the guest-callable cast_cheer_vote / increment_player_hype (known stuffing gap, WORK_QUEUE DATA-01-F11)."
+    },
+    {
+      "id": "cache",
+      "name": "Cache server (Redis-compatible)",
+      "tier": "scale",
+      "today": "None (the app reads the database directly; offline queue is on the device)",
+      "exitA": {
+        "aws": "Amazon ElastiCache for Valkey/Redis in private subnets",
+        "azure": "Azure Cache for Redis in the VNet"
+      },
+      "exitB": {
+        "aws": "ElastiCache Serverless",
+        "azure": "Azure Cache for Redis"
+      },
+      "owner": "EXIT_SERVICES",
+      "with": [
+        "MOBILE_PERFORMANCE",
+        "API",
+        "SECURITY",
+        "INFRA_SECURITY",
+        "RLS_SECURITY"
+      ],
+      "repo": [
+        "apps/mobile/src/frontend/lib"
+      ],
+      "notes": "Not needed for a like-for-like move. First uses when load requires it: WAF-independent rate-limit counters, short-TTL caches of public reads (feed, leaderboards, live scores) behind the API layer, Realtime fan-out relief. Never cache RLS-scoped or private rows under a shared key; invalidate on writes; the app must behave identically with the cache empty."
+    },
+    {
+      "id": "pooler",
+      "name": "Database connection pooler",
+      "tier": "drill",
+      "today": "Supabase Supavisor / PgBouncer",
+      "exitA": {
+        "aws": "Supavisor (part of the self-hosted stack) or PgBouncer on the database host",
+        "azure": "Supavisor or PgBouncer on the database host"
+      },
+      "exitB": {
+        "aws": "RDS Proxy (or PgBouncer on ECS)",
+        "azure": "Flexible Server built-in PgBouncer"
+      },
+      "owner": "EXIT_DATABASE",
+      "with": [
+        "BACKEND",
+        "RELIABILITY",
+        "INFRA_SECURITY",
+        "RLS_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/supabase"
+      ],
+      "notes": "Transaction pooling breaks session-level settings; the app sets JWT claims per transaction (PostgREST), which is compatible. Admin/migration jobs connect directly."
+    },
+    {
+      "id": "db-ha",
+      "name": "Database high availability, replicas and point-in-time recovery",
+      "tier": "production",
+      "today": "Supabase-managed backups (plan-dependent PITR)",
+      "exitA": {
+        "aws": "Primary plus streaming standby in a second AZ (Patroni or repmgr), WAL archiving to S3 (wal-g / pgBackRest) for PITR; or move the database tier to exit B",
+        "azure": "Primary plus standby VM in a second zone, WAL archive to Blob; or move the database tier to exit B"
+      },
+      "exitB": {
+        "aws": "RDS Multi-AZ (or Aurora) with automated backups/PITR; one read replica for reports",
+        "azure": "Flexible Server zone-redundant HA with PITR; read replica"
+      },
+      "owner": "EXIT_DATABASE",
+      "with": [
+        "RECOVERY",
+        "RELIABILITY",
+        "RECOVERY_SECURITY",
+        "INFRA_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/backup"
+      ],
+      "notes": "Self-run HA is the hardest part of exit A; a managed database (exit B tier) with the self-hosted Supabase services pointed at it is a valid hybrid. Replicas must be read-only for app writes; reports can read them."
+    },
+    {
+      "id": "migration-replication",
+      "name": "Migration data movement (dump/restore or online replication)",
+      "tier": "drill",
+      "today": "Not applicable",
+      "exitA": {
+        "aws": "Default: quiesced pg_dump \u2192 reviewed pg_restore \u2192 grant-sync \u2192 parity + access PASS. Online option: native logical replication (publication on Supabase \u2192 subscription on target) or AWS DMS",
+        "azure": "Same default; online option: logical replication or Azure Database Migration Service (online)"
+      },
+      "exitB": {
+        "aws": "Same default; AWS DMS (full load + CDC) for online",
+        "azure": "Same default; Azure DMS online"
+      },
+      "owner": "EXIT_DATABASE",
+      "with": [
+        "RECOVERY",
+        "DATABASE_MIGRATIONS",
+        "STORAGE",
+        "RECOVERY_SECURITY",
+        "RLS_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/migration",
+        "infrastructure/backup"
+      ],
+      "notes": "Logical replication does not carry DDL, sequences, auth/storage service schemas or large objects: freeze schema changes, setval sequences at cutover, and copy Storage objects separately (bulk pre-copy, delta during the freeze)."
+    },
+    {
+      "id": "dns-traffic",
+      "name": "DNS, client endpoint indirection and traffic switching",
+      "tier": "production",
+      "today": "Clients call the supabase.co project URL compiled into each build",
+      "exitA": {
+        "aws": "Route 53 records with low TTL, health checks and weighted/failover routing between old and new endpoints",
+        "azure": "Azure DNS with Traffic Manager or Front Door routing"
+      },
+      "exitB": {
+        "aws": "Same",
+        "azure": "Same"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "RELEASE",
+        "AUTH",
+        "INFRA_SECURITY",
+        "SESSION_SECURITY"
+      ],
+      "repo": [
+        "apps/mobile/src/frontend/lib/supabase.ts"
+      ],
+      "notes": "Do this well before any exit: give clients an endpoint we control (Supabase custom domain, or our own api domain proxying to Supabase) and ship builds that use it. Then cutover is a DNS change, not an app release, and old installs follow automatically. Owner decision (paid add-on or proxy)."
+    },
+    {
+      "id": "admin-access",
+      "name": "Operator access (no public SSH)",
+      "tier": "production",
+      "today": "Supabase dashboard",
+      "exitA": {
+        "aws": "AWS Systems Manager Session Manager; no inbound SSH",
+        "azure": "Azure Bastion; no public SSH"
+      },
+      "exitB": {
+        "aws": "Same",
+        "azure": "Same"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "SECURITY",
+        "INFRA_SECURITY",
+        "SESSION_SECURITY"
+      ],
+      "repo": [
+        "infrastructure/terraform"
+      ],
+      "notes": "Every operator action logged; break-glass account with MFA kept offline."
+    },
+    {
+      "id": "ci-cd",
+      "name": "Build and deploy pipeline",
+      "tier": "production",
+      "today": "GitHub Actions checks; EAS builds; manual SQL",
+      "exitA": {
+        "aws": "GitHub Actions \u2192 ECR images \u2192 deploy to the host/ASG with approval; migrations applied by a pipeline job (R3-03)",
+        "azure": "GitHub Actions \u2192 ACR \u2192 deploy with approval"
+      },
+      "exitB": {
+        "aws": "GitHub Actions \u2192 ECR \u2192 ECS",
+        "azure": "GitHub Actions \u2192 ACR \u2192 Container Apps"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "CI",
+        "RELEASE",
+        "SUPPLY_CHAIN_SECURITY"
+      ],
+      "repo": [
+        ".github/workflows/ci-checks.yml"
+      ],
+      "notes": "OIDC federation from GitHub to the cloud (no long-lived keys). Deploys require the owner's approval per environment (ENVIRONMENTS_AND_HOSTING \u00a74)."
+    },
+    {
+      "id": "cost-guard",
+      "name": "Budgets and cost alarms",
+      "tier": "drill",
+      "today": "Owner-reported $50/month infrastructure ceiling",
+      "exitA": {
+        "aws": "AWS Budgets with alerts at 80% / 100% of the approved budget; tags per environment",
+        "azure": "Azure Cost Management budgets and alerts"
+      },
+      "exitB": {
+        "aws": "Same",
+        "azure": "Same"
+      },
+      "owner": "EXIT_CLOUD",
+      "with": [
+        "COST_OPERATIONS",
+        "CFO",
+        "INFRA_SECURITY",
+        "THREAT_DETECTION"
+      ],
+      "repo": [
+        "infrastructure/terraform"
+      ],
+      "notes": "A production two-zone footprint will exceed $50/month; COST_OPERATIONS supplies dated quotes before any purchase."
+    }
+  ],
+  "authCapabilities": {
+    "getUser": "Validate the current session with the server",
+    "getSession": "Read the local session",
+    "signInWithPassword": "Email and password sign-in",
+    "signUp": "Email sign-up",
+    "signInWithOtp": "Email link / one-time code",
+    "signInWithOAuth": "OAuth redirect (Google)",
+    "signInWithIdToken": "Native Apple / Google ID token",
+    "exchangeCodeForSession": "PKCE code exchange after a redirect",
+    "setSession": "Restore a session from tokens",
+    "signOut": "Sign out",
+    "onAuthStateChange": "Session change events",
+    "mfa.enroll": "TOTP factor enrollment",
+    "mfa.challenge": "TOTP challenge",
+    "mfa.verify": "TOTP verification",
+    "mfa.unenroll": "TOTP removal",
+    "mfa.listFactors": "List MFA factors",
+    "mfa.getAuthenticatorAssuranceLevel": "Read aal1 / aal2"
+  },
+  "edgeFunctionsExcluded": {
+    "stripe-webhook": "Must not be deployed until P1-05 retires the client tips insert (STATE \u00a70, \u00a76 item 3)."
+  },
+  "buildOrder": [
+    {
+      "step": "Approve provider, region, budget, exit A / B / hybrid and whether real data may be used in a drill",
+      "owner": "REDUNDANCY_LEAD",
+      "tool": "Owner decision through CTO (ENVIRONMENTS_AND_HOSTING \u00a79); COST_OPERATIONS dated quote",
+      "status": "open (owner)"
+    },
+    {
+      "step": "Capture exact checked source release and immutable complete runtime image archives for the target architecture",
+      "owner": "EXIT_SYNC",
+      "tool": "infrastructure/exit/release.mjs and runtime_images.py; source-only CI workflow",
+      "status": "local tools/tested source integrity; actual runtime capture pending"
+    },
+    {
+      "step": "Give clients an endpoint we control and ship it in every supported build (so cutover is a DNS change)",
+      "owner": "EXIT_CLOUD",
+      "tool": "infrastructure/containers/compose.gateway.yml optional gateway; RELEASE must deploy owned-origin compatible builds",
+      "status": "gateway source prepared; Caddy/installed clients not tested or deployed"
+    },
+    {
+      "step": "Provision the network: two zones, private subnets, NAT, security rules, operator access without SSH",
+      "owner": "EXIT_CLOUD",
+      "tool": "infrastructure/terraform/aws or azure (extend the single-VM drill templates)",
+      "status": "drill templates prepared; production layout not written"
+    },
+    {
+      "step": "Start the database tier with extensions, Supabase roles, pooler, HA standby, PITR and backups",
+      "owner": "EXIT_DATABASE",
+      "tool": "infrastructure/supabase (exit A) or RDS / Flexible Server (exit B / hybrid)",
+      "status": "exit A bootstrap prepared; upstream pin unresolved"
+    },
+    {
+      "step": "Start Auth, Data API, Storage (S3 / Blob), Realtime and functions; set SMTP, OAuth and keys",
+      "owner": "EXIT_SERVICES",
+      "tool": "infrastructure/supabase/bootstrap.py and configure.py",
+      "status": "prepared; not run"
+    },
+    {
+      "step": "Put the load balancer, CDN, WAF / DDoS and rate rules in front; TLS certificates; health checks",
+      "owner": "EXIT_CLOUD",
+      "tool": "Terraform (ALB / Application Gateway, CloudFront / Front Door, WAF policies)",
+      "status": "designed in this map; not written"
+    },
+    {
+      "step": "Build and start app and admin containers (2+ instances) with target URLs and runtime secrets",
+      "owner": "EXIT_CLOUD",
+      "tool": "infrastructure/containers; GitHub Actions \u2192 ECR / ACR",
+      "status": "local builds pass; images unbuilt"
+    },
+    {
+      "step": "Turn on monitoring, alarms, budgets, backups and the independent copy on the target",
+      "owner": "RECOVERY",
+      "tool": "infrastructure/backup/job.py, status.py; CloudWatch / Azure Monitor; budgets",
+      "status": "prepared; not installed"
+    },
+    {
+      "step": "Fingerprint the bare target, propose and review the restore list",
+      "owner": "EXIT_DATABASE",
+      "tool": "infrastructure/migration/parity.py fingerprint; toc_review.py",
+      "status": "locally proven (REDUNDANCY-01 drill)"
+    },
+    {
+      "step": "Hosted drill: restore database and Storage, grant-sync, parity + access PASS, app smoke tests, timed",
+      "owner": "EXIT_DATABASE",
+      "tool": "CLOUD_MIGRATION_RUNBOOK6A\u20136E historical Storage + reviewed Auth/DB/owner/grant restore; complete parity/readiness",
+      "status": "earlier synthetic DB/grant drill only; new catalog SQL/actual Supabase/hosted timing pending"
+    },
+    {
+      "step": "Record readiness on the release commit and pass the execution gate",
+      "owner": "EXIT_SYNC",
+      "tool": "infrastructure/exit/readiness.py; pnpm exit:preflight --evidence-config PRIVATE_CONFIG",
+      "status": "strict gate implemented locally; no hosted GO"
+    },
+    {
+      "step": "Cutover in an approved window: freeze, final copy, verify, switch DNS, reopen; watch and keep rollback",
+      "owner": "REDUNDANCY_LEAD",
+      "tool": "EXIT_READY_RUNBOOK complete180-minute warm rehearsal and final accepted cutover evidence",
+      "status": "not started (owner approval)"
+    }
+  ],
+  "tiers": {
+    "drill": "Needed to run an isolated restore drill or a like-for-like exit",
+    "production": "Needed before real users move (availability, protection, operability)",
+    "scale": "Add when measured load requires it; the app must work without it"
+  },
+  "topology": [
+    "flowchart TB",
+    "  users[Fans, athletes, admins<br/>native apps + web] --> dns[DNS we control<br/>Route 53 / Azure DNS]",
+    "  dns --> edge[CDN + WAF + DDoS<br/>CloudFront + AWS WAF / Front Door WAF]",
+    "  edge --> lb[Load balancer + health checks<br/>ALB / Application Gateway]",
+    "  subgraph private[Private subnets, two zones]",
+    "    lb --> app[Expo web + API, Next portal<br/>2+ instances]",
+    "    lb --> gw[Supabase gateway<br/>Auth, REST, Storage API, Realtime, Functions]",
+    "    app --> gw",
+    "    gw --> pool[Connection pooler<br/>Supavisor / RDS Proxy]",
+    "    pool --> db[(PostgreSQL primary)]",
+    "    db -. streaming / managed HA .-> standby[(Standby in zone 2)]",
+    "    db -. read-only .-> replica[(Read replica: reports)]",
+    "    app -. optional .-> cache[(Cache: Valkey/Redis)]",
+    "  end",
+    "  gw --> obj[(Object storage<br/>S3 / Blob, private buckets)]",
+    "  db --> wal[(WAL archive + encrypted backups<br/>second account / cloud)]",
+    "  obj --> backupcopy[(Independent encrypted copy)]",
+    "  secrets[Secrets Manager + KMS / Key Vault] -.-> app & gw",
+    "  monitor[CloudWatch / Azure Monitor<br/>alarms to on-call] -.-> app & gw & db",
+    "  stripe[Stripe, Expo EAS, Apple, Google<br/>stay external] -.-> app"
+  ],
+  "migrationStrategies": [
+    {
+      "name": "Freeze and restore (default at current size)",
+      "how": "Freeze all writers \u2192 final quiesced encrypted backup \u2192 reviewed Auth data preload if required \u2192 historical Storage bytes before app guards \u2192 owner reconciliation \u2192 reviewed main DB restore \u2192 grant-sync \u2192 complete database/Storage/service/client/finance parity \u2192 one owned gateway route \u2192 reopen",
+      "downtime": "Owner target2\u20133hours on a prepared target; unmeasured. Complete warm rehearsal\u2264180minutes required",
+      "rollback": "Keep source frozen; route owned stable gateway back through independently tested session/client policy. Reconcile all target writes before reopening either side",
+      "when": "Default while the database is small"
+    },
+    {
+      "name": "Online replication (near-zero downtime)",
+      "how": "Initial copy + continuous change capture from Supabase (native logical replication or AWS DMS / Azure DMS) while the app keeps running; short freeze only to drain the last changes, set sequences, verify parity + access, switch DNS",
+      "downtime": "Minutes (the final drain and checks)",
+      "rollback": "Reverse replication target \u2192 Supabase prepared before cutover, or freeze-and-restore back",
+      "when": "When the database is too large to dump within an acceptable window; needs schema-change freeze, primary keys or replica identity on every replicated table, and separate handling of auth/storage schemas, sequences and Storage objects"
+    }
+  ],
+  "cutoverPhases": [
+    {
+      "phase": "T-30 days \u00b7 Decide",
+      "steps": [
+        "Owner approves provider, region, budget, exit A/B/hybrid and data handling",
+        "Endpoint indirection shipped to every supported build (dns-traffic component)",
+        "Production-tier components built from Terraform in an isolated account"
+      ],
+      "owner": "REDUNDANCY_LEAD",
+      "gate": "Owner approval recorded; COST_OPERATIONS quote"
+    },
+    {
+      "phase": "T-14 days \u00b7 Rehearse",
+      "steps": [
+        "Hosted isolated compatible-stack drill with approved data; current exact source and image archive prepared",
+        "Measure complete freeze, transfer/restore, logical rows/functions/access, Storage bytes/owners, Auth/MFA, clients, finance and rollback\u2264180minutes",
+        "Capture original release/target/endpoint-bound attachments and independent acceptance via infrastructure/exit/readiness.py --phase prepared; legacy record-readiness is informational"
+      ],
+      "owner": "EXIT_DATABASE",
+      "gate": "Current private original evidence accepted; hosted/data/owner decisions retained independently"
+    },
+    {
+      "phase": "T-2 days \u00b7 Prepare",
+      "steps": [
+        "Review owned stable API route, supported deployed-client origins and TTL/cache transition",
+        "Freeze schema changes and app releases; regenerate release if source changes",
+        "Run strict prepared evidence gate and review actual target/custody/rollback readiness",
+        "Prepare support/status communication through authorized operator"
+      ],
+      "owner": "EXIT_SYNC",
+      "gate": "Prepared evidence acceptance; final-cutover evidence still required after final capture"
+    },
+    {
+      "phase": "T-0 \u00b7 Execute",
+      "steps": [
+        "Execute independently tested all-writer freeze, drain jobs/uploads/financial activity and retain provider events; role settings alone do not prove a freeze",
+        "Final quiesced backup with protected original SHA and independent copies; source fingerprint/custody",
+        "Prepare reviewed complete Auth/main TOC split if owner FKs need Auth preload; restore historical bytes before guards and reconcile target owner fields",
+        "Database-only continuation \u2192 grant-sync \u2192 complete database/function/Auth/Storage/access acceptance, service and installed-client tests",
+        "Apply tested signing-key/session transition and provider callback/SMTP policy; no untested key rotation",
+        "pnpm exit:preflight --evidence-config PRIVATE_CONFIG requires final backup-bound/postcapture evidence and quiesced writers",
+        "Switch the one owned stable API route; smoke guest/sign-in/MFA/upload/test donation/live/admin; reconcile provider events and reopen one target writer"
+      ],
+      "owner": "REDUNDANCY_LEAD",
+      "gate": "Strict current final evidence and independent owner/domain acceptance; otherwise rollback"
+    },
+    {
+      "phase": "T+1 to T+7 days \u00b7 Watch",
+      "steps": [
+        "Supabase kept read-only as the rollback point",
+        "Alarms on errors, latency, backup age; reconcile every Stripe event since the freeze",
+        "Backups and the independent copy running on the target"
+      ],
+      "owner": "RECOVERY",
+      "gate": "Rollback window closed by the owner; Supabase decommission is a separate decision"
+    }
+  ],
+  "rollbackTriggers": [
+    "Parity or access check not PASS",
+    "Sign-in, upload or donation smoke test fails",
+    "Error rate or latency above the agreed threshold for 15 minutes",
+    "Data loss or a security exposure suspected"
+  ],
+  "protection": [
+    {
+      "control": "Encryption at rest",
+      "aws": "KMS for EBS/RDS/S3; backups age-encrypted",
+      "azure": "Key Vault-managed keys for disks/Postgres/Blob; backups age-encrypted",
+      "why": "Minor, guardian, Auth and finance data"
+    },
+    {
+      "control": "Encryption in transit",
+      "aws": "TLS 1.2+ at CloudFront/ALB; verify-full to the database",
+      "azure": "TLS 1.2+ at Front Door/App Gateway; verify-full to the database",
+      "why": "No plaintext on any hop"
+    },
+    {
+      "control": "Private data tier",
+      "aws": "Private subnets, security groups, VPC endpoints",
+      "azure": "Private access, NSGs, private endpoints",
+      "why": "Database and admin ports unreachable from the internet"
+    },
+    {
+      "control": "Edge protection",
+      "aws": "AWS WAF managed + rate rules, Shield",
+      "azure": "Front Door WAF, DDoS Network Protection",
+      "why": "Auth abuse, scraping, guest vote stuffing, floods"
+    },
+    {
+      "control": "Least privilege",
+      "aws": "IAM roles per service, GitHub OIDC, no long-lived keys",
+      "azure": "Managed identities, RBAC, GitHub OIDC",
+      "why": "A leaked credential cannot reach everything"
+    },
+    {
+      "control": "Secrets",
+      "aws": "Secrets Manager; rotate after cutover",
+      "azure": "Key Vault; rotate after cutover",
+      "why": "Keys known to the old provider are retired"
+    },
+    {
+      "control": "Same access rules",
+      "aws": "grant-sync + parity + access PASS",
+      "azure": "grant-sync + parity + access PASS",
+      "why": "A raw restore reopened 2,059 revoked rights; access parity proves each user sees the same rows"
+    },
+    {
+      "control": "Write freeze",
+      "aws": "Database read-only roles on Supabase during the final copy",
+      "azure": "Same",
+      "why": "No write lost between snapshot and switch"
+    },
+    {
+      "control": "Two backups before cutover",
+      "aws": "Encrypted archive in two accounts/clouds; readback verified",
+      "azure": "Same",
+      "why": "Rollback and disaster recovery do not depend on the migration succeeding"
+    },
+    {
+      "control": "Audit and monitoring",
+      "aws": "CloudTrail, CloudWatch alarms to on-call",
+      "azure": "Activity Log, Azure Monitor alerts",
+      "why": "Every operator action and failure is visible"
+    },
+    {
+      "control": "Rollback point",
+      "aws": "Supabase frozen, intact, DNS switch-back rehearsed",
+      "azure": "Same",
+      "why": "A failed cutover returns users to the known-good system"
+    }
+  ]
+}

@@ -62,3 +62,16 @@ apps/mobile/android
 
 # Playwright MCP screenshots and traces (local evidence, never committed)
 .playwright-mcp/
+
+# Disaster recovery: only tooling/templates belong in Git; runtime data and state stay external.
+__pycache__/
+*.pyc
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tar.age
+*.tar.age.*
+infrastructure/**/*.env
+infrastructure/**/upstream/

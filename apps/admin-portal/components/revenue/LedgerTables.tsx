@@ -68,8 +68,12 @@ function When({ iso }: { iso: string }) {
   return stamp ? <>{stamp}</> : <Blank words="Not in this read" />;
 }
 
-/** One row as a card (under `sm`): title and amount on the first line, then labelled details. */
-type CardRow = { key: string; title: string; amount: string; details: { label: string; value: ReactNode }[] };
+/**
+ * One row as a card (under `sm`): title and amount on the first line, then labelled details.
+ * `figure`: a time or amount. It breaks only at spaces (`break-normal`), so "$12,345.67" never splits
+ *   mid-figure while "Oct 12, 2:52 PM UTC" can still wrap at enlarged text. Words use `break-words`.
+ */
+type CardRow = { key: string; title: string; amount: string; details: { label: string; value: ReactNode; figure?: boolean }[] };
 
 function Cards({ caption, rows }: { caption: string; rows: CardRow[] }) {
   return (
@@ -80,11 +84,12 @@ function Cards({ caption, rows }: { caption: string; rows: CardRow[] }) {
             <span className="min-w-0 font-extrabold break-words text-[var(--ink)]">{row.title}</span>
             <span className="chart-tabular shrink-0 font-extrabold whitespace-nowrap text-[var(--ink)]">{row.amount}</span>
           </div>
-          <dl className="mt-1.5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-xs">
+          {/* The value column never goes below its widest figure, so at enlarged text the label column wraps ("Payee / share") instead of an amount running past the card. */}
+          <dl className="mt-1.5 grid grid-cols-[minmax(0,max-content)_minmax(min-content,1fr)] gap-x-3 gap-y-0.5 text-xs">
             {row.details.map((detail) => (
               <div key={detail.label} className="contents">
-                <dt className="font-bold text-[var(--text-muted)]">{detail.label}</dt>
-                <dd className="chart-tabular min-w-0 break-words text-[var(--ink-soft)]">{detail.value}</dd>
+                <dt className="min-w-0 font-bold break-words text-[var(--text-muted)]">{detail.label}</dt>
+                <dd className={`chart-tabular min-w-0 text-[var(--ink-soft)] ${detail.figure ? 'break-normal' : 'break-words'}`}>{detail.value}</dd>
               </div>
             ))}
           </dl>
@@ -119,10 +124,10 @@ export function RecentLedgerTable({ rows, error }: { rows: RevenueLog[]; error: 
     title: streamName(row.source, row.source),
     amount: formatUsd(row.gross_cents),
     details: [
-      { label: 'When', value: <When iso={row.created_at} /> },
+      { label: 'When', value: <When iso={row.created_at} />, figure: true },
       { label: 'Detail', value: ledgerDetail(row.source, row.label) },
-      { label: "Tapua'i share", value: formatUsd(row.platform_cents) },
-      { label: 'Payee share', value: formatUsd(row.payout_cents) },
+      { label: "Tapua'i share", value: formatUsd(row.platform_cents), figure: true },
+      { label: 'Payee share', value: formatUsd(row.payout_cents), figure: true },
     ],
   }));
   return (
@@ -168,7 +173,7 @@ export function RecentDonationsTable({ rows, error }: { rows: MaloTxn[]; error: 
     title: row.athlete_name,
     amount: formatUsd(row.amount_cents),
     details: [
-      { label: 'When', value: <When iso={row.created_at} /> },
+      { label: 'When', value: <When iso={row.created_at} />, figure: true },
       { label: 'Donor', value: row.fan_name },
       { label: 'Started', value: donationChannel(row.origin, row.entry, row.source_label) },
       { label: 'Linked to', value: linkedTo(row) },

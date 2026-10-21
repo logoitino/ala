@@ -1,3 +1,4 @@
+<!-- Highlights composition ownership and app cleanup/retention behavior; hosted SQL remains unapplied. -->
 # Highlights and uploading
 
 Feed/player overlays and Highlight composition belong here. Generic UI stays in `components/UI`;
@@ -5,12 +6,16 @@ Storage/compression stays in `services/MediaUploadService` and data calls in `li
 
 - `UploadVideoModal.tsx`: owns the draft (video clip and photo-story photos, kept separately), clip and photo picking,
   required-field checks, upload lock and result handling. Videos publish through `lib/reels`; photo stories through
-  `lib/photoStories` (`createPhotoStory`).
+  `lib/photoStories` (`createPhotoStory`); failed-attempt cleanup and owner-scoped local removal intent
+  live in `lib/photoStoryCleanup`.
 - `UploadVideoComposer.tsx`: renders Media / Details / Review, optional settings, searchable selections and fixed navigation.
 - `PhotoStoryPicker.tsx`: the Video | Photos switch, the photo strip (Move earlier / Move later / Remove, 44-point,
   position-named labels) and optional per-photo descriptions (≤ 200 characters). Presentation only.
 - `HighlightPickerModal.tsx`: existing library selection/compression flow.
 - `AccountTagField.tsx`: optional mentions; their confirmation does not change the donation recipient.
+- `ReelCard.tsx`: one full-screen Highlight (hype rail, donate, save, report, owner peek). Its video player is
+  `ReelVideoLayer.tsx` (only the card on screen gets a file; playback rules in `reelPlayback.ts`) and its live play
+  callout is `PlayBroadcastBanner.tsx` — both split out unchanged for R4-03 (2026-10-20).
 
 Back preserves the draft. Replacing footage clears its rights confirmations; every applicable
 confirmation remains mandatory.
@@ -27,9 +32,12 @@ The database stores Storage **paths**, never URLs: photos upload (no overwrite) 
 checks that exact shape, and readers turn paths into URLs with `storyPhotoPublicUrl` (`lib/photoStories`).
 `set_reel_photos` is publish-once (it only succeeds while `photo_count = 0`). Nothing is visible unless every
 photo uploads and the RPC succeeds; on failure `createPhotoStory` throws `PhotoStoryPublishError` with the
-hidden reel id, the modal keeps the draft and that id, and Retry reuses the same reel (caption and category
-refreshed). A changed athlete or game starts a new reel, because those columns are fixed after insert; the
-id is cleared when the story publishes or the sheet closes.
+hidden reel id. The modal keeps its local draft/id, and Retry retires that earlier row/files before a fresh
+insert, including athlete/game retargets. Close persists only owner/reel removal intent before dismissal;
+network deletion retries on that owner’s next Upload open. A failed local save keeps the draft open.
+Earlier committed stories are recovered with stored fields/cover, without applying edited mentions or
+publishing a second photo story. Closed drafts’ cleanup does not block a new upload. See the dated
+repair in the design contract for ownership, retention and hosted verification gaps.
 
 Photo stories use the photo rights wording (`PHOTO_RIGHTS_CHECKS`) and are public only (no Vault control).
 Switching Video ↔ Photos keeps both drafts and clears only the confirmations. Adding photos clears

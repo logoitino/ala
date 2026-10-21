@@ -43,7 +43,7 @@ jest.mock('react-native-gesture-handler', () => {
 });
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({
-  useAppRuntime: () => ({ live: { catalog: { exclusiveDollars: 5, exclusiveAura: 10 }, buttons: { suggest: false } } }),
+  useAppRuntime: () => ({ live: { catalog: { exclusiveDollars: 5, exclusiveAura: 10 }, buttons: { suggest: false }, layouts: {} } }),
 }));
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'u1' }, profile: null, isAthlete: false }) }));
 jest.mock('@/context/CelebrationContext', () => ({ useOptionalCelebration: () => null }));
@@ -145,13 +145,14 @@ describe('ReelCard photo-story branch', () => {
     expect(mockTracker).toHaveBeenLastCalledWith('c1', true, false, 3000);
   });
 
-  it('keeps the video player for a clip and loads its source when the card becomes current', async () => {
+  it('keeps a mounted neighbor on an empty player and loads its source when the card becomes current', async () => {
     const clip = { ...base, id: 'v1', videoUrl: 'https://x/v.mp4' };
     const view = await renderCard(clip, false);
-    expect(screen.getByTestId('video-view')).toBeTruthy();
+    expect(screen.queryByTestId('video-view')).toBeNull();
     expect(mockCreatePlayer).toHaveBeenCalledWith(null);
     expect(mockReplace).not.toHaveBeenCalled();
     await view.rerender(<ReelCard clip={clip} player={null} active height={800} tipping={false} onTip={jest.fn()} />);
+    expect(screen.getByTestId('video-view')).toBeTruthy();
     expect(mockReplace).toHaveBeenCalledWith('https://x/v.mp4');
     expect(screen.queryByText(/photos:/)).toBeNull();
     expect(mockOverlay).toHaveBeenLastCalledWith(expect.objectContaining({ storyNote: null }));

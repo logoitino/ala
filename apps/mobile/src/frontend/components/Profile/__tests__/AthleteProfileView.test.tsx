@@ -1,16 +1,20 @@
 /**
  * Profile hero integration keeps the viewer's sport, position and class on their linked roster identity.
  * Matching display names are not enough to lend another public athlete the viewer's credentials.
+ * Story presentation uses only supplied subject text/links and remains inside the selected Highlights pane.
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import * as WebBrowser from 'expo-web-browser';
 
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
 import type { AthleteStatsBundle } from '@/data/athleteStats';
 import { TAGLINE_HEADLINE } from '@/data/malo';
+import type { HighlightClip } from '@/data/highlights';
 import type { Player, Profile } from '@/types/database';
 
 let mockProfile: Profile;
 let mockActionsOnTop = false;
+let mockStatsFirst = false;
 
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ profile: mockProfile }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({
@@ -18,7 +22,7 @@ jest.mock('@/context/AppRuntimeContext', () => ({
     const { DEFAULT_APP_RUNTIME } = jest.requireActual('@/lib/runtime');
     return { live: {
       ...DEFAULT_APP_RUNTIME,
-      profile: { ...DEFAULT_APP_RUNTIME.profile, showCard: false, showCrew: false, statsFirst: false, actionsOnTop: mockActionsOnTop },
+      profile: { ...DEFAULT_APP_RUNTIME.profile, showCard: false, showCrew: false, statsFirst: mockStatsFirst, actionsOnTop: mockActionsOnTop },
     } };
   },
 }));
@@ -31,10 +35,14 @@ jest.mock('react-native-safe-area-context', () => ({
 jest.mock('@/lib/leaderboards', () => ({ fetchAthleteHighlightViews: async () => 0 }));
 jest.mock('@/lib/wishlist', () => ({ fetchWishlistItems: async () => [] }));
 jest.mock('@/lib/haptics', () => ({ impactPress: jest.fn() }));
+jest.mock('expo-web-browser', () => ({ openBrowserAsync: jest.fn() }));
 
 // These independent surfaces load media, storage or account data; credential selection stays real.
 jest.mock('@/components/Profile/ExclusivePaywall', () => ({ VaultLockedCard: () => null }));
-jest.mock('@/components/Profile/AthleteReelManager', () => ({ AthleteReelManager: () => null }));
+jest.mock('@/components/Profile/AthleteReelManager', () => ({ AthleteReelManager: ({ clips }: { clips: HighlightClip[] }) => {
+  const { Text } = jest.requireActual('react-native');
+  return <Text>{`Managed clips: ${clips.map(clip => clip.id).join(', ')}`}</Text>;
+} }));
 jest.mock('@/components/Profile/AthleteStatsTab', () => ({ AthleteStatsTab: ({ stats }: { stats: AthleteStatsBundle }) => {
   const { Text } = jest.requireActual('react-native');
   return <Text>Stats: {stats.career.sport}; {stats.topThree.map(row => `${row.label}: ${row.value}`).join(', ')}</Text>;
@@ -52,7 +60,10 @@ jest.mock('@/components/Profile/ShareQrModal', () => ({ ShareQrModal: () => null
 jest.mock('@/components/Profile/SubscriberQnA', () => ({ SubscriberQnA: () => null }));
 jest.mock('@/components/Profile/TeamRosterStrip', () => ({ TeamRosterStrip: () => null }));
 jest.mock('@/components/Profile/VaultLockCard', () => ({ VaultLockCard: () => null }));
-jest.mock('@/components/Profile/TaggedReelGrid', () => ({ TaggedReelGrid: () => null }));
+jest.mock('@/components/Profile/TaggedReelGrid', () => ({ TaggedReelGrid: ({ clips }: { clips: HighlightClip[] }) => {
+  const { Text } = jest.requireActual('react-native');
+  return <Text>{`Visible clips: ${clips.map(clip => clip.id).join(', ')}`}</Text>;
+} }));
 jest.mock('@/components/Profile/ProfileAvatarPicker', () => ({
   ProfileAvatarPicker: ({ children }: { children: React.ReactNode }) => children,
 }));
@@ -228,5 +239,97 @@ describe('AthleteProfileView Learn your athlete’s sport card', () => {
     mockProfile = { id: 'fan', user_id: 'fan-user', full_name: 'Fan', role: 'fan', is_verified: false };
     await render(<AthleteProfileView player={player} name={player.name} role="fan" clips={[]} stats={stats} auraPoints={0} />);
     expect(screen.queryByText(/^Learn card:/)).toBeNull();
+  });
+});
+
+/** A section label never grants access to the viewer's biography, hidden school or Vault-only clips. */
+describe('AthleteProfileView Story in Highlights', () => {
+  const publicClip: HighlightClip = {
+    id: 'public-play', athleteName: player.name, school: player.school_name,
+    tag: 'Game Day', videoUrl: 'https://example.test/public.mp4', playerId: player.id,
+  };
+  const vaultClip: HighlightClip = { ...publicClip, id: 'vault-play', isVaultOnly: true };
+  beforeEach(() => {
+    mockProfile = { id: 'viewer', user_id: 'viewer-user', full_name: 'Viewer', role: 'fan', is_verified: false,
+      bio: 'Viewer biography must stay private to this fixture' };
+  });
+  afterEach(() => { mockStatsFirst = false; jest.clearAllMocks(); });
+
+  it('names the subject Story before Highlights without restoring hidden school or viewer data', async () => {
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete"
+      clips={[publicClip, vaultClip]} stats={stats} auraPoints={0} schoolVisible={false}
+      bio="Generated school and position summary" aboutBio="  Practice, family, and the game.  "
+      socialLinks={{ instagram: '@alexlee' }} />);
+    expect(screen.getByRole('header', { name: 'Story' })).toBeTruthy();
+    expect(screen.getByText('Practice, family, and the game.')).toBeTruthy();
+    expect(screen.getByRole('header', { name: 'Highlights' })).toBeTruthy();
+    expect(screen.getByText('Visible clips: public-play')).toBeTruthy();
+    expect(screen.queryByText(player.school_name)).toBeNull();
+    expect(screen.queryByText(mockProfile.bio!)).toBeNull();
+    expect(screen.queryByText('Generated school and position summary')).toBeNull();
+    expect(screen.queryByText('No public Highlights to show here yet.')).toBeNull();
+    const tree = JSON.stringify(screen.toJSON());
+    expect(tree.indexOf('Practice, family, and the game.')).toBeLessThan(tree.indexOf('Visible clips: public-play'));
+  });
+
+  it('omits Story when caller-visible text and links are empty, without inventing a biography', async () => {
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]}
+      stats={stats} auraPoints={0} aboutBio={' \n '} socialLinks={{ instagram: '', twitter: '  ' }}
+      bio="Generated roster summary" />);
+    expect(screen.queryByRole('header', { name: 'Story' })).toBeNull();
+    expect(screen.queryByRole('link')).toBeNull();
+    expect(screen.queryByText(mockProfile.bio!)).toBeNull();
+    expect(screen.queryByText('Generated roster summary')).toBeNull();
+    expect(screen.getByRole('header', { name: 'Highlights' })).toBeTruthy();
+    expect(screen.getByText('No public Highlights to show here yet.')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Highlights ⚡', selected: true })).toBeTruthy();
+  });
+
+  it('renders links-only Story and keeps the existing resolved browser action', async () => {
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]}
+      stats={stats} auraPoints={0} aboutBio={null} socialLinks={{ instagram: '@alexlee', twitter: ' ' }} />);
+    expect(screen.getByRole('header', { name: 'Story' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Open X' })).toBeNull();
+    await fireEvent.press(screen.getByRole('link', { name: 'Open Instagram' }));
+    expect(WebBrowser.openBrowserAsync).toHaveBeenCalledTimes(1);
+    expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith('https://instagram.com/alexlee');
+  });
+
+  it('uses the same supplied Story for an exact owner and hides it in other panes', async () => {
+    mockProfile = { ...mockProfile, role: 'athlete', player_id: player.id };
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[publicClip]}
+      stats={stats} auraPoints={0} aboutBio="My own authored story." manageVault />);
+    expect(screen.getByRole('header', { name: 'Story' })).toBeTruthy();
+    expect(screen.getByText('Managed clips: public-play')).toBeTruthy();
+    for (const pane of ['Stats 📊', 'Goals', 'Vault 🔒', 'Manage']) {
+      await fireEvent.press(screen.getByRole('tab', { name: pane }));
+      expect(screen.queryByRole('header', { name: 'Story' })).toBeNull();
+      expect(screen.queryByText('My own authored story.')).toBeNull();
+      expect(screen.queryByRole('header', { name: 'Highlights' })).toBeNull();
+    }
+    await fireEvent.press(screen.getByRole('tab', { name: 'Highlights ⚡' }));
+    expect(screen.getByText('My own authored story.')).toBeTruthy();
+    expect(screen.queryByText(mockProfile.bio!)).toBeNull();
+  });
+
+  it('keeps Stats first when configured and only reveals supplied Story after selecting Highlights', async () => {
+    mockStatsFirst = true;
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]}
+      stats={stats} auraPoints={0} aboutBio="A real subject story." />);
+    expect(screen.getByRole('tab', { name: 'Stats 📊', selected: true })).toBeTruthy();
+    expect(screen.queryByRole('header', { name: 'Story' })).toBeNull();
+    await fireEvent.press(screen.getByRole('tab', { name: 'Highlights ⚡' }));
+    expect(screen.getByText('A real subject story.')).toBeTruthy();
+  });
+
+  it('describes only public emptiness even when Vault clips exist and keeps their pane intact', async () => {
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[vaultClip]}
+      stats={stats} auraPoints={0} subscribed />);
+    expect(screen.getByRole('header', { name: 'Highlights' })).toBeTruthy();
+    expect(screen.getByText('No public Highlights to show here yet.')).toBeTruthy();
+    expect(screen.queryByText(/^Visible clips:/)).toBeNull();
+    await fireEvent.press(screen.getByRole('tab', { name: 'Vault 🔒' }));
+    expect(screen.queryByText('No public Highlights to show here yet.')).toBeNull();
+    expect(screen.getByText('Visible clips: vault-play')).toBeTruthy();
   });
 });

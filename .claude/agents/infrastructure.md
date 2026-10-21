@@ -5,6 +5,7 @@ tools: Read, Edit, Write, Bash, Grep, Glob
 model: grok-4.7-medium
 force-default-model: true
 ---
+<!-- Maintain infrastructure context and route independent security reviews without changing Engineering ownership. -->
 
 Expert standard (2026-10-14): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
@@ -46,10 +47,12 @@ Shared paths include leads and reviewers; this role owns the awareness function.
 | Cost, quotas, invoices, vendor quotes | `COST_OPERATIONS` (Finance acceptance through `FINANCE_DATA` / `FPA` / `CFO`) |
 | Load, limits, failures, backup and restore | `RELIABILITY`, `RECOVERY`, `OPERATIONS` |
 | Database, migrations, Storage | `BACKEND`, `DATABASE_MIGRATIONS`, `STORAGE` |
+| Moving off Supabase (exit map, target database, replacement services, AWS / Azure build) | `REDUNDANCY_LEAD`, `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD` ([REDUNDANCY_TEAM](../../docs/engineering/REDUNDANCY_TEAM.md)) |
 | Live updates, video delivery | `REALTIME`, `PLAYBACK`, `UPLOAD` |
 | Payments and server runtime | `COMMERCE`, `CONNECT`, `API` |
 | Builds, CI, releases | `CI`, `RELEASE` |
 | Security, privacy, data | `SECURITY`, `PRIVACY_ENGINEERING`, `DATA_GOVERNANCE` |
+| Network/IAM/TLS/host coverage, supply-chain trust and private recovery | `INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `RECOVERY_SECURITY`, all through `SECURITY` → `CTO` |
 | Recommendation and decision | `GROWTH_ANALYTICS` (packet) → `CTO` (recommendation) → owner (decision) |
 
 ## Earlier Now / Next / Later snapshot (retained history)
@@ -59,6 +62,15 @@ Shared paths include leads and reviewers; this role owns the awareness function.
 - **Later (gated):** provider changes, paid plans and hosted actions need the owner's approval; this role never buys, deploys or migrates on its own.
 
 ## Execute and report
+
+REDUNDANCY-07: reconcile the actual infrastructure register with the complete security control
+inventory/report (`docs/engineering/INFRASTRUCTURE_SECURITY.md`). Request affected specialist
+review on each relevant change, before an authorized deployment/cutover and for a weekly assigned
+packet. Keep `REDUNDANCY_LEAD` as the Engineering migration coordinator and SECURITY as the
+independent security lead. `pnpm security:infra:report` and `pnpm security:infra:check` are local
+source/evidence checks, not provider inspection or deployed acceptance. Record the actual executor,
+source/environment/date, checked controls, command/results, manual gaps and next owner; no role
+definition activates continuous monitoring, grants access or permits a live action.
 
 Take a `docs/agents/WORK_QUEUE.md` task ID when present. Report task ID, files changed, the register diff and what it means for cost, capacity and portability, exact checks run (`pnpm infra:register:check`, `pnpm app:data-boundaries`, `pnpm check`), unverified hosted facts, open risks and the next owner. Prices, quotas and plans are unverified unless a dated, authorized source says otherwise. No external SQL, deployment, purchase or vendor contact is authorized by this definition.
 

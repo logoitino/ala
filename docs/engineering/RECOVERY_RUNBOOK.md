@@ -23,6 +23,13 @@ person who edited uncommitted code. Versioned dependency patches are part of the
 
 ## Database backups
 
+The portable operator kit is in [infrastructure/backup](../../infrastructure/backup/README.md).
+It combines a full logical database/Auth dump, every Storage file, verified source and optional
+private configuration custody into an age-encrypted archive. Its restore command requires an
+explicit isolated target and reviewed TOC; it records database commit before file restoration so
+Storage-only retries do not reapply SQL. These local tools have no completed hosted backup/restore
+receipt yet. [REDUNDANCY-01](../agents/REDUNDANCY-01.md) records the actual remaining rehearsal work.
+
 RECOVERY and DATABASE_MIGRATIONS own hosted backup/PITR enrollment, retention, encryption and access;
 PRIVACY_ENGINEERING reviews personal-data handling. Keep database artifacts outside source packages
 and this repository. Record protected backup reference, provider timestamp, DB/schema version,

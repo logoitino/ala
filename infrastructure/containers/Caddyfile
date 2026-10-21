@@ -1,0 +1,21 @@
+# Tapua'i TLS boundary: no Studio, SQL pooler, or root Kong dashboard is public.
+{
+  email {$ACME_EMAIL}
+}
+{$FAN_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy fan-web:8081
+}
+{$ADMIN_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy admin-portal:3001
+}
+{$API_DOMAIN} {
+  @supabase path /auth/v1/* /rest/v1/* /realtime/v1/* /storage/v1/* /functions/v1/*
+  handle @supabase {
+    reverse_proxy kong:8000
+  }
+  handle {
+    respond "Not found" 404
+  }
+}

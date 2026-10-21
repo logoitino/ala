@@ -17,6 +17,8 @@ jest.mock('@/hooks/useStoryPhotos', () => ({
   },
 }));
 jest.mock('@/lib/haptics', () => ({ impactPress: jest.fn() }));
+// Gesture handler 3 wraps its FlatList in a GestureDetector that needs a native root view.
+jest.mock('react-native-gesture-handler', () => ({ FlatList: jest.requireActual('react-native').FlatList }));
 
 const clip: HighlightClip = {
   id: 's1',

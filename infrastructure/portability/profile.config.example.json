@@ -1,0 +1,7 @@
+{
+  "_comment": "Copy privately outside Git with mode600 and supply only reviewed target public settings. This example creates no working service.",
+  "schemaVersion": 1,
+  "backendUrl": "https://backend.owned.invalid",
+  "apiOrigin": "https://app.owned.invalid",
+  "publicKey": "sb_publishable_replace_with_reviewed_target_public_key"
+}

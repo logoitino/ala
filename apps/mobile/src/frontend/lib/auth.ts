@@ -1,7 +1,8 @@
 /**
  * Sign-in helpers behind the soft wall: what the email form may enable for a given field state, password length
  * checks for sign-up, and the Apple / Google / Magic Link flows. `updateOwnDisplayName` writes the signed-in
- * person's own `profiles.full_name`. Session handling lives in `context/AuthContext`.
+ * person's own `profiles.full_name`. Session handling lives in `context/AuthContext`. Web Google
+ * keeps the initiating page/draft alive and opens its popup before any authorize network probe.
  * @sideEffects Supabase Auth, and a `profiles` UPDATE from `updateOwnDisplayName`.
  */
 
@@ -24,6 +25,8 @@ WebBrowser.maybeCompleteAuthSession();
 export const GUEST_ID_KEY = 'tapuai.guestId';
 export const ONBOARDING_SEEN_KEY = 'tapuai.onboardingSeen';
 export const AUTH_CALLBACK_PATH = 'auth/callback';
+const GOOGLE_SIGN_IN_FAILED = 'Could not finish Google sign-in. Please try again.';
+const AUTH_RETURN_FAILED = 'Sign-in could not be completed. Please try again.';
 
 /** Soft-Wall one-tap demo fan (Email provider + password must be enabled in Supabase). */
 export const DEMO_FAN_EMAIL =
@@ -113,7 +116,7 @@ export function authFailureMessage(message: string, action: 'google' | 'apple' |
   const raw = message.trim();
   if (/provider is not enabled/i.test(raw)) {
     if (action === 'google') {
-      return 'Google sign-in is turned off on the server. Create an account with email, or enable the Google provider in Supabase Auth.';
+      return 'Google sign-in is turned off on the server. Create an account with email.';
     }
     if (action === 'apple') {
       return 'Apple sign-in is turned off on the server. Create an account with email, or enable the Apple provider in Supabase Auth.';
@@ -125,7 +128,8 @@ export function authFailureMessage(message: string, action: 'google' | 'apple' |
   if (action === 'signup' && /password/i.test(raw)) {
     return `Use a password of at least ${MIN_PASSWORD_LENGTH} characters.`;
   }
-  return raw || 'Could not finish that sign-in.';
+  // Google diagnostics may contain a return URL or token. Only recognized safe fixes reach the sheet.
+  return action === 'google' ? GOOGLE_SIGN_IN_FAILED : raw || 'Could not finish that sign-in.';
 }
 
 /**
@@ -144,9 +148,10 @@ export function oauthAuthorizeFailure(
   let message = body.trim();
   try {
     const parsed = JSON.parse(body) as { msg?: string; error_description?: string; message?: string };
-    message = parsed.msg || parsed.error_description || parsed.message || message;
+    const diagnostic = [parsed.msg, parsed.error_description, parsed.message].find((value) => typeof value === 'string' && value);
+    message = diagnostic || message;
   } catch {
-    // A non-JSON error page still belongs in the sheet.
+    // Non-JSON diagnostics still pass through the provider's safe message mapping.
   }
   return authFailureMessage(message, action);
 }
@@ -249,41 +254,70 @@ async function oauthAuthorizeBlock(url: string, action: 'google' | 'apple'): Pro
 }
 
 function parseParams(url: string): Record<string, string> {
-  const out: Record<string, string> = {};
-  const hash = url.split('#')[1] ?? '';
-  const query = url.includes('?') ? url.split('?')[1]?.split('#')[0] ?? '' : '';
-  for (const chunk of `${query}&${hash}`.split('&')) {
-    if (!chunk) continue;
-    const [rawKey, rawValue = ''] = chunk.split('=');
-    if (!rawKey) continue;
-    out[decodeURIComponent(rawKey)] = decodeURIComponent(rawValue);
+  const out: Record<string, string> = Object.create(null);
+  let parsed: URL;
+  let expected: URL;
+  try {
+    parsed = new URL(url);
+    expected = new URL(authRedirectUri());
+  } catch {
+    throw new Error('Could not read this sign-in link. Please try again.');
+  }
+  // The deep-link listener can see unrelated URLs; credentials belong only to this configured callback.
+  if (parsed.protocol !== expected.protocol || parsed.host !== expected.host || parsed.pathname !== expected.pathname
+    || parsed.username || parsed.password) {
+    throw new Error('Could not read this sign-in link. Please try again.');
+  }
+  const authKeys = new Set(['access_token', 'refresh_token', 'code', 'error', 'error_code', 'error_description']);
+  // URLSearchParams preserves '=' inside values and distinguishes encoded '+' from a form space.
+  for (const params of [parsed.searchParams, new URLSearchParams(parsed.hash.slice(1))]) {
+    params.forEach((value, key) => {
+      if (authKeys.has(key) && key in out) {
+        throw new Error('Could not read this sign-in link. Please try again.');
+      }
+      out[key] = value;
+    });
   }
   return out;
 }
 
+// Only pending exchanges are shared; never retain returned sessions or callback URLs after settlement.
+const pendingAuthRedirects = new Map<string, Promise<Session | null>>();
+
 /**
  * @purpose Complete OAuth / magic-link return by exchanging tokens from the deep link URL.
+ * @returns Session after one shared in-flight exchange; null for a URL without credentials.
+ * Only the exact generated callback is accepted. Provider-return errors stop before session
+ * changes and never expose their description in the UI; repeated auth fields are refused.
  * @sideEffects `supabase.auth.setSession` or `exchangeCodeForSession`.
  */
 export async function completeAuthRedirect(url: string): Promise<Session | null> {
   if (!isSupabaseConfigured) return null;
   const params = parseParams(url);
-  if (params.access_token && params.refresh_token) {
-    const { data, error } = await supabase.auth.setSession({
-      access_token: params.access_token,
-      refresh_token: params.refresh_token,
-    });
-    if (error) throw new Error(error.message);
+  if ('error' in params || 'error_code' in params || 'error_description' in params) {
+    throw new Error(AUTH_RETURN_FAILED);
+  }
+  const hasTokens = Boolean(params.access_token && params.refresh_token);
+  const key = hasTokens
+    ? JSON.stringify(['tokens', params.access_token, params.refresh_token])
+    : params.code ? JSON.stringify(['code', params.code]) : null;
+  if (!key) return null;
+  const pending = pendingAuthRedirects.get(key);
+  if (pending) return pending;
+
+  const completion = (async () => {
+    const { data, error } = hasTokens
+      ? await supabase.auth.setSession({ access_token: params.access_token, refresh_token: params.refresh_token })
+      : await supabase.auth.exchangeCodeForSession(params.code);
+    if (error) throw new Error(AUTH_RETURN_FAILED);
     if (data.user) await ensureFanProfile(data.user);
     return data.session;
-  }
-  if (params.code) {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(params.code);
-    if (error) throw new Error(error.message);
-    if (data.user) await ensureFanProfile(data.user);
-    return data.session;
-  }
-  return null;
+  })().catch(() => {
+    // The callback screen must not display SDK or profile diagnostics containing identity data.
+    throw new Error(AUTH_RETURN_FAILED);
+  }).finally(() => { pendingAuthRedirects.delete(key); });
+  pendingAuthRedirects.set(key, completion);
+  return completion;
 }
 
 /**
@@ -321,6 +355,7 @@ export async function signInWithApple(): Promise<Session> {
 
 /**
  * @purpose Google OAuth via system browser → Supabase session + fan profile.
+ * Web keeps its popup close to the initiating gesture so the current sheet/draft survives.
  * @sideEffects `signInWithOAuth`; `WebBrowser.openAuthSessionAsync`; profile bootstrap.
  */
 export async function signInWithGoogle(): Promise<Session> {
@@ -329,16 +364,26 @@ export async function signInWithGoogle(): Promise<Session> {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo, skipBrowserRedirect: true },
-  });
+  }).catch(() => { throw new Error(GOOGLE_SIGN_IN_FAILED); });
   if (error) throw new Error(authFailureMessage(error.message, 'google'));
   if (!data.url) throw new Error('Google sign-in did not return a URL.');
 
-  // The client builds the authorize URL without asking the server first. A disabled
-  // provider answers 400 JSON, and opening that URL is the dead page instead of an account.
-  const blocked = await oauthAuthorizeBlock(data.url, 'google');
-  if (blocked) throw new Error(blocked);
+  // Native can preflight disabled providers. A web fetch would consume the mobile browser's
+  // popup gesture; keep the locally generated URL's path to openAuthSessionAsync network-free.
+  if (Platform.OS !== 'web') {
+    const blocked = await oauthAuthorizeBlock(data.url, 'google');
+    if (blocked) throw new Error(blocked);
+  }
 
-  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+  let result: Awaited<ReturnType<typeof WebBrowser.openAuthSessionAsync>>;
+  try {
+    result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ERR_WEB_BROWSER_BLOCKED') {
+      throw new Error('Your browser blocked Google sign-in. Allow pop-ups for this site, then try again.');
+    }
+    throw new Error(GOOGLE_SIGN_IN_FAILED);
+  }
   if (result.type !== 'success' || !('url' in result) || !result.url) {
     throw new Error('Google sign-in was cancelled.');
   }

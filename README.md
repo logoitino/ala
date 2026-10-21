@@ -12,11 +12,12 @@ replaces the GoFundMe link families pass around today. Built as a **pnpm monorep
 
 | Path | What lives there |
 | --- | --- |
-| [`apps/mobile/`](apps/mobile) | Expo Router app (SDK 57): fan tabs, role HQs, operator console, and main `/admin` with reports, analytics and all administration controls. |
+| [`apps/mobile/`](apps/mobile) | Expo Router app (SDK 58): fan tabs, role HQs, operator console, and main `/admin` with reports, analytics and all administration controls. |
 | [`apps/admin-portal/`](apps/admin-portal) | Next.js oversight desk on port 3001. **Read-only by design.** |
 | [`packages/shared-types/`](packages/shared-types) | `@tapuai/shared-types`, TypeScript shapes shared by both apps. |
 | [`supabase/`](supabase) | Database SQL, timestamped [`migrations/`](supabase/migrations), and Edge Functions (Stripe checkout, Connect, webhook). |
 | [`scripts/`](scripts) | Repo checks (`pnpm check`) and the generator for product-facts docs. |
+| [`infrastructure/`](infrastructure/README.md) | Supabase backup/restore tools, app containers, and separate AWS/Azure deployment templates. |
 | [`docs/`](docs) | All documentation. Start at the [docs index](docs/README.md). |
 | [`archive/`](archive) | Old code kept for reference only. Not built or deployed. |
 | `.claude/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md` | Instructions for AI coding assistants. Humans can skip these. |
@@ -88,6 +89,7 @@ source headers, the agent registry and client credential markers). Single pieces
 | Know what is happening right now | [docs/STATE.md](docs/STATE.md) |
 | Understand the product direction | [docs/product/ROADMAP.md](docs/product/ROADMAP.md) |
 | See every document | [docs/README.md](docs/README.md) |
+| Back up Supabase and prepare AWS/Azure recovery | [infrastructure/README.md](infrastructure/README.md) · [redundancy plan](docs/engineering/REDUNDANCY_PLAN.md) · [migration runbook](docs/engineering/CLOUD_MIGRATION_RUNBOOK.md) |
 
 ## License
 

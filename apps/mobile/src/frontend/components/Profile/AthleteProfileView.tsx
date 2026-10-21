@@ -5,6 +5,7 @@
  * hint for that trivia round).
  * Used by both the fan tab's own profile and any athlete opened from elsewhere. `onOpenClip` lets other
  * components (for example a Rally thank-you) jump to a specific clip in the Highlights tab.
+ * Story names only the existing caller-visible authored text and social links in that same Highlights pane.
  * @sideEffects Reads athlete, crew, school badge, leaderboard and reel data through hooks / lib.
  */
 
@@ -40,7 +41,7 @@ import { VaultLockCard } from '@/components/Profile/VaultLockCard';
 import { TaggedReelGrid } from '@/components/Profile/TaggedReelGrid';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { colors, radii, space } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
@@ -100,7 +101,7 @@ type AthleteProfileViewProps = {
   bio?: string;
   /** Real, user-authored about-me text (`profiles.bio`) — separate from `bio` above, which is an
    * auto-generated position/school summary line shown only on the flip-card back face. Rendered
-   * as an "About" section on the main sheet body when present. */
+   * as the "Story" section within Highlights when present. */
   aboutBio?: string | null;
   /** `profiles.social_links`, already visibility-filtered by the caller for a public sheet. */
   socialLinks?: ProfileSocialLinks | null;
@@ -255,6 +256,9 @@ export function AthleteProfileView({
   const setFlipOpen = onAuraCardOpenChange ?? setInternalFlip;
 
   const publicClips = useMemo(() => clips.filter((clip) => !isClipVaultOnly(clip)), [clips]);
+  // Public callers already filter these fields; a new section must never fall back to viewer or roster data.
+  const storyText = aboutBio?.trim();
+  const visibleSocialLinks = nonEmptySocialLinks(socialLinks);
   const sekiPeak = Math.max(player.seki_count ?? 0, sekiCount, ...publicClips.map((clip) => clip.sekiCount ?? 0));
   const flexPeak = Math.max(player.flex_count ?? 0, ...publicClips.map((clip) => clip.flexCount ?? 0));
   // Rally thank-you can point at one of the athlete's own confirmed clips ("what it paid for").
@@ -467,12 +471,13 @@ export function AthleteProfileView({
 
       {tab === 'highlights' ? (
         <View style={styles.highlightsPane}>
-          {aboutBio?.trim() || nonEmptySocialLinks(socialLinks).length > 0 ? (
-            <View style={styles.about}>
-              {aboutBio?.trim() ? <Text style={styles.aboutBio}>{aboutBio.trim()}</Text> : null}
-              {nonEmptySocialLinks(socialLinks).length > 0 ? (
+          {storyText || visibleSocialLinks.length > 0 ? (
+            <View style={styles.story}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>Story</Text>
+              {storyText ? <Text style={styles.storyBio}>{storyText}</Text> : null}
+              {visibleSocialLinks.length > 0 ? (
                 <View style={styles.socialRow}>
-                  {nonEmptySocialLinks(socialLinks).map(([platform, value]) => (
+                  {visibleSocialLinks.map(([platform, value]) => (
                     <Pressable
                       key={platform}
                       accessibilityRole="link"
@@ -489,11 +494,14 @@ export function AthleteProfileView({
             </View>
           ) : null}
 
-          {publicClips.length === 0 ? (
-            <Text style={styles.empty}>No Highlights ⚡ tagged yet.</Text>
-          ) : (
-            grid(publicClips)
-          )}
+          <View style={styles.highlightSection}>
+            <Text accessibilityRole="header" style={styles.sectionTitle}>Highlights</Text>
+            {publicClips.length === 0 ? (
+              <Text style={styles.highlightEmpty}>No public Highlights to show here yet.</Text>
+            ) : (
+              grid(publicClips)
+            )}
+          </View>
 
         </View>
       ) : null}
@@ -776,7 +784,7 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   highlightsPane: {
-    gap: 16,
+    gap: space.xl,
   },
   vault: {
     gap: 12,
@@ -784,31 +792,51 @@ const styles = StyleSheet.create({
   statsPane: {
     gap: 16,
   },
-  about: {
-    gap: 10,
+  story: {
+    gap: space.sm,
+    padding: space.lg,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  aboutBio: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600',
+  storyBio: {
+    fontSize: 15,
+    lineHeight: 24,
     color: colors.text,
+  },
+  highlightSection: {
+    gap: space.sm,
+  },
+  highlightEmpty: {
+    padding: space.lg,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
   },
   socialRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: space.xs,
   },
   socialChip: {
-    borderRadius: 999,
+    minHeight: 44,
+    minWidth: 44,
+    maxWidth: '100%',
+    borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: space.sm,
+    paddingVertical: space.xs,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   socialChipLabel: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '700',
     color: FOCAL.jadeInk,
   },
   navRow: {

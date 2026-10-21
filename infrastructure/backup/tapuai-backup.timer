@@ -1,0 +1,12 @@
+# Proposed six-hour recovery interval; RPO is unproven until jobs and remote copies are monitored.
+[Unit]
+Description=Tapuai backup every six hours
+
+[Timer]
+OnCalendar=*-*-* 00,06,12,18:00:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+Unit=tapuai-backup.service
+
+[Install]
+WantedBy=timers.target

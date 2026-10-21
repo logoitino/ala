@@ -4,6 +4,7 @@
  */
 
 import 'react-native-gesture-handler';
+import { useEffect, useRef } from 'react';
 import { LogBox, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
@@ -22,6 +23,7 @@ import { SoftWallProvider } from '@/context/SoftWallContext';
 import { CelebrationProvider } from '@/context/CelebrationContext';
 import { UploadSheetProvider } from '@/context/UploadSheetContext';
 import { colors, isLightCanvas } from '@/constants/theme';
+import { telemetry } from '@/services/TelemetryManager';
 import { StripeProvider } from '@/lib/stripe';
 import { APPLE_PAY_MERCHANT_ID } from '@/lib/walletPay';
 import '@/services/OfflineQueue';
@@ -29,9 +31,21 @@ import '@/services/TelemetryManager';
 
 LogBox.ignoreAllLogs();
 
+// Cold-start clock: bundle eval to first root commit. The mark is module-level so Fast Refresh and
+// re-renders never move it; emission still waits for the smoothness flag (async config fetch).
+const BUNDLE_EVALLED_AT = performance.now();
+
 function RuntimeApp() {
   const { live } = useAppRuntime();
   const light = isLightCanvas(live.theme.background);
+  const smoothnessOn = live.layouts?.telemetrySmoothness === true;
+  const appStartSent = useRef(false);
+  useEffect(() => {
+    if (smoothnessOn && !appStartSent.current) {
+      appStartSent.current = true;
+      telemetry.trackAppStart(performance.now() - BUNDLE_EVALLED_AT);
+    }
+  }, [smoothnessOn]);
   return (
     <>
       <SupportRuntimeObserver />

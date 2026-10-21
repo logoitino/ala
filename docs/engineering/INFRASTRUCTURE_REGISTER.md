@@ -12,27 +12,31 @@ owner-reported or unverified. Portability and exits: [PORTABILITY.md](PORTABILIT
 
 | Service | Role | Status | Environments | Plan | Decision |
 | --- | --- | --- | --- | --- | --- |
-| Supabase (managed) | PostgreSQL database, PostgREST API, Auth (GoTrue), Storage, Realtime, Edge Functions (Deno) | in use | development (ulfapgtabidorgwfjvwz); staging (tucioqipfejqqqtuakdi); production: not created yet | Free (owner-reported 2026-10-13; unverified) | Owner 2026-10-14: stay on managed Supabase; self-hosted Supabase is the drilled exit (HOSTING_DECISION_BRIEF §9, PORTABILITY.md); BEYOND-01 new private bucket/source written locally October15Denver, default-off and not applied/activated; no plan/spend change. |
+| Supabase (managed) | PostgreSQL database, PostgREST API, Auth (GoTrue), Storage, Realtime, Edge Functions (Deno) | in use | development (ulfapgtabidorgwfjvwz); staging (tucioqipfejqqqtuakdi); production: not created yet | Free (owner-reported 2026-10-13; unverified) | Owner 2026-10-14: stay on managed Supabase; self-hosted Supabase is the drilled exit (HOSTING_DECISION_BRIEF §9, PORTABILITY.md); historical October15Denver BEYOND-01 checkpoint: private bucket/source then local/default-off/unapplied; later development catch-up is recorded in STATE and is not rechecked here; no plan/spend change. 2026-10-21 local media adapter/readers: same six buckets/services and credentials; replaceable upload/sign/list/remove and legacy/reference playback, writer switch off. No new provider, size-limit change or hosted parity claim; design/MEDIA_SERVICE_PLAN.md. |
 | Stripe (PaymentSheet, Connect) | Donations, Connect payouts (blocked), identity / TIN checks for payees (VERIFY-02) | in use, test mode | test mode only | Pay per transaction (unverified) | In use; payouts blocked until STATE §6 item 8 |
 | Expo / EAS (builds, over-the-air updates) | App builds, OTA updates (u.expo.dev), store submission; planned push notifications (SCALE-07) | in use | development, preview, production build profiles | Free build quota (unverified) | In use |
 | Apple and Google sign-in (OAuth) | Sign in with Apple / Google through Supabase Auth | Apple on; Google off on development and staging | development; staging | Apple Developer $99/yr (owner-reported) | In use |
 | Managed video host (Mux provisional first experiment; Bunny / Cloudflare compared) | Streaming, transcoding and delivery of Highlights | candidate, not selected | — | Not purchased | Experiment recommended (HOSTING_DECISION_BRIEF §11); no provider selected |
-| GitHub (repository, Actions CI) | Source, CI gates (ci-checks.yml), future deploy approvals | in use (CI); repository plan and deploy environments undecided | CI | Undecided (ENVIRONMENTS_AND_HOSTING §9) | In use for CI |
+| GitHub (repository, Actions CI) | Source, full CI gates and all-branch/PR/manual/daily-default source-only exit tar artifacts with run/commit/hash provenance and thirty-day retention; cloud deployment gates remain separate | in use (CI); repository plan and deploy environments undecided | CI | Undecided (ENVIRONMENTS_AND_HOSTING §9) | Existing CI in use; current exit workflow prepared locally, no remote run claimed |
 | Next.js admin portal hosting | Read-only oversight portal | local only; host undecided | local :3001 | Undecided | Open (ENVIRONMENTS_AND_HOSTING §9) |
 | Engineering Support release and sensor settings | Release / environment labels and the runtime sensor switch for the support desk | in use (local) | all | No vendor | In use |
+| Portable encrypted Supabase recovery | Full logical database/Auth export, all Storage bytes, source/config custody, isolated reviewed restore, all-destination backup jobs, capture-time freshness monitoring and protected-checksum remote retrieval; exact expanded source release, Storage ownership/catalog reconciliation and original evidence readiness checks; content-polled private working-source snapshots with OS locking, atomic pointers and resumable cache retention; successful pnpm check and Claude Stop invoke explicit source ensure/catch-up; macOS verified-source checks temporarily inhibit idle sleep for the bounded600s check command; fresh private external setup templates and read-only operational health with source-bound upload/capture evidence and actual sweep/process clocks; shared public connection contract for Expo/Next clients, matching private target profiles and installed-SDK synthetic loopback protocol checks; registered infrastructure/exit Security review coverage and deterministic safe source-bound report with guard-specific missing-prerequisite statuses, independent Security partners and unverified operational controls | Local source tools and current-login detached watcher active; OS login-startup registration blocked (REDUNDANCY-04); live database backup/restore jobs remain inactive; REDUNDANCY-05 private placeholders and invoked health available, no live backup config | operator-runner and isolated recovery target: not provisioned; Local current-login source watcher (detached Node); login autostart not established | Local source sweeps30s after installation; proposed6h database backup schedule inactive; no measured RPO/RTO or paid enrollment | Owner2026-10-19 requests automatically current app exit copies; local source cache authorized, hosted/database/Storage operations remain separately gated |
+| AWS/Azure self-hosted Supabase deployment | Optional Linux VM, pinned Supabase stack, Expo web/API and Next standalone containers, TLS; independent private versioned S3/Blob recovery destinations; release-bound immutable runtime image archives and optional owned stable API gateway | local deployment templates; upstream pin offline/unverified; no cloud plan/apply or Docker rehearsal | AWS/Azure recovery destinations and optional single VM: not provisioned | Provider/region/spend undecided; one VM is not HA | Exit A preparation per PORTABILITY; version/checksum/image review and isolated rehearsal required before execution |
 
 ## What the code uses, by service
 
 | Service | Dependencies | Environment variables (names only) | Server functions / API routes | Buckets / extensions / workflows |
 | --- | --- | --- | --- | --- |
-| Supabase (managed) | `@supabase/supabase-js`, `@supabase/ssr` | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | `create-payment-intent`, `create-stripe-account`, `stripe-webhook`; `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload` | `reels`, `avatars`, `game_highlights`, `reel_vault`, `beyond_game`, `fan_zone`; `pgcrypto` |
+| Supabase (managed) | `@supabase/supabase-js`, `@supabase/ssr` | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_ADMIN_REQUIRE_MFA`, `EXPO_PUBLIC_ADMIN_REQUIRE_MFA`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `EXPO_PUBLIC_LIVE_SCORES_BROADCAST` | `create-payment-intent`, `create-stripe-account`, `stripe-webhook`; `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload` | `reels`, `avatars`, `game_highlights`, `reel_vault`, `beyond_game`, `fan_zone`; `pgcrypto` |
 | Stripe (PaymentSheet, Connect) | `@stripe/stripe-react-native`, `stripe` | `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | `create-payment-intent`, `create-payout`, `create-stripe-account` | — |
 | Expo / EAS (builds, over-the-air updates) | `expo`, `expo-updates`, `expo-router`, `@expo/metro-runtime` | `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_API_ORIGIN` | — | — |
 | Apple and Google sign-in (OAuth) | `expo-apple-authentication`, `expo-auth-session`, `expo-web-browser`, `expo-crypto` | — | — | — |
 | Managed video host (Mux provisional first experiment; Bunny / Cloudflare compared) | — | — | — | — |
-| GitHub (repository, Actions CI) | — | — | — | `ci-checks.yml` |
+| GitHub (repository, Actions CI) | — | — | — | `ci-checks.yml`, `exit-release.yml` |
 | Next.js admin portal hosting | `next` | — | — | — |
 | Engineering Support release and sensor settings | — | `EXPO_PUBLIC_SUPPORT_SENSORS_ENABLED`, `EXPO_PUBLIC_SUPPORT_RELEASE`, `EXPO_PUBLIC_SUPPORT_ENVIRONMENT`, `SUPPORT_RELEASE_ID`, `SUPPORT_ENVIRONMENT` | — | — |
+| Portable encrypted Supabase recovery | — | — | — | — |
+| AWS/Azure self-hosted Supabase deployment | — | — | — | — |
 
 Local libraries (no outside service): 50. App configuration variables: `NODE_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `ANALYTICS_TEST_RESOLVER`.
 
@@ -40,17 +44,17 @@ Local libraries (no outside service): 50. App configuration variables: `NODE_ENV
 
 | Measure | Count | Meaning |
 | --- | --- | --- |
-| `auth.uid()` / `auth.role()` in SQL | 246 / 108 | Identity calls a non-Supabase host must provide (prefer `my_profile_id()` in new SQL) |
-| Grants to `anon` / `authenticated` / `service_role` | 355 | The PostgREST role model |
-| `storage.*` references in SQL | 116 | Storage policies and bucket rules |
-| Realtime references in SQL / client channels | 14 / 11 | Live updates to replace on another host |
+| `auth.uid()` / `auth.role()` in SQL | 275 / 117 | Identity calls a non-Supabase host must provide (prefer `my_profile_id()` in new SQL) |
+| Grants to `anon` / `authenticated` / `service_role` | 378 | The PostgREST role model |
+| `storage.*` references in SQL | 122 | Storage policies and bucket rules |
+| Realtime references in SQL / client channels | 28 / 12 | Live updates to replace on another host |
 | Realtime publication tables | 4 | `app_runtime_config`, `cheer_polls`, `game_events`, `games` |
-| Direct Supabase calls outside `lib/` | 48 in 19 files | Places a provider change must touch; may only shrink (`app:data-boundaries`) |
+| Direct Supabase calls outside `lib/` | 37 in 14 files | Places a provider change must touch; may only shrink (`app:data-boundaries`) |
 | Direct Supabase calls in Expo routes | 0 | Same rule, route files |
 
 ## Builds, updates and CI
 
 - EAS build profiles: `development`, `preview`, `production`; over-the-air updates host: `u.expo.dev`.
-- CI workflows: `ci-checks.yml`.
+- CI workflows: `ci-checks.yml`, `exit-release.yml`.
 - Edge Functions: `create-payment-intent`, `create-stripe-account`, `stripe-webhook`. Metro API routes: `create-payment-intent`, `create-payout`, `create-stripe-account`, `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload`.
 

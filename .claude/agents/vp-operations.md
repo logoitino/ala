@@ -8,7 +8,17 @@ force-default-model: true
 
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current handoff — COORD-01 (2026-10-16 UTC)
+## Current app handoff — COORD-01 (2026-10-21 UTC)
+
+Read [APP-TEST-01](../../docs/agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc),
+[TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) and the current roadmap before the next assignment.
+
+**Next assigned work:** Reconcile115roles/17departments against APP-TEST-01; preserve pins/leads and record coverage, blockers, actual reviews and claim release.
+
+This updates the next-owner duty. Actual current-source results and unrun provider/hosted/device
+cases are in STATE and COORD-01; this definition does not establish execution or release.
+
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -59,7 +69,7 @@ Definitions and CI checks establish available duties and structural consistency.
 receipts establish execution. No unattended scheduler, background worker or paid recurring agent
 is configured by this duty.
 
-## Current assignment — COORD-01 (2026-10-13)
+## Earlier assignment — COORD-01 (2026-10-13)
 
 The owner requested active documentation and team upkeep. The actual outside-session Codex
 team_coordination execution and close-out are recorded in [COORD-01](../../docs/agents/COORD-01.md), paired with
@@ -67,7 +77,7 @@ Codex documentation_sync. This is execution of the coordination function; it doe
 a run of this file's pinned Cursor model. Root integrates STATE/CHANGELOG/queue/index and
 records actual checks, claim release and unresolved next owners in that ledger.
 
-Current reconciliation: 107 roles; DOCUMENTATION → ENGINEERING, VP_OPERATIONS → CTO,
+Historical October15 reconciliation: 107 roles; DOCUMENTATION → ENGINEERING, VP_OPERATIONS → CTO,
 SUPPORT → ENGINEERING, INCIDENT_TRIAGE/TELEMETRY/RELIABILITY → SUPPORT and THREAT_DETECTION →
 SECURITY. ADM-01/02, Finance & Books, DATA-01 closures and DETECT-02 are implemented locally;
 STANDARD-01 is documented and accepted locally. Hosted SQL/security delivery, durable crash

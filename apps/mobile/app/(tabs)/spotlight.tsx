@@ -1,3 +1,4 @@
+/** UX-07: Spotlight presents published athlete recognition without declaring a pending board empty. */
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
@@ -96,8 +97,9 @@ export default function SpotlightTab() {
           />
         </ScrollFxParallax>
         {loading && awards.length === 0 ? (
-          <View style={styles.boot}>
+          <View style={styles.boot} accessibilityLiveRegion="polite">
             <ActivityIndicator color={colors.primary} />
+            <Text style={styles.loadingLabel}>Loading Spotlights…</Text>
           </View>
         ) : null}
         {featured ? (
@@ -107,16 +109,16 @@ export default function SpotlightTab() {
               setSelected(featured);
             }} />
           </ScrollFxItem>
-        ) : (
+        ) : !loading ? (
           <EmptyState
             kicker="Spotlight"
             title={live.copy.spotlightEmpty}
-            lede="Publish Player of the Week from the Spotlight desk, then it lands here and on Home."
+            lede="When an athlete is featured, their Spotlight and Highlight appear here."
             adminHref="/admin/spotlight"
             adminLabel="Open Spotlight desk"
             accent={TAB_ACCENTS.spotlight.color}
           />
-        )}
+        ) : null}
         {showBoards ? (
           <LeaderboardsBoard
             boards={leaderboards.boards}
@@ -135,7 +137,7 @@ export default function SpotlightTab() {
         ) : null}
         {rest.length > 0 ? (
           <View style={styles.list}>
-            <Text style={styles.section}>Recent Spotlights</Text>
+            <Text accessibilityRole="header" style={styles.section}>Recent Spotlights</Text>
             {rest.map((award, index) => (
               <ScrollFxItem key={award.id} index={index + 1} variant="tilt">
                 <SpotlightAwardCard award={award} onPress={() => {
@@ -217,21 +219,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 120,
-    gap: 14,
+    gap: 20,
   },
   boot: {
     minHeight: 80,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 24,
+  },
+  loadingLabel: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
   },
   list: {
-    gap: 10,
+    gap: 16,
   },
   section: {
     color: FOCAL.goldInk,
-    fontSize: 12,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
+    letterSpacing: -0.2,
   },
 });

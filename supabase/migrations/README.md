@@ -65,6 +65,7 @@ check: `docs/STATE.md` §0.
 
 | File | What | Applied? |
 | --- | --- | --- |
+| `20261020190000_failed_photo_story_cleanup.sql` | Owner begin/finish cleanup for failed photo stories; terminal claim and exact-prefix Storage DELETE permission; locked late-content-write guard with timestamp bookkeeping preserved. Client retires earlier files/row before fresh retry. [Design](../../docs/engineering/design/PHOTO_STORIES_DESIGN.md) | **No.** Written locally; static/source reviewed. Real SQL/RLS/race replay blocked by local OS IPC and test-engine download permissions. Needs photo stories, owner-folder and minor-account guards; local replay/source review precedes owner-authorized staging apply; hosted negative/Storage-byte/concurrency verification follows staging apply and precedes production rollout. |
 | `20260929120000_athlete_verification_ladder.sql` | School-confirmed athlete verification: claims go to "pending", the athletic director or coach confirms in person with a 6-digit code; closes the self-verify and name-match holes. [Design](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **Recorded on staging 2026-09-30; not development.** No dependency on the other unapplied files |
 | `20260929130000_payout_gate_without_school.sql` | Payouts unlock with Stripe ID check + one undisputed claim, $250 cap until 3 teammate vouches or school confirmation; `athlete_vouches` + vouch RPCs. [Design §9](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **Recorded on staging 2026-09-30; not development.** Needs `20260929120000` and `supabase/custodial_money.sql` (`custodial_accounts`, `athlete_controls_money`) first |
 | `20260929140000_school_badge.sql` | School logo / colours, `athlete_school_badge`, `admin_set_school_branding`, no ✓ in names. [Design §10](../../docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | **Recorded on staging 2026-09-30; not development.** Needs `20260929120000` first |
@@ -166,3 +167,33 @@ or case records blindly. Hosted compatibility, counsel review of group notices/r
 | `20261017090000_coach_level_label.sql` | `safety_label` on `reels` and `beyond_posts` (`none` or `coach_level`). Append-only `safety_label_events`. Uploader RPC only on a new Train Like Me clip or a workout still in draft or pending. Admin add/remove requires a reason. `coach_level` reports do not hide the clip or count toward the three-report hide. `reels_feed` and `beyond_post_json` include the label. | **No.** Written 2026-10-16, not applied anywhere. |
 | `20261017110000_trivia_iq.sql` | Six approved IQ questions (`sport` IQ, topic general). A personal sport round draws one unseen IQ question, then continues with sport questions. | **No.** Written 2026-10-17, not applied anywhere. |
 
+
+## Live score Broadcast — SCALE-03
+
+| File | Purpose | Applied? |
+| --- | --- | --- |
+| `20261018120000_live_score_broadcast.sql` | Stops the game-night refetch storm. `games.live_seq` (server-owned change number), trigger `games_live_seq_bump`, definer trigger `games_broadcast_score_change` that sends only the changed scoreboard columns on private Broadcast `game_scores_{id}` (and add / remove / active notices on `game_scores_index`), and the receive-only `realtime.messages` policy `Fans receive game score changes`. No client send policy. The app uses it only when a build sets `EXPO_PUBLIC_LIVE_SCORES_BROADCAST=true`, and falls back to today's refetch if the topic is refused. Rollback in the header. RLS_SECURITY review: [SCALE-03](../../docs/agents/SCALE-03.md#rls_security-review). | **No.** Written 2026-10-18, not applied anywhere. Replay: 9 checks in `schema-replay.mjs`. |
+
+## Guest Rally reads — RALLY
+
+| File | Purpose | Applied? |
+| --- | --- | --- |
+| `20261020090000_rallies_guest_read.sql` | Splits `rallies` SELECT into "Read public rallies" (anon + authenticated, `live` / `filled` / `closed`) and "Managers read own rallies" (authenticated, `rally_manager_role(player_id) is not null`). The old single policy called `rally_manager_role`, which anon may not execute, so every guest read failed with 42501. Signed-in visibility unchanged; function stays closed to anon. Replay: `schema-replay.mjs` Rally checks. | No — staging first, then confirm a guest sees a live Rally meter |
+
+## Smoothness telemetry — behavior logging Step 2
+
+| File | Purpose | Applied? |
+| --- | --- | --- |
+| `20261020173000_telemetry_smoothness_events.sql` | Adds `screen_mount` + `app_start` to the `telemetry_logs` event whitelist (cold-start and key-screen mount timing; surface + duration only). Client emits only while `layouts.telemetrySmoothness` is on (default off) — flip it in Expo /admin App setup → Features and publish AFTER applying, or pre-apply batches die on the CHECK. Rollback in the header. | **No.** Written 2026-10-20, not applied anywhere. |
+| `20261020180000_reports_trivia_smoothness.sql` | `get_admin_reports`: new `trivia` key (7-day funnel counts, answers per question, starts per kind) and `smoothness` key (mount/start counts, averages, average mount per surface). Counts only. Full-body rewrite including the 20261012180000 casts + bands — apply after (or instead of) that file, never before it. Trivia keys fill immediately; smoothness keys fill after 20261020173000 + the layouts flag. Rollback: re-apply 20261012180000. | **No.** Written 2026-10-20, not applied anywhere. |
+| `20261020174500_reports_trivia_funnel_top.sql` | `get_admin_reports.trivia` gains `prep_views_7d` (preparation screens shown) + `start_presses_7d` (Start taps incl. unconfirmed attempts): viewed-but-never-pressed is friction, pressed-but-never-confirmed is technical. Full-body rewrite including everything above — apply after (or instead of) 20261020180000, never before it. Rollback: re-apply 20261020180000. | **No.** Written 2026-10-20, not applied anywhere. |
+
+## Caller-bound adult and guardian Connect setup
+
+| File | Purpose | Applied? |
+| --- | --- | --- |
+| `20261021120000_connect_account_context.sql` | Service-only `stripe_connect_context` and `save_stripe_connect_account`: live validated caller, adult-athlete own account or conservative reviewed guardian account per athlete; active link/donations consent, existing custodial record/DOB before handover, no disputed claim; exact profile/binding CAS and cross-profile/custodial account reuse rejection. Guardian writes only the custodial binding/transfer flag; self writes existing profile fields. `payee_changes_supersede` invalidates only the old nonnull Stripe account's KYC, preserving other accounts and existing guardian relationship invalidation. No new table/column/client grant or inferred identity/TIN. Requires MINOR-01, VERIFY-02 and custodial schema. | **No.** Local source only. Replay: `node apps/mobile/src/backend/db/connectAccountContext.replay.mjs <external-pglite-dist>`; PostgreSQL execution pending an available engine. Test fixtures are synthetic; guardian consent remains counsel-gated and payouts remain blocked. |
+
+The replay uses the actual canonical schema and external PGlite, without provider calls or app dependencies.
+It checks competing captured bindings, not multi-connection lock scheduling. Authorized hosted application,
+negative readback, real Stripe returns and provider/counsel acceptance are separate prerequisites.

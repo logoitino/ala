@@ -155,3 +155,65 @@ test('checkout timings are per step, not one whole checkout (VOICE #24, #25)', (
   assert.equal(errors?.stats.find((stat) => stat.key === 'avg_checkout_ms_24h')?.label, 'Average checkout step · 24h');
   assert.equal(errors?.stats.find((stat) => stat.key === 'checkouts_24h')?.label, 'Checkout step timings · 24h');
 });
+
+const trivia = {
+  prepViews7d: 40, startPresses7d: 22,
+  starts7d: 20, answers7d: 80, nexts7d: 60, completes7d: 15, abandons7d: 4, unavailable7d: 1,
+  startFailed7d: 0, answerFailed7d: 2, nextFailed7d: 1, explanationFailed7d: 0,
+  byPosition7d: [
+    { label: 'Question 1', value: 20 }, { label: 'Question 2', value: 18 }, { label: 'Question 3', value: 16 },
+    { label: 'Question 4', value: 14 }, { label: 'Question 5', value: 12 },
+  ],
+  startsByKind7d: [{ label: 'personal', value: 12 }, { label: 'group', value: 8 }],
+};
+
+test('trivia funnel tiles join the buttons tab with counts, rate, drop-off and kinds', () => {
+  const buttons = buildOperations({ ...base, trivia }).find((lens) => lens.id === 'buttons');
+  assert.equal(buttons?.stats.find((stat) => stat.key === 'trivia_prep_views_7d')?.value, 40);
+  assert.equal(buttons?.stats.find((stat) => stat.key === 'trivia_start_presses_7d')?.value, 22);
+  assert.equal(buttons?.stats.find((stat) => stat.key === 'trivia_starts_7d')?.value, 20);
+  assert.equal(buttons?.stats.find((stat) => stat.key === 'trivia_completes_7d')?.value, 15);
+  assert.equal(buttons?.stats.find((stat) => stat.key === 'trivia_complete_rate_7d')?.value, 75);
+  assert.equal(buttons?.stats.find((stat) => stat.key === 'trivia_abandons_7d')?.value, 4);
+  const positions = buttons?.rankings.find((ranking) => ranking.title === 'Answers by question');
+  assert.deepEqual(positions?.rows?.map((row) => row.value), [20, 18, 16, 14, 12]);
+  const kinds = buttons?.rankings.find((ranking) => ranking.title === 'Rounds by kind');
+  assert.deepEqual(kinds?.rows, [{ label: 'Personal rounds', value: 12 }, { label: 'Group rounds', value: 8 }]);
+  assert.ok(buttons?.details.some((row) => row.label === 'Trivia answer failures · 7d' && row.value === '2'));
+});
+
+test('trivia completion is missing without starts, never 0% it did not return', () => {
+  const buttons = buildOperations({ ...base, trivia: { ...trivia, starts7d: 0, completes7d: 0 } }).find((lens) => lens.id === 'buttons');
+  assert.equal(buttons?.stats.find((stat) => stat.key === 'trivia_complete_rate_7d')?.value, null);
+});
+
+test('callers without trivia or smoothness see the old tiles only', () => {
+  const lenses = buildOperations(base);
+  const buttons = lenses.find((lens) => lens.id === 'buttons');
+  const errors = lenses.find((lens) => lens.id === 'errors');
+  assert.equal(buttons?.stats.some((stat) => stat.key.startsWith('trivia_')) ?? false, false);
+  assert.equal(buttons?.rankings.some((ranking) => ranking.title === 'Answers by question') ?? false, false);
+  assert.equal(errors?.stats.some((stat) => stat.key === 'avg_mount_ms_7d') ?? false, false);
+  assert.equal(errors?.rankings.some((ranking) => ranking.title === 'Mount time by screen') ?? false, false);
+});
+
+const smoothness = {
+  mounts7d: 300, avgMountMs7d: 180,
+  bySurface7d: [{ label: 'home', value: 210 }, { label: 'sport-quiz', value: 160 }, { label: 'donate-sheet', value: 140 }],
+  appStarts7d: 120, avgStartMs7d: 900,
+};
+
+test('smoothness tiles join the errors tab with averages and slowest-first screens', () => {
+  const errors = buildOperations({ ...base, smoothness }).find((lens) => lens.id === 'errors');
+  assert.equal(errors?.stats.find((stat) => stat.key === 'avg_mount_ms_7d')?.value, 180);
+  assert.equal(errors?.stats.find((stat) => stat.key === 'avg_start_ms_7d')?.value, 900);
+  assert.equal(errors?.stats.find((stat) => stat.key === 'avg_mount_ms_7d')?.goodDirection, 'down');
+  const mounts = errors?.rankings.find((ranking) => ranking.title === 'Mount time by screen');
+  assert.deepEqual(mounts?.rows, [
+    { label: 'Home', value: 210 },
+    { label: 'Sport Pop Quiz', value: 160 },
+    { label: 'Donate sheet', value: 140 },
+  ]);
+  assert.equal(mounts?.kind, 'ms');
+  assert.ok(errors?.details.some((row) => row.label === 'Average cold start · 7d'));
+});

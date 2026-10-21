@@ -1,3 +1,4 @@
+<!-- Domain review standards and declared model pins; actual execution and acceptance require original scoped evidence. -->
 # Expert standards
 
 ## Current main-checkout handoff — COORD-01 (2026-10-16 UTC)
@@ -57,11 +58,39 @@ A `SECURITY DEFINER` function on Supabase runs as `postgres`, which bypasses RLS
 
 Storage policies live on `storage.objects` and name `bucket_id` ([storage access control](https://supabase.com/docs/guides/storage/security/access-control)). The client insert of `tips` stays the only credit path until webhook crediting replaces it in the same change. No service-role key in the app.
 
+### Portable infrastructure security — REDUNDANCY-07 (2026-10-20)
+
+`INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY` and `RECOVERY_SECURITY` report to SECURITY → CTO.
+They independently review network/IAM/TLS/host controls and complete coverage, locked dependency/
+upstream/image/CI/offline provenance, and private recovery/isolation/integrity/rotation/custody.
+RLS_SECURITY/SESSION_SECURITY/THREAT_DETECTION retain SQL, identity and signal judgments.
+REDUNDANCY_LEAD remains the Engineering migration coordinator; INFRASTRUCTURE supplies context.
+
+The complete source/control report is inspectable with `pnpm security:infra:report` and checked
+with `pnpm security:infra:check`/`pnpm security:infra:test`. Structural coverage is not security
+acceptance: preserve securityStatus=not-established, operationalAcceptance=false,
+readyToCutOver=false and all missing manual/hosted evidence. No static check establishes
+provider IAM, remote encryption, signed provenance, actual recovery custody, SOC or SLA.
+Require actual dated executor/model/source/environment/path/command/result/finding/limit/next-owner
+receipts on relevant changes, weekly assigned reviews and before authorized deployments/cutovers.
+Definitions grant no live access or continuous SOC. Owner-authorized outside-session Codex is
+recorded separately from the unchanged Grok pins; reconciliation/evidence is in REDUNDANCY-07.
+
 ## IT infrastructure
 
 Lead: `OPERATIONS`. [EAS Build](https://docs.expo.dev/build/introduction/) makes the installable binary. Do not start a new iOS preview until a second device is registered. The 2026-10-01 preview binaries do not contain later JavaScript. [EAS Update](https://docs.expo.dev/eas-update/introduction/) can ship JavaScript and images only when `expo-updates` is already in the binary and the runtime version matches.
 
 A Wave 0 preview build, applying SQL, and a `4242` donation are $0 until Expo's free build quota runs out or a free Supabase project pauses (then Pro is about $25/mo). Apple Developer $99/yr is already enrolled. Do not start Wave 1. Staging commands need both `--linked` and project ref `tucioqipfejqqqtuakdi`. Do not link the CLI away from development.
+
+## Redundancy and exit
+
+Lead: `REDUNDANCY_LEAD`. The bar: the move off Supabase must be buildable from the documents alone, and current with the code.
+Every claim names its evidence — a passing `pnpm exit:map:check`, parity PASS, a drill receipt — and says what was **not** run
+(hosted restore, provider accounts, Terraform apply, Docker images). Never call one VM highly available, never price a provider
+without COST_OPERATIONS' dated quote, never skip `grant-sync` after a restore onto a Supabase stack, and never deploy
+`stripe-webhook` before P1-05. Exit A (self-hosted Supabase) keeps service interfaces; exit B (cloud-native) is a redesign of
+Auth, Storage and Realtime adapters and must preserve RLS through equivalent roles and JWT claims. Charter:
+[REDUNDANCY_TEAM](../engineering/REDUNDANCY_TEAM.md).
 
 ## Design
 
@@ -191,6 +220,12 @@ Lead: `SUPPORT`, reporting to `ENGINEERING`; specialists INCIDENT_TRIAGE, TELEME
 | `HIGHLIGHTS` | `grok-4.7-medium` | Engineering |
 | `INCIDENT_TRIAGE` | `grok-4.7-medium` | Engineering support |
 | `INFRASTRUCTURE` | `grok-4.7-medium` | Engineering |
+| `INFRA_SECURITY` | `grok-4.7-medium` | Security |
+| `REDUNDANCY_LEAD` | `grok-4.7-medium` | Engineering |
+| `EXIT_SYNC` | `grok-4.7-medium` | Engineering |
+| `EXIT_DATABASE` | `grok-4.7-medium` | Engineering |
+| `EXIT_SERVICES` | `grok-4.7-medium` | Engineering |
+| `EXIT_CLOUD` | `grok-4.7-medium` | Engineering |
 | `INFO_RETURNS` | `grok-4.7-medium` | Finance and Accounting |
 | `INTERNAL_CONTROLS` | `grok-4.7-medium` | Finance and Accounting |
 | `LEADERBOARDS` | `grok-4.7-medium` | Engineering |
@@ -221,6 +256,7 @@ Lead: `SUPPORT`, reporting to `ENGINEERING`; specialists INCIDENT_TRIAGE, TELEME
 | `RECEIPTS` | `grok-4.7-medium` | Finance |
 | `RECONCILIATION` | `grok-4.7-medium` | Finance |
 | `RECOVERY` | `grok-4.7-medium` | IT infrastructure |
+| `RECOVERY_SECURITY` | `grok-4.7-medium` | Security |
 | `REFUNDS` | `grok-4.7-medium` | Finance |
 | `RELEASE` | `grok-4.7-medium` | IT infrastructure |
 | `RELIABILITY` | `grok-4.7-medium` | Engineering support |
@@ -238,6 +274,7 @@ Lead: `SUPPORT`, reporting to `ENGINEERING`; specialists INCIDENT_TRIAGE, TELEME
 | `SPONSOR_ADS` | `grok-4.7-medium` | Partnerships |
 | `SPOTLIGHT` | `grok-4.7-medium` | Engineering |
 | `STORAGE` | `grok-4.7-medium` | Database |
+| `SUPPLY_CHAIN_SECURITY` | `grok-4.7-medium` | Security |
 | `SUPPORT` | `grok-4.7-medium` | Engineering support |
 | `TAX` | `grok-4.7-medium` | Finance and Accounting |
 | `TELEMETRY` | `grok-4.7-medium` | Engineering support |

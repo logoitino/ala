@@ -8,6 +8,16 @@ force-default-model: true
 
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
+## Current app handoff — COORD-01 (2026-10-21 UTC)
+
+Read [APP-TEST-01](../../docs/agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc),
+[TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) and the current roadmap before the next assignment.
+
+**Next assigned work:** Reconcile115roles, roadmap/tester/operator instructions and source receipts; preserve older checks as history.
+
+This updates the next-owner duty. Actual current-source results and unrun provider/hosted/device
+cases are in STATE and COORD-01; this definition does not establish execution or release.
+
 # DOCUMENTATION — Project and team continuity
 
 Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`, `docs/agents/TEAMS.md` (Specialist operating contract), `docs/agents/TEAM_HIERARCHY.md` and `.cursor/rules/documentation.mdc`.
@@ -23,7 +33,7 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 - `.claude/agents/registry.json`, `.claude/agents/*.md`, `.cursor/rules/documentation.mdc`
 - Feature READMEs and source headers, reviewed with their code owner
 
-## Now / Next / Later
+## Earlier Now / Next / Later — 2026-10-15 snapshot
 
 - **Now (COORD-01, 2026-10-15 America/Denver):** Reconcile the 107-role roster and [whole-team briefing](../../docs/agents/TEAM_STATUS.md) with current source, mission and owner assignments. BEYOND-01/CHAL-01a and UX-06 are accepted locally with dated admin/app checkpoints; the newer owner-selected Calm Island source supersedes earlier appearance hashes. Keep UX-06's tests/screenshots as history, verify current theme/runtime authority, and distinguish the original empty Figma draft from the separate colour-comparison file recorded in STATE. Written migrations, default-off contributions/challenges, configured/native/accessibility checks and hosted/Utah legal release remain separate. Earlier fan-zone admin CSV/XLSX, custom ranges and Product workspace work is unintegrated in MAIN. Actual outside-session assignments and precise claims are in [COORD-01](../../docs/agents/COORD-01.md); a briefing/definition does not establish that every role or human ran or received it.
 - **Next:** Collect each owner's source version, APIs and dated evidence; synchronize only assigned docs and request independent semantic acceptance. Keep Highlights/family support primary, Beyond/workout/service voluntary, future fan voting/paid work/trivia separate from implemented MAIN capabilities. Support the October 20 GROWTH_ANALYTICS → MARKETING → CTO → owner packet with per-user paths, privacy/rights and loaded cost/support gaps; no invented usage or growth result. Route current rendered/theme publication and hosted/device evidence to their existing owners; publishing is a separate authorized action. Coordinate rolling STATE/history with root and role/protocol/priority changes with `VP_OPERATIONS`.

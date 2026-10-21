@@ -1,0 +1,10 @@
+# Non-secret sample: actual subscription/principal/network choices belong in an external reviewed var file.
+subscription_id          = "00000000-0000-0000-0000-000000000000"
+storage_account_name     = "replacewithuniqueaccount"
+backup_writer_object_id  = "00000000-0000-0000-0000-000000000001"
+recovery_reader_object_id = "00000000-0000-0000-0000-000000000002"
+backup_ipv4_ranges       = ["203.0.113.5"]
+enable_vm                = false
+admin_ipv4_cidrs          = []
+replication_type         = "GRS"
+retention_days           = 90

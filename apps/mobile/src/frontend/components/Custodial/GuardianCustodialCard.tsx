@@ -1,9 +1,12 @@
-import { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+/** Guardian record setup and per-athlete Stripe test-bank setup remain separate from live payouts. */
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { useCustodial } from '@/hooks/useCustodial';
+import { useAuth } from '@/context/AuthContext';
+import { PayoutSetupCard } from '@/components/Profile/PayoutSetupCard';
 import {
   formatHandoverDate,
   parseBirthDateInput,
@@ -15,83 +18,89 @@ import { formatTipDollars } from '@/lib/reels';
 
 import { WithdrawalHistory } from './WithdrawalHistory';
 
-function errorText(error: unknown): string {
-  return error instanceof Error ? error.message : 'Try again.';
-}
-
 /**
  * @purpose A guardian's custodial account for one linked athlete (owner rules 2026-09-29): enter
  * the birth date once, say whether the bank account is in the athlete's name (encouraged), ask
  * the athlete to approve a withdrawal, and see the handover date after which only the athlete
  * can move the money.
- * @param playerId A `players.id` whose `guardian_id` is this guardian. Renders nothing when the
- * server does not recognise the caller as that athlete's guardian or the SQL is not applied.
+ * @param playerId A `players.id` whose `guardian_id` is this guardian. Loading, missing SQL, errors and
+ * permission loss stay visible; admins inspect records without guardian actions.
  * @remarks Recording a request moves no money — payouts stay 503 until the Phase 1a ledger and
  * Connect destination charges ship (ROADMAP Wave 1).
  * @sideEffects `useCustodial` RPCs.
  */
 export function GuardianCustodialCard({ playerId }: { playerId: string }) {
   const custodial = useCustodial(playerId);
+  const { user, session, profile, isSessionCurrent } = useAuth();
   const { summary } = custodial;
-  const [birthInput, setBirthInput] = useState('');
-  const [amountInput, setAmountInput] = useState('');
-  const [note, setNote] = useState('');
+  const owner = user?.id && user.id === session?.user.id && profile?.user_id === user.id ? user.id : null;
+  const key = `${owner || 'guest'}:${playerId}`;
+  const scope = useRef({ key, sessionGuard: isSessionCurrent, epoch: 0, mounted: true });
+  const flight = useRef<object | null>(null);
+  if (scope.current.key !== key || scope.current.sessionGuard !== isSessionCurrent) { scope.current = { ...scope.current, key, sessionGuard: isSessionCurrent, epoch: scope.current.epoch + 1 }; flight.current = null; }
+  const epoch = scope.current.epoch;
+  const current = () => !!owner && scope.current.mounted && scope.current.key === key && scope.current.epoch === epoch && (isSessionCurrent?.() ?? true);
+  useEffect(() => { scope.current.mounted = true; return () => { scope.current.mounted = false; }; }, []);
+  const [draft, setDraft] = useState({ key, epoch, birthInput: '', amountInput: '', note: '', bankChoice: null as boolean | null, reviewBirth: null as string | null });
+  const inputs = draft.key === key && draft.epoch === epoch ? draft : { key, epoch, birthInput: '', amountInput: '', note: '', bankChoice: null, reviewBirth: null };
+  const updateDraft = (patch: Partial<typeof draft>) => { if (current()) setDraft({ ...inputs, ...patch, key, epoch }); };
+  const { birthInput, amountInput, note, bankChoice, reviewBirth } = inputs;
+  const [pendingOperation, setPending] = useState<{ key: string; epoch: number } | null>(null);
+  const [notice, setNotice] = useState<{ key: string; epoch: number; text: string } | null>(null);
+  const busy = custodial.busy || pendingOperation?.key === key && pendingOperation.epoch === epoch;
+  const act = async (work: () => Promise<void>, success?: () => void) => {
+    if (!current() || busy || flight.current) return;
+    const operation = {}; flight.current = operation; setPending({ key, epoch }); setNotice(null);
+    try { await work(); if (current() && flight.current === operation) success?.(); }
+    catch { if (current() && flight.current === operation) setNotice({ key, epoch, text: 'This test account action could not be confirmed. Refresh and try again.' }); }
+    finally { if (flight.current === operation) { flight.current = null; if (current()) setPending(null); } }
+  };
   // Before a birth date is on file the server rejects a bank-only save, so hold the answer here.
-  const [bankChoice, setBankChoice] = useState<boolean | null>(null);
 
-  if (!custodial.available || !summary || summary.viewerRole === 'athlete') return null;
+  if (custodial.loading) return <View style={styles.card}><Text style={styles.body}>Loading custodial account…</Text></View>;
+  if (!custodial.available) return <View style={styles.card}><Text style={styles.body}>Custodial account setup is not available on this server yet.</Text></View>;
+  if (custodial.error) return <View style={styles.card}><Text style={styles.body} accessibilityRole="alert">{custodial.error}</Text><Pressable accessibilityRole="button" accessibilityLabel="Retry account" onPress={() => void custodial.refresh()} style={styles.chip}><Text style={styles.chipLabel}>Retry account</Text></Pressable></View>;
+  if (!current() || !summary || summary.playerId !== playerId || summary.viewerRole === 'athlete') return <View style={styles.card}><Text style={styles.body}>This custodial account is not available to this signed-in guardian.</Text></View>;
 
   const pending = pendingRequests(summary);
   const name = summary.athleteName;
+  const actionNotice = notice?.key === key && notice.epoch === epoch ? notice.text : null;
+  const testNotice = <Text style={styles.hint}>TEST ONLY — use synthetic account information. Record actions move no real money; payouts remain disabled.</Text>;
+
+  if (summary.viewerRole === 'admin') return <View style={styles.card}><Text style={styles.title}>{name} · read-only inspection</Text>{testNotice}<Text style={styles.body}>Guardian record {summary.hasAccount ? 'created' : 'not created'}. This view cannot connect a bank or act as the guardian.</Text><WithdrawalHistory requests={summary.requests} /></View>;
 
   const saveSetup = () => {
+    if (!current() || busy) return;
     const birthDate = parseBirthDateInput(birthInput);
     if (!birthDate) {
-      Alert.alert('Check the date', 'Use YYYY-MM-DD or MM/DD/YYYY.');
+      setNotice({ key, epoch, text: 'Check the date. Use YYYY-MM-DD or MM/DD/YYYY.' });
       return;
     }
-    Alert.alert(
-      `Is ${birthDate} right?`,
-      `This sets the day ${name} takes over their own money. Only Tapua'i support can change it later.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Save',
-          onPress: () =>
-            void custodial.setup(birthDate, bankChoice ?? summary.bankInAthleteName).catch((error: unknown) => {
-              Alert.alert('Couldn’t save', errorText(error));
-            }),
-        },
-      ],
-    );
+    updateDraft({ reviewBirth: birthDate });
   };
 
   const setBank = (inAthleteName: boolean) => {
-    void custodial.setup(null, inAthleteName).catch((error: unknown) => {
-      Alert.alert('Couldn’t save', errorText(error));
-    });
+    void act(() => custodial.setup(null, inAthleteName));
   };
 
   const sendRequest = () => {
+    if (!current() || busy) return;
     const amountCents = parseDollarInput(amountInput);
     if (!amountCents) {
-      Alert.alert('Enter an amount', 'How much do you want to withdraw?');
+      setNotice({ key, epoch, text: 'Enter an amount for the test withdrawal request.' });
       return;
     }
-    void custodial
-      .request(amountCents, note)
-      .then(() => {
-        setAmountInput('');
-        setNote('');
-        Alert.alert('Sent to ' + name, `${name} gets a request in Activity. Nothing moves until they approve.`);
-      })
-      .catch((error: unknown) => Alert.alert('Couldn’t send', errorText(error)));
+    void act(() => custodial.request(amountCents, note), () => {
+      updateDraft({ amountInput: '', note: '' });
+      setNotice({ key, epoch, text: 'Test request recorded. No real money moves.' });
+    });
   };
 
   if (summary.athleteControls) {
     return (
       <View style={styles.card}>
         <Text style={styles.title}>{name}</Text>
+        {testNotice}
         <Text style={styles.body}>
           {name} is {summary.handoverAge}+ and now manages their own money. Only they can withdraw it.
         </Text>
@@ -104,6 +113,7 @@ export function GuardianCustodialCard({ playerId }: { playerId: string }) {
     return (
       <View style={styles.card}>
         <Text style={styles.title}>Set up {name}'s account</Text>
+        {testNotice}
         <Text style={styles.body}>
           You look after the donations {name} receives until they turn {summary.handoverAge}. They see every
           gift, and nothing is withdrawn without their OK.
@@ -111,7 +121,8 @@ export function GuardianCustodialCard({ playerId }: { playerId: string }) {
         <Text style={styles.label}>{name}'s date of birth</Text>
         <TextInput
           value={birthInput}
-          onChangeText={setBirthInput}
+          onChangeText={(birthInput) => updateDraft({ birthInput, reviewBirth: null })}
+          editable={!busy}
           placeholder="YYYY-MM-DD"
           placeholderTextColor={colors.textMuted}
           autoCorrect={false}
@@ -121,17 +132,23 @@ export function GuardianCustodialCard({ playerId }: { playerId: string }) {
         />
         <BankQuestion
           value={bankChoice ?? summary.bankInAthleteName}
-          disabled={custodial.busy}
-          onChange={setBankChoice}
+          disabled={busy}
+          onChange={(bankChoice) => updateDraft({ bankChoice, reviewBirth: null })}
         />
         <Pressable
           accessibilityRole="button"
-          disabled={custodial.busy}
+          disabled={busy}
           onPress={saveSetup}
-          style={[styles.primary, custodial.busy && styles.dim]}
+          style={[styles.primary, busy && styles.dim]}
         >
           <Text style={styles.primaryLabel}>Save</Text>
         </Pressable>
+        {reviewBirth ? <View style={styles.form}>
+          <Text style={styles.body}>Confirm {reviewBirth}. This sets the handover date. Only Tapua'i support can correct it later.</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Confirm custodial record" disabled={busy} onPress={() => void act(() => custodial.setup(reviewBirth, bankChoice ?? summary.bankInAthleteName), () => updateDraft({ reviewBirth: null }))} style={styles.primary}><Text style={styles.primaryLabel}>Confirm test record</Text></Pressable>
+          <Pressable accessibilityRole="button" disabled={busy} onPress={() => updateDraft({ reviewBirth: null })} style={styles.chip}><Text style={styles.chipLabel}>Back</Text></Pressable>
+        </View> : null}
+        {actionNotice ? <Text style={styles.body} accessibilityRole="alert">{actionNotice}</Text> : null}
       </View>
     );
   }
@@ -139,13 +156,17 @@ export function GuardianCustodialCard({ playerId }: { playerId: string }) {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>{name}</Text>
+      {testNotice}
       <Text style={styles.total}>{receivedLines(summary.receivedCents, summary.familyCents, formatTipDollars).headline}</Text>
       <Text style={styles.body}>{receivedLines(summary.receivedCents, summary.familyCents, formatTipDollars).detail}</Text>
       <Text style={styles.body}>
         You hold this for {name} until {formatHandoverDate(summary.handoverDate)}. After that it is
         theirs to move.
       </Text>
-      <BankQuestion value={summary.bankInAthleteName} disabled={custodial.busy} onChange={setBank} />
+      <Text style={styles.hint}>The bank-name answer records your intention; it does not link or verify a bank.</Text>
+      <BankQuestion value={summary.bankInAthleteName} disabled={busy} onChange={setBank} />
+      {summary.hasAccount && summary.guardianLinked ? <PayoutSetupCard playerId={playerId} athleteName={name} disabled={busy} /> : null}
+      {actionNotice ? <Text style={styles.body} accessibilityRole="alert">{actionNotice}</Text> : null}
 
       {pending.map((request) => (
         <View key={request.id} style={styles.pending}>
@@ -154,13 +175,11 @@ export function GuardianCustodialCard({ playerId }: { playerId: string }) {
           </Text>
           <Pressable
             accessibilityRole="button"
-            disabled={custodial.busy}
+            disabled={busy}
             onPress={() =>
-              void custodial.cancel(request.id).catch((error: unknown) => {
-                Alert.alert('Couldn’t cancel', errorText(error));
-              })
+              void act(() => custodial.cancel(request.id))
             }
-            style={[styles.chip, custodial.busy && styles.dim]}
+            style={[styles.chip, busy && styles.dim]}
           >
             <Text style={styles.chipLabel}>Cancel request</Text>
           </Pressable>
@@ -172,7 +191,8 @@ export function GuardianCustodialCard({ playerId }: { playerId: string }) {
           <Text style={styles.label}>Ask {name} to approve a withdrawal</Text>
           <TextInput
             value={amountInput}
-            onChangeText={setAmountInput}
+            onChangeText={(amountInput) => updateDraft({ amountInput })}
+            editable={!busy}
             placeholder="$ amount"
             placeholderTextColor={colors.textMuted}
             keyboardType="decimal-pad"
@@ -181,7 +201,8 @@ export function GuardianCustodialCard({ playerId }: { playerId: string }) {
           />
           <TextInput
             value={note}
-            onChangeText={setNote}
+            onChangeText={(note) => updateDraft({ note })}
+            editable={!busy}
             placeholder="What it's for (club fee, cleats…)"
             placeholderTextColor={colors.textMuted}
             maxLength={280}
@@ -190,9 +211,9 @@ export function GuardianCustodialCard({ playerId }: { playerId: string }) {
           />
           <Pressable
             accessibilityRole="button"
-            disabled={custodial.busy}
+            disabled={busy}
             onPress={sendRequest}
-            style={[styles.primary, custodial.busy && styles.dim]}
+            style={[styles.primary, busy && styles.dim]}
           >
             <Text style={styles.primaryLabel}>Send to {name}</Text>
           </Pressable>
@@ -297,6 +318,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   chip: {
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: colors.border,
@@ -315,6 +339,7 @@ const styles = StyleSheet.create({
     color: colors.onAccent,
   },
   primary: {
+    minHeight: 44,
     backgroundColor: colors.deepGreen,
     borderRadius: radii.md,
     paddingVertical: 14,

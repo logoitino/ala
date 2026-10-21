@@ -1,7 +1,7 @@
 /**
  * Process-wide usage and performance logger. Batches events (video stalls, first frame, tab dwell, scroll depth,
- * feature taps, checkout latency, UI issues) and inserts them into `telemetry_logs`, which feeds the admin Reports
- * and Coverage desks. See docs/engineering/DATA_PRIVACY_MAP.md for what is collected.
+ * feature taps, checkout latency, UI issues, trivia funnel steps, screen mounts, app start) and inserts them into
+ * `telemetry_logs`, which feeds the admin Reports and Coverage desks. See docs/engineering/DATA_PRIVACY_MAP.md for what is collected.
  * @sideEffects Inserts into `telemetry_logs`.
  */
 
@@ -55,7 +55,9 @@ type TelemetryEventType =
   | 'tab_dwell'
   | 'surface_scroll'
   | 'feature_tap'
-  | 'ui_issue';
+  | 'ui_issue'
+  | 'screen_mount'
+  | 'app_start';
 
 export type TelemetryEvent = {
   event_type: TelemetryEventType | string;
@@ -66,6 +68,39 @@ export type TelemetryEvent = {
   attempts?: number | null;
   payload?: Record<string, unknown>;
 };
+
+/** Trivia funnel steps (QUIZ-02 round lifecycle): preparation viewed, Start tapped, Start confirmed, answer confirmed, Next confirmed, terminal summary shown, an open round left behind, or a round ended by missing content. */
+export type TriviaFunnelAction = 'view_prep' | 'press_start' | 'start' | 'answer' | 'next' | 'complete' | 'abandon' | 'unavailable';
+export type TriviaRoundKind = 'personal' | 'group' | 'life';
+export type TriviaStepDetail = {
+  kind: TriviaRoundKind | string | null;
+  /** Round shape at Start (`round` of five vs legacy single `timed`); timed singles never reach a summary. */
+  mode?: string | null;
+  topic?: string | null;
+  chapter?: string | null;
+  /** QUIZ-05 Learn-card round (the athlete's identity is never logged). */
+  learn?: boolean | null;
+  position?: number | null;
+  answered?: number | null;
+  planned?: number | null;
+  outcome?: string | null;
+  reason?: string | null;
+  durationMs?: number | null;
+};
+
+const TRIVIA_ACTIONS: readonly string[] = ['view_prep', 'press_start', 'start', 'answer', 'next', 'complete', 'abandon', 'unavailable'];
+const TRIVIA_KINDS: readonly string[] = ['personal', 'group', 'life'];
+
+function asTriviaCount(value: number | null | undefined): number | null {
+  if (value == null || !Number.isFinite(value)) return null;
+  return Math.max(0, Math.round(value));
+}
+
+function asTriviaText(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const text = String(value).trim().slice(0, 80);
+  return text ? text : null;
+}
 
 type QueueRow = Omit<TelemetryLog, 'id' | 'created_at'> & { created_at: string };
 type DeliveryResponse = { error: unknown; status: number };
@@ -298,6 +333,59 @@ export class TelemetryManager {
       event_type: 'ui_issue',
       channel: surface ?? null,
       step: control,
+    });
+  }
+
+  /**
+   * @purpose One trivia funnel step. Stored as `feature_tap` (`trivia.<action>`, surface `sport-quiz`) so the
+   *   existing Reports features/issues lists pick it up with no migration; kind/mode/position/counts ride in the
+   *   payload. Never carries question text, options, athlete/group identity or account identity.
+   */
+  trackTriviaStep(action: TriviaFunnelAction | string, detail: TriviaStepDetail): void {
+    if (!TRIVIA_ACTIONS.includes(action)) return;
+    const payload: Record<string, unknown> = {};
+    if (detail.kind != null && TRIVIA_KINDS.includes(detail.kind)) payload.kind = detail.kind;
+    const mode = asTriviaText(detail.mode); if (mode) payload.mode = mode;
+    const topic = asTriviaText(detail.topic); if (topic) payload.topic = topic;
+    const chapter = asTriviaText(detail.chapter); if (chapter) payload.chapter = chapter;
+    if (detail.learn === true) payload.learn = true;
+    const position = asTriviaCount(detail.position); if (position !== null) payload.position = position;
+    const answered = asTriviaCount(detail.answered); if (answered !== null) payload.answered = answered;
+    const planned = asTriviaCount(detail.planned); if (planned !== null) payload.planned = planned;
+    const outcome = asTriviaText(detail.outcome); if (outcome) payload.outcome = outcome;
+    const reason = asTriviaText(detail.reason); if (reason) payload.reason = reason;
+    this.track({
+      event_type: 'feature_tap',
+      channel: 'sport-quiz',
+      step: `trivia.${action}`,
+      duration_ms: detail.durationMs == null ? null : asMillis(detail.durationMs),
+      payload,
+    });
+  }
+
+  /**
+   * @purpose Mount-to-first-effect latency for a key surface (Home, Sport Pop Quiz, donate sheet): a blocked
+   *   main thread delays the effect, so rising mounts flag jank before fans complain. Callers emit only while
+   *   `layouts.telemetrySmoothness` is on — the `20261020173000` whitelist must be applied first, or the whole
+   *   batch dies on the CHECK (see flush: no replay).
+   */
+  trackScreenMount(surface: string, durationMs: number): void {
+    const name = surface?.trim().slice(0, 160);
+    if (!name) return;
+    this.track({
+      event_type: 'screen_mount',
+      channel: name,
+      duration_ms: asMillis(durationMs),
+    });
+  }
+
+  /**
+   * @purpose Cold start: JS bundle eval to the first root render commit. Same flag + whitelist contract as mounts.
+   */
+  trackAppStart(durationMs: number): void {
+    this.track({
+      event_type: 'app_start',
+      duration_ms: asMillis(durationMs),
     });
   }
 

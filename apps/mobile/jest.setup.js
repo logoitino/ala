@@ -58,3 +58,11 @@ jest.mock('expo-auth-session', () => ({ makeRedirectUri: jest.fn(() => 'alasport
 jest.mock('expo-apple-authentication', () => ({}));
 jest.mock('expo-web-browser', () => ({ maybeCompleteAuthSession: jest.fn() }));
 jest.mock('expo-linking', () => ({}));
+
+// SDK 58: icon fonts reach expo-asset through a registry Jest never fills, so the first
+// Ionicons mount throws "Module 1 is missing from the asset registry". Fonts count as loaded.
+jest.mock('expo-font', () => ({
+  ...jest.requireActual('expo-font'),
+  isLoaded: () => true,
+  loadAsync: () => Promise.resolve(),
+}));

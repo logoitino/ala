@@ -1,7 +1,7 @@
 /**
  * The single Supabase client for the whole app.
  * Reads EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY (apps/mobile/.env.local) and exports `supabase`
- * plus `isSupabaseConfigured`, which callers check before querying so a missing .env shows a readable error
+ * plus `isSupabaseConfigured`, which callers check before querying so missing/invalid config shows a readable error
  * instead of a crash. Auth sessions persist in AsyncStorage on device (an in-memory map where that is unavailable).
  * Only the anon key lives here; secret keys never belong in src/frontend.
  */
@@ -11,19 +11,19 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
+import { resolveBackendConnection } from '@tapuai/shared-types/backendConnection';
 
 import type { Database } from '@/types/database';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const backend = resolveBackendConnection({ url: supabaseUrl, publicKey: supabaseAnonKey });
 
-export const isSupabaseConfigured = Boolean(
-  supabaseUrl?.trim() && supabaseAnonKey?.trim(),
-);
+export const isSupabaseConfigured = backend.status === 'configured';
 
 if (!isSupabaseConfigured) {
   console.warn(
-    'Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. Add them to .env.local and restart Expo.',
+    'Missing or invalid EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. Check .env.local and restart Expo.',
   );
 }
 
@@ -73,8 +73,9 @@ const authStorage: AuthStorage = isWebSSR
     : AsyncStorage;
 
 export const supabase = createClient<Database>(
-  supabaseUrl ?? 'https://placeholder.supabase.co',
-  supabaseAnonKey ?? 'public-anon-key',
+  // Keep the guarded export; a stray unconfigured request stays on-device instead of reaching a provider.
+  backend.connection?.url ?? 'http://127.0.0.1:1',
+  backend.connection?.publicKey ?? 'public-anon-key',
   {
     auth: {
       storage: authStorage,

@@ -1,11 +1,19 @@
 {
+  "_comment": "Typecheck notification contracts and canonical pure templates alongside existing shared app types.",
   "compilerOptions": {
     "strict": true,
+    "allowImportingTsExtensions": true,
     "moduleResolution": "bundler",
     "module": "ESNext",
     "target": "ES2022",
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["index.ts", "admin/**/*.ts"]
+  "include": [
+    "index.ts",
+    "admin/**/*.ts",
+    "backendConnection.ts",
+    "notifications.ts",
+    "notificationTemplates.ts"
+  ]
 }

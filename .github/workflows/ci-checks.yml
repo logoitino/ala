@@ -92,6 +92,7 @@ jobs:
           echo "1a841344c67fa38277b0c5b898b0ed0c518d3a6d71cb9a07fa21c300b5a5977b84458e8e1780529cbd6dec5647d8c970f913dc78306514981269e70eef773810  /tmp/pglite.tgz" | sha512sum -c -
           mkdir -p /tmp/pglite && tar -xzf /tmp/pglite.tgz -C /tmp/pglite
           node scripts/replay/schema-replay.mjs /tmp/pglite/package/dist
+          node infrastructure/migration/pglite-parity.mjs /tmp/pglite/package/dist
           node scripts/replay/books01-ledger-replay.mjs /tmp/pglite/package/dist supabase/migrations/20261012210000_bookkeeping_ledger.sql
           node scripts/replay/data01-closures-replay.mjs /tmp/pglite/package/dist supabase/migrations/20261013120000_data_governance_closures.sql
           node scripts/replay/support-replay.mjs /tmp/pglite/package/dist
@@ -106,6 +107,10 @@ jobs:
 
       - name: Source recovery integrity and isolated restore regression checks
         run: pnpm recovery:test
+
+      # Synthetic checks need no provider credentials and must never run hosted restores in CI.
+      - name: Supabase backup integrity and isolated target regression checks
+        run: pnpm redundancy:test
 
       - name: Future feature admin contract gates
         run: pnpm feature-admin:test && pnpm feature-admin:check
@@ -128,3 +133,13 @@ jobs:
 
       - name: Infrastructure register is current (INFRASTRUCTURE reviews every change)
         run: pnpm infra:register:check
+
+      - name: Exact exit source release, readiness and offline runtime regression checks
+        run: pnpm exit:test
+
+      # Local synthetic and source-governance checks never imply deployed security acceptance.
+      - name: Portable connection and infrastructure Security coverage regressions
+        run: pnpm portability:test && pnpm security:infra:test && pnpm security:infra:check
+
+      - name: Exit plan is current and every change is announced (REDUNDANCY-02, EXIT_SYNC)
+        run: pnpm exit:map:check

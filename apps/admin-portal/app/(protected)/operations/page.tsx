@@ -33,6 +33,8 @@ export default async function OperationsPage() {
     tabs: reports.tabs,
     buttons: reports.features,
     appErrors: reports.issues,
+    trivia: reports.trivia,
+    smoothness: reports.smoothness,
     scroll: reports.scroll,
     dwellSeries: reports.series.dwell,
     stallSeries: reports.series.stalls,

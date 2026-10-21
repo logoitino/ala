@@ -12,7 +12,8 @@ import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
 import {
-  CONNECT_PROFILE_COLUMNS,
+  CONNECT_FAILURE_MESSAGE,
+  ConnectContextError,
   CONNECT_SIGN_IN_MESSAGE,
   runCreateStripeAccount,
 } from '../../../../../supabase/functions/_shared/money/connect.ts';
@@ -20,7 +21,6 @@ import {
   INVALID_SESSION_MESSAGE,
   errorResult, refuseLiveStripeKey,
   readBearerLoose,
-  thrownMessage,
   type CoreResult,
 } from '../../../../../supabase/functions/_shared/money/http.ts';
 import { resolveSession } from '../../../../../supabase/functions/_shared/money/session.ts';
@@ -34,7 +34,7 @@ function respond(result: CoreResult): Response {
  * @param request JSON `{ returnUrl, refreshUrl, mode }` plus `Authorization: Bearer <access_token>`.
  * @returns `{ url, accountId, stripe_onboarding_complete, payouts_enabled }`.
  * @sideEffects `supabase.auth.getUser` (live session, every call); Stripe Accounts v2; `profiles` read and UPDATE via
- *   service role when present, else the caller's session.
+ *   required service role. Service-only context/save RPCs revalidate ownership and stop before links when persistence is unconfirmed.
  */
 export async function createStripeAccountHandler(request: Request): Promise<Response> {
   try {
@@ -66,20 +66,21 @@ export async function createStripeAccountHandler(request: Request): Promise<Resp
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
       return respond(
-        errorResult('Missing STRIPE_SECRET_KEY. Add it to .env.local (server only) and restart Expo.', 500),
+        errorResult('Missing STRIPE_SECRET_KEY. Load it into the private server process and restart Expo.', 500),
       );
     }
     const liveKey = refuseLiveStripeKey(secretKey);
     if (liveKey) return respond(liveKey);
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return respond(errorResult('Missing SUPABASE_SERVICE_ROLE_KEY.', 500));
     const stripe = new Stripe(secretKey);
 
     const body: unknown = await request.json();
-    // Built once the request passes validation (first profile read), as before.
+    // Built once the request passes validation (first context read), as before.
     const makeProfilesDb = () => {
-      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      return createClient(supabaseUrl, serviceKey || anonKey, {
+      return createClient(supabaseUrl, serviceKey, {
         auth: { persistSession: false, autoRefreshToken: false },
-        global: serviceKey ? undefined : { headers: { Authorization: `Bearer ${jwt}` } },
+        global: undefined,
       });
     };
     let profileClient: ReturnType<typeof makeProfilesDb> | null = null;
@@ -89,21 +90,26 @@ export async function createStripeAccountHandler(request: Request): Promise<Resp
       await runCreateStripeAccount({
         user: session.user,
         body,
-        loadProfile: async (userId) => {
-          const { data: profile } = await profilesDb()
-            .from('profiles')
-            .select(CONNECT_PROFILE_COLUMNS)
-            .eq('user_id', userId)
-            .maybeSingle();
-          return profile;
+        loadContext: async (userId, playerId) => {
+          const { data, error } = await profilesDb().rpc('stripe_connect_context', {
+            actor_user_id: userId, target_player_id: playerId,
+          });
+          if (error) throw new ConnectContextError(error.code === '42501');
+          return data;
         },
-        saveFlags: async (profileId, userId, flags) => {
-          await profilesDb().from('profiles').update(flags).eq('id', profileId).eq('user_id', userId);
+        saveAccount: async (profileId, userId, flags, expectedAccountId, playerId) => {
+          // The service-only function rechecks current guardianship/consent after the Stripe await.
+          const { data, error } = await profilesDb().rpc('save_stripe_connect_account', {
+            actor_user_id: userId, target_player_id: playerId, expected_profile_id: profileId,
+            expected_account_id: expectedAccountId, account_id: flags.stripe_connect_id,
+            onboarding_complete: flags.stripe_onboarding_complete, transfers_enabled: flags.payouts_enabled,
+          });
+          if (error || data !== flags.stripe_connect_id) throw new Error('Connect account save was not confirmed.');
         },
         stripe: () => stripe,
       }),
     );
-  } catch (error) {
-    return respond(errorResult(thrownMessage(error), 400));
+  } catch {
+    return respond(errorResult(CONNECT_FAILURE_MESSAGE, 400));
   }
 }

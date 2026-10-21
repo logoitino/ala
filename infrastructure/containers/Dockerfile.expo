@@ -1,0 +1,40 @@
+# Tapua'i fan web and Expo API image. Private runtime values must never become build arguments.
+ARG NODE_IMAGE
+FROM ${NODE_IMAGE} AS build
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY infrastructure/containers/pnpm.npmrc ./.npmrc
+COPY patches ./patches
+COPY apps ./apps
+COPY packages ./packages
+COPY supabase/functions ./supabase/functions
+COPY infrastructure/containers/expo-server.mjs ./infrastructure/containers/expo-server.mjs
+RUN pnpm install --frozen-lockfile
+ARG EXPO_PUBLIC_SUPABASE_URL
+ARG EXPO_PUBLIC_SUPABASE_ANON_KEY
+ARG EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ARG EXPO_PUBLIC_API_ORIGIN
+ARG EXPO_PUBLIC_APP_ENV=production
+ARG EXPO_PUBLIC_ADMIN_REQUIRE_MFA=true
+ARG EXPO_PUBLIC_LIVE_SCORES_BROADCAST=false
+ARG EXPO_PUBLIC_SUPPORT_ENVIRONMENT=production
+ARG EXPO_PUBLIC_SUPPORT_RELEASE=unassigned
+ARG EXPO_PUBLIC_SUPPORT_SENSORS_ENABLED=false
+ENV CI=1 EXPO_NO_TELEMETRY=1 EXPO_NO_DOTENV=1 NODE_ENV=production
+RUN test -n "$EXPO_PUBLIC_SUPABASE_URL" && test -n "$EXPO_PUBLIC_SUPABASE_ANON_KEY" && pnpm --filter @tapuai/mobile exec expo export --platform web
+
+FROM ${NODE_IMAGE} AS runtime
+ENV NODE_ENV=production PORT=8081 EXPO_NO_TELEMETRY=1
+WORKDIR /app/apps/mobile
+# pnpm symlinks need the workspace store and manifests, even for the minimal HTTP adapter.
+COPY --from=build --chown=node:node /app/node_modules /app/node_modules
+COPY --from=build --chown=node:node /app/apps/mobile/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/apps/mobile/package.json ./package.json
+COPY --from=build --chown=node:node /app/apps/mobile/dist ./dist
+COPY --from=build --chown=node:node /app/packages /app/packages
+COPY --from=build --chown=node:node /app/infrastructure/containers/expo-server.mjs ./expo-server.mjs
+USER node
+EXPOSE 8081
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD node -e "fetch('http://127.0.0.1:8081/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "expo-server.mjs"]

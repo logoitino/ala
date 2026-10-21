@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { fetchSubscriberRequests, insertSubscriberRequest, isPlayerUuid } from '@/lib/subscriptions';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import type { SubscriberRequest } from '@/types/database';
-
-function isPlayerUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
 
 /**
  * @purpose Load and send exclusive-subscriber shoutout / Q&A requests for one athlete.
  * @param athleteId Target `players.id` (`subscriber_requests.athlete_id`).
  * @returns `{ items, submitting, submit }` — `submit` inserts a row then prepends locally.
- * @sideEffects Selects/inserts `subscriber_requests`.
+ * @sideEffects Selects/inserts `subscriber_requests` through `lib/subscriptions`.
  */
 export function useSubscriberRequests(athleteId: string | undefined) {
   const { user } = useAuth();
@@ -25,19 +22,7 @@ export function useSubscriberRequests(athleteId: string | undefined) {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('subscriber_requests')
-      .select('id, subscriber_id, athlete_id, body, created_at')
-      .eq('athlete_id', athleteId)
-      .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (error || !data) {
-      setItems([]);
-      return;
-    }
-
-    setItems(data as SubscriberRequest[]);
+    setItems(await fetchSubscriberRequests(athleteId));
   }, [athleteId]);
 
   useEffect(() => {
@@ -61,24 +46,10 @@ export function useSubscriberRequests(athleteId: string | undefined) {
 
       setSubmitting(true);
       try {
-        const { data, error } = await supabase
-          .from('subscriber_requests')
-          .insert({
-            subscriber_id: user.id,
-            athlete_id: athleteId,
-            body: trimmed,
-          })
-          .select('id, subscriber_id, athlete_id, body, created_at')
-          .single();
-
-        if (error) {
-          return error.message.includes('Could not find the table')
-            ? 'The subscriber_requests table is missing. Run supabase/subscriber_requests.sql in the SQL editor.'
-            : error.message;
-        }
-
-        if (data) {
-          setItems((current) => [data as SubscriberRequest, ...current.filter((row) => row.id !== data.id)]);
+        const { row, error } = await insertSubscriberRequest(user.id, athleteId, trimmed);
+        if (error) return error;
+        if (row) {
+          setItems((current) => [row, ...current.filter((item) => item.id !== row.id)]);
         }
         return null;
       } finally {

@@ -24,6 +24,8 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 jest.mock('@/components/Admin/AdminChrome', () => ({ AdminReportHeader: () => null }));
+// New notification source handling is tested independently from the existing report navigation.
+jest.mock('@/components/Admin/Notifications/NotificationHealthSummary', () => ({ NotificationHealthSummary: () => null }));
 
 function report() { return require('../AdminReportScreen').AdminReportScreen; }
 const destinations = { home: 'A week of community support.', trends: 'Trends', audience: 'Audience', revenue: 'Revenue', health: 'Health', product: 'Product',

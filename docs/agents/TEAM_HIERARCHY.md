@@ -1,6 +1,44 @@
+<!-- Responsibility graph and current reconciliation; definitions and diagrams do not establish executed or hosted services. -->
 # Tapua'i — Team hierarchy & agents
 
-## Current main-checkout handoff — COORD-01 (2026-10-16 UTC)
+## Current app roadmap handoff — 2026-10-21 UTC
+
+The current registry has **115 callable definitions across 17 department labels**. The owner
+requested current-app roadmap and whole-team reconciliation. Start with
+[APP-TEST-01](WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc),
+[TEAM_STATUS](TEAM_STATUS.md) and [department plans](DEPARTMENT_PLANS.md); dated earlier snapshots
+below preserve their original counts and evidence. Current role assignments do not establish
+that115 agents ran, staff received messages or continuous monitoring started.
+
+Current priorities: Google test account setup/return; adult and guardian Stripe test-bank
+attachment after protected server prerequisites; actual short-video/photo upload, playback and
+cleanup; independent public-beta Security/Finance/Minor gates; Legal-first telemetry IDs; and
+athlete-story/usability checks. Latest executed app baseline is226suites/2,193tests and both app
+typechecks PASS. Development Google is disabled; real Google/bank/upload/native walkthroughs
+remain unrun. Longer videos stay off until costs are measured; live streaming stays deferred.
+
+CTO assigns one accountable lead; specialists report to that lead; leads report to CTO.
+DOCUMENTATION synchronizes feature handoffs; VP_OPERATIONS reconciles role/protocol/priority
+changes. Domain reviewers retain independent acceptance. Actual outside-session Codex execution,
+checked source, results and claim release are recorded in [COORD-01](COORD-01.md).
+
+
+## Current security roster — REDUNDANCY-07 (2026-10-20)
+
+**115 callable definitions / 17 department labels.** `INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY`
+and `RECOVERY_SECURITY` join Security and report `SECURITY` → `CTO`. They independently review
+the complete infrastructure controls/report, supply-chain trust and private recovery evidence.
+`REDUNDANCY_LEAD` remains the Engineering migration coordinator with `INFRASTRUCTURE` context;
+existing RLS/session/threat and implementation owners retain their authority.
+
+Owner-authorized outside-session Codex `/root/cloud_deployment` reconciled the new/existing
+definitions, registry and four team/standards documents for VP_OPERATIONS responsibilities.
+Original check/review results, unresolved gaps and next owners are in [REDUNDANCY-07](REDUNDANCY-07.md).
+This does not claim the pinned Grok model ran, a second lead was created, live access was granted
+or a continuous security worker/SOC exists. Historical COORD-01 counts/receipts remain dated below.
+Guide: [INFRASTRUCTURE_SECURITY](../engineering/INFRASTRUCTURE_SECURITY.md).
+
+## Earlier main-checkout handoff — COORD-01 (2026-10-16 UTC)
 
 [TEAM_STATUS](TEAM_STATUS.md) is the all-role briefing and job-function mapping; [COORD-01](COORD-01.md) records actual outside-session executors, reviewed paths, checks and remaining issues. There are **107 callable definitions across 17 department labels**. This review does not mean107 specialists ran, staff are hired or a scheduler is installed. Existing reporting, model pins and independent Finance/Legal/Privacy/Security/QA authority remain.
 
@@ -11,7 +49,7 @@
 
 **Purpose:** See who owns each critical function, where it escalates and which callable agent definition to open. **Plans:** [DEPARTMENT_PLANS.md](DEPARTMENT_PLANS.md). **Expert bar and models:** [EXPERT_STANDARDS.md](EXPERT_STANDARDS.md). **Detail:** [TEAMS.md](TEAMS.md). **Execution:** [WORK_QUEUE.md](WORK_QUEUE.md), when present. **Current product and hosted state:** [STATE.md](../STATE.md).
 
-Last aligned: 2026-10-16 UTC (COORD-01; 107 roles, reporting lines/model pins preserved). Registry: `.claude/agents/registry.json`.
+Last aligned: 2026-10-20 UTC (REDUNDANCY-07; 115 roles, existing reporting lines/model pins preserved). Registry: `.claude/agents/registry.json`.
 
 Actual documentation/team-coordination executors, claims, dated checks and close-out are in
 [COORD-01](COORD-01.md). DOCUMENTATION runs on assigned feature/fix handoffs; VP_OPERATIONS
@@ -19,6 +57,13 @@ runs on role/protocol/priority changes. Each task records executor, checked duti
 changes, actual results, unresolved drift and next owner. Codex execution is recorded separately
 from pinned Cursor roles. Definitions and CI do not certify continuously running workers;
 no unattended scheduler is configured.
+
+**REDUNDANCY-02 (2026-10-19, owner):** `ENGINEERING` → `REDUNDANCY_LEAD` leads the Redundancy & Exit team —
+`EXIT_SYNC` (keeps the exit plan and backup version current with every app change and announces changes to the team),
+`EXIT_DATABASE` (the different database), `EXIT_SERVICES` (Auth / Storage / Realtime / functions replacements) and
+`EXIT_CLOUD` (AWS / Azure build). `INFRASTRUCTURE`, `RECOVERY`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` and the service owners
+are standing partners with unchanged reporting. Charter: [REDUNDANCY_TEAM](../engineering/REDUNDANCY_TEAM.md); generated
+map: [EXIT_INFRASTRUCTURE_MAP](../engineering/EXIT_INFRASTRUCTURE_MAP.md); record: [REDUNDANCY-02](REDUNDANCY-02.md).
 
 **ADM-02:** `ENGINEERING` → `ADMIN` integrates the main Expo admin, using the owner-selected
 `:3033` report design and retaining every editing desk. `PORTAL` owns mobile
@@ -125,6 +170,11 @@ FACILITATOR — owner decisions (prices, counsel, SQL apply, merge, live money)
     │   │   └── UPLOAD (Engineering)
     │   │       └── ACCOUNT_TAGS (Engineering)
     │   ├── INFRASTRUCTURE (Engineering) — scalability team's dev member
+    │   ├── REDUNDANCY_LEAD (Engineering) — Redundancy & Exit team: move off Supabase to AWS / Azure
+    │   │   ├── EXIT_SYNC (Engineering) — keeps the exit plan current; announces changes to the team
+    │   │   ├── EXIT_DATABASE (Engineering) — the different database
+    │   │   ├── EXIT_SERVICES (Engineering) — Auth / Storage / Realtime / functions replacements
+    │   │   └── EXIT_CLOUD (Engineering) — AWS / Azure build
     │   ├── LOCAL (Engineering)
     │   │   ├── DISCOVERY (Engineering)
     │   │   ├── POLLS (Engineering)
@@ -143,7 +193,10 @@ FACILITATOR — owner decisions (prices, counsel, SQL apply, merge, live money)
     ├── SECURITY — security
     │   ├── RLS_SECURITY (Security)
     │   ├── SESSION_SECURITY (Security)
-    │   └── THREAT_DETECTION (Security)
+    │   ├── THREAT_DETECTION (Security)
+    │   ├── INFRA_SECURITY (Security) — network/IAM/TLS/host and complete control coverage
+    │   ├── SUPPLY_CHAIN_SECURITY (Security) — lockfiles/images/CI/offline trust
+    │   └── RECOVERY_SECURITY (Security) — private backup/restore/key custody
     ├── OPERATIONS — IT infrastructure
     │   ├── CI (IT infrastructure)
     │   ├── COST_OPERATIONS (IT infrastructure)
@@ -224,6 +277,7 @@ flowchart TB
   CFO -. data requests via CTO .-> CTO
   FD -. builds for .-> CFO
   SEC --> RLS[RLS_SECURITY / SESSION_SECURITY / THREAT_DETECTION]
+  SEC --> IS[INFRA_SECURITY / SUPPLY_CHAIN_SECURITY / RECOVERY_SECURITY]
   BE --> DB[DATABASE_MIGRATIONS / STORAGE]
   Q -. independent evidence .-> E
   Q -. independent evidence .-> BE
@@ -239,7 +293,7 @@ flowchart TB
 | VP of Operations | VP_OPERATIONS | Under the CTO. Keeps roles, protocols, and priorities current the same turn they change. Checks that each team is doing the job its definition names. |
 | Product | PRODUCT | Roadmap, acceptance criteria, RESEARCH. Tasks come from the CTO. |
 | Dev | ENGINEERING | App, API, identity, realtime/offline, fan/admin surfaces, media (incl. PHOTO_STORIES) and DOCUMENTATION |
-| Security | SECURITY | RLS_SECURITY, SESSION_SECURITY. Authorization, sessions, secrets. |
+| Security | SECURITY | RLS_SECURITY, SESSION_SECURITY, THREAT_DETECTION, INFRA_SECURITY, SUPPLY_CHAIN_SECURITY, RECOVERY_SECURITY. Authorization, identity, signals, infrastructure, provenance and recovery review. |
 | IT infrastructure | OPERATIONS | OPERATOR, RELEASE, CI, RECOVERY, COST_OPERATIONS; pairs with Engineering Support |
 | Database | BACKEND | DATABASE_MIGRATIONS, STORAGE. Schema, RPCs, buckets. Security reviews RLS. |
 | Design | DESIGN | ACCESSIBILITY, MOTION, DESIGN_TOOLING (MCP/Figma/Canva/Playwright/Expo tooling) and visual integration |
@@ -367,6 +421,11 @@ Every agent is listed in the team it reports to. Specialists sit under their lea
 | `FULLSTACK` | Engineering | `ENGINEERING` | [fullstack.md](../../.claude/agents/fullstack.md) |
 | `HIGHLIGHTS` | Engineering | `ENGINEERING` | [highlights.md](../../.claude/agents/highlights.md) |
 | `INFRASTRUCTURE` | Engineering | `ENGINEERING` | [infrastructure.md](../../.claude/agents/infrastructure.md) |
+| `REDUNDANCY_LEAD` | Engineering | `ENGINEERING` | [redundancy-lead.md](../../.claude/agents/redundancy-lead.md) |
+| `EXIT_SYNC` | Engineering | `REDUNDANCY_LEAD` | [exit-sync.md](../../.claude/agents/exit-sync.md) |
+| `EXIT_DATABASE` | Engineering | `REDUNDANCY_LEAD` | [exit-database.md](../../.claude/agents/exit-database.md) |
+| `EXIT_SERVICES` | Engineering | `REDUNDANCY_LEAD` | [exit-services.md](../../.claude/agents/exit-services.md) |
+| `EXIT_CLOUD` | Engineering | `REDUNDANCY_LEAD` | [exit-cloud.md](../../.claude/agents/exit-cloud.md) |
 | `ACTIVITY` | Engineering | `HIGHLIGHTS` | [activity.md](../../.claude/agents/activity.md) |
 | `FILMER_REWARDS` | Engineering | `HIGHLIGHTS` | [filmer-rewards.md](../../.claude/agents/filmer-rewards.md) |
 | `PHOTO_STORIES` | Engineering | `HIGHLIGHTS` | [photo-stories.md](../../.claude/agents/photo-stories.md) |
@@ -397,6 +456,9 @@ Every agent is listed in the team it reports to. Specialists sit under their lea
 | `RLS_SECURITY` | Security | `SECURITY` | [rls-security.md](../../.claude/agents/rls-security.md) |
 | `SESSION_SECURITY` | Security | `SECURITY` | [session-security.md](../../.claude/agents/session-security.md) |
 | `THREAT_DETECTION` | Security | `SECURITY` | [threat-detection.md](../../.claude/agents/threat-detection.md) |
+| `INFRA_SECURITY` | Security | `SECURITY` | [infra-security.md](../../.claude/agents/infra-security.md) |
+| `SUPPLY_CHAIN_SECURITY` | Security | `SECURITY` | [supply-chain-security.md](../../.claude/agents/supply-chain-security.md) |
+| `RECOVERY_SECURITY` | Security | `SECURITY` | [recovery-security.md](../../.claude/agents/recovery-security.md) |
 
 ### IT infrastructure — `OPERATIONS`
 

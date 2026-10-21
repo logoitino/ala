@@ -81,6 +81,14 @@ const FEATURE_LABELS: Record<string, string> = {
   operator_claim: 'Operator claim',
   operator_checkin: 'Operator check-in',
   operator_scorer: 'Operator scorer',
+  'trivia.view_prep': 'View trivia preparation',
+  'trivia.press_start': 'Tap Start on a trivia round',
+  'trivia.start': 'Start a trivia round',
+  'trivia.answer': 'Answer a trivia question',
+  'trivia.next': 'Next trivia question',
+  'trivia.complete': 'Finish a trivia round',
+  'trivia.abandon': 'Leave a trivia round',
+  'trivia.unavailable': 'Trivia question unavailable',
 };
 
 /**
@@ -98,6 +106,10 @@ const ISSUE_LABELS: Record<string, string> = {
   received_malo_unavailable: 'Received donations did not load',
   'video.stall_overlay': 'Video stalled',
   'poll.vote_timeout': 'Cheer poll vote timed out',
+  'trivia.start_failed': 'Trivia Start failed',
+  'trivia.answer_failed': 'Trivia answer failed',
+  'trivia.next_failed': 'Trivia Next failed',
+  'trivia.explanation_failed': 'Trivia explanation failed',
   control: 'Unnamed control',
 };
 
@@ -109,6 +121,7 @@ const SURFACE_LABELS: Record<string, string> = {
   drip: 'Drip',
   profile: 'Profile',
   activity: 'Activity',
+  'sport-quiz': 'Sport Pop Quiz',
   auth: 'sign-in',
   app: 'app',
   other: 'other',
@@ -124,6 +137,8 @@ const KEY_WORDS: Record<string, string> = {
   highlight: 'Highlight',
   highlights: 'Highlights',
   rally: 'Rally',
+  trivia: 'Trivia',
+  quiz: 'Quiz',
   vault: 'Vault',
   drip: 'Drip',
   local: 'Local',

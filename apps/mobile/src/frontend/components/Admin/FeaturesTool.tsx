@@ -1,3 +1,4 @@
+/** Features owns published app flags and the separate server-enforced notification operational desk. */
 import { type Href, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -14,6 +15,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { colors, radii } from '@/constants/theme';
 import { APP_FLAG_GROUPS, getRuntimeFlag, setRuntimeFlag, type AppRuntimeFlagPath } from '@/lib/runtime';
 import { SOFT_WALL_AUTH_PROVIDERS, SOFT_WALL_GATES } from '@tapuai/shared-types';
+import { NotificationAdminPanel } from './Notifications/NotificationAdminPanel';
 
 /**
  * @purpose Draft fan-bar tabs, hype buttons, and boards. Publish to app is the ship step. Soft-Wall auth gates are code-owned; Features pauses the underlying Mālo / Crew / Wishlist / Operator controls.
@@ -28,10 +30,11 @@ export function FeaturesTool() {
   return (
     <AdminPage
       title="Features"
-      lede="Turn off a tab or a Donate button for a campaign. That stays a draft until you hit Publish to app. The web portal shows this same state read-only — all changes happen here."
+      lede="Layout and Donate controls stay a draft until Publish to app. Notification controls save separately when confirmed. The web portal shows app state read-only; all changes happen here."
       saveMode="publish"
     >
       <AdminPublishBar />
+      <NotificationAdminPanel />
 
       <View style={styles.group}>
         <AdminSectionTitle>Soft-Wall auth</AdminSectionTitle>

@@ -13,36 +13,57 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const LIMITS = { maxFiles: 20_000, maxFileBytes: 20 * 1024 * 1024, maxBytes: 128 * 1024 * 1024, maxArchiveBytes: 192 * 1024 * 1024, maxJsonBytes: 220 * 1024 * 1024 };
-const FOLDERS = new Set(['apps', 'packages', 'supabase', 'scripts', 'patches', 'docs', '.github', '.claude']);
-const ROOT_FILES = new Set(['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'tsconfig.json', 'app.json', 'AGENTS.md', 'CLAUDE.md', 'README.md', 'CHANGELOG.md', '.gitignore']);
-const IGNORE = new Set(['node_modules', '.git', '.next', '.expo', '.smoke', '.tmp', '.temp', '.superpowers', 'dist', 'out', 'web-build', 'ios', 'android', '.playwright-mcp', '.DS_Store']);
+const FOLDERS = new Set(['apps', 'packages', 'supabase', 'scripts', 'patches', 'docs', 'infrastructure', '.github', '.claude']);
+const ROOT_FILES = new Set(['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'tsconfig.json', 'app.json', 'AGENTS.md', 'CLAUDE.md', 'README.md', 'CHANGELOG.md', '.gitignore', '.dockerignore', '.npmrc']);
+const IGNORE = new Set(['node_modules', '.git', '.next', '.expo', '.smoke', '.tmp', '.temp', '.superpowers', 'dist', 'out', 'web-build', 'ios', 'android', '.playwright-mcp', '.DS_Store', '__pycache__', '.terraform', 'upstream']);
 const sha = (value) => createHash('sha256').update(value).digest('hex');
 const text = (value) => JSON.stringify(value);
 const treeHash = (files) => sha(text(files.map(({ path: file, sha256, size, mode }) => ({ path: file, sha256, size, mode }))));
 const manifestHash = ({ manifestHash: _digest, ...manifest }) => sha(text(manifest));
 
 // Only reviewed source/config formats are packaged; ambiguous data files require an explicit policy edit.
-const SOURCE_EXTENSIONS = new Set(['.ts','.tsx','.js','.cjs','.mjs','.sql','.md','.css','.scss','.html','.svg','.png','.jpg','.jpeg','.webp','.gif','.avif','.ttf','.otf','.woff','.woff2','.yml','.yaml','.toml','.sh','.patch']);
-const JSON_SOURCE = new Set(['package.json','tsconfig.json','app.json','eas.json','scripts/app-data-boundary-baseline.json','docs/agents/feature-admin.json','docs/engineering/detection-sensors.json','docs/engineering/data-ownership.json','docs/engineering/design/community-preview/canva-dashboard-concepts.json','.claude/agents/registry.json','packages/shared-types/admin/supportTopology.json']);
+const SOURCE_EXTENSIONS = new Set(['.ts','.tsx','.js','.cjs','.mjs','.sql','.md','.css','.scss','.html','.svg','.png','.jpg','.jpeg','.webp','.gif','.avif','.ttf','.otf','.woff','.woff2','.yml','.yaml','.toml','.sh','.patch','.py','.tf','.service','.timer']);
+const JSON_SOURCE = new Set(['package.json','tsconfig.json','app.json','eas.json','scripts/app-data-boundary-baseline.json','scripts/vendor-boundary-baseline.json','docs/agents/feature-admin.json','docs/engineering/detection-sensors.json','docs/engineering/data-ownership.json','docs/engineering/infrastructure.json','docs/engineering/exit-map.json','docs/engineering/exit-map.baseline.json','docs/engineering/exit-readiness.json','docs/engineering/design/community-preview/canva-dashboard-concepts.json','.claude/agents/registry.json','packages/shared-types/admin/supportTopology.json','supabase/content/life_copy_rules.json','supabase/content/life_playbook_bank.json','supabase/content/trivia_starter_bank.json','infrastructure/supabase/upstream.lock.json','infrastructure/backup/job.config.example.json','infrastructure/exit/readiness.config.example.json','infrastructure/portability/profile.config.example.json','infrastructure/security/controls.json']);
+// Only reviewed examples travel with source. Operator credentials and Terraform state never do.
+// test-server.env.example (reviewed 2026-10-21) holds blank Stripe/service-role names only.
+const envExample = file => ['apps/mobile/.env.example', 'apps/admin-portal/.env.example', 'apps/mobile/src/backend/api/test-server.env.example'].includes(file);
+// This operator guide is source documentation; other backup/export names remain excluded.
+const RECOVERY_GUIDES = new Set(['docs/engineering/BACKUP_OPERATIONS.md']);
+/** Source identity ignores timestamps so content edits and reversions are measured honestly. */
+export const sourceTreeHash = files => treeHash(files);
 function allowedScope(file) {
   const parts = file.split('/');
-  return (FOLDERS.has(parts[0]) || ROOT_FILES.has(file)) && !parts.some(part => IGNORE.has(part) || part.startsWith('.env'))
+  return (FOLDERS.has(parts[0]) || ROOT_FILES.has(file)) && !parts.some(part => IGNORE.has(part) || part.startsWith('.env') && !envExample(file))
     && (parts[0] !== '.claude' || parts.length === 1 || parts[1] === 'agents')
-    && !parts.some(part => /^(?:credentials?|secrets?|runtime-cache|customer-data|backups?|exports?|logs?|cache)(?:[._-]|$)/i.test(part))
+    && !parts.some((part, index) => /^(?:credentials?|secrets?|runtime-cache|customer-data|backups?|exports?|logs?|cache)(?:[._-]|$)/i.test(part)
+      && !(RECOVERY_GUIDES.has(file) && index === parts.length - 1)
+      && !(parts[0] === 'infrastructure' && parts[1] === 'backup' && (index === 1 || index === 2 && ['backup.py', 'backup.env.example'].includes(part))))
     && !/(?:\.pem|\.key|\.p12|\.p8|\.jks|\.mobileprovision|\.sqlite|\.db|\.dump|\.tsbuildinfo|\.log)$/i.test(file)
-    && !/\.(?:local|secret|credentials)\./i.test(file) && !file.endsWith('/settings.local.json');
+    && !/\.(?:local|secret|credentials)\./i.test(file) && !file.endsWith('/settings.local.json')
+    && !/\.(?:tfstate|tfplan|age)(?:\.|$)/i.test(file) && !(file.endsWith('.tfvars') && !file.endsWith('.tfvars.example'));
 }
 function allowed(file) {
   if (!allowedScope(file)) return false;
-  if (ROOT_FILES.has(file) || ['.github/CODEOWNERS','apps/mobile/public/canvaskit.wasm'].includes(file)) return true;
+  if (ROOT_FILES.has(file) || ['.github/CODEOWNERS','apps/mobile/public/canvaskit.wasm','infrastructure/containers/pnpm.npmrc','infrastructure/containers/Caddyfile.backend-switch'].includes(file)) return true;
   const extension = path.posix.extname(file).toLowerCase();
   if (extension === '.json') return JSON_SOURCE.has(file) || ['package.json','tsconfig.json','app.json','eas.json'].includes(path.posix.basename(file));
-  return SOURCE_EXTENSIONS.has(extension) || ['.gitignore'].includes(path.posix.basename(file));
+  const basename = path.posix.basename(file);
+  return SOURCE_EXTENSIONS.has(extension) || ['.gitignore', '.dockerignore', 'Dockerfile', 'Caddyfile', '.terraform.lock.hcl'].includes(basename)
+    || envExample(file) || file.startsWith('infrastructure/') && (/^Dockerfile\.[a-z]+$/.test(basename) || /\.(?:env|tfvars)\.example$/.test(basename));
 }
 
 function assertSafePath(file) {
   if (typeof file !== 'string' || !file || file.includes('\\') || /[\x00-\x1f]/.test(file) || path.posix.isAbsolute(file)
     || path.posix.normalize(file) !== file || file.split('/').includes('..') || !allowed(file)) throw new Error('Unsafe capsule path');
+}
+
+/** Dependency layout is necessary recovery source; registry auth is forbidden in packaged npm config. */
+function assertNpmConfig(file, bytes) {
+  if (!['.npmrc', 'infrastructure/containers/pnpm.npmrc'].includes(file)) return;
+  const reviewed = new Set(['shamefully-hoist=true', 'strict-peer-dependencies=false']);
+  for (const line of bytes.toString('utf8').split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#') && !line.startsWith(';'))) {
+    if (!reviewed.has(line)) throw new Error('Unreviewed npm configuration; registry credentials may not enter a recovery capsule');
+  }
 }
 
 async function privateDirectory(root, parts) {
@@ -73,6 +94,7 @@ export async function collectSource(root, options = {}) {
       const info = await fs.stat(absolute);
       if (info.size > limits.maxFileBytes || total + info.size > limits.maxBytes || files.length >= limits.maxFiles) throw new Error('Recovery source size/file limit exceeded');
       const bytes = await fs.readFile(absolute);
+      assertNpmConfig(file, bytes);
       const after = await fs.stat(absolute);
       if (info.size !== bytes.length || info.mtimeMs !== after.mtimeMs) throw new Error('Source changed during package capture; retry after edits settle');
       total += bytes.length;
@@ -98,7 +120,11 @@ export async function createCapsule(root, options = {}) {
   const files = await collectSource(root, options);
   let verification = 'not-run';
   if (options.verifyCode) {
-    execFileSync('pnpm', ['check'], { cwd: root, stdio: 'inherit', timeout: 600_000 });
+    // macOS idle sleep can expire the verification deadline while tests are suspended.
+    // The process-scoped assertion ends with this bounded command; forced sleep still fails closed.
+    const command = process.platform === 'darwin' ? '/usr/bin/caffeinate' : 'pnpm';
+    const args = process.platform === 'darwin' ? ['-i', 'pnpm', 'check'] : ['check'];
+    execFileSync(command, args, { cwd: root, stdio: 'inherit', timeout: 600_000 });
     if (treeHash(await collectSource(root, options)) !== treeHash(files)) throw new Error('Source changed during code verification; no verified capsule created');
     verification = 'passed';
   }
@@ -117,7 +143,16 @@ export async function createCapsule(root, options = {}) {
   const json = Buffer.from(text(payload));
   if (json.length > LIMITS.maxJsonBytes) throw new Error('Capsule expanded size limit exceeded');
   const archive = gzipSync(json, { level: 6 });
-  const directory = await privateDirectory(root, ['.smoke', 'recovery', 'packages']);
+  // Full-backup staging is private and outside source; existing source-only callers keep their preview path.
+  let directory;
+  if (options.outputDirectory) {
+    const requested = path.resolve(options.outputDirectory);
+    if (requested === path.resolve(root) || requested.startsWith(`${path.resolve(root)}${path.sep}`)) throw new Error('Backup output must be outside the source repository');
+    const info = await fs.lstat(requested);
+    if (!info.isDirectory() || info.isSymbolicLink() || info.mode & 0o077) throw new Error('External capsule output must be an existing private directory');
+    directory = await fs.realpath(requested);
+    if (directory === path.resolve(root) || directory.startsWith(`${path.resolve(root)}${path.sep}`)) throw new Error('Backup output resolves inside source');
+  } else directory = await privateDirectory(root, ['.smoke', 'recovery', 'packages']);
   const capsulePath = path.join(directory, `${releaseId}.tapuai.gz`);
   await fs.writeFile(capsulePath, archive, { mode: 0o600, flag: 'wx' });
   const metadata = { ...manifest, capsuleHash: sha(archive) };
@@ -149,6 +184,7 @@ export async function verifyCapsule(capsulePath) {
       || !Number.isSafeInteger(file.size) || file.size < 0 || file.size > LIMITS.maxFileBytes || ![0o600, 0o700].includes(file.mode)
       || file.type || !/^[a-f0-9]{64}$/.test(file.sha256)) throw new Error('Invalid capsule entry size/type/hash');
     const bytes = Buffer.from(file.data, 'base64');
+    assertNpmConfig(file.path, bytes);
     total += bytes.length;
     if (bytes.toString('base64') !== file.data || bytes.length !== file.size || sha(bytes) !== file.sha256 || total > LIMITS.maxBytes) throw new Error('Capsule content size/hash integrity failure');
   }

@@ -386,11 +386,14 @@
       "plannedAt": "2026-10-14T05:10:40Z",
       "exemption": null,
       "source": {
-        "description": "Canonical sources: payee_verifications (append-only; never an SSN; looks_like_ssn CHECKs) and payout_flag_overrides; athlete_payout_status reads payee_missing_checks for the account that would be paid. Stripe collects SSN / tax ID in its hosted onboarding; record_stripe_kyc (server only) records yes/no results. A missing migration reads as not switched on. Plan: docs/engineering/design/PAYEE_VERIFICATION_PLAN.md.",
+        "description": "Canonical sources: payee_verifications (append-only; never an SSN; looks_like_ssn CHECKs) and payout_flag_overrides; athlete_payout_status reads payee_missing_checks for the account that would be paid. Stripe collects SSN / tax ID in its hosted onboarding; record_stripe_kyc (server only) records yes/no results. A missing migration reads as not switched on. Plan: docs/engineering/design/PAYEE_VERIFICATION_PLAN.md. Local 2026-10-21 bank-test preparation adds service-only actor/athlete context and conditional binding save in 20261021120000_connect_account_context.sql; SQL runtime and hosted deployment are unverified. Capability flags never fabricate KYC.",
         "paths": [
           "supabase/migrations/20261014120000_payee_verification.sql",
           "apps/mobile/src/frontend/lib/payeeVerification.ts",
-          "scripts/check-no-ssn.mjs"
+          "scripts/check-no-ssn.mjs",
+          "supabase/migrations/20261021120000_connect_account_context.sql",
+          "supabase/functions/_shared/money/connect.ts",
+          "apps/mobile/src/frontend/hooks/useStripeConnect.ts"
         ]
       },
       "admin": {
@@ -427,9 +430,10 @@
           "admin",
           "server"
         ],
-        "deniedBehavior": "No client reads or writes the records; only the server records Stripe results; an admin never records a check about themselves; relationship checks count only after an independent second admin confirms; the override's requester, subject and the athlete's guardian cannot decide it. Wrong-actor tests in scripts/replay/schema-replay.mjs.",
+        "deniedBehavior": "No client reads or writes the records; only the server records Stripe results; an admin never records a check about themselves; relationship checks count only after an independent second admin confirms; the override's requester, subject and the athlete's guardian cannot decide it. Wrong-actor tests in scripts/replay/schema-replay.mjs. New bank preparation resolves the live actor and explicit athlete on the server, repeats eligibility after Stripe awaits, and rejects account reuse; guardians cannot use own-profile bindings for an athlete.",
         "paths": [
-          "supabase/migrations/20261014120000_payee_verification.sql"
+          "supabase/migrations/20261014120000_payee_verification.sql",
+          "supabase/migrations/20261021120000_connect_account_context.sql"
         ]
       },
       "app": {
@@ -437,7 +441,10 @@
         "paths": [
           "apps/mobile/src/frontend/components/Verification/AthleteVerificationCard.tsx",
           "apps/mobile/src/frontend/lib/redact.ts",
-          "apps/mobile/src/frontend/services/TelemetryManager.ts"
+          "apps/mobile/src/frontend/services/TelemetryManager.ts",
+          "apps/mobile/src/frontend/components/Profile/PayoutSetupCard.tsx",
+          "apps/mobile/src/frontend/components/Custodial/GuardianCustodialCard.tsx",
+          "apps/mobile/app/stripe-connect.tsx"
         ]
       },
       "readiness": {
@@ -1070,7 +1077,7 @@
       "plannedAt": "2026-10-14T19:44:21Z",
       "exemption": null,
       "source": {
-        "description": "Builds on QUIZ-02 (paused / testing-only / empty cohort). New round items with per-item deadlines, question types, private challenge groups joined by hashed codes under MINOR-01 teen rules, sport and season badges, drafts-only starter bank. Design: docs/engineering/design/TRIVIA_PLAY_TOGETHER_DESIGN.md (review §9 adopted).",
+        "description": "Builds on QUIZ-02 (paused / testing-only / empty cohort). New round items with per-item deadlines, question types, private challenge groups joined by hashed codes under MINOR-01 teen rules, sport and season badges, drafts-only starter bank. Design: docs/engineering/design/TRIVIA_PLAY_TOGETHER_DESIGN.md (review \u00a79 adopted).",
         "paths": [
           "docs/engineering/design/TRIVIA_PLAY_TOGETHER_DESIGN.md",
           "supabase/migrations/20261014160000_trivia_play_together.sql",
@@ -1168,7 +1175,7 @@
       "plannedAt": "2026-10-14T21:53:41Z",
       "exemption": null,
       "source": {
-        "description": "Builds on QUIZ-02/03. Separate personal / group / life weekly guards; levels from facts learned that never drop; Life Playbook simplified by the owner 2026-10-15 to simple well-known facts: four 13+ chapters, one-admin approval like other trivia, automatic copy rules (no advice, brands, Tapua'i money words, NIL, tax / loan / credit, money figures or years). Design: docs/engineering/design/LIFE_PLAYBOOK_DESIGN.md (§8 overrides §2–§7).",
+        "description": "Builds on QUIZ-02/03. Separate personal / group / life weekly guards; levels from facts learned that never drop; Life Playbook simplified by the owner 2026-10-15 to simple well-known facts: four 13+ chapters, one-admin approval like other trivia, automatic copy rules (no advice, brands, Tapua'i money words, NIL, tax / loan / credit, money figures or years). Design: docs/engineering/design/LIFE_PLAYBOOK_DESIGN.md (\u00a78 overrides \u00a72\u2013\u00a77).",
         "paths": [
           "docs/engineering/design/LIFE_PLAYBOOK_DESIGN.md",
           "supabase/migrations/20261014180000_life_playbook.sql",
@@ -1357,6 +1364,151 @@
               "path": "docs/engineering/evidence/QUIZ-05-app.md",
               "command": "pnpm check",
               "result": "exit 0, 1,579 tests and every guard (lead run); fresh-questions replay 46/46. VOICE / ACCESSIBILITY / MINOR_SAFETY / PRIVACY_ENGINEERING passed with fixes. No device, screen reader or hosted database."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-07",
+      "title": "Primary tabs and real athlete-story clarity",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-10-20T17:46:34.322Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Existing screen and story heading hierarchy, wrapping navigation/activity labels, existing chooser copy and touch targets, truthful initial loading and fan/category empty copy, OS Reduce Motion. Uses existing public authored biography only in the Highlights pane, preserving data, ownership, privacy, callbacks, destinations, defaults, runtime gates and reporting duties.",
+        "reviewedBy": "Outside-session Codex redundancy_documentation source/exemption review; final implementation review recorded in UX-07"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/mobile/src/frontend/components/ScreenHeading.tsx",
+          "apps/mobile/src/frontend/components/UI/FanTabBar.tsx",
+          "apps/mobile/src/frontend/components/UI/AnimatedButton.tsx",
+          "apps/mobile/src/frontend/components/UI/EmptyState.tsx",
+          "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx",
+          "apps/mobile/src/frontend/components/Reels/UploadChoiceSheet.tsx",
+          "apps/mobile/app/(tabs)/index.tsx",
+          "apps/mobile/app/(tabs)/activity.tsx",
+          "apps/mobile/app/(tabs)/spotlight.tsx",
+          "apps/mobile/app/(tabs)/drip.tsx",
+          "apps/mobile/app/(tabs)/local/index.tsx",
+          "apps/mobile/app/(tabs)/beyond.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-20T17:46:47.469Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-07.md",
+              "command": "Actual independent preimplementation source/privacy/accessibility presentation exemption review by outside Codex redundancy_documentation; selected planned gate",
+              "result": "Specific existing-field/callback presentation scope accepted at recorded UTC time before app edits. Public subject-only biography, exact owner checks, published runtime controls and reporting duties preserved; 17 registered contracts pass planned gate. Source-only review: rendered/native/hosted results remain unestablished."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-20T18:20:40.209Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-07.md",
+              "command": "Independent bounded source/privacy/copy/accessibility review; focused component and tab-state Jest checks; final pnpm check after Upload scroll/maxHeight; validated current-component synthetic Story web capture",
+              "result": "Local presentation implementation accepted: 212 mobile suites/1849 tests, both app typechecks and all included guards passed. Subject-only bio/default-pane/hidden/Vault/callback/loading/error boundaries tested; normal390 and320 CSS enlarged Story locally viewed. Native assistive and Dynamic Type, all-detail/admin visual coverage, hosted policy and engagement outcomes unverified. Final raw source sync deferred on concurrent capture lock; sourceCurrent unknown, readyToCutOver false. Upload screenshot interaction receipt is separate from mocked callback tests and will be recorded with its actual scope."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "NOTIFY-01",
+      "title": "Account and donation notifications, Activity inbox and Profile preferences",
+      "owner": "NOTIFICATIONS",
+      "status": "app-ready",
+      "plannedAt": "2026-10-21T06:08:30.639Z",
+      "exemption": null,
+      "source": {
+        "description": "Server-owned allowlisted events and durable per-recipient delivery intents; recipient-only revisioned preferences and separate inbox/read/archive state. All optional email categories default off. Payment notifications require committed purpose-specific processor/business proof; unsafe or unsupported sources stay unavailable. Auth verification/reset stays separate. Exact proposed contract is in EMAIL_NOTIFICATIONS_DESIGN and its implementation plan.",
+        "paths": [
+          "packages/shared-types/notifications.ts",
+          "supabase/migrations/20261021140000_notifications.sql",
+          "supabase/functions/_shared/notifications/worker.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/features",
+        "actions": [
+          "Preview versioned templates with synthetic fixtures without sending mail",
+          "Pause email/inbox production and inspect per-category source availability",
+          "Inspect bounded sanitized failed jobs and retry only known retryable failures with an audited fixed reason"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/Notifications/NotificationAdminPanel.tsx",
+          "apps/mobile/src/frontend/components/Admin/FeaturesTool.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/health",
+        "metrics": [
+          "Current queue snapshot: pending count and oldest eligible pending age. Last24hours: attempts, accepted, delivered, suppressed, failed, bounced and unknown outcomes with populations/units and available provider evidence; statuses overlap and are not added as a total. Complete existing Data alternative and staff repair links. Missing configuration/source is unavailable, never a fabricated zero."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/Reports/AdminReportHealth.tsx",
+          "apps/mobile/src/frontend/lib/notifications.ts"
+        ]
+      },
+      "disable": {
+        "strategy": "Server category/channel availability and global pauses enforce production/delivery policy. Unsupported producers remain off; no automatic historical backfill on resume. Client unavailable/error states remain distinct from empty. Reading/archive never erases receipt or delivery evidence; unknown sends cannot be blindly replayed. No provider publication follows from local readiness.",
+        "paths": [
+          "supabase/migrations/20261021140000_notifications.sql",
+          "supabase/functions/_shared/notifications/worker.ts"
+        ]
+      },
+      "access": {
+        "roles": [
+          "authenticated",
+          "admin",
+          "service_role"
+        ],
+        "deniedBehavior": "Own preferences/inbox only, Auth-derived actor and revision conflict checks; no client enqueue/recipient selection or direct privileged writes. Inbox details/deep links reauthorize current guardian/content rights. Admin server guard and audited bounded repair. Worker rechecks verified address, opt-in, current source/business state and minor/guardian/privacy eligibility before send; accepted/in-flight external mail cannot be recalled.",
+        "paths": [
+          "supabase/migrations/20261021140000_notifications.sql",
+          "supabase/functions/_shared/notifications/worker.ts",
+          "apps/mobile/src/frontend/lib/notifications.ts"
+        ]
+      },
+      "app": {
+        "route": "/profile",
+        "paths": [
+          "apps/mobile/src/frontend/components/Profile/NotificationSettingsSheet.tsx",
+          "apps/mobile/src/frontend/components/Activity/NotificationInbox.tsx",
+          "apps/mobile/src/frontend/hooks/useNotifications.ts",
+          "apps/mobile/src/frontend/lib/adminCoverage.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-21T15:31:03Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/NOTIFY-01-admin.md",
+              "command": "CI=1 pnpm --filter @tapuai/mobile test -- --watchman=false --runInBand src/frontend/lib/__tests__/notifications.test.ts src/frontend/components/Admin/Notifications/__tests__/NotificationAdminPanel.test.tsx",
+              "result": "Local synthetic SDK/admin fixtures:2 suites/30 tests passed,0 failed/skipped; source/actor/Health independent review accepted. Both app and shared typechecks and21 worker/template tests passed. SQL25 plus1 concurrency cases prepared,0 executed; all production paused, email/provider/unsubscribe and money authority unavailable."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-21T15:50:54Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/NOTIFY-01-app.md",
+              "command": "CI=1 pnpm --filter @tapuai/mobile test -- --watchman=false --runInBand",
+              "result": "Local mobile233 suites/2,287 tests passed,0 failures; both app/shared typechecks passed. Recipient hook19 and fanUI15 regressions plus SDK/admin30 fixtures verify local disabled-source controls; independent lifecycle/Archived and Finance/Data reviews accepted. SQL25 plus1concurrency cases prepared,0 executed; actual email/payment/push/provider activation not certified."
             }
           ]
         }

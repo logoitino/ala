@@ -1,3 +1,4 @@
+/** Athlete discovery keeps the existing feed/player contracts, with readable recovery and 44-point chrome. */
 import { useRouter } from 'expo-router';
 import { clearVideoCacheAsync } from 'expo-video';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -11,6 +12,7 @@ import { RivalryWeekBanner } from '@/components/Local/RivalryWeekBanner';
 import { RallyMeter } from '@/components/Rally/RallyMeter';
 import { LiveMatchBanner } from '@/components/Reels/LiveMatchBanner';
 import { ReelCard } from '@/components/Reels/ReelCard';
+import { useScreenMountTime } from '@/hooks/useScreenMountTime';
 import { ReelPage } from '@/components/Reels/ReelPage';
 import { SpotlightModal } from '@/components/Spotlight/SpotlightModal';
 import { SlangGuideBanner } from '@/components/Onboarding/SlangGuideBanner';
@@ -64,6 +66,7 @@ const BEYOND_PILL: { id: HighlightFeedFilter; label: string } = { id: 'beyond', 
  * @sideEffects `useReels` fetch; `crew_follows` for Home ranking; `clearVideoCacheAsync` on mount; `get_active_spotlight_award` launch popup; `MaloTipModal` PaymentSheet; hide list after Report; Reanimated scroll handler feeds the pager depth math.
  */
 export default function HighlightsTab() {
+  useScreenMountTime('home');
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<FeedItem>>(null);
@@ -452,7 +455,9 @@ export default function HighlightsTab() {
       : feedFilter === 'seki'
       ? 'No Seki plays in the feed yet.'
       : feedFilter === 'home'
-        ? 'Your Home mix is quiet. Follow athletes in Crew.'
+        ? runtime.layouts.homeSearch
+          ? 'Your Home mix is quiet. Find an athlete with search, then follow their story in Crew.'
+          : 'Your Home mix is quiet. New Highlights from athletes you follow will appear here.'
         : runtime.copy.homeEmpty;
 
   return (
@@ -467,7 +472,7 @@ export default function HighlightsTab() {
           </View>
         ) : feed.length === 0 ? (
           <View style={styles.boot}>
-            <Text style={styles.empty}>{emptyCopy}</Text>
+            <Text accessibilityRole="header" style={styles.empty}>{emptyCopy}</Text>
             {feedFilter === 'beyond' ? (
               <View style={styles.emptyActions}>
                 {runtime.tabs.upload ? (
@@ -823,9 +828,9 @@ const styles = StyleSheet.create({
     opacity: 0.86,
   },
   searchBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.videoScrim,
     borderWidth: 1,
     borderColor: FOCAL.electricGold,
@@ -838,7 +843,7 @@ const styles = StyleSheet.create({
   },
   searchField: {
     flex: 1,
-    minHeight: 36,
+    minHeight: 44,
     borderRadius: 999,
     backgroundColor: colors.videoScrim,
     borderWidth: 1,
@@ -855,8 +860,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   empty: {
-    color: colors.textMuted,
-    fontSize: 15,
+    color: colors.onVideo,
+    fontSize: 18,
+    lineHeight: 26,
     fontWeight: '700',
     textAlign: 'center',
   },
@@ -894,7 +900,7 @@ const styles = StyleSheet.create({
   },
   beyondLink: {
     alignSelf: 'flex-start',
-    minHeight: 32,
+    minHeight: 44,
     marginTop: 8,
     paddingHorizontal: 12,
     borderRadius: 999,
@@ -907,13 +913,14 @@ const styles = StyleSheet.create({
     color: colors.onVideo,
     fontSize: 12,
     fontWeight: '700',
+    flexShrink: 1,
   },
   feedSwitch: {
-    flexGrow: 0,
-    flexShrink: 1,
+    flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 3,
     backgroundColor: colors.videoScrim,
     borderRadius: 999,
     borderWidth: 1,
@@ -922,8 +929,8 @@ const styles = StyleSheet.create({
   },
   feedPill: {
     flexGrow: 0,
-    minHeight: 32,
-    paddingHorizontal: 10,
+    minHeight: 44,
+    paddingHorizontal: 8,
     borderRadius: 999,
     flexDirection: 'row',
     gap: 4,
@@ -931,7 +938,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   feedPillSlot: {
-    flexGrow: 0,
+    flex: 1,
+    minWidth: 0,
     zIndex: 1,
   },
   feedIndicator: {
@@ -961,8 +969,9 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   localPill: {
-    flex: 0,
-    paddingHorizontal: 10,
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 8,
     borderWidth: 1,
     borderColor: `${TAB_ACCENTS.local.glow}55`,
   },
@@ -973,6 +982,7 @@ const styles = StyleSheet.create({
     color: colors.onVideoMuted,
     fontSize: 13,
     fontWeight: '800',
+    flexShrink: 1,
   },
   feedPillLabelOn: {
     color: '#FFFFFF',

@@ -17,6 +17,7 @@ import { answerTimedSportQuiz, endTimedSportQuiz, fetchTimedSportQuizReceipt, ne
 import { startLifeRound } from '@/lib/lifePlaybook';
 import { startTriviaFromLearnCard } from '@/lib/freshQuestions';
 import { NOT_SWITCHED_ON } from '@/lib/rpc';
+import { telemetry } from '@/services/TelemetryManager';
 import { LIFE_NOTICE_VERSION, type LifeChapterId, type LifeSnapshot } from '@shared/lifePlaybook';
 import {
     TIMED_QUIZ_NOTICE_VERSION, type TimedQuizSnapshot, type TimedQuizStartInput, type TimedQuizReceipt, type TimedQuizQuestion, type TimedQuizTopic,
@@ -121,6 +122,12 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
             scope.live = null;
             publish();
             return;
+        }
+        // Funnel: an open round left behind (End tap, page left, app hidden, identity change). Completed rounds
+        // never pass here with result set (dismiss sends nothing; the summary effect counts completion), and the
+        // first leave ends the scope, so this fires at most once per round. Missing content counts separately.
+        if (scope.mode !== null && !scope.ended && scope.result === null && !scope.erased) {
+            telemetry.trackTriviaStep(scope.unavailableQuestion ? 'unavailable' : 'abandon', { kind: original ? original.kind : (own?.round_kind ?? 'personal'), reason, answered: scope.entries.length, planned: scope.planned });
         }
         if (!scope.ended && scope.mode === 'round') scope.endedEarly = true;
         clear();
@@ -236,6 +243,8 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
                 // Next settles the item on the server, so the round can continue without the explanation.
                 scope.between = { attemptId: c.attemptId, position: c.position, planned: c.planned, question: c.question, result: null };
                 scope.closing = null;
+                // The round continues without the explanation, but the delivery failed after every retry.
+                telemetry.trackIssue('trivia.explanation_failed', 'sport-quiz');
                 scope.error = 'We couldn’t load that answer’s explanation. You can still tap Next or end the round.';
             }
         }
@@ -388,6 +397,10 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
             const remaining = a?.expires_at ? Date.parse(a.expires_at) - Date.parse(receipt.server_now) : 0;
             // Full request elapsed time is a conservative delivery allowance; exact retry never extends the first deadline.
             scope.deadline = Math.min(scope.deadline, clock() + Math.max(0, remaining - (clock() - sentAt)));
+            // Funnel: Start confirmed (the receipt passed identity checks). Pre-confirmation guards return
+            // earlier without an event; a confirmed scope can never confirm again (live/ended guard). Fires
+            // before the item opens so missing content counts as start → unavailable, in that order.
+            telemetry.trackTriviaStep('start', { kind, mode: a?.mode ?? null, topic: exact.topic_category, chapter: exact.chapter, learn: exact.learn != null, durationMs: clock() - sentAt });
             if (receipt.active_question && a?.status === 'issued' && clock() < scope.deadline) {
                 scope.mode = a.mode === 'round' ? 'round' : 'timed';
                 trackRound(a);
@@ -404,6 +417,7 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
         }
         catch {
             if (valid() && generation === scope.generation) {
+                telemetry.trackIssue('trivia.start_failed', 'sport-quiz');
                 scope.error = 'Start was not confirmed. Retry the same Start while this page stays active, or end the round.';
                 publish();
             }
@@ -452,12 +466,16 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
         scope.busy = 'answer';
         scope.error = null;
         publish();
+        const sentAt = clock();
         try {
             const result = await answerTimedSportQuiz({ attempt_id: pending.attemptId, option: pending.option, request_id: pending.id, session_secret: scope.start.session_secret, expected_profile_id: scope.profile! });
             if (!valid() || scope.erased)
                 return null;
             if (result.profile_id !== scope.profile || result.request_id !== pending.id)
                 throw Error('identity mismatch');
+            // Funnel: answer confirmed. A confirmed item reopens no prompt, so retries after success are
+            // guarded out (no live item) and each position counts once; recovery counts separately below.
+            telemetry.trackTriviaStep('answer', { kind: scope.start?.kind ?? null, position: result.result?.position ?? shownPosition, durationMs: clock() - sentAt });
             if (result.attempt?.mode === 'round') {
                 if (generation !== scope.generation) {
                     // Already left: keep the committed fact for the summary, never reopen the round.
@@ -491,6 +509,7 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
         }
         catch {
             if (valid() && !scope.erased) {
+                telemetry.trackIssue('trivia.answer_failed', 'sport-quiz');
                 pending.uncertain = true;
                 scope.error = 'Your answer was not confirmed. Retry only this answer while the round is open, or check its result after it ends.';
                 publish();
@@ -548,6 +567,8 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
                 return null;
             if (receipt.profile_id !== scope.profile || receipt.request_id !== pending.id)
                 throw Error('identity mismatch');
+            // Funnel: Next confirmed (a new item opens, or the terminal receipt applies below).
+            telemetry.trackTriviaStep('next', { kind: scope.start?.kind ?? null, position: pending.expectedPosition, durationMs: clock() - sentAt });
             const a = receipt.attempt;
             if (receipt.active_question && receipt.active_item && a?.status === 'issued' && a.round_state === 'item') {
                 const remaining = Date.parse(receipt.active_item.expires_at) - Date.parse(receipt.server_now);
@@ -568,6 +589,7 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
         catch {
             if (valid() && generation === scope.generation) {
                 pending.uncertain = true;
+                telemetry.trackIssue('trivia.next_failed', 'sport-quiz');
                 scope.error = 'Next wasn’t confirmed. Tap Next to try again, or end the round.';
                 publish();
             }
@@ -588,6 +610,9 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
         if (result?.profile_id === scope.profile && result.operation === 'answer' && result.request_id === pending.id && result.attempt?.mode === 'round' && result.result) {
             record({ position: result.result.position ?? shownPosition, question: shownQuestion, result: result.result });
             if (result.attempt.status !== 'issued') scope.result = result;
+            // Funnel: an uncertain answer confirmed through its receipt. Recovery runs only while the
+            // answer is still uncertain, so a directly confirmed answer never counts twice.
+            telemetry.trackTriviaStep('answer', { kind: scope.start?.kind ?? null, position: result.result?.position ?? shownPosition });
             scope.answer = null;
             scope.error = null;
             publish();
@@ -599,6 +624,8 @@ export function useTimedSportQuizRound(input: TimedQuizRoundInput) {
             scope.result = result;
             scope.answer = null;
             scope.error = null;
+            // Funnel: an uncertain answer confirmed through its receipt (terminal round); see above.
+            telemetry.trackTriviaStep('answer', { kind: scope.start?.kind ?? null, position: result.result?.position ?? shownPosition });
             publish();
             void latest.current.onChanged();
             return result;

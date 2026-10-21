@@ -1,5 +1,6 @@
+/** UX-07: published Drip category labels guide browsing; empty filters stay distinct from an empty catalog. */
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { GearCard } from '@/components/Drip/GearCard';
 import { ProductSheet } from '@/components/Drip/ProductSheet';
@@ -58,6 +59,8 @@ export default function DripTab() {
       })),
     [live.copy.dripAllLabel, live.copy.dripApparelLabel, live.copy.dripAuraCardsLabel, live.copy.dripMerchLabel],
   );
+  const filteredEmpty = catalog.length > 0 && filter !== 'all';
+  const categoryLabel = categoryPills.find((item) => item.id === filter)?.label ?? '';
 
   if (!live.tabs.drip) {
     return <RuntimePaused title="Drip is paused" lede="Turn Drip back on in Admin → Features, then Publish to app." />;
@@ -80,7 +83,6 @@ export default function DripTab() {
       >
         <ScrollFxParallax fadeOver={120}>
           <ScreenHeading
-            compact
             kicker={live.copy.dripKicker}
             title="Drip"
             lede={live.copy.dripLede}
@@ -98,8 +100,9 @@ export default function DripTab() {
           accessibilityLabel="Drip categories"
         />
         {loading && catalog.length === 0 ? (
-          <View style={styles.loading}>
+          <View style={styles.loading} accessibilityLiveRegion="polite">
             <ActivityIndicator color={TAB_ACCENTS.drip.color} />
+            <Text style={styles.loadingLabel}>Loading the rack…</Text>
           </View>
         ) : null}
         {!loading && error ? (
@@ -114,8 +117,10 @@ export default function DripTab() {
         ) : !loading && items.length === 0 ? (
           <EmptyState
             kicker="Drip"
-            title={live.copy.dripEmpty}
-            lede="Add SKUs on the Drip desk, then they land on this rack after Save."
+            title={filteredEmpty ? `No items in ${categoryLabel}` : live.copy.dripEmpty}
+            lede={filteredEmpty
+              ? 'Choose another category above to explore the rack.'
+              : 'The rack is empty right now. Check back for available Drip.'}
             adminHref="/admin/drip"
             adminLabel="Open Drip desk"
             accent={TAB_ACCENTS.drip.color}
@@ -142,12 +147,18 @@ export default function DripTab() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: 28,
-    gap: 12,
+    paddingTop: 8,
+    paddingBottom: 120,
+    gap: 20,
   },
   loading: {
     paddingVertical: 32,
     alignItems: 'center',
+    gap: 12,
+  },
+  loadingLabel: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

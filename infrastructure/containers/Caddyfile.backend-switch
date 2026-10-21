@@ -1,0 +1,40 @@
+# Owned stable API gateway: operator chooses exactly one backend; no retry/fallback or dual writes.
+{
+  email {$ACME_EMAIL}
+}
+{$FAN_DOMAIN} {
+  encode zstd gzip
+  # Expo /api routes stay on the fan domain compiled into EXPO_PUBLIC_API_ORIGIN.
+  reverse_proxy fan-web:8081
+}
+{$ADMIN_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy admin-portal:3001
+}
+{$API_DOMAIN} {
+  @supabase path /auth/v1/* /rest/v1/* /realtime/v1/* /storage/v1/* /functions/v1/*
+  handle @supabase {
+    # The fixed suffix and constrained ref prevent selecting arbitrary public upstreams.
+    @managed expression {env.BACKEND_MODE} == "managed" && {env.MANAGED_PROJECT_REF}.matches("^[a-z0-9]{20}$")
+    handle @managed {
+      reverse_proxy https://{$MANAGED_PROJECT_REF}.supabase.co {
+        header_up Host {$MANAGED_PROJECT_REF}.supabase.co
+        transport http {
+          tls
+          tls_server_name {$MANAGED_PROJECT_REF}.supabase.co
+        }
+      }
+    }
+    @owned expression {env.BACKEND_MODE} == "owned"
+    handle @owned {
+      # This service alias exists only on the reviewed private tapuai-backend Docker bridge.
+      reverse_proxy kong:8000
+    }
+    handle {
+      respond "Backend configuration unavailable" 503
+    }
+  }
+  handle {
+    respond "Not found" 404
+  }
+}

@@ -1,4 +1,5 @@
 {
+  "_comment": "Callable responsibilities and model pins only; owner-authorized outside-session execution, security acceptance and live access require original task evidence.",
   "version": 1,
   "agents": [
     {
@@ -12,7 +13,8 @@
         "apps/admin-portal"
       ],
       "tasks": [
-        "Audit screen-reader labels, focus order, touch targets, contrast, text scaling and reduced motion."
+        "Audit screen-reader labels, focus order, touch targets, contrast, text scaling and reduced motion.",
+        "Current app roadmap handoff (2026-10-21 UTC): Test keyboard/focus, screen readers, large text, contrast and reduced motion on current app journeys. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -40,7 +42,8 @@
         "apps/mobile/app/(tabs)/activity.tsx"
       ],
       "tasks": [
-        "Own activity rows, pagination, actor navigation and empty/error states."
+        "Own activity rows, pagination, actor navigation and empty/error states.",
+        "Current app roadmap handoff (2026-10-21 UTC): Verify account-specific donations, tags and empty/error states; navigation is not settled-money evidence. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -85,7 +88,8 @@
       "tasks": [
         "Shared read-only Expo/Next measure catalog and eight analytics dashboards; ANALYST reviews meaning, SHARED_CONTRACTS owns shared implementation",
         "Review shared Expo/Next measure definitions, source provenance, units/window/population/denominator and missing-value meaning for the single GROWTH_ANALYTICS packet; only clips/donations have current prior-week pairs, and MAU/retention/conversion remain unmeasured as defined.",
-        "Use main's existing measure catalog and fixed report windows; preserve missing versus zero and source/denominator limits, with no invented MAU or claim that fan-zone range/export work exists here."
+        "Use main's existing measure catalog and fixed report windows; preserve missing versus zero and source/denominator limits, with no invented MAU or claim that fan-zone range/export work exists here.",
+        "Current app roadmap handoff (2026-10-21 UTC): Report qualifying source/window/denominator and unknown funnels honestly; tab/profile counts are not unique active users. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -103,7 +107,8 @@
       ],
       "tasks": [
         "Own request validation, JWT verification, authorization, typed responses and server error boundaries.",
-        "Maintain the shared Node/Edge money-core boundary and canonical actor-bound Beyond/CHAL contracts; provider capability responses and local validation do not certify hosted authorization or settlement."
+        "Maintain the shared Node/Edge money-core boundary and canonical actor-bound Beyond/CHAL contracts; provider capability responses and local validation do not certify hosted authorization or settlement.",
+        "Current app roadmap handoff (2026-10-21 UTC): Verify protected Connect adapters and masked dependency errors after approved setup; never expose credentials or report an unconfirmed database save as success. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -135,7 +140,8 @@
         "apps/mobile/app/school-confirm.tsx"
       ],
       "tasks": [
-        "Own claim/vouch/school confirmation ladder, token validity and verified badge semantics."
+        "Own claim/vouch/school confirmation ladder, token validity and verified badge semantics.",
+        "Current app roadmap handoff (2026-10-21 UTC): Keep school/payee verification distinct from account creation; positive Stripe identity/TIN recording remains unwired. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -161,7 +167,8 @@
         "apps/mobile/src/frontend/context/AuthContext.tsx"
       ],
       "tasks": [
-        "Guest browse, sign-in and role flow integration"
+        "Guest browse, sign-in and role flow integration",
+        "Current app roadmap handoff (2026-10-21 UTC): Follow the prepared Google setup guide, then test fresh/returning/canceled/failed callbacks and resumed actions. Development Google is disabled; existing sessions are not new-login evidence. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -178,7 +185,8 @@
       ],
       "tasks": [
         "Database architecture, migrations, RPCs, Storage layout and pairing with Security",
-        "Retain accepted local Beyond/CHAL actor-bound SQL and real replay evidence; prepare ordered, owner-authorized hosted application/negative readback with migration, Storage and Security owners."
+        "Retain accepted local Beyond/CHAL actor-bound SQL and real replay evidence; prepare ordered, owner-authorized hosted application/negative readback with migration, Storage and Security owners.",
+        "Current app roadmap handoff (2026-10-21 UTC): Review written Connect-context and failed-photo-cleanup SQL; approved execution/apply and negative readback remain required. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -206,7 +214,7 @@
         "docs/company/FINANCE_OPERATIONS.md"
       ],
       "tasks": [
-        "Monthly routine in BOOKKEEPING.md §6 and FINANCE_OPERATIONS.md: Stripe fees, payouts to bank, receipts, Suspense, then hand to CONTROLLER",
+        "Monthly routine in BOOKKEEPING.md \u00a76 and FINANCE_OPERATIONS.md: Stripe fees, payouts to bank, receipts, Suspense, then hand to CONTROLLER",
         "Keep every recorded entry referenced to a receipt, invoice or Stripe report; void by reversal, never by editing"
       ],
       "model": "grok-4.7-medium"
@@ -257,7 +265,8 @@
         "Run the Finance and Accounting department: CONTROLLER, TAX, TREASURY and FPA report here; owner decisions go up to FACILITATOR",
         "Request finance data and admin screens through the CTO (CTO -> ENGINEERING -> FINANCE_DATA) and give finance acceptance on the result",
         "Required finance reviewer on any change to splits, the revenue log, the chart of accounts, posting rules, payouts or tax wording",
-        "Accept the existing local Books/catalog work with requesting finance reviewers; W0-10 staged close and P1-08 bank/CPA/first live-month controls remain pending, with no live money or tax-ID storage authority."
+        "Accept the existing local Books/catalog work with requesting finance reviewers; W0-10 staged close and P1-08 bank/CPA/first live-month controls remain pending, with no live money or tax-ID storage authority.",
+        "Current app roadmap handoff (2026-10-21 UTC): Keep test receipts separate from cash and require settlement/refund/held-balance and cost evidence before live-money/spending decisions. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -291,7 +300,8 @@
       ],
       "tasks": [
         "Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation.",
-        "Keep existing registry, documentation, data, boundary, type and detection gates reproducible; a structural pass is not semantic review, hosted health, device acceptance or evidence that all 107 roles ran."
+        "Keep existing registry, documentation, data, boundary, type and detection gates reproducible; a structural pass is not semantic review, hosted health, device acceptance or evidence that all 115 roles ran.",
+        "Current app roadmap handoff (2026-10-21 UTC): Keep Node24/pinned-pnpm app and fixture checks reproducible; distinguish scoped checks from full CI and115 executed roles. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -322,7 +332,8 @@
       ],
       "tasks": [
         "Financial design and payment specialist integration; Next Revenue (/money) and its components/revenue",
-        "Maintain local Finance & Books and read-only Revenue meaning; guardian/payee, destination-charge choice, authoritative settlement/refund/held balances and live-money acceptance remain separate gates."
+        "Maintain local Finance & Books and read-only Revenue meaning; guardian/payee, destination-charge choice, authoritative settlement/refund/held balances and live-money acceptance remain separate gates.",
+        "Current app roadmap handoff (2026-10-21 UTC): Lead optional later test-bank setup with Connect/Custodial and Finance reviewers; keep identity/destination/money-integrity gates. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -337,7 +348,8 @@
       ],
       "tasks": [
         "Privacy, commercial disclosures and evidence-backed claims",
-        "Supply privacy/consent/processor/retention and actual-exposure gaps to the standing Growth charter §9 review; exchange Legal/Growth/Engineering findings, track counsel-approved alternatives and mandatory control acceptance without inventing policy."
+        "Supply privacy/consent/processor/retention and actual-exposure gaps to the standing Growth charter \u00a79 review; exchange Legal/Growth/Engineering findings, track counsel-approved alternatives and mandatory control acceptance without inventing policy.",
+        "Current app roadmap handoff (2026-10-21 UTC): Keep account creation, voluntary bank verification, media rights and provider evidence distinct; no new policy approval follows this refresh. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -354,7 +366,8 @@
       ],
       "tasks": [
         "Own JWT-gated Express links, bank onboarding state and verification/payout readiness.",
-        "Review actual canonical account/link/Terms and transfer-or-payout capability wiring; VERIFY-02's SSN-only-Stripe/guardian policy is an owner rule, not proof that age, guardian, bank and settlement gates are implemented."
+        "Review actual canonical account/link/Terms and transfer-or-payout capability wiring; VERIFY-02's SSN-only-Stripe/guardian policy is an owner rule, not proof that age, guardian, bank and settlement gates are implemented.",
+        "Current app roadmap handoff (2026-10-21 UTC): Test adult and guardian per-athlete portal/status/return after reviewed SQL/Edge setup. Keep confirmed Terms and ownership; capability flags are not KYC and payouts stay503. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -402,7 +415,8 @@
       ],
       "tasks": [
         "Wave budgets, free quotas, media bandwidth and vendor cost evidence",
-        "Contribute dated actual invoices/usage/verified quotas and loaded 30/90-day cost forecasts/options to the single GROWTH_ANALYTICS packet, with RELIABILITY and FINANCE_DATA/FPA/TREASURY/CFO; preserve OPERATIONS source controls and owner spending gates."
+        "Contribute dated actual invoices/usage/verified quotas and loaded 30/90-day cost forecasts/options to the single GROWTH_ANALYTICS packet, with RELIABILITY and FINANCE_DATA/FPA/TREASURY/CFO; preserve OPERATIONS source controls and owner spending gates.",
+        "Current app roadmap handoff (2026-10-21 UTC): Supply dated media storage/delivery/processing and support cost evidence; local tests establish no purchase/provider decision. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -431,7 +445,8 @@
       ],
       "tasks": [
         "Assign every app fix to one department lead, review the evidence, and reject shortcuts",
-        "Review the single GROWTH_ANALYTICS packet through MARKETING after source quality and domain/independent checks; record technical disposition and submit spending/service/release decisions to the owner, retaining $50 initial ceiling and no automatic upgrade."
+        "Review the single GROWTH_ANALYTICS packet through MARKETING after source quality and domain/independent checks; record technical disposition and submit spending/service/release decisions to the owner, retaining $50 initial ceiling and no automatic upgrade.",
+        "Current app roadmap handoff (2026-10-21 UTC): Sequence APP-TEST-01 with one accountable lead per lane and independent domain/release gates. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -447,7 +462,8 @@
         "apps/mobile/src/frontend/lib/payouts.ts"
       ],
       "tasks": [
-        "Own guardian approval, payee relationship, age handover and server payout policy invariants."
+        "Own guardian approval, payee relationship, age handover and server payout policy invariants.",
+        "Current app roadmap handoff (2026-10-21 UTC): Verify two-athlete guardian selection, current consent/link/handover, Terms and account-safe bank return; local routing is not hosted acceptance. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -463,7 +479,8 @@
       ],
       "tasks": [
         "Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent.",
-        "Maintain canonical parity and replay evidence for written MINOR/VERIFY/DATA/BOOKS/Support/Beyond/CHAL migrations; do not rebuild already complete local slices or apply hosted SQL without authorization."
+        "Maintain canonical parity and replay evidence for written MINOR/VERIFY/DATA/BOOKS/Support/Beyond/CHAL migrations; do not rebuild already complete local slices or apply hosted SQL without authorization.",
+        "Current app roadmap handoff (2026-10-21 UTC): Bind written migrations to canonical schema/types; retain replay/apply/readback gaps until actual evidence exists. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -512,7 +529,8 @@
       ],
       "tasks": [
         "Visual design and interaction integration",
-        "Calm Island is the owner's newer source direction after UX-06's frozen manifest; five published theme values may still override it until an authorized Look-to-Daylight publication, with native/accessibility checks open. The Rally and board-leader share sheet is local (M8-01). Backer wall, badges and the larger rivalry takeover stay later."
+        "Calm Island is the owner's newer source direction after UX-06's frozen manifest; five published theme values may still override it until an authorized Look-to-Daylight publication, with native/accessibility checks open. The Rally and board-leader share sheet is local (M8-01). Backer wall, badges and the larger rivalry takeover stay later.",
+        "Current app roadmap handoff (2026-10-21 UTC): Improve current story/tab/account/upload clarity from reproducible findings, preserving rights and honest account/media/money states. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -542,7 +560,8 @@
         "docs/engineering/AUDIT_REPORT.md"
       ],
       "tasks": [
-        "Own real-device fan/athlete/guardian/operator/booster journey evidence."
+        "Own real-device fan/athlete/guardian/operator/booster journey evidence.",
+        "Current app roadmap handoff (2026-10-21 UTC): Run iOS/Android Google/bank return, real picker/compression/playback and accessibility after build/provider setup. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -577,7 +596,8 @@
       ],
       "tasks": [
         "Synchronize code comments, current state, team ownership, architecture, tester journeys and product evidence across departments in the same change; preserve generated facts and approved legal conclusions.",
-        "On each assigned active feature/fix handoff, reconcile owner-supplied source/environment and dated evidence; record actual executor, changed paths, checks, gaps and next owner in the task ledger and coordinate role/protocol/priority changes with VP_OPERATIONS."
+        "On each assigned active feature/fix handoff, reconcile owner-supplied source/environment and dated evidence; record actual executor, changed paths, checks, gaps and next owner in the task ledger and coordinate role/protocol/priority changes with VP_OPERATIONS.",
+        "Current app roadmap handoff (2026-10-21 UTC): Reconcile115roles, roadmap/tester/operator instructions and source receipts; preserve older checks as history. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -625,8 +645,9 @@
       ],
       "tasks": [
         "Technical architecture, typed contracts and specialist integration",
-        "Supply actual versioned client/server/provider/access, supported state, failure/retry and feasible recovery evidence for Growth charter §9; exchange Legal/Growth findings before decision, retaining domain/QA acceptance and existing implementation gates.",
-        "Beyond/CHAL participant and admin slices are complete locally; preserve actor/focus/retry/permission boundaries while integrating only separately assigned fan-zone admin work and current release-path evidence."
+        "Supply actual versioned client/server/provider/access, supported state, failure/retry and feasible recovery evidence for Growth charter \u00a79; exchange Legal/Growth findings before decision, retaining domain/QA acceptance and existing implementation gates.",
+        "Beyond/CHAL participant and admin slices are complete locally; preserve actor/focus/retry/permission boundaries while integrating only separately assigned fan-zone admin work and current release-path evidence.",
+        "Current app roadmap handoff (2026-10-21 UTC): Integrate Google, later test-bank and short-media rehearsals against current source; local repairs still need hosted/provider/device acceptance. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -716,7 +737,8 @@
         "Own standing Legal/Growth/Engineering verification/consent review in the single packet; pair friction/permitted engagement with safety/disputes/recovery and loaded manual-review costs, record disagreements/domain acceptance/owner decisions and next October 20 packet; product options remain proposed.",
         "Maintain one Growth plan card for every overlapping user segment and gated/internal capacity: acquisition, first useful action, repeat/contribution, qualifying outcomes/gaps, action safeguards, loaded costs and next owner/decision; preserve non-donating fan value and authorized casual uploads; next October 20 packet, authorization-relative 30/60/90 stages.",
         "Extend family-fun segment cards in the October 20 packet with owner-selected free fan-ballot winners: staff checks eligibility/rights/safety, public candidate consent/private acknowledgment, honest newcomer/network tradeoffs, proportionate abuse/capacity costs and next trusted ballot design; badge/Aura/money and voluntary service remain separate proposals.",
-        "Include current FUN-01/QUIZ-01 implementation status in October20 evidence packet with per-user optional completion/return, onboarding friction, correction/support burden and capacity; keep unknown actual measurements explicit; propose expansion only with Legal/Safety/Dev evidence and owner decisions."
+        "Include current FUN-01/QUIZ-01 implementation status in October20 evidence packet with per-user optional completion/return, onboarding friction, correction/support burden and capacity; keep unknown actual measurements explicit; propose expansion only with Legal/Safety/Dev evidence and owner decisions.",
+        "Current app roadmap handoff (2026-10-21 UTC): Coordinate measured usage, allowances and loaded costs before long-video reconsideration; no follower threshold/live pilot is enabled. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -733,7 +755,8 @@
         "Highlights feed and media specialist integration",
         "Integrate actual family-fun media/credit/status gaps for owner-selected fan-ballot awards; staff checks eligibility/rights/safety, votes choose winner, per-entry public candidate consent/private acknowledgment and withdrawal/recap corrections precede implementation; newcomer/network and trusted tally gaps stay explicit.",
         "Maintain default Highlights and the adjacent Beyond integration with UPLOAD/PLAYBACK/FULLSTACK; source-free or ambiguous legacy samples must not acquire an unrelated athlete/payee, and fan awards remain proposed. Coach-level label (SAFETY-01) is local; SQL 20261017090000 is not applied; counsel has not approved the wording. A missing database update does not show a red notice on Activity.",
-        "Integrate current authorized curated free athlete stories and account Fan Zone/quiz discovery with Product/Privacy; never copy private fan media to public reels or substitute an unauthorized story; preserve optional existing Donate navigation."
+        "Integrate current authorized curated free athlete stories and account Fan Zone/quiz discovery with Product/Privacy; never copy private fan media to public reels or substitute an unauthorized story; preserve optional existing Donate navigation.",
+        "Current app roadmap handoff (2026-10-21 UTC): Lead actual short-video/photo selection, publication and playback using synthetic fixtures; long videos remain off until costs are measured and live deferred. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -785,7 +808,92 @@
         "Always aware of the infrastructure: hosting, services, environments and how deeply the app is integrated with each (INFRASTRUCTURE_REGISTER, PORTABILITY)",
         "Standing dev member of the Growth and Capacity Review (GROWTH-01): technical context, integration depth, exits and options for every scalability recommendation, with COST_OPERATIONS, RELIABILITY, BACKEND, STORAGE, REALTIME; CTO recommends, owner decides",
         "Review every infrastructure diff (pnpm infra:register:check) and notify affected teams even when they did not ask",
-        "PORT-01's shared money core, media references and local type/token follow-through are source-complete; maintain the actual register, unapplied beyond_game bucket and provider exits without implying hosting activation or prices."
+        "PORT-01's shared money core, media references and local type/token follow-through are source-complete; maintain the actual register, unapplied beyond_game bucket and provider exits without implying hosting activation or prices.",
+        "Reconcile the infrastructure inventory with complete security control/report coverage and request INFRA_SECURITY, SUPPLY_CHAIN_SECURITY and RECOVERY_SECURITY review through SECURITY without changing Engineering reporting."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "REDUNDANCY_LEAD",
+      "file": ".claude/agents/redundancy-lead.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "docs/engineering/REDUNDANCY_TEAM.md",
+        "docs/engineering/REDUNDANCY_PLAN.md",
+        "docs/engineering/design/REDUNDANCY_IMPLEMENTATION_PLAN.md",
+        "docs/engineering/exit-map.json",
+        "docs/agents/REDUNDANCY-02.md"
+      ],
+      "tasks": [
+        "Lead the Redundancy & Exit team: keep the redundant database plan and the move off Supabase to AWS or Azure ready as the app changes (REDUNDANCY_TEAM, EXIT_INFRASTRUCTURE_MAP)",
+        "Accept changes to exit-map.json (component mapping, build order, Auth capabilities, excluded functions) and close routed change notices with their reviewers",
+        "Own hosted drill readiness with RECOVERY and EXIT_DATABASE; report exit readiness to the CTO and the Growth packet through INFRASTRUCTURE; owner decides provider, spend and cutover",
+        "Integrate independent INFRA_SECURITY/SUPPLY_CHAIN_SECURITY/RECOVERY_SECURITY findings and manual evidence gaps into the single Engineering exit packet; security reviewers report through SECURITY to CTO."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "EXIT_SYNC",
+      "file": ".claude/agents/exit-sync.md",
+      "department": "Engineering",
+      "lead": "REDUNDANCY_LEAD",
+      "owns": [
+        "scripts/exit-map.mjs",
+        "scripts/exit-map-guard.sh",
+        "docs/engineering/EXIT_INFRASTRUCTURE_MAP.md",
+        "docs/agents/EXIT_CHANGE_LOG.md"
+      ],
+      "tasks": [
+        "Keep the backup version and the redundant database plan in step with every app change: the exit map regenerates automatically (Stop hook, pnpm check, CI) and its plan version follows the code",
+        "Tell the rest of the team: announce each change with pnpm exit:map --acknowledge, routed by area to the agents who must review it (EXIT_CHANGE_LOG)",
+        "Chase open notices at the start of every task and report them to REDUNDANCY_LEAD; an announcement is a notice, not an approval"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "EXIT_DATABASE",
+      "file": ".claude/agents/exit-database.md",
+      "department": "Engineering",
+      "lead": "REDUNDANCY_LEAD",
+      "owns": [
+        "infrastructure/migration"
+      ],
+      "tasks": [
+        "Work on the different database: keep a target PostgreSQL (self-hosted Supabase Postgres or RDS / Aurora / Azure Flexible Server) able to take the schema and data at any time",
+        "Own the restore list, parity check and privilege reconciliation (infrastructure/migration); review every database change notice with DATABASE_MIGRATIONS, RLS_SECURITY and RECOVERY",
+        "Keep exit B's role and JWT-claims requirements current so RLS keeps working off Supabase"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "EXIT_SERVICES",
+      "file": ".claude/agents/exit-services.md",
+      "department": "Engineering",
+      "lead": "REDUNDANCY_LEAD",
+      "owns": [
+        "infrastructure/supabase"
+      ],
+      "tasks": [
+        "Keep a working replacement for every Supabase service the app uses (Auth, Data API, Storage, Realtime, functions, email) for exit A and exit B on AWS and Azure",
+        "Own the self-host Edge Function allowlist, the Auth capability list and the lib/ adapter seam; review every Auth, Storage, Realtime and function change notice",
+        "Never deploy stripe-webhook before P1-05; no provider account or purchase without the owner"
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "EXIT_CLOUD",
+      "file": ".claude/agents/exit-cloud.md",
+      "department": "Engineering",
+      "lead": "REDUNDANCY_LEAD",
+      "owns": [
+        "infrastructure/terraform",
+        "infrastructure/containers"
+      ],
+      "tasks": [
+        "Keep the AWS and Azure build ready: infrastructure as code, hosts or managed services, containers, network and TLS, secrets, monitoring and backup stores",
+        "Review every hosting change notice (environment names, routes, functions, extensions) against the build; keep the build order executable and honest",
+        "No cloud account, terraform apply, DNS change or purchase without the owner; one VM is not high availability"
       ],
       "model": "grok-4.7-medium"
     },
@@ -832,7 +940,8 @@
         "apps/mobile/src/frontend/hooks/useReceivedMalo.ts"
       ],
       "tasks": [
-        "Own immutable financial events, exactly-once credits, revenue/owed balances and lifecycle invariants."
+        "Own immutable financial events, exactly-once credits, revenue/owed balances and lifecycle invariants.",
+        "Current app roadmap handoff (2026-10-21 UTC): Retain Phase1a payment-event/fee/refund/dispute/held-gift authority gaps; client tips are not a settled ledger. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -847,7 +956,8 @@
       ],
       "tasks": [
         "Approved legal wording and counsel decision tracking",
-        "Coordinate counsel classification of age/guardian/school/payment checks, approved alternatives and consent/notice decisions for Growth charter §9; exchange findings with Growth/Engineering before the one packet, preserving counsel/domain acceptance and owner business decisions. SAFETY-01 option A wording is local only. LEGAL_BRIEFING row AC stays open."
+        "Coordinate counsel classification of age/guardian/school/payment checks, approved alternatives and consent/notice decisions for Growth charter \u00a79; exchange findings with Growth/Engineering before the one packet, preserving counsel/domain acceptance and owner business decisions. SAFETY-01 option A wording is local only. LEGAL_BRIEFING row AC stays open.",
+        "Current app roadmap handoff (2026-10-21 UTC): Review scoped session/user telemetry policy before collection and existing minor/content/payee promises with counsel. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -901,7 +1011,8 @@
       ],
       "tasks": [
         "Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria.",
-        "Maintain MINOR birth-month/year, unknown-age and known-under13 closure plus teen consent/guardian limits; Beyond/CHAL age/friend gates stay action-specific, and minor in-person time/location remains prohibited even in future Vault work. Coach-level invites still work and show the notice. Teen pre-publish review is not built."
+        "Maintain MINOR birth-month/year, unknown-age and known-under13 closure plus teen consent/guardian limits; Beyond/CHAL age/friend gates stay action-specific, and minor in-person time/location remains prohibited even in future Vault work. Coach-level invites still work and show the notice. Teen pre-publish review is not built.",
+        "Current app roadmap handoff (2026-10-21 UTC): Preserve age, guardian and subject consent through Google, short posts and optional bank; draft consent is not approved for real families. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -916,7 +1027,8 @@
         "apps/mobile/src/frontend/theme"
       ],
       "tasks": [
-        "Feed rendering, media memory, startup and measured interaction performance"
+        "Feed rendering, media memory, startup and measured interaction performance",
+        "Current app roadmap handoff (2026-10-21 UTC): Measure first-tab transitions and one-active-video resources on actual builds; unit timings are not device performance. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -958,10 +1070,15 @@
       "lead": "CREW",
       "owns": [
         "apps/mobile/src/frontend/lib/crew.ts",
+        "apps/mobile/src/frontend/lib/notifications.ts",
+        "packages/shared-types/notifications.ts",
+        "supabase/functions/_shared/notifications",
+        "apps/mobile/src/frontend/components/Admin/Notifications",
         "apps/mobile/src/backend/db/schema.sql"
       ],
       "tasks": [
-        "crew_push_queue privacy, deduplication and authorized delivery design"
+        "Optional notification events, account-bound preferences, recipient inbox and safe delivery; crew_push_queue privacy and deduplication remain distinct from external push",
+        "NOTIFY-01 (2026-10-21 UTC): implement the owner-approved security-only email default, reviewed source permissions, Expo admin/Health controls and bounded delivery repair before fan UI. AUTH and COMMERCE retain account/financial source authority; independent Security, Data/Privacy, Minor/Custodial, Finance and QA acceptance remains required. Local disabled-source app-ready checkpoint recorded at 2026-10-21T15:50:54Z; hosted SQL, real email delivery, provider activation and release remain unverified."
       ],
       "model": "grok-4.7-medium"
     },
@@ -991,7 +1108,8 @@
       "tasks": [
         "Own first-open onboarding, birth-month/year age confirmation, athlete claim and pending action resume.",
         "Maintain browse-first onboarding and MINOR birth-month/year confirmation, unknown-age and known-closed recovery; guest post-auth resumes must not reuse an outgoing actor's retained intent.",
-        "Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume."
+        "Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume.",
+        "Current app roadmap handoff (2026-10-21 UTC): Verify Google creation with existing age rules and preserved drafts; bank attachment stays optional and later. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1051,8 +1169,9 @@
         "docs/engineering/design/PHOTO_STORIES_DESIGN.md"
       ],
       "tasks": [
-        "Own photo story upload and data flow: 1–10 photos, reorder, per-photo descriptions, set_reel_photos client and story photo reads.",
-        "Keep photo stories graceful before the SQL exists and never publish a partially uploaded story."
+        "Own photo story upload and data flow: 1\u201310 photos, reorder, per-photo descriptions, set_reel_photos client and story photo reads.",
+        "Keep photo stories graceful before the SQL exists and never publish a partially uploaded story.",
+        "Current app roadmap handoff (2026-10-21 UTC): Test1\u201310JPEG order/descriptions/rights, interrupted publication and claimed physical cleanup after approved SQL; partial stories cannot publish. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1068,7 +1187,8 @@
       ],
       "tasks": [
         "Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting.",
-        "Maintain PLAY-01-owned lifecycle and signed/private entitlement boundaries; Beyond legacy cards are discovery only and do not authorize edits to held player files or imply native playback/TTL verification."
+        "Maintain PLAY-01-owned lifecycle and signed/private entitlement boundaries; Beyond legacy cards are discovery only and do not authorize edits to held player files or imply native playback/TTL verification.",
+        "Current app roadmap handoff (2026-10-21 UTC): Test actual uploaded codecs on web/iOS/Android, one active decoded Highlight and private expiry/retry; URL/unit tests do not decode an app video. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1131,7 +1251,8 @@
       ],
       "tasks": [
         "Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation.",
-        "Beyond/CHAL own exports, support erasure/redaction and quota/cleanup metadata exist locally; global account export/deletion, provider physical deletion, retention, known-closed and remote revocation evidence remain separate gaps."
+        "Beyond/CHAL own exports, support erasure/redaction and quota/cleanup metadata exist locally; global account export/deletion, provider physical deletion, retention, known-closed and remote revocation evidence remain separate gaps.",
+        "Current app roadmap handoff (2026-10-21 UTC): Review purpose/visibility/retention before telemetry IDs; preserve private media/export/removal boundaries. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1149,7 +1270,8 @@
         "Translate the family donation and recruitment mission into acceptance criteria and dependencies.",
         "Define per-segment jobs, first/repeat/cross-user value, accepted outcomes and capability gaps with Growth/Research/domain owners; retain action safeguards, loaded support/service costs, proposals and authorization-relative 30/60/90 acceptance/stop decisions without imposing athlete/payee gates on unrelated permitted fan activity.",
         "Refine family-fun entry and owner-selected fan-ballot Game/Week design: staff eligibility/rights/safety, most valid free votes wins, per-entry publicity/private acknowledgment, one eligible-account ballot/window, trusted limits/closure/ties/corrections/appeals, proportional abuse and honest newcomer/network fairness; no enrollment.",
-        "Integrate authorized FUN-01 and QUIZ-01 account journeys for fans/filmers/families/friends/athletes/guardians and optional personal learning by donor/booster/sponsor/staff/operator accounts; keep Not now/Skip/no pressure, consent and private completion badges clear; actual admin-first gates precede app source."
+        "Integrate authorized FUN-01 and QUIZ-01 account journeys for fans/filmers/families/friends/athletes/guardians and optional personal learning by donor/booster/sponsor/staff/operator accounts; keep Not now/Skip/no pressure, consent and private completion badges clear; actual admin-first gates precede app source.",
+        "Current app roadmap handoff (2026-10-21 UTC): Keep athlete storytelling, simple Google creation and optional later bank attachment central; short Highlights stay available under existing eligibility. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1163,7 +1285,8 @@
         "apps/mobile/app/(tabs)/profile.tsx"
       ],
       "tasks": [
-        "Own/public athlete identity and feature integration"
+        "Own/public athlete identity and feature integration",
+        "Current app roadmap handoff (2026-10-21 UTC): Verify current own/public athlete identity, delayed account switches and optional later bank setup without stale-user data. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1178,7 +1301,8 @@
       ],
       "tasks": [
         "Independent final verification gate",
-        "Preserve retained local Beyond/CHAL/UX-06 passes as dated evidence; review newer Calm Island/configured theme and require distinct hosted, actual-build/native and policy acceptance rather than recertifying old hashes."
+        "Preserve retained local Beyond/CHAL/UX-06 passes as dated evidence; review newer Calm Island/configured theme and require distinct hosted, actual-build/native and policy acceptance rather than recertifying old hashes.",
+        "Current app roadmap handoff (2026-10-21 UTC): Accept each APP-TEST-01 lane separately;226suites/2193local tests do not accept Google/bank/upload/device or public release. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1237,7 +1361,8 @@
         "apps/mobile/src/frontend/hooks/useReceivedMalo.ts"
       ],
       "tasks": [
-        "Own Stripe-event versus ledger reconciliation, discrepancies, receipts and revenue reporting evidence."
+        "Own Stripe-event versus ledger reconciliation, discrepancies, receipts and revenue reporting evidence.",
+        "Current app roadmap handoff (2026-10-21 UTC): Verify processor-event/receipt/ledger reconciliation separately from bank attachment and positive KYC evidence. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1284,7 +1409,8 @@
         "docs/engineering/STAGING_RUNBOOK.md"
       ],
       "tasks": [
-        "Own preview profiles, environment binding, signing/device eligibility and rollback artifact evidence."
+        "Own preview profiles, environment binding, signing/device eligibility and rollback artifact evidence.",
+        "Current app roadmap handoff (2026-10-21 UTC): Prepare development build/origin/device prerequisites; local tests alone cannot publish or accept release. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1304,7 +1430,8 @@
       ],
       "tasks": [
         "Build local detection scans, failure/recovery checks and root-cause repairs together with domain developers.",
-        "Contribute accepted workload/denominator, game-night runtime/capacity and recovery evidence to the single Growth and Capacity Review packet through existing SUPPORT/ENGINEERING reporting; local tests do not establish hosted headroom or uptime."
+        "Contribute accepted workload/denominator, game-night runtime/capacity and recovery evidence to the single Growth and Capacity Review packet through existing SUPPORT/ENGINEERING reporting; local tests do not establish hosted headroom or uptime.",
+        "Current app roadmap handoff (2026-10-21 UTC): Test upload/auth/Connect recovery with Dev/QA; preserve explicit dependency errors and unverified uptime/capacity. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1318,7 +1445,8 @@
         "docs/product/STORY.md"
       ],
       "tasks": [
-        "Test family, athlete, guardian, filmer and operator journeys using consented feedback."
+        "Test family, athlete, guardian, filmer and operator journeys using consented feedback.",
+        "Current app roadmap handoff (2026-10-21 UTC): Collect consented feedback for browse, athlete story, signup, permitted short post and optional bank; record actual friction. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1332,7 +1460,8 @@
         "supabase/migrations"
       ],
       "tasks": [
-        "Audit grants, RLS, security-definer RPCs, storage policies and ownership boundaries."
+        "Audit grants, RLS, security-definer RPCs, storage policies and ownership boundaries.",
+        "Current app roadmap handoff (2026-10-21 UTC): Review service-only Connect CAS and claimed cleanup grants/triggers with denied unrelated writes; approved hosted readback remains required. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1422,7 +1551,71 @@
         "apps/mobile/src/backend/db/schema.sql"
       ],
       "tasks": [
-        "Critical review of RLS, sessions, secrets and storage authorization"
+        "Critical review of RLS, sessions, secrets and storage authorization",
+        "Lead independent portable-infrastructure security review with INFRA_SECURITY, SUPPLY_CHAIN_SECURITY and RECOVERY_SECURITY alongside existing RLS/session/threat specialists; report evidence and manual gaps to CTO.",
+        "Current app roadmap handoff (2026-10-21 UTC): Independently review current OAuth/Connect/cleanup ownership and public-beta blockers; local tests cannot accept hosted operations or live money. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "INFRA_SECURITY",
+      "file": ".claude/agents/infra-security.md",
+      "department": "Security",
+      "lead": "SECURITY",
+      "owns": [
+        "infrastructure/terraform",
+        "infrastructure/containers",
+        "infrastructure/supabase",
+        "infrastructure/security",
+        "docs/engineering/INFRASTRUCTURE_REGISTER.md",
+        "docs/engineering/INFRASTRUCTURE_SECURITY.md",
+        "docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md"
+      ],
+      "tasks": [
+        "Review network exposure, least-privilege IAM, TLS/upstream routing and host hardening; own complete governed-infrastructure security control/report coverage without equating source checks with deployed acceptance.",
+        "Return fixed redacted source findings and missing manual/hosted evidence to SECURITY; coordinate implementation through REDUNDANCY_LEAD/INFRASTRUCTURE and retain RLS/session/threat domain authority."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "SUPPLY_CHAIN_SECURITY",
+      "file": ".claude/agents/supply-chain-security.md",
+      "department": "Security",
+      "lead": "SECURITY",
+      "owns": [
+        "pnpm-lock.yaml",
+        ".github/workflows",
+        ".dockerignore",
+        "infrastructure/containers",
+        "infrastructure/supabase/bootstrap.py",
+        "infrastructure/exit/runtime_images.py",
+        "scripts/recovery-capsule.mjs",
+        "infrastructure/security",
+        "docs/engineering/INFRASTRUCTURE_SECURITY.md"
+      ],
+      "tasks": [
+        "Review locked dependencies/build scripts, pinned upstream/image provenance, least-privilege CI trust, source-only artifact boundaries and offline installation material.",
+        "Record original source/runtime identity and trust limits; missing caches, mutable pins and unsigned hashes remain explicit gaps; CI/RELEASE/EXIT_* retain implementation and SECURITY retains acceptance."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "RECOVERY_SECURITY",
+      "file": ".claude/agents/recovery-security.md",
+      "department": "Security",
+      "lead": "SECURITY",
+      "owns": [
+        "infrastructure/backup",
+        "infrastructure/migration",
+        "infrastructure/exit",
+        "scripts/recovery-capsule.mjs",
+        "infrastructure/security",
+        "docs/engineering/INFRASTRUCTURE_SECURITY.md",
+        "docs/engineering/EXIT_READY_RUNBOOK.md"
+      ],
+      "tasks": [
+        "Review private backup/retrieval/restore isolation and integrity, target/config/archive binding, original snapshot age, key rotation and independently held custody evidence.",
+        "Preserve implementation with RECOVERY/EXIT_DATABASE/EXIT_SYNC and grants/JWT/incident judgments with existing specialists; no access grant, destructive restore, live rotation or fabricated custody/readiness follows from review."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1438,7 +1631,8 @@
         "apps/mobile/src/frontend/lib/auth.ts"
       ],
       "tasks": [
-        "Own JWT/session handling, role boundaries, OAuth redirect integrity and server identity checks."
+        "Own JWT/session handling, role boundaries, OAuth redirect integrity and server identity checks.",
+        "Current app roadmap handoff (2026-10-21 UTC): Verify exact Google return origin/path, concurrent callbacks and stale Auth/Connect lifetimes on current source. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1454,7 +1648,8 @@
       ],
       "tasks": [
         "Shared RPC/domain types, generated database type provenance and mobile/admin contract parity",
-        "ADM-02 platform-neutral admin reporting models and package exports shared by Expo and Next"
+        "ADM-02 platform-neutral admin reporting models and package exports shared by Expo and Next",
+        "Current app roadmap handoff (2026-10-21 UTC): Keep normalized duration and account/payee DTOs aligned; shared types do not establish hosted schema/provider parity. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1514,7 +1709,8 @@
       ],
       "tasks": [
         "Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle",
-        "Maintain the locally written private beyond_game draft/review/cleanup policies and Vault gap with RLS_SECURITY; actual provisioning, signed-URL lifetime and provider physical deletion remain hosted acceptance."
+        "Maintain the locally written private beyond_game draft/review/cleanup policies and Vault gap with RLS_SECURITY; actual provisioning, signed-URL lifetime and provider physical deletion remain hosted acceptance.",
+        "Current app roadmap handoff (2026-10-21 UTC): Verify ownership/MIME/byte/deletion controls with RLS_SECURITY; canonical server quotas and legacy public Vault bytes remain gaps. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1540,7 +1736,8 @@
       ],
       "tasks": [
         "Own cross-system detection coverage, incident/fix coordination, safe support intake and Dev reporting.",
-        "Maintain implemented DETECT-02 main-admin issue/review/flow/recovery coordination with Dev and independent Security/QA; distinguish local capture/containment from remaining hosted delivery, durable crash intake and legacy telemetry gaps."
+        "Maintain implemented DETECT-02 main-admin issue/review/flow/recovery coordination with Dev and independent Security/QA; distinguish local capture/containment from remaining hosted delivery, durable crash intake and legacy telemetry gaps.",
+        "Current app roadmap handoff (2026-10-21 UTC): Route actual tester failures with current source and one feature owner; unknown provider/device/hosted states are not healthy. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1555,7 +1752,7 @@
       ],
       "tasks": [
         "Tax calendar and deadlines (financeTax.ts) and the Taxes tab of the Finance & Books hub",
-        "Year-end tax pack, quarterly estimated-tax figures and the CPA question list (BOOKKEEPING.md §8)",
+        "Year-end tax pack, quarterly estimated-tax figures and the CPA question list (BOOKKEEPING.md \u00a78)",
         "1099-K reconciliation: Stripe gross versus Tapua'i receipts plus pass-through money",
         "Keep provider-handled payee-document/SSN boundaries and CPA-validated tax dates/thresholds; test-mode tax packs do not authorize Tapua'i tax-ID storage, e-filing, registrations or filings."
       ],
@@ -1573,7 +1770,8 @@
         "docs/engineering/detection-sensors.json"
       ],
       "tasks": [
-        "Build cross-system runtime sensors, safe bounded logs, correlation, delivery health and honest coverage gaps."
+        "Build cross-system runtime sensors, safe bounded logs, correlation, delivery health and honest coverage gaps.",
+        "Current app roadmap handoff (2026-10-21 UTC): Preserve bounded behavior logs; session/user IDs remain unbuilt until policy review, then require approved schema/client/Health coverage. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1589,7 +1787,8 @@
         "scripts"
       ],
       "tasks": [
-        "Own meaningful regression, boundary/security and finance invariant checks."
+        "Own meaningful regression, boundary/security and finance invariant checks.",
+        "Current app roadmap handoff (2026-10-21 UTC): Maintain duration, stale-account, Terms, private-access and retry regressions plus offline fixture safety checks in regular builds. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1605,7 +1804,9 @@
         "docs/engineering/ENGINEERING_SUPPORT.md"
       ],
       "tasks": [
-        "Review trusted security signals, false positives, audit integrity and safe recovery with Engineering Support and Dev."
+        "Review trusted security signals, false positives, audit integrity and safe recovery with Engineering Support and Dev.",
+        "Share infrastructure/provenance/recovery findings with INFRA_SECURITY, SUPPLY_CHAIN_SECURITY and RECOVERY_SECURITY while retaining trusted-signal, false-positive and audit judgments under SECURITY.",
+        "Current app roadmap handoff (2026-10-21 UTC): Preserve trusted source/actor and reproducible app findings; guest telemetry/vote/hype abuse and missing sensors remain explicit. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1620,8 +1821,9 @@
       "tasks": [
         "Held-for-families roll-forward and per-athlete balances agree before any payout is approved",
         "Payout queue review in Payouts (MoneyTool) with CUSTODIAL and CONNECT; payouts stay blocked in Wave 0",
-        "Advocate Connect destination charges (STATE §6 item 8) with COMMERCE and payments counsel",
-        "Verify approved infrastructure ceiling and actual billing/cash obligations for the single Growth and Capacity Review packet with FPA/CFO; owner decides spending and test gross is not available company cash."
+        "Advocate Connect destination charges (STATE \u00a76 item 8) with COMMERCE and payments counsel",
+        "Verify approved infrastructure ceiling and actual billing/cash obligations for the single Growth and Capacity Review packet with FPA/CFO; owner decides spending and test gross is not available company cash.",
+        "Current app roadmap handoff (2026-10-21 UTC): Keep payout approval/withdrawal caps gated on authoritative balances and payee context; bank attachment grants no cash authority. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1659,7 +1861,8 @@
         "Supply actual permitted casual-video versus athlete-required-photo workflows, rights/audience/age checks and publication/tag/reward/error states to per-user growth plans; identify retag/share/public-byte/removal/retry gaps and feasible reviewed bridges with support/service costs; no implementation or new rewards implied.",
         "Supply actual casual-video/photo/right/age/audience behavior for fan-ballot entries; staff eligibility/rights/safety and per-entry public candidate consent/private acknowledgment, restricted media/status/withdrawal and trusted ballot gaps remain proposed; no blanket Stripe KYC or implemented workflow.",
         "Keep existing Highlight/photo rights and draft behavior distinct from Beyond's private pending video/JPEG review pipeline; current actor/consent/metadata/retry boundaries do not prove server decoding or public media safety. A new Train Like Me upload can set the coach-level label only when layouts.coachLevel is on.",
-        "Maintain private Fan Zone reserved MP4 upload, sanitized verification, revocable viewing and all-revision tracked removal with BACKEND/Safety; casual learning/upload needs no athlete/Stripe/school status; hosted provider/device/access/deletion proof remains required."
+        "Maintain private Fan Zone reserved MP4 upload, sanitized verification, revocable viewing and all-revision tracked removal with BACKEND/Safety; casual learning/upload needs no athlete/Stripe/school status; hosted provider/device/access/deletion proof remains required.",
+        "Current app roadmap handoff (2026-10-21 UTC): Preserve web-seconds/native-milliseconds duration through publication, finite positive45s metadata and8MiB post-compression cap; actual picker/server media verification remains separate. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1675,7 +1878,8 @@
       ],
       "tasks": [
         "Own private video entitlements, signed playback URLs and subscription-request access.",
-        "Keep private entitlement/signed playback separate from public workout discovery and presets; workout Vault protection, try videos, season access and minor in-person prohibitions remain later action-specific gates."
+        "Keep private entitlement/signed playback separate from public workout discovery and presets; workout Vault protection, try videos, season access and minor in-person prohibitions remain later action-specific gates.",
+        "Current app roadmap handoff (2026-10-21 UTC): Test authorized/unrelated/expired private access; new private uploads do not remove legacy public Vault objects or revoke existing signed URLs. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1688,7 +1892,8 @@
         "docs/engineering/AUDIT_REPORT.md"
       ],
       "tasks": [
-        "Record browser/visual regression evidence with the Playwright MCP on Expo web: narrow widths, large text and screenshots in AUDIT_REPORT; native sign-off stays with DEVICE_QA."
+        "Record browser/visual regression evidence with the Playwright MCP on Expo web: narrow widths, large text and screenshots in AUDIT_REPORT; native sign-off stays with DEVICE_QA.",
+        "Current app roadmap handoff (2026-10-21 UTC): Verify fresh guest and signed-in story/auth/upload paths, narrow/large-text/keyboard layouts; prior390px checks cover only recorded screens. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1724,7 +1929,8 @@
       "tasks": [
         "Reconcile roles, reporting lines, protocols and current priorities on assigned changes and affected handoffs; pair with DOCUMENTATION, preserve model pins/domain authority and report drift to CTO.",
         "Record actual executor, checked documents/roles/priorities, changed paths, dated check results, unresolved drift and next owner in the existing task ledger; release shared claims after integration/checks. Definitions are task-triggered, with no unattended scheduler configured.",
-        "Reconcile all 107 current role duties against main/task evidence and documented job-function gaps; preserve reporting/models and report actual reviewed/changed paths, checks, next owners and uncorrected outside-scope docs."
+        "Reconcile all 115 current role duties against main/task evidence and documented job-function gaps; preserve reporting/models and report actual reviewed/changed paths, checks, next owners and uncorrected outside-scope docs.",
+        "Current app roadmap handoff (2026-10-21 UTC): Reconcile115roles/17departments against APP-TEST-01; preserve pins/leads and record coverage, blockers, actual reviews and claim release. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
       ],
       "model": "grok-4.7-medium"
     },

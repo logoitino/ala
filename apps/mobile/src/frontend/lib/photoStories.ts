@@ -4,11 +4,11 @@
  * Rule: a story is never half-published. The `reels` row is inserted exactly like a video's
  * (`insertReelRow`), but stays at `photo_count = 0` — hidden by the feed — until every photo has
  * uploaded and `set_reel_photos` has validated and stored the ordered list. That RPC is publish-once
- * (it only succeeds while `photo_count = 0`), so a failed attempt is retried on the SAME reel id,
- * carried in `PhotoStoryPublishError`.
+ * (it only succeeds while `photo_count = 0`), and `PhotoStoryPublishError` carries a failed row id. Before retry, owner cleanup removes its
+ * files and hidden row, then a fresh insert publishes the preserved local draft.
  * Security rule (QA, 2026-10-07): the database stores Storage PATHS (`{uid}/stories/{reel_id}/…jpg`),
  * never URLs; `storyPhotoPublicUrl` turns a path into a displayable URL on the client.
- * @sideEffects `reels` INSERT/UPDATE, Storage `reels/{uid}/stories/…`, RPC `set_reel_photos`, view `reel_photos_feed`.
+ * @sideEffects `reels` INSERT, owner cleanup RPCs/Storage removal and local cleanup intent, Storage `reels/{uid}/stories/…`, RPC `set_reel_photos`, view `reel_photos_feed`.
  */
 
 import {
@@ -19,14 +19,15 @@ import {
   type StoryPhoto,
 } from '@/data/highlights';
 import { publicMediaUrl } from '@/lib/media';
+import { cleanupFailedPhotoStory } from '@/lib/photoStoryCleanup';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { insertReelRow, uploadStoryPhoto } from '@/services/MediaUploadService';
 import type { Reel } from '@/types/database';
 import { isMissingFunction, isMissingRelation } from '@/lib/dbErrors';
 
 /**
- * A publish attempt failed after the story's reel row existed. `reelId` lets the caller retry on the same
- * (still hidden, `photo_count = 0`) row instead of inserting another one.
+ * A publish attempt failed after the story's reel row existed. `reelId` lets the caller retire the earlier
+ * row before creating a clean retry. A failed response may also need a committed-story check.
  */
 export class PhotoStoryPublishError extends Error {
   readonly reelId: string;
@@ -34,6 +35,16 @@ export class PhotoStoryPublishError extends Error {
     super(message);
     this.name = 'PhotoStoryPublishError';
     this.reelId = reelId;
+  }
+}
+
+/** A previous publish committed; its stored story is recovered separately from the edited local draft. */
+export class PhotoStoryAlreadyPublishedError extends Error {
+  readonly reel: Reel;
+  constructor(reel: Reel) {
+    super('Your earlier photo story was already shared. Your current draft has not been published.');
+    this.name = 'PhotoStoryAlreadyPublishedError';
+    this.reel = reel;
   }
 }
 
@@ -52,10 +63,11 @@ type LooseResult = PromiseLike<{ data: unknown; error: PostgrestErrorLike }>;
  * so only these calls go through a narrow untyped view of the same client.
  */
 type PhotoStoryClient = {
-  from: (relation: 'reel_photos_feed' | 'reels') => {
+  from: (relation: 'reel_photos_feed' | 'reel_photos' | 'reels') => {
     select: (columns: string, options?: { head?: boolean; count?: 'exact' }) => {
       in: (column: string, values: string[]) => { order: (column: string, options: { ascending: boolean }) => LooseResult };
       limit: (count: number) => LooseResult;
+      eq: (column: string, value: unknown) => { eq: (column: string, value: unknown) => { maybeSingle: () => LooseResult } };
     };
   };
   rpc: (fn: 'set_reel_photos', args: { p_reel_id: string; p_photos: unknown[] }) => LooseResult;
@@ -187,8 +199,8 @@ export async function setStoryPhotos(
     // 55000 = already published. If an earlier attempt committed but its reply was lost, the story is
     // live: confirm from the row and treat it as success instead of trapping the user in retries.
     if (error.code === '55000') {
-      const published = await publishedPhotoCount(reelId);
-      if (published > 0) return published;
+      const published = await confirmedPublishedStory(reelId);
+      if (published) throw new PhotoStoryAlreadyPublishedError(published);
     }
     throw new Error(isMissingFunction(error) ? 'Photo stories are not available yet.' : error.message || 'Could not save the photos.');
   }
@@ -199,11 +211,16 @@ export async function setStoryPhotos(
   return count;
 }
 
-/** Photos already stored on the caller's own story (base `reels` row is readable by its uploader); 0 when unknown. */
-async function publishedPhotoCount(reelId: string): Promise<number> {
-  const { data } = await supabase.from('reels').select('*').eq('id', reelId).maybeSingle();
-  const count = Number((data as { photo_count?: unknown } | null)?.photo_count ?? 0);
-  return Number.isInteger(count) && count > 0 && count <= PHOTO_STORY_MAX_PHOTOS ? count : 0;
+/** Read only the owner-visible committed story and its stored position-zero path after a lost reply. */
+async function confirmedPublishedStory(reelId: string): Promise<Reel | null> {
+  const { data, error } = await supabase.from('reels').select('*').eq('id', reelId).maybeSingle();
+  const row = data as Reel & { media_type?: string; photo_count?: number; is_removed?: boolean } | null;
+  const count = Number(row?.photo_count ?? 0);
+  if (error || !row || row.media_type !== 'photo_story' || row.is_removed || !Number.isInteger(count) || count < 1 || count > PHOTO_STORY_MAX_PHOTOS) return null;
+  const cover = await db.from('reel_photos').select('image_path').eq('reel_id', reelId).eq('position', 0).maybeSingle();
+  const path = (cover.data as { image_path?: unknown } | null)?.image_path;
+  if (cover.error || typeof path !== 'string' || !path.trim()) return null;
+  return { ...row, cover_path: path } as Reel;
 }
 
 let availability: Promise<boolean> | null = null;
@@ -257,17 +274,16 @@ export function resetPhotoStoriesProbe(): void {
 /**
  * @purpose Publish a photo story: insert the reel row like a video (`media_type = 'photo_story'`,
  *   `video_url = ''`), upload each photo (metadata stripped, orientation kept), then store the ordered paths with
- *   `set_reel_photos`. With `existingReelId` (a retry), the insert is skipped and the earlier hidden row is
- *   reused: its caption and category are refreshed, then photos are uploaded again and the RPC called again.
+ *   `set_reel_photos`. With `existingReelId` (a retry), retire the earlier hidden row and its files first, then create a fresh
+ *   row from the preserved draft. A committed earlier story is recovered without replacing it.
  * @param input Photos in story order, caption, tagged athlete, optional game, category, the rights version the
- *   uploader confirmed, and `existingReelId` from a previous `PhotoStoryPublishError`. The caller must only pass
- *   it when the athlete and game are unchanged (those columns are fixed after insert).
+ *   uploader confirmed, and `existingReelId` from a previous `PhotoStoryPublishError`. The earlier id is passed even if the athlete or game changed, so abandoned uploads are retired.
  *   `onProgress(done, total)` fires before and after each photo.
  * @returns The reel with `photo_count` and `cover_path` filled in.
- * @throws `PhotoStoryPublishError` (carrying `reelId`) when a photo, the caption refresh or the RPC fails — nothing
- *   is visible (`photo_count` stays 0) and the caller keeps the draft for a retry. A plain `Error` when the insert
- *   itself fails (no row exists yet) or input is invalid.
- * @sideEffects `reels` INSERT (or UPDATE of title/category on retry); Storage uploads; RPC `set_reel_photos`.
+ * @throws `PhotoStoryPublishError` (carrying `reelId`) when cleanup, a photo or the RPC fails — the caller
+ *   keeps the draft/id for a retry; an uncertain save reply can follow a successful commit. A plain `Error` when the insert
+ *   itself fails (a lost insert reply can leave an unknown hidden row) or input is invalid.
+ * @sideEffects `reels` INSERT; owner cleanup and local intent on retry; Storage uploads; RPC `set_reel_photos`.
  */
 export async function createPhotoStory(input: {
   photos: PhotoStoryDraftPhoto[];
@@ -277,6 +293,7 @@ export async function createPhotoStory(input: {
   category: ReelCategory;
   rightsVersion: string;
   existingReelId?: string | null;
+  expectedUserId?: string;
   onProgress?: (done: number, total: number) => void;
 }): Promise<Reel> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured. Add EXPO_PUBLIC keys to .env.local.');
@@ -288,40 +305,33 @@ export async function createPhotoStory(input: {
   if (!input.playerId) throw new Error('Tag the athlete before sharing.');
   const category = parseReelCategory(input.category);
 
-  let reel: Reel;
   const existingId = input.existingReelId?.trim();
   if (existingId) {
-    // The caption or category may have been edited after the failed attempt; both are uploader-updatable.
-    const { error } = await supabase.from('reels').update({ title: caption, category }).eq('id', existingId);
-    if (error) {
-      throw new PhotoStoryPublishError(`Your story could not be updated, so nothing was published. Try again. (${error.message || 'update failed'})`, existingId);
+    let status: 'discarded' | 'published';
+    try {
+      status = input.expectedUserId ? await cleanupFailedPhotoStory(existingId, input.expectedUserId) : await cleanupFailedPhotoStory(existingId);
+    } catch (caught) {
+      throw new PhotoStoryPublishError(errorText(caught), existingId);
     }
-    reel = {
-      id: existingId,
-      video_url: '',
-      title: caption,
-      player_id: input.playerId,
-      game_id: input.gameId || null,
-      // Approximate: the row keeps its original insert time, which is a few moments earlier.
-      created_at: new Date().toISOString(),
-      is_exclusive: false,
-      is_vault_only: false,
-      category,
-    };
-  } else {
-    reel = await insertReelRow({
-      video_url: '',
-      title: caption,
-      player_id: input.playerId,
-      game_id: input.gameId || null,
-      is_exclusive: false,
-      is_vault_only: false,
-      category,
-      attested_at: new Date().toISOString(),
-      rights_version: input.rightsVersion,
-      media_type: 'photo_story',
-    });
+    if (status === 'published') {
+      const stored = await confirmedPublishedStory(existingId);
+      if (stored) throw new PhotoStoryAlreadyPublishedError(stored);
+      throw new PhotoStoryPublishError('The earlier story may already be shared. Check your connection and try again; it was not removed.', existingId);
+    }
   }
+  if (input.expectedUserId) {
+    const current = await supabase.auth.getUser();
+    if (current.error || current.data.user?.id !== input.expectedUserId) {
+      throw new Error('The account changed. Open your upload again before sharing.');
+    }
+  }
+  // Every retry retires its old row and all attempt files first. Timestamped leftovers cannot
+  // survive on a successfully published replacement; the local draft and rights remain intact.
+  const reel = await insertReelRow({
+    video_url: '', title: caption, player_id: input.playerId, game_id: input.gameId || null,
+    is_exclusive: false, is_vault_only: false, category, attested_at: new Date().toISOString(),
+    rights_version: input.rightsVersion, media_type: 'photo_story',
+  });
 
   const total = photos.length;
   input.onProgress?.(0, total);
@@ -346,7 +356,8 @@ export async function createPhotoStory(input: {
   try {
     count = await setStoryPhotos(reel.id, uploaded);
   } catch (caught) {
-    throw new PhotoStoryPublishError(`Your photos uploaded but the story could not be saved, so nothing was published. Try again. (${errorText(caught)})`, reel.id);
+    if (caught instanceof PhotoStoryAlreadyPublishedError) throw caught;
+    throw new PhotoStoryPublishError(`We could not confirm whether your story was shared. Try again and we’ll check before replacing it. (${errorText(caught)})`, reel.id);
   }
   return { ...reel, media_type: 'photo_story', photo_count: count, cover_path: uploaded[0]?.imagePath ?? null } as Reel;
 }

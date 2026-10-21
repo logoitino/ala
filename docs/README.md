@@ -1,3 +1,4 @@
+<!-- Index current engineering and execution receipts without implying hosted readiness. -->
 # Documentation index
 
 Every document in the repo, grouped by who it is for. New here? Read the four entry points in
@@ -13,9 +14,20 @@ order, then dip into the folders as you need them.
 | [STATE.md](STATE.md) | Where the project is **right now**: recent changes, known breakage, open decisions, next steps. The living log; update it with every code change. |
 
 ## engineering/ — how the system is built
+| [PORTABLE_INTEGRATIONS](engineering/PORTABLE_INTEGRATIONS.md) | Shared app connection contract, matching target profiles and local installed-SDK compatibility tests. |
+| [Infrastructure Security](engineering/INFRASTRUCTURE_SECURITY.md) | Security roles, current registered-source coverage and independent operational review workflow. |
+| [Infrastructure Security report](engineering/INFRASTRUCTURE_SECURITY_REPORT.md) | Generated safe source binding, Security reviewers and unverified operational requirements. |
+| [Infrastructure Security findings](engineering/INFRASTRUCTURE_SECURITY_FINDINGS.md) | Dated scoped source observations, local repairs and remaining review boundaries. |
+| [Portable connection plan](engineering/design/PORTABLE_CONNECTION_IMPLEMENTATION_PLAN.md) | REDUNDANCY-06 executable local portability plan and scoped specialist assignments. |
+| [Infrastructure Security plan](engineering/design/INFRASTRUCTURE_SECURITY_IMPLEMENTATION_PLAN.md) | REDUNDANCY-07 role/report/routing and local security repair assignments. |
+| [REDUNDANCY-06](agents/REDUNDANCY-06.md) | Actual local portability/client/profile/test execution and final verification custody. |
+| [REDUNDANCY-07](agents/REDUNDANCY-07.md) | Actual Security/VP/Documentation execution, source fixes and final verification custody. |
 
 | Document | What it answers |
 | --- | --- |
+| [Media service plan](engineering/design/MEDIA_SERVICE_PLAN.md) | Current video/photo upload and player contracts, replaceable storage and migration tests; long videos off until measured costs, live deferred. |
+| [Athlete story UI plan](engineering/design/ATHLETE_STORY_UX_IMPROVEMENT_PLAN.md) | Existing Calm Island story/tab scope, accessibility criteria and verification boundaries. |
+| [UX-07](agents/UX-07.md) | Actual presentation exemption, source reviews, implementation and local UI verification receipts. |
 | [ARCHITECTURE.md](engineering/ARCHITECTURE.md) | How the apps, Supabase, Stripe and Edge Functions fit together. |
 | [SYSTEM_OVERVIEW.md](engineering/SYSTEM_OVERVIEW.md) | Executive summary, tech stack, directory map, feature tracker. |
 | [CONVENTIONS.md](engineering/CONVENTIONS.md) | Folder rules, file naming, where code goes, the comment standard (§5). |
@@ -38,9 +50,21 @@ order, then dip into the folders as you need them.
 | [design/ATHLETE_VERIFICATION_DESIGN.md](engineering/design/ATHLETE_VERIFICATION_DESIGN.md) | Athlete verification ladder, open sign-up, fake-highlight takedown. |
 | [design/PHOTO_STORIES_DESIGN.md](engineering/design/PHOTO_STORIES_DESIGN.md) | Photo stories in Highlights: data model, RPC, screens, privacy rules and build ownership. |
 | [design/PROFILE_PRIVACY_DESIGN.md](engineering/design/PROFILE_PRIVACY_DESIGN.md) | Profile privacy (PRIV-01): public / private accounts, per-item audiences, friends, blocking, hide from search, tag approval. |
+| [ADMIN_MFA.md](engineering/ADMIN_MFA.md) | SCALE-01 admin two-step sign-in (TOTP, `aal2`) for the portal and Expo `/admin`: switches (default off), how the owner turns it on, what it does not cover. |
 | [EXIT_DRILL.md](engineering/EXIT_DRILL.md) | Exit drill runbook (E3): local rehearsal today, full self-hosted Supabase drill after E1; record of runs. |
 | [INFRASTRUCTURE_REGISTER.md](engineering/INFRASTRUCTURE_REGISTER.md) | Generated list of what Tapua'i runs on and how deeply the app is integrated (INFRA-01); owner `INFRASTRUCTURE`; source `infrastructure.json`. |
 | [PORTABILITY.md](engineering/PORTABILITY.md) | Staying free to move hosts (PORT-01): what is portable, the Supabase ties, the two exits, the boundary guard and next steps. |
+| [REDUNDANCY_TEAM.md](engineering/REDUNDANCY_TEAM.md) | Redundancy & Exit team charter (REDUNDANCY-02): documents, agents, change protocol and cadence that keep the move-off-Supabase plan current with every app change. |
+| [EXIT_INFRASTRUCTURE_MAP.md](engineering/EXIT_INFRASTRUCTURE_MAP.md) | Generated build map for moving off Supabase: each component → AWS / Azure (exit A self-hosted, exit B cloud-native), owners, detected inventory, build order, plan version and unannounced changes; source `exit-map.json`. |
+| [EXIT_CHANGE_LOG.md](agents/EXIT_CHANGE_LOG.md) | Routed notices of app changes the exit plan depends on, with each agent's review result (`EXIT_SYNC`). |
+| [EXIT_READY_RUNBOOK.md](engineering/EXIT_READY_RUNBOOK.md) | Exact current source/image preparation, complete acceptance evidence and an unproven180-minute warm cutover target. |
+| [MIGRATION_FAILURES_AND_CONTROLS.md](engineering/MIGRATION_FAILURES_AND_CONTROLS.md) | Local migration failures, implemented controls, historical reference limits and outstanding hosted drills. |
+| [Exit implementation plan](engineering/design/EXIT_READY_IMPLEMENTATION_PLAN.md) | Owned REDUNDANCY-03 source/runtime/Storage/readiness implementation and acceptance. |
+| [REDUNDANCY_PLAN.md](engineering/REDUNDANCY_PLAN.md) | Full Supabase backup scope, independent recovery copies, proposed schedule and AWS/Azure exit architecture. |
+| [BACKUP_OPERATIONS.md](engineering/BACKUP_OPERATIONS.md) | Private backup job configuration, complete offsite upload accounting, freshness checks, guarded retries and independent-copy retrieval. |
+| [CLOUD_MIGRATION_RUNBOOK.md](engineering/CLOUD_MIGRATION_RUNBOOK.md) | Backup, decrypt, reviewed restore, own-server deployment, cutover and rollback commands. |
+| [Redundancy implementation checklist](engineering/design/REDUNDANCY_IMPLEMENTATION_PLAN.md) | Local tooling and separate operational acceptance work, with recorded verification gaps. |
+| [Infrastructure operator entry point](../infrastructure/README.md) | Executable backup tools, application containers, upstream Supabase setup and AWS/Azure Terraform folders. |
 | [design/PAYEE_VERIFICATION_PLAN.md](engineering/design/PAYEE_VERIFICATION_PLAN.md) | Verifying people who receive donations (VERIFY-02): SSN to Stripe only, guardian proof (Stripe + school), two-admin payout override. |
 | [design/MINOR_ACCOUNTS_DESIGN.md](engineering/design/MINOR_ACCOUNTS_DESIGN.md) | Minor accounts (MINOR-01): birth month and year, teen defaults, guardian link and signed consent, supervision, under-16 approvals, under-13 closure. |
 | [design/PARENT_PAYEE_CONNECT_DESIGN.md](engineering/design/PARENT_PAYEE_CONNECT_DESIGN.md) | Guardian-as-payee and custodial money rules. |
@@ -53,6 +77,10 @@ order, then dip into the folders as you need them.
 | [TRIVIA_STAGING_APPLY.md](engineering/TRIVIA_STAGING_APPLY.md) | Apply trivia (QUIZ-01 to QUIZ-04) and its prerequisites on staging by hand: 16 files in order, a read-only check after each, rollback notes, then the in-app tester steps. |
 | [design/BOOKKEEPING.md](engineering/design/BOOKKEEPING.md) | BOOKS-01/02: Finance & Books hub, double-entry journal from the money tables, QuickBooks export, monthly routine and tax questions for the CPA. |
 | [FEATURE_ADMIN_WORKFLOW.md](engineering/FEATURE_ADMIN_WORKFLOW.md) | Future features: admin contracts, implementation/evidence before app work, and registered lifecycle gates. |
+| [design/EMAIL_NOTIFICATIONS_DESIGN.md](engineering/design/EMAIL_NOTIFICATIONS_DESIGN.md) | Approved account/donation email, Activity inbox and Profile preferences architecture; optional emails off by default; local implementation/delivery gates. |
+| [design/EMAIL_NOTIFICATIONS_IMPLEMENTATION_PLAN.md](engineering/design/EMAIL_NOTIFICATIONS_IMPLEMENTATION_PLAN.md) | Notification backend, money source, staff-before-app controls and verification tasks with file ownership. |
+| [Notification admin evidence](engineering/evidence/NOTIFY-01-admin.md) | Actual local staff/source review and checks, with SQL/provider and payment-authority limits. |
+| [Notification app evidence](engineering/evidence/NOTIFY-01-app.md) | Profile/Activity implementation, final regression and local readiness with delivery limits. |
 | [evidence/FAMILY_FUN_BUILD_DECISIONS.md](engineering/evidence/FAMILY_FUN_BUILD_DECISIONS.md) | Concrete Fan Zone and quiz build decisions, reasons and cost of changing them. |
 | [evidence/QUIZ-01-app.md](engineering/evidence/QUIZ-01-app.md) | Actual local quiz participant/integration checks and remaining final gates. |
 | [evidence/FUN-01-admin.md](engineering/evidence/FUN-01-admin.md) | Local Fan admin source/checks and independent gate recording. |
@@ -112,11 +140,15 @@ location (tracked in [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_P
 | [FEATURE_ADMIN_TEMPLATE.md](agents/FEATURE_ADMIN_TEMPLATE.md) | Future feature registration and readiness checkpoint template. |
 | [feature-admin.json](agents/feature-admin.json) | Enrolled future feature contracts checked by `pnpm feature-admin:check`. |
 | [WORK_QUEUE.md](agents/WORK_QUEUE.md) | Ordered tasks with acceptance criteria and owners. |
+| [REDUNDANCY-03.md](agents/REDUNDANCY-03.md) | Current exact-source release, Storage/runtime/evidence safeguards, actual independent reviews and pending cloud drill. |
+| [REDUNDANCY-04.md](agents/REDUNDANCY-04.md) | Automatic current-source watcher, all-branch CI, actual activation and crash/failure/retention evidence. |
+| [REDUNDANCY-01.md](agents/REDUNDANCY-01.md) | Actual backup/migration implementation receipts, independent review findings and pending operational rehearsal. |
 | [DEPARTMENT_PLANS.md](agents/DEPARTMENT_PLANS.md) | Each department: what is in the app today, and what that team will do before a public release. |
 | [EXPERT_STANDARDS.md](agents/EXPERT_STANDARDS.md) | The expert bar for each department, and which model is connected to each agent. |
 | [ADM-01.md](agents/ADM-01.md) | Live tracker for the admin portal charts work (ADM-01): status, owner decisions, how to resume. Brief: [ADM-01_ASSIGNMENT.md](agents/ADM-01_ASSIGNMENT.md); fix list: [ADM-01_FIXES.md](agents/ADM-01_FIXES.md). |
 | [ADM-02.md](agents/ADM-02.md) | Unified main admin: implementation claims, report/tool coverage and actual verification evidence. |
 | [PLAY-01.md](agents/PLAY-01.md) | Browser media errors: scoped playback/dependency repair, ownership and actual verification evidence. |
+| [SCALE-03.md](agents/SCALE-03.md) | Live scores over per-game Broadcast: topic/payload design, switch and fallback, RLS_SECURITY review, checks and unverified hosted work. |
 
 The agent definitions themselves are in `.claude/agents/`; `pnpm agents:check` keeps them in step
 with these files.
@@ -174,3 +206,9 @@ with these files.
 | [QUIZ-01 admin evidence](engineering/evidence/QUIZ-01-admin.md) | Local weekly quiz admin source, independent acceptance and actual checks; no hosted release. |
 
 | [Timed trivia proposal](engineering/design/TIMED_TRIVIA_PROPOSAL.md) | Owner-approved design: opt-in, sports-first topics, 30/90 timing, question history and admin-first requirements. |
+
+## Exit preparation continuation
+
+| Document | Purpose |
+| --- | --- |
+| [REDUNDANCY-05](agents/REDUNDANCY-05.md) | Private backup setup and operational health execution. |

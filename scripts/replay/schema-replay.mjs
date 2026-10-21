@@ -485,6 +485,68 @@ const truncate = await db.exec(`truncate public.payee_verifications`).then(() =>
 const sneak = await db.exec(`update public.payee_verifications set reason = 'rewritten', reviewer_id = null where reviewer_id is not null`).then(() => 'ran', (e) => e.message);
 record('verification records cannot be deleted, truncated or rewritten (even by the server)', /kept/.test(purge) && /kept/.test(truncate) && /kept as recorded/.test(sneak), JSON.stringify({ purge, truncate, sneak }));
 
+// SCALE-03 live score Broadcast (20261018120000): one message per visible change carrying only that change, a
+// server-owned sequence, and receive-only private topics. Hosted Supabase grants the API roles select/insert on
+// realtime.messages and leaves the decision to RLS; mirror that here so the policy is what is tested.
+{
+  const G = '00000000-0000-4000-8000-0000000005c1';
+  await db.exec(`grant select, insert on realtime.messages to anon, authenticated; grant usage on sequence realtime.messages_id_seq to anon, authenticated; delete from realtime.messages;
+    insert into public.games (id, home_team, away_team) values ('${G}', 'Replay Home', 'Replay Away');`);
+  const msgs = async () => rows(`select topic, event, payload, private from realtime.messages order by id`);
+  const added = await msgs();
+  record('a new game announces itself on the index topic only', added.length === 1 && added[0].topic === 'game_scores_index' && added[0].payload.op === 'insert' && added[0].private === true, JSON.stringify(added));
+  await db.exec(`delete from realtime.messages; update public.games set home_score = 7 where id = '${G}';`);
+  const scored = await msgs();
+  const [seq1] = await rows(`select live_seq from public.games where id = '${G}'`);
+  record('a score change sends only that change, with the next sequence number, on the game topic', scored.length === 1 && scored[0].topic === `game_scores_${G}` && scored[0].event === 'score' && JSON.stringify(scored[0].payload.changes) === '{"home_score":7}' && scored[0].payload.seq === 1 && Number(seq1.live_seq) === 1, JSON.stringify({ scored, seq1 }));
+  await db.exec(`delete from realtime.messages; update public.games set claimed_by = null, live_seq = 999 where id = '${G}';`);
+  const quiet = await msgs();
+  const [seq2] = await rows(`select live_seq from public.games where id = '${G}'`);
+  record('a change fans do not see sends nothing, and a client cannot set the sequence', quiet.length === 0 && Number(seq2.live_seq) === 1, JSON.stringify({ quiet, seq2 }));
+  await db.exec(`delete from realtime.messages; update public.games set is_active = false where id = '${G}';`);
+  const inactive = await msgs();
+  record('going inactive sends the change and an index notice', inactive.length === 2 && inactive[0].payload.changes.is_active === false && inactive[1].payload.op === 'active', JSON.stringify(inactive));
+  const topicAs = async (who, topic, sql) => { try { return (await db.exec(`${as[who]} set realtime.topic = '${topic}'; ${sql};`)).at(-1).rows ?? 'ran'; } catch (e) { return e.message; } finally { await db.exec('reset role; reset request.jwt.claims; reset realtime.topic;'); } };
+  const guestReads = await topicAs('guest', `game_scores_${G}`, `select count(*)::int as n from realtime.messages where topic = 'game_scores_${G}'`);
+  const fanIndex = await topicAs('fan', 'game_scores_index', `select count(*)::int as n from realtime.messages`);
+  const oddTopic = await topicAs('guest', `game_scores_${G}x`, `select count(*)::int as n from realtime.messages`);
+  record('guests and fans may receive a game score topic and the index; a look-alike topic gets nothing', guestReads[0]?.n === 1 && fanIndex[0]?.n === 2 && oddTopic[0]?.n === 0, JSON.stringify({ guestReads, fanIndex, oddTopic }));
+  const forged = await topicAs('guest', `game_scores_${G}`, `insert into realtime.messages (topic, extension, payload, event, private) values ('game_scores_${G}', 'broadcast', '{"v":1}', 'score', true)`);
+  const forgedFan = await topicAs('fan', 'game_scores_index', `insert into realtime.messages (topic, extension, payload, event, private) values ('game_scores_index', 'broadcast', '{"v":1}', 'membership', true)`);
+  record('no guest or fan can send on a score topic (only the trigger writes them)', /row-level security/.test(String(forged)) && /row-level security/.test(String(forgedFan)), JSON.stringify({ forged, forgedFan }));
+  const presence = await topicAs('guest', `game_scores_${G}`, `select count(*)::int as n from realtime.messages where extension = 'presence'`);
+  await db.exec(`insert into realtime.messages (topic, extension, payload, event, private) values ('game_scores_${G}', 'presence', '{}', 'sync', true)`);
+  const presenceAfter = await topicAs('guest', `game_scores_${G}`, `select count(*)::int as n from realtime.messages where extension = 'presence'`);
+  record('the score topic policy covers Broadcast only, not Presence', presence[0]?.n === 0 && presenceAfter[0]?.n === 0, JSON.stringify({ presence, presenceAfter }));
+  const callable = await rows(`select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname in ('games_live_seq_bump', 'games_broadcast_score_change') and (has_function_privilege('anon', p.oid, 'execute') or has_function_privilege('authenticated', p.oid, 'execute'))`);
+  record('the score trigger functions are not executable by API roles', callable.length === 0, list(callable));
+  await db.exec(`delete from realtime.messages; delete from public.games where id = '${G}';`);
+  const removed = await msgs();
+  record('deleting a game sends an index notice', removed.length === 1 && removed[0].payload.op === 'delete', JSON.stringify(removed));
+  await db.exec(`delete from realtime.messages; revoke select, insert on realtime.messages from anon, authenticated; revoke usage on sequence realtime.messages_id_seq from anon, authenticated;`);
+}
+
+// Rally meters must show to guests (found 2026-10-20 by access parity): the read policy may not call a function guests cannot execute.
+{
+  const P1 = '7a000000-0000-4000-8000-000000000001';
+  const P2 = '7a000000-0000-4000-8000-000000000002';
+  await db.exec(`insert into public.players (id, name) values ('${P1}', 'Rally Live'), ('${P2}', 'Rally Pending') on conflict (id) do nothing;
+    insert into public.rallies (id, player_id, title, target_cents, status) values
+      ('7b000000-0000-4000-8000-000000000001', '${P1}', 'Season fees', 50000, 'live'),
+      ('7b000000-0000-4000-8000-000000000002', '${P2}', 'New cleats', 15000, 'pending_guardian');`);
+  const rallyRead = async (who) => {
+    try { return (await db.exec(`${as[who]} select count(*)::int as n from public.rallies where player_id in ('${P1}', '${P2}');`)).at(-1).rows[0].n; }
+    catch (e) { return e.message; } finally { await db.exec('reset role; reset request.jwt.claims;'); }
+  };
+  const guestSees = await rallyRead('guest');
+  const fanSees = await rallyRead('fan');
+  const adminSees = await rallyRead('admin');
+  record('a guest sees a live Rally without a permission error', guestSees === 1, String(guestSees));
+  record('a signed-in fan sees live Rallies only, not another family\'s pending one', fanSees === 1, String(fanSees));
+  record('an admin still sees a pending Rally', adminSees === 2, String(adminSees));
+  await db.exec(`delete from public.rallies where player_id in ('${P1}', '${P2}'); delete from public.players where id in ('${P1}', '${P2}');`);
+}
+
 const [counts] = await rows(`select (select count(*) from pg_tables where schemaname = 'public')::int as tables, (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public')::int as functions, (select count(*) from pg_policies where schemaname = 'public')::int as policies`);
 for (const r of results) console.log(`${r.pass ? 'PASS' : 'FAIL'}  ${r.name}${r.pass || !r.detail ? '' : ` — ${r.detail}`}`);
 const failed = results.filter((r) => !r.pass);

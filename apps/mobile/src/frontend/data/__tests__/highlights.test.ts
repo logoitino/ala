@@ -10,6 +10,7 @@ import {
   rankHomeFeed,
   REEL_CATEGORY_PILLS,
 } from '@/data/highlights';
+import type { HighlightClip } from '@/data/highlights';
 
 type Row = { clip: { id: string; athleteName: string; sekiCount: number; auraCount: number; flexCount: number } };
 
@@ -35,10 +36,11 @@ describe('pinFeedOrder', () => {
   });
 
   it('pages uploaded clips and leaves empty samples off once a file exists', () => {
-    const sample = { clip: { videoUrl: '', mediaType: undefined, photoCount: 0 } };
-    const upload = { clip: { videoUrl: 'https://example.com/a.mp4', mediaType: undefined, photoCount: 0 } };
-    const story = { clip: { videoUrl: '', mediaType: 'photo_story' as const, photoCount: 2 } };
-    const brokenStory = { clip: { videoUrl: '', mediaType: 'photo_story' as const, photoCount: 0 } };
+    type Item = { clip: Pick<HighlightClip, 'videoUrl' | 'mediaType' | 'photoCount'> };
+    const sample: Item = { clip: { videoUrl: '', mediaType: undefined, photoCount: 0 } };
+    const upload: Item = { clip: { videoUrl: 'https://example.com/a.mp4', mediaType: undefined, photoCount: 0 } };
+    const story: Item = { clip: { videoUrl: '', mediaType: 'photo_story', photoCount: 2 } };
+    const brokenStory: Item = { clip: { videoUrl: '', mediaType: 'photo_story', photoCount: 0 } };
     expect(homePagerClips([upload, brokenStory], [sample])).toEqual([upload]);
     expect(homePagerClips([story], [sample])).toEqual([story]);
     expect(homePagerClips([brokenStory], [sample])).toEqual([sample]);

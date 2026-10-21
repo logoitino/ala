@@ -10,7 +10,7 @@ it('offers Highlight and Beyond moment and reports which was chosen', async () =
   const onHighlight = jest.fn(), onBeyond = jest.fn(), onClose = jest.fn();
   await render(<UploadChoiceSheet visible onHighlight={onHighlight} onBeyond={onBeyond} onClose={onClose} />);
   expect(screen.getByText('What are you sharing?')).toBeTruthy();
-  await fireEvent.press(screen.getByLabelText(/^Highlight\. A clip of an athlete/));
+  await fireEvent.press(screen.getByLabelText(/^Highlight\. An athlete's game play/));
   expect(onHighlight).toHaveBeenCalledTimes(1);
   await fireEvent.press(screen.getByLabelText(/^Beyond moment\. Your own workout/));
   expect(onBeyond).toHaveBeenCalledTimes(1);
