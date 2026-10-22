@@ -62,6 +62,7 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 | [STAGING_DATABASE_CATCHUP.md](engineering/STAGING_DATABASE_CATCHUP.md) | Ordered SQL checklist to bring staging up to date (41 files since 2026-10-01, security fix first); prepared 2026-10-21, not run. |
 | [TOOLING.md](engineering/TOOLING.md) | MCP servers for assistants (Playwright, Expo, Canva, Supabase dev, Figma): what each is for, sign-in, safety limits. |
 | [TROUBLESHOOTING.md](engineering/TROUBLESHOOTING.md) | Metro, Expo, env and payment failures and their fixes. |
+| [METRO-01](engineering/evidence/METRO-01.md) | Exact SDK request-abort reproduction, narrow streaming-render patch and local verification limits. |
 | [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) | What testers do per role, and what to ask them. |
 | [DATA_PRIVACY_MAP.md](engineering/DATA_PRIVACY_MAP.md) | What personal data is collected, where it lives, and the gaps. |
 | [MENU_STYLE_MAP.md](engineering/MENU_STYLE_MAP.md) | Shared sheet/menu components and which screens use them. |

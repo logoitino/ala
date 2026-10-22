@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  '@expo/router-server@58.0.14':
+    hash: c4bmnqk2mmbfdrfcsmg5vxcsce
+    path: patches/@expo__router-server@58.0.14.patch
   expo-video@58.0.11:
     hash: spd627umwzxzvvefiidczrrjpa
     path: patches/expo-video@58.0.11.patch
@@ -5545,7 +5548,7 @@ snapshots:
       '@expo/plist': 0.10.1
       '@expo/prebuild-config': 58.0.14(typescript@6.0.3)
       '@expo/require-utils': 58.0.4(typescript@6.0.3)
-      '@expo/router-server': 58.0.14(@expo/metro-runtime@58.0.14)(expo-constants@58.0.12)(expo-font@58.0.8(expo@58.0.14)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(expo-router@58.0.23)(expo-server@58.0.5)(expo@58.0.14)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@expo/router-server': 58.0.14(patch_hash=c4bmnqk2mmbfdrfcsmg5vxcsce)(@expo/metro-runtime@58.0.14)(expo-constants@58.0.12)(expo-font@58.0.8(expo@58.0.14)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(expo-router@58.0.23)(expo-server@58.0.5)(expo@58.0.14)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@expo/schema-utils': 58.0.2
       '@expo/spawn-async': 1.8.0
       '@expo/ws-tunnel': 2.0.1(ws@8.21.3)
@@ -5875,7 +5878,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@expo/router-server@58.0.14(@expo/metro-runtime@58.0.14)(expo-constants@58.0.12)(expo-font@58.0.8(expo@58.0.14)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(expo-router@58.0.23)(expo-server@58.0.5)(expo@58.0.14)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@expo/router-server@58.0.14(patch_hash=c4bmnqk2mmbfdrfcsmg5vxcsce)(@expo/metro-runtime@58.0.14)(expo-constants@58.0.12)(expo-font@58.0.8(expo@58.0.14)(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(expo-router@58.0.23)(expo-server@58.0.5)(expo@58.0.14)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       debug: 4.4.3
       expo: 58.0.14(patch_hash=lfnogteup6bgk5lmhhco4hvsge)(@babel/core@7.29.7)(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.14)(expo-router@58.0.23)(react-dom@19.3.0(react@19.3.0))(react-native-web@0.21.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-native-webview@14.0.1(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)(typescript@6.0.3)

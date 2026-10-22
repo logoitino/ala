@@ -464,6 +464,20 @@
       ],
       "limitation": "Local invoked evidence only. Migration/Edge application, actual Stripe per-charge fees, captured transfer/bank settlement, old clients/in-flight release compatibility, guardian Terms and alert delivery remain unverified. Flat covered fee is an estimate, not actual processor cost. Prepared quote retention/erasure/quota and gift-linked Aura eligibility are separate Data/Security/legal release gaps.",
       "next": "COMMERCE with Finance/Security/Data/SUPPORT reviews hosted compatibility and source-backed test capture; owner/counsel approve legal disclosures and live money. No second credit writer or background monitor."
+    },
+    {
+      "id": "metro-request-cancellation",
+      "area": "tooling",
+      "owner": "RELIABILITY",
+      "status": "implemented",
+      "detects": "Installed SDK58 pre-shell request cancellation, connected HTML/static export and genuine-error visibility through pnpm metro:test in full check/CI.",
+      "evidence": [
+        "scripts/__tests__/metro-request-abort.test.mjs",
+        "patches/@expo__router-server@58.0.14.patch",
+        "docs/engineering/evidence/METRO-01.md"
+      ],
+      "limitation": "Local Node HTTP/real React plus isolated Expo navigation/resource fixtures; not a browser/device/hosted monitor or full clean-install proof.",
+      "next": "SUPPORT/QA verify the owner journey after restarting old Metro processes; review/port or remove versioned patch on SDK upgrades."
     }
   ]
 }

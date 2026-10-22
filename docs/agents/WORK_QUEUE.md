@@ -1,6 +1,13 @@
 <!-- Current priorities and dated task evidence; queue assignments do not authorize hosted operations or release. -->
 # Specialist work queue
 
+## METRO-01 — SDK58 request cancellation repair (2026-10-22)
+
+ENGINEERING/FULLSTACK owns the narrow dependency repair, paired with SUPPORT/RELIABILITY.
+Local implementation, independent trace/review and original verification receipts are in
+[METRO-01](../engineering/evidence/METRO-01.md). Next QA/owner: restart existing Metro
+terminals, reload and confirm the original journey. No role/registry/model changes.
+
 ## Current gift-release handoff — COORD-02 (2026-10-22)
 
 [COORD-02](COORD-02.md) is the current whole-team reading path. All **115 callable role

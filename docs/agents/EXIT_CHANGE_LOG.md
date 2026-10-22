@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-22 · plan `6cdb7c8b8436` → `363314bc533d` · announced by Codex METRO-01 source repair
+
+App at announcement: commit `89a4c7846233f4c9c1aa46ff73d5e7408b12ddae` + 5 uncommitted file(s), source `363314bc533d200f0537cfde254f00f8d4f5bef7cf887d25e87f54d14edb8801`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `.github/workflows/ci-checks.yml a5d987bbdaacf4d28bf42796cc0402bd3c62d9902c5433d3a1d76fecbe7eb979`, `package.json 531bcb9e771a4e62dfcd831a0f1f1788ff89c5557f8bd1cf936d4341f926e81d`, `patches/@expo__router-server@58.0.14.patch b038a61630b068ba93e0f0819b0355e86502410033f4ba99666c80d91c6d28f8`, `pnpm-lock.yaml 673ea75682af43bb4732bc3af7f38b0ed24af5093c26d1234f2448082b1e0300`, `scripts/__tests__/metro-request-abort.test.mjs d7e4cf96e7fde0833554d6cd75ef24fba6c0972d9d1cc533d74d53f0d85733d6`; removed `.github/workflows/ci-checks.yml 9b56372b66c25a3bbf1d6701d788a7302828f828ea0f148ee212911ea577d3d9`, `package.json 8a78dac8348ac78b167d4ceaac3a71c59291a36eef952618aa0354922ff3cdd3`, `pnpm-lock.yaml 36be82a6d4f3aa16d19c262d38b27f3894b59b3512cd320377587aeadf421208`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-22 · plan `a25b21173011` → `6cdb7c8b8436` · announced by Codex COORD-02 gift release handoff
 
 App at announcement: commit `4c54606595a0bb604c5a22e356e098460559c3ac` + 2 uncommitted file(s), source `6cdb7c8b8436633c40aacb834fc2967f026697a56ae24cad7ab3bceae4983a63`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

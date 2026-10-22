@@ -87,7 +87,7 @@
         "development, preview, production build profiles"
       ],
       "plan": "Free build quota (unverified)",
-      "decision": "In use",
+      "decision": "In use; 2026-10-22 METRO-01 versioned Router Server58.0.14 pre-shell cancellation patch with installed-SDK local regressions; SDK/provider/hosting versions unchanged, no deployment. See evidence/METRO-01.md.",
       "packages": [
         "expo",
         "expo-updates",

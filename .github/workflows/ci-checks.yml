@@ -60,6 +60,10 @@ jobs:
       - name: Typecheck admin portal
         run: pnpm --filter @tapuai/admin-portal typecheck
 
+      # METRO-01 uses the installed SDK: lost sockets must not hide real SSR failures.
+      - name: Expo server request cancellation regression
+        run: pnpm metro:test
+
       - name: Check front-of-house docs match product constants
         run: pnpm docs:check
 

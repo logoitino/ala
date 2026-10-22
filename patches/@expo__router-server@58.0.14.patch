@@ -1,0 +1,23 @@
+diff --git a/build/server/renderStreamingContent.js b/build/server/renderStreamingContent.js
+index 4f165f5..d6e3ed7 100644
+--- a/build/server/renderStreamingContent.js
++++ b/build/server/renderStreamingContent.js
+@@ -244,6 +244,18 @@ async function getStreamingContent(location, options) {
+                     console.error('SSR streaming render error:', error);
+                 }
+             }
++        }).catch((error)=>{
++            const signal = options?.request?.signal;
++            // METRO-01: a disconnected client has no response to receive; keep its
++            // pre-shell cancellation out of Metro's renderer-error/overlay wrappers.
++            if (!isStatic && signal?.aborted && error === signal.reason && error?.name === 'AbortError') {
++                return new ReadableStream({
++                    start (controller) {
++                        controller.close();
++                    }
++                });
++            }
++            throw error;
+         });
+         if (isStatic) {
+             await stream.allReady;

@@ -1,5 +1,5 @@
 {
- "planVersion": "6cdb7c8b8436",
+ "planVersion": "363314bc533d",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1460,7 +1460,7 @@
    ".dockerignore f1b019dabc767e59cf0af392af423c7bbdb714787e97017aff521d5f74315125",
    ".github/CODEOWNERS a80c2075d710564202383814aa2842412f03a60e97b7c2ef355020825eb6bd35",
    ".github/pull_request_template.md 97bc1b0241b01bbcbc356d600a05eeebb4615967220ba7832456164c25826f82",
-   ".github/workflows/ci-checks.yml 9b56372b66c25a3bbf1d6701d788a7302828f828ea0f148ee212911ea577d3d9",
+   ".github/workflows/ci-checks.yml a5d987bbdaacf4d28bf42796cc0402bd3c62d9902c5433d3a1d76fecbe7eb979",
    ".github/workflows/exit-release.yml 20e129c275cb8915908d9554c5477f9ca8625f2c39a07aa5c3bb5335b94dc70a",
    ".npmrc 1cf445caa9452da6f460c72e8777c9d5452caa4d02f0f6a17717bce818a0a3bc",
    "app.json b7c55adf9886178318b9a475422a1a361cb6a3211b82f774104c77e460a1ec88",
@@ -2520,7 +2520,7 @@
    "infrastructure/terraform/azure/versions.tf c08663049560d0230464c562c62a6a73687b9441bf5b349961288e92ed6936f0",
    "infrastructure/terraform/cloud-init.yml 679b43051113e498f07384c18cec354edc0476668ddca0d7acc9d12582d96f33",
    "infrastructure/terraform/README.md 6f9b6a76c77b8b28024413974dd78f25f0e8bcaeebb34a70aa878b547aa3fac3",
-   "package.json 8a78dac8348ac78b167d4ceaac3a71c59291a36eef952618aa0354922ff3cdd3",
+   "package.json 531bcb9e771a4e62dfcd831a0f1f1788ff89c5557f8bd1cf936d4341f926e81d",
    "packages/shared-types/admin/adminMfa.ts 6b67c8581ca0a2324c111cd56e4d31d2771d5f4ee2d9610e630efad342302ac9",
    "packages/shared-types/admin/analytics.ts eea060b3e447b6572ea1c6d31594542c720ba48c1bd508b7513500ab164e8898",
    "packages/shared-types/admin/analyticsCatalog.ts 01fdfb40b2c6ced520078e7a53f875c52f14e090b1a20c8ebca7866d02f5dd0f",
@@ -2557,9 +2557,10 @@
    "packages/shared-types/timedSportQuiz.ts bbc8672c55589f4a6369432aba9e55c90da25e70fc278f6c6f93aa33a356b825",
    "packages/shared-types/triviaPlayTogether.ts a939c84bda82cbfeda34983bf166ea8c4817a7f69db51a7c4d2499773a0e1ebb",
    "packages/shared-types/tsconfig.json 77a12f48c2757eb5b394f850dc4ab7e3edb178ad95cd7fe920169724f1bce830",
+   "patches/@expo__router-server@58.0.14.patch b038a61630b068ba93e0f0819b0355e86502410033f4ba99666c80d91c6d28f8",
    "patches/expo-video@58.0.11.patch 4eb49a84e89ddc7476025a47315dbc5a46e3df8b8882ab48027ec0423905f171",
    "patches/expo@58.0.14.patch ebb5bf534a9dabf276e39ead040727097971ede1ba297dbde15b7b7afe5758b2",
-   "pnpm-lock.yaml 36be82a6d4f3aa16d19c262d38b27f3894b59b3512cd320377587aeadf421208",
+   "pnpm-lock.yaml 673ea75682af43bb4732bc3af7f38b0ed24af5093c26d1234f2448082b1e0300",
    "pnpm-workspace.yaml 60ce4d1dbf137701a4683d171391c51662700c2f3e32a7caab8b2efc22540e65",
    "scripts/__tests__/check-feature-admin.test.mjs 02e7f06f1309c8812200e58c12a43ba60b8514acfc8badbde462678f7cee807c",
    "scripts/__tests__/detection.test.mjs 1353e4b50f2e79b16c8936b9031f5b0576e58242b6c0cfb2dddbab22ebffe427",
@@ -2568,6 +2569,7 @@
    "scripts/__tests__/ip-docs.test.mjs 7cb5a1f5f4a3fdec4110736165113ca06f5fba06fff59cec84061eff2935b586",
    "scripts/__tests__/media-storage-lineage.test.mjs d465c55ed585f4159c235b4237c6f4b3188fb096cdfcce8985e1c90fef7edd8c",
    "scripts/__tests__/media-test-assets.test.mjs 6269cda1929abe1479ccc417326a75a93011ce24b3d4cdd4c100b3e4357d719b",
+   "scripts/__tests__/metro-request-abort.test.mjs d7e4cf96e7fde0833554d6cd75ef24fba6c0972d9d1cc533d74d53f0d85733d6",
    "scripts/__tests__/recovery-capsule.test.mjs 180d57a66dd8b63ce916bac41b754c1796356790845580da9f6b2b84ed55f15d",
    "scripts/__tests__/sql-functions.test.mjs 740a6c466f00b779ad9db32bdfb6b40202aab779edb9d49b61878331958ee2c9",
    "scripts/app-data-boundary-baseline.json ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",

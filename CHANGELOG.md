@@ -9,6 +9,12 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-22 — Metro disconnected-request repair (METRO-01)
+
+- Version SDK58 Router Server's narrow pre-shell cancellation fix; retain real errors,
+  static exports and stream cleanup. Add installed-SDK11-case regression to full check/CI.
+- Restart existing Metro terminals to load the patch. Local evidence: [METRO-01](docs/engineering/evidence/METRO-01.md).
+
 ## 2026-10-22 — Refresh Claude entry point
 
 - Keep STATE/AGENTS imports and add current conventions, gift-release/team, counsel and IP

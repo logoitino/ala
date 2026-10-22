@@ -1,6 +1,22 @@
+<!-- Troubleshooting follows observed SDK sources; stale processes need restart after dependency repairs. -->
 # Tapua'i Diagnostic & Troubleshooting Playbook
 
 Pair with [docs/ONBOARDING.md](../ONBOARDING.md). Prefer running [`apps/mobile/src/backend/db/schema.sql`](../../apps/mobile/src/backend/db/schema.sql) over one-off policies when the project is empty. This is a **pnpm monorepo** — run Expo from the repo root with `pnpm mobile`.
+
+---
+
+## 0a. Metro: `This operation was aborted` at `http.js:105`
+
+An unfinished browser response closing cancels Expo's server-render request. SDK58's
+Router Server previously let the pre-shell cancellation reach Metro's error logger/overlay.
+[METRO-01](evidence/METRO-01.md) patches that exact request-correlated cancellation;
+genuine errors and static export failures remain visible. The versioned dependency patch
+ships through root pnpm configuration; no app exception filter is needed.
+
+Stop the old Metro terminal with Ctrl+C, then run `pnpm mobile` from the root on Node24
+and reload the app/browser. Existing processes keep the old module in memory. Run
+`pnpm metro:test` to check installed patch behavior. If it recurs, retain the redacted
+full stack/platform/navigation steps for SUPPORT; a different AbortError needs its own trace.
 
 ---
 
