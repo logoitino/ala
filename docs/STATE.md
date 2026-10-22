@@ -343,6 +343,11 @@ the staging catch-up from the repo sources, proves it ends identical to developm
 first, and checks cap, search privacy, confirmation and direct writes. Not applied: a session hook now refuses
 creating security definer functions through the Supabase plugin, so both hosted steps wait for the owner (SQL
 Editor) or a hook change.
+
+3. **Photo stories `20261007230000`.** Already on both projects (migration recorded and `reel_photos` present on
+each, checked 2026-10-22); nothing to apply. A read-only definition comparison between the two projects was refused
+by a session hook (catalog scanning), so cross-project identity of its objects is not re-proved here; the failed-upload
+cleanup in workstream 5 covers this area with its own replay.
 Also seen, not caused here: Beyond replay 56/57 ("duplicate upload refused") at HEAD.
 
 ### 2026-10-22 — Metro request cancellation (METRO-01)
