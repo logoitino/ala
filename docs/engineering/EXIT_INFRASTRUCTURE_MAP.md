@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `49755cf71dce` |
-| Last announced plan | `49755cf71dce` — up to date |
+| Exit plan version (what the app uses on Supabase) | `e9e50cf56b87` |
+| Last announced plan | `e9e50cf56b87` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
-| Latest migration | `20261022152000_no_cut_gifts_optional_tips.sql` (56 files) |
-| Canonical schema hash | `152ed5f7f51cb67b3c21a3181ca3a4ff3c4dabcfd57356e35278e7225947c4c6` (`schema.sql`) |
-| Complete source/configuration content hash | `49755cf71dceb0df2073feae5cff17d564f85c026176a47c3f7762b8d09d8e68` across 1300 files |
+| Latest migration | `20261022152000_no_cut_gifts_optional_tips.sql` (57 files) |
+| Canonical schema hash | `077c50dceaacd7305241404a3f397bbdcca5f285ab6641b2c4469c766d2974e3` (`schema.sql`) |
+| Complete source/configuration content hash | `e9e50cf56b8730ae892c4b34993fd1693aebb816248927f152461fba17e10110` across 1302 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -151,7 +151,7 @@ Counts come from static statements in `schema.sql` and the source; the live data
 | Extensions | 1 | `pgcrypto` |
 | Realtime publication tables | 4 | `public.app_runtime_config`, `public.cheer_polls`, `public.game_events`, `public.games` |
 | Storage buckets | 6 | `avatars`, `beyond_game`, `fan_zone`, `game_highlights`, `reel_vault`, `reels` |
-| Migration files | 56 | latest `20261022152000_no_cut_gifts_optional_tips.sql` |
+| Migration files | 57 | latest `20261022152000_no_cut_gifts_optional_tips.sql` |
 | Edge Functions | 3 | `create-payment-intent` (self-host allowlist), `create-stripe-account` (self-host allowlist), `stripe-webhook` (excluded: Must not be deployed until P1-05 retires the client tips insert (STATE §0, §6 item 3).) |
 | Expo API routes | 6 | `create-payment-intent`, `create-payout`, `create-stripe-account`, `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload` |
 | Auth methods called | 17 | `exchangeCodeForSession` (PKCE code exchange after a redirect), `getSession` (Read the local session), `getUser` (Validate the current session with the server), `mfa.challenge` (TOTP challenge), `mfa.enroll` (TOTP factor enrollment), `mfa.getAuthenticatorAssuranceLevel` (Read aal1 / aal2), `mfa.listFactors` (List MFA factors), `mfa.unenroll` (TOTP removal), `mfa.verify` (TOTP verification), `onAuthStateChange` (Session change events), `setSession` (Restore a session from tokens), `signInWithIdToken` (Native Apple / Google ID token), `signInWithOAuth` (OAuth redirect (Google)), `signInWithOtp` (Email link / one-time code), `signInWithPassword` (Email and password sign-in), `signOut` (Sign out), `signUp` (Email sign-up) |

@@ -228,7 +228,7 @@ Mentions of Tapua'i accounts on a Highlight. The uploader may add up to three ac
 
 **RLS:** anyone can read `confirmed`. The tagged account and the uploader can also read their pending rows. No client INSERT/UPDATE.
 
-RPCs: `search_taggable_accounts(search_query)` (username or first name only), `tag_reel_accounts(target_reel_id, profile_ids)`, `get_reel_account_tags(target_reel_id)`, `get_my_account_tags()`, `confirm_account_tag(target_tag_id, tag_action)`. `account_tag_label` builds the public name and is not granted to the app. `tag_reel_accounts` rejects missing identity and non-uploader writes. `confirm_account_tag` returns the new status only when it updates an owned pending mention; missing, foreign, or already answered rows return SQL `NULL`. Revised before first application on 2026-10-07; not parsed or exercised against Postgres locally.
+RPCs: `search_taggable_accounts(search_query)` (since PRIV-01: username prefix of 3+ characters; hidden and blocked accounts never appear), `tag_reel_accounts(target_reel_id, profile_ids)`, `get_reel_account_tags(target_reel_id)`, `get_my_account_tags()`, `confirm_account_tag(target_tag_id, tag_action)`. `account_tag_label` builds the public name and is not granted to the app. `tag_reel_accounts` rejects missing identity and non-uploader writes and, since 20261022150000, silently skips a profile in a block with the uploader. `confirm_account_tag` returns the new status only when it updates an owned pending mention; missing, foreign, or already answered rows return SQL `NULL`. On development since 2026-10-17; replay `scripts/replay/account-tags-replay.mjs`.
 
 ### `reel_photos`
 

@@ -1548,7 +1548,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `increment_reel_tips` | `HIGHLIGHTS` | `@/lib/reels.ts`, `sql:check constraint` | `reels` | — |
 | `insert_support_signal` | `TELEMETRY` | By hand: Private helper validates and appends client/trusted observations. | `support_signals` | — |
 | `is_admin_or_db` | `BACKEND` | `sql:admin_add_school_confirmer`, `sql:admin_decide_verification`, `sql:admin_revoke_school_confirmer` +8 more | — | — |
-| `is_blocked_between` | `PROFILE` | `sql:beyond_can_view`, `sql:beyond_legacy_posts`, `sql:beyond_missing` +27 more | — | `user_blocks` |
+| `is_blocked_between` | `PROFILE` | `sql:beyond_can_view`, `sql:beyond_legacy_posts`, `sql:beyond_missing` +28 more | — | `user_blocks` |
 | `is_guardian_of_profile` | `ROSTERS` | `sql:challenge_counts_visible`, `sql:challenge_missing_dependencies`, `sql:viewer_relationship` | — | `players`, `profiles` |
 | `is_guardian_of_record` | `ROSTERS` | `sql:guardian_list_minors`, `sql:guardian_view`, `sql:minor_status_json` +3 more | — | `players`, `profiles` |
 | `is_minor_band` | `BACKEND` | `sql:accept_guardian_invite`, `sql:admin_minor_report`, `sql:admin_set_birth_month` +17 more | — | — |

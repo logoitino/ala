@@ -10697,6 +10697,7 @@
         "sql:reels_apply_tag_defaults",
         "sql:request_friend",
         "sql:sign_guardian_consent",
+        "sql:tag_reel_accounts",
         "sql:viewer_relationship"
       ],
       "manual": null,

@@ -10,6 +10,15 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-22 · plan `49755cf71dce` → `e9e50cf56b87` · announced by Claude Code workstream 4 (account tags: blocked-tag fix 20261022150000 + staging catch-up replay; not applied)
+
+App at announcement: commit `f4f0be19ebe5383af6d1389bda4ba2c9608e8434` + 5 uncommitted file(s), source `e9e50cf56b8730ae892c4b34993fd1693aebb816248927f152461fba17e10110`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Migration files** — added `20261022150000_account_tags_respect_blocks.sql`; removed —. Notify: `REDUNDANCY_LEAD`, `DATABASE_MIGRATIONS`, `EXIT_DATABASE`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+- **Source/configuration content fingerprints** — added `apps/mobile/src/backend/db/schema.sql 077c50dceaacd7305241404a3f397bbdcca5f285ab6641b2c4469c766d2974e3`, `packages/shared-types/admin/supportTopology.json a2c11b8c7d578d00b9fdd89fbdabe080cf9e1fe3a22ce68587335aa886ab3470`, `scripts/replay/account-tags-replay.mjs c4920cc126dfa85d1a4f7d4f8dba220acee5600fb61eb5da8766a239ffc5f6f9`, `supabase/migrations/20261022150000_account_tags_respect_blocks.sql 9708707d92d74f30eb6ff6de2eee3d6013cc94e314082bfae8791e69f7f86fcd`, `supabase/migrations/README.md 9296c81da25d66a3ea655d973e5d9598de2e639e54b279ebdc586a4828e8b53d`; removed `apps/mobile/src/backend/db/schema.sql 152ed5f7f51cb67b3c21a3181ca3a4ff3c4dabcfd57356e35278e7225947c4c6`, `packages/shared-types/admin/supportTopology.json e123e31ab22b04b15f417c977a157dbd2cd69048245ab74150397de6d35b4569`, `supabase/migrations/README.md aac1ab1a3de71a7e0dd3a563d38552e7615ec6519ea2db8d2fe8e71a73b9c083`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-22 · plan `363314bc533d` → `49755cf71dce` · announced by Claude Code workstream 4 (coach-level 20261017090000 fixed + applied to development)
 
 App at announcement: commit `9f9858148ba9fc5bf636dd38f4ae5db13f3583f0` + 5 uncommitted file(s), source `49755cf71dceb0df2073feae5cff17d564f85c026176a47c3f7762b8d09d8e68`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

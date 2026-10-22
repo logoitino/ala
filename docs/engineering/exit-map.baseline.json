@@ -1,5 +1,5 @@
 {
- "planVersion": "49755cf71dce",
+ "planVersion": "e9e50cf56b87",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1034,6 +1034,7 @@
    "20261022120000_drop_public_update_profiles.sql",
    "20261022130000_vote_and_hype_limits.sql",
    "20261022140000_record_stripe_kyc_dedupe.sql",
+   "20261022150000_account_tags_respect_blocks.sql",
    "20261022152000_no_cut_gifts_optional_tips.sql"
   ],
   "edgeFunctions": [
@@ -1672,7 +1673,7 @@
    "apps/mobile/src/backend/db/connectAccountContext.replay.mjs 1757aec7830468eec917d207518f95d3880a9055730dc7810cb6ee8ee0ee3bfa",
    "apps/mobile/src/backend/db/failedPhotoStoryCleanup.replay.py edb77e6bcdfdeb58af63e4c52eb8636e4f3ad835e05ee637e6aa6396e8ed4dd7",
    "apps/mobile/src/backend/db/notifications.replay.mjs 9f04f4a1e24e6360331e3183c56026fe6dd492e22ab75faee971fe5714ca4dcc",
-   "apps/mobile/src/backend/db/schema.sql 152ed5f7f51cb67b3c21a3181ca3a4ff3c4dabcfd57356e35278e7225947c4c6",
+   "apps/mobile/src/backend/db/schema.sql 077c50dceaacd7305241404a3f397bbdcca5f285ab6641b2c4469c766d2974e3",
    "apps/mobile/src/backend/services/__fixtures__/fanZoneMp4Fixture.ts 337d454a4a404dbaa1c9abc3dfdcf7dec05462c34d7361149ff170ea1026550a",
    "apps/mobile/src/backend/services/__tests__/fanZoneMp4.test.ts d966212a5b0f134315f3b6ffdc6af7fd8503adc33d49d24f97fab449e1587ec5",
    "apps/mobile/src/backend/services/fanZoneMedia.ts 73df19ed56e9f0b5e2eb11a5a66310cf7e86d91e41e7105a5d5bcc35dfc8ad39",
@@ -2541,7 +2542,7 @@
    "packages/shared-types/admin/operations.ts 086a153b5082dc65feb4e3ea80f57499990648f31b3cc274d1777f133a37c838",
    "packages/shared-types/admin/reports.ts bf13c585407a11a6f6722bd7593c7d36897963a6d817bca477f5d787e7431d31",
    "packages/shared-types/admin/revenueModel.ts 5d309211171969bf86dafd6ff8913ee730eccdb6f7ba4ea2e4395673199772fc",
-   "packages/shared-types/admin/supportTopology.json e123e31ab22b04b15f417c977a157dbd2cd69048245ab74150397de6d35b4569",
+   "packages/shared-types/admin/supportTopology.json a2c11b8c7d578d00b9fdd89fbdabe080cf9e1fe3a22ce68587335aa886ab3470",
    "packages/shared-types/admin/teamFlow.ts 8a6d50e6aa34a7b4abd678abd8be91f92dc19e48f473853dafe6f17f3278d5f8",
    "packages/shared-types/admin/unappliedControls.ts 33cd2660faba9aceecd40096acdc8f8d0fa989d0a71583fed432b6fe564261c2",
    "packages/shared-types/backendConnection.ts 890d4399e0769f669a9d327a6ddd6a8c0c6bafc981ef3ecd1acffb466f40554a",
@@ -2599,6 +2600,7 @@
    "scripts/life-bank-sql.mjs 28357a9afdbc0a9f1803dfebde5df2e3828ee24f0bfa235ff77343f07c1ed148",
    "scripts/media-test-assets.mjs b48f4882a79540f0e6fbb3abddb1e10accbf494ea2720f715dfdd0805e117412",
    "scripts/recovery-capsule.mjs ddedf5ff97c1c2e353aa644d95d9672e683aa99b85ce80a19abb3582284d77f5",
+   "scripts/replay/account-tags-replay.mjs c4920cc126dfa85d1a4f7d4f8dba220acee5600fb61eb5da8766a239ffc5f6f9",
    "scripts/replay/anon-branch-replay.mjs f70a2ebfd32d1e131d186fffa2c67ba6647bf4208df34068521dccc602b1b0c2",
    "scripts/replay/athlete-sports-replay.mjs a3e36459ce8a1f2b97a254de5f763a123179702381ab283d5540405d0d305567",
    "scripts/replay/beyond-game-replay.mjs 7b04c6609e49de590c058fa435967a276a222690899496e21870120cfba99a5b",
@@ -2733,8 +2735,9 @@
    "supabase/migrations/20261022120000_drop_public_update_profiles.sql 91579cfbb99eabdc8ffb93bafd4954dcfbbcb4314bfc95ffe94c67a32a840633",
    "supabase/migrations/20261022130000_vote_and_hype_limits.sql 41935a0d030280173c7a9c5d95d1e94f4e955a90382ecfd0e04d78a9afe08ea6",
    "supabase/migrations/20261022140000_record_stripe_kyc_dedupe.sql 4853323e75a3e8d55fdfd0bee00c2d43fd6ad217a40ef4e54ac0b7f4671a8b48",
+   "supabase/migrations/20261022150000_account_tags_respect_blocks.sql 9708707d92d74f30eb6ff6de2eee3d6013cc94e314082bfae8791e69f7f86fcd",
    "supabase/migrations/20261022152000_no_cut_gifts_optional_tips.sql f46a7d2aeba23cc50150cdf99c3f04d2bbf76ccbf745b4400f123ab3d55cdee9",
-   "supabase/migrations/README.md aac1ab1a3de71a7e0dd3a563d38552e7615ec6519ea2db8d2fe8e71a73b9c083",
+   "supabase/migrations/README.md 9296c81da25d66a3ea655d973e5d9598de2e639e54b279ebdc586a4828e8b53d",
    "supabase/player_vault_lock.sql 7268b913a13c5798260e25bb3bade574a0969ebf408c8ffe563e3339a0b07c98",
    "supabase/players.sql 8bc9c0a10168e0b611ef22cf116928ee9d3a9e5bb3c0140ec197fc98f6a0e205",
    "supabase/profile_customization.sql c5d839c3062d71946580a6b857da85484cef0bb1e92684edd89c20dd17801bee",
