@@ -1093,7 +1093,9 @@
       "sqlReaders": [
         "beyond_enabled",
         "friend_requests_enabled",
-        "guardian_links_enabled"
+        "guardian_links_enabled",
+        "monetization_tips_enabled",
+        "prepare_tip_payment_context"
       ],
       "removers": [],
       "triggers": [],
@@ -2950,7 +2952,25 @@
       ],
       "triggers": [],
       "screens": [
-        "/admin/books"
+        "/admin",
+        "/admin/analytics",
+        "/admin/audience",
+        "/admin/books",
+        "/admin/departments",
+        "/admin/health",
+        "/admin/product",
+        "/admin/product/coverage",
+        "/admin/product/features",
+        "/admin/product/people",
+        "/admin/product/profile",
+        "/admin/product/sign-in",
+        "/admin/revenue",
+        "/admin/trends",
+        "portal:/",
+        "portal:/analytics",
+        "portal:/manage",
+        "portal:/money",
+        "portal:/operations"
       ]
     },
     {
@@ -3205,16 +3225,18 @@
       "name": "notification_payment_contexts",
       "kind": "table",
       "owner": "COMMERCE",
-      "purpose": "Immutable server-bound test payment purpose/actor/athlete/quote allocation evidence. Notification authority is constrained false; no gift credit source.",
+      "purpose": "Private prepared test quote allocation and actor/athlete evidence, with provisional-to-real intent binding only; provider observations remain separate. No gift-credit or receipt-delivery authority.",
       "writers": [],
       "readers": [],
       "sqlWriters": [
         "apply_notification_payment_event",
+        "prepare_tip_payment_context",
         "record_notification_payment_context"
       ],
       "sqlReaders": [
         "apply_notification_payment_event",
-        "record_notification_payment_context"
+        "record_notification_payment_context",
+        "tips_payment_context_guard"
       ],
       "removers": [],
       "triggers": [],
@@ -3459,12 +3481,12 @@
         "is_school_operator_for",
         "minor_has_consent",
         "payee_for_player",
+        "prepare_tip_payment_context",
         "publish_spotlight_award",
         "quiz_fact_audience_ok",
         "quiz_fact_month_bucket",
         "quiz_fact_text_problems",
         "rally_manager_role",
-        "record_notification_payment_context",
         "record_stripe_kyc",
         "report_reel",
         "search_local_entities",
@@ -3695,6 +3717,7 @@
         "parent_set_player_consent",
         "payee_for_player",
         "player_hidden_from_viewer",
+        "prepare_tip_payment_context",
         "preview_guardian_invite",
         "privacy_settings_json",
         "profile_age_band",
@@ -6222,20 +6245,23 @@
         "get_admin_malo_breakdown",
         "get_admin_platform_metrics",
         "get_admin_reports",
+        "get_company_revenue_summary",
         "get_custodial_summary",
         "get_donations_to_thank",
         "get_fan_tip_history",
         "get_my_donation_thanks",
         "get_received_malo",
         "sync_company_revenue_logs",
-        "thank_donation"
+        "thank_donation",
+        "tips_payment_context_guard"
       ],
       "removers": [],
       "triggers": [
         "company_revenue_tips_ai → company_revenue_after_source_insert",
         "tips_platform_tip_revenue_ai → tips_platform_tip_revenue",
         "tips_rally_before_insert → tips_rally_before_insert",
-        "tips_card_fee_revenue_ai → tips_card_fee_revenue"
+        "tips_card_fee_revenue_ai → tips_card_fee_revenue",
+        "tips_payment_context_guard_bi → tips_payment_context_guard"
       ],
       "screens": [
         "/",
@@ -9822,7 +9848,8 @@
       "writes": [],
       "reads": [
         "company_revenue_logs",
-        "disbursements"
+        "disbursements",
+        "tips"
       ]
     },
     {
@@ -10791,6 +10818,7 @@
         "sql:close_ledger_period",
         "sql:record_ledger_entry",
         "sql:reopen_ledger_period",
+        "sql:sync_company_revenue_logs",
         "sql:void_ledger_entry"
       ],
       "manual": null,
@@ -10801,7 +10829,9 @@
       "name": "ledger_period_is_closed",
       "owner": "CONTROLLER",
       "callers": [
+        "sql:get_company_revenue_summary",
         "sql:record_ledger_entry",
+        "sql:sync_company_revenue_logs",
         "sql:void_ledger_entry"
       ],
       "manual": null,
@@ -10895,6 +10925,7 @@
         "sql:create_rally",
         "sql:increment_backer_count",
         "sql:increment_reel_tips",
+        "sql:prepare_tip_payment_context",
         "supabase/functions/create-payment-intent/index.ts"
       ],
       "manual": null,
@@ -11019,6 +11050,18 @@
       ],
       "reads": [
         "reels"
+      ]
+    },
+    {
+      "name": "monetization_tips_enabled",
+      "owner": "COMMERCE",
+      "callers": [
+        "sql:prepare_tip_payment_context"
+      ],
+      "manual": "Private trigger/quote lookup of literal published optional-extras flag; missing/nonboolean is OFF. No write, customer grant or gift-credit authority.",
+      "writes": [],
+      "reads": [
+        "app_runtime_config"
       ]
     },
     {
@@ -11356,6 +11399,20 @@
       "manual": null,
       "writes": [],
       "reads": [
+        "profiles"
+      ]
+    },
+    {
+      "name": "prepare_tip_payment_context",
+      "owner": "COMMERCE",
+      "callers": [],
+      "manual": "Service-only test quote: authenticated sender/athlete, gross gift and optional extras; default-off published admission and private provisional intent. Immutable allocation retained for one real PaymentIntent binding; notification authority remains false.",
+      "writes": [
+        "notification_payment_contexts"
+      ],
+      "reads": [
+        "app_runtime_config",
+        "players",
         "profiles"
       ]
     },
@@ -14506,13 +14563,12 @@
       "name": "record_notification_payment_context",
       "owner": "COMMERCE",
       "callers": [],
-      "manual": "Service-only immutable server quote context, actor/purpose/athlete/currency/integer allocation bound; notification authority hard false.",
+      "manual": "Service-only one-time promotion of an immutable prepared test quote to its real PaymentIntent; exact replay only, no retargeting or gift/Aura/notification credit.",
       "writes": [
         "notification_payment_contexts"
       ],
       "reads": [
-        "notification_payment_contexts",
-        "players"
+        "notification_payment_contexts"
       ]
     },
     {
@@ -15434,6 +15490,19 @@
       "reads": []
     },
     {
+      "name": "tips_payment_context_guard",
+      "owner": "COMMERCE",
+      "callers": [
+        "trigger:tips_payment_context_guard_bi on tips"
+      ],
+      "manual": "Before insert: optional gift extras match a service-prepared real PaymentIntent allocation and original actor/athlete/cents; provisional/mismatched/reused references denied. Previously issued quotes survive an OFF publish; no new business writer.",
+      "writes": [],
+      "reads": [
+        "notification_payment_contexts",
+        "tips"
+      ]
+    },
+    {
       "name": "tips_platform_tip_revenue",
       "owner": "LEDGER",
       "callers": [
@@ -16085,6 +16154,14 @@
         "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx",
         "apps/mobile/src/frontend/components/Rally/RallyCard.tsx",
         "apps/mobile/src/frontend/components/Rally/RallyMeter.tsx",
+        "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx"
+      ]
+    },
+    {
+      "group": "buttons",
+      "key": "MONETIZATION_TIPS_ENABLED",
+      "path": "buttons.MONETIZATION_TIPS_ENABLED",
+      "readers": [
         "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx"
       ]
     },

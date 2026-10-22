@@ -181,7 +181,7 @@ const investorBlock = `${START}
 | Line | Price (as coded) | Notes |
 | --- | --- | --- |
 | Donations | ${tipLabel} + custom | ${maloDisclaimer} |
-| Current test-rail splits | Gifts ${bpsLabel(maloCutBps)}/${bpsLabel(10000 - maloCutBps)} athlete · Boosters ${bpsLabel(boosterCutBps)}/${bpsLabel(10000 - boosterCutBps)} operator · Vault ${bpsLabel(vaultCutBps)}/${bpsLabel(10000 - vaultCutBps)} athlete · Drip ${bpsLabel(merchCutBps)} platform | Control plane on \`/admin/money\`. The 90 / 10 allocation remains in current source; the owner superseded this policy on 2026-10-22 and directed a separate no-cut tip model. Optional tips to Tapua'i at checkout are 100% platform. |
+| Current test-rail splits | Gifts ${bpsLabel(maloCutBps)}/${bpsLabel(10000 - maloCutBps)} athlete · Boosters ${bpsLabel(boosterCutBps)}/${bpsLabel(10000 - boosterCutBps)} operator · Vault ${bpsLabel(vaultCutBps)}/${bpsLabel(10000 - vaultCutBps)} athlete · Drip ${bpsLabel(merchCutBps)} platform | Control plane on \`/admin/money\`. New individual gifts allocate the full gross amount to the family with no platform gift share (owner, 2026-10-22); original historical records are preserved. Optional tips to Tapua'i at checkout are 100% platform. |
 | Exclusive | ${dollars(exclusiveDollars)} one-time PaymentIntent stored as a \`subscriptions\` row | +${exclusiveAura} Aura to the payer. Not Stripe Billing yet. |
 | Boosters | ${boosterLabel} | Silver / Gold / Platinum. One-time price, no billing period. |
 | Aura | ${auraPerDollar} points per gifted dollar | ${auraTitles.length}-tier card (${auraRange}). Double-tap ${doubleTapAura}; Serve Like Me ×${serveAuraMultiplier}. Not cash. |

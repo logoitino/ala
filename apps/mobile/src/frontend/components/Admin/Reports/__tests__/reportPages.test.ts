@@ -105,3 +105,20 @@ it('keeps partial menu reads unknown in shared Health as well as Product', () =>
   const { menuSplits } = require('@tapuai/shared-types/admin');
   expect(menuSplits({ tabs: { home: false } }, true).find((row: { id: string }) => row.id === 'tabs')).toMatchObject({ on: null, off: null });
 });
+
+// MONEY-TIPS-01 repair uses the existing Revenue surface, never a second Money dashboard.
+it('shows missing gift revenue and the existing Finance repair route', () => {
+  const data = fixture();
+  data.revenue.gift_repair_gap_count = 3;
+  const section = reportPageSections('revenue', data).find(row => row.id === 'gift-revenue-repair')!;
+  expect(section.sentences?.join(' ')).toContain('3 gift revenue rows are missing');
+  expect(section.links).toEqual([{ label: 'Open Books for Finance repair', href: '/admin/books' }]);
+});
+
+it('keeps absent or failed repair observations unknown, even with old zero rows', () => {
+  const data = fixture();
+  expect(reportPageSections('revenue', data).find(row => row.id === 'gift-revenue-repair')?.sentences?.join(' ')).toContain('unknown');
+  data.revenue.gift_repair_gap_count = 0;
+  data.revenue.error = 'Denied';
+  expect(reportPageSections('revenue', data).find(row => row.id === 'gift-revenue-repair')?.sentences?.join(' ')).toContain('unknown');
+});

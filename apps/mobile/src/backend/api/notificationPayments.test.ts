@@ -43,14 +43,11 @@ describe('bounded server donation context', () => {
       persist: async () => ({ data: null, error: { code: '40001' } }) } });
     expect(await runCreatePaymentIntent(input)).toEqual({ status: 503, body: { error: 'Payment context unavailable.' } });
   });
-  it('preserves checkout when notification context is not configured and labels it unavailable', async () => {
+  it('refuses optional extras before charge when service context is not configured', async () => {
     const { input, create, persist } = setup({ donationContext: undefined });
-    expect((await runCreatePaymentIntent(input)).status).toBe(200);
+    expect((await runCreatePaymentIntent(input)).status).toBe(503);
     expect(persist).not.toHaveBeenCalled();
-    expect(create.mock.calls[0][0]).toEqual(expect.objectContaining({ metadata: expect.objectContaining({
-      tapuai_purpose: 'donation', tapuai_notification_authority: 'false',
-    }) }));
-    expect(create.mock.calls[0][0].metadata).not.toHaveProperty('tapuai_context_id');
+    expect(create).not.toHaveBeenCalled();
   });
   it('does not use a donation adapter for a shared non-donation purchase', async () => {
     const { input, persist } = setup({ body: { amount: 500, playerId: athleteId } });

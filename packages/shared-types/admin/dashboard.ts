@@ -325,7 +325,7 @@ export function homeKpis(input: DashboardInput, formatUsd: (cents: number) => st
         ? 'Ledger not in this read'
         : platform == null
           ? 'No gross in the ledger yet'
-          : `The ledger records ${formatUsd(input.companyNetCents as number)} for Tapua'i out of ${formatUsd(input.grossCents as number)} gross across every stream. Current test-mode model: 90% to the family account, 10% to Tapua'i.`,
+          : `The ledger records ${formatUsd(input.companyNetCents as number)} for Tapua'i out of ${formatUsd(input.grossCents as number)} gross across every stream. New gifts allocate the full gift to the family account with no Tapua'i gift cut. Historical allocations are retained.`,
       tone: 'neutral',
       missing: !ledger,
       delta: null,

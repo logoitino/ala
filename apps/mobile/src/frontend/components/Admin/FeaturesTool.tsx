@@ -1,4 +1,4 @@
-/** Features owns published app flags and the separate server-enforced notification operational desk. */
+/** Features owns drafted app flags and separate notification controls. MONEY-TIPS-01 extras stay OFF until Publish; this desk grants no payment or migration readiness. */
 import { type Href, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -26,6 +26,8 @@ export function FeaturesTool() {
   const { draft, published, saveDraft } = useAppRuntime();
   const operatorLive = getRuntimeFlag(published, 'layouts.operatorConsole');
   const operatorDraft = getRuntimeFlag(draft, 'layouts.operatorConsole');
+  const monetizationLive = getRuntimeFlag(published, 'buttons.MONETIZATION_TIPS_ENABLED');
+  const monetizationDraft = getRuntimeFlag(draft, 'buttons.MONETIZATION_TIPS_ENABLED');
 
   return (
     <AdminPage
@@ -35,6 +37,28 @@ export function FeaturesTool() {
     >
       <AdminPublishBar />
       <NotificationAdminPanel />
+
+      <View style={styles.group}>
+        <AdminSectionTitle>Optional checkout controls</AdminSectionTitle>
+        <AdminNotice
+          tone={monetizationLive || monetizationDraft ? 'warn' : 'ok'}
+          text={monetizationLive
+            ? "Tip Tapua'i (optional) and processing-fee coverage are ON in the published configuration."
+            : monetizationDraft
+              ? "Tip Tapua'i (optional) and processing-fee coverage are draft ON, live OFF. Publish is required."
+              : "Tip Tapua'i (optional) and processing-fee coverage are OFF (default)."}
+        />
+        <Text style={styles.body}>
+          This flag controls optional tips and processing-fee coverage only. After the MONEY-TIPS-01 migration,
+          the gift platform share is always zero; turning this flag OFF does not restore the old 90 / 10 model.
+          Verify the migration and trusted server enforcement before Publish. Stripe remains in test mode and
+          payouts stay blocked. Actual Stripe processing costs are not measured here.
+        </Text>
+        <View style={styles.linkRow}>
+          <AdminBtn label="Open Money" onPress={() => router.push('/admin/money' as Href)} />
+          <AdminBtn label="Open Books" onPress={() => router.push('/admin/books' as Href)} />
+        </View>
+      </View>
 
       <View style={styles.group}>
         <AdminSectionTitle>Soft-Wall auth</AdminSectionTitle>

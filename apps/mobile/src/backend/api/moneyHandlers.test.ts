@@ -321,7 +321,7 @@ describe.each([
 
   test('success mints the intent with the metadata contract', async () => {
     const result = await read(
-      await handler()(request({ amount: '500', playerId: `  ${PLAYER}  `, platformTipCents: 50 })),
+      await handler()(request({ amount: '500', playerId: `  ${PLAYER}  ` })),
     );
     expect(result).toEqual({ status: 200, body: { clientSecret: 'pi_secret_1' } });
     expect(mockStripe.paymentIntents.create).toHaveBeenCalledTimes(1);
@@ -329,7 +329,7 @@ describe.each([
       amount: 500,
       currency: 'usd',
       payment_method_types: ['card'],
-      metadata: { tapuai_user_id: 'user-1', tapuai_player_id: PLAYER, tapuai_platform_tip_cents: '50' },
+      metadata: { tapuai_user_id: 'user-1', tapuai_player_id: PLAYER },
     });
     expect(mockStripeCtorCalls).toEqual([
       runtime === 'node' ? ['sk_test_x'] : ['sk_test_edge', { httpClient: 'fetch-http-client' }],
@@ -343,18 +343,35 @@ describe.each([
       expect.objectContaining({ amount: 50, metadata: { tapuai_user_id: 'user-1' } }),
     );
   });
-  test('donation declaration preserves legacy checkout without requiring a new context RPC', async () => {
+  test('forged gift extras fail before charge without trusted service quotation', async () => {
     expect(await read(await handler()(request({ amount: 650, playerId: PLAYER, platformTipCents: 50,
       donation: { giftCents: 500, coverFees: true, platformTipPercent: 10 },
       tapuai_context_id: 'client-cannot-create-authority', donorId: 'someone-else', purpose: 'donation' })))).toEqual({
-      status: 200, body: { clientSecret: 'pi_secret_1' },
+      status: 503, body: { error: 'Payment context unavailable.' },
     });
-    expect(mockState.rpc).toHaveBeenCalledTimes(1);
     expect(mockState.rpc).toHaveBeenCalledWith('malo_target_frozen', { target_player_id: PLAYER });
-    expect(mockStripe.paymentIntents.create).toHaveBeenCalledWith(expect.objectContaining({ metadata: {
-      tapuai_user_id: 'user-1', tapuai_player_id: PLAYER, tapuai_platform_tip_cents: '50',
-      tapuai_purpose: 'donation', tapuai_notification_authority: 'false',
-    } }));
+    expect(mockStripe.paymentIntents.create).not.toHaveBeenCalled();
+  });
+  test('omitting gift declaration cannot bypass optional-tip admission', async () => {
+    expect(await read(await handler()(request({ amount: 500, playerId: PLAYER, platformTipCents: 50 })))).toEqual({
+      status: 400, body: { error: "Gift allocation required for an optional tip to Tapua'i." },
+    });
+    expect(mockStripe.paymentIntents.create).not.toHaveBeenCalled();
+  });
+  test('service quote is wired through this runtime and bound before returning a payable secret', async () => {
+    const donor='00000000-0000-0000-0000-000000000001';
+    const context={id:'00000000-0000-0000-0000-000000000003',donorId:donor,athleteId:PLAYER,purpose:'donation',currency:'usd',
+      giftCents:5000,coverFeeCents:50,platformTipCents:500,totalCents:5550,livemode:false,notificationAuthority:false};
+    process.env.SUPABASE_SERVICE_ROLE_KEY='node-service';
+    mockState.getUser.mockResolvedValue({data:{user:{id:donor,email:null}},error:null});
+    mockState.rpc.mockImplementation(async(fn:string)=>({data:fn==='prepare_tip_payment_context'?context:fn==='record_notification_payment_context',error:null}));
+    mockStripe.paymentIntents.create.mockResolvedValue({id:'pi_runtime1234',client_secret:'pi_secret_1',livemode:false});
+    expect(await read(await handler()(request({amount:5550,playerId:PLAYER,platformTipCents:500,
+      donation:{giftCents:5000,coverFees:true,platformTipPercent:10}})))).toEqual({status:200,body:{clientSecret:'pi_secret_1'}});
+    expect(mockState.rpc).toHaveBeenCalledWith('prepare_tip_payment_context',{donor_user_id:donor,athlete_id:PLAYER,gift_cents:5000,cover_fees:true,platform_tip_percent:10});
+    expect(mockState.rpc).toHaveBeenCalledWith('record_notification_payment_context',{context_id:context.id,provider_intent_id:'pi_runtime1234',donor_user_id:donor,
+      athlete_id:PLAYER,gift_cents:5000,cover_fee_cents:50,platform_tip_cents:500,currency_code:'usd',provider_livemode:false});
+    expect(mockStripe.paymentIntents.create).toHaveBeenCalledWith(expect.objectContaining({amount:5550,metadata:expect.objectContaining({tapuai_notification_authority:'false',tapuai_gift_cents:'5000'})}));
   });
 
   test('a Stripe error is 400 with its message', async () => {

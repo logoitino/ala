@@ -66,7 +66,7 @@ Prices below are generated from source (`pnpm docs:sync`). Do not edit inside th
 | Line | Price (as coded) | Notes |
 | --- | --- | --- |
 | Donations | $5 / $10 / $25 + custom | 90% of your donation goes to the athlete's family account. Tapua'i keeps 10% to run the app, including card processing. Nothing goes to the person who uploaded the clip. |
-| Current test-rail splits | Gifts 10%/90% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. The 90 / 10 allocation remains in current source; the owner superseded this policy on 2026-10-22 and directed a separate no-cut tip model. Optional tips to Tapua'i at checkout are 100% platform. |
+| Current test-rail splits | Gifts 0%/100% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. New individual gifts allocate the full gross amount to the family with no platform gift share (owner, 2026-10-22); original historical records are preserved. Optional tips to Tapua'i at checkout are 100% platform. |
 | Exclusive | $4.99 one-time PaymentIntent stored as a `subscriptions` row | +100 Aura to the payer. Not Stripe Billing yet. |
 | Boosters | Silver $50 / Gold $150 / Platinum $500 | Silver / Gold / Platinum. One-time price, no billing period. |
 | Aura | 10 points per gifted dollar | 7-tier card (Slate Silver → Celestial Prism). Double-tap 1; Serve Like Me ×2. Not cash. |

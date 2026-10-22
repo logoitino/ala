@@ -15,12 +15,13 @@
  * FlagStatusList wraps long flag names and hints rather than cutting them off (W3-PORTAL), and
  * every heading wrapper is `min-w-0` so long headings wrap inside grids.
  * Owner: PORTAL. The Analytics header link is shared with ANALYST.
+ * MONEY-TIPS-01 status uses its false catalog default so older rows cannot appear to enable money controls.
  */
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { SignOutButton } from '@/components/SignOutButton';
-import { APP_RUNTIME_FLAG_GROUPS, type AppRuntimeFlagGroup } from '@tapuai/shared-types';
+import { APP_RUNTIME_FLAG_GROUPS, readPublishedRuntimeFlag, type AppRuntimeFlagGroup } from '@tapuai/shared-types';
 
 export type PortalHref =
   | '/'
@@ -325,19 +326,6 @@ export function Badge({ tone, children }: { tone: 'ok' | 'warn' | 'neutral' | 'd
   return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${cls}`}>{children}</span>;
 }
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
-function readFlag(bag: Record<string, unknown>, path: string): boolean {
-  const [root, key] = path.split('.');
-  if (!root || !key) return true;
-  const group = bag[root];
-  if (!isPlainObject(group)) return true;
-  const value = group[key];
-  return typeof value === 'boolean' ? value : true;
-}
-
 /**
  * @purpose Read-only flag status — this portal is oversight only; all edits happen in Expo /admin
  *   (Features / Look desks). Renders live (published) state as plain Badges, no toggle affordance.
@@ -361,7 +349,7 @@ export function FlagStatusList({
           <p className="mt-1 text-sm text-[var(--ink-soft)]">{group.hint}</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {group.flags.map((row) => {
-              const on = readFlag(published, row.path);
+              const on = readPublishedRuntimeFlag(published, row);
               return (
                 <div
                   key={row.path}

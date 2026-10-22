@@ -72,7 +72,7 @@ export function booksSections({ period, entries, issues, revenue, playerNames }:
       title: period.label,
       hint: `${inPeriod.length} entries · UTC days ${period.from} to ${period.to}`,
       sentences: [
-        "Only Tapua'i's shares are income. The family's 90% of each gift, the athlete's 80% of a Vault sale and the operator's 85% of a booster sponsorship are held for them until paid out.",
+        "New gifts are fully allocated to the family, with no Tapua'i gift cut; historical allocations remain as recorded. The family's gift balance, the athlete's 80% of a Vault sale and the operator's 85% of a booster sponsorship are held for them until paid out. Only recorded Tapua'i revenue is income.",
       ],
       kpis: [
         { label: "Tapua'i income", value: booksUsd(pnl.totalIncome), hint: "Platform shares, optional tips for Tapua'i, Drip and covered card fees" },

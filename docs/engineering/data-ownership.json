@@ -496,7 +496,7 @@
     },
     "notification_payment_contexts": {
       "owner": "COMMERCE",
-      "purpose": "Immutable server-bound test payment purpose/actor/athlete/quote allocation evidence. Notification authority is constrained false; no gift credit source."
+      "purpose": "Private prepared test quote allocation and actor/athlete evidence, with provisional-to-real intent binding only; provider observations remain separate. No gift-credit or receipt-delivery authority."
     },
     "notification_payment_observations": {
       "owner": "RECONCILIATION",
@@ -1480,7 +1480,7 @@
     },
     "record_notification_payment_context": {
       "owner": "COMMERCE",
-      "use": "Service-only immutable server quote context, actor/purpose/athlete/currency/integer allocation bound; notification authority hard false."
+      "use": "Service-only one-time promotion of an immutable prepared test quote to its real PaymentIntent; exact replay only, no retargeting or gift/Aura/notification credit."
     },
     "apply_notification_payment_event": {
       "owner": "RECONCILIATION",
@@ -1545,6 +1545,18 @@
     "get_sport_configs": {
       "owner": "ATHLETE_STATS",
       "purpose": "Existing public catalog read reused by PROFILE/UPLOAD/Admin useStoredSportChoices through lib/sports.fetchStoredSportConfigs. Ready-empty and unavailable stay distinct; client retries retain drafts. No additional table, RPC, verification or money authority."
+    },
+    "monetization_tips_enabled": {
+      "owner": "COMMERCE",
+      "use": "Private trigger/quote lookup of literal published optional-extras flag; missing/nonboolean is OFF. No write, customer grant or gift-credit authority."
+    },
+    "prepare_tip_payment_context": {
+      "owner": "COMMERCE",
+      "use": "Service-only test quote: authenticated sender/athlete, gross gift and optional extras; default-off published admission and private provisional intent. Immutable allocation retained for one real PaymentIntent binding; notification authority remains false."
+    },
+    "tips_payment_context_guard": {
+      "owner": "COMMERCE",
+      "use": "Before insert: optional gift extras match a service-prepared real PaymentIntent allocation and original actor/athlete/cents; provisional/mismatched/reused references denied. Previously issued quotes survive an OFF publish; no new business writer."
     }
   },
   "exceptions": {

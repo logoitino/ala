@@ -1,6 +1,7 @@
 /**
  * Money owns disbursement requests and status changes. Ledger totals, streams and gift history belong
  * to the Revenue report so the editing desk does not fetch or repeat a second financial dashboard.
+ * MONEY-TIPS-01 missing gift-revenue counts remain on that report; repair belongs to Finance in Books.
  * @sideEffects Existing disbursement reads, queue insertion and confirmed status updates.
  */
 import { useCallback, useMemo, useState } from 'react';
@@ -123,6 +124,7 @@ export function MoneyTool() {
         <AdminBtn label="View revenue report" onPress={() => router.push('/admin/revenue' as Href)} />
         <AdminBtn label="Edit gift amounts + exclusive prices" onPress={() => router.push('/admin/catalog' as Href)} />
       </View>
+      <AdminNotice text="Gift revenue repair status is on the existing Revenue report. An absent count is unknown; Finance reviews missing original revenue rows and closed-period repair in Books." tone="warn" />
 
       <AdminPanel title="Queue disbursement">
         <AdminSuggest

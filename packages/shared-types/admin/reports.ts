@@ -2,6 +2,7 @@
  * ADM-02: platform-neutral report parsers, nullable snapshots and money labels for both admins.
  * Transport stays in each application; this module never reads a session or performs I/O.
  * Missing rankings and gift bands stay missing, while measured empty lists stay empty.
+ * MONEY-TIPS-01 repair counts preserve unknown source states; a missing count is never a clean ledger.
  */
 export type ReportSection = Record<string, number>;
 
@@ -124,6 +125,8 @@ export type PortalRevenue = {
   company_net_cents: number | null;
   payouts_cents: number | null;
   stripe_paid_cents: number | null;
+  /** Unposted gift revenue rows; missing/older snapshots mean unknown, never zero. */
+  gift_repair_gap_count?: number | null;
   streams: RevenueStream[];
   recent: RevenueLog[];
 };
@@ -157,6 +160,7 @@ const EMPTY_REVENUE: PortalRevenue = {
   company_net_cents: null,
   payouts_cents: null,
   stripe_paid_cents: null,
+  gift_repair_gap_count: null,
   streams: [],
   recent: [],
 };
@@ -561,6 +565,7 @@ export function parseRevenueSummary(data: unknown): PortalRevenue {
       company_net_cents: centsOrNull(row.company_net_cents, row.total_platform_revenue),
       payouts_cents: centsOrNull(row.payouts_cents, row.total_payouts),
       stripe_paid_cents: asIntOrNull(row.stripe_paid_cents),
+      gift_repair_gap_count: giftGapCount(row.gift_repair_gap_count),
       streams,
       recent,
     };
@@ -571,6 +576,23 @@ export function parseRevenueSummary(data: unknown): PortalRevenue {
       error: caught instanceof Error ? caught.message : 'Could not parse revenue summary.',
     };
   }
+}
+
+/** Counts must be valid whole nonnegative values; malformed source data cannot become a healthy zero. */
+function giftGapCount(value: unknown): number | null {
+  if (typeof value !== 'number' && !(typeof value === 'string' && /^\d+$/.test(value.trim()))) return null;
+  const count = Number(value);
+  return Number.isSafeInteger(count) && count >= 0 ? count : null;
+}
+
+/** Existing Revenue report notice: missing rows need Finance review, including closed-period recovery. */
+export function giftRepairGapNotice(revenue: Pick<PortalRevenue, 'configured' | 'error' | 'gift_repair_gap_count'>): { count: number | null; message: string } {
+  const count = revenue.configured && !revenue.error ? giftGapCount(revenue.gift_repair_gap_count) : null;
+  return { count, message: count == null
+    ? 'Gift revenue repair count is unknown. This read did not establish whether gift revenue rows are missing; Finance must review the source.'
+    : count > 0
+      ? `${count} gift revenue ${count === 1 ? 'row is' : 'rows are'} missing. Finance must review and repair the original records; if the original period is closed, obtain approval to reopen it through Books before repair. Historical allocations must stay unchanged.`
+      : 'No missing gift revenue rows were reported in this snapshot. This count does not certify reconciliation or payouts.' };
 }
 
 /**

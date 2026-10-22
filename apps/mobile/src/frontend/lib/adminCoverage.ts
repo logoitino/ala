@@ -4,6 +4,7 @@
  * Add a row here whenever you add a fan control. Trivia rows (2026-10-15) add the This week strip, level and Life
  * Playbook opt-in / chapters, and the page Skip now reads "Skip my round this week". QUIZ-05 adds Report a problem,
  * the athlete's Share a fun fact, the Privacy fun facts audience and the guardian's fun-fact Approve / Decline.
+ * MONEY-TIPS-01 separates optional checkout controls from gifts; its absent telemetry is explicit.
  */
 
 import type { AdminNavHref } from '@/lib/admin';
@@ -282,7 +283,9 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'tag_confirm', label: "That's them / Not them", hint: 'Athlete, parent, and operator tag queues', surface: 'profile', fanHref: '/profile', adminHref: '/admin/spotlight' },
   { id: 'receipts', label: 'Gift History & Receipts', hint: '/receipts', surface: 'receipts', fanHref: '/receipts', adminHref: '/admin/money', flag: 'layouts.receipts', telemetry: 'receipts' },
   { id: 'receipt_open_clip', label: 'Receipt → highlight', hint: 'Jump from a receipt to the clip', surface: 'receipts', fanHref: '/receipts', adminHref: '/admin/highlights', flag: 'layouts.receipts' },
-  { id: 'malo_amounts', label: 'Gift amount presets', hint: 'Amount chips + cover fee — Catalogs', surface: 'receipts', fanHref: '/receipts', adminHref: '/admin/catalog' },
+  { id: 'malo_amounts', label: 'Gift amount presets', hint: 'Gift amount chips — Catalogs', surface: 'receipts', fanHref: '/receipts', adminHref: '/admin/catalog' },
+  { id: 'checkout.platform_tip', label: "Tip Tapua'i (optional)", hint: 'Optional checkout amount; default No tip. Published authority only. No separate tap counter; checkout failures use existing fixed signals.', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.MONETIZATION_TIPS_ENABLED' },
+  { id: 'checkout.cover_processing_fee', label: 'Cover the processing fee', hint: 'Optional estimated fee coverage; not the actual Stripe cost. Missing published authority stays OFF. No separate tap counter.', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.MONETIZATION_TIPS_ENABLED' },
 
   { id: 'soft_wall.malo', label: 'Give Soft Wall', hint: 'Guest give → SoftWallModal → resume give sheet', surface: 'auth', fanHref: '/', adminHref: '/admin/features', flag: 'buttons.malo', telemetry: 'soft_wall.malo', owner: 'code' },
   { id: 'soft_wall.crew', label: 'Crew Soft Wall', hint: 'Guest Join Crew → SoftWallModal → resume toggle', surface: 'auth', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.crew', telemetry: 'soft_wall.crew', owner: 'code' },

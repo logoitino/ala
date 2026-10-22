@@ -403,7 +403,7 @@ function ledgerRing(revenue: PortalRevenue): RingSpec {
     { key: 'payouts_cents', label: 'Payee share recorded', value: payouts, color: measureColor('payeeShare') },
     { key: 'company_net_cents', label: 'Tapua\'i share', value: net, color: measureColor('tapuaiShare') },
   ];
-  let caption = 'Tapua\'i share and payee share as parts of recorded gross. Current test-mode model: 90% to the family account, 10% to Tapua\'i.';
+  let caption = 'Tapua\'i share and payee share as parts of recorded gross. New gifts allocate the full gift to the family account with no Tapua\'i gift cut. Historical allocations are retained.';
   let totalLabel = 'Recorded gross';
   if (gross != null && net != null && payouts != null) {
     const rest = gross - net - payouts;

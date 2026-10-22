@@ -1,11 +1,11 @@
 /**
  * Admin finance splits (basis points, 10_000 = 100%).
- * The donate sheet discloses the 10% donation share (`MALO_DISCLAIMER`, owner 2026-09-29) and offers an
- * optional tip to Tapua'i on top (`tip`, 100% platform, never taken from the athlete's donation).
+ * Individual gifts allocate 100% to the family before any actual processor expense (owner, 2026-10-22). The
+ * optional tip to Tapua'i is separate (`tip`, 100% platform, never taken from the gift).
  * SQL `company_revenue_bps` must stay in lockstep.
  */
-export const MALO_PLATFORM_CUT_BPS = 1000;
-export const MALO_ATHLETE_SHARE_BPS = 9000;
+export const MALO_PLATFORM_CUT_BPS = 0;
+export const MALO_ATHLETE_SHARE_BPS = 10000;
 
 export const BOOSTER_PLATFORM_CUT_BPS = 1500;
 export const BOOSTER_OPERATOR_SHARE_BPS = 8500;
@@ -24,7 +24,7 @@ export type RevenueSource = 'malo' | 'booster' | 'vault' | 'merch' | 'tip';
 /**
  * @purpose Split gross cents into platform cut vs athlete/operator payout for one revenue source.
  * @param grossCents Stripe-style cents that flowed through the platform.
- * @param platformBps Platform share in basis points (`MALO_PLATFORM_CUT_BPS` = 10%).
+ * @param platformBps Platform share in basis points (`MALO_PLATFORM_CUT_BPS` = 0%; independent of the optional-extras flag).
  * @returns Platform cents and residual payout cents (gross − platform).
  */
 export function splitRevenueCents(grossCents: number, platformBps: number): {

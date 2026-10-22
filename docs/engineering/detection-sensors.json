@@ -447,6 +447,21 @@
       ],
       "limitation": "Only executes on actual invocation/Claude Stop/CI. Hashes cannot discover omitted inventions, verify private access, authorship/licenses, legal conclusions, filing receipts or docket deadlines; semantic and counsel reviews remain separate.",
       "next": "DOCUMENTATION repairs invalid/missing input and reruns sync/check; source owner revalidates stale scope, LEGAL coordinates actual counsel evidence and owner decides sharing/spend/filings."
+    },
+    {
+      "id": "no-cut-gift-optional-extras",
+      "area": "backend",
+      "owner": "COMMERCE",
+      "status": "partial",
+      "detects": "Invoked local source/SQL/runtime tests cover zero gift cut in both flag states, default-off published authority, exact prepared quote binding, duplicate/mismatched extras, no re-cut on report catch-up and existing historical allocations. Existing Money repair gap count and checkout fixed failure observations retain unknown data.",
+      "evidence": [
+        "supabase/migrations/20261022152000_no_cut_gifts_optional_tips.sql",
+        "supabase/functions/_shared/money/serverDonationContext.ts",
+        "apps/mobile/src/frontend/components/Admin/MoneyTool.tsx",
+        "docs/engineering/evidence/TIP_MODEL_BASELINE.md"
+      ],
+      "limitation": "Local invoked evidence only. Migration/Edge application, actual Stripe per-charge fees, captured transfer/bank settlement, old clients/in-flight release compatibility, guardian Terms and alert delivery remain unverified. Flat covered fee is an estimate, not actual processor cost.",
+      "next": "COMMERCE with Finance/Security/Data/SUPPORT reviews hosted compatibility and source-backed test capture; owner/counsel approve legal disclosures and live money. No second credit writer or background monitor."
     }
   ]
 }

@@ -136,7 +136,8 @@ const gift = await attempt('fan', `insert into public.tips (player_id, amount_ce
 const [books] = await rows(`select r.payout_cents from public.company_revenue_logs r join public.tips t on r.source = 'malo' and r.source_id = t.id::text where t.player_id = '${OWN}' and t.amount_cents = 5000`);
 const parentView = async () => { try { const out = await db.exec(`${as.parent} select (select family_cents from public.get_received_malo('${OWN}') where amount_cents = 5000) as row_family, (public.get_custodial_summary('${OWN}')->>'family_cents')::int as summary_family, (public.get_custodial_summary('${OWN}')->>'received_cents')::int as summary_donated;`); return out.at(-1).rows[0]; } catch (e) { return { error: e.message }; } finally { await db.exec('reset role; reset request.jwt.claims;'); } };
 const seen1 = await parentView();
-record("the family sees what reaches their account (the books' payout), not the donated total", gift === 'ran' && books?.payout_cents > 0 && books.payout_cents < 5000 && seen1.row_family === books.payout_cents && seen1.summary_family === books.payout_cents && seen1.summary_donated === 5000, JSON.stringify({ gift, books, seen1 }));
+// MONEY-TIPS-01 removes the gift cut; this proves gross family ledger allocation, never processor/bank settlement.
+record("the family sees the full new gift gross in the books without a platform cut", gift === 'ran' && books?.payout_cents === 5000 && seen1.row_family === books.payout_cents && seen1.summary_family === books.payout_cents && seen1.summary_donated === 5000, JSON.stringify({ gift, books, seen1 }));
 await db.exec(`delete from public.company_revenue_logs where source = 'malo' and source_id in (select id::text from public.tips where player_id = '${OWN}')`);
 const seen2 = await parentView();
 record('with no books entry yet, the family share falls back to the current split', seen2.row_family === books?.payout_cents, JSON.stringify(seen2));

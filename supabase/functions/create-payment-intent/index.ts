@@ -5,9 +5,10 @@ import { createAccessTokenVerifier, type AccessTokenVerifier } from '../_shared/
 import { INVALID_SESSION_MESSAGE, errorResult, refuseLiveStripeKey, readBearerLoose, thrownMessage, type CoreResult } from '../_shared/money/http.ts';
 import { PAYMENT_SIGN_IN_MESSAGE, runCreatePaymentIntent } from '../_shared/money/paymentIntent.ts';
 import { resolveSession } from '../_shared/money/session.ts';
+import { serverDonationContextAdapter } from '../_shared/money/serverDonationContext.ts';
 
 /**
- * Edge Function adapter for donation checkout — the primary checkout path: `lib/stripeIntent.ts` invokes this
+ * Edge Function adapter for gift and purchase checkout — the primary checkout path: `lib/stripeIntent.ts` invokes this
  * function first and only falls back to the Metro route when it is not deployed, because an installed EAS build has
  * no Metro server to answer `/api/*`. Deploy it to every project testers use.
  *
@@ -93,12 +94,19 @@ Deno.serve(async (req) => {
     }
 
     const body: unknown = await req.json();
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     return respond(
       await runCreatePaymentIntent({
         userId: session.user.id,
         body,
         isTargetFrozen: (playerId) => userClient.rpc('malo_target_frozen', { target_player_id: playerId }),
         getStripe: () => new Stripe(stripeSecret, { httpClient: Stripe.createFetchHttpClient() }),
+        // Service-only quote admission is shared with Node; a missing key cannot become client authority.
+        donationContext: serverDonationContextAdapter(serviceKey
+          ? (name, args) => createClient(supabaseUrl, serviceKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+          }).rpc(name, args)
+          : undefined),
       }),
     );
   } catch (error) {

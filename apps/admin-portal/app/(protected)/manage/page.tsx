@@ -134,7 +134,7 @@ export default async function ManagementPage() {
             />
             <Panel level={3} title="Gifts and revenue" kicker="Test mode" action={<Badge tone={toneBadge(desk('billing').tone)}>{desk('billing').status}</Badge>}>
               <p className="text-sm leading-6 text-[var(--ink-soft)]">
-                Current test-mode model: 90% to the family account, 10% to Tapua&apos;i. Payouts stay blocked in this test. The full ledger,
+                New gift model: the full gift is allocated to the family account, with no Tapua&apos;i gift cut. Historical allocations are retained. Payouts stay blocked in this test. The full ledger,
                 gifts by day, and where gifts started are on{' '}
                 <Link href="/money" className="font-extrabold text-[var(--jade)] underline-offset-2 hover:underline">
                   Revenue

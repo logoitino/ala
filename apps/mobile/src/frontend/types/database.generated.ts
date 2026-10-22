@@ -595,6 +595,27 @@ export type Database = {
         }
         Relationships: []
       }
+      cheer_poll_votes: {
+        Row: {
+          poll_slug: string
+          side: string
+          updated_at: string
+          voter_id: string
+        }
+        Insert: {
+          poll_slug: string
+          side: string
+          updated_at?: string
+          voter_id: string
+        }
+        Update: {
+          poll_slug?: string
+          side?: string
+          updated_at?: string
+          voter_id?: string
+        }
+        Relationships: []
+      }
       cheer_polls: {
         Row: {
           away_label: string
@@ -2200,6 +2221,27 @@ export type Database = {
           status?: string
           subject_profile_id?: string
           target?: string
+        }
+        Relationships: []
+      }
+      player_hype_votes: {
+        Row: {
+          hype_kind: string
+          player_id: string
+          voted_on: string
+          voter_id: string
+        }
+        Insert: {
+          hype_kind: string
+          player_id: string
+          voted_on?: string
+          voter_id: string
+        }
+        Update: {
+          hype_kind?: string
+          player_id?: string
+          voted_on?: string
+          voter_id?: string
         }
         Relationships: []
       }
@@ -6499,6 +6541,10 @@ export type Database = {
         }
         Returns: Json
       }
+      monetization_tips_enabled: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       my_claimed_player_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -6586,6 +6632,16 @@ export type Database = {
           target_player_id: string
         }
         Returns: boolean
+      }
+      prepare_tip_payment_context: {
+        Args: {
+          donor_user_id: string
+          athlete_id: string
+          gift_cents: number
+          cover_fees: boolean
+          platform_tip_percent: number
+        }
+        Returns: Json
       }
       preview_guardian_invite: {
         Args: {

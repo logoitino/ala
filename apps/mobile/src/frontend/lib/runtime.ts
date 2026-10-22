@@ -5,6 +5,7 @@
  * /admin → Features / Look edits it; "Publish to app" writes it. The defaults here apply until a published
  * row overrides them, so a stale published row can hide a newer default (see STATE.md on copy overrides).
  * @sideEffects Reads (and, from admin screens, writes) `app_runtime_config`.
+ * MONEY-TIPS-01 optional extras require explicit published true; missing authority stays OFF.
  */
 
 import { EXCLUSIVE_AURA_GRANT, EXCLUSIVE_MONTHLY_DOLLARS } from '@/data/exclusive';
@@ -33,6 +34,8 @@ export type AppRuntimeButtons = {
   aura: boolean;
   flex: boolean;
   malo: boolean;
+  /** Gates optional tips and fee coverage; it never changes the gift's zero platform allocation. */
+  MONETIZATION_TIPS_ENABLED: boolean;
   more: boolean;
   subscribe: boolean;
   crew: boolean;
@@ -207,6 +210,7 @@ export const DEFAULT_APP_RUNTIME: AppRuntimeConfig = {
     aura: true,
     flex: true,
     malo: true,
+    MONETIZATION_TIPS_ENABLED: false,
     more: true,
     subscribe: true,
     crew: true,
@@ -602,6 +606,8 @@ export function runtimeConfigsEqual(left: AppRuntimeConfig, right: AppRuntimeCon
 }
 
 export function getRuntimeFlag(config: AppRuntimeConfig, path: AppRuntimeFlagPath): boolean {
+  // Unlike established chrome defaults, optional money authority cannot be inferred from absence.
+  if (path === 'buttons.MONETIZATION_TIPS_ENABLED') return config.buttons?.MONETIZATION_TIPS_ENABLED === true;
   const [group, key] = path.split('.') as [keyof AppRuntimeConfig, string];
   const bag = config[group] as Record<string, boolean>;
   return bag[key] !== false;
@@ -836,7 +842,9 @@ export async function fetchAppRuntimeBundle(): Promise<AppRuntimeBundle> {
  */
 export async function saveAppRuntimeDraft(draft: AppRuntimeConfig): Promise<AppRuntimeBundle> {
   if (!isSupabaseConfigured) {
-    return { draft, published: draft, publishedAt: null, updatedAt: new Date().toISOString() };
+    // Offline previews preserve legacy chrome behavior, but a draft grants no money authority.
+    const published = setRuntimeFlag(draft, 'buttons.MONETIZATION_TIPS_ENABLED', false);
+    return { draft, published, publishedAt: null, updatedAt: new Date().toISOString() };
   }
   const { data, error } = await supabase.rpc('patch_app_runtime_draft', { next_draft: draft });
   if (!error && data && typeof data === 'object') return parseBundle(data as Record<string, unknown>);

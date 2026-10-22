@@ -66,7 +66,7 @@ const sample: BooksInput = {
 };
 
 describe('posting rules', () => {
-  it('splits a gift into the Stripe balance, money held for the family and the 10% share', () => {
+  it('preserves a historical recorded gift allocation in the Stripe balance and family liability', () => {
     const { entry, issues } = journalFromRevenue(rev({ id: 'd1' }));
     expect(issues).toEqual([]);
     expect(entry!.lines).toEqual([
@@ -270,7 +270,7 @@ describe('chart of accounts', () => {
 
 describe('review fixes (CONTROLLER / TAX / QA, 2026-10-13)', () => {
   it('refunds the whole charge: family share back out of held money for that athlete, Tapua\'i share to contra-income', () => {
-    const built = refundEntryLines({ stream: 'malo', grossCents: 10000, extraTapuaiCents: 500, disputeFeeCents: 1500, athleteRef: 'ath-11111111' });
+    const built = refundEntryLines({ stream: 'malo', grossCents: 10000, extraTapuaiCents: 500, disputeFeeCents: 1500, athleteRef: 'ath-11111111', recordedPlatformCents: 1000 });
     expect(built).toEqual({ lines: [
       { account_code: '2000', debit_cents: 9000, credit_cents: 0, athlete_ref: 'ath-11111111' },
       { account_code: '4900', debit_cents: 1500, credit_cents: 0 },
@@ -279,7 +279,7 @@ describe('review fixes (CONTROLLER / TAX / QA, 2026-10-13)', () => {
     ] });
     expect(refundEntryLines({ stream: 'malo', grossCents: 100 })).toEqual({ error: expect.stringMatching(/athlete/) });
     expect(refundEntryLines({ stream: 'merch', grossCents: 4500 })).toEqual({ lines: [{ account_code: '4900', debit_cents: 4500, credit_cents: 0 }, { account_code: '1010', debit_cents: 0, credit_cents: 4500 }] });
-    const { entries } = buildJournal({ ...sample, manual: [{ id: 'r1', entry_date: '2026-10-20', kind: 'refund', memo: 'Refund', lines: (refundEntryLines({ stream: 'malo', grossCents: 1000, athleteRef: athleteRef(KALEO) }) as { lines: never[] }).lines }] });
+    const { entries } = buildJournal({ ...sample, manual: [{ id: 'r1', entry_date: '2026-10-20', kind: 'refund', memo: 'Refund', lines: (refundEntryLines({ stream: 'malo', grossCents: 1000, athleteRef: athleteRef(KALEO), recordedPlatformCents: 100 }) as { lines: never[] }).lines }] });
     expect(athleteHeld(entries, '2026-10-31').find((row) => row.athleteRef === athleteRef(KALEO))!.held).toBe(799 - 900);
   });
 
@@ -339,5 +339,21 @@ describe('review fixes (CONTROLLER / TAX / QA, 2026-10-13)', () => {
     const found = booksQualityIssues(entries, issues, { period: periodFor('month', '2026-10-01'), manualConfigured: false, revenueTruncated: false, missingPaymentIds: false, testMode: false, closes: [], queuedPayoutCents: 0, loaded: false, readErrors: { Payouts: 'permission denied' } });
     expect(found.filter((issue) => issue.severity === 'block').map((issue) => issue.id)).toEqual(expect.arrayContaining(['not-loaded', 'read-failed:Payouts']));
     expect(found.some((issue) => issue.id === 'manual-off')).toBe(false);
+  });
+});
+
+/** New gifts reverse full family liability; optional platform lines and original historical shares remain separate. */
+describe('no-cut gift refunds', () => {
+  it('reverses the full gift and only optional extras as platform contra-income', () => {
+    expect(refundEntryLines({ stream: 'malo', grossCents: 5000, extraTapuaiCents: 500, athleteRef: 'ath-fixture' })).toEqual({ lines: [
+      { account_code: '2000', debit_cents: 5000, credit_cents: 0, athlete_ref: 'ath-fixture' },
+      { account_code: '4900', debit_cents: 500, credit_cents: 0 },
+      { account_code: '1010', debit_cents: 0, credit_cents: 5500 },
+    ] });
+  });
+  it('rejects invented historical shares outside the original gross', () => {
+    for (const recordedPlatformCents of [-1, 5001, 1.5, NaN]) {
+      expect(refundEntryLines({ stream: 'malo', grossCents: 5000, athleteRef: 'ath-fixture', recordedPlatformCents })).toEqual({ error: expect.any(String) });
+    }
   });
 });

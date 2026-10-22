@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { donationSplit, streamName as revenueStreamName } from '../components/revenue/revenueModel.ts';
+import { giftRepairGapNotice } from '../../../packages/shared-types/admin/reports.ts';
 import {
   DONATION_BANDS_MISSING_NOTE,
   MALO_FALLBACK_LIMIT,
@@ -275,4 +276,24 @@ test('donation_bands malformed: not an object, a list, or none of the three coun
   assert.equal(REPORT_LABELS.donation_bands, 'Athletes by all-time gifts');
   assert.match(REPORT_NOTES.donation_bands, /no names/);
   assert.doesNotMatch(REPORT_NOTES.donation_bands, /M\u0101lo|\btip/i);
+});
+
+// MONEY-TIPS-01: a missing repair observation must not pass as a healthy count of zero.
+test('gift repair count preserves missing/invalid states and observed zero', () => {
+  for (const raw of [undefined, null, '', false, -1, 1.5, 'NaN', '1.5', [], {}, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(parseRevenueSummary({ gift_repair_gap_count: raw }).gift_repair_gap_count, null);
+  }
+  assert.equal(parseRevenueSummary({ gift_repair_gap_count: 0 }).gift_repair_gap_count, 0);
+  assert.equal(parseRevenueSummary({ gift_repair_gap_count: '3' }).gift_repair_gap_count, 3);
+});
+
+test('gift repair notice distinguishes observed gaps, unknown source and bounded zero', () => {
+  const gap = giftRepairGapNotice(parseRevenueSummary({ gift_repair_gap_count: 2 }));
+  assert.equal(gap.count, 2);
+  assert.match(gap.message, /2 gift revenue rows are missing/);
+  assert.match(gap.message, /original period is closed/);
+  assert.match(gap.message, /Historical allocations must stay unchanged/);
+  assert.equal(giftRepairGapNotice({ ...parseRevenueSummary({ gift_repair_gap_count: 0 }), error: 'Denied' }).count, null);
+  assert.match(giftRepairGapNotice(parseRevenueSummary({})).message, /unknown/);
+  assert.match(giftRepairGapNotice(parseRevenueSummary({ gift_repair_gap_count: 0 })).message, /does not certify reconciliation or payouts/);
 });

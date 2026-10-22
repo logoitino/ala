@@ -1,6 +1,7 @@
 /** Finance & Books hub: tabs read one journal, entries go through the ledger RPC with balanced lines,
  * recording stays off before the migration, reconciliation and the data catalog are visible, transactions
  * filter and export exactly what is shown, and exports never need a re-read. Fixtures are synthetic. */
+// MONEY-TIPS-01 refund evidence distinguishes zero-share new gifts from original historical allocations.
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { BooksScreen } from '../BooksScreen';
 import { recordLedgerEntry } from '@/lib/bookkeeping';
@@ -170,13 +171,15 @@ it('blocks every export when a source failed to read', async () => {
   expect(screen.getByLabelText('Chart of accounts')).toBeEnabled();
 });
 
-it('records a refund of the whole gift against the athlete', async () => {
+it('records a historical gift refund using its original recorded platform share', async () => {
   await render(<BooksScreen />);
   await openTab('Record & close');
   await fireEvent.press(screen.getByRole('tab', { name: 'Refund a gift or sale' }));
   await fireEvent.press(screen.getByRole('tab', { name: 'Fixture Athlete' }));
   await fireEvent.changeText(screen.getByLabelText('Charge refunded ($)'), '20');
-  await fireEvent.changeText(screen.getByLabelText('Memo'), 'Refund, donor request');
+  await fireEvent.changeText(screen.getByLabelText("Original Tapua'i gift share ($)"), '2.00');
+  await fireEvent.changeText(screen.getByLabelText('Receipt, invoice or Stripe id'), 'original-revenue-d1');
+  await fireEvent.changeText(screen.getByLabelText('Memo'), 'Refund, giver request');
   await fireEvent.press(screen.getByLabelText('Record entry'));
   await waitFor(() => expect(recordLedgerEntry).toHaveBeenCalledWith(expect.objectContaining({ kind: 'refund', lines: [
     { account_code: '2000', debit_cents: 1800, credit_cents: 0, athlete_ref: 'ath-11111111' },
@@ -184,4 +187,57 @@ it('records a refund of the whole gift against the athlete', async () => {
     { account_code: '1010', debit_cents: 0, credit_cents: 2000 },
   ] })));
   expect(await screen.findByText(/Recorded \$20\.00 · Refund a gift or sale/)).toBeTruthy();
+});
+
+const openGiftRefund = async () => {
+  await render(<BooksScreen />);
+  await openTab('Record & close');
+  await fireEvent.press(screen.getByRole('tab', { name: 'Refund a gift or sale' }));
+  await fireEvent.press(screen.getByRole('tab', { name: 'Fixture Athlete' }));
+  await fireEvent.changeText(screen.getByLabelText('Charge refunded ($)'), '20');
+  await fireEvent.changeText(screen.getByLabelText('Memo'), 'Refund, giver request');
+};
+
+it('defaults new gift refunds to zero platform share and retains the original reference', async () => {
+  await openGiftRefund();
+  expect(screen.getByLabelText("Original Tapua'i gift share ($)").props.value).toBe('0.00');
+  expect(screen.getByText(/does not verify the original charge or automatically reconcile a refund/)).toBeTruthy();
+  await fireEvent.changeText(screen.getByLabelText('Receipt, invoice or Stripe id'), 'original-zero-share-row');
+  await fireEvent.press(screen.getByLabelText('Record entry'));
+  await waitFor(() => expect(recordLedgerEntry).toHaveBeenCalledWith(expect.objectContaining({
+    reference: 'original-zero-share-row',
+    lines: [
+      { account_code: '2000', debit_cents: 2000, credit_cents: 0, athlete_ref: 'ath-11111111' },
+      { account_code: '1010', debit_cents: 0, credit_cents: 2000 },
+    ],
+  })));
+});
+
+it.each(['12.345', '-1', '20.01', '9007199254740992'])('rejects invalid original gift share %s before writing', async share => {
+  await openGiftRefund();
+  await fireEvent.changeText(screen.getByLabelText("Original Tapua'i gift share ($)"), share);
+  await fireEvent.changeText(screen.getByLabelText('Receipt, invoice or Stripe id'), 'original-row');
+  await fireEvent.press(screen.getByLabelText('Record entry'));
+  expect(await screen.findByText(/original Tapua'i gift share between/)).toBeTruthy();
+  expect(recordLedgerEntry).not.toHaveBeenCalled();
+});
+
+it('requires original gift evidence before a manual refund write', async () => {
+  await openGiftRefund();
+  await fireEvent.press(screen.getByLabelText('Record entry'));
+  expect(await screen.findByText(/Add the original gift receipt or recorded revenue reference/)).toBeTruthy();
+  expect(recordLedgerEntry).not.toHaveBeenCalled();
+});
+
+it('keeps a Vault refund independent from the gift-only share field', async () => {
+  await openGiftRefund();
+  await fireEvent.changeText(screen.getByLabelText("Original Tapua'i gift share ($)"), '2');
+  await fireEvent.press(screen.getByRole('tab', { name: 'Vault sale' }));
+  expect(screen.queryByLabelText("Original Tapua'i gift share ($)")).toBeNull();
+  await fireEvent.press(screen.getByLabelText('Record entry'));
+  await waitFor(() => expect(recordLedgerEntry).toHaveBeenCalledWith(expect.objectContaining({ lines: [
+    { account_code: '2010', debit_cents: 1600, credit_cents: 0, athlete_ref: 'ath-11111111' },
+    { account_code: '4900', debit_cents: 400, credit_cents: 0 },
+    { account_code: '1010', debit_cents: 0, credit_cents: 2000 },
+  ] })));
 });

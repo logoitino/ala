@@ -2,6 +2,7 @@
  * Money labelling helpers: pick the channel stored on a donation (`tips.origin`) and the short channel line shown
  * on receipts and the admin Money desk. Wording follows docs/product/VOICE.md.
  * @sideEffects `fetchRecentTips` reads `tips`. `recordDripOrder` inserts `shop_orders`.
+ * MONEY-TIPS-01 repair counts are optional/nullable for old transport snapshots and never imply zero.
  */
 
 import {
@@ -101,6 +102,7 @@ export type CompanyRevenueSummary = {
   company_net_cents: number;
   payouts_cents: number;
   stripe_paid_cents: number;
+  gift_repair_gap_count?: number | null;
   streams: CompanyRevenueStream[];
   recent: CompanyRevenueLog[];
 };

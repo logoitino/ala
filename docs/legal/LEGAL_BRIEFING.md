@@ -50,7 +50,7 @@ Prices, PIN, Connect identity, RLS, and the Mālo disclaimer are generated from 
 | --- | --- |
 | Gift amounts | $5 / $10 / $25 + custom (`TIP_AMOUNTS`) |
 | In-app claim | 90% of your donation goes to the athlete's family account. Tapua'i keeps 10% to run the app, including card processing. Nothing goes to the person who uploaded the clip. |
-| Current test-rail gift split | 10% platform / 90% athlete's family account (`MALO_PLATFORM_CUT_BPS`), disclosed on the current checkout; the optional tip for Tapua'i is separate and 100% platform (rows L, R) |
+| Current test-rail gift split | 0% platform / 100% athlete's family account (`MALO_PLATFORM_CUT_BPS`), disclosed on the current checkout; the optional tip for Tapua'i is separate and 100% platform (rows L, R) |
 | Exclusive | $4.99; +100 Aura (`EXCLUSIVE_MONTHLY_DOLLARS`) |
 | Boosters | Silver $50 / Gold $150 / Platinum $500 (`SPONSOR_TIERS`) |
 | Stripe Express | US individual (`createStripeAccount.ts`) |

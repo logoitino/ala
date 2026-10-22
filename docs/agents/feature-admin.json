@@ -1953,6 +1953,96 @@
           ]
         }
       }
+    },
+    {
+      "id": "MONEY-TIPS-01",
+      "title": "Optional tip for Tapua'i and processing-fee coverage with the full gift allocated to the family",
+      "owner": "COMMERCE",
+      "status": "admin-ready",
+      "plannedAt": "2026-10-22T15:03:49.233Z",
+      "exemption": null,
+      "source": {
+        "description": "Published app_runtime_config.buttons.MONETIZATION_TIPS_ENABLED is the optional-tip/fee-cover authority; default OFF, absent/malformed/error remains OFF. The gift split is permanently zero platform cut after the model migration and does not depend on the optional-extras flag. Shared server money core owns the integer quote; tips and company_revenue_logs remain canonical existing allocations. Existing historical ledger rows are preserved. Server denies new optional quotations when published authority is absent or OFF; SQL admits only exactly matched previously issued real-intent quotes; untrusted client flags never grant authority. Stripe remains test mode, payouts blocked, canonical webhook crediting disabled.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/runtime.ts",
+          "packages/shared-types/index.ts",
+          "supabase/functions/_shared/money/paymentIntent.ts",
+          "apps/mobile/src/backend/db/schema.sql"
+        ]
+      },
+      "admin": {
+        "route": "/admin/features",
+        "actions": [
+          "Review distinct draft and published optional tip/processing-fee flag; default OFF",
+          "Save flag change to draft without enabling the first published row",
+          "Publish reviewed draft only through existing Publish to app action",
+          "Pause optional extras with OFF plus Publish; gift platform allocation stays zero",
+          "Open existing Money and Books desks to reconcile gift, optional tip and covered processing-fee rows"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/FeaturesTool.tsx",
+          "apps/mobile/src/frontend/lib/runtime.ts",
+          "packages/shared-types/index.ts",
+          "apps/admin-portal/components/PortalShell.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/revenue",
+        "metrics": [
+          "Existing athlete gifts stream from get_company_revenue_summary retains actual gross/family/platform cents and basis points: new model requires zero gift platform allocation. Historical rows keep actual posted amounts; no recomputation or false all-time100% claim. Authorized staff have existing Data/Finance & Books alternatives and links to Features/Publish for control repair.",
+          "Optional tip stream is Tip Tapua'i (optional), separate from gifts; existing covered-processing-fee stream remains separate. Gift totals count transactions, not unique givers; retain existing UTC windows, bounded reads, missing/error states, exact reconciliation controls and no duplicate canonical-credit writer.",
+          "SUPPORT review required: fixed checkout/runtime/ledger error signals only, safe logs without payment secrets or recipient details. Actual Stripe processing cost is unknown until processor evidence; estimates/covered amounts never prove actual cost or family settlement. Missing sensor remains explicit and no new metric/dashboard is justified."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/MoneyTool.tsx",
+          "packages/shared-types/admin/reports.ts",
+          "packages/shared-types/admin/bookkeeping.ts",
+          "packages/shared-types/admin/financeChecks.ts",
+          "apps/mobile/src/frontend/components/Admin/Reports/reportPages.ts",
+          "apps/admin-portal/app/(protected)/money/page.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Set MONETIZATION_TIPS_ENABLED OFF in Expo Features and Publish. New server quotations reject optional extras if authority is OFF/unreadable; the SQL insert guard honors only the original service-issued real-intent allocation, including payments already in progress at OFF; base gifts remain zero platform cut. Never restore the former10%cut when extras are disabled. Existing confirmed charges/receipts and historical allocations are preserved; stale/draft clients cannot authorize extras. Repair config/read failures with safe fixed-code observation and reproduction; Finance owns uncertain/in-flight quote/commit reconciliation, no automatic payment retry. Unapplied migration/source-version compatibility and enforcement outages are explicit release blockers.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/runtime.ts",
+          "supabase/functions/_shared/money/paymentIntent.ts",
+          "apps/mobile/src/backend/db/schema.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "admin"
+        ],
+        "deniedBehavior": "Only authorized Expo admins draft/publish configuration; Next portal reads published status without write controls. Guest/fan/athlete accounts cannot set or publish authority. Stripe handlers authenticate gift senders; optional allocation admission uses trusted published configuration and SQL enforcement, not submitted booleans. Tests must cover wrong actor, absent/malformed authority, first-row draft ON without Publish, malformed amounts and flag changed during quote. Existing gift/privacy/guardian gates remain in force; test-only/payout-blocked state is preserved.",
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/FeaturesTool.tsx",
+          "supabase/functions/_shared/money/paymentIntent.ts",
+          "apps/mobile/src/backend/db/schema.sql"
+        ]
+      },
+      "app": {
+        "route": "/gift/[handle]",
+        "paths": [
+          "apps/mobile/src/frontend/components/TipSheetModal.tsx",
+          "apps/mobile/src/frontend/components/TipCheckout.tsx",
+          "apps/mobile/src/frontend/components/FeeCheckbox.tsx",
+          "apps/mobile/src/frontend/components/Profile/ReceiptCard.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-22T15:18:00.098Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/MONEY-TIPS-01-admin.md",
+              "command": "node scripts/replay/tip-model-replay.mjs .claude/worktrees/fan-zone/.smoke/runtime/pglite-cache/package/dist; focused backend/admin Jest, portal node --test, pnpm typecheck; independent invalid-quote SQL revalidation",
+              "result": "Local source/admin: SQL22/22, backend208, admin87, portal117 and both typechecks pass. Independent P1 revalidation rejects both inputs before persistence. No remaining source blockers in reviewed scope; hosted/provider/domain/counsel acceptance and client stage pending."
+            }
+          ]
+        },
+        "app": null
+      }
     }
   ]
 }

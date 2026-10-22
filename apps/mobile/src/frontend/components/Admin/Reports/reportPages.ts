@@ -1,10 +1,11 @@
 /** Page-specific report content for Expo admin. All builders consume snapshots from the existing session;
- * no screen queries a database or manufactures absent counts. Named gift-total rankings stay private. */
+ * no screen queries a database or manufactures absent counts. Named gift-total rankings stay private.
+ * MONEY-TIPS-01 repair evidence stays in this existing Revenue report, with explicit unknown counts. */
 import {
   MEASURES, buildAnalytics, homeKpis, teamTrends, readKey, formatUsd, formatReportValue, labelForReportKey,
   UNMEASURED, managementDeskStatus, deskLabel, APP_API_ROUTES, streamName, streamSplitText,
      type AnalyticsChart, type AnalyticsPoint, type ChartAccent, type DashboardInput, type MeasureUnit,
-  ledgerDetail, originName, entryName, donationChannel, utcStamp, fillDays, shortDay, donationSplit, kpiUsd, payeeName } from '@tapuai/shared-types/admin';
+  ledgerDetail, originName, entryName, donationChannel, utcStamp, fillDays, shortDay, donationSplit, giftRepairGapNotice, kpiUsd, payeeName } from '@tapuai/shared-types/admin';
 import type { AdminReportData } from '@/lib/adminReports';
 import { chartValue, type ReportChart, type ReportTable } from './reportChartModel';
 
@@ -113,8 +114,8 @@ function revenueSections(d: AdminReportData): ReportSection[] {
   const donations = valid ? donationSplit(r.streams) : null;
   const recordedParts = [{ key: 'payee', label: 'Payee share (families, athletes, operators)', value: valid ? r.payouts_cents : null, color: 'jade' as const }, { key: 'company', label: "Tapua'i share", value: valid ? r.company_net_cents : null, color: 'gold' as const }, ...(unsplit > 0 ? [{ key: 'unsplit', label: 'Recorded gross not split', value: unsplit, color: 'muted' as const }] : [])];
   const ledgerRing: AnalyticsChart = { ...split('Where recorded gross goes', recordedParts, 'get_company_revenue_summary'), kind: 'ring', centerLabel: 'Recorded gross', centerValue: chartValue(valid ? r.gross_volume_cents : null, 'cents') };
-  const policySplit = split('Gift split, from the ledger', [{ key: 'family', label: "Athletes' family accounts", value: donations?.family ?? null, color: 'jade' }, { key: 'company', label: "Tapua'i share (covers card processing)", value: donations?.platform ?? null, color: 'gold' }, ...(donations && donations.unsplit > 0 ? [{ key: 'unsplit', label: 'Recorded but not split', value: donations.unsplit, color: 'muted' as const }] : [])], 'get_company_revenue_summary.streams[malo]');
-  policySplit.caption = donations?.policy ? `Stated policy for this stream: ${donations.policy}` : 'Gifts stream';
+  const policySplit = split('Gift split, from the ledger', [{ key: 'family', label: "Athletes' family accounts", value: donations?.family ?? null, color: 'jade' }, { key: 'company', label: "Historical Tapua'i gift share", value: donations?.platform ?? null, color: 'gold' }, ...(donations && donations.unsplit > 0 ? [{ key: 'unsplit', label: 'Recorded but not split', value: donations.unsplit, color: 'muted' as const }] : [])], 'get_company_revenue_summary.streams[malo]');
+  policySplit.caption = donations?.policy ? `Model returned for this stream: ${donations.policy}` : 'Gifts stream';
   const daily = trend('Gifts per day', breakdownOk ? fillDays(d.breakdown.byDay).map(day => ({ label: shortDay(day.day), value: day.cents })) : null, 'cents', 'jade', 'get_admin_malo_breakdown.by_day', d.breakdown.error, 'columns');
   if ('windowLabel' in daily) daily.windowLabel = 'Last 14 days, UTC'; daily.caption = 'Last 14 days, UTC';
   const cross = donations && n('money', 'malo_cents_all') != null ? donations.gross - n('money', 'malo_cents_all')! : null;
@@ -126,7 +127,8 @@ function revenueSections(d: AdminReportData): ReportSection[] {
     return item;
   };
   return [
-    { id: 'test-mode', title: 'Wave 0 test mode', sentences: [`Stripe is in test mode, so every amount here is a test record and no real money has moved. Payouts are blocked.${queued != null ? ` Queued payout requests: ${queued}.` : ''}${valid && r.stripe_paid_cents! > 0 ? ' Some payout rows are marked paid. Check them before trusting this banner.' : ' Nothing has been sent to a family, athlete, or operator.'}`, 'Gifts: 90% to the athlete or family account, 10% to Tapua’i. Vault purchases: 80% recorded for the athlete, 20% to Tapua’i. Drip purchases: 100% to Tapua’i.'] },
+    { id: 'test-mode', title: 'Wave 0 test mode', sentences: [`Stripe is in test mode, so every amount here is a test record and no real money has moved. Payouts are blocked.${queued != null ? ` Queued payout requests: ${queued}.` : ''}${valid && r.stripe_paid_cents! > 0 ? ' Some payout rows are marked paid. Check them before trusting this banner.' : ' Nothing has been sent to a family, athlete, or operator.'}`, 'New gifts: full family allocation with no Tapua’i gift cut; historical recorded allocations are retained. Vault purchases: 80% recorded for the athlete, 20% to Tapua’i. Drip purchases: 100% to Tapua’i.'] },
+    { id: 'gift-revenue-repair', title: 'Gift revenue repair', sentences: [giftRepairGapNotice(r).message], links: [{ label: 'Open Books for Finance repair', href: '/admin/books' }] },
     { id: 'ledger', title: 'Ledger totals', kpis: [money('Gross volume', r.gross_volume_cents, 'Recorded ledger gross'), money("Tapua'i share", r.company_net_cents, 'Recorded for Tapua’i'), money('Payee share recorded', r.payouts_cents, 'Recorded share, not proof of a payout'), { ...money('Payouts marked paid', r.stripe_paid_cents, valid && r.stripe_paid_cents! > 0 ? 'Should be $0 while payouts are blocked. Check the paid rows in the disbursements table.' : 'Stays $0 while payouts are blocked in Wave 0'), tone: valid && r.stripe_paid_cents! > 0 ? 'warn' : 'neutral' }],
       // copy-ok: 'tips' is the raw SQL source shown to staff; visible identifier leak is recorded in the copy report.
     charts: [ledgerRing, policySplit], sentences: cross == null ? [] : [`Cross-check: the ledger records ${formatUsd(donations!.gross)} in gifts and the tips table holds ${formatUsd(n('money', 'malo_cents_all')!)}. ${cross === 0 ? 'They match.' : `They differ by ${formatUsd(Math.abs(cross))}. Check company_revenue_logs.`}`] },

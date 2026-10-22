@@ -275,6 +275,8 @@ export type AppRuntimeFlagRow = {
   path: string;
   label: string;
   hint: string;
+  /** Money controls must stay OFF when an older published row omits their authority. */
+  defaultValue?: boolean;
 };
 
 export type AppRuntimeFlagGroup = {
@@ -283,6 +285,17 @@ export type AppRuntimeFlagGroup = {
   hint: string;
   flags: AppRuntimeFlagRow[];
 };
+
+/** Read-only status, never server authority: absent money controls use their catalog OFF default. */
+export function readPublishedRuntimeFlag(published: Record<string, unknown>, flag: Pick<AppRuntimeFlagRow, 'path' | 'defaultValue'>): boolean {
+  const fallback = flag.defaultValue ?? true;
+  const [root, key] = flag.path.split('.');
+  if (!root || !key) return fallback;
+  const group = published[root];
+  if (!group || typeof group !== 'object' || Array.isArray(group)) return fallback;
+  const value = (group as Record<string, unknown>)[key];
+  return typeof value === 'boolean' ? value : fallback;
+}
 
 /**
  * @purpose One flag catalog for Expo Features / Look and the Next Features desk — same paths Expo `parseAppRuntimeConfig` reads.
@@ -312,6 +325,7 @@ export const APP_RUNTIME_FLAG_GROUPS: AppRuntimeFlagGroup[] = [
       { path: 'buttons.aura', label: 'Aura', hint: '⚡ on Highlights ⚡' },
       { path: 'buttons.flex', label: 'Flex', hint: '💪 on Highlights ⚡' },
       { path: 'buttons.malo', label: 'Give', hint: 'Give rail and Profile Give' },
+      { path: 'buttons.MONETIZATION_TIPS_ENABLED', label: "Tip Tapua'i (optional) and fee coverage", hint: 'Default OFF. Optional tips and processing-fee coverage only; gift platform share stays zero after MONEY-TIPS-01. Draft until Publish.', defaultValue: false },
       { path: 'buttons.more', label: 'More sheet', hint: 'Share / Save / Report' },
       { path: 'buttons.subscribe', label: 'Purchase', hint: 'One-time Exclusive on the Vault (price on Catalogs)' },
       { path: 'buttons.crew', label: 'Join Crew', hint: 'The Crew ⚡' },

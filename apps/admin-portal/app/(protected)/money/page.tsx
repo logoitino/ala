@@ -1,3 +1,5 @@
+/** Existing Revenue report keeps actual historical amounts and MONEY-TIPS-01 repair counts visible.
+ * This portal reads staff summaries; Finance repair and publication stay in Expo admin. */
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -33,6 +35,7 @@ import {
   formatUsd,
   streamName,
   streamSplitText,
+  giftRepairGapNotice,
 } from '@/lib/reports';
 
 export const dynamic = 'force-dynamic';
@@ -49,7 +52,7 @@ const TAPUAI = measureColor('tapuaiShare');
 const usd = (cents: number) => formatUsd(cents);
 const count = (n: number) => n.toLocaleString('en-US');
 
-/** "Gifts · 90% to the family account, 10% to Tapua'i". The split comes from basis points
+/** Gift model labels come from the source's basis points; historical recorded amounts remain separate.
  *  (`streamSplitText`) and already names the payee, so the payee is said once (W3-COMMERCE #1). When the
  *  read cannot support a split, the payee alone stands in ("Gifts · to athlete's family account");
  *  never the RPC's raw `split` text (VOICE #3, #4). */
@@ -97,6 +100,7 @@ export default async function MoneyPage() {
   ];
 
   const split = revenueOk ? donationSplit(revenue.streams) : null;
+  const giftRepair = giftRepairGapNotice(revenue);
   // Payout rows marked paid while payouts are blocked: the tile warns and the banner stops saying "nothing sent" (VOICE #21).
   const paidWarn = stripePaid != null && stripePaid > 0;
   const paidTone: StatTone = paidWarn ? 'warn' : 'neutral';
@@ -135,6 +139,12 @@ export default async function MoneyPage() {
           </p>
         )}
       </div>
+
+      <p role="status" className="mb-6 text-sm text-[var(--ink-soft)]">
+        {giftRepair.message}{' '}
+        Repair uses Expo <code>/admin/books</code>.{' '}
+        <Link href="/manage#billing" className="font-bold text-[var(--jade)] underline">View the Finance handoff.</Link>
+      </p>
 
       <SectionHeading level={2} title="Ledger totals" hint="company_revenue_logs · all time · test mode" />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -189,10 +199,10 @@ export default async function MoneyPage() {
         />
         <SplitBar
           title="Gift split, from the ledger"
-          caption={split?.policy ? `Stated policy for this stream: ${split.policy}` : 'Gifts stream'}
+          caption={split?.policy ? `Model returned for this stream: ${split.policy}` : 'Gifts stream'}
           parts={[
             { label: "Athletes' family accounts", value: split ? split.family : null, color: PAYEE },
-            { label: "Tapua'i share (covers card processing)", value: split ? split.platform : null, color: TAPUAI },
+            { label: "Historical Tapua'i gift share", value: split ? split.platform : null, color: TAPUAI },
             ...(split && split.unsplit > 0 ? [{ label: 'Recorded but not split', value: split.unsplit, color: 'muted' as const }] : []),
           ]}
           format={usd}
@@ -202,7 +212,7 @@ export default async function MoneyPage() {
               ? 'Gift split: this read did not include the gifts stream.'
               : split.gross === 0
                 ? 'No gifts in the ledger yet, so there is no split to show.'
-                : `Of ${usd(split.gross)} in test-mode gifts on the ledger, ${usd(split.family)} (${split.familyPct}%) is recorded for family accounts and ${usd(split.platform)} (${split.platformPct}%) for Tapua'i. Both percents are computed from ledger rows, not from the policy.`
+                : `Of ${usd(split.gross)} in test-mode gifts on the ledger, ${usd(split.family)} (${split.familyPct}%) is recorded for family accounts and ${usd(split.platform)} (${split.platformPct}%) for Tapua'i. Both percents are computed from recorded rows; historical allocations are retained. New gifts use the full family allocation with no Tapua'i gift cut.`
           }
           source="get_company_revenue_summary.streams[malo] · gross_cents, payout_cents, platform_cents"
           error={revenue.error}

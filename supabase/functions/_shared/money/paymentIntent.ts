@@ -4,8 +4,8 @@
  * Edge Function `create-payment-intent` and the Metro route `POST /api/create-payment-intent`; each runtime injects
  * its own database call and Stripe client and keeps its own session / configuration order in front of this.
  *
- * This creates the intent only. The app still owns `tips`/Aura. Optional server quote/persistence is prepared,
- * unwired in both runtimes; even a stored context has notificationAuthority=false until atomic business integration.
+ * This creates the intent only. The app still owns `tips`/Aura. Service-owned quote/persistence now protects
+ * allocation and optional-extra admission; a stored context still has notificationAuthority=false.
  */
 
 import { errorResult, type CoreResult } from './http.ts';
@@ -74,6 +74,8 @@ export async function runCreatePaymentIntent(input: {
   if (!Number.isSafeInteger(platformTipCents) || platformTipCents < 0 || platformTipCents >= amount) {
     return errorResult('platformTipCents must be whole cents, less than amount.', 400);
   }
+  // An extra cannot bypass the published flag by omitting its gift declaration/server quote.
+  if (platformTipCents > 0 && !body.donation) return errorResult("Gift allocation required for an optional tip to Tapua'i.", 400);
 
   let context: DonationPaymentContext | null = null;
   if (body.donation !== undefined) {
@@ -108,6 +110,8 @@ export async function runCreatePaymentIntent(input: {
       if (!validDonationContext(context, { donorId: input.userId, athleteId: playerId, giftCents: request.giftCents,
         amount, platformTipCents, coverFees: request.coverFees })) return errorResult('Payment context unavailable.', 503);
     } catch { return errorResult('Payment context unavailable.', 503); }
+  } else if (body.donation && (body.donation.coverFees || platformTipCents > 0)) {
+    return errorResult('Payment context unavailable.', 503);
   }
 
   const paymentIntent = await input.getStripe().paymentIntents.create({

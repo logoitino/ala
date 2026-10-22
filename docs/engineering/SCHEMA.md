@@ -1,3 +1,26 @@
+<!-- Source schema overview distinguishes private test quotes from gift-credit and settlement authority. -->
+## MONEY-TIPS-01 — no-cut gifts and optional platform tips (local, 2026-10-22)
+
+Append-only `20261022152000_no_cut_gifts_optional_tips.sql` changes the individual `malo`
+allocation to0platform/10000family independently of `buttons.MONETIZATION_TIPS_ENABLED`.
+Other commercial rates stay unchanged. Existing financial rows/closed periods are preserved;
+new missing gift rows backfill at0cut only into open periods. The summary exposes bounded
+`gift_repair_gap_count`; missing/unknown is not healthy.
+
+`monetization_tips_enabled()` is a private literal-boolean published-config lookup, defaultOFF.
+`prepare_tip_payment_context(uuid,uuid,bigint,boolean,numeric)` is service-only and prepares
+an actor/athlete-bound quote in existing `notification_payment_contexts`. Optional allocations
+need publishedON. `record_notification_payment_context` binds the unchanged quote to a real
+Stripe test intent once; provisional references cannot credit a gift. `tips_payment_context_guard()`
+checks exact recorded optional allocation/identity/intent and duplicates before insert, including
+previously issued quotes when the flag turnsOFF. No new table, column, credit writer or receipt
+producer; `notification_authority` remainsfalse. Existing `tips` insertion owns business credit.
+
+First draft creation keeps this new money flag publishedOFF until explicit adminPublish.
+Flat catalog processing coverage is an estimate/contribution, not actual processor cost.
+Current-family gross liability is not bank settlement; test mode and blocked payouts remain.
+Migration application, actual per-charge processing and item8movement require separate evidence.
+
 <!-- Canonical schema inventory; notification entries are local unapplied source contracts. -->
 # Tapua'i database schema
 

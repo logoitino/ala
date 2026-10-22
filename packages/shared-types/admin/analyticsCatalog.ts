@@ -297,7 +297,7 @@ export const MEASURES: MeasureDef[] = [
   { key: 'avg_checkout_ms_24h', board: 'playback', section: 'reliability', label: 'Average checkout step, 24 hours', unit: 'milliseconds', grain: '24h', note: 'Mean across every logged checkout step, not one whole checkout.' },
   { key: 'events_24h', board: 'playback', section: 'reliability', label: 'Telemetry events, 24 hours', unit: 'count', grain: '24h', note: 'All telemetry rows in the last day.' },
   { key: 'gross_volume_cents', board: 'ledger', section: 'revenue', label: 'Gross recorded', unit: 'cents', grain: 'all', note: 'Company ledger gross.' },
-  { key: 'company_net_cents', board: 'ledger', section: 'revenue', label: 'Tapua\'i share', unit: 'cents', grain: 'all', note: 'What the ledger recorded for Tapua\'i across every stream. Current test-mode model: 90% to the family account, 10% to Tapua\'i.' },
+  { key: 'company_net_cents', board: 'ledger', section: 'revenue', label: 'Tapua\'i share', unit: 'cents', grain: 'all', note: 'What the ledger recorded for Tapua\'i across every stream. New gifts allocate the full gift to the family account with no Tapua\'i gift cut. Historical allocations are retained.' },
   { key: 'payouts_cents', board: 'ledger', section: 'revenue', label: 'Payee share recorded', unit: 'cents', grain: 'all', note: 'Recorded for families, Vault athletes, and booster operators. Nothing is paid out in Wave 0.' },
   { key: 'stripe_paid_cents', board: 'ledger', section: 'revenue', label: 'Payouts marked paid', unit: 'cents', grain: 'all', note: 'Disbursement rows marked paid. Same sum on the Gifts and Ledger boards. Should be $0 while payouts are blocked in Wave 0.' },
 ];

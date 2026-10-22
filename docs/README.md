@@ -86,6 +86,8 @@ order, then dip into the folders as you need them.
 | [Notification admin evidence](engineering/evidence/NOTIFY-01-admin.md) | Actual local staff/source review and checks, with SQL/provider and payment-authority limits. |
 | [Gift-language string table](engineering/evidence/GIFT_LANGUAGE_STRINGS.md) | Before/after production strings, updated tests and parsed residual classifications. |
 | [Gift-language residual grep](engineering/evidence/GIFT_LANGUAGE_RESIDUALS.md) | Every retained donat* source line, including identifiers and explicit holds. |
+| [Tip-model admin evidence](engineering/evidence/MONEY-TIPS-01-admin.md) | Actual source/admin checks and no-cut/flag/privacy/payment limits. |
+| [Tip-model app evidence](engineering/evidence/MONEY-TIPS-01-app.md) | App integration checks after the preserved admin checkpoint. |
 | [Tip-model baseline](engineering/evidence/TIP_MODEL_BASELINE.md) | Pre-change10% calculation inventory, flag contracts and processing/settlement limits. |
 | [Gift-language report](engineering/evidence/GIFT_LANGUAGE_REPORT.md) | Actual copy changes, residual vocabulary, frozen/dynamic exceptions and release dependencies. |
 | [Notification app evidence](engineering/evidence/NOTIFY-01-app.md) | Profile/Activity implementation, final regression and local readiness with delivery limits. |

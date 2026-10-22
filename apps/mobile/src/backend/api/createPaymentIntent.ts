@@ -1,5 +1,5 @@
 /**
- * Metro / Node adapter for donation checkout (`POST /api/create-payment-intent`). The validation, freeze check and
+ * Metro / Node adapter for gift and purchase checkout (`POST /api/create-payment-intent`). The validation, freeze check and
  * PaymentIntent shape live in the shared money core (`supabase/functions/_shared/money/paymentIntent.ts`, SCALE-04),
  * which the Edge Function `create-payment-intent` uses too. This file keeps only what is Node-specific: reading
  * `process.env`, the Node Stripe SDK, the Supabase client for the freeze RPC, and this route's order of checks
@@ -7,6 +7,7 @@
  */
 
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 
 import { errorResult, refuseLiveStripeKey, thrownMessage, type CoreResult } from '../../../../../supabase/functions/_shared/money/http.ts';
 import {
@@ -14,6 +15,7 @@ import {
   runCreatePaymentIntent,
 } from '../../../../../supabase/functions/_shared/money/paymentIntent.ts';
 import { createAuthedDb, requireAuthedUser } from './session';
+import { serverDonationContextAdapter } from '../../../../../supabase/functions/_shared/money/serverDonationContext.ts';
 
 function respond(result: CoreResult): Response {
   return Response.json(result.body, { status: result.status });
@@ -45,6 +47,7 @@ export async function createPaymentIntentHandler(request: Request): Promise<Resp
     if (liveKey) return respond(liveKey);
 
     const body: unknown = await request.json();
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     return respond(
       await runCreatePaymentIntent({
         userId: auth.user.id,
@@ -56,6 +59,12 @@ export async function createPaymentIntentHandler(request: Request): Promise<Resp
             { target_player_id: playerId },
           ),
         getStripe: () => new Stripe(secretKey),
+        // The quote client never falls back to a user's JWT: missing service authority must refuse before charge.
+        donationContext: serverDonationContextAdapter(serviceKey
+          ? (name, args) => createClient(auth.supabaseUrl, serviceKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+          }).rpc(name, args)
+          : undefined),
       }),
     );
   } catch (error) {

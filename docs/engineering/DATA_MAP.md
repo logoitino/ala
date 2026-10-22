@@ -10,8 +10,8 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Tables | 125 |
 | Views | 3 |
 | Storage buckets | 6 |
-| Feature switches read by the fan app | 41 of 41 |
-| Database functions | 609 (250 used by hand, 61 trigger functions) |
+| Feature switches read by the fan app | 42 of 42 |
+| Database functions | 612 (253 used by hand, 62 trigger functions) |
 | Tables reached by at least one screen or server route | 125 of 128 |
 | Code files that read or write the database | 84 |
 | Exported symbols nothing imports | 42 (0 proposed for archive, 42 kept on purpose) |
@@ -29,7 +29,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `AURA` | `sport_quiz_badges`, `sport_quiz_levels` | 7 |
 | `AUTH` | `notification_account_activations` | 7 |
 | `BILLING` | `subscriber_requests`, `subscriptions` | 0 |
-| `COMMERCE` | `notification_payment_contexts` | 1 |
+| `COMMERCE` | `notification_payment_contexts` | 4 |
 | `CONNECT` | `payee_verifications`, `payout_flag_overrides` | 12 |
 | `CONTROLLER` | `ledger_accounts`, `ledger_manual_entries`, `ledger_manual_lines`, `ledger_period_closes`, `ledger_period_reopens` | 6 |
 | `CREW` | `crew_follows` | 3 |
@@ -105,7 +105,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `RUNTIME_CONFIG` · Draft and published app switches, copy and catalogs (Publish to app).
 
 - Written by: `@/lib/runtime.ts`; database functions: `admin_beyond_set_enabled`, `patch_app_runtime_draft`, `publish_app_runtime`
-- Read by: `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `@/lib/adminReports.ts`, `@/lib/runtime.ts`; database functions: `beyond_enabled`, `friend_requests_enabled`, `guardian_links_enabled`
+- Read by: `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `@/lib/adminReports.ts`, `@/lib/runtime.ts`; database functions: `beyond_enabled`, `friend_requests_enabled`, `guardian_links_enabled`, `monetization_tips_enabled`, `prepare_tip_payment_context`
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +58 more
 
 ### `athlete_birthdates`
@@ -554,7 +554,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `close_ledger_period`
 - Read by: —; database functions: `get_ledger_books`, `ledger_period_is_closed`
 - Removed by: `reopen_ledger_period`
-- Screens: `/admin/books`
+- Screens: `/admin`, `/admin/analytics`, `/admin/audience`, `/admin/books`, `/admin/departments`, `/admin/health`, `/admin/product`, `/admin/product/coverage`, `/admin/product/features`, `/admin/product/people` +9 more
 
 ### `ledger_period_reopens`
 
@@ -632,10 +632,10 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `notification_payment_contexts`
 
-**Owner:** `COMMERCE` · Immutable server-bound test payment purpose/actor/athlete/quote allocation evidence. Notification authority is constrained false; no gift credit source.
+**Owner:** `COMMERCE` · Private prepared test quote allocation and actor/athlete evidence, with provisional-to-real intent binding only; provider observations remain separate. No gift-credit or receipt-delivery authority.
 
-- Written by: —; database functions: `apply_notification_payment_event`, `record_notification_payment_context`
-- Read by: —; database functions: `apply_notification_payment_event`, `record_notification_payment_context`
+- Written by: —; database functions: `apply_notification_payment_event`, `prepare_tip_payment_context`, `record_notification_payment_context`
+- Read by: —; database functions: `apply_notification_payment_event`, `record_notification_payment_context`, `tips_payment_context_guard`
 - Screens: `edge:stripe-webhook`
 
 ### `notification_payment_observations`
@@ -713,7 +713,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `PROFILE` · Account profiles, roles and settings; trusted Connect adapters conditionally persist the own-account binding/onboarding/capability flags before links. These flags do not assert identity/TIN verification. MULTISPORT-01 athlete_sports_revision plus trusted athlete_sports_managed opt-in marker guard atomic participation/primary corrections while preserving verified school/player/guardian identities.
 
 - Written by: `@/context/AuthContext.tsx`, `@/lib/adminCatalog.ts`, `@/lib/auth.ts`, `@/lib/legal.ts`, `@/lib/teams.ts`, `@/services/MediaUploadService.ts`; database functions: `add_user_aura`, `add_user_role`, `admin_decide_payout_override`, `admin_decide_verification`, `admin_revoke_verification`, `admin_set_birth_month` +13 more
-- Read by: `portal/lib/authz.ts`, `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `apps/mobile/src/backend/api/createPayout.ts`, `@/context/AuthContext.tsx`, `@/lib/admin.ts` +8 more; database functions: `admin_add_athlete_game_log`, `admin_add_school_confirmer`, `admin_athlete_sport_usage`, `admin_beyond_erase_profile`, `admin_challenge_nudge_senders`, `admin_hold_challenge_sender` +140 more
+- Read by: `portal/lib/authz.ts`, `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `apps/mobile/src/backend/api/createPayout.ts`, `@/context/AuthContext.tsx`, `@/lib/admin.ts` +8 more; database functions: `admin_add_athlete_game_log`, `admin_add_school_confirmer`, `admin_athlete_sport_usage`, `admin_beyond_erase_profile`, `admin_challenge_nudge_senders`, `admin_hold_challenge_sender` +141 more
 - Triggers: `guard_profiles_admin_escalation → guard_profiles_admin_escalation`, `guard_profiles_verification → guard_profiles_verification`, `profiles_privacy_guard → guard_profiles_privacy`, `profiles_new_account_rules → profiles_apply_new_account_rules`, `profiles_age_guard → guard_profiles_age`, `profiles_payout_flags_guard → guard_payout_flags` +8 more
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +73 more
 
@@ -1151,8 +1151,8 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `LEDGER` · Gifts (code name tips), with channel, Rally, tip for Tapua'i and covered fee.
 
 - Written by: `@/hooks/useTipCheckout.ts`; database functions: —
-- Read by: `portal/lib/reports.ts`, `@/lib/admin.ts`, `@/lib/adminReports.ts`, `@/lib/bookkeeping.ts`, `@/lib/donationHistory.ts`, `@/lib/finance.ts`; database functions: `confirm_reel_player_tag`, `get_admin_malo_breakdown`, `get_admin_platform_metrics`, `get_admin_reports`, `get_custodial_summary`, `get_donations_to_thank` +5 more
-- Triggers: `company_revenue_tips_ai → company_revenue_after_source_insert`, `tips_platform_tip_revenue_ai → tips_platform_tip_revenue`, `tips_rally_before_insert → tips_rally_before_insert`, `tips_card_fee_revenue_ai → tips_card_fee_revenue`
+- Read by: `portal/lib/reports.ts`, `@/lib/admin.ts`, `@/lib/adminReports.ts`, `@/lib/bookkeeping.ts`, `@/lib/donationHistory.ts`, `@/lib/finance.ts`; database functions: `confirm_reel_player_tag`, `get_admin_malo_breakdown`, `get_admin_platform_metrics`, `get_admin_reports`, `get_company_revenue_summary`, `get_custodial_summary` +7 more
+- Triggers: `company_revenue_tips_ai → company_revenue_after_source_insert`, `tips_platform_tip_revenue_ai → tips_platform_tip_revenue`, `tips_rally_before_insert → tips_rally_before_insert`, `tips_card_fee_revenue_ai → tips_card_fee_revenue`, `tips_payment_context_guard_bi → tips_payment_context_guard`
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/audience`, `/admin/books`, `/admin/departments`, `/admin/health`, `/admin/moderation`, `/admin/product` +28 more
 
 ### `user_blocks`
@@ -1234,6 +1234,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `buttons.aura` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.flex` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.malo` | `apps/mobile/app/gift/[handle].tsx`, `@/components/Profile/AthleteProfileView.tsx`, `@/components/Rally/RallyCard.tsx`, `@/components/Rally/RallyMeter.tsx` +1 more |
+| `buttons.MONETIZATION_TIPS_ENABLED` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.more` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.subscribe` | `@/components/Profile/AthleteProfileView.tsx`, `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.crew` | `@/components/Profile/ProfileStatRow.tsx`, `@/components/Reels/ReelActionOverlay.tsx` |
@@ -1484,7 +1485,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `get_app_feedback` | `SUPPORT` | `@/lib/feedback.ts` | — | `app_feedback` |
 | `get_athlete_sports` | `PROFILE` | By hand: Privacy-filtered authorized snapshot RPC; no blanket participation SELECT. | — | `athlete_sport_entries`, `profiles` |
 | `get_aura_board` | `PROFILE` | `@/lib/aura.ts` | — | `profiles` |
-| `get_company_revenue_summary` | `LEDGER` | `portal/lib/reports.ts`, `@/lib/adminReports.ts` | — | `company_revenue_logs`, `disbursements` |
+| `get_company_revenue_summary` | `LEDGER` | `portal/lib/reports.ts`, `@/lib/adminReports.ts` | — | `company_revenue_logs`, `disbursements`, `tips` |
 | `get_crew_graph` | `CREW` | `@/lib/crew.ts`, `sql:toggle_crew_follow` | — | `crew_follows`, `profiles` |
 | `get_custodial_summary` | `LEDGER` | `@/lib/custodial.ts` | — | `company_revenue_logs`, `custodial_accounts`, `custodial_withdrawals` +3 more |
 | `get_donations_to_thank` | `DONATION_THANKS` | `@/lib/donationThanks.ts` | — | `donation_thanks`, `profiles`, `rallies` +1 more |
@@ -1553,13 +1554,13 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `is_school_operator_for` | `ROSTERS` | `sql:reels_apply_tag_defaults` | — | `players`, `profiles`, `schools_and_teams` |
 | `is_supervising_guardian` | `PROFILE` | `sql:beyond_can_view`, `sql:beyond_missing`, `sql:challenge_counts_visible` +6 more | — | `guardian_links` |
 | `is_trusted_server` | `BACKEND` | `sql:add_user_aura`, `sql:check constraint`, `sql:chip_in_wishlist_item` +12 more | — | — |
-| `ledger_lock_period` | `BACKEND` | `sql:close_ledger_period`, `sql:record_ledger_entry`, `sql:reopen_ledger_period` +1 more | — | — |
-| `ledger_period_is_closed` | `CONTROLLER` | `sql:record_ledger_entry`, `sql:void_ledger_entry` | — | `ledger_period_closes` |
+| `ledger_lock_period` | `BACKEND` | `sql:close_ledger_period`, `sql:record_ledger_entry`, `sql:reopen_ledger_period` +2 more | — | — |
+| `ledger_period_is_closed` | `CONTROLLER` | `sql:get_company_revenue_summary`, `sql:record_ledger_entry`, `sql:sync_company_revenue_logs` +1 more | — | `ledger_period_closes` |
 | `list_my_blocks` | `PROFILE` | `@/lib/privacy.ts` | — | `profiles`, `user_blocks` |
 | `list_my_friends` | `PROFILE` | `@/lib/privacy.ts` | — | `friendships`, `profiles` |
 | `log_supervision_event` | `PROFILE` | `sql:admin_set_birth_month`, `sql:cancel_my_approval_request`, `sql:challenge_missing_dependencies` +20 more | `supervision_events` | — |
 | `looks_like_ssn` | `BACKEND` | `sql:admin_record_payee_check`, `sql:admin_request_payout_override`, `sql:admin_revoke_payee_check` +1 more | — | — |
-| `malo_target_frozen` | `PROFILE` | `apps/mobile/src/backend/api/createPaymentIntent.ts`, `sql:RLS policy`, `sql:add_user_aura` +6 more | — | `profiles`, `schools_and_teams` |
+| `malo_target_frozen` | `PROFILE` | `apps/mobile/src/backend/api/createPaymentIntent.ts`, `sql:RLS policy`, `sql:add_user_aura` +7 more | — | `profiles`, `schools_and_teams` |
 | `mark_all_notifications_read` | `NOTIFICATIONS` | By hand: Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified. | `notification_inbox` | `notification_inbox_snapshots` |
 | `minor_guardian_count` | `PROFILE` | `sql:admin_minor_report`, `sql:enforce_minor_consent`, `sql:quiz_fact_mine` +3 more | — | `guardian_links` |
 | `minor_has_consent` | `CUSTODIAL` | `sql:admin_minor_report`, `sql:beyond_legacy_posts`, `sql:enforce_minor_consent` +6 more | — | `guardian_consents`, `guardian_links`, `players` +1 more |
@@ -1567,6 +1568,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `minor_payout_hold_reason` | `CUSTODIAL` | `sql:athlete_payout_status` | — | `athlete_birthdates`, `profiles` |
 | `minor_status_json` | `PROFILE` | `sql:cancel_my_approval_request`, `sql:get_my_privacy`, `sql:get_my_supervision` +4 more | — | `guardian_approval_requests`, `guardian_consents`, `guardian_links` +1 more |
 | `moderate_flagged_reel` | `HIGHLIGHTS` | `@/lib/admin.ts`, `@/lib/adminCatalog.ts` | `reels` | `reels` |
+| `monetization_tips_enabled` | `COMMERCE` | By hand: Private trigger/quote lookup of literal published optional-extras flag; missing/nonboolean is OFF. No write, customer grant or gift-credit authority. | — | `app_runtime_config` |
 | `my_claimed_player_id` | `PROFILE` | `sql:get_my_payout_status` | — | `profiles`, `verification_requests` |
 | `my_profile_id` | `PROFILE` | `sql:RLS policy`, `sql:accept_guardian_invite`, `sql:admin_confirm_payee_check` +67 more | — | `profiles` |
 | `my_vouching_school_id` | `PROFILE` | `sql:get_teammates_to_vouch`, `sql:vouch_for_teammate` | — | `profiles`, `verification_requests` |
@@ -1587,6 +1589,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `payee_hold_reason` | `BACKEND` | `sql:athlete_payout_status`, `sql:check constraint` | — | — |
 | `payee_missing_checks` | `BACKEND` | `sql:admin_payee_overview`, `sql:check constraint`, `sql:payee_hold_reason` | — | — |
 | `player_hidden_from_viewer` | `PROFILE` | `sql:beyond_legacy_posts`, `sql:search_local_entities` | — | `profiles` |
+| `prepare_tip_payment_context` | `COMMERCE` | By hand: Service-only test quote: authenticated sender/athlete, gross gift and optional extras; default-off published admission and private provisional intent. Immutable allocation retained for one real PaymentIntent binding; notification authority remains false. | `notification_payment_contexts` | `app_runtime_config`, `players`, `profiles` |
 | `preview_guardian_invite` | `PROFILE` | `@/lib/minors.ts` | — | `guardian_invites`, `profiles` |
 | `privacy_default_audience` | `BACKEND` | `sql:admin_reset_privacy`, `sql:apply_privacy_settings`, `sql:audience_allows` +4 more | — | — |
 | `privacy_settings_json` | `PROFILE` | `sql:admin_get_privacy`, `sql:apply_privacy_settings`, `sql:get_my_privacy` +2 more | — | `profiles` |
@@ -1796,7 +1799,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `record_company_revenue` | `LEDGER` | `sql:check constraint`, `sql:company_revenue_after_source_insert` | `company_revenue_logs` | — |
 | `record_guardian_consent` | `CUSTODIAL` | `sql:accept_guardian_invite`, `sql:sign_guardian_consent` | `guardian_consents` | `guardian_links` |
 | `record_ledger_entry` | `CONTROLLER` | `@/lib/bookkeeping.ts` | `ledger_manual_entries`, `ledger_manual_lines` | `ledger_accounts` |
-| `record_notification_payment_context` | `COMMERCE` | By hand: Service-only immutable server quote context, actor/purpose/athlete/currency/integer allocation bound; notification authority hard false. | `notification_payment_contexts` | `notification_payment_contexts`, `players` |
+| `record_notification_payment_context` | `COMMERCE` | By hand: Service-only one-time promotion of an immutable prepared test quote to its real PaymentIntent; exact replay only, no retargeting or gift/Aura/notification credit. | `notification_payment_contexts` | `notification_payment_contexts` |
 | `record_reel_view` | `HIGHLIGHTS` | `@/lib/leaderboards.ts` | `reel_views`, `reels` | `profiles`, `reels` |
 | `record_stripe_kyc` | `CUSTODIAL` | `apps/mobile/src/backend/api/createStripeAccount.ts`, `sql:check constraint`, `supabase/functions/create-stripe-account/index.ts` | `custodial_accounts`, `payee_verifications`, `profiles` | `players` |
 | `record_support_review` | `INCIDENT_TRIAGE` | By hand: Admin review action with independent protected confirmation. | `support_reviews` | `support_signals` |
@@ -1861,6 +1864,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `thank_rally` | `RALLY` | `@/lib/rallies.ts` | `rallies` | `reels` |
 | `tip_origin_label` | `BACKEND` | `sql:company_revenue_after_source_insert`, `sql:sync_company_revenue_logs` | — | — |
 | `tips_card_fee_revenue` | `LEDGER` | `trigger:tips_card_fee_revenue_ai on tips` | `company_revenue_logs` | — |
+| `tips_payment_context_guard` | `COMMERCE` | By hand: Before insert: optional gift extras match a service-prepared real PaymentIntent allocation and original actor/athlete/cents; provisional/mismatched/reused references denied. Previously issued quotes survive an OFF publish; no new business writer. | — | `notification_payment_contexts`, `tips` |
 | `tips_platform_tip_revenue` | `LEDGER` | `trigger:tips_platform_tip_revenue_ai on tips` | `company_revenue_logs` | — |
 | `tips_rally_before_insert` | `RALLY` | `trigger:tips_rally_before_insert on tips` | `rallies` | — |
 | `toggle_crew_follow` | `CREW` | `@/lib/crew.ts` | `crew_follows` | `players` |

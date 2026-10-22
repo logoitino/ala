@@ -4,6 +4,7 @@
  * balanced two-line entries; record a refund of a whole charge (family / athlete / operator share and
  * Tapua'i's share) against the right athlete; void by reversal; close or reopen a finished month and see
  * every past reopen. Writes go only through the admin ledger RPCs.
+ * MONEY-TIPS-01 gift refunds copy the original recorded platform share; current gifts default to zero.
  */
 import { useState } from 'react';
 import { Text, View } from 'react-native';
@@ -54,6 +55,7 @@ export function BooksRecordTab({ period, today, entries, manual, closes, reopens
   const [refundStream, setRefundStream] = useState('malo');
   const [refundAthlete, setRefundAthlete] = useState('');
   const [refundExtra, setRefundExtra] = useState('');
+  const [recordedGiftShare, setRecordedGiftShare] = useState('0.00');
   const [disputeFee, setDisputeFee] = useState('');
   const [voidReason, setVoidReason] = useState('');
   const [reopenReason, setReopenReason] = useState('');
@@ -76,10 +78,17 @@ export function BooksRecordTab({ period, today, entries, manual, closes, reopens
     if (!memo.trim()) throw new Error('Say what it was in the memo, like "Supabase Pro, October".');
     let built: ReturnType<typeof manualEntryLines>;
     if (isRefund) {
+      const recordedPlatformCents = refundStream === 'malo' ? parseUsdCents(recordedGiftShare) : undefined;
+      if (refundStream === 'malo') {
+        if (recordedPlatformCents == null || !Number.isSafeInteger(recordedPlatformCents) || recordedPlatformCents < 0 || recordedPlatformCents > cents) {
+          throw new Error("Enter the original Tapua'i gift share between $0.00 and the charge refunded, using the original recorded revenue row.");
+        }
+        if (!reference.trim()) throw new Error('Add the original gift receipt or recorded revenue reference. This entry does not automatically reconcile the refund.');
+      }
       const extra = refundExtra ? parseUsdCents(refundExtra) : 0;
       const dispute = disputeFee ? parseUsdCents(disputeFee) : 0;
-      if (extra == null || dispute == null) throw new Error("Enter the tip for Tapua'i / card fee returned and the dispute fee as dollars and cents.");
-      built = refundEntryLines({ stream: refundStream, grossCents: cents, extraTapuaiCents: extra, disputeFeeCents: dispute, athleteRef: refundNeedsAthlete ? refundAthlete : null });
+      if (extra == null || dispute == null) throw new Error("Enter the Tapua'i tip / processing fee returned and the dispute fee as dollars and cents.");
+      built = refundEntryLines({ stream: refundStream, grossCents: cents, extraTapuaiCents: extra, disputeFeeCents: dispute, athleteRef: refundNeedsAthlete ? refundAthlete : null, ...(refundStream === 'malo' ? { recordedPlatformCents: recordedPlatformCents! } : {}) });
     } else {
       built = manualEntryLines(entryKind, cents, paidFrom);
     }
@@ -89,6 +98,7 @@ export function BooksRecordTab({ period, today, entries, manual, closes, reopens
     setMemo('');
     setReference('');
     setRefundExtra('');
+    setRecordedGiftShare('0.00');
     setDisputeFee('');
     return `Recorded ${booksUsd(cents)} · ${template.label}.`;
   });
@@ -111,12 +121,20 @@ export function BooksRecordTab({ period, today, entries, manual, closes, reopens
           <AdminField label={isRefund ? 'Charge refunded ($)' : 'Amount ($)'} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="42.50" />
         </AdminFieldRow>
         {isRefund ? <AdminFieldRow>
-          <AdminField label="Tip for Tapua'i or card fee returned too ($)" value={refundExtra} onChangeText={setRefundExtra} keyboardType="decimal-pad" placeholder="0.00" />
+          <AdminField label="Tapua'i tip or processing fee returned too ($)" value={refundExtra} onChangeText={setRefundExtra} keyboardType="decimal-pad" placeholder="0.00" />
           <AdminField label="Stripe dispute fee ($)" value={disputeFee} onChangeText={setDisputeFee} keyboardType="decimal-pad" placeholder="0.00" />
         </AdminFieldRow> : null}
+        {isRefund && refundStream === 'malo' ? <>
+          <AdminField label="Original Tapua'i gift share ($)" value={recordedGiftShare} onChangeText={setRecordedGiftShare} keyboardType="decimal-pad" placeholder="0.00" />
+          <Text style={{ fontSize: 12 }}>
+            Copy the platform share from the original recorded revenue row. New gifts under MONEY-TIPS-01 use $0.00;
+            older gifts may have a recorded share. Enter the original gift receipt or revenue reference below.
+            This manual entry does not verify the original charge or automatically reconcile a refund.
+          </Text>
+        </> : null}
         <AdminFieldRow>
-          <AdminField label="Memo" value={memo} onChangeText={setMemo} autoCapitalize="sentences" placeholder={isRefund ? 'Refund, donor request' : 'Supabase Pro, October'} />
-          <AdminField label="Receipt, invoice or Stripe id" value={reference} onChangeText={setReference} placeholder="Optional" />
+          <AdminField label="Memo" value={memo} onChangeText={setMemo} autoCapitalize="sentences" placeholder={isRefund ? 'Refund, giver request' : 'Supabase Pro, October'} />
+          <AdminField label="Receipt, invoice or Stripe id" value={reference} onChangeText={setReference} placeholder={isRefund && refundStream === 'malo' ? 'Original gift reference required' : 'Optional'} />
         </AdminFieldRow>
         <AdminBtn kind="primary" label={busy === 'record' ? 'Recording…' : 'Record entry'} onPress={() => { void record(); }} disabled={!manualConfigured || manualReadFailed || busy != null} />
         {resultFor(['record'])}

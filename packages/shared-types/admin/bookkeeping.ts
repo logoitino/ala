@@ -6,8 +6,8 @@
  * exports are all read from that one journal, so every report agrees with every export.
  *
  * Accounting rules, in plain words (docs/engineering/design/BOOKKEEPING.md):
- * - A gift is mostly not Tapua'i's money. The 90% for the family is a liability ("held for
- *   families") until it is paid out; only the 10% share is Tapua'i income.
+ * - The full new gift is a family liability until paid out; no gift platform cut is income.
+ *   Historical recorded allocations remain unchanged, with their actual platform amount in account 4000.
  * - Every amount is integer cents. Dates are UTC calendar days (`YYYY-MM-DD`).
  * - Nothing is ever edited in place: a correction is a reversing entry.
  * - A row that does not add up is still posted, with the difference in Suspense, so the books
@@ -40,14 +40,14 @@ export const CHART_OF_ACCOUNTS: LedgerAccount[] = [
   { code: '1000', name: 'Business bank account', type: 'asset', qboType: 'Bank', qboDetail: 'Checking', taxLine: 'Balance sheet', description: "Tapua'i's operating bank account; Stripe payouts land here." },
   { code: '1010', name: 'Stripe balance', type: 'asset', qboType: 'Bank', qboDetail: 'Cash on hand', taxLine: 'Balance sheet', description: 'Charges collected by Stripe and not yet paid out to the bank.' },
   { code: '1999', name: 'Suspense (needs review)', type: 'asset', qboType: 'Other Current Asset', qboDetail: 'Other Current Assets', taxLine: 'Clear before filing', description: 'Differences on rows that did not add up. Should be zero before a period is closed.' },
-  { code: '2000', name: 'Gifts held for families', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Other Current Liabilities', taxLine: 'Balance sheet (not income)', description: "The family's 90% of each gift, owed until it is paid out." },
+  { code: '2000', name: 'Gifts held for families', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Other Current Liabilities', taxLine: 'Balance sheet (not income)', description: "The family's recorded gift allocation, owed until paid out: full new gifts; historical amounts retained." },
   { code: '2010', name: 'Vault earnings held for athletes', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Other Current Liabilities', taxLine: 'Balance sheet (not income)', description: "The athlete's 80% of Exclusive / Vault sales, owed until it is paid out." },
   { code: '2100', name: 'Booster operator payable', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Other Current Liabilities', taxLine: 'Balance sheet (not income)', description: "The operator's 85% of booster sponsorships." },
   { code: '2200', name: 'Sales tax payable', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Sales Tax Payable', taxLine: 'Balance sheet', description: 'Sales tax collected on Drip merchandise. Not collected yet.' },
   { code: '2300', name: 'Owed to owner (expenses paid personally)', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Other Current Liabilities', taxLine: 'Balance sheet', description: "Business costs the owner paid from a personal card, to be repaid or converted to a contribution." },
   { code: '3000', name: 'Owner contributions', type: 'equity', qboType: 'Equity', qboDetail: "Owner's Equity", taxLine: 'Balance sheet', description: 'Money the owner put into the business.' },
   { code: '3100', name: 'Owner draws', type: 'equity', qboType: 'Equity', qboDetail: "Owner's Equity", taxLine: 'Balance sheet', description: 'Money the owner took out of the business.' },
-  { code: '4000', name: 'Platform share of gifts', type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "Tapua'i's disclosed 10% of each gift." },
+  { code: '4000', name: 'Historical platform share of gifts', type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "Historical recorded platform amounts from gifts. New gifts have no Tapua'i platform cut." },
   { code: '4010', name: "Optional tips to Tapua'i", type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "The optional tip a giver adds for Tapua'i at checkout (100% Tapua'i)." },
   { code: '4020', name: 'Vault platform share', type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "Tapua'i's 20% of Exclusive / Vault sales." },
   { code: '4030', name: 'Booster sponsorship share', type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "Tapua'i's 15% of booster sponsorships." },
@@ -714,7 +714,7 @@ export const REFUND_STREAMS: { id: string; label: string; payable: string | null
  *   optional tip or covered card fee returned with it, is contra-income (4900); the Stripe balance pays
  *   the gross. A dispute fee Stripe charged is a processing fee (5000).
  */
-export function refundEntryLines(input: { stream: string; grossCents: number; extraTapuaiCents?: number; disputeFeeCents?: number; athleteRef?: string | null }): { lines: ManualLineInput[] } | { error: string } {
+export function refundEntryLines(input: { stream: string; grossCents: number; extraTapuaiCents?: number; disputeFeeCents?: number; athleteRef?: string | null; recordedPlatformCents?: number }): { lines: ManualLineInput[] } | { error: string } {
   const stream = REFUND_STREAMS.find((item) => item.id === input.stream);
   if (!stream) return { error: 'Choose what was refunded.' };
   const gross = Math.round(input.grossCents);
@@ -724,8 +724,13 @@ export function refundEntryLines(input: { stream: string; grossCents: number; ex
   if (gross + extra + dispute > 100_000_000) return { error: 'Enter an amount of $1,000,000 or less.' };
   const ref = input.athleteRef?.trim() || null;
   if ((stream.payable === '2000' || stream.payable === '2010') && !ref) return { error: 'Choose the athlete whose money is being returned.' };
-  const bps = stream.id === 'malo' ? 1000 : stream.id === 'vault' ? 2000 : stream.id === 'booster' ? 1500 : 10000;
-  const platform = Math.round((gross * bps) / 10000);
+  const bps = stream.id === 'malo' ? 0 : stream.id === 'vault' ? 2000 : stream.id === 'booster' ? 1500 : 10000;
+  // A historical refund follows its original recorded allocation, never today's no-cut rate.
+  const recorded = input.recordedPlatformCents;
+  if (recorded !== undefined && (!Number.isSafeInteger(recorded) || recorded < 0 || recorded > gross)) {
+    return { error: 'Enter the original recorded platform share between $0.00 and the refunded amount.' };
+  }
+  const platform = stream.id === 'malo' && recorded !== undefined ? recorded : Math.round((gross * bps) / 10000);
   const payee = gross - platform;
   const lines: ManualLineInput[] = [];
   if (stream.payable && payee > 0) lines.push({ account_code: stream.payable, debit_cents: payee, credit_cents: 0, athlete_ref: stream.payable === '2100' ? null : ref });
