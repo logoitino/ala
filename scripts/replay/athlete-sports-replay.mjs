@@ -100,6 +100,17 @@ const unknown=(await db.query(`select id from public.athlete_game_logs where sta
 await test('admin classifies original unassigned log without recreating it',`${who(A)}select * from public.admin_set_athlete_game_log_sport('${unknown}','${OTHER}','Volleyball',null);`,r=>r[0]?.id===unknown&&r[0]?.sport==='Volleyball'&&r[0]?.stat_line==='unknown sport'&&new Date(r[0]?.played_on).toISOString().startsWith('2026-10-01'));
 await test('stale original log classification refused',`${who(A)}select public.admin_set_athlete_game_log_sport('${unknown}','${OTHER}','Football',null);`,()=>true,true);
 await test('other target player cannot claim original log',`${who(A)}select public.admin_set_athlete_game_log_sport('${unknown}','${PLAYER}','Football','Volleyball');`,()=>true,true);
+// Security review 2026-10-21: sport is athlete-only public identity, the edit revision is owner/admin-only,
+// and a catalog school fixes the team name.
+await test('fan leftover sport stays private to others',`select public.apply_privacy_settings('${profile(F)}','{"account_private":false}');update public.profiles set athlete_sport='Rugby' where id='${profile(F)}';${who(U)}select public.get_athlete_sports('${profile(F)}');`,r=>snapshot(r)===null);
+await test('fan still reads own sport fields',`${who(F)}select public.get_athlete_sports('${profile(F)}');`,r=>snapshot(r)?.primary_sport==='Rugby');
+await test('other viewers see revision zero, owner sees the real revision',`select public.apply_privacy_settings('${profile(U)}','{"account_private":false}');${who(F)}select public.get_athlete_sports('${profile(U)}');`,r=>snapshot(r)?.revision===0&&snapshot(r)?.sports.length>=1);
+await test('owner sees the real revision',`${who(U)}select public.get_athlete_sports('${profile(U)}');`,r=>snapshot(r)?.revision>0);
+// Names are unique and the schema may already seed this school; reuse whichever row exists.
+await db.exec(`insert into public.schools_and_teams(name) values('Westlake High') on conflict do nothing;`);
+const SCHOOL=(await db.query(`select id from public.schools_and_teams where name='Westlake High'`)).rows[0].id;
+const urev=(await db.query(`select athlete_sports_revision from public.profiles where id='${profile(U)}'`)).rows[0].athlete_sports_revision;
+await test('catalog school replaces a typed team name',save(U,'Football',urev,JSON.stringify([{sport:'Football',school_id:SCHOOL,team_name:'Fake Champions'}]),profile(U)),r=>r[0]?.set_athlete_sports?.sports[0]?.team_name==='Westlake High');
 await db.close();
 for(const r of results)console.log(`${r.pass?'PASS':'FAIL'} ${r.name}${r.pass?'':` — ${r.detail}`}`);
 const failed=results.filter(r=>!r.pass).length;console.log(`athlete-sports replay: ${results.length-failed}/${results.length} passed; ${flags.includes('--baseline')?'BASELINE':'LOCAL ONLY'}`);process.exitCode=failed?1:0;

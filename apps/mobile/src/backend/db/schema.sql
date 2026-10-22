@@ -30196,12 +30196,15 @@ declare p public.profiles;rel text;school_ok boolean;stats_ok boolean;items json
  if not public.caller_not_age_blocked() or p.age_blocked_at is not null or rel='blocked'
    or (p.account_private and rel not in('self','admin','guardian','friend'))
    or (public.is_minor_band(public.profile_age_band(p.id)) and rel not in('self','admin','guardian','friend') and not public.minor_has_consent(p.id,'public_profile')) then return null;end if;
+ -- Sport is public athlete identity only (matches profiles_public); a fan's leftover sport fields stay private.
+ if not (p.role='athlete' or 'athlete'=any(coalesce(p.roles,'{}'))) and rel not in('self','admin') then return null;end if;
  school_ok:=public.profile_item_visible(p.id,'school');stats_ok:=public.profile_item_visible(p.id,'stats');
  select coalesce(jsonb_agg(jsonb_build_object('sport',e.sport,'school_id',case when school_ok then e.school_id end,
    'team_name',case when school_ok then e.team_name end,'position',case when stats_ok then e.position else '' end,
    'jersey',case when stats_ok and school_ok then e.jersey else '' end) order by e.sport),'[]'::jsonb)
  into items from public.athlete_sport_entries e where e.profile_id=p.id;
- return jsonb_build_object('profile_id',p.id,'primary_sport',nullif(btrim(p.athlete_sport),''),'revision',p.athlete_sports_revision,'sports',items);
+ -- The edit revision is only for the owner/admin who can save; everyone else sees 0 (the client parser needs an integer).
+ return jsonb_build_object('profile_id',p.id,'primary_sport',nullif(btrim(p.athlete_sport),''),'revision',case when rel in('self','admin') then p.athlete_sports_revision else 0 end,'sports',items);
 end;$$;
 
 create or replace function public.set_athlete_sports(p_profile_id uuid,p_primary_sport text,p_sports jsonb,p_expected_revision integer)
@@ -30224,7 +30227,9 @@ declare p public.profiles;e jsonb;canonical text;primary_name text;seen text[]:=
     or (e ? 'position' and jsonb_typeof(e->'position')<>'string') or (e ? 'jersey' and jsonb_typeof(e->'jersey')<>'string') then raise exception 'ATHLETE_SPORTS_ENTRY';end if;
   school:=nullif(e->>'school_id','')::uuid;
   if school is not null and not exists(select 1 from public.schools_and_teams where id=school) then raise exception 'ATHLETE_SPORTS_SCHOOL';end if;
-  team:=nullif(btrim(e->>'team_name'),'');pos:=btrim(coalesce(e->>'position',''));jersey_text:=btrim(coalesce(e->>'jersey',''));
+  -- With a catalog school the team is that school's official name; free text only when no school is chosen.
+  team:=case when school is not null then (select st.name from public.schools_and_teams st where st.id=school) else nullif(btrim(e->>'team_name'),'') end;
+  pos:=btrim(coalesce(e->>'position',''));jersey_text:=btrim(coalesce(e->>'jersey',''));
   if char_length(team)>120 or char_length(pos)>80 or char_length(jersey_text)>12 then raise exception 'ATHLETE_SPORTS_ENTRY';end if;
   normalized:=normalized||jsonb_build_array(jsonb_build_object('sport',canonical,'school_id',school,'team_name',team,'position',pos,'jersey',jersey_text));
  end loop;

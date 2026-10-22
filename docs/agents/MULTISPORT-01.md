@@ -135,3 +135,14 @@ registered sensor gaps remain explicit. Final source-copy ensure synced with sou
 readyToCutOver=false. Local app-ready record is later than preserved admin checkpoint; selected final
 gate and same-turn documentation follow. No SQL applied, commit, deployment, provider change or
 physical-device acceptance executed by this task.
+
+## Security review follow-up — 2026-10-21 (Claude Code, migration still unapplied)
+
+An automated commit security review flagged two medium issues in `20261021233000_athlete_sports.sql`; both fixed in
+the migration and canonical schema. (1) `set_athlete_sports` stored a client `team_name` beside a catalog
+`school_id`, so an athlete could pair a real school with any team name; with a school the team is now that school's
+catalog name, free text only without a school. (2) `get_athlete_sports` (granted to anon) returned sport details for
+non-athlete profiles and the edit revision to everyone; it now returns null for non-athletes unless self/admin, and
+revision is 0 for viewers other than self/admin (the client parser needs an integer; only self/admin can save).
+Replay `athlete-sports-replay.mjs` 61/61 with four new cases; app athlete-sports suites 5 / 65 pass.
+
