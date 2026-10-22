@@ -1,5 +1,5 @@
 {
- "planVersion": "d71e3a5d49d1",
+ "planVersion": "4cabb5a7442e",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1018,7 +1018,8 @@
    "20261021140000_notifications.sql",
    "20261021150000_notification_payment_context.sql",
    "20261021220000_game_venues.sql",
-   "20261021233000_athlete_sports.sql"
+   "20261021233000_athlete_sports.sql",
+   "20261022090000_lock_orphan_public_tables.sql"
   ],
   "edgeFunctions": [
    "create-payment-intent",
@@ -1654,7 +1655,7 @@
    "apps/mobile/src/backend/db/connectAccountContext.replay.mjs 1757aec7830468eec917d207518f95d3880a9055730dc7810cb6ee8ee0ee3bfa",
    "apps/mobile/src/backend/db/failedPhotoStoryCleanup.replay.py edb77e6bcdfdeb58af63e4c52eb8636e4f3ad835e05ee637e6aa6396e8ed4dd7",
    "apps/mobile/src/backend/db/notifications.replay.mjs 9f04f4a1e24e6360331e3183c56026fe6dd492e22ab75faee971fe5714ca4dcc",
-   "apps/mobile/src/backend/db/schema.sql 77bdaaf5d4bdc7ae49ff4b50b613b4e206c10b65d61ee214a6cb8b7e64eff43e",
+   "apps/mobile/src/backend/db/schema.sql c218662e333652e04aa7419478cd7c550ccb8249fe443b86a3952e91afd31001",
    "apps/mobile/src/backend/services/__fixtures__/fanZoneMp4Fixture.ts 337d454a4a404dbaa1c9abc3dfdcf7dec05462c34d7361149ff170ea1026550a",
    "apps/mobile/src/backend/services/__tests__/fanZoneMp4.test.ts d966212a5b0f134315f3b6ffdc6af7fd8503adc33d49d24f97fab449e1587ec5",
    "apps/mobile/src/backend/services/fanZoneMedia.ts 73df19ed56e9f0b5e2eb11a5a66310cf7e86d91e41e7105a5d5bcc35dfc8ad39",
@@ -2582,6 +2583,7 @@
    "scripts/replay/game-venues-replay.mjs 3735287d4c4d4fb6547179890300ccd341e91a43b89e9e519b0b82ffa16769bb",
    "scripts/replay/life-playbook-replay.mjs 6480138737f0357e40431b2f288d6c451e998c8fce01737d1d0ad58f0bb32dc9",
    "scripts/replay/notification-payment-replay.mjs 7051bdae6bf4b18d269098ef7e2ab8e54ab7061c8ce379f4293b50972af607ef",
+   "scripts/replay/orphan-tables-replay.mjs e7630c01bddf317b72830e7c488b4d367e009c94fb5bd9a6d716e628686467c5",
    "scripts/replay/schema-replay.mjs c0880edca880bc6d6a85e5d8c70e309171f77182fd1ad98ea8db9655544b11d9",
    "scripts/replay/sport-quiz-replay.mjs dc7a44bcda7b0e4bcc81f31b6ba070c03c4f055135fd736f2d38eabad89de739",
    "scripts/replay/supabase-stubs.mjs a077c5a3968d532412e2ef8babb2beaa107dd40f3262f2755e9be0c2eadf3163",
@@ -2692,7 +2694,8 @@
    "supabase/migrations/20261021150000_notification_payment_context.sql 68ca9a81a900fa436f4ab3d6758148f645b764c1c2786ed0d9fac6cc2bca5979",
    "supabase/migrations/20261021220000_game_venues.sql 024bf8b1e824803f9d0c5ce7d3bd5ad45f99005cfc1a7ac6614bf2610135bae7",
    "supabase/migrations/20261021233000_athlete_sports.sql 6ba4a33493f7292febbaa210f306cb4c025a25a34e20fd2629ec5bacad5a8ed2",
-   "supabase/migrations/README.md 4f1a0ab73397def379783f3429f489cef3602a4a2300ab3bf59a98b3dd82e135",
+   "supabase/migrations/20261022090000_lock_orphan_public_tables.sql 0ce67181385e4ec7df28c92942c32fc33892d851c5814bceb5fad3b30c1f088f",
+   "supabase/migrations/README.md d578df8aa4fd7626391650a8268d11353231b51c38bef557a202591a8b619870",
    "supabase/player_vault_lock.sql 7268b913a13c5798260e25bb3bade574a0969ebf408c8ffe563e3339a0b07c98",
    "supabase/players.sql 8bc9c0a10168e0b611ef22cf116928ee9d3a9e5bb3c0140ec197fc98f6a0e205",
    "supabase/profile_customization.sql c5d839c3062d71946580a6b857da85484cef0bb1e92684edd89c20dd17801bee",

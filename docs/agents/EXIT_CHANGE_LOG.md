@@ -10,6 +10,15 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-22 · plan `d71e3a5d49d1` → `4cabb5a7442e` · announced by Claude Code (Opus 5.5) 2026-10-22: workstream 1 staging parity + orphan table lock
+
+App at announcement: commit `0ff2dcd1070869e6c24a2392522ce68fdf08b8ba` + 4 uncommitted file(s), source `4cabb5a7442e2965f947625b051afe5a7d2adf5b15fc398ea6fb8eb4028e1542`, app 1.0.0, latest migration `20261022090000_lock_orphan_public_tables.sql`.
+
+- **Migration files** — added `20261022090000_lock_orphan_public_tables.sql`; removed —. Notify: `REDUNDANCY_LEAD`, `DATABASE_MIGRATIONS`, `EXIT_DATABASE`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+- **Source/configuration content fingerprints** — added `apps/mobile/src/backend/db/schema.sql c218662e333652e04aa7419478cd7c550ccb8249fe443b86a3952e91afd31001`, `scripts/replay/orphan-tables-replay.mjs e7630c01bddf317b72830e7c488b4d367e009c94fb5bd9a6d716e628686467c5`, `supabase/migrations/20261022090000_lock_orphan_public_tables.sql 0ce67181385e4ec7df28c92942c32fc33892d851c5814bceb5fad3b30c1f088f`, `supabase/migrations/README.md d578df8aa4fd7626391650a8268d11353231b51c38bef557a202591a8b619870`; removed `apps/mobile/src/backend/db/schema.sql 77bdaaf5d4bdc7ae49ff4b50b613b4e206c10b65d61ee214a6cb8b7e64eff43e`, `supabase/migrations/README.md 4f1a0ab73397def379783f3429f489cef3602a4a2300ab3bf59a98b3dd82e135`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-22 · plan `934f9a1e1a55` → `d71e3a5d49d1` · announced by Claude Code (Opus 5.5) 2026-10-21: UX-11 compact panels
 
 App at announcement: commit `7645a99df220a1fa64b4d7dc46051e5f6733eeee` + 20 uncommitted file(s), source `d71e3a5d49d19e4dffc8a417fc3d6617663344bc6ecd4e9cfc4551aa3d487558`, app 1.0.0, latest migration `20261021233000_athlete_sports.sql`.

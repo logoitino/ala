@@ -1,5 +1,23 @@
-<!-- Prepared, not applied. Staging changes need the owner. -->
-# Staging database catch-up (prepared 2026-10-21, not applied)
+<!-- Parity report and remaining staging SQL; 12 files applied 2026-10-22 by owner instruction. -->
+# Staging database catch-up and dev ↔ staging parity
+
+## Applied 2026-10-22 (owner instruction; Claude Code via the Supabase Management API)
+
+In development's filename order, each with its record line, no errors: `20261007230000` photo stories (privacy's
+`reels_feed` reads `reel_photos`), `20261007231000` reels owner folder, `20261012210000` Books, `20261013120000`
+DATA-01, `20261013210000` function hardening, `20261013220000` guardian scope, `20261013230000` avatars,
+`20261014090000` privacy, `20261014100000` tag approval, `20261014110000` minor accounts, `20261014120000` payee
+verification, `20261020090000` Rallies guest read (also applied to development the same day). Rollback for each is in
+its own header. Proof with the public key: guest `record_company_revenue` / `add_user_aura` → 42501; guest Rallies,
+`reels_feed` and `get_public_profiles` → 200.
+
+**Still not on staging** (feature freeze until brief items 1–3 close, or awaiting item 4's review): reel account tags
+`20261002160000`, operator check-ins role check `20261002120000`, admin-report bigint `20261012180000`, engineering
+support `20261013190000`, family share `20261013231000`, Fan Zone / trivia / IQ / Beyond / challenges, coach-level
+(on neither project), and the 2026-10-20 → 10-21 files (reports, photo-story cleanup, Connect context,
+notifications, venues, athlete sports). The table below still lists the original full order.
+
+# Original catch-up plan (prepared 2026-10-21)
 
 Staging (`ala-sports-staging`, `tucioqipfejqqqtuakdi`) last received SQL on 2026-10-01: the standalone files plus
 `20260929120000` … `20261001180000` (STATE §0, `supabase/migrations/README.md`). Everything after that is below,
@@ -8,6 +26,16 @@ and its fixes are folded in here. **Nothing on this page has been run against st
 from the migration folder; staging's live state was not read (no staging access from this session).
 
 Do **not** use `supabase db push` on staging before the baseline in `supabase/migrations/README.md`.
+
+## Read-only check of staging (2026-10-22, Supabase plugin)
+
+- Objects from every file through `20261001180000` exist; nothing from `20261002160000` onward does (39 marker
+  tables/functions checked). The list below is therefore correct.
+- `supabase_migrations.schema_migrations` only records 10 rows ending `20260929212828 telemetry_logs_bounds`: the
+  2026-09-29 … 10-01 files were pasted without record lines. The pre-flight query below will therefore not show
+  `20261001180000`; that is expected.
+- **The security hole is live:** `anon` can execute `record_company_revenue`, `add_user_aura`, `upsert_sport_config`
+  and `delete_sport_config`. Step 1 closes it.
 
 ## Before you start
 

@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `d71e3a5d49d1` |
-| Last announced plan | `d71e3a5d49d1` — up to date |
+| Exit plan version (what the app uses on Supabase) | `4cabb5a7442e` |
+| Last announced plan | `4cabb5a7442e` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
-| Latest migration | `20261021233000_athlete_sports.sql` (49 files) |
-| Canonical schema hash | `77bdaaf5d4bdc7ae49ff4b50b613b4e206c10b65d61ee214a6cb8b7e64eff43e` (`schema.sql`) |
-| Complete source/configuration content hash | `d71e3a5d49d19e4dffc8a417fc3d6617663344bc6ecd4e9cfc4551aa3d487558` across 1274 files |
+| Latest migration | `20261022090000_lock_orphan_public_tables.sql` (50 files) |
+| Canonical schema hash | `c218662e333652e04aa7419478cd7c550ccb8249fe443b86a3952e91afd31001` (`schema.sql`) |
+| Complete source/configuration content hash | `4cabb5a7442e2965f947625b051afe5a7d2adf5b15fc398ea6fb8eb4028e1542` across 1276 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -151,7 +151,7 @@ Counts come from static statements in `schema.sql` and the source; the live data
 | Extensions | 1 | `pgcrypto` |
 | Realtime publication tables | 4 | `public.app_runtime_config`, `public.cheer_polls`, `public.game_events`, `public.games` |
 | Storage buckets | 6 | `avatars`, `beyond_game`, `fan_zone`, `game_highlights`, `reel_vault`, `reels` |
-| Migration files | 49 | latest `20261021233000_athlete_sports.sql` |
+| Migration files | 50 | latest `20261022090000_lock_orphan_public_tables.sql` |
 | Edge Functions | 3 | `create-payment-intent` (self-host allowlist), `create-stripe-account` (self-host allowlist), `stripe-webhook` (excluded: Must not be deployed until P1-05 retires the client tips insert (STATE §0, §6 item 3).) |
 | Expo API routes | 6 | `create-payment-intent`, `create-payout`, `create-stripe-account`, `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload` |
 | Auth methods called | 17 | `exchangeCodeForSession` (PKCE code exchange after a redirect), `getSession` (Read the local session), `getUser` (Validate the current session with the server), `mfa.challenge` (TOTP challenge), `mfa.enroll` (TOTP factor enrollment), `mfa.getAuthenticatorAssuranceLevel` (Read aal1 / aal2), `mfa.listFactors` (List MFA factors), `mfa.unenroll` (TOTP removal), `mfa.verify` (TOTP verification), `onAuthStateChange` (Session change events), `setSession` (Restore a session from tokens), `signInWithIdToken` (Native Apple / Google ID token), `signInWithOAuth` (OAuth redirect (Google)), `signInWithOtp` (Email link / one-time code), `signInWithPassword` (Email and password sign-in), `signOut` (Sign out), `signUp` (Email sign-up) |
