@@ -157,12 +157,12 @@ export function athleteMoneyNotice(summary: CustodialSummary): string {
     return `You're ${summary.handoverAge}+. The money fans gave you is yours to move — no one else can withdraw it.`;
   }
   if (!summary.guardianLinked) {
-    return 'Donations you receive are held for you. A parent or guardian needs to be linked before any of it can be paid out.';
+    return 'Gifts you receive are held for you. A parent or guardian needs to be linked before any of it can be paid out.';
   }
   const until = summary.handoverDate
     ? ` until ${formatHandoverDate(summary.handoverDate)}, when you turn ${summary.handoverAge}`
     : ` until you turn ${summary.handoverAge}`;
-  return `Every donation is held for you in ${summary.guardianName}'s custodial account${until}. They can't withdraw any of it without your OK in the app.`;
+  return `Every gift is held for you in ${summary.guardianName}'s custodial account${until}. They can't withdraw any of it without your OK in the app.`;
 }
 
 /**
@@ -181,18 +181,18 @@ export function receivedLines(
 ): { headline: string; detail: string } {
   if (familyCents == null) {
     return {
-      headline: `${format(donatedCents)} donated`,
+      headline: `${format(donatedCents)} given`,
       detail: PLATFORM_SHARE_PERCENT === 0
-        ? 'All of each donation is recorded for the family account.'
-        : `${ATHLETE_SHARE_PERCENT}% of each donation is recorded for the family account. Tapua'i keeps ${PLATFORM_SHARE_PERCENT}% to run the app, including card processing.`,
+        ? 'All of each gift is recorded for the family account.'
+        : `${ATHLETE_SHARE_PERCENT}% of each gift is recorded for the family account. Tapua'i keeps ${PLATFORM_SHARE_PERCENT}% to run the app, including card processing.`,
     };
   }
   const kept = Math.max(0, donatedCents - familyCents);
   return {
     headline: `${format(familyCents)} recorded for your family account so far`,
     detail: kept === 0
-      ? `Fans donated ${format(donatedCents)}. All of it is recorded for your family account.`
-      : `Fans donated ${format(donatedCents)}. Tapua'i kept ${format(kept)} to run the app, including card processing.`,
+      ? `Fans gave ${format(donatedCents)}. All of it is recorded for your family account.`
+      : `Fans gave ${format(donatedCents)}. Tapua'i kept ${format(kept)} to run the app, including card processing.`,
   };
 }
 

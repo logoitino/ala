@@ -27,7 +27,7 @@ export default async function FeaturesPage() {
     <PortalShell active="/features">
       <Panel title="Features" kicker="Read-only status">
         <p className="text-sm leading-6 text-[var(--ink-soft)]">
-          Live chrome fans currently see — fan bar, hype buttons, boards, Soft-Wall-related Donate / Crew / Wishlist /
+          Live chrome fans currently see — fan bar, hype buttons, boards, Soft-Wall-related Give / Crew / Wishlist /
           Operator, and Profile chrome. This desk is oversight only; toggle and Publish to app from Expo{' '}
           <code className="rounded bg-[var(--jade-soft)] px-1.5 py-0.5 text-[var(--jade)]">/admin/features</code> or{' '}
           <code className="rounded bg-[var(--jade-soft)] px-1.5 py-0.5 text-[var(--jade)]">/admin/look</code> — same{' '}

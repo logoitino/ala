@@ -170,10 +170,10 @@ it('blocks every export when a source failed to read', async () => {
   expect(screen.getByLabelText('Chart of accounts')).toBeEnabled();
 });
 
-it('records a refund of the whole donation against the athlete', async () => {
+it('records a refund of the whole gift against the athlete', async () => {
   await render(<BooksScreen />);
   await openTab('Record & close');
-  await fireEvent.press(screen.getByRole('tab', { name: 'Refund a donation or sale' }));
+  await fireEvent.press(screen.getByRole('tab', { name: 'Refund a gift or sale' }));
   await fireEvent.press(screen.getByRole('tab', { name: 'Fixture Athlete' }));
   await fireEvent.changeText(screen.getByLabelText('Charge refunded ($)'), '20');
   await fireEvent.changeText(screen.getByLabelText('Memo'), 'Refund, donor request');
@@ -183,5 +183,5 @@ it('records a refund of the whole donation against the athlete', async () => {
     { account_code: '4900', debit_cents: 200, credit_cents: 0 },
     { account_code: '1010', debit_cents: 0, credit_cents: 2000 },
   ] })));
-  expect(await screen.findByText(/Recorded \$20\.00 · Refund a donation or sale/)).toBeTruthy();
+  expect(await screen.findByText(/Recorded \$20\.00 · Refund a gift or sale/)).toBeTruthy();
 });

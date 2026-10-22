@@ -1773,7 +1773,7 @@
       "name": "company_revenue_logs",
       "kind": "table",
       "owner": "LEDGER",
-      "purpose": "One row per revenue event (donation, tip for Tapua'i, card fee, Vault, booster, Drip); the books are built from it.",
+      "purpose": "One row per revenue event (gift, tip for Tapua'i, card fee, Vault, booster, Drip); the books are built from it.",
       "writers": [],
       "readers": [
         "apps/mobile/src/frontend/lib/bookkeeping.ts"
@@ -2026,7 +2026,7 @@
       "name": "donation_thanks",
       "kind": "table",
       "owner": "DONATION_THANKS",
-      "purpose": "Preset thank-you messages athletes send donors.",
+      "purpose": "Preset thank-you messages athletes send givers.",
       "writers": [],
       "readers": [],
       "sqlWriters": [
@@ -3205,7 +3205,7 @@
       "name": "notification_payment_contexts",
       "kind": "table",
       "owner": "COMMERCE",
-      "purpose": "Immutable server-bound test payment purpose/actor/athlete/quote allocation evidence. Notification authority is constrained false; no donation credit source.",
+      "purpose": "Immutable server-bound test payment purpose/actor/athlete/quote allocation evidence. Notification authority is constrained false; no gift credit source.",
       "writers": [],
       "readers": [],
       "sqlWriters": [
@@ -3400,7 +3400,7 @@
       "name": "players",
       "kind": "table",
       "owner": "ROSTERS",
-      "purpose": "Athlete roster that fans tag and donate to.",
+      "purpose": "Athlete roster that fans tag and give to.",
       "writers": [
         "apps/mobile/src/frontend/lib/adminCatalog.ts",
         "apps/mobile/src/frontend/lib/boosterPortal.ts",
@@ -3916,7 +3916,7 @@
       "name": "rallies",
       "kind": "table",
       "owner": "RALLY",
-      "purpose": "Donation goals for a named sports cost.",
+      "purpose": "Gift goals for a named sports cost.",
       "writers": [],
       "readers": [],
       "sqlWriters": [
@@ -5755,7 +5755,7 @@
       "name": "stripe_webhook_events",
       "kind": "table",
       "owner": "LEDGER",
-      "purpose": "Retained legacy PaymentIntent claim/dedup evidence from the retired pre-claim webhook writer. Not proof of completed business application, donation credits or receipt delivery; current webhook no longer writes this table. Owner-reviewed retention/reconciliation required.",
+      "purpose": "Retained legacy PaymentIntent claim/dedup evidence from the retired pre-claim webhook writer. Not proof of completed business application, gift credits or receipt delivery; current webhook no longer writes this table. Owner-reviewed retention/reconciliation required.",
       "writers": [],
       "readers": [],
       "sqlWriters": [],
@@ -6204,7 +6204,7 @@
       "name": "tips",
       "kind": "table",
       "owner": "LEDGER",
-      "purpose": "Donations (code name tips), with channel, Rally, tip for Tapua'i and covered fee.",
+      "purpose": "Gifts (code name tips), with channel, Rally, tip for Tapua'i and covered fee.",
       "writers": [
         "apps/mobile/src/frontend/hooks/useTipCheckout.ts"
       ],
@@ -6484,7 +6484,7 @@
       "name": "wishlist_items",
       "kind": "table",
       "owner": "WISHLIST",
-      "purpose": "Gear goals fans donate to.",
+      "purpose": "Gear goals fans give to.",
       "writers": [
         "apps/mobile/src/frontend/lib/adminShop.ts"
       ],
@@ -7492,7 +7492,7 @@
       "callers": [
         "supabase/functions/stripe-webhook/index.ts"
       ],
-      "manual": "Service-only unique validated processor observation with mode/currency/allocation and refund/dispute ordering; no donation, Aura, ledger or notification intent writes.",
+      "manual": "Service-only unique validated processor observation with mode/currency/allocation and refund/dispute ordering; no gift, Aura, ledger or notification intent writes.",
       "writes": [
         "notification_payment_contexts",
         "notification_payment_observations"
@@ -15387,7 +15387,7 @@
       "callers": [
         "apps/mobile/src/frontend/lib/donationThanks.ts"
       ],
-      "manual": "Preset donation thanks with explicit NULL/unrelated-role denial; no thank-you notification producer is enabled by this repair.",
+      "manual": "Preset gift thanks with explicit NULL/unrelated-role denial; no thank-you notification producer is enabled by this repair.",
       "writes": [
         "donation_thanks"
       ],

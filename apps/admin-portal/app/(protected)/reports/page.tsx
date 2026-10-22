@@ -1,9 +1,9 @@
 /**
  * Open metric rows wrap labels and whole values inside the shared report at enlarged text.
  * Trends (`/reports`, owned by ADMIN): the analysis page of the read-only Next admin portal. Daily
- * series, this week vs the prior week (clips and donations only), 24-hour pace against the 7-day
- * daily average, splits, athletes by all-time donations (three bands, counts only: owner decision
- * 2026-10-12 replaced the named "Largest donation totals" list, so Trends names no one by donation
+ * series, this week vs the prior week (clips and gifts only), 24-hour pace against the 7-day
+ * daily average, splits, athletes by all-time gifts (three bands, counts only: owner decision
+ * 2026-10-12 replaced the named "Largest gift totals" list, so Trends names no one by gift
  * total and does not draw `leaders.malo`), the two top 5 lists, counts now, reliability, and every
  * `get_admin_reports` section as returned. When `donation_bands` is missing (migration not applied)
  * the bands show the kit's missing state and say the database needs the 2026-10-12 reports update. Tap and UI-issue lists name their
@@ -152,7 +152,7 @@ export default async function ReportsPage() {
   const paceGroups = [
     [
       paceRow('Clips uploaded', n(engagement, 'clips_24h'), clips7d, formatCount, measureColor('clips'), 'clips_24h · clips_7d'),
-      paceRow('Donations', n(money, 'malo_cents_24h'), donations7d, formatUsd, measureColor('donations'), 'malo_cents_24h · malo_cents_7d'),
+      paceRow('Gifts', n(money, 'malo_cents_24h'), donations7d, formatUsd, measureColor('donations'), 'malo_cents_24h · malo_cents_7d'),
     ],
     [
       paceRow('Feature taps', n(usage, 'taps_24h'), n(usage, 'taps_7d'), formatCount, measureColor('featureTaps'), 'taps_24h · taps_7d'),
@@ -172,7 +172,7 @@ export default async function ReportsPage() {
   const avgCheckout = n(reliability, 'avg_checkout_ms_24h');
   const openBugs = n(usage, 'feedback_bugs_open');
 
-  // Athletes by all-time donation total, three bands, no names. null = the key is not in a working
+  // Athletes by all-time gift total, three bands, no names. null = the key is not in a working
   // read (the 2026-10-12 migration is not applied here): the kit's missing state plus that note.
   const bands = read ? reports.donationBands : null;
   const bandRows: ChartPoint[] | null = bands ? donationBandRows(bands) : null;
@@ -215,7 +215,7 @@ export default async function ReportsPage() {
           <SectionHeading id="trends-daily" level={2} title="Daily trends" hint="One point per UTC day" />
           <div className="grid gap-6 lg:grid-cols-2">
             <TrendChart
-              title="Donations per day"
+              title="Gifts per day"
               windowLabel={WEEK}
               points={list(series.malo)}
               format={formatUsd}
@@ -261,7 +261,7 @@ export default async function ReportsPage() {
         </section>
 
         <section aria-labelledby="trends-week">
-          <SectionHeading id="trends-week" level={2} title="This week against the prior week" hint="Only clips and donations have a prior week in this read" />
+          <SectionHeading id="trends-week" level={2} title="This week against the prior week" hint="Only clips and gifts have a prior week in this read" />
           <div className="grid gap-6 lg:grid-cols-2">
             <CompareBars
               title="Clips, this week vs the prior week"
@@ -274,8 +274,8 @@ export default async function ReportsPage() {
               error={error}
             />
             <CompareBars
-              title="Donations, this week vs the prior week"
-              subject="Donations"
+              title="Gifts, this week vs the prior week"
+              subject="Gifts"
               current={{ label: 'Last 7 days', value: donations7d }}
               previous={{ label: 'Prior 7 days', value: donationsPrev }}
               format={formatUsd}
@@ -368,7 +368,7 @@ export default async function ReportsPage() {
         </section>
 
         <section aria-labelledby="trends-rankings">
-          <SectionHeading id="trends-rankings" level={2} title="Donation bands and top 5 lists" hint="All time. Donation bands are counts of athletes, no names." />
+          <SectionHeading id="trends-rankings" level={2} title="Gift bands and top 5 lists" hint="All time. Gift bands are counts of athletes, no names." />
           <div className="grid gap-6 lg:grid-cols-3">
             <HBarList
               title={DONATION_BANDS_TITLE}
@@ -378,7 +378,7 @@ export default async function ReportsPage() {
               rows={bandRows}
               format={formatCount}
               accent={measureColor('donations')}
-              emptyText="No athletes have donations yet."
+              emptyText="No athletes have gifts yet."
               summary={bandsSummary}
               source="get_admin_reports.donation_bands · under_50 · 50_to_250 · 250_plus"
               error={error}
@@ -482,7 +482,7 @@ export default async function ReportsPage() {
               label="Checkout step timings · 24h"
               value={formatCount(checkouts ?? 0)}
               missing={checkouts == null}
-              hint="Donation checkout steps that logged a time (intent, set-up, sheet, total)"
+              hint="Gift checkout steps that logged a time (intent, set-up, sheet, total)"
             />
             <StatTile
               label="Average checkout step · 24h"
@@ -521,7 +521,7 @@ export default async function ReportsPage() {
           <SectionHeading id="trends-every" level={2} title="Every number" hint="Each section of the read, as returned" />
           {/* Eight panels of different heights: two balanced columns instead of a grid with one left over. */}
           <div className="gap-6 lg:columns-2 [&>*]:mb-6 [&>*]:break-inside-avoid">
-            <Panel title="Donations and payouts" kicker="Money" level={3}>
+            <Panel title="Gifts and payouts" kicker="Money" level={3}>
               <MetricList section={money} read={read} />
             </Panel>
             <Panel title="Engagement" kicker="Highlights ⚡" level={3}>
@@ -542,7 +542,7 @@ export default async function ReportsPage() {
             <Panel title="Reliability" kicker="Playback + checkout" level={3}>
               <MetricList section={reliability} read={read} />
             </Panel>
-            <Panel title={DONATION_BANDS_TITLE} kicker="Donation bands" level={3}>
+            <Panel title={DONATION_BANDS_TITLE} kicker="Gift bands" level={3}>
               {read && !bands ? (
                 <p className="text-sm text-[var(--text-muted)]">Not in this read. {DONATION_BANDS_MISSING_NOTE}</p>
               ) : (

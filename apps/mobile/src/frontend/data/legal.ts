@@ -36,20 +36,20 @@ export const LEGAL_SECTIONS: LegalSection[] = [
   {
     id: 'tos',
     title: 'Terms of Service & Privacy',
-    body: `Tapua'i is a game-day highlights and community app. By using it you agree that donations, Crew, gear-goal donations, Drip, and Exclusive are optional; that video, names, and school identity you upload may be shown to other fans; and that we may hide or flag clips you report.
+    body: `Tapua'i is a game-day highlights and community app. By using it you agree that personal gifts, Crew, gear-goal gifts, Drip, and Exclusive purchases are optional; that video, names, and school identity you upload may be shown to other fans; and that we may hide or flag clips you report.
 
-We store the account you create (email or sign-in provider), a fan profile, and product activity needed to run tips, Crew, and receipts. Each donation is stored with the amount, the athlete, your account, the time, and where you gave it: a Highlight, a QR gift link, a specific wishlist item, a profile visit, or a live play, plus whether you arrived from a QR link. We use that gift record for your receipts, to account for what is owed to the athlete, and for our own business — to see which parts of Tapua'i bring in support so we can operate, bill, and improve the product. The record is tied to your account. It is not anonymous. Demo RLS is still open — do not put production student data in this prototype.
+We store the account you create (email or sign-in provider), a fan profile, and product activity needed to record personal gifts, Crew, and receipts. Each gift is stored with the amount, the athlete, your account, the time, and where you gave it: a Highlight, a QR gift link, a specific wishlist item, a profile visit, or a live play, plus whether you arrived from a QR link. We use that gift record for your receipts, to account for what is owed to the athlete, and for our own business — to see which parts of Tapua'i bring in support so we can operate, bill, and improve the product. The record is tied to your account. It is not anonymous. Demo RLS is still open — do not put production student data in this prototype.
 
 This summary is not a full Terms of Service or Privacy Policy. It is not legal advice. Counsel must replace it before live money or a public app-store listing.`,
   },
   {
     id: 'nil',
     title: 'High School NIL Disclaimer',
-    body: `A donation is a voluntary gift of support. It is independent of school, team, or individual performance. It is not pay-for-play, not a wager, and not compensation for a statistic, win, ranking, or highlight.
+    body: `A personal gift is voluntary support. It is independent of school, team, or individual performance. It is not pay-for-play, not a wager, and not compensation for a statistic, win, ranking, or highlight.
 
 Tapua'i does not claim to be “approved NIL.” High-school amateur rules are usually stricter than college NIL and are set by the state association and school district — not by this app.
 
-Fans and athletes must not use school trademarks, logos, or official marks as if Tapua'i or a donation were school-sponsored. School names may appear as community identity; they are not a license to sell those marks.
+Fans and athletes must not use school trademarks, logos, or official marks as if Tapua'i or a personal gift were school-sponsored. School names may appear as community identity; they are not a license to sell those marks.
 
 Aura points cannot be withdrawn as cash. Cheer polls have no entry fee and no prize.`,
   },
@@ -60,6 +60,6 @@ Aura points cannot be withdrawn as cash. Cheer polls have no entry fee and no pr
 
 Do not create accounts for children under 13. Parents and guardians should expect real consent, identity, and custodial payouts before any live transfer.
 
-Connecting a bank (Stripe Connect) is blocked until you acknowledge these terms. Schools and associations may restrict participation; we will honor a written direction to freeze donations for a named athlete, team, or school when that process exists.`,
+Connecting a bank (Stripe Connect) is blocked until you acknowledge these terms. Schools and associations may restrict participation; we will honor a written direction to freeze gifts for a named athlete, team, or school when that process exists.`,
   },
 ];

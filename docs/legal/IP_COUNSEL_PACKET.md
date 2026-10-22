@@ -11,7 +11,7 @@ This packet contains source fingerprints and supplied investigation notes. It is
 
 ## 1. Current source and open work
 
-- Inventory SHA-256: `1432cf400b215cb371d7657c0cf9be177604f3409f862425e29dc9704e8b7e9e`
+- Inventory SHA-256: `31509242fef6273ce276d8a79753c46e3d96e174e6a328044a42e297658c62b0`
 - Register SHA-256: `86a11d86b776757dd362bc03cdfc5c8e88d1c7a862e65db85ba00dd7c6073a71`
 - Safe source/manifest files monitored: 1104. Git-tracked and non-ignored untracked source; excluded files require separate human review.
 - Investigation candidates: 3; missing engineering reviews: 3; stale engineering reviews: 0.
@@ -35,7 +35,7 @@ These candidates are questions to investigate. None has an established novelty, 
 
 **Feature owner:** HIGHLIGHTS with ACCOUNT\_TAGS / PRIVACY\_ENGINEERING
 
-Candidate source SHA-256: `8630159ac6611926219915c781059b0433c62f99795f3d315e3e86ba525ea54e`
+Candidate source SHA-256: `25cbff0845244e8d5a11be05dd4c52b168cb148d1593c463beb0f26e2fcbeea6`
 
 **Review state:** No engineering review supplied.
 
@@ -54,7 +54,7 @@ Candidate source SHA-256: `8630159ac6611926219915c781059b0433c62f99795f3d315e3e8
 | Source / reading reference | SHA-256 |
 | --- | --- |
 | [apps/mobile/src/frontend/lib/reels.ts](../../apps/mobile/src/frontend/lib/reels.ts) | `4da5c804dfec788fc750f8851b6be6f4907f6400662efd649b3956c487cf52bd` |
-| [apps/mobile/src/frontend/lib/privacy.ts](../../apps/mobile/src/frontend/lib/privacy.ts) | `d29bfd72f3f42863ccfe5e243cb712fdb6d153dea10ea47e25390c7b6abd1777` |
+| [apps/mobile/src/frontend/lib/privacy.ts](../../apps/mobile/src/frontend/lib/privacy.ts) | `ae53d3bab4f2e9c458a1d9296a75692f8c2c049c8c549f81b26cea559c31fd02` |
 | [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `c8325565c5a05fa5714a49ab77053ca8a35bf435a120f807e41b6d442775f3dd` |
 | [docs/engineering/design/PROFILE\_PRIVACY\_DESIGN.md](../../docs/engineering/design/PROFILE_PRIVACY_DESIGN.md) | `2cd42389d6492030f1bf9ff40f47c1b085cdf01bc6ebc7f0cecdf17bdabe8168` |
 

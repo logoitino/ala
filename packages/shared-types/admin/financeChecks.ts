@@ -1,6 +1,6 @@
 /**
  * Source-to-ledger reconciliation (BOOKS-02, owned by INTERNAL_CONTROLS, built by FINANCE_DATA).
- * Proves every money row in the app reached the revenue log the books are built from: each donation,
+ * Proves every money row in the app reached the revenue log the books are built from: each gift,
  * optional tip, covered card fee, Vault purchase, booster sponsorship and Drip order must have exactly
  * one matching `company_revenue_logs` row with the same amount. Also flags money that has no posting
  * path yet (paid guardian withdrawals, filmer cash, booster renewals). Pure; the desk passes rows in.
@@ -83,9 +83,9 @@ function compare(stream: string, title: string, source: string, expected: Expect
 export function reconcileSources(revenue: RevenueLogInput[], src: FinanceSources, payouts: DisbursementInput[] = []): { rows: ReconRow[]; findings: BookIssue[] } {
   const positive = <T,>(rows: T[] | null, pick: (row: T) => Expected | null): Expected[] | null => rows == null ? null : rows.map(pick).filter((row): row is Expected => Boolean(row && row.cents > 0));
   const rows: ReconRow[] = [
-    compare('malo', 'Donations', 'tips.amount_cents', positive(src.tips, (t) => ({ id: t.id, cents: Math.round(t.amount_cents) })), revenue),
+    compare('malo', 'Gifts', 'tips.amount_cents', positive(src.tips, (t) => ({ id: t.id, cents: Math.round(t.amount_cents) })), revenue),
     compare('tip', "Optional tips to Tapua'i", 'tips.platform_tip_cents', positive(src.tips, (t) => ({ id: t.id, cents: Math.round(t.platform_tip_cents ?? 0) })), revenue),
-    compare('card_fee', 'Card fees covered by donors', 'tips.cover_fee_cents', src.coverFeeColumn ? positive(src.tips, (t) => ({ id: t.id, cents: Math.round(t.cover_fee_cents ?? 0) })) : null, revenue),
+    compare('card_fee', 'Processing fees covered by givers', 'tips.cover_fee_cents', src.coverFeeColumn ? positive(src.tips, (t) => ({ id: t.id, cents: Math.round(t.cover_fee_cents ?? 0) })) : null, revenue),
     compare('vault', 'Vault purchases', 'subscriptions (assumed $4.99)', positive(src.subscriptions, (s) => ({ id: s.id, cents: VAULT_ASSUMED_CENTS })), revenue),
     compare('booster', 'Booster sponsorships', 'sponsorships.amount_cents', positive(src.sponsorships, (s) => ({ id: s.id, cents: Math.round(s.amount_cents) })), revenue),
     compare('merch', 'Drip orders', 'shop_orders.amount_cents', positive(src.shopOrders, (o) => ({ id: o.id, cents: Math.round(o.amount_cents) })), revenue),
@@ -122,7 +122,7 @@ export function reconcileSources(revenue: RevenueLogInput[], src: FinanceSources
   return { rows, findings };
 }
 
-/** @purpose Channel per donation id ("Highlight via QR · Cleats"), to filter transactions by where giving started. */
+/** @purpose Channel per gift id ("Highlight via QR · Cleats"), to filter transactions by where giving started. */
 export function channelBySourceId(tips: TipSource[] | null, label: (origin: string, entry: string, sourceLabel: string) => string): Record<string, string> {
   return Object.fromEntries((tips ?? []).map((tip) => [tip.id, label(tip.origin ?? 'profile', tip.entry ?? 'in_app', tip.source_label ?? '')]));
 }

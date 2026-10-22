@@ -16,9 +16,9 @@ export const NOTIFICATION_CATEGORIES: ReadonlyArray<{
   id: NotificationCategoryId; label: string; description: string;
 }> = [
   { id: 'account', label: 'Account welcome and updates', description: 'Welcome and meaningful account updates.' },
-  { id: 'donation_receipts', label: 'Donations you make', description: 'Donation confirmations in your account.' },
-  { id: 'donations_received', label: 'Donations you receive', description: 'Updates for donations you are permitted to review.' },
-  { id: 'payment_updates', label: 'Payment updates', description: 'Recorded changes affecting your donations.' },
+  { id: 'donation_receipts', label: 'Gifts you make', description: 'Gift confirmations in your account.' },
+  { id: 'donations_received', label: 'Gifts you receive', description: 'Updates for gifts you are permitted to review.' },
+  { id: 'payment_updates', label: 'Payment updates', description: 'Recorded changes affecting your gifts.' },
   { id: 'social', label: 'Thanks and social activity', description: 'Allowed thanks, tags and friend requests.' },
   { id: 'crew', label: 'Crew and followed athletes', description: 'Allowed Crew and published Highlight updates.' },
   { id: 'workouts', label: 'Workout invitations', description: 'Invitations and responses under your existing contact choices.' },
@@ -92,7 +92,7 @@ export interface NotificationAdminJob {
 
 export interface NotificationAdminJobsPage { items: NotificationAdminJob[]; nextCursor: string | null }
 
-/** References contain no donation amounts, private message content or recipient addresses. */
+/** References contain no gift amounts, private message content or recipient addresses. */
 export type NotificationPayload = {
   version: 1;
   kind: 'account_welcome' | 'donation_confirmed' | 'donation_received' | 'payment_updated'

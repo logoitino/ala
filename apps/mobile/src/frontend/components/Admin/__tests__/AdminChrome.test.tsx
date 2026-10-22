@@ -284,7 +284,7 @@ it('browses desk groups without navigating away from the current report', async 
 it('finds desks by their description across groups and clears an empty search', async () => {
   await render(<AdminReportHeader />);
   await fireEvent.press(screen.getByRole('button', { name: 'Manage desks' }));
-  await fireEvent.changeText(screen.getByLabelText('Find an admin desk'), '  DONATIONS  ');
+  await fireEvent.changeText(screen.getByLabelText('Find an admin desk'), '  GIFTS  ');
   const results = within(screen.getByLabelText('Production desks'));
   expect(results.queryByRole('link', { name: 'Payouts' })).toBeNull();
   expect(results.getByRole('link', { name: 'Catalogs' })).toBeTruthy();

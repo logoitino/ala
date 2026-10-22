@@ -182,7 +182,7 @@ it('retains public donation and supports direct teammate navigation', async () =
     auraPoints={0} onDropMalo={donate} rosterPlayers={[player]} />);
   expect(screen.getByRole('tab', { name: 'Team' })).toBeTruthy();
   expect(screen.queryByRole('tab', { name: 'Manage' })).toBeNull();
-  await fireEvent.press(screen.getByRole('button', { name: `Donate 5 dollars to ${player.name}` }));
+  await fireEvent.press(screen.getByRole('button', { name: `Give 5 dollars to ${player.name}` }));
   expect(donate).toHaveBeenCalledTimes(1);
 });
 
@@ -201,9 +201,10 @@ describe('AthleteProfileView donate tagline', () => {
     mockProfile = { id: 'fan', user_id: 'fan-user', full_name: 'Fan', role: 'fan', is_verified: false };
     await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]} stats={stats}
       auraPoints={0} onDropMalo={jest.fn()} />);
-    expect(screen.getByRole('button', { name: `Donate 5 dollars to ${player.name}` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Give 5 dollars to ${player.name}` })).toBeTruthy();
     expect(screen.queryByText(/One-time Exclusive/)).toBeNull();
     expect(screen.getByText(TAGLINE_HEADLINE)).toBeTruthy();
+    expect(screen.getByText("Gifts to individual athletes are personal gifts and are not tax-deductible.")).toBeTruthy();
     expect(screen.queryByRole('header', { name: TAGLINE_HEADLINE })).toBeNull();
   });
   it('hides the tagline when there is no Donate button or the viewer owns the profile', async () => {

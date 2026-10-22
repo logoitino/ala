@@ -25,9 +25,9 @@ describe('formatGiftUrl', () => {
 });
 
 describe('shareQrSubtitle', () => {
-  it('names the athlete without promising an instant, app-free donation', () => {
+  it('names the athlete without promising an instant, app-free gift', () => {
     const line = shareQrSubtitle('Mele');
-    expect(line).toBe('Scan or share to support Mele. Friends and family can donate from the link.');
+    expect(line).toBe('Scan or share to support Mele. Friends and family can give from the link.');
     expect(line).not.toMatch(/instantly|without downloading/i);
     expect(shareQrSubtitle('  ')).toMatch(/support this athlete/);
   });

@@ -255,7 +255,7 @@ export function describeEvent(event: SupervisionEvent): string {
     case 'guardian_linked': return `${str(d.guardian, 'A guardian')} was linked as a parent or guardian.`;
     case 'guardian_unlinked': return `${str(d.guardian, 'A guardian')} is no longer linked.`;
     case 'consent_signed': {
-      const allowed = [d.public_profile === true ? 'a public profile' : null, d.donations === true ? 'payouts of donations' : null].filter(Boolean);
+      const allowed = [d.public_profile === true ? 'a public profile' : null, d.donations === true ? 'payouts of gifts' : null].filter(Boolean);
       return allowed.length ? `Consent signed for ${allowed.join(' and ')}.` : 'Consent signed (nothing extra allowed).';
     }
     case 'consent_withdrawn': return 'Consent was withdrawn.';

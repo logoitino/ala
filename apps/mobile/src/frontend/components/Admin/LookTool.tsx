@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -120,7 +121,7 @@ export function LookTool() {
           />
           <ToggleRow
             title="Actions on top"
-            meta="Off (shipping): Donate / Subscribe under Crew. On: park them under Highlights / Stats / Vault."
+            meta="Off (shipping): Give / Subscribe under Crew. On: park them under Highlights / Stats / Vault."
             on={draft.profile.actionsOnTop}
             live={published.profile.actionsOnTop}
             onPress={() => patchProfile('actionsOnTop', !draft.profile.actionsOnTop)}
@@ -242,7 +243,7 @@ function ColorsPane({
         <Text style={[styles.previewKicker, { color: theme.jade }]}>Highlights ⚡</Text>
         <Text style={[styles.previewTitle, { color: theme.text }]}>Friday night</Text>
         <View style={[styles.previewBtn, { backgroundColor: theme.jade }]}>
-          <Text style={[styles.previewBtnLabel, { color: theme.background }]}>Donate</Text>
+          <Text style={[styles.previewBtnLabel, { color: theme.background }]}>Give</Text>
         </View>
         <Text style={[styles.previewMeta, { color: theme.gold }]}>Live vs draft {theme.jade !== live.jade ? '· unpublished jade' : '· live'}</Text>
       </View>
@@ -295,7 +296,7 @@ function HighlightsPane({
       </View>
       <ToggleRow
         title="Rail on the left"
-        meta="Seki / Aura / Flex / Donate / ⋯"
+        meta="Seki / Aura / Flex / Give / ⋯"
         on={draft.railSide === 'left'}
         live={live.railSide === 'left'}
         onPress={() => onPatch({ railSide: draft.railSide === 'left' ? 'right' : 'left' })}

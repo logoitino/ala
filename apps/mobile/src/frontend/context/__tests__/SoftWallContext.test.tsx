@@ -1,5 +1,5 @@
 /**
- * The soft wall gates every Donate / Join Crew / gear goal / Upload tap for guests: a signed-in action runs at once,
+ * The soft wall gates every Give / Join Crew / gear goal / Upload tap for guests: a signed-in action runs at once,
  * a guest's action waits behind sign-in and runs exactly once afterwards — never before a new account's 13+
  * confirmation — and cancelling the sheet drops it.
  */
@@ -56,7 +56,7 @@ describe('soft wall', () => {
     expect(wall.visible).toBe(false);
   });
 
-  it("holds a guest's donation behind sign-in, then closes the sheet and runs it exactly once", async () => {
+  it("holds a guest's gift behind sign-in, then closes the sheet and runs it exactly once", async () => {
     const auth = await mount(guest);
     const resume = jest.fn();
     await act(async () => wall.requireAuth({ kind: 'malo', athleteName: 'Mele', athleteId: 'p1', resume }));

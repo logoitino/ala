@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -47,7 +48,7 @@ export function AthleteMoneyCard({ playerId }: { playerId: string | null | undef
 
   return (
     <View style={styles.card} accessibilityLabel="Your money">
-      <Text style={styles.kicker}>{summary.athleteControls ? 'Your money' : 'Your donations'}</Text>
+      <Text style={styles.kicker}>{summary.athleteControls ? 'Your money' : 'Your gifts'}</Text>
       <Text style={styles.total}>{received.headline}</Text>
       <Text style={styles.body}>{received.detail}</Text>
       <Text style={styles.body}>{athleteMoneyNotice(summary)}</Text>

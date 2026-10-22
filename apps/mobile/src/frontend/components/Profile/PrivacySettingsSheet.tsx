@@ -318,7 +318,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
                 options={[{ value: 'review_all', label: 'Review every tag' }, { value: 'auto_friends', label: 'Auto-approve friends' }]}
                 onChange={(next) => setDraft({ ...draft, tagReview: next })}
               />
-              <Text style={styles.hint}>A clip you are tagged in shows on your profile, counts for Spotlight and takes donations once the tag is approved.</Text>
+              <Text style={styles.hint}>A clip you are tagged in shows on your profile, counts for Spotlight and takes gifts once the tag is approved.</Text>
 
               {teen && minor ? (
                 <View style={styles.box}>

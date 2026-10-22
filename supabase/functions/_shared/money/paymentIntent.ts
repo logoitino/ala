@@ -14,7 +14,7 @@ import { donationContextMetadata, validDonationContext, type DonationContextAdap
 /** 401 copy when the Bearer header is missing on checkout. */
 export const PAYMENT_SIGN_IN_MESSAGE = 'Sign in to complete payment.';
 /** 403 copy when the target athlete is frozen. */
-export const FROZEN_TARGET_MESSAGE = 'This athlete cannot currently receive Mālo.';
+export const FROZEN_TARGET_MESSAGE = 'This athlete cannot currently receive gifts.';
 /** Stripe's US card minimum, in cents. */
 export const PAYMENT_MIN_CENTS = 50;
 
@@ -84,7 +84,7 @@ export async function runCreatePaymentIntent(input: {
       || request.giftCents + platformTipCents > amount
       || (!request.coverFees && request.giftCents + platformTipCents !== amount)
       || Math.round(request.giftCents * request.platformTipPercent / 100) !== platformTipCents) {
-      return errorResult('Invalid donation allocation.', 400);
+      return errorResult('Invalid gift allocation.', 400);
     }
   }
 

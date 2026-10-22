@@ -80,7 +80,7 @@ it('the guardian on record signs without a code and may allow payouts', async ()
   m.signGuardianConsent.mockResolvedValue(minors.parseSupervision({}));
   await render(<GuardianSupervisionPanel />);
   await fireEvent.press(await screen.findByLabelText('Sign the consent for Lani'));
-  await fireEvent.press(screen.getByRole('checkbox', { name: 'Donations to Lani may be paid out to the family account on record' }));
+  await fireEvent.press(screen.getByRole('checkbox', { name: 'Gifts to Lani may be paid out to the family account on record' }));
   await signForm('Pat Parent');
   await fireEvent.press(screen.getByLabelText('Sign the consent'));
   await waitFor(() => expect(m.signGuardianConsent).toHaveBeenCalledWith('m1', expect.objectContaining({ signerName: 'Pat Parent', allowsDonations: true })));

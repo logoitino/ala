@@ -1,5 +1,5 @@
 /**
- * First fan visit introduces the donation mission using shared Daylight chrome.
+ * First fan visit introduces the gift mission using shared Daylight chrome.
  * Admin routes keep their own entry flow and leave the fan welcome unseen for a later fan visit.
  */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
@@ -64,9 +64,9 @@ export function WelcomeOverlay() {
         <View style={[styles.card, frame.card]}>
           <MenuBackdrop accent="gold" />
           <Text style={styles.brand}>Tapua&apos;i</Text>
-          <Text style={styles.title}>Donate to the athletes you cheer for.</Text>
+          <Text style={styles.title}>Give to the athletes you cheer for.</Text>
           <Text style={styles.body}>
-            {DONATION_MISSION} Watch their highlights, cheer your school, and donate in a few taps — so our kids feel
+            {DONATION_MISSION} Watch their highlights, cheer your school, and give in a few taps — so our kids feel
             believed in.
           </Text>
           {/* Owner-approved message (BRAND-01): plain text under the mission so it never competes with the title. */}
@@ -82,7 +82,7 @@ export function WelcomeOverlay() {
           >
             <Text style={styles.ctaLabel}>Watch highlights</Text>
           </AnimatedButton>
-          <Text style={styles.foot}>You can browse as a guest. Sign in when you are ready to donate or join a Crew.</Text>
+          <Text style={styles.foot}>You can browse as a guest. Sign in when you are ready to give or join a Crew.</Text>
         </View>
       </View>
     </Modal>

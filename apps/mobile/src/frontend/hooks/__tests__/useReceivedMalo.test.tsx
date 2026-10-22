@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { renderHook, waitFor } from '@testing-library/react-native';
 
 import { useReceivedMalo } from '@/hooks/useReceivedMalo';
@@ -25,7 +26,7 @@ describe('useReceivedMalo', () => {
     mockTrackIssue.mockReset();
   });
 
-  it('shows $0 when the donations call is missing or fails', async () => {
+  it('shows $0 when the gifts call is missing or fails', async () => {
     mockRpc.mockResolvedValue({
       data: null,
       error: { code: 'PGRST202', message: 'Could not find the function public.get_received_malo' },
@@ -38,7 +39,7 @@ describe('useReceivedMalo', () => {
     expect(mockTrackIssue).toHaveBeenCalledWith('received_malo_unavailable', 'profile');
   });
 
-  it('sums the donations that came back', async () => {
+  it('sums the gifts that came back', async () => {
     mockRpc.mockResolvedValue({
       data: [
         {

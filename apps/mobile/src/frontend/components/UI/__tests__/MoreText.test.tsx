@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { MoreText } from '@/components/UI/MoreText';
 
-const LONG = 'New connected account updates appear here. Your donation history and invitations stay in their own sections.';
+const LONG = 'New connected account updates appear here. Your gift history and invitations stay in their own sections.';
 
 describe('MoreText', () => {
   it('shows short text as-is with no toggle', async () => {

@@ -1,5 +1,5 @@
 /**
- * Money owns disbursement requests and status changes. Ledger totals, streams and donation history belong
+ * Money owns disbursement requests and status changes. Ledger totals, streams and gift history belong
  * to the Revenue report so the editing desk does not fetch or repeat a second financial dashboard.
  * @sideEffects Existing disbursement reads, queue insertion and confirmed status updates.
  */
@@ -121,7 +121,7 @@ export function MoneyTool() {
     >
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         <AdminBtn label="View revenue report" onPress={() => router.push('/admin/revenue' as Href)} />
-        <AdminBtn label="Edit donation amounts + exclusive prices" onPress={() => router.push('/admin/catalog' as Href)} />
+        <AdminBtn label="Edit gift amounts + exclusive prices" onPress={() => router.push('/admin/catalog' as Href)} />
       </View>
 
       <AdminPanel title="Queue disbursement">

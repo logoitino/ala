@@ -367,7 +367,7 @@ export default function MyHubTab() {
     if (live.layouts.receipts) {
       items.push({
         id: 'receipts',
-        label: 'Donation History & Receipts',
+        label: 'Gift History & Receipts',
         hint: live.copy.receiptsKicker,
         onPress: openReceipts,
       });

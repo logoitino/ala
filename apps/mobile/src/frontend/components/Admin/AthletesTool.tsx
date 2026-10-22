@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { useCallback, useMemo, useState } from 'react';
 import { AthleteRecordsPanel } from '@/components/Admin/AthleteRecordsPanel';
 import { Alert } from 'react-native';
@@ -114,7 +115,7 @@ export function AthletesTool() {
         vertical_jump: form.vertical_jump,
       });
       setForm(empty);
-      setMessage('Athlete saved. Tagging, donations, and profiles will pick this up.');
+      setMessage('Athlete saved. Tagging, gifts, and profiles will pick this up.');
       await refresh();
     } catch (caught) {
       setMessage(caught instanceof Error ? caught.message : 'Could not save this athlete.');
@@ -195,7 +196,7 @@ export function AthletesTool() {
   return (
     <AdminPage
       title="Athletes"
-      lede="This roster is who fans tag on Highlights ⚡ and donate to. Pick a school from the catalog so onboarding stays in sync."
+      lede="This roster is who fans tag on Highlights ⚡ and give to. Pick a school from the catalog so onboarding stays in sync."
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}

@@ -1,4 +1,4 @@
-/** FUN-01 explicitly curated authorized free story; no substitute athlete or new Donate behavior. */
+/** FUN-01 explicitly curated authorized free story; no substitute athlete or new Give behavior. */
 import { useEffect, useMemo, useState } from 'react';
 import { AppState, Text } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -18,8 +18,8 @@ export function FanZoneStory({ story, open, onOpen, onClose }: {
     return <FanPanel title="Meet an athlete">
  {story ? <><Text style={fanStyles.copy}>{story.title}</Text><FanButton label={open ? 'Close athlete story' : 'Watch curated story'} onPress={open ? onClose : onOpen}/>
  {open ? <StoryPlayer key={`${story.id}:${story.video_url}`} url={story.video_url} onClose={onClose}/> : null}
- {story.player_id ? <FanButton label="Athlete profile & Donate" onPress={() => { onClose(); router.push(userProfileHref(story.player_id!)); }}/> : <Text>Profile link is unavailable for this story.</Text>}
- <Text>Watching is free. Donate is optional in the athlete’s existing profile and never adds votes.</Text></> : <Text>This curated story is unavailable. No different athlete is substituted.</Text>}
+ {story.player_id ? <FanButton label="Athlete profile & Give" onPress={() => { onClose(); router.push(userProfileHref(story.player_id!)); }}/> : <Text>Profile link is unavailable for this story.</Text>}
+ <Text>Watching is free. Give is optional in the athlete’s existing profile and never adds votes.</Text></> : <Text>This curated story is unavailable. No different athlete is substituted.</Text>}
  </FanPanel>;
 }
 function StoryPlayer({ url, onClose }: {

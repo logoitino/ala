@@ -42,7 +42,7 @@ it('provides prior Back and the actual role Home outside a fan-only gate',async(
 it('uses role Home when no previous route exists',async()=>{mockCanBack=false;await open();await fireEvent.press(screen.getByLabelText('Back'));expect(mockReplace).toHaveBeenCalledWith('/parent');});
 it('shows three voluntary paths, published deadlines and private receipt versus public candidacy',async()=>{
  await open();expect(screen.getByLabelText('Join the fun')).toBeTruthy();expect(screen.getByLabelText('Meet an athlete')).toBeTruthy();expect(screen.getByLabelText('Serve together')).toBeTruthy();
- expect(screen.getByText(/Voting /)).toBeTruthy();expect(screen.getByText(/Private entry.*accepted/i)).toBeTruthy();expect(screen.getByText(/Free ballots.*donations.*votes/i)).toBeTruthy();
+ expect(screen.getByText(/Voting /)).toBeTruthy();expect(screen.getByText(/Private entry.*accepted/i)).toBeTruthy();expect(screen.getByText(/Free ballots.*gifts.*votes/i)).toBeTruthy();
 });
 it('allows an unlisted guardian private review and requires real readiness plus exact copy review before grant',async()=>{
  bank={...bank,entry:null,candidates:[],can_participate:false,guardian_queue:[bank.entry!]};await open();
@@ -70,7 +70,7 @@ it('offers optional private preset service and no public reward or free-text pro
  await open();await fireEvent.press(screen.getByLabelText('Serve together'));await fireEvent.press(screen.getByLabelText('Encourage someone'));
  expect(await screen.findByText(/Private reflection received/)).toBeTruthy();expect(await screen.findByText(/Private idea: encourage/)).toBeTruthy();expect(screen.queryByLabelText('Service proof')).toBeNull();await fireEvent.press(screen.getByLabelText('Delete private reflection'));expect(await screen.findByText('Private reflection deleted.')).toBeTruthy();expect(screen.queryByText(/Private idea: encourage/)).toBeNull();
 });
-it('does not substitute an athlete when curated story is unavailable',async()=>{await open();await fireEvent.press(screen.getByLabelText('Meet an athlete'));expect(screen.getByText(/This curated story is unavailable/)).toBeTruthy();expect(screen.queryByLabelText('Athlete profile & Donate')).toBeNull();});
+it('does not substitute an athlete when curated story is unavailable',async()=>{await open();await fireEvent.press(screen.getByLabelText('Meet an athlete'));expect(screen.getByText(/This curated story is unavailable/)).toBeTruthy();expect(screen.queryByLabelText('Athlete profile & Give')).toBeNull();});
 it('keeps an uncertain ballot choice disabled and shows the authoritative ballot after retry',async()=>{
  bank.entry=null;await open();let writes=0;mockRpc.mockImplementation(async(fn:string,args:Record<string,unknown>)=>{
   if(fn!=='fun_vote')return{data:bank,error:null};if(++writes===1)throw new Error('lost reply');bank={...bank,ballot:{id:FUN_IDS.ballot,campaign_id:FUN_IDS.campaign,entry_id:FUN_IDS.audit,version:2,invalidated:false}};

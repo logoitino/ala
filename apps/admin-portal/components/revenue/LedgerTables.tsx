@@ -1,7 +1,7 @@
 /**
  * Read-only tables for the Revenue desk (COMMERCE): the recent `company_revenue_logs` rows from
- * `get_company_revenue_summary.recent` and the latest donations from `get_admin_malo_breakdown.recent`.
- * Server-Component safe. Times are UTC. Words follow docs/product/VOICE.md: donation, donor, gear goal,
+ * `get_company_revenue_summary.recent` and the latest gifts from `get_admin_malo_breakdown.recent`.
+ * Server-Component safe. Times are UTC. Words follow docs/product/VOICE.md: gift, giver, gear goal,
  * and "tip" only for the tip for Tapua'i. Ledger rows are records; none of them means money was paid out.
  *
  * Open table and phone-row dividers follow Home's report format, retaining the legal ledger copy.
@@ -62,7 +62,7 @@ function Blank({ words }: { words: string }) {
   );
 }
 
-/** Ledger and donation time, or a Blank when the read has no usable time. */
+/** Ledger and gift time, or a Blank when the read has no usable time. */
 function When({ iso }: { iso: string }) {
   const stamp = utcStamp(iso);
   return stamp ? <>{stamp}</> : <Blank words="Not in this read" />;
@@ -117,7 +117,7 @@ function Notice({ tone, children }: { tone: 'error' | 'empty'; children: ReactNo
  */
 export function RecentLedgerTable({ rows, error }: { rows: RevenueLog[]; error: string | null }) {
   if (error) return <Notice tone="error">{error}</Notice>;
-  if (rows.length === 0) return <Notice tone="empty">No ledger rows yet. A row is written after a test-mode donation, booster, or Vault charge.</Notice>;
+  if (rows.length === 0) return <Notice tone="empty">No ledger rows yet. A row is written after a test-mode gift, booster, or Vault charge.</Notice>;
   const caption = 'Recent ledger rows, newest first, test mode';
   const cards: CardRow[] = rows.map((row) => ({
     key: row.id,
@@ -151,8 +151,8 @@ export function RecentLedgerTable({ rows, error }: { rows: RevenueLog[]; error: 
   );
 }
 
-/** The gear goal or clip a donation points at, by short id. A donation with neither (a profile or QR
- *  donation) is a Blank that says so, not a bare "—". */
+/** The gear goal or clip a gift points at, by short id. A gift with neither (a profile or QR
+ *  gift) is a Blank that says so, not a bare "—". */
 function linkedTo(row: MaloTxn): ReactNode {
   if (row.wishlist_item_id) return `Gear goal ${row.wishlist_item_id.slice(0, 8)}`;
   if (row.reel_id) return `Clip ${row.reel_id.slice(0, 8)}`;
@@ -160,21 +160,21 @@ function linkedTo(row: MaloTxn): ReactNode {
 }
 
 /**
- * @purpose Latest donations: athlete, donor, where it started, linked clip or gear goal, amount.
+ * @purpose Latest gifts: athlete, giver, where it started, linked clip or gear goal, amount.
  * @param rows `PortalMaloBreakdown.recent` (newest first, up to 40).
  * @param error `PortalMaloBreakdown.error`, shown instead of the table.
  */
 export function RecentDonationsTable({ rows, error }: { rows: MaloTxn[]; error: string | null }) {
   if (error) return <Notice tone="error">{error}</Notice>;
-  if (rows.length === 0) return <Notice tone="empty">No donations yet.</Notice>;
-  const caption = 'Latest donations, newest first, test mode';
+  if (rows.length === 0) return <Notice tone="empty">No gifts yet.</Notice>;
+  const caption = 'Latest gifts, newest first, test mode';
   const cards: CardRow[] = rows.map((row) => ({
     key: row.id,
     title: row.athlete_name,
     amount: formatUsd(row.amount_cents),
     details: [
       { label: 'When', value: <When iso={row.created_at} />, figure: true },
-      { label: 'Donor', value: row.fan_name },
+      { label: 'Giver', value: row.fan_name },
       { label: 'Started', value: donationChannel(row.origin, row.entry, row.source_label) },
       { label: 'Linked to', value: linkedTo(row) },
     ],
@@ -182,7 +182,7 @@ export function RecentDonationsTable({ rows, error }: { rows: MaloTxn[]; error: 
   return (
     <>
       <Cards caption={caption} rows={cards} />
-      <Shell caption={caption} head={['When (UTC)', 'Athlete', 'Donor', 'Where it started', 'Linked to', 'Amount']} rightFrom={5}>
+      <Shell caption={caption} head={['When (UTC)', 'Athlete', 'Giver', 'Where it started', 'Linked to', 'Amount']} rightFrom={5}>
         {rows.map((row) => (
           <tr key={row.id} className="border-t border-[var(--border)] align-top">
             <th scope="row" className="px-3 py-2 font-semibold whitespace-nowrap text-[var(--ink-soft)]">

@@ -76,7 +76,7 @@ export function ProfileFriendActions({ playerId }: { playerId: string }) {
 
   const privateNote = isPrivate ? (
     <Text style={styles.private} accessibilityRole="text">
-      This profile is private. You can still watch their Highlights, donate and join their Crew.
+      This profile is private. You can still watch their Highlights, give and join their Crew.
     </Text>
   ) : null;
 

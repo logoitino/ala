@@ -1,7 +1,7 @@
 /**
  * Tests for `lib/eventLabels.ts`: the one source of people words for telemetry keys on Health,
  * Trends, Analytics and Departments. They pin the VISUAL_QA 2026-10-12 examples, the VOICE rule
- * that money keys read as "Donate" / "donation", the readable fallback for unknown keys, and
+ * that money keys read as "Give" / "gift", the readable fallback for unknown keys, and
  * that rows with the same words merge.
  */
 import assert from 'node:assert/strict';
@@ -20,16 +20,16 @@ test('feature keys from the review read as people words', () => {
   assert.equal(featureLabel('spotlight.open_modal'), 'Open Spotlight');
   assert.equal(featureLabel('reel.save'), 'Save a Highlight');
   assert.equal(featureLabel('poll.vote'), 'Cheer poll vote');
-  assert.equal(featureLabel('share_qr.copy'), 'Copy the QR donation link');
+  assert.equal(featureLabel('share_qr.copy'), 'Copy the QR gift link');
   assert.equal(featureLabel('  '), 'Unknown button');
 });
 
 test('issue keys read as what went wrong, with the surface in brackets', () => {
   assert.equal(issueLabel('upload.retry · upload'), 'Upload retry (upload)');
-  assert.equal(issueLabel('malo.sheet.dismiss_error · home'), 'Donate sheet closed with an error (Home)');
+  assert.equal(issueLabel('malo.sheet.dismiss_error · home'), 'Give sheet closed with an error (Home)');
   assert.equal(issueLabel('video.stall_overlay · spotlight'), 'Video stalled (Spotlight)');
   assert.equal(issueLabel('poll.vote_timeout · local'), 'Cheer poll vote timed out (Local)');
-  assert.equal(issueLabel('checkout · app'), 'Donation checkout error (app)');
+  assert.equal(issueLabel('checkout · app'), 'Gift checkout error (app)');
   assert.equal(issueLabel('control · app'), 'Unnamed control (app)');
   // Open bug reports arrive as "<surface> bug".
   assert.equal(issueLabel('profile bug'), 'Open bug reports (Profile)');
@@ -37,7 +37,7 @@ test('issue keys read as what went wrong, with the surface in brackets', () => {
   assert.equal(issueLabel(''), 'Unknown issue');
 });
 
-test('money keys say Donate or donation, never Mālo or tip (VOICE.md)', () => {
+test('money keys say Give or gift, never Mālo or tip (VOICE.md)', () => {
   const money = [
     featureLabel('malo'),
     featureLabel('reel.malo.open'),
@@ -51,12 +51,12 @@ test('money keys say Donate or donation, never Mālo or tip (VOICE.md)', () => {
   for (const label of money) {
     assert.ok(!/m[aā]lo/i.test(label), `${label} has no Mālo`);
     assert.ok(!/\btips?\b/i.test(label), `${label} has no tip`);
-    assert.match(label, /[Dd]onat/);
+    assert.match(label, /give|gift/i);
   }
 });
 
 test('unknown keys are spelled out in sentence case, never shown as the raw key', () => {
-  assert.equal(featureLabel('vault.subscribe.sheet'), 'Open Vault subscribe');
+  assert.equal(featureLabel('vault.subscribe.sheet'), 'Open Vault purchase');
   assert.equal(featureLabel('lineup.share_card'), 'Lineup share card');
   assert.equal(featureLabel('clip.flex'), 'Flex on a Highlight');
   assert.equal(issueLabel('lineup.load_fail · drip'), 'Lineup load fail (Drip)');

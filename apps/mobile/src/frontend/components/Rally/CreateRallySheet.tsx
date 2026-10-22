@@ -74,7 +74,7 @@ export function CreateRallySheet({ visible, playerId, athleteName, onClose, onCr
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
               <Text style={styles.title}>Start a Rally for {athleteName}</Text>
               <Text style={styles.lede}>
-                Name a real sports cost and tell your community why it matters. Donations go to the family account for that cost.
+                Name a real sports cost and tell your community why it matters. Gifts go to the family account for that cost.
               </Text>
 
               <Text style={styles.label}>What is it for?</Text>
@@ -144,7 +144,7 @@ export function CreateRallySheet({ visible, playerId, athleteName, onClose, onCr
 
               <Text style={styles.note}>
                 Keep it to real costs — fees, gear, travel, camps, college prep. Never ask for money for a play, a stat or a win.
-                If the athlete starts the Rally, a parent or guardian approves it before fans can donate.
+                If the athlete starts the Rally, a parent or guardian approves it before fans can give.
               </Text>
 
               {error ? <Text style={styles.error}>{error}</Text> : null}

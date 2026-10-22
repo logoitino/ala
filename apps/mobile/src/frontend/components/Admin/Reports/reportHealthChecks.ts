@@ -17,7 +17,7 @@ export function buildReportHealthChecks(data: AdminReportData): ReportHealthChec
   const checks: ReportHealthCheck[] = [
     measured('stalls', 'Video stalls', n('reliability', 'stalls_24h'), '24h · Check ≥1; Failed ≥5', '/admin/qa', v => band(v, 1, 5)),
     measured('reconnects', 'Realtime reconnects', n('reliability', 'reconnects_24h'), '24h · Check ≥1; Failed ≥10', '/admin/qa', v => band(v, 1, 10)),
-    measured('checkout', 'Donation checkout', n('reliability', 'avg_checkout_ms_24h'), 'Mean logged step, 24h · Check ≥3,000 ms; Failed ≥8,000 ms', '/admin/qa', v => band(v, 3000, 8000), ' ms'),
+    measured('checkout', 'Gift checkout', n('reliability', 'avg_checkout_ms_24h'), 'Mean logged step, 24h · Check ≥3,000 ms; Failed ≥8,000 ms', '/admin/qa', v => band(v, 3000, 8000), ' ms'),
     measured('flags', 'Open flags', n('content', 'flagged'), 'Current · Check ≥1; Failed ≥8', '/admin/moderation', v => band(v, 1, 8)),
     measured('payouts', 'Queued payouts', n('money', 'queued_payouts'), 'Current · Check when any request is queued; Wave 0 payouts remain blocked', '/admin/money', v => band(v, 1)),
     measured('verify', 'Verify queue', n('audience', 'pending_verify'), 'Current · Check when any verification is pending', '/admin/people', v => band(v, 1)),

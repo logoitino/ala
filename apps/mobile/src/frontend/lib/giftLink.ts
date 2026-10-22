@@ -46,7 +46,7 @@ function text(value: unknown): string | null {
 export async function resolveGiftLink(raw: string | null | undefined): Promise<GiftLink> {
   const handle = normalizeAthleteHandle(raw);
   if (!raw?.trim()) return { status: 'not_found', handle };
-  if (!isSupabaseConfigured) return { status: 'error', handle, message: 'Donations are not set up on this build yet.' };
+  if (!isSupabaseConfigured) return { status: 'error', handle, message: 'Gifts are not set up on this build yet.' };
   try {
     const byId = isAuraUuid(handle);
     // Privacy-applied public rows (PRIV-01); a missing row is not proof the athlete is missing when the link is an id.

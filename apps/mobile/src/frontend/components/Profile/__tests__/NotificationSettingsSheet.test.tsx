@@ -34,7 +34,7 @@ it('allows disabling a previously enabled choice when its source is unavailable'
   const draft = makeDefaultNotificationPreferences(); draft.categories.donation_receipts.email = true;
   mockSettings.draft = draft;
   await render(<NotificationSettingsSheet visible onClose={jest.fn()} />);
-  const choice = screen.getByLabelText('Donations you make: Email');
+  const choice = screen.getByLabelText('Gifts you make: Email');
   expect(choice).toBeEnabled();
   await fireEvent.press(choice);
   expect(mockSetCategory).toHaveBeenCalledWith('donation_receipts', 'email', false);

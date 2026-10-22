@@ -1,4 +1,4 @@
-/** Regression fixtures cover source keys, donation provenance/privacy and partial oversight reads.
+/** Regression fixtures cover source keys, gift provenance/privacy and partial oversight reads.
  * Deliberately different totals make a wrong window or hidden roster row observable. */
 import { emptyAdminReportData } from '@/lib/adminReports';
 import { reportPageSections } from '../reportPages';
@@ -18,7 +18,7 @@ function fixture() {
   data.revenue.gross_volume_cents = 5000; data.revenue.payouts_cents = 1000; data.revenue.company_net_cents = 1000; data.revenue.stripe_paid_cents = 500;
   data.revenue.streams = [{ source: 'malo', label: 'Mālo', split: '', gross_cents: 3000, payout_cents: 2000, platform_cents: 300, payee: 'Athlete' }];
   data.revenue.recent = [{ id: 'ledger', source: 'malo', label: 'Mālo · Highlight · Athlete', gross_cents: 3000, payout_cents: 2000, platform_cents: 300, created_at: '2026-10-01T14:00:00Z' }];
-  data.breakdown.recent = [{ id: 'donation', amount_cents: 200, created_at: '2026-10-01T14:00:00Z', origin: 'wishlist', entry: 'qr_link', source_label: 'Shoes', athlete_name: 'Athlete', fan_name: 'Donor', reel_id: null, wishlist_item_id: 'goal' }, { id: 'clipdonation', amount_cents: 200, created_at: '2026-10-01T14:00:00Z', origin: 'highlight', entry: 'in_app', source_label: '', athlete_name: 'Athlete', fan_name: 'Donor', reel_id: 'clip', wishlist_item_id: null }];
+  data.breakdown.recent = [{ id: 'donation', amount_cents: 200, created_at: '2026-10-01T14:00:00Z', origin: 'wishlist', entry: 'qr_link', source_label: 'Shoes', athlete_name: 'Athlete', fan_name: 'Gift sender', reel_id: null, wishlist_item_id: 'goal' }, { id: 'clipdonation', amount_cents: 200, created_at: '2026-10-01T14:00:00Z', origin: 'highlight', entry: 'in_app', source_label: '', athlete_name: 'Athlete', fan_name: 'Gift sender', reel_id: 'clip', wishlist_item_id: null }];
   return data;
 }
 it('uses the actual verification queue and content category mix, not hype reactions', () => {
@@ -27,10 +27,10 @@ it('uses the actual verification queue and content category mix, not hype reacti
   expect(sections[2].charts?.some(chart => chart.id === 'split-categories')).toBe(true);
   expect(sections[2].charts?.find(chart => chart.id === 'split-categories')).toMatchObject({ parts: [{ key: 'game_play', value: 2 }, { key: 'train_like_me', value: 3 }, { key: 'serve_like_me', value: 4 }] });
 });
-it('preserves all-time and14-day donation reads, gross remainder, ledger detail and linked media', () => {
+it('preserves all-time and14-day gift reads, gross remainder, ledger detail and linked media', () => {
   const sections = reportPageSections('revenue', fixture());
   const donation = sections.find(section => section.id === 'donations')!;
-  expect(donation.kpis?.find(row => row.label === 'Donations, all time')?.value).toBe('$30.00');
+  expect(donation.kpis?.find(row => row.label === 'Gifts, all time')?.value).toBe('$30.00');
   expect(donation.charts?.[0]).toMatchObject({ source: 'get_admin_malo_breakdown.by_day', windowLabel: 'Last 14 days, UTC' });
   expect(JSON.stringify(donation.charts?.[0])).not.toContain('Wrong seven-day source');
   expect(JSON.stringify(sections.find(section => section.id === 'ledger'))).toContain('Recorded gross not split');

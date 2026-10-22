@@ -4,7 +4,7 @@
  * file turns one reports read and one revenue read into eight dashboards: a KPI row, chart specs
  * for the inline chart kit in `components/charts`, and the measure catalog. It never computes a
  * measure the report does not return. A key the read did not return stays blank (`—`), a prior
- * week of zero never becomes a percent, and only clips and donations have a prior week.
+ * week of zero never becomes a percent, and only clips and gifts have a prior week.
  * Chart colours come from `lib/measureColors.ts`, stream names from `streamName`, and shared labels
  * from `REPORT_LABELS`, so a measure reads and looks the same here as on Trends, Home and Revenue.
  * Minutes and durations use the Home/Health formatters (`<1 min`, `1.3 s`). Measure and list names
@@ -13,7 +13,7 @@
  * `issueLabel` (lib/eventLabels.ts), never the raw telemetry key. Live games draws only the
  * live/parked split: poll, booster and shop counts are tiles or catalog rows, because an all-time
  * vote total does not belong on one chart with current counts.
- * Donations draws "Athletes by all-time donations" from `get_admin_reports.donation_bands` (three
+ * Gifts draws "Athletes by all-time gifts" from `get_admin_reports.donation_bands` (three
  * catalog measures, counts of athletes, no names; owner decision 2026-10-12). The named
  * `leaders.malo` list is no longer drawn on any board; it stays in the list catalog by row count
  * only so every report key is still named. Bands missing from a working read (migration not applied)
@@ -170,8 +170,8 @@ function revenueBag(revenue: PortalRevenue): Record<string, number | null> {
 }
 
 /**
- * @purpose A measure's note, plus the 2026-10-12 update note when a donation band is blank in a
- *   working read, so "—" says why instead of looking like nothing was donated.
+ * @purpose A measure's note, plus the 2026-10-12 update note when a gift band is blank in a
+ *   working read, so "—" says why instead of looking like nothing was given.
  */
 function noteFor(measure: MeasureDef, value: number | null, reports: PortalReports): string {
   if (measure.section === 'donation_bands' && value == null && stateOf(reports) === 'ok') return `${measure.note} ${DONATION_BANDS_MISSING_NOTE}`;
@@ -278,7 +278,7 @@ function ranking(id: RankingId, reports: PortalReports, error: string | null, ac
 }
 
 /**
- * @purpose "Athletes by all-time donations": the three `donation_bands` measures as bars in band
+ * @purpose "Athletes by all-time gifts": the three `donation_bands` measures as bars in band
  *   order. Counts of athletes, no names (owner decision 2026-10-12).
  * @returns `points: null` (kit "missing") when the read did not include the key, with a summary that
  *   names the 2026-10-12 reports update; a partial key keeps its missing band as `null` ("—").
@@ -300,7 +300,7 @@ function donationBands(reports: PortalReports, revenue: PortalRevenue, error: st
     accent: measureColor('donations'),
     error,
     points: bands ? DONATION_BANDS.map((band) => ({ label: band.label, value: readMeasure(band.key, reports, revenue) })) : null,
-    emptyText: 'No athletes have donations yet.',
+    emptyText: 'No athletes have gifts yet.',
     // Bands, not a ranking: fixed order, no rank numbers, no "leads" line.
     keepOrder: true,
     summary,
@@ -403,7 +403,7 @@ function ledgerRing(revenue: PortalRevenue): RingSpec {
     { key: 'payouts_cents', label: 'Payee share recorded', value: payouts, color: measureColor('payeeShare') },
     { key: 'company_net_cents', label: 'Tapua\'i share', value: net, color: measureColor('tapuaiShare') },
   ];
-  let caption = 'Tapua\'i share and payee share as parts of recorded gross. Donation policy: 90% to the family account, 10% to Tapua\'i.';
+  let caption = 'Tapua\'i share and payee share as parts of recorded gross. Current test-mode model: 90% to the family account, 10% to Tapua\'i.';
   let totalLabel = 'Recorded gross';
   if (gross != null && net != null && payouts != null) {
     const rest = gross - net - payouts;
@@ -484,7 +484,7 @@ function chartsFor(board: BoardId, reports: PortalReports, revenue: PortalRevenu
   if (board === 'donations') {
     return [
       trend('malo', 'area', reports, error),
-      compare('malo_cents_7d', 'Donations', 'Donations, this week and the week before', reports, revenue, error),
+      compare('malo_cents_7d', 'Gifts', 'Gifts, this week and the week before', reports, revenue, error),
       donationBands(reports, revenue, error),
     ];
   }

@@ -1,5 +1,5 @@
 /**
- * `ReelOwnerPeek` behavior that does not depend on layout: labelled actions, the Donate vs pending Tag state, a clip
+ * `ReelOwnerPeek` behavior that does not depend on layout: labelled actions, the Give vs pending Tag state, a clip
  * with and without a tag, a missing player, video vs photo story, the real @username (never a name-derived guess),
  * the "Posted by" line, and the close button. Layout (wrapping, 2 x 2 grid, 44-point targets) needs a render check.
  */
@@ -116,21 +116,21 @@ function mockWindow(width: number, fontScale: number) {
 }
 
 describe('ReelOwnerPeek', () => {
-  it('shows labelled Join Crew, Donate and Open profile actions that fire their callbacks', async () => {
+  it('shows labelled Join Crew, Give and Open profile actions that fire their callbacks', async () => {
     const props = await renderPeek();
     expect(screen.getByLabelText('Join Crew, follow Marcus Reyes')).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText('Donate to Marcus Reyes'));
+    await fireEvent.press(screen.getByLabelText('Give to Marcus Reyes'));
     expect(props.onTip).toHaveBeenCalledTimes(1);
     await fireEvent.press(screen.getByLabelText('Open full profile for Marcus Reyes'));
     expect(props.onOpenProfile).toHaveBeenCalledTimes(1);
-    expect(screen.getByText('Donate')).toBeTruthy();
+    expect(screen.getByText('Give')).toBeTruthy();
   });
 
   it('reads Tag with a confirm-first label while the athlete tag is pending', async () => {
     await renderPeek({ maloReady: false });
-    expect(screen.getByLabelText('Tag: confirm Marcus Reyes on this clip before donating')).toBeTruthy();
+    expect(screen.getByLabelText('Tag: confirm Marcus Reyes on this clip before giving')).toBeTruthy();
     expect(screen.getByText('Tag')).toBeTruthy();
-    expect(screen.queryByText('Donate')).toBeNull();
+    expect(screen.queryByText('Give')).toBeNull();
   });
 
   it('puts the clip tag in the "On this clip" row, and falls back to the clip kind without one', async () => {
@@ -148,23 +148,23 @@ describe('ReelOwnerPeek', () => {
     await renderPeek({ clip: { ...video, tag: '', mediaType: 'photo_story', photoCount: 5 } });
     expect(screen.getByText('Photo story · 5 photos')).toBeTruthy();
     expect(screen.getByLabelText('Open full profile for Marcus Reyes')).toBeTruthy();
-    expect(screen.getByText('Donate')).toBeTruthy();
+    expect(screen.getByText('Give')).toBeTruthy();
     // Spoken form drops the middle dot the visible text uses.
     expect(screen.getByLabelText('On this clip: Photo story, 5 photos')).toBeTruthy();
   });
 
-  it('renders without a player: no Crew button, clip name and aura from the clip, no Donate unless a handler exists', async () => {
+  it('renders without a player: no Crew button, clip name and aura from the clip, no Give unless a handler exists', async () => {
     await renderPeek({ player: null, onTip: undefined, clip: { ...video, auraCount: 4 } });
     expect(screen.queryByLabelText(/Crew$/)).toBeNull();
-    expect(screen.queryByText('Donate')).toBeNull();
+    expect(screen.queryByText('Give')).toBeNull();
     expect(screen.getAllByText('Marcus Reyes').length).toBeGreaterThan(0);
     expect(screen.getByLabelText('Aura 4')).toBeTruthy();
   });
 
-  it('lays the four stats out as Crew, Donations, Seki, Aura with the formatted values', async () => {
+  it('lays the four stats out as Crew, Gifts, Seki, Aura with the formatted values', async () => {
     await renderPeek();
     expect(screen.getByLabelText('Crew 12')).toBeTruthy();
-    expect(screen.getByLabelText('Donations $25')).toBeTruthy();
+    expect(screen.getByLabelText('Gifts $25')).toBeTruthy();
     expect(screen.getByLabelText('Seki 3')).toBeTruthy();
     expect(screen.getByLabelText('Aura 25')).toBeTruthy();
   });
@@ -237,14 +237,14 @@ describe('ReelOwnerPeek', () => {
     expect(open.props.accessibilityState).toEqual(expect.objectContaining({ disabled: true }));
   });
 
-  it('pins Close and the action footer outside the scroll area at normal text, so Donate never scrolls away', async () => {
+  it('pins Close and the action footer outside the scroll area at normal text, so Give never scrolls away', async () => {
     mockWindow(320, 1);
     await renderPeek();
     const scroll = screen.getByTestId('peek-scroll');
     expect(within(scroll).queryByLabelText('Close profile peek')).toBeNull();
-    expect(within(scroll).queryByLabelText('Donate to Marcus Reyes')).toBeNull();
+    expect(within(scroll).queryByLabelText('Give to Marcus Reyes')).toBeNull();
     expect(within(scroll).queryByLabelText('Open full profile for Marcus Reyes')).toBeNull();
-    expect(screen.getByLabelText('Donate to Marcus Reyes')).toBeTruthy();
+    expect(screen.getByLabelText('Give to Marcus Reyes')).toBeTruthy();
     expect(within(scroll).getByLabelText('Crew 12')).toBeTruthy();
   });
 
@@ -252,7 +252,7 @@ describe('ReelOwnerPeek', () => {
     mockWindow(320, 2);
     await renderPeek();
     const scroll = screen.getByTestId('peek-scroll');
-    expect(within(scroll).getByLabelText('Donate to Marcus Reyes')).toBeTruthy();
+    expect(within(scroll).getByLabelText('Give to Marcus Reyes')).toBeTruthy();
     expect(within(scroll).queryByLabelText('Close profile peek')).toBeNull();
   });
 

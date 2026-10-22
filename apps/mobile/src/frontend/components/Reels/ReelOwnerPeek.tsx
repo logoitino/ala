@@ -1,6 +1,6 @@
 /**
  * The card revealed by swiping a Highlight sideways (video or photo story): who owns the clip, in Island Daylight
- * chrome with a tier-colored header, what the clip is, four stats in a fixed 2 x 2 grid, Join Crew / Donate, and
+ * chrome with a tier-colored header, what the clip is, four stats in a fixed 2 x 2 grid, Join Crew / Give, and
  * Open full profile. The header (tier pill + Close) and the action footer are pinned outside the scroll area, so the
  * primary action is always on screen; identity, the clip row and stats scroll between them. Fetches lazily, only once the panel has opened. `ReelPage` owns the slide and the card shell
  * (rounded light surface); this file owns everything inside it.
@@ -210,7 +210,7 @@ export function ReelOwnerPeek({
   });
   const stats: { label: string; value: string }[] = [
     { label: 'Crew', value: formatCompactCount(crew.crew_count) },
-    { label: 'Donations', value: formatTipDollars(totalTipsCents) },
+    { label: 'Gifts', value: formatTipDollars(totalTipsCents) },
     { label: 'Seki', value: formatCompactCount(player?.seki_count ?? clip.sekiCount ?? 0) },
     { label: 'Aura', value: formatCompactCount(auraPoints) },
   ];
@@ -252,7 +252,7 @@ export function ReelOwnerPeek({
           ) : null}
           {onTip ? (
             <AnimatedPressable
-              accessibilityLabel={maloReady ? maloAthleteCta(name) : `Tag: confirm ${name} on this clip before donating`}
+              accessibilityLabel={maloReady ? maloAthleteCta(name) : `Tag: confirm ${name} on this clip before giving`}
               haptic="medium"
               scaleTo={0.94}
               onPress={onTip}
@@ -270,7 +270,7 @@ export function ReelOwnerPeek({
                 adjustsFontSizeToFit
                 minimumFontScale={0.7}
               >
-                {maloReady ? 'Donate' : 'Tag'}
+                {maloReady ? 'Give' : 'Tag'}
               </Text>
             </AnimatedPressable>
           ) : null}

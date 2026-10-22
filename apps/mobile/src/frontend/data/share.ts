@@ -2,10 +2,10 @@
  * Gift link text: the canonical web URL encoded in the athlete QR and the family-facing explainer under it.
  */
 
-export const SHARE_FUND_CTA = 'Share & Donate ⚡';
-export const SHARE_QR_TITLE = 'Share & Donate ⚡';
+export const SHARE_FUND_CTA = 'Share & Give ⚡';
+export const SHARE_QR_TITLE = 'Share & Give ⚡';
 export const SHARE_SAVE_LABEL = '📸 Save QR Image to Camera Roll';
-export const SHARE_COPY_LABEL = '🔗 Copy Donation Link';
+export const SHARE_COPY_LABEL = '🔗 Copy Gift Link';
 export const SHARE_NATIVE_LABEL = '📱 Share via SMS / Social';
 const DEFAULT_WEB_ORIGIN = 'https://tapuai.app';
 
@@ -34,7 +34,7 @@ export const TAPUAI_WEB_ORIGIN = webOrigin(process.env.EXPO_PUBLIC_WEB_ORIGIN);
 export function shareQrSubtitle(athleteName: string): string {
   const name = athleteName.trim() || 'this athlete';
   // No "instantly" / "without the app" promise: donors sign in first, and the web app is not hosted yet (UX-08 review).
-  return `Scan or share to support ${name}. Friends and family can donate from the link.`;
+  return `Scan or share to support ${name}. Friends and family can give from the link.`;
 }
 
 /**

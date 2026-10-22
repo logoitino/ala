@@ -73,7 +73,7 @@ function compactStat(player: Player | null, time: string): string {
   const bits: string[] = [];
   if (player?.position) bits.push(player.position);
   if (time) bits.push(time);
-  if (player) bits.push(`${player.backer_count} donors`);
+  if (player) bits.push(`${player.backer_count} supporters`);
   return bits.join('  ·  ');
 }
 

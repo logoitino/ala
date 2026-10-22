@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -94,7 +95,7 @@ export function ShareQrModal({ visible, onClose, athleteName, username, playerId
                   telemetry.trackFeature('share_qr.copy', 'profile');
                   await copyGiftLink(target.url);
                 },
-                'Donation link copied.',
+                'Gift link copied.',
               )
             }
             contentStyle={[styles.action, styles.actionPrimary, busy && styles.actionOff]}

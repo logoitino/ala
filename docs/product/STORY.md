@@ -1,3 +1,10 @@
+<!-- Dated framing notice preserves prior decisions while pointing to current transaction language. -->
+> **2026-10-22 wording/policy update:** individual athlete support is a **personal gift**;
+> program/club giving is a **donation**; optional platform support is a **tip**. Older donation
+> and 10%-share framing below is superseded history, not current release copy. Source-generated
+> facts still describe the checked-in test rail until the separate tip model changes it.
+> Current rules: [VOICE](VOICE.md); counsel drafts: [Terms](../legal/GIFT_DONATION_TIP_TERMS_DRAFT.md), [store/review](APP_STORE_GIFT_DRAFT.md).
+
 # Tapua'i — Our story
 
 **Back every athlete.** Not just the star.

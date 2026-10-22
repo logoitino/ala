@@ -1,5 +1,5 @@
 /**
- * R4-03 / PORT-01 hook moves: donation history, exclusive passes and subscriber requests now reach the database
+ * R4-03 / PORT-01 hook moves: gift history, exclusive passes and subscriber requests now reach the database
  * through `lib/`. These pin the behaviour the hooks relied on: the receipt fallback order, the duplicate-pass rule,
  * the missing-table message and a failed read that stays distinct from "not subscribed". Database replies are synthetic.
  */
@@ -39,8 +39,8 @@ beforeEach(() => {
   mockFrom.mockReset();
 });
 
-describe('donation history', () => {
-  it('returns null for a failed received-donations call so the screen can show $0', async () => {
+describe('gift history', () => {
+  it('returns null for a failed received-gifts call so the screen can show $0', async () => {
     mockRpc.mockResolvedValue({ data: null, error: { message: 'down' } });
     await expect(fetchReceivedMalo('p1')).resolves.toBeNull();
   });

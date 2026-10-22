@@ -1,12 +1,12 @@
 /**
- * Home (`/`) of the read-only admin portal: the selected community report. Donations lead an
- * open typographic overview, followed by wide jade donation and compact cyan clip charts.
- * All eight KPI meanings remain; only donations and clips carry a prior-week delta. Other
+ * Home (`/`) of the read-only admin portal: the selected community report. Gifts lead an
+ * open typographic overview, followed by wide jade gift and compact cyan clip charts.
+ * All eight KPI meanings remain; only gifts and clips carry a prior-week delta. Other
  * measures follow the primary stories, with a week-at-a-glance heat strip, team trend sentences, the industry
  * measures this portal does not have, and department status. A missing key shows "—", never $0.00.
  * Chart colours come from `lib/measureColors.ts` (clips are cyan here as on every page). Cards in a
  * shared row keep their own height (`items-start`) instead of stretching to the tallest neighbour.
- * A failed reports read leaves desk counts null, so Billing never says "No donations in 7 days".
+ * A failed reports read leaves desk counts null, so Billing never says "No gifts in 7 days".
  * In the "Not measured" list the dash reads "Not measured" to a screen reader: those rates are never
  * measured, so "Not in this read" (used for a missing key on Trends and Analytics) would be wrong.
  * Codex Home fixes (2026-10-12): the setup panel and read alerts follow the single h1, so the
@@ -151,7 +151,7 @@ export default async function AdminHomePage() {
             <MetricValue card={donationCard} />
           </p>
           <p className="mt-1 text-base font-bold break-words text-[var(--ink)]">
-            {isMeasured(input.donationCount7d) ? `${formatCount(input.donationCount7d)} ${input.donationCount7d === 1 ? 'donation' : 'donations'} recorded` : 'Donation count not in this read'}
+            {isMeasured(input.donationCount7d) ? `${formatCount(input.donationCount7d)} ${input.donationCount7d === 1 ? 'gift' : 'gifts'} recorded` : 'Gift count not in this read'}
             <span className="mt-1 block text-xs font-normal text-[var(--jade)] sm:mt-0 sm:inline"> · <WeeklyChange card={donationCard} /></span>
           </p>
         </div>
@@ -196,7 +196,7 @@ export default async function AdminHomePage() {
 
       <section className="community-chart mb-4 text-[var(--jade)]">
             <TrendChart
-              title="Donations"
+              title="Gifts"
               windowLabel={WEEK}
               points={malo}
               format={formatUsd}
@@ -240,7 +240,7 @@ export default async function AdminHomePage() {
 
       <div className="mb-10 flex flex-wrap items-start gap-x-6 gap-y-2 border-l-2 border-[var(--jade)] pl-4 text-sm leading-5 text-[var(--ink-soft)]">
         <p className="pt-0.5 text-[11px] font-bold tracking-[0.14em] text-[var(--jade)] uppercase">At a glance</p>
-        <p className="break-words">{isMeasured(input.donations7dCents) && isMeasured(input.clips7d) ? `${formatUsd(input.donations7dCents)} in recorded donations and ${formatCount(input.clips7d)} ${input.clips7d === 1 ? 'clip' : 'clips'} uploaded over the last 7 days.` : 'One or more weekly totals were not in this read.'}</p>
+        <p className="break-words">{isMeasured(input.donations7dCents) && isMeasured(input.clips7d) ? `${formatUsd(input.donations7dCents)} in recorded gifts and ${formatCount(input.clips7d)} ${input.clips7d === 1 ? 'clip' : 'clips'} uploaded over the last 7 days.` : 'One or more weekly totals were not in this read.'}</p>
       </div>
 
       <section aria-labelledby="home-kpis" className="mb-10">
@@ -268,7 +268,7 @@ export default async function AdminHomePage() {
           <ReadBadge name="get_admin_reports" ok={reportsOk} configured={reports.configured} />
           <ReadBadge name="get_company_revenue_summary" ok={revenueOk} configured={revenue.configured} />
         </div>
-        <p className="mt-3 text-sm">Prior 7 days — donations: {isMeasured(input.donationsPrev7dCents) ? formatUsd(input.donationsPrev7dCents) : 'Not in this read'}; clips: {isMeasured(input.clipsPrev7d) ? formatCount(input.clipsPrev7d) : 'Not in this read'}.</p>
+        <p className="mt-3 text-sm">Prior 7 days — gifts: {isMeasured(input.donationsPrev7dCents) ? formatUsd(input.donationsPrev7dCents) : 'Not in this read'}; clips: {isMeasured(input.clipsPrev7d) ? formatCount(input.clipsPrev7d) : 'Not in this read'}.</p>
       </details>
 
       <section aria-labelledby="home-attention" className="mb-10">
@@ -303,7 +303,7 @@ export default async function AdminHomePage() {
           caption="Each row is shaded against its own busiest day. The outlined cell is the peak."
           source="get_admin_reports.series.malo · clips · dwell · stalls"
           rows={[
-            { label: 'Donations', points: malo ?? [], format: formatUsd, accent: DONATIONS },
+            { label: 'Gifts', points: malo ?? [], format: formatUsd, accent: DONATIONS },
             { label: 'Clips uploaded', points: clips ?? [], format: formatCount, accent: CLIPS },
             { label: 'Time on tabs', points: dwell ?? [], format: formatMinutes, accent: TIME },
             { label: 'Video stalls', points: stalls ?? [], format: formatCount, accent: STALLS },

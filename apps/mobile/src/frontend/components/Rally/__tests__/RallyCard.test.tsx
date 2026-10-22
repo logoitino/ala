@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { RallyCard } from '@/components/Rally/RallyCard';
@@ -31,7 +32,7 @@ jest.mock('@/components/TipSheetModal', () => {
   const { Text } = jest.requireActual('react-native');
   return {
     MaloTipModal: ({ player, rallyId, origin }: { player: unknown; rallyId?: string; origin?: string }) =>
-      player ? <Text>{`donate sheet ${origin} ${rallyId}`}</Text> : null,
+      player ? <Text>{`give sheet ${origin} ${rallyId}`}</Text> : null,
   };
 });
 jest.mock('@/components/Profile/ShareQrModal', () => ({ ShareQrModal: () => null }));
@@ -76,16 +77,16 @@ describe('RallyCard', () => {
     expect(screen.queryByText(/Rally/)).toBeNull();
   });
 
-  it('shows progress and opens the donate sheet tagged with the Rally', async () => {
+  it('shows progress and opens the give sheet tagged with the Rally', async () => {
     mockActive = RALLY;
     await render(<RallyCard player={PLAYER} athleteName="Kaleo" />);
     expect(screen.getByText('New cleats')).toBeTruthy();
     expect(screen.getByText('$140 of $250')).toBeTruthy();
-    expect(screen.getByText('12 donations')).toBeTruthy();
+    expect(screen.getByText('12 gifts')).toBeTruthy();
 
-    await fireEvent.press(screen.getByText(/Donate/));
+    await fireEvent.press(screen.getByText(/Give/));
     expect(mockRequireAuth).toHaveBeenCalledWith(expect.objectContaining({ kind: 'malo', athleteId: 'p1' }));
-    expect(screen.getByText('donate sheet rally r1')).toBeTruthy();
+    expect(screen.getByText('give sheet rally r1')).toBeTruthy();
   });
 
   it('hides the invite until Rallies are available (SQL not applied)', async () => {

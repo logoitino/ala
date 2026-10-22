@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import { Stack, type Href, useRouter } from 'expo-router';
@@ -66,7 +67,7 @@ export default function AthleteHomeScreen() {
         <ScreenHeading
           kicker="Tapua'i athlete"
           title="Athlete HQ"
-          lede="Your private donation record, badges, and fan tags that name you."
+          lede="Your private gift record, badges, and fan tags that name you."
         />
         <TagConfirmList
           tags={pending.tags}
@@ -77,7 +78,7 @@ export default function AthleteHomeScreen() {
           onReject={(id) => void pending.resolve(id, 'reject')}
         />
         <DashboardPanel
-          title="Private donation record"
+          title="Private gift record"
           body={
             profile?.player_id
               ? `${athleteName} has received $${(total / 100).toFixed(2)} from fans.`
@@ -88,8 +89,8 @@ export default function AthleteHomeScreen() {
             <ActivityIndicator color={colors.deepGreen} />
           ) : received.rows.length === 0 ? (
             <EmptyState
-              kicker="Donations"
-              title="No donations yet"
+              kicker="Gifts"
+              title="No gifts yet"
               lede="Gifts from a Highlight, a QR link, a wishlist item, your profile, or a live play show up here."
               actionLabel="Open Profile"
               onAction={() => router.push('/profile' as Href)}

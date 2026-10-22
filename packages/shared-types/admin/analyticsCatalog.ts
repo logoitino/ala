@@ -73,7 +73,7 @@ export type BarsSpec = ChartBase & {
   points: AnalyticsPoint[] | null;
   emptyText: string;
   keepOrder: boolean;
-  /** Replaces the kit's generated sentence when set (the donation bands, and their missing note). */
+  /** Replaces the kit's generated sentence when set (the gift bands, and their missing note). */
   summary?: string;
 };
 export type SplitPartSpec = { key: string; label: string; value: number | null; color: ChartAccent };
@@ -193,8 +193,8 @@ export const BOARDS: BoardDef[] = [
   },
   {
     id: 'donations',
-    title: 'Donations',
-    question: 'How much was donated, how often, and are any payouts queued?',
+    title: 'Gifts',
+    question: 'How much was given, how often, and are any payouts queued?',
     tileKeys: ['malo_cents_7d', 'malo_count_7d', 'avg_tip_cents_7d', 'malo_cents_all'],
   },
   {
@@ -246,20 +246,20 @@ export const MEASURES: MeasureDef[] = [
   { key: 'hype_votes', board: 'highlights', section: 'engagement', label: 'Hype votes', unit: 'count', grain: 'all', note: 'Rows in hype votes. Not distinct people.' },
   { key: 'saves', board: 'highlights', section: 'engagement', label: 'Saves', unit: 'count', grain: 'all', note: 'Saved clips.' },
   { key: 'crew_follows', board: 'highlights', section: 'engagement', label: 'Crew follows', unit: 'count', grain: 'all', note: 'Follow rows, not distinct people.' },
-  { key: 'malo_cents_all', board: 'donations', section: 'money', label: 'Donations, all time', unit: 'cents', grain: 'all', note: 'Sum of donation rows.' },
-  { key: 'malo_count_all', board: 'donations', section: 'money', label: 'Donation count, all time', unit: 'count', grain: 'all', note: 'Donations, not people who donated.' },
-  { key: 'malo_cents_24h', board: 'donations', section: 'money', label: 'Donations, 24 hours', unit: 'cents', grain: '24h', note: 'Sum of donation rows in the last day.' },
-  { key: 'malo_count_24h', board: 'donations', section: 'money', label: 'Donation count, 24 hours', unit: 'count', grain: '24h', note: 'Donations in the last day.' },
-  { key: 'malo_cents_7d', board: 'donations', section: 'money', label: 'Donations, 7 days', unit: 'cents', grain: '7d', note: 'Sum of donation rows this week.' },
-  { key: 'malo_count_7d', board: 'donations', section: 'money', label: 'Donation count, 7 days', unit: 'count', grain: '7d', note: 'Donations this week. Not people who donated.' },
-  { key: 'malo_cents_prev_7d', board: 'donations', section: 'money', label: 'Donations, the week before', unit: 'cents', grain: 'prior7d', note: 'The week used as the comparison.' },
-  { key: 'avg_tip_cents_7d', board: 'donations', section: 'money', label: 'Average donation, 7 days', unit: 'cents', grain: '7d', note: 'Mean donation this week. Not the share of people who donated.' },
+  { key: 'malo_cents_all', board: 'donations', section: 'money', label: 'Gifts, all time', unit: 'cents', grain: 'all', note: 'Sum of gift rows.' },
+  { key: 'malo_count_all', board: 'donations', section: 'money', label: 'Gift count, all time', unit: 'count', grain: 'all', note: 'Gifts, not people who gave.' },
+  { key: 'malo_cents_24h', board: 'donations', section: 'money', label: 'Gifts, 24 hours', unit: 'cents', grain: '24h', note: 'Sum of gift rows in the last day.' },
+  { key: 'malo_count_24h', board: 'donations', section: 'money', label: 'Gift count, 24 hours', unit: 'count', grain: '24h', note: 'Gifts in the last day.' },
+  { key: 'malo_cents_7d', board: 'donations', section: 'money', label: 'Gifts, 7 days', unit: 'cents', grain: '7d', note: 'Sum of gift rows this week.' },
+  { key: 'malo_count_7d', board: 'donations', section: 'money', label: 'Gift count, 7 days', unit: 'count', grain: '7d', note: 'Gifts this week. Not people who gave.' },
+  { key: 'malo_cents_prev_7d', board: 'donations', section: 'money', label: 'Gifts, the week before', unit: 'cents', grain: 'prior7d', note: 'The week used as the comparison.' },
+  { key: 'avg_tip_cents_7d', board: 'donations', section: 'money', label: 'Average gift, 7 days', unit: 'cents', grain: '7d', note: 'Mean gift this week. Not the share of people who gave.' },
   { key: 'queued_payouts', board: 'donations', section: 'money', label: 'Queued payouts', unit: 'count', grain: 'now', note: 'Payout rows waiting. Not money sent.' },
   { key: 'paid_payouts_cents', board: 'donations', section: 'money', label: REPORT_LABELS.paid_payouts_cents, unit: 'cents', grain: 'all', note: REPORT_NOTES.paid_payouts_cents },
   { key: 'active_subs', board: 'donations', section: 'money', label: 'Exclusive rows marked active', unit: 'count', grain: 'now', note: 'One-time Exclusive. This is a row count, not a renewal.' },
-  { key: 'under_50', board: 'donations', section: 'donation_bands', label: 'Athletes with all-time donations under $50', unit: 'count', grain: 'all', note: 'Athletes whose all-time donation total is more than $0 and under $50. A count, no names.' },
-  { key: '50_to_250', board: 'donations', section: 'donation_bands', label: 'Athletes with all-time donations of $50–$250', unit: 'count', grain: 'all', note: 'Athletes whose all-time donation total is $50 or more and under $250. A count, no names.' },
-  { key: '250_plus', board: 'donations', section: 'donation_bands', label: 'Athletes with all-time donations of $250 and up', unit: 'count', grain: 'all', note: 'Athletes whose all-time donation total is $250 or more. A count, no names.' },
+  { key: 'under_50', board: 'donations', section: 'donation_bands', label: 'Athletes with all-time gifts under $50', unit: 'count', grain: 'all', note: 'Athletes whose all-time gift total is more than $0 and under $50. A count, no names.' },
+  { key: '50_to_250', board: 'donations', section: 'donation_bands', label: 'Athletes with all-time gifts of $50–$250', unit: 'count', grain: 'all', note: 'Athletes whose all-time gift total is $50 or more and under $250. A count, no names.' },
+  { key: '250_plus', board: 'donations', section: 'donation_bands', label: 'Athletes with all-time gifts of $250 and up', unit: 'count', grain: 'all', note: 'Athletes whose all-time gift total is $250 or more. A count, no names.' },
   { key: 'profiles', board: 'audience', section: 'audience', label: 'Profiles', unit: 'count', grain: 'now', note: 'Account rows.' },
   { key: 'athletes', board: 'audience', section: 'audience', label: 'Athletes', unit: 'count', grain: 'now', note: 'Player rows.' },
   { key: 'verified', board: 'audience', section: 'audience', label: 'Verified profiles', unit: 'count', grain: 'now', note: 'Profiles marked verified. Not a share until it is divided by profiles.' },
@@ -293,20 +293,20 @@ export const MEASURES: MeasureDef[] = [
   { key: 'drip_skus', board: 'gameday', section: 'live', label: 'Drip products on the rack', unit: 'count', grain: 'now', note: 'Shop products marked active.' },
   { key: 'stalls_24h', board: 'playback', section: 'reliability', label: 'Video stalls, 24 hours', unit: 'count', grain: '24h', note: 'Playback stall events in the last day.' },
   { key: 'reconnects_24h', board: 'playback', section: 'reliability', label: 'Reconnects, 24 hours', unit: 'count', grain: '24h', note: 'Socket reconnect events in the last day.' },
-  { key: 'checkouts_24h', board: 'playback', section: 'reliability', label: 'Checkout step timings, 24 hours', unit: 'count', grain: '24h', note: 'Donation checkout steps that logged a time in the last day.' },
+  { key: 'checkouts_24h', board: 'playback', section: 'reliability', label: 'Checkout step timings, 24 hours', unit: 'count', grain: '24h', note: 'Gift checkout steps that logged a time in the last day.' },
   { key: 'avg_checkout_ms_24h', board: 'playback', section: 'reliability', label: 'Average checkout step, 24 hours', unit: 'milliseconds', grain: '24h', note: 'Mean across every logged checkout step, not one whole checkout.' },
   { key: 'events_24h', board: 'playback', section: 'reliability', label: 'Telemetry events, 24 hours', unit: 'count', grain: '24h', note: 'All telemetry rows in the last day.' },
   { key: 'gross_volume_cents', board: 'ledger', section: 'revenue', label: 'Gross recorded', unit: 'cents', grain: 'all', note: 'Company ledger gross.' },
-  { key: 'company_net_cents', board: 'ledger', section: 'revenue', label: 'Tapua\'i share', unit: 'cents', grain: 'all', note: 'What the ledger recorded for Tapua\'i across every stream. Donation policy: 90% to the family account, 10% to Tapua\'i.' },
+  { key: 'company_net_cents', board: 'ledger', section: 'revenue', label: 'Tapua\'i share', unit: 'cents', grain: 'all', note: 'What the ledger recorded for Tapua\'i across every stream. Current test-mode model: 90% to the family account, 10% to Tapua\'i.' },
   { key: 'payouts_cents', board: 'ledger', section: 'revenue', label: 'Payee share recorded', unit: 'cents', grain: 'all', note: 'Recorded for families, Vault athletes, and booster operators. Nothing is paid out in Wave 0.' },
-  { key: 'stripe_paid_cents', board: 'ledger', section: 'revenue', label: 'Payouts marked paid', unit: 'cents', grain: 'all', note: 'Disbursement rows marked paid. Same sum on the Donations and Ledger boards. Should be $0 while payouts are blocked in Wave 0.' },
+  { key: 'stripe_paid_cents', board: 'ledger', section: 'revenue', label: 'Payouts marked paid', unit: 'cents', grain: 'all', note: 'Disbursement rows marked paid. Same sum on the Gifts and Ledger boards. Should be $0 while payouts are blocked in Wave 0.' },
 ];
 
 export type SeriesId = 'clips' | 'malo' | 'dwell' | 'stalls';
 
 export const SERIES: readonly { id: SeriesId; title: string; board: BoardId; source: string; format: MeasureUnit; accent: ChartAccent; note: string }[] = [
   { id: 'clips', title: 'Clips uploaded', board: 'highlights', source: 'get_admin_reports.series.clips', format: 'count', accent: measureColor('clips'), note: 'New clip rows per UTC day, last 7 days.' },
-  { id: 'malo', title: 'Donations', board: 'donations', source: 'get_admin_reports.series.malo', format: 'cents', accent: measureColor('donations'), note: 'Sum of donation rows per UTC day, last 7 days.' },
+  { id: 'malo', title: 'Gifts', board: 'donations', source: 'get_admin_reports.series.malo', format: 'cents', accent: measureColor('donations'), note: 'Sum of gift rows per UTC day, last 7 days.' },
   { id: 'dwell', title: 'Time on tabs', board: 'attention', source: 'get_admin_reports.series.dwell', format: 'minutes', accent: measureColor('timeOnTabs'), note: 'Sum of tab time per UTC day, last 7 days. Not time per person.' },
   { id: 'stalls', title: 'Video stalls', board: 'playback', source: 'get_admin_reports.series.stalls', format: 'count', accent: measureColor('stalls'), note: 'Playback stall events per UTC day, last 7 days.' },
 ];
@@ -318,7 +318,7 @@ export const RANKINGS: readonly { id: RankingId; title: string; board: BoardId; 
   { id: 'features', title: 'Taps by control', board: 'attention', source: 'get_admin_reports.features', format: 'count', note: 'Taps over 7 days, excluding tab opens.' },
   { id: 'scroll', title: 'Scroll depth by surface', board: 'attention', source: 'get_admin_reports.scroll', format: 'percent', note: 'Average scroll sample per surface, 7 days. Not a share of people.' },
   { id: 'issues', title: 'UI issues and open bugs', board: 'playback', source: 'get_admin_reports.issues', format: 'count', note: 'UI issues over 7 days (problems the app logged on a button or screen), plus open bug reports by surface.' },
-  { id: 'malo', title: 'Donation totals by athlete (not drawn)', board: 'donations', source: 'get_admin_reports.leaders.malo', format: 'cents', note: 'All time, top 5, named. Read but not drawn: the portal names no one by donation total (owner decision 2026-10-12). Donations shows athletes by all-time donations instead.' },
+  { id: 'malo', title: 'Gift totals by athlete (not drawn)', board: 'donations', source: 'get_admin_reports.leaders.malo', format: 'cents', note: 'All time, top 5, named. Read but not drawn: the portal names no one by gift total (owner decision 2026-10-12). The Gifts board shows athletes by all-time gifts instead.' },
   { id: 'hype', title: 'Most-hyped clips', board: 'highlights', source: 'get_admin_reports.leaders.hype', format: 'count', note: 'Top five live clips by Seki, Aura, and Flex combined.' },
   { id: 'schools', title: 'Schools by athletes listed', board: 'audience', source: 'get_admin_reports.leaders.schools', format: 'count', note: 'Top 5 schools · player rows.' },
 ];

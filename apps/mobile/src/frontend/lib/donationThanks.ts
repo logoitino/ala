@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { isAuraUuid } from '@/lib/aura';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { isMissingFunction } from '@/lib/dbErrors';
@@ -13,7 +14,7 @@ import { isMissingFunction } from '@/lib/dbErrors';
 export type ThanksKey = 'malo' | 'season' | 'gear' | 'family' | 'work';
 
 export const THANKS_MESSAGES: readonly { key: ThanksKey; text: string }[] = [
-  { key: 'malo', text: 'Mālo! Thank you for your donation 🙏' },
+  { key: 'malo', text: 'Mālo! Thank you for your gift 🙏' },
   { key: 'season', text: 'Thank you for helping me play this season.' },
   { key: 'gear', text: 'Thank you — this helps with my gear.' },
   { key: 'family', text: 'My family and I thank you.' },
@@ -143,7 +144,7 @@ export type ThankResult = { ok: true } | { ok: false; message: string };
  * @sideEffects `thank_donation` RPC.
  */
 export async function thankDonation(tipId: string, key: ThanksKey): Promise<ThankResult> {
-  if (!isAuraUuid(tipId) || !isSupabaseConfigured) return { ok: false, message: 'Thank-yous open once this donation is saved.' };
+  if (!isAuraUuid(tipId) || !isSupabaseConfigured) return { ok: false, message: 'Thank-yous open once this gift is saved.' };
   try {
     const { error } = await supabase.rpc('thank_donation', { target_tip_id: tipId, message_key: key });
     if (error) return { ok: false, message: error.message || 'Could not send the thank-you.' };

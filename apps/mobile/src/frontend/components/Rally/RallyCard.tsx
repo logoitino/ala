@@ -1,6 +1,6 @@
-/** Profile sports-goal Rally card shows the existing donation target, status and preset thank-you.
+/** Profile sports-goal Rally card shows the existing gift target, status and preset thank-you.
  * Guardian approval, eligibility and payment review stay in the current hooks and checkout flow.
- * @sideEffects Rally reads/actions, donation checkout and published Share through existing helpers. */
+ * @sideEffects Rally reads/actions, gift checkout and published Share through existing helpers. */
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -229,7 +229,7 @@ export function RallyCard({
           {rally.status === 'filled' && !rally.thankedAt ? (
             thanking ? (
               <View style={styles.thanksBlock}>
-                <Text style={styles.manageLabel}>Thank everyone who donated</Text>
+                <Text style={styles.manageLabel}>Thank everyone who gave</Text>
                 {clips.length > 0 ? (
                   <View style={styles.clipRow}>
                     <Text style={styles.manageHint}>Add a clip of what it paid for (optional):</Text>
@@ -274,7 +274,7 @@ export function RallyCard({
             </Pressable>
           ) : null}
           {rally.status === 'pending_guardian' && !guardian ? (
-            <Text style={styles.manageHint}>Your parent or guardian approves it from Parent HQ before fans can donate.</Text>
+            <Text style={styles.manageHint}>Your parent or guardian approves it from Parent HQ before fans can give.</Text>
           ) : null}
         </View>
       ) : null}

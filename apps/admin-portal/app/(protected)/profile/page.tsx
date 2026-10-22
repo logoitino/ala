@@ -62,7 +62,7 @@ export default async function ProfileOversightPage() {
       <Panel title="Clean Profile hierarchy" kicker="Fan surface">
         <p className="text-sm leading-6 text-[var(--ink-soft)]">
           Own Profile and `/user/[id]` share <code className="rounded bg-[var(--jade-soft)] px-1.5">AthleteProfileView</code>.
-          Hamburger is hub-only; Join Crew / Donate / Subscribe hide on your claimed row. The badges below show
+          Hamburger is hub-only; Join Crew / Give / Purchase hide on your claimed row. The badges below show
           published chrome. Change it in Expo Admin → Look → Profile, then Publish to app there.
         </p>
         <div className="grid gap-2 pt-1 sm:grid-cols-2 lg:grid-cols-3">

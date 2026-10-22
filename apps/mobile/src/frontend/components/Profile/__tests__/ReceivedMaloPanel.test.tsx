@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { ReceivedMaloPanel } from '@/components/Profile/ReceivedMaloPanel';
@@ -56,7 +57,7 @@ describe('ReceivedMaloPanel say thanks', () => {
   it('nudges the athlete and sends a preset thank-you in two taps', async () => {
     await render(<ReceivedMaloPanel playerId="p1" />);
 
-    expect(screen.getByText('1 donor is waiting for a thank-you.')).toBeTruthy();
+    expect(screen.getByText('1 gift sender is waiting for a thank-you.')).toBeTruthy();
     expect(screen.getByText(/Thanked ✓ “My family and I thank you\.”/)).toBeTruthy();
 
     await fireEvent.press(screen.getByLabelText('Say thanks to Sina'));
@@ -77,22 +78,22 @@ describe('ReceivedMaloPanel say thanks', () => {
     mockRows = [];
     mockLoadError = 'Could not find the function public.get_received_malo';
     await render(<ReceivedMaloPanel playerId="p1" />);
-    expect(screen.getByText('$0.00 donated')).toBeTruthy();
-    expect(screen.getByText(/No donations yet/)).toBeTruthy();
-    expect(screen.queryByText(/Could not load donations/)).toBeNull();
+    expect(screen.getByText('$0.00 given')).toBeTruthy();
+    expect(screen.getByText(/No gifts yet/)).toBeTruthy();
+    expect(screen.queryByText(/Could not load gifts/)).toBeNull();
     expect(screen.queryByText('Retry')).toBeNull();
   });
 });
 
 describe('ReceivedMaloPanel family share', () => {
-  it('leads with what reached the family account, not the donated total', async () => {
+  it('leads with what reached the family account, not the gave total', async () => {
     mockRows = [
       { id: 't1', fan_name: 'Sina', amount_cents: 500, family_cents: 450, origin: 'rally', entry: 'in_app', source_label: 'New cleats' },
       { id: 't2', fan_name: 'Tavita', amount_cents: 1000, family_cents: 900, origin: 'profile', entry: 'in_app', source_label: null },
     ];
     await render(<ReceivedMaloPanel playerId="p1" />);
     expect(screen.getByText('$13.50 recorded for your family account so far')).toBeTruthy();
-    expect(screen.getByText("Fans donated $15.00. Tapua'i kept $1.50 to run the app, including card processing.")).toBeTruthy();
+    expect(screen.getByText("Fans gave $15.00. Tapua'i kept $1.50 to run the app, including card processing.")).toBeTruthy();
     expect(screen.getByText('$4.50 for your family account')).toBeTruthy();
     expect(screen.getByText('$10.00')).toBeTruthy();
   });
@@ -100,8 +101,8 @@ describe('ReceivedMaloPanel family share', () => {
   it('says the split instead of guessing when the database has no family share yet', async () => {
     mockRows = [{ id: 't1', fan_name: 'Sina', amount_cents: 500, origin: 'rally', entry: 'in_app', source_label: 'New cleats' }];
     await render(<ReceivedMaloPanel playerId="p1" />);
-    expect(screen.getByText('$5.00 donated')).toBeTruthy();
-    expect(screen.getByText("90% of each donation is recorded for the family account. Tapua'i keeps 10% to run the app, including card processing.")).toBeTruthy();
+    expect(screen.getByText('$5.00 given')).toBeTruthy();
+    expect(screen.getByText("90% of each gift is recorded for the family account. Tapua'i keeps 10% to run the app, including card processing.")).toBeTruthy();
     expect(screen.queryByText(/for your family account/)).toBeNull();
   });
 });

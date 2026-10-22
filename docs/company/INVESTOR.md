@@ -1,3 +1,10 @@
+<!-- Dated framing notice preserves prior decisions while pointing to current transaction language. -->
+> **2026-10-22 wording/policy update:** individual athlete support is a **personal gift**;
+> program/club giving is a **donation**; optional platform support is a **tip**. Older donation
+> and 10%-share framing below is superseded history, not current release copy. Source-generated
+> facts still describe the checked-in test rail until the separate tip model changes it.
+> Current rules: [VOICE](../product/VOICE.md); counsel drafts: [Terms](../legal/GIFT_DONATION_TIP_TERMS_DRAFT.md), [store/review](../product/APP_STORE_GIFT_DRAFT.md).
+
 # Tapua'i — Investor briefing (front of house)
 
 **Product:** Tapua'i (“Back Every Athlete.”)  
@@ -59,10 +66,10 @@ Prices below are generated from source (`pnpm docs:sync`). Do not edit inside th
 | Line | Price (as coded) | Notes |
 | --- | --- | --- |
 | Donations | $5 / $10 / $25 + custom | 90% of your donation goes to the athlete's family account. Tapua'i keeps 10% to run the app, including card processing. Nothing goes to the person who uploaded the clip. |
-| Admin splits | Donations 10%/90% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. The 90 / 10 donation split is disclosed on the donate sheet (owner, 2026-09-29). Optional tips to Tapua'i at checkout are 100% platform. |
+| Current test-rail splits | Gifts 10%/90% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. The 90 / 10 allocation remains in current source; the owner superseded this policy on 2026-10-22 and directed a separate no-cut tip model. Optional tips to Tapua'i at checkout are 100% platform. |
 | Exclusive | $4.99 one-time PaymentIntent stored as a `subscriptions` row | +100 Aura to the payer. Not Stripe Billing yet. |
 | Boosters | Silver $50 / Gold $150 / Platinum $500 | Silver / Gold / Platinum. One-time price, no billing period. |
-| Aura | 10 points per donated dollar | 7-tier card (Slate Silver → Celestial Prism). Double-tap 1; Serve Like Me ×2. Not cash. |
+| Aura | 10 points per gifted dollar | 7-tier card (Slate Silver → Celestial Prism). Double-tap 1; Serve Like Me ×2. Not cash. |
 | Operator PIN | `1234` | Prototype. Demo RLS: tighten before production. |
 | Athlete roster | Same flow for HS + NCAA | Sports Football / Basketball / Rugby / Volleyball / Soccer / Baseball / Softball / Wrestling / Track & Field / Lacrosse / Ice Hockey / Tennis. Class '26 / '27 / '28. `profiles.school_id` + `athlete_division`. |
 | Athlete profile | Unified sheet | Tabs Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar Home / Spotlight. Vault Lock Vault 🔒 (default locked). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. |

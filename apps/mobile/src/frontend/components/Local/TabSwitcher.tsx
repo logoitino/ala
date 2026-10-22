@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
@@ -29,7 +30,7 @@ export function TabSwitcher({ value, onChange }: TabSwitcherProps) {
         onPress={() => onChange('rosters')}
         style={[styles.tab, value === 'rosters' && styles.tabActive]}
       >
-        <Text style={[styles.label, value === 'rosters' && styles.labelActive]}>Rosters & Donate</Text>
+        <Text style={[styles.label, value === 'rosters' && styles.labelActive]}>Rosters & Give</Text>
       </Pressable>
     </View>
   );

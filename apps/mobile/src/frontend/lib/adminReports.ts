@@ -131,13 +131,13 @@ export async function fetchAdminDonationBreakdown(): Promise<PortalMaloBreakdown
     const result = await client.rpc('get_admin_malo_breakdown');
     if (!result.error && result.data && typeof result.data === 'object') return parseBreakdown(bag(result.data));
     if (!isMissingFunction(result.error)) {
-      return emptyPortalMaloBreakdown(true, result.error ? message(result.error) : 'The donation report returned no data.');
+      return emptyPortalMaloBreakdown(true, result.error ? message(result.error) : 'The gift report returned no data.');
     }
     const listed = await client.from('tips')
       .select('id, amount_cents, created_at, origin, entry, source_label, reel_id, wishlist_item_id, player_id')
       .order('created_at', { ascending: false }).limit(MALO_FALLBACK_LIMIT);
     if (listed.error) return emptyPortalMaloBreakdown(true, message(listed.error));
-    if (!Array.isArray(listed.data)) return emptyPortalMaloBreakdown(true, 'The donation list returned no data.');
+    if (!Array.isArray(listed.data)) return emptyPortalMaloBreakdown(true, 'The gift list returned no data.');
     return breakdownFromTips(listed.data.map(bag));
   } catch (error) { return emptyPortalMaloBreakdown(true, message(error)); }
 }

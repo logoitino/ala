@@ -79,7 +79,7 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
   return (
     <AnimatedPressable
       accessibilityRole="button"
-      accessibilityLabel={`${sport ? `${sport}. ` : ''}${status.label}${status.detail ? `, ${status.detail}` : ''}. ${accessibleScore(home, game.home_school, homeScore)} against ${accessibleScore(away, game.away_school, awayScore)}. ${game.venue?.trim() || 'Venue TBA'}. View game, roster and donate.${sponsors.length ? ` Boosted by ${sponsors.slice(0, 4).map((sponsor) => sponsor.business_name).join(', ')}.` : ''}`}
+      accessibilityLabel={`${sport ? `${sport}. ` : ''}${status.label}${status.detail ? `, ${status.detail}` : ''}. ${accessibleScore(home, game.home_school, homeScore)} against ${accessibleScore(away, game.away_school, awayScore)}. ${game.venue?.trim() || 'Venue TBA'}. View game, roster and give.${sponsors.length ? ` Boosted by ${sponsors.slice(0, 4).map((sponsor) => sponsor.business_name).join(', ')}.` : ''}`}
       haptic="light"
       overshoot={false}
       scaleTo={0.97}

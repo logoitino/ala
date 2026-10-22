@@ -1,3 +1,4 @@
+/** Shared athlete CTA tests retain checkout expectations until the separate tip-model branch. */
 import {
   donationWhereItGoes,
   canDropMaloOnHighlight,
@@ -57,11 +58,11 @@ describe('canDropMaloOnHighlight', () => {
 
 describe('Malo copy helpers', () => {
   it('names the athlete in the CTA', () => {
-    expect(maloAthleteCta('Trey Lawson')).toBe('Donate to Trey Lawson');
+    expect(maloAthleteCta('Trey Lawson')).toBe('Give to Trey Lawson');
   });
 
   it('falls back to a generic phrase when the athlete name is missing', () => {
-    expect(maloAthleteCta(undefined)).toBe('Donate to this athlete');
+    expect(maloAthleteCta(undefined)).toBe('Give to this athlete');
   });
 
   it('sheet subtitle clarifies the gift goes to the athlete, not the uploader', () => {

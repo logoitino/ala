@@ -1,8 +1,8 @@
 /**
- * Donation ledgers read by two screens: what an athlete received (`get_received_malo`) and a fan's own
+ * Gift ledgers read by two screens: what an athlete received (`get_received_malo`) and a fan's own
  * receipts (`get_fan_tip_history`, with a `tips` SELECT fallback for databases without that function).
  * Rows are parsed defensively here so a missing column never reaches the UI as `undefined`.
- * The calls live here (PORT-01) so a host change rewrites this file, not the hooks. Code name `tip` / `malo` = donation.
+ * The calls live here (PORT-01) so a host change rewrites this file, not the hooks. Code name `tip` / `malo` = gift.
  * @sideEffects Supabase RPCs `get_received_malo` / `get_fan_tip_history`; `tips` SELECT joined to `players`.
  */
 
@@ -118,7 +118,7 @@ export async function fetchFanTipHistory(userId: string): Promise<{ receipts: Fa
   const fallback = plain ?? rich;
 
   if (fallback.error || !fallback.data) {
-    return { receipts: [], error: fallback.error?.message ?? 'Could not load your donation receipts.' };
+    return { receipts: [], error: fallback.error?.message ?? 'Could not load your gift receipts.' };
   }
   return {
     receipts: parseReceipts(

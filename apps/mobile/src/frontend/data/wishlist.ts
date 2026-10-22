@@ -1,12 +1,12 @@
 /**
- * Locker Room wishlist content and maths: titles and labels, demo items, the preset donate amount, Aura for an
- * equipped item, and funded-progress helpers (percent, funded check, labels, applying a donation to an item).
+ * Locker Room wishlist content and maths: titles and labels, demo items, the preset give amount, Aura for an
+ * equipped item, and funded-progress helpers (percent, funded check, labels, applying a gift to an item).
  */
 
 import type { WishlistItem } from '@/types/database';
 
 export const WISHLIST_TITLE = '👟 Locker Room Wishlist';
-export const WISHLIST_LEDE = 'Gear this athlete needs. Donate toward it or buy it outright.';
+export const WISHLIST_LEDE = 'Gear this athlete needs. Give toward it or make a purchase.';
 export const WISHLIST_GIFT_ACTION = '🎁 Buy this item for them';
 
 /**
@@ -14,7 +14,7 @@ export const WISHLIST_GIFT_ACTION = '🎁 Buy this item for them';
  */
 export function wishlistChipInAction(dollars = WISHLIST_CHIP_IN_DOLLARS): string {
   const amount = Number.isInteger(dollars) ? String(dollars) : dollars.toFixed(2);
-  return `⚡ Donate $${amount} to this goal`;
+  return `⚡ Give $${amount} to this goal`;
 }
 export const WISHLIST_EQUIPPED_BADGE = 'EQUIPPED ⚡';
 export const WISHLIST_UNLOCKED_TOAST = 'Gear Unlocked!';

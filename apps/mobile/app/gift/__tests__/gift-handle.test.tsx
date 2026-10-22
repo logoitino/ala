@@ -1,4 +1,4 @@
-/** QR landing: a scan reaches a Donate button tagged as a QR donation, and unknown or failed links never pretend to work. */
+/** QR landing: a scan reaches a Give button tagged as a QR gift, and unknown or failed links never pretend to work. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import type { GiftLink } from '@/lib/giftLink';
 import { cloneAppRuntime, DEFAULT_APP_RUNTIME } from '@/lib/runtime';
@@ -36,10 +36,10 @@ beforeEach(() => {
 });
 
 describe('gift landing', () => {
-  it('opens the donate sheet as a QR donation after the soft wall', async () => {
+  it('opens the give sheet as a QR gift after the soft wall', async () => {
     mockResolve.mockResolvedValue({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: 'mele', sport: 'Football', schoolVisible: true });
     await render(<GiftHandleScreen />);
-    await fireEvent.press(await screen.findByText('Donate to Mele'));
+    await fireEvent.press(await screen.findByText('Give to Mele'));
     expect(mockRequireAuth).toHaveBeenCalledWith(expect.objectContaining({ kind: 'malo', athleteId: player.id }));
     expect(mockTipModal).toHaveBeenLastCalledWith(expect.objectContaining({ player, origin: 'qr', entry: 'qr_link' }));
     await fireEvent.press(screen.getByText("See Mele's profile"));
@@ -58,19 +58,19 @@ describe('gift landing', () => {
     expect(screen.getByLabelText('Jersey number 5')).toBeTruthy();
   });
 
-  it('hides Donate when donations are switched off', async () => {
+  it('hides Give when gifts are switched off', async () => {
     mockLive.buttons.malo = false;
     mockResolve.mockResolvedValue({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: 'mele', sport: 'Football', schoolVisible: true });
     await render(<GiftHandleScreen />);
     await screen.findByText('Support Mele');
-    expect(screen.queryByText('Donate to Mele')).toBeNull();
+    expect(screen.queryByText('Give to Mele')).toBeNull();
   });
 
-  it('says an unknown link is unknown, with no donate or share', async () => {
+  it('says an unknown link is unknown, with no give or share', async () => {
     mockResolve.mockResolvedValue({ status: 'not_found', handle: 'mele' });
     await render(<GiftHandleScreen />);
     await screen.findByText("We couldn't find this athlete");
-    expect(screen.queryByText(/Donate/)).toBeNull();
+    expect(screen.queryByText(/Give/)).toBeNull();
     await fireEvent.press(screen.getByText('Go to Home'));
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
@@ -80,7 +80,7 @@ describe('gift landing', () => {
     mockResolve.mockResolvedValueOnce({ status: 'found', handle: 'mele', player: player as never, name: 'Mele', username: null, sport: null, schoolVisible: true });
     await render(<GiftHandleScreen />);
     await fireEvent.press(await screen.findByText('Try again'));
-    expect(await screen.findByText('Donate to Mele')).toBeTruthy();
+    expect(await screen.findByText('Give to Mele')).toBeTruthy();
     expect(mockResolve).toHaveBeenCalledTimes(2);
   });
 });

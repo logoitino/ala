@@ -49,7 +49,7 @@ export function GuardianConsentForm({ teenFirstName, canAllowDonations, initial,
       <Text style={styles.section}>Permissions</Text>
       <LegalAckToggle checked={publicProfile} onCheckedChange={setPublicProfile} disabled={busy} label={`${teenFirstName} may have a public profile`} />
       {canAllowDonations ? (
-        <LegalAckToggle checked={donations} onCheckedChange={setDonations} disabled={busy} label={`Donations to ${teenFirstName} may be paid out to the family account on record`} />
+        <LegalAckToggle checked={donations} onCheckedChange={setDonations} disabled={busy} label={`Gifts to ${teenFirstName} may be paid out to the family account on record`} />
       ) : (
         <Text style={styles.body}>Payouts can only be allowed by the guardian on record for this athlete&apos;s family account.</Text>
       )}

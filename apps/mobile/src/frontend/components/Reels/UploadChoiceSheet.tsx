@@ -50,7 +50,7 @@ export function UploadChoiceSheet({ visible, onHighlight, onBeyond, onClose }: U
 
               <AnimatedButton
                 accessibilityRole="button"
-                accessibilityLabel="Highlight. An athlete's game play, workout or service. Shared in Highlights, where fans can donate."
+                accessibilityLabel="Highlight. An athlete's game play, workout or service. Shared in Highlights, where fans can give."
                 haptic="light"
                 onPress={onHighlight}
                 contentStyle={styles.option}
@@ -58,7 +58,7 @@ export function UploadChoiceSheet({ visible, onHighlight, onBeyond, onClose }: U
                 <View style={styles.icon}><Ionicons name="flash" size={22} color={FOCAL.jadeInk} /></View>
                 <View style={styles.copy}>
                   <Text style={styles.optionTitle}>Highlight</Text>
-                  <Text style={styles.optionBody}>An athlete’s game play, workout or service. Shared in Highlights, where fans can donate.</Text>
+                  <Text style={styles.optionBody}>An athlete’s game play, workout or service. Shared in Highlights, where fans can give.</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </AnimatedButton>

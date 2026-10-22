@@ -37,7 +37,7 @@ export function deskLabel(tone: DeskTone): 'Clear' | 'Check' | 'Failed' {
 
 /** App routes this desk names. It does not call them. */
 export const APP_API_ROUTES = [
-  { path: '/api/create-payment-intent', note: 'Donation checkout. Stripe test mode.' },
+  { path: '/api/create-payment-intent', note: 'Gift checkout. Stripe test mode.' },
   { path: '/api/create-stripe-account', note: 'Connect onboarding. Stripe test mode.' },
   { path: '/api/create-payout', note: 'Payouts stay blocked in this test.' },
 ] as const;
@@ -66,17 +66,17 @@ export function managementDeskStatus(snapshot: ManagementSnapshot): DeskStatus[]
   const known = (value: number | null): value is number => typeof value === 'number' && Number.isFinite(value);
   const { donations7dCents: donations, sessions24h: sessions, issues24h: issues, openBugs: bugs, stalls24h: stalls, reconnects24h: reconnects } = snapshot;
 
-  // Billing's donation count comes from the reports read, not the revenue read. A failed reports
-  // read must not turn into "No donations in 7 days".
+  // Billing's gift count comes from the reports read, not the revenue read. A failed reports
+  // read must not turn into "No gifts in 7 days".
   const billing: Pick<DeskStatus, 'tone' | 'status'> = moneyDown
     ? { tone: 'danger', status: 'Revenue read failed' }
     : reportsDown
-      ? { tone: 'danger', status: 'Donations did not load' }
+      ? { tone: 'danger', status: 'Gifts did not load' }
       : !known(donations)
-        ? { tone: 'warn', status: 'Donations not in this read' }
+        ? { tone: 'warn', status: 'Gifts not in this read' }
         : donations > 0
-          ? { tone: 'ok', status: 'Donations in this window' }
-          : { tone: 'warn', status: 'No donations in 7 days' };
+          ? { tone: 'ok', status: 'Gifts in this window' }
+          : { tone: 'warn', status: 'No gifts in 7 days' };
 
   const marketing: Pick<DeskStatus, 'tone' | 'status'> = reportsDown
     ? { tone: 'danger', status: 'Tab opens did not load' }

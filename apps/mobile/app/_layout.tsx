@@ -70,7 +70,7 @@ function RuntimeApp() {
           <Stack.Screen name="(sponsor)" options={{ headerShown: false }} />
           <Stack.Screen name="(admin)" options={{ headerShown: false }} />
           <Stack.Screen name="auth/callback" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen name="gift/[handle]" options={{ title: 'Share & Donate ⚡' }} />
+          <Stack.Screen name="gift/[handle]" options={{ title: 'Share & Give ⚡' }} />
           <Stack.Screen name="school-confirm" options={{ title: 'Confirm athletes' }} />
           <Stack.Screen name="sport-quiz" options={{ headerShown: false }} />
           <Stack.Screen name="fan-zone" options={{ headerShown: false }} />

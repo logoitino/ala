@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { isAuraUuid } from '@/lib/aura';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { RallyCostKind,  RallyStatus } from '@/types/database';
@@ -114,7 +115,7 @@ export function rallyProgress(rally: Pick<Rally, 'raisedCents' | 'targetCents' |
   return {
     fraction,
     amountLine: `${dollars(rally.raisedCents)} of ${dollars(rally.targetCents)}`,
-    donorsLine: donors === 0 ? 'Be the first to donate' : `${donors} ${donors === 1 ? 'donation' : 'donations'}`,
+    donorsLine: donors === 0 ? 'Be the first to give' : `${donors} ${donors === 1 ? 'gift' : 'gifts'}`,
   };
 }
 

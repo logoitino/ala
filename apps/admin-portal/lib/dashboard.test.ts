@@ -28,12 +28,12 @@ test('a prior week of zero is not a percent', () => {
   const change = weekChange(400, 0);
   assert.equal(change.tone, 'new');
   assert.equal(change.percent, null);
-  assert.match(weekSentence('Donations', change, usd), /no percent/);
-  assert.equal(weekSentence('Donations', change, usd), 'Donations: $4.00 this week. The prior week had none, so there is no percent.');
+  assert.match(weekSentence('Gifts', change, usd), /no percent/);
+  assert.equal(weekSentence('Gifts', change, usd), 'Gifts: $4.00 this week. The prior week had none, so there is no percent.');
 });
 
-test('week sentences never say "Donations is"', () => {
-  assert.equal(weekSentence('Donations', weekChange(150, 100), usd), 'Donations: up 50% versus the prior week ($1.00 to $1.50).');
+test('week sentences never say "Gifts is"', () => {
+  assert.equal(weekSentence('Gifts', weekChange(150, 100), usd), 'Gifts: up 50% versus the prior week ($1.00 to $1.50).');
   assert.equal(weekSentence('Clips uploaded', weekChange(7, 7), String), 'Clips uploaded: flat versus the prior week (7).');
 });
 
@@ -79,7 +79,7 @@ test('home cards name events as events', () => {
     usd,
   );
   // Home's overview prints these labels as they are; the page holds no label of its own.
-  assert.equal(cards.find((card) => card.id === 'avgDonation')?.label, 'Average donation · 7d');
+  assert.equal(cards.find((card) => card.id === 'avgDonation')?.label, 'Average gift · 7d');
   assert.equal(cards.find((card) => card.id === 'clips')?.label, 'Clips uploaded · 7d');
   assert.equal(cards.find((card) => card.id === 'opens')?.label, 'Tab opens · 24h');
   const opens = cards.find((card) => card.label.startsWith('Tab opens'));
@@ -89,7 +89,7 @@ test('home cards name events as events', () => {
   assert.equal(share?.value, '10%');
   assert.equal(
     share?.hint,
-    `The ledger records ${usd(100)} for Tapua'i out of ${usd(1000)} gross across every stream. Donation policy: 90% to the family account, 10% to Tapua'i.`,
+    `The ledger records ${usd(100)} for Tapua'i out of ${usd(1000)} gross across every stream. Current test-mode model: 90% to the family account, 10% to Tapua'i.`,
   );
   assert.match(share?.hint ?? '', /90% to the family account, 10% to Tapua'i/);
   assert.doesNotMatch(share?.hint ?? '', /keeps/);
@@ -151,7 +151,7 @@ test('a missing key is a dash, not $0.00, and never carries a delta', () => {
   assert.match(lines[3], /not in this read/);
 });
 
-test('only donations and clips get a prior-week delta', () => {
+test('only gifts and clips get a prior-week delta', () => {
   const cards = homeKpis(
     {
       ...missing,

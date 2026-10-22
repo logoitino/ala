@@ -1,4 +1,52 @@
-# VOICE — how Tapua'i talks about money
+<!-- Current money vocabulary separates individual gifts, program donations and optional platform tips. -->
+# VOICE — money language (owner, 2026-10-22)
+
+This naming map supersedes the September donation-everywhere framing below. It changes words,
+not payment authority, tax status, eligibility, consent or the current test-mode allocation.
+The checkout sweep follows the separate tip-model implementation; see the
+[copy report](../engineering/evidence/GIFT_LANGUAGE_REPORT.md).
+
+| Recipient / transaction | Required words | Example |
+| --- | --- | --- |
+| Individual athlete / family | **Gift**, **Give**, **Send a gift** | Support her season; gifts received |
+| Booster club / school program | **Donation**, **Donate to the program** | Program donation; club's own status governs deductibility |
+| Optional money to Tapua'i | **Tip Tapua'i (optional)** | Separate voluntary tip; never a fee or donation |
+| Optional Stripe-cost coverage | **Cover the processing fee** | Separate from the gift and the optional tip |
+| Athlete premium | **Subscription** | Subscription; not a gift benefit |
+| Paid digital extra | **Purchase** | One-time Exclusive purchase; never bundled with giving |
+
+Athlete gifts never use donation, donate, donor, fundraiser or charitable. Program donations
+never use gift. A sponsorship or booster pass is not automatically a charitable donation;
+ambiguous flows stay unchanged for owner classification. Internal names (`tips`, `donation_*`,
+`malo`, routes, API fields) stay unchanged; report any visible raw identifiers.
+
+Required athlete-page and gift-receipt line:
+
+> Gifts to individual athletes are personal gifts and are not tax-deductible.
+
+Required tip-step copy, held until the matching implementation and flag land:
+
+> 100% of your gift goes to the athlete's family. Tips go to Tapua'i and keep the platform free for families.
+
+`MONETIZATION_TIPS_ENABLED` must default OFF in the separate tip model. Tip and processing-fee
+copy belong behind that flag. No copied statement may conceal a processor deduction or promise
+settlement that has not occurred. Review the exact 100% line against net processing before release.
+
+Keep optional choices unselected, final payment deliberate, recipient/held/error notices honest,
+athlete thanks preset-only and Aura distinct from money. No pay for a play, recruiting promise,
+tax-deduction implication for individuals or digital entitlement from giving.
+
+Counsel owns final Terms and tax/eligibility review. The source guard checks wording; it does not
+approve App Store compliance, charitable status, hosted config or delivery. Published Look copy,
+signed consent and server-generated text require their own reviewed updates.
+
+## Superseded history — September/October donation framing
+
+The original text below is retained as a dated record. Its donation-everywhere terminology,
+90/10 policy and old tagline are superseded by the owner's October22 naming/no-cut decisions.
+It does not instruct new copy or certify the new model is implemented.
+
+# Historical VOICE — how Tapua'i talked about money
 
 **Owner decision (2026-09-29):** Tapua'i is a **donation app**. Families put their young athlete
 somewhere their community can see the highlights and donate toward the athlete's sports costs — a

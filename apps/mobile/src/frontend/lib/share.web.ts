@@ -17,7 +17,7 @@ export { giftQrTarget } from '@/lib/giftLink';
  * @purpose Web has no Camera Roll — copy the tipping URL instead.
  */
 export async function saveGiftQrToCameraRoll(_svg: unknown, _handle: string): Promise<void> {
-  throw new Error('Save the QR flyer from iOS or Android. Copy the donation link here.');
+  throw new Error('Save the QR flyer from iOS or Android. Copy the gift link here.');
 }
 
 /**
@@ -26,7 +26,7 @@ export async function saveGiftQrToCameraRoll(_svg: unknown, _handle: string): Pr
  */
 export async function copyGiftLink(url: string): Promise<void> {
   const ok = await Clipboard.setStringAsync(url);
-  if (ok === false) throw new Error('Could not copy the donation link.');
+  if (ok === false) throw new Error('Could not copy the gift link.');
 }
 
 /**

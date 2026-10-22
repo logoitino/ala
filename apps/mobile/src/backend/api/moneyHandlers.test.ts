@@ -161,7 +161,7 @@ const NEW_ACCOUNT_PARAMS = (email: string) => ({
   defaults: {
     currency: 'usd',
     responsibilities: { fees_collector: 'application', losses_collector: 'application' },
-    profile: { product_description: "Tapua'i athlete receiving donations and subscriptions" },
+    profile: { product_description: "Tapua'i athlete receiving personal gifts and purchases" },
   },
   configuration: { recipient: { capabilities: { stripe_balance: { stripe_transfers: { requested: true } } } } },
   metadata: { tapuai_user_id: 'user-1' },
@@ -302,7 +302,7 @@ describe.each([
     mockState.rpc.mockResolvedValue({ data: true, error: null });
     expect(await read(await handler()(request({ amount: 500, playerId: PLAYER })))).toEqual({
       status: 403,
-      body: { error: 'This athlete cannot currently receive Mālo.' },
+      body: { error: 'This athlete cannot currently receive gifts.' },
     });
     expect(mockState.rpc).toHaveBeenCalledWith('malo_target_frozen', { target_player_id: PLAYER });
     expect(mockStripe.paymentIntents.create).not.toHaveBeenCalled();

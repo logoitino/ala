@@ -368,7 +368,7 @@ export function AthleteProfileView({
     <View style={styles.actionRow}>
       {live.buttons.malo && onDropMalo ? (
         <AnimatedButton
-          accessibilityLabel={`Donate ${maloAmount} dollars to ${name}`}
+          accessibilityLabel={`Give ${maloAmount} dollars to ${name}`}
           disabled={tipping}
           haptic="medium"
           onPress={onDropMalo}
@@ -376,7 +376,7 @@ export function AthleteProfileView({
           contentStyle={[styles.primaryAction, tipping && styles.disabled]}
         >
           <Text style={styles.primaryActionLabel}>
-            Donate ${maloAmount}
+            Give ${maloAmount}
           </Text>
           </AnimatedButton>
       ) : null}
@@ -469,7 +469,7 @@ export function AthleteProfileView({
       </View> : null}
       {live.profile.actionsOnTop ? null : quickActions}
       {/* Brand line (BRAND-01) only where this athlete can actually be donated to; plain text, not a heading. */}
-      {showDonateTagline ? <Text style={styles.donateTagline}>{TAGLINE_HEADLINE}</Text> : null}
+      {showDonateTagline ? <><Text style={styles.donateTagline}>{TAGLINE_HEADLINE}</Text><Text style={styles.donateTagline}>Gifts to individual athletes are personal gifts and are not tax-deductible.</Text></> : null}
       <View accessibilityRole="tablist" accessibilityLabel="Athlete profile sections" style={styles.sectionNav}>
         {tabs.map(item => <AnimatedButton key={item.id} accessibilityRole="tab"
           accessibilityLabel={item.label} accessibilityState={{ selected: tab === item.id }}
@@ -545,7 +545,7 @@ export function AthleteProfileView({
             <Ionicons name="gift-outline" size={22} color={FOCAL.goldInk} />
             <View style={styles.sectionCopy}>
               <Text accessibilityRole="header" style={styles.sectionTitle}>Sports goals</Text>
-              <Text style={styles.sectionHint}>Wishlist and donations for sports costs.</Text>
+              <Text style={styles.sectionHint}>Wishlist and gifts for sports costs.</Text>
             </View>
           </View>
           {live.layouts.wishlist ? <LockerRoomWishlist player={player} athleteName={name}

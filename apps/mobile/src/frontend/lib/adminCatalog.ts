@@ -430,7 +430,7 @@ export async function setMaloFreeze(
     target_id: targetId,
     frozen,
   });
-  throwIf(error, 'Could not update the donation freeze.');
+  throwIf(error, 'Could not update the gift freeze.');
 }
 
 /**

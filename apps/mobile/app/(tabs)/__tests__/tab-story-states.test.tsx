@@ -169,8 +169,8 @@ it('keeps signed-out Activity private and uses the existing auth gate', async ()
 });
 
 it('retains complete Activity story text, exact amount and receipt/athlete destinations', async () => {
-  const title = 'You donated to a student athlete with a long public display name';
-  const body = 'A donation from your family toward the athlete’s upcoming sports costs, with the original source description.';
+  const title = 'You gave to a student athlete with a long public display name';
+  const body = 'A gift from your family toward the athlete’s upcoming sports costs, with the original source description.';
   mockActivity.items = [
     { id: 'sent', kind: 'malo_sent', at: '2026-10-20', title, body, amountCents: 12345 },
     { id: 'thanks', kind: 'thanks_received', at: '2026-10-20', title: 'An athlete thanked you', body: 'Mālo!', playerId: 'athlete-id' },

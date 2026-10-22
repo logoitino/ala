@@ -74,10 +74,10 @@ const TITLES: Record<PortalHref, string> = {
  * because the shell types every route.
  */
 const SUBTITLES: Record<PortalHref, string> = {
-  '/': "This week's donations, clips, attention and playback, plus the rates we do not measure.",
+  '/': "This week's gifts, clips, attention and playback, plus the rates we do not measure.",
   '/reports': 'How the numbers move over the last 7 days.',
   '/audience': 'Who is on the platform: profiles, athletes, schools, and the clip mix.',
-  '/money': 'Donations and the ledger, read from the recorded rows.',
+  '/money': 'Gifts and the ledger, read from the recorded rows.',
   '/operations': 'Time on tabs, taps, what breaks, and which menus are on.',
   '/manage': 'Billing, Marketing, Support, API, and IT on one read-only page.',
   '/analytics': 'Dashboards and the measure catalog. Every number names its source.',

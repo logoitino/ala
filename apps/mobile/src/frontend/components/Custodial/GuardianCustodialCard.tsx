@@ -115,7 +115,7 @@ export function GuardianCustodialCard({ playerId }: { playerId: string }) {
         <Text style={styles.title}>Set up {name}'s account</Text>
         {testNotice}
         <Text style={styles.body}>
-          You look after the donations {name} receives until they turn {summary.handoverAge}. They see every
+          You look after the gifts {name} receives until they turn {summary.handoverAge}. They see every
           gift, and nothing is withdrawn without their OK.
         </Text>
         <Text style={styles.label}>{name}'s date of birth</Text>

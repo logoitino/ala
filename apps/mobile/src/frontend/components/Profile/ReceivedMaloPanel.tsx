@@ -1,6 +1,6 @@
-/** Private Profile and Parent HQ donation list retains the family-account amounts and preset-only thanks.
- * Compact rows must preserve every donation origin and amount disclosure.
- * @sideEffects Reads received donations and submits the selected thank-you through existing hooks. */
+/** Private Profile and Parent HQ gift list retains the family-account amounts and preset-only thanks.
+ * Compact rows must preserve every gift origin and amount disclosure.
+ * @sideEffects Reads received gifts and submits the selected thank-you through existing hooks. */
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -48,17 +48,17 @@ export function ReceivedMaloPanel({ playerId }: { playerId: string }) {
       <Text style={styles.total}>{loading ? 'Loading gifts…' : received.headline}</Text>
       {!loading && rows.length > 0 ? <Text style={styles.meta}>{received.detail}</Text> : null}
       <Text style={styles.lede}>
-        Each donation shows who sent it and where it started: a Highlight, a Rally, a QR link, a gear goal or your profile.
+        Each gift shows who sent it and where it started: a Highlight, a Rally, a QR link, a gear goal or your profile.
         Saying thanks keeps people cheering you on.
       </Text>
       {toThank > 0 ? (
         <Text style={styles.nudge}>
-          {toThank} {toThank === 1 ? 'donor is' : 'donors are'} waiting for a thank-you.
+          {toThank} {toThank === 1 ? 'gift sender is' : 'gift senders are'} waiting for a thank-you.
         </Text>
       ) : null}
       {loading ? <ActivityIndicator color={colors.deepGreen} /> : null}
       {!loading && rows.length === 0 ? (
-        <Text style={styles.empty}>No donations yet. They show up here after a fan donates.</Text>
+        <Text style={styles.empty}>No gifts yet. They show up here after a fan gives.</Text>
       ) : null}
       {rows.slice(0, 8).map((row) => {
         const thanks = thanksByTip.get(row.id);

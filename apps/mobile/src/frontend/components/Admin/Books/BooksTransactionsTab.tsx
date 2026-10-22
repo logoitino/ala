@@ -95,7 +95,7 @@ export function BooksTransactionsTab({ entries, period, channels, athleteNames, 
         {badDate ? <AdminNotice tone="warn" text="Dates must look like 2026-10-31; the period dates are used until then." /> : null}
         <AdminPills label="Kind" items={KINDS} value={kind} onChange={setKind} />
         <AdminPills label="Stream" items={[{ id: 'all', label: 'All streams' }, ...options.streams]} value={stream} onChange={setStream} />
-        {options.channels.length ? <AdminPills label="Where the donation started" items={[{ id: 'all', label: 'Any channel' }, ...options.channels.map((c) => ({ id: c, label: c }))]} value={channel} onChange={setChannel} /> : null}
+        {options.channels.length ? <AdminPills label="Where the gift started" items={[{ id: 'all', label: 'Any channel' }, ...options.channels.map((c) => ({ id: c, label: c }))]} value={channel} onChange={setChannel} /> : null}
         <AdminPills label="Account touched" items={[{ id: 'all', label: 'Any account' }, ...options.accounts]} value={account} onChange={setAccount} />
         {options.athletes.length ? <AdminPills label="Athlete" items={[{ id: 'all', label: 'Every athlete' }, ...options.athletes.map((ref) => ({ id: ref, label: nameOf(ref) }))]} value={athlete} onChange={setAthlete} /> : null}
         <AdminPills label="Side" items={SIDES} value={side} onChange={setSide} />
@@ -118,7 +118,7 @@ export function BooksTransactionsTab({ entries, period, channels, athleteNames, 
       <AdminReportData
         title="Filtered transactions"
         initiallyOpen
-        source="Journal entries built from company_revenue_logs, paid disbursements and recorded entries; channel from each donation's origin and entry"
+        source="Journal entries built from company_revenue_logs, paid disbursements and recorded entries; channel from each gift's origin and entry"
         table={{
           columns: ['Date', 'Kind', 'Stream', 'Channel', 'Amounts', 'Athlete', 'Memo'],
           rows: rows.slice(0, TRANSACTION_SCREEN_ROWS).map((row) => [row.date, row.origin === 'revenue' ? 'Income' : row.origin === 'disbursement' ? 'Payout' : 'Recorded', row.streamTitle, row.channel, transactionAmountLine(row), nameOf(row.athleteRef), row.memo]),

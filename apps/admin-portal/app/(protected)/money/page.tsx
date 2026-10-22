@@ -40,7 +40,7 @@ export const dynamic = 'force-dynamic';
 /** Tab title "Revenue · Tapua'i Admin" through the layout's title template (A11Y #3). */
 export const metadata: Metadata = { title: 'Revenue' };
 
-// One colour per measure across the portal (lib/measureColors.ts): donation amounts jade,
+// One colour per measure across the portal (lib/measureColors.ts): gift amounts jade,
 // payee share jade, Tapua'i share gold.
 const DONATIONS = measureColor('donations');
 const PAYEE = measureColor('payeeShare');
@@ -49,9 +49,9 @@ const TAPUAI = measureColor('tapuaiShare');
 const usd = (cents: number) => formatUsd(cents);
 const count = (n: number) => n.toLocaleString('en-US');
 
-/** "Donations · 90% to the family account, 10% to Tapua'i". The split comes from basis points
+/** "Gifts · 90% to the family account, 10% to Tapua'i". The split comes from basis points
  *  (`streamSplitText`) and already names the payee, so the payee is said once (W3-COMMERCE #1). When the
- *  read cannot support a split, the payee alone stands in ("Donations · to athlete's family account");
+ *  read cannot support a split, the payee alone stands in ("Gifts · to athlete's family account");
  *  never the RPC's raw `split` text (VOICE #3, #4). */
 function streamRowLabel(stream: Parameters<typeof streamSplitText>[0] & { label: string; payee: string }): string {
   const split = streamSplitText(stream);
@@ -59,7 +59,7 @@ function streamRowLabel(stream: Parameters<typeof streamSplitText>[0] & { label:
 }
 
 /**
- * @purpose Web Revenue desk — company totals plus every donation broken down by where it started.
+ * @purpose Web Revenue desk — company totals plus every gift broken down by where it started.
  * @sideEffects `get_company_revenue_summary` and `get_admin_malo_breakdown` (same ledgers as Expo `/admin/money`).
  *   ADM-01e (COMMERCE): also reads `get_admin_reports` for the `money` section and the 7-day `series.malo`.
  *   Wave 0 is Stripe test mode and payouts are blocked; the page says so and never shows a payout as sent.
@@ -101,7 +101,7 @@ export default async function MoneyPage() {
   const paidWarn = stripePaid != null && stripePaid > 0;
   const paidTone: StatTone = paidWarn ? 'warn' : 'neutral';
 
-  // Cross-check: ledger donation gross vs the `tips` table total. Both are reads; the page only compares them.
+  // Cross-check: ledger gift gross vs the `tips` table total. Both are reads; the page only compares them.
   const tipsAll = m('malo_cents_all');
   const ledgerDonations = split?.gross ?? null;
   const crossGap = tipsAll != null && ledgerDonations != null ? ledgerDonations - tipsAll : null;
@@ -148,7 +148,7 @@ export default async function MoneyPage() {
           label="Tapua'i share"
           value={net != null ? kpiUsd(net) : ''}
           missing={net == null}
-          hint="What the ledger records for Tapua'i: its share of donations, tips for Tapua'i, boosters, Vault, and all of Drip"
+          hint="What the ledger records for Tapua'i: its share of gifts, tips for Tapua'i, boosters, Vault, and all of Drip"
         />
         <StatTile
           label="Payee share recorded"
@@ -188,21 +188,21 @@ export default async function MoneyPage() {
           error={revenue.error}
         />
         <SplitBar
-          title="Donation split, from the ledger"
-          caption={split?.policy ? `Stated policy for this stream: ${split.policy}` : 'Donations stream'}
+          title="Gift split, from the ledger"
+          caption={split?.policy ? `Stated policy for this stream: ${split.policy}` : 'Gifts stream'}
           parts={[
             { label: "Athletes' family accounts", value: split ? split.family : null, color: PAYEE },
             { label: "Tapua'i share (covers card processing)", value: split ? split.platform : null, color: TAPUAI },
             ...(split && split.unsplit > 0 ? [{ label: 'Recorded but not split', value: split.unsplit, color: 'muted' as const }] : []),
           ]}
           format={usd}
-          totalLabel="Donations recorded"
+          totalLabel="Gifts recorded"
           summary={
             !split
-              ? 'Donation split: this read did not include the donations stream.'
+              ? 'Gift split: this read did not include the gifts stream.'
               : split.gross === 0
-                ? 'No donations in the ledger yet, so there is no split to show.'
-                : `Of ${usd(split.gross)} in test-mode donations on the ledger, ${usd(split.family)} (${split.familyPct}%) is recorded for family accounts and ${usd(split.platform)} (${split.platformPct}%) for Tapua'i. Both percents are computed from ledger rows, not from the policy.`
+                ? 'No gifts in the ledger yet, so there is no split to show.'
+                : `Of ${usd(split.gross)} in test-mode gifts on the ledger, ${usd(split.family)} (${split.familyPct}%) is recorded for family accounts and ${usd(split.platform)} (${split.platformPct}%) for Tapua'i. Both percents are computed from ledger rows, not from the policy.`
           }
           source="get_company_revenue_summary.streams[malo] · gross_cents, payout_cents, platform_cents"
           error={revenue.error}
@@ -210,7 +210,7 @@ export default async function MoneyPage() {
       </div>
       {crossGap != null ? (
         <p className="-mt-4 mb-8 text-xs leading-5 text-[var(--text-muted)]">
-          Cross-check: the ledger records {usd(ledgerDonations ?? 0)} in donations and the donations table holds {usd(tipsAll ?? 0)}.{' '}
+          Cross-check: the ledger records {usd(ledgerDonations ?? 0)} in gifts and the gifts table holds {usd(tipsAll ?? 0)}.{' '}
           {crossGap === 0
             ? 'They match.'
             : `They differ by ${usd(Math.abs(crossGap))}. The ledger syncs on each read; check company_revenue_logs.`}
@@ -237,7 +237,7 @@ export default async function MoneyPage() {
                 : null
             }
             format={usd}
-            emptyText="No stream rows yet. Donations, boosters, and Vault reach the ledger after a test-mode checkout."
+            emptyText="No stream rows yet. Gifts, boosters, and Vault reach the ledger after a test-mode checkout."
             source="get_company_revenue_summary.streams"
             error={revenue.error}
           />
@@ -256,54 +256,54 @@ export default async function MoneyPage() {
         </div>
       </div>
 
-      <SectionHeading level={2} title="Donations" hint="Donations table · rolling windows, UTC" />
+      <SectionHeading level={2} title="Gifts" hint="Gifts table · rolling windows, UTC" />
       <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
-          label="Donations, last 7 days"
+          label="Gifts, last 7 days"
           value={donations7d != null ? kpiUsd(donations7d) : ''}
           missing={donations7d == null}
           delta={donations7d != null && donationsPrev7d != null ? { current: donations7d, previous: donationsPrev7d } : null}
           goodDirection="up"
           spark={sparkPoints.length > 0 ? { points: sparkPoints, format: usd, accent: DONATIONS } : undefined}
-          hint={has('malo_count_7d') ? plural(money.malo_count_7d, 'donation', 'donations') : undefined}
+          hint={has('malo_count_7d') ? plural(money.malo_count_7d, 'gift', 'gifts') : undefined}
         />
         <StatTile
-          label="Donations, last 24 hours"
+          label="Gifts, last 24 hours"
           value={has('malo_cents_24h') ? kpiUsd(money.malo_cents_24h) : ''}
           missing={!has('malo_cents_24h')}
-          hint={has('malo_count_24h') ? plural(money.malo_count_24h, 'donation', 'donations') : undefined}
+          hint={has('malo_count_24h') ? plural(money.malo_count_24h, 'gift', 'gifts') : undefined}
         />
         <StatTile
-          label="Average donation, 7 days"
+          label="Average gift, 7 days"
           value={has('avg_tip_cents_7d') ? usd(money.avg_tip_cents_7d) : ''}
           missing={!has('avg_tip_cents_7d')}
-          hint="Mean amount per donation"
+          hint="Mean amount per gift"
         />
         <StatTile
-          label="Donations, all time"
+          label="Gifts, all time"
           value={has('malo_cents_all') ? kpiUsd(money.malo_cents_all) : ''}
           missing={!has('malo_cents_all')}
-          hint={has('malo_count_all') ? plural(money.malo_count_all, 'donation', 'donations') : undefined}
+          hint={has('malo_count_all') ? plural(money.malo_count_all, 'gift', 'gifts') : undefined}
         />
       </div>
       {reports.error ? (
         <p role="status" className="mb-4 rounded-xl border border-[var(--ember)]/30 bg-[var(--ember-soft)] px-4 py-3 text-sm text-[var(--ember)]">
-          <span className="font-extrabold">Could not read donation totals. </span>
+          <span className="font-extrabold">Could not read gift totals. </span>
           {reports.error}. Needs <code>get_admin_reports</code>.
         </p>
       ) : null}
 
       {malo.source === 'fallback' ? (
         <p role="note" className="mb-4 text-xs leading-5 text-[var(--text-muted)]">
-          Partial: only the last {MALO_FALLBACK_LIMIT} donations were read, because <code>get_admin_malo_breakdown</code> is not on
-          this database yet. &ldquo;Donations per day&rdquo;, &ldquo;Where donations start&rdquo; and &ldquo;How donors arrived&rdquo; count
-          only these rows. A day can show $0 when its donations are older than these {MALO_FALLBACK_LIMIT}.
+          Partial: only the last {MALO_FALLBACK_LIMIT} gifts were read, because <code>get_admin_malo_breakdown</code> is not on
+          this database yet. &ldquo;Gifts per day&rdquo;, &ldquo;Where gifts start&rdquo; and &ldquo;How givers arrived&rdquo; count
+          only these rows. A day can show $0 when its gifts are older than these {MALO_FALLBACK_LIMIT}.
         </p>
       ) : null}
       <div className="mb-4 grid items-start gap-4 lg:grid-cols-3">
         <div className="min-w-0 lg:col-span-2">
           <TrendChart
-            title="Donations per day"
+            title="Gifts per day"
             windowLabel="Last 14 days, UTC"
             points={malo.error ? null : dayPoints}
             format={usd}
@@ -317,7 +317,7 @@ export default async function MoneyPage() {
         </div>
         <CompareBars
           title="This week versus the prior week"
-          subject="Donations"
+          subject="Gifts"
           current={{ label: 'Last 7 days', value: donations7d }}
           previous={{ label: 'Prior 7 days', value: donationsPrev7d }}
           format={usd}
@@ -329,22 +329,22 @@ export default async function MoneyPage() {
 
       <div className="mb-8 grid items-start gap-4 lg:grid-cols-2">
         <HBarList
-          title="Where donations start"
-          caption="All time · amount, with the number of donations"
-          rows={malo.error ? null : malo.byOrigin.map((row) => ({ label: `${originName(row.key)} (${plural(row.count, 'donation', 'donations')})`, value: row.cents }))}
+          title="Where gifts start"
+          caption="All time · amount, with the number of gifts"
+          rows={malo.error ? null : malo.byOrigin.map((row) => ({ label: `${originName(row.key)} (${plural(row.count, 'gift', 'gifts')})`, value: row.cents }))}
           format={usd}
           accent={DONATIONS}
-          emptyText="No donations yet."
+          emptyText="No gifts yet."
           source="get_admin_malo_breakdown.by_origin"
           error={malo.error}
         />
         <HBarList
-          title="How donors arrived"
-          caption="All time · amount, with the number of donations"
-          rows={malo.error ? null : malo.byEntry.map((row) => ({ label: `${entryName(row.key)} (${plural(row.count, 'donation', 'donations')})`, value: row.cents }))}
+          title="How givers arrived"
+          caption="All time · amount, with the number of gifts"
+          rows={malo.error ? null : malo.byEntry.map((row) => ({ label: `${entryName(row.key)} (${plural(row.count, 'gift', 'gifts')})`, value: row.cents }))}
           format={usd}
           accent={DONATIONS}
-          emptyText="No donations yet."
+          emptyText="No gifts yet."
           source="get_admin_malo_breakdown.by_entry"
           error={malo.error}
         />
@@ -355,7 +355,7 @@ export default async function MoneyPage() {
         <RecentLedgerTable rows={revenue.recent} error={revenue.error} />
       </div>
 
-      <SectionHeading level={2} title="Latest donations" hint="Newest first · up to 40 rows" />
+      <SectionHeading level={2} title="Latest gifts" hint="Newest first · up to 40 rows" />
       <div className="mb-6">
         <RecentDonationsTable rows={malo.recent} error={malo.error} />
       </div>

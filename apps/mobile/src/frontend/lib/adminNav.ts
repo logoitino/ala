@@ -96,7 +96,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: 'Commerce',
     items: [
       { href: '/admin/drip', label: 'Drip', hint: 'Marketplace catalog' },
-      { href: '/admin/wishlist', label: 'Locker Room', hint: 'Gear goals fans donate to' },
+      { href: '/admin/wishlist', label: 'Locker Room', hint: 'Gear goals fans give to' },
       { href: '/admin/money', label: 'Payouts', hint: 'Queue and review disbursements', searchTerms: 'Money' },
       { href: '/admin/books', label: 'Finance & Books', hint: 'Accounting, taxes, reconciliation and QuickBooks export', searchTerms: 'Books bookkeeping accounting tax QuickBooks reconcile' },
     ],
@@ -125,7 +125,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { href: '/admin/support', label: 'Engineering Support', hint: 'Issues, team flow, change history and recovery', searchTerms: 'Support security cybersecurity sensors errors audit backup versions' },
       { href: '/admin/features', label: 'Features', hint: 'Tabs, Soft-Wall, boards' },
       { href: '/admin/look', label: 'Look', hint: 'Daylight colors, copy, profile, Highlights rail' },
-      { href: '/admin/catalog', label: 'Catalogs', hint: 'Donations, exclusive, chips, tiers' },
+      { href: '/admin/catalog', label: 'Catalogs', hint: 'Gifts, exclusive, chips, tiers' },
       { href: '/admin/studio', label: 'Studio', hint: 'Preview roles and surfaces' },
     ],
   },
@@ -140,7 +140,7 @@ export const ADMIN_REPORT_NAV: AdminNavItem[] = [
   ADMIN_HOME,
   { href: '/admin/trends', label: 'Trends', hint: 'Recorded changes over the last seven days' },
   { href: '/admin/audience', label: 'Audience', hint: 'Profiles, athletes, schools and clips' },
-  { href: '/admin/revenue', label: 'Revenue', hint: 'Donations and recorded ledger rows' },
+  { href: '/admin/revenue', label: 'Revenue', hint: 'Gifts and recorded ledger rows' },
   { href: '/admin/health', label: 'Health', hint: 'Operational checks, attention and issues' },
   { href: '/admin/product', label: 'Product', hint: 'Published product status' },
 ];

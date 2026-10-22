@@ -41,17 +41,17 @@ test('both reads failing marks API as danger', () => {
   assert.equal(managementDeskStatus(snapshot).find((desk) => desk.id === 'it')?.tone, 'danger');
 });
 
-test('a failed reports read is not "No donations in 7 days" (QA #2)', () => {
+test('a failed reports read is not "No gifts in 7 days" (QA #2)', () => {
   const snapshot: ManagementSnapshot = { ...quiet, reportsError: 'timeout', donations7dCents: null };
   const billing = managementDeskStatus(snapshot).find((desk) => desk.id === 'billing');
   assert.equal(billing?.tone, 'danger');
-  assert.equal(billing?.status, 'Donations did not load');
+  assert.equal(billing?.status, 'Gifts did not load');
 });
 
 test('a missing key reads as not in this read, never as an empty window', () => {
   const snapshot: ManagementSnapshot = { ...quiet, donations7dCents: null, sessions24h: null, stalls24h: null };
   const byId = Object.fromEntries(managementDeskStatus(snapshot).map((desk) => [desk.id, desk.status]));
-  assert.equal(byId.billing, 'Donations not in this read');
+  assert.equal(byId.billing, 'Gifts not in this read');
   assert.equal(byId.marketing, 'Tab opens not in this read');
   assert.equal(byId.it, 'Stalls or reconnects not in this read');
 });

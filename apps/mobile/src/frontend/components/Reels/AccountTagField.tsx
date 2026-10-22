@@ -1,6 +1,6 @@
 /**
  * Optional account mentions on the Highlight upload sheet. The selected athlete still
- * decides who receives a donation. At most three accounts.
+ * decides who receives a gift. At most three accounts.
  * @sideEffects `search_taggable_accounts`.
  */
 
@@ -47,7 +47,7 @@ export function AccountTagField({
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>Tag accounts</Text>
-      <Text style={styles.hint}>Optional. They confirm before their name shows. Donations still go to the selected athlete.</Text>
+      <Text style={styles.hint}>Optional. They confirm before their name shows. Gifts still go to the selected athlete.</Text>
       <View style={styles.chips}>
         {value.map((row) => (
           <Pressable

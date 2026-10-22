@@ -1,5 +1,5 @@
 /**
- * Small badge on an athlete's profile showing how many fans have donated to them.
+ * Small badge on an athlete's profile showing how many fans have gave to them.
  */
 
 import { StyleSheet, Text, View } from 'react-native';
@@ -17,7 +17,7 @@ export function FanBackerBadge({ player }: FanBackerBadgeProps) {
 
   return (
     <View style={styles.badge} accessibilityRole="text">
-      <Text style={styles.badgeLabel}>Fan Donor</Text>
+      <Text style={styles.badgeLabel}>Fan Giver</Text>
       <Text style={styles.badgeText}>
         {backerCount} Fans Backed {firstName} Tonight
       </Text>

@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { useCallback, useState } from 'react';
 import { SchoolStaffPanel } from '@/components/Admin/SchoolStaffPanel';
 import { Alert } from 'react-native';
@@ -96,10 +97,10 @@ export function SchoolsTool() {
   const confirmFreeze = (school: SchoolTeam) => {
     const next = !school.malo_frozen;
     Alert.alert(
-      next ? 'Freeze donations for this school?' : 'Unfreeze donations for this school?',
+      next ? 'Freeze gifts for this school?' : 'Unfreeze gifts for this school?',
       next
-        ? `Every athlete at ${school.name} will no longer be able to receive donations or new exclusive subscriptions. Use this only for a written school/association direction.`
-        : `Athletes at ${school.name} will be able to receive donations and new exclusive subscriptions again.`,
+        ? `Every athlete at ${school.name} will no longer be able to receive gifts or new exclusive subscriptions. Use this only for a written school/association direction.`
+        : `Athletes at ${school.name} will be able to receive gifts and new exclusive subscriptions again.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -178,7 +179,7 @@ export function SchoolsTool() {
           <AdminRow
             key={row.id}
             title={row.name}
-            meta={`${row.mascot} · ${formatTeamBadge(row)}${row.malo_frozen ? ' · Donations frozen' : ''}`}
+            meta={`${row.mascot} · ${formatTeamBadge(row)}${row.malo_frozen ? ' · Gifts frozen' : ''}`}
           >
             <AdminBtn
               label="Edit"
@@ -195,7 +196,7 @@ export function SchoolsTool() {
               }
             />
             <AdminBtn
-              label={row.malo_frozen ? 'Unfreeze donations' : 'Freeze donations'}
+              label={row.malo_frozen ? 'Unfreeze gifts' : 'Freeze gifts'}
               kind={row.malo_frozen ? 'ghost' : 'danger'}
               disabled={busy}
               onPress={() => confirmFreeze(row)}

@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import fs from 'node:fs';
 import path from 'node:path';
 import {
@@ -65,7 +66,7 @@ const sample: BooksInput = {
 };
 
 describe('posting rules', () => {
-  it('splits a donation into the Stripe balance, money held for the family and the 10% share', () => {
+  it('splits a gift into the Stripe balance, money held for the family and the 10% share', () => {
     const { entry, issues } = journalFromRevenue(rev({ id: 'd1' }));
     expect(issues).toEqual([]);
     expect(entry!.lines).toEqual([
@@ -254,7 +255,7 @@ describe('exports', () => {
   it('exports the chart of accounts in the QuickBooks layout', () => {
     const csv = chartOfAccountsCsv();
     expect(csv.split('\r\n')[0]).toBe('Account Number,Account Name,Type,Detail Type,Description');
-    expect(csv).toContain('2000,Donations held for families,Other Current Liability');
+    expect(csv).toContain('2000,Gifts held for families,Other Current Liability');
   });
 });
 
@@ -282,7 +283,7 @@ describe('review fixes (CONTROLLER / TAX / QA, 2026-10-13)', () => {
     expect(athleteHeld(entries, '2026-10-31').find((row) => row.athleteRef === athleteRef(KALEO))!.held).toBe(799 - 900);
   });
 
-  it('pays an athlete out of donations first, then Vault earnings', () => {
+  it('pays an athlete out of gifts first, then Vault earnings', () => {
     const { entries } = buildJournal({ ...sample, disbursements: [{ id: 'big', player_id: KALEO, amount_cents: 1299, status: 'paid', created_at: '2026-10-10T00:00:00Z' }] });
     const payout = entries.find((entry) => entry.id === 'pay:big')!;
     expect(payout.lines.map((line) => [line.account, line.debit, line.credit])).toEqual([['2000', 900, 0], ['2010', 399, 0], ['1010', 0, 1299]]);

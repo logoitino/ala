@@ -1,7 +1,7 @@
 /**
  * ADM-02: platform-neutral report parsers, nullable snapshots and money labels for both admins.
  * Transport stays in each application; this module never reads a session or performs I/O.
- * Missing rankings and donation bands stay missing, while measured empty lists stay empty.
+ * Missing rankings and gift bands stay missing, while measured empty lists stay empty.
  */
 export type ReportSection = Record<string, number>;
 
@@ -37,7 +37,7 @@ export type PortalReports = {
 };
 
 /**
- * Athletes counted by all-time donation total (owner decision 2026-10-12). Each count is `null`
+ * Athletes counted by all-time gift total (owner decision 2026-10-12). Each count is `null`
  * when that band is absent or not a number in the read, so a partial payload never shows a 0 it
  * did not return.
  */
@@ -220,7 +220,7 @@ export const DONATION_BANDS: readonly { key: 'under_50' | '50_to_250' | '250_plu
 ];
 
 /** Title shared by Trends and Analytics. */
-export const DONATION_BANDS_TITLE = 'Athletes by all-time donations';
+export const DONATION_BANDS_TITLE = 'Athletes by all-time gifts';
 
 /** Shown when a working read has no `donation_bands` key: the migration is not on this database yet. */
 export const DONATION_BANDS_MISSING_NOTE = 'Needs the 2026-10-12 reports update on this database.';
@@ -338,14 +338,14 @@ export const REPORT_LABELS: Record<string, string> = {
   hype_votes: 'Hype votes',
   saves: 'Saves',
   crew_follows: 'Crew follows',
-  malo_cents_all: 'Donations, all time',
-  malo_count_all: 'Donation count, all time',
-  malo_cents_24h: 'Donations (24h)',
-  malo_count_24h: 'Donation count (24h)',
-  malo_cents_7d: 'Donations (7d)',
-  malo_count_7d: 'Donation count (7d)',
-  malo_cents_prev_7d: 'Donations (prior 7d)',
-  avg_tip_cents_7d: 'Average donation (7d)',
+  malo_cents_all: 'Gifts, all time',
+  malo_count_all: 'Gift count, all time',
+  malo_cents_24h: 'Gifts (24h)',
+  malo_count_24h: 'Gift count (24h)',
+  malo_cents_7d: 'Gifts (7d)',
+  malo_count_7d: 'Gift count (7d)',
+  malo_cents_prev_7d: 'Gifts (prior 7d)',
+  avg_tip_cents_7d: 'Average gift (7d)',
   queued_payouts: 'Queued payouts',
   paid_payouts_cents: 'Payouts marked paid',
   active_subs: 'Exclusive rows marked active',
@@ -491,8 +491,8 @@ export function parseReportsPayload(data: unknown): PortalReports {
 
 /** Short notes under a report value, where the label alone could mislead. Keyed like `REPORT_LABELS`. */
 export const REPORT_NOTES: Record<string, string> = {
-  paid_payouts_cents: 'Disbursement rows marked paid. Same sum on the Donations and Ledger boards. Should be $0 while payouts are blocked in Wave 0.',
-  donation_bands: 'All time. Counts of athletes by all-time donation total (more than $0 and under $50, $50 to under $250, $250 and up), no names. Athletes with no donations are not counted.',
+  paid_payouts_cents: 'Disbursement rows marked paid. Same sum on the Gifts and Ledger boards. Should be $0 while payouts are blocked in Wave 0.',
+  donation_bands: 'All time. Counts of athletes by all-time gift total (more than $0 and under $50, $50 to under $250, $250 and up), no names. Athletes with no gifts are not counted.',
 };
 
 /** Cents field, else the older dollars field, else `null` (absent = not in this read, never $0). */
@@ -578,10 +578,10 @@ export function parseRevenueSummary(data: unknown): PortalRevenue {
  * ("Mālo Micro-Tips", "Merch & Vault Subscriptions") never show. VOICE money words.
  */
 const STREAM_NAMES: Record<string, string> = {
-  malo: 'Donations',
+  malo: 'Gifts',
   tip: "Optional tips for Tapua'i",
   booster: 'Booster sponsorships',
-  vault: 'Vault subscriptions',
+  vault: 'Vault purchases',
   merch: 'Drip merch',
   merch_vault: 'Vault and Drip',
 };
@@ -619,7 +619,7 @@ export function streamSplitText(stream: Pick<RevenueStream, 'source' | 'payout_b
   if (payout == null || platform == null || payout + platform !== 10_000) return null;
   if (stream.source === 'malo') return `${bpsPercent(payout)}% to the family account, ${bpsPercent(platform)}% to Tapua'i`;
   if (stream.source === 'booster') return `${bpsPercent(payout)}% to the operator, ${bpsPercent(platform)}% to Tapua'i`;
-  if (stream.source === 'tip') return payout === 0 ? "100% to Tapua'i (donor's choice)" : null;
+  if (stream.source === 'tip') return payout === 0 ? "100% to Tapua'i (giver's choice)" : null;
   return null;
 }
 
@@ -671,7 +671,7 @@ export function maloOriginTitle(origin: string): string {
 }
 
 export function maloEntryTitle(entry: string): string {
-  return entry === 'qr_link' ? 'QR donation link' : 'In the app';
+  return entry === 'qr_link' ? 'QR gift link' : 'In the app';
 }
 
 function asRows(value: unknown): Record<string, unknown>[] {
@@ -714,7 +714,7 @@ export function parseBreakdown(payload: Record<string, unknown>): PortalMaloBrea
 }
 
 /**
- * @purpose Build the donation breakdown from raw `tips` rows (the RPC fallback). Pure. Marked `source: 'fallback'`:
+ * @purpose Build the gift breakdown from raw `tips` rows (the RPC fallback). Pure. Marked `source: 'fallback'`:
  *   it only sees the rows it was given (at most `MALO_FALLBACK_LIMIT`), so its totals are partial.
  */
 export function breakdownFromTips(rows: Record<string, unknown>[], now: number = Date.now()): PortalMaloBreakdown {

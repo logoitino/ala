@@ -28,8 +28,8 @@ export function AdminReportHomeHero({ data }: { data: AdminReportData }) {
     <View style={{ minWidth: 0, flexBasis: wide ? '40%' : paired ? '47%' : '100%', gap: 10 }}>
       <Text accessibilityRole="header" aria-level={1} style={[s.h1, { fontSize: width < 640 ? 30 : 36 }]}>{PAGE_TITLES.home}</Text>
       {/* Font fitting is native only; on web the full amount must wrap rather than ellipsize. */}
-      <Text style={[s.heroValue, { fontSize: width < 640 ? 48 : 60, minWidth: 0, maxWidth: '100%', flexShrink: 1 }]} numberOfLines={Platform.OS === 'web' ? undefined : 1} adjustsFontSizeToFit={Platform.OS !== 'web'} minimumFontScale={0.6} accessibilityLabel={`Donations this week: ${donation.missing ? 'Not in this read' : donation.value}`}>{donation.value}</Text>
-      <View style={[s.row, { gap: 6 }]}><Text style={s.strong}>{isMeasured(input.donationCount7d) ? `${formatCount(input.donationCount7d)} ${input.donationCount7d === 1 ? 'donation' : 'donations'} recorded` : 'Donation count not in this read'}</Text>
+      <Text style={[s.heroValue, { fontSize: width < 640 ? 48 : 60, minWidth: 0, maxWidth: '100%', flexShrink: 1 }]} numberOfLines={Platform.OS === 'web' ? undefined : 1} adjustsFontSizeToFit={Platform.OS !== 'web'} minimumFontScale={0.6} accessibilityLabel={`Gifts this week: ${donation.missing ? 'Not in this read' : donation.value}`}>{donation.value}</Text>
+      <View style={[s.row, { gap: 6 }]}><Text style={s.strong}>{isMeasured(input.donationCount7d) ? `${formatCount(input.donationCount7d)} ${input.donationCount7d === 1 ? 'gift' : 'gifts'} recorded` : 'Gift count not in this read'}</Text>
         <Text style={[s.small, { color: c.jade }]}>{weeklyChange(donation)}</Text></View>
     </View>
     <View style={[s.grid, { flexBasis: wide ? '38%' : paired ? '47%' : '100%', minWidth: 0, gap: 16 }]}>
@@ -62,7 +62,7 @@ export function AdminReportHomeBody({ data }: { data: AdminReportData }) {
       </View>
     </View>
     <View style={[s.row, { borderLeftWidth: 2, borderLeftColor: c.jade, paddingLeft: 16, alignItems: 'flex-start', gap: 24 }]}>
-      <Text style={s.kicker}>At a glance</Text><Text style={s.sentence}>{isMeasured(input.donations7dCents) && isMeasured(input.clips7d) ? `${formatUsd(input.donations7dCents)} in recorded donations and ${formatCount(input.clips7d)} ${input.clips7d === 1 ? 'clip' : 'clips'} uploaded over the last 7 days.` : 'One or more weekly totals were not in this read.'}</Text>
+      <Text style={s.kicker}>At a glance</Text><Text style={s.sentence}>{isMeasured(input.donations7dCents) && isMeasured(input.clips7d) ? `${formatUsd(input.donations7dCents)} in recorded gifts and ${formatCount(input.clips7d)} ${input.clips7d === 1 ? 'clip' : 'clips'} uploaded over the last 7 days.` : 'One or more weekly totals were not in this read.'}</Text>
     </View>
     <AdminHomeCards />
     {sections.slice(2).map(section => <AdminReportSection key={section.id} section={section} />)}

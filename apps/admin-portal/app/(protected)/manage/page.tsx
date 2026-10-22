@@ -107,7 +107,7 @@ export default async function ManagementPage() {
         <section id="billing" aria-labelledby="billing-heading" className="scroll-mt-40">
           <SectionHeading id="billing-heading" level={2} title="Billing" hint="Ledger detail is on Revenue" />
           <div className="mb-4 grid gap-3 sm:grid-cols-3">
-            <StatTile label="Donations · 7d" value={usd(donations7d)} missing={donations7d == null} hint="Recorded donations, last 7 days" goodDirection="none" />
+            <StatTile label="Gifts · 7d" value={usd(donations7d)} missing={donations7d == null} hint="Recorded gifts, last 7 days" goodDirection="none" />
             <StatTile label="Gross, all streams" value={usd(gross)} missing={gross == null} hint="Recorded gross in the ledger" goodDirection="none" />
             <StatTile label="Tapua'i share, all streams" value={usd(net)} missing={net == null} hint="Recorded for Tapua'i in the ledger" goodDirection="none" />
           </div>
@@ -132,10 +132,10 @@ export default async function ManagementPage() {
               format={formatUsd}
               emptyText="No revenue streams in this read."
             />
-            <Panel level={3} title="Donations and revenue" kicker="Test mode" action={<Badge tone={toneBadge(desk('billing').tone)}>{desk('billing').status}</Badge>}>
+            <Panel level={3} title="Gifts and revenue" kicker="Test mode" action={<Badge tone={toneBadge(desk('billing').tone)}>{desk('billing').status}</Badge>}>
               <p className="text-sm leading-6 text-[var(--ink-soft)]">
-                Donation policy: 90% to the family account, 10% to Tapua&apos;i. Payouts stay blocked in this test. The full ledger,
-                donations by day, and where donations started are on{' '}
+                Current test-mode model: 90% to the family account, 10% to Tapua&apos;i. Payouts stay blocked in this test. The full ledger,
+                gifts by day, and where gifts started are on{' '}
                 <Link href="/money" className="font-extrabold text-[var(--jade)] underline-offset-2 hover:underline">
                   Revenue
                 </Link>

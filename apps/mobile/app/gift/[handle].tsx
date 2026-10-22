@@ -1,4 +1,4 @@
-/** Public QR landing (`/gift/[handle]`): a game-program header and Donate for the athlete a family shared. */
+/** Public QR landing (`/gift/[handle]`): a game-program header and Give for the athlete a family shared. */
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -80,14 +80,14 @@ export default function GiftHandleScreen() {
               {/* row-reverse: the patch draws on the left but screen readers hear the name first. */}
               <View style={styles.programRow}>
                 <View style={styles.programId}>
-                  <Text style={styles.kicker}>Donate on Tapua'i</Text>
+                  <Text style={styles.kicker}>Give on Tapua'i</Text>
                   <Text accessibilityRole="header" style={styles.title}>Support {link.name}</Text>
                 </View>
                 <JerseyBadge number={link.player.jersey_number} size="md" />
               </View>
               {programLine(link) ? <Text style={styles.programLine}>{programLine(link)}</Text> : null}
             </View>
-            <Text style={styles.body}>{`Donate to ${link.name} here, or pass this page on to family and friends.`}</Text>
+            <Text style={styles.body}>{`Send a gift to ${link.name} here, or pass this page on to family and friends.`}</Text>
             {live.buttons.malo ? (
               <AnimatedButton
                 accessibilityLabel={maloAthleteCta(link.name)}

@@ -48,7 +48,7 @@ it('returns the guardian consent error from the RPC', async () => {
   await expect(setParentPlayerConsent('player-1', false)).resolves.toBeNull();
 });
 
-it('loads the newest donations and a public profile, or nothing when the read fails', async () => {
+it('loads the newest gifts and a public profile, or nothing when the read fails', async () => {
   mockFrom.mockImplementation((table: string) => {
     if (table === 'tips') return chain({ data: [{ id: 'tip-1' }] });
     return chain({ data: { player_id: 'player-1' }, error: null });

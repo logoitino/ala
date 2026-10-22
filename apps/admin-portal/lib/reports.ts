@@ -35,7 +35,7 @@ export async function fetchPortalMaloBreakdown(): Promise<PortalMaloBreakdown> {
     .select('id, amount_cents, created_at, origin, entry, source_label, reel_id, wishlist_item_id, player_id')
     .order('created_at', { ascending: false }).limit(MALO_FALLBACK_LIMIT);
   if (listed.error || !Array.isArray(listed.data)) {
-    return emptyPortalMaloBreakdown(true, rpc.error?.message ?? listed.error?.message ?? 'Could not load donations.');
+    return emptyPortalMaloBreakdown(true, rpc.error?.message ?? listed.error?.message ?? 'Could not load gifts.');
   }
   return breakdownFromTips(listed.data as Record<string, unknown>[]);
 }

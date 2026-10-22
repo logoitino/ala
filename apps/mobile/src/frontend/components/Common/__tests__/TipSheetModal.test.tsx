@@ -89,10 +89,10 @@ describe('donation popup session', () => {
     await fireEvent.press(screen.getByText('Payment in progress…'));
     expect(mockClose).not.toHaveBeenCalled();
     await view.rerender(<MaloTipModal player={{ ...player, id: 'p2', name: 'Sina' }} onClose={mockClose} />);
-    expect(screen.getByText('Donate to Ana')).toBeTruthy();
-    expect(screen.queryByText('Donate to Sina')).toBeNull();
+    expect(screen.getByText('Give to Ana')).toBeTruthy();
+    expect(screen.queryByText('Give to Sina')).toBeNull();
     await act(async () => resolve());
-    expect(screen.getByText('Donate to Sina')).toBeTruthy();
+    expect(screen.getByText('Give to Sina')).toBeTruthy();
     expect(screen.getByLabelText('Next').props.accessibilityState.disabled).toBe(true);
   });
 });

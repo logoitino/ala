@@ -296,7 +296,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `company_revenue_logs`
 
-**Owner:** `LEDGER` · One row per revenue event (donation, tip for Tapua'i, card fee, Vault, booster, Drip); the books are built from it.
+**Owner:** `LEDGER` · One row per revenue event (gift, tip for Tapua'i, card fee, Vault, booster, Drip); the books are built from it.
 
 - Written by: —; database functions: `record_company_revenue`, `sync_company_revenue_logs`, `tips_card_fee_revenue`, `tips_platform_tip_revenue`
 - Read by: `@/lib/bookkeeping.ts`; database functions: `get_company_revenue_summary`, `get_custodial_summary`, `get_received_malo`
@@ -348,7 +348,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `donation_thanks`
 
-**Owner:** `DONATION_THANKS` · Preset thank-you messages athletes send donors.
+**Owner:** `DONATION_THANKS` · Preset thank-you messages athletes send givers.
 
 - Written by: —; database functions: `thank_donation`
 - Read by: —; database functions: `get_donations_to_thank`, `get_my_donation_thanks`
@@ -632,7 +632,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `notification_payment_contexts`
 
-**Owner:** `COMMERCE` · Immutable server-bound test payment purpose/actor/athlete/quote allocation evidence. Notification authority is constrained false; no donation credit source.
+**Owner:** `COMMERCE` · Immutable server-bound test payment purpose/actor/athlete/quote allocation evidence. Notification authority is constrained false; no gift credit source.
 
 - Written by: —; database functions: `apply_notification_payment_event`, `record_notification_payment_context`
 - Read by: —; database functions: `apply_notification_payment_event`, `record_notification_payment_context`
@@ -701,7 +701,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `players`
 
-**Owner:** `ROSTERS` · Athlete roster that fans tag and donate to.
+**Owner:** `ROSTERS` · Athlete roster that fans tag and give to.
 
 - Written by: `@/lib/adminCatalog.ts`, `@/lib/boosterPortal.ts`, `@/lib/hype.ts`, `@/lib/payments.ts`, `@/lib/vault.ts`; database functions: `add_user_aura`, `admin_approve_player_consent`, `admin_set_player_guardian`, `increment_backer_count`, `increment_player_hype`, `parent_set_player_consent` +1 more
 - Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/athleteStats.ts`, `@/lib/bookkeeping.ts`, `@/lib/guestGames.ts`, `@/lib/localSearch.ts` +4 more; database functions: `admin_add_athlete_game_log`, `admin_challenge_post_counts`, `admin_decide_payout_override`, `admin_payee_overview`, `admin_record_payee_check`, `admin_upsert_athlete_career_stats` +36 more
@@ -728,7 +728,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `rallies`
 
-**Owner:** `RALLY` · Donation goals for a named sports cost.
+**Owner:** `RALLY` · Gift goals for a named sports cost.
 
 - Written by: —; database functions: `approve_rally`, `close_rally`, `create_rally`, `thank_rally`, `tips_rally_before_insert`
 - Read by: —; database functions: `get_active_rally`, `get_donations_to_thank`, `get_player_rallies`
@@ -1072,7 +1072,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `stripe_webhook_events`
 
-**Owner:** `LEDGER` · Retained legacy PaymentIntent claim/dedup evidence from the retired pre-claim webhook writer. Not proof of completed business application, donation credits or receipt delivery; current webhook no longer writes this table. Owner-reviewed retention/reconciliation required.
+**Owner:** `LEDGER` · Retained legacy PaymentIntent claim/dedup evidence from the retired pre-claim webhook writer. Not proof of completed business application, gift credits or receipt delivery; current webhook no longer writes this table. Owner-reviewed retention/reconciliation required.
 
 - Written by: —; database functions: —
 - Read by: —; database functions: —
@@ -1148,7 +1148,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `tips`
 
-**Owner:** `LEDGER` · Donations (code name tips), with channel, Rally, tip for Tapua'i and covered fee.
+**Owner:** `LEDGER` · Gifts (code name tips), with channel, Rally, tip for Tapua'i and covered fee.
 
 - Written by: `@/hooks/useTipCheckout.ts`; database functions: —
 - Read by: `portal/lib/reports.ts`, `@/lib/admin.ts`, `@/lib/adminReports.ts`, `@/lib/bookkeeping.ts`, `@/lib/donationHistory.ts`, `@/lib/finance.ts`; database functions: `confirm_reel_player_tag`, `get_admin_malo_breakdown`, `get_admin_platform_metrics`, `get_admin_reports`, `get_custodial_summary`, `get_donations_to_thank` +5 more
@@ -1175,7 +1175,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `wishlist_items`
 
-**Owner:** `WISHLIST` · Gear goals fans donate to.
+**Owner:** `WISHLIST` · Gear goals fans give to.
 
 - Written by: `@/lib/adminShop.ts`; database functions: `chip_in_wishlist_item`
 - Read by: `@/lib/adminShop.ts`; database functions: `get_wishlist_items`
@@ -1327,7 +1327,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `admin_upsert_athlete_career_stats` | `ATHLETE_STATS` | By hand: Existing admin career writer now preserves composite player/sport history. | `athlete_career_stats` | `players`, `sport_configs` |
 | `age_band_from` | `BACKEND` | `sql:admin_set_birth_month`, `sql:profile_age_band`, `sql:profiles_apply_new_account_rules` +1 more | — | — |
 | `allow_verification_write` | `BACKEND` | `sql:admin_decide_verification`, `sql:admin_revoke_verification`, `sql:apply_verification` +2 more | — | — |
-| `apply_notification_payment_event` | `RECONCILIATION` | By hand: Service-only unique validated processor observation with mode/currency/allocation and refund/dispute ordering; no donation, Aura, ledger or notification intent writes. | `notification_payment_contexts`, `notification_payment_observations` | `notification_payment_contexts`, `notification_payment_observations` |
+| `apply_notification_payment_event` | `RECONCILIATION` | By hand: Service-only unique validated processor observation with mode/currency/allocation and refund/dispute ordering; no gift, Aura, ledger or notification intent writes. | `notification_payment_contexts`, `notification_payment_observations` | `notification_payment_contexts`, `notification_payment_observations` |
 | `apply_privacy_settings` | `PROFILE` | `sql:admin_reset_privacy`, `sql:admin_set_birth_month`, `sql:admin_set_hide_from_search` +6 more | `profiles` | `profiles` |
 | `apply_teen_defaults` | `PROFILE` | `sql:admin_set_birth_month`, `sql:set_my_birth_month` | — | `profiles` |
 | `apply_verification` | `PROFILE` | `sql:admin_decide_verification`, `sql:school_confirm_athlete` | `profiles` | — |
@@ -1857,7 +1857,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `tag_party` | `ROSTERS` | `sql:view` | — | `players`, `profiles` |
 | `tag_reel_accounts` | `ACCOUNT_TAGS` | `@/lib/accountTags.ts` | `reel_account_tags` | `profiles`, `reels` |
 | `team_code_school_key` | `BACKEND` | `sql:redeem_team_code` | — | — |
-| `thank_donation` | `DONATION_THANKS` | By hand: Preset donation thanks with explicit NULL/unrelated-role denial; no thank-you notification producer is enabled by this repair. | `donation_thanks` | `profiles`, `tips` |
+| `thank_donation` | `DONATION_THANKS` | By hand: Preset gift thanks with explicit NULL/unrelated-role denial; no thank-you notification producer is enabled by this repair. | `donation_thanks` | `profiles`, `tips` |
 | `thank_rally` | `RALLY` | `@/lib/rallies.ts` | `rallies` | `reels` |
 | `tip_origin_label` | `BACKEND` | `sql:company_revenue_after_source_insert`, `sql:sync_company_revenue_logs` | — | — |
 | `tips_card_fee_revenue` | `LEDGER` | `trigger:tips_card_fee_revenue_ai on tips` | `company_revenue_logs` | — |

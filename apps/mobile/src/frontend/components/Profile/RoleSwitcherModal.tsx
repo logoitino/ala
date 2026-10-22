@@ -243,7 +243,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
             </View>
           </View>
           <Text style={styles.cardBody}>
-            Discover highlights, donate to athletes, vote in cheer polls, and level up your Aura Card.
+            Discover highlights, give to athletes, vote in cheer polls, and level up your Aura Card.
           </Text>
         </View>
 
@@ -261,7 +261,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
             )}
           </View>
           <Text style={styles.cardBody}>
-            Claim a High School or NCAA roster, receive donations, and host one-time Exclusive access for $
+            Claim a High School or NCAA roster, receive gifts, and host one-time Exclusive access for $
             {live.catalog.exclusiveDollars.toFixed(2)}. School claim is not Varsity — fans will
             see Not verified yet until a team code or coach/parent approval.
           </Text>

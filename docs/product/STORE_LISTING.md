@@ -1,3 +1,8 @@
+<!-- Historical store draft retained so superseded fee/language choices stay reviewable. -->
+> **Superseded 2026-10-22:** the draft below used donation language for individuals and the old
+> 10% share. Use [the current gift listing/review draft](APP_STORE_GIFT_DRAFT.md), subject to
+> the tip-model, processing disclosure and counsel gates. Neither draft is submitted.
+
 # Store listing — App Store and Google Play (DRAFT)
 
 **Status: DRAFT — not submitted.** Written 2026-10-07 by VOICE + MARKETING (WORK_QUEUE BRAND-01).

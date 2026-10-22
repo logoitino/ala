@@ -6,7 +6,7 @@
  * exports are all read from that one journal, so every report agrees with every export.
  *
  * Accounting rules, in plain words (docs/engineering/design/BOOKKEEPING.md):
- * - A donation is mostly not Tapua'i's money. The 90% for the family is a liability ("held for
+ * - A gift is mostly not Tapua'i's money. The 90% for the family is a liability ("held for
  *   families") until it is paid out; only the 10% share is Tapua'i income.
  * - Every amount is integer cents. Dates are UTC calendar days (`YYYY-MM-DD`).
  * - Nothing is ever edited in place: a correction is a reversing entry.
@@ -40,27 +40,27 @@ export const CHART_OF_ACCOUNTS: LedgerAccount[] = [
   { code: '1000', name: 'Business bank account', type: 'asset', qboType: 'Bank', qboDetail: 'Checking', taxLine: 'Balance sheet', description: "Tapua'i's operating bank account; Stripe payouts land here." },
   { code: '1010', name: 'Stripe balance', type: 'asset', qboType: 'Bank', qboDetail: 'Cash on hand', taxLine: 'Balance sheet', description: 'Charges collected by Stripe and not yet paid out to the bank.' },
   { code: '1999', name: 'Suspense (needs review)', type: 'asset', qboType: 'Other Current Asset', qboDetail: 'Other Current Assets', taxLine: 'Clear before filing', description: 'Differences on rows that did not add up. Should be zero before a period is closed.' },
-  { code: '2000', name: 'Donations held for families', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Other Current Liabilities', taxLine: 'Balance sheet (not income)', description: "The family's 90% of each donation, owed until it is paid out." },
+  { code: '2000', name: 'Gifts held for families', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Other Current Liabilities', taxLine: 'Balance sheet (not income)', description: "The family's 90% of each gift, owed until it is paid out." },
   { code: '2010', name: 'Vault earnings held for athletes', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Other Current Liabilities', taxLine: 'Balance sheet (not income)', description: "The athlete's 80% of Exclusive / Vault sales, owed until it is paid out." },
   { code: '2100', name: 'Booster operator payable', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Other Current Liabilities', taxLine: 'Balance sheet (not income)', description: "The operator's 85% of booster sponsorships." },
   { code: '2200', name: 'Sales tax payable', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Sales Tax Payable', taxLine: 'Balance sheet', description: 'Sales tax collected on Drip merchandise. Not collected yet.' },
   { code: '2300', name: 'Owed to owner (expenses paid personally)', type: 'liability', qboType: 'Other Current Liability', qboDetail: 'Other Current Liabilities', taxLine: 'Balance sheet', description: "Business costs the owner paid from a personal card, to be repaid or converted to a contribution." },
   { code: '3000', name: 'Owner contributions', type: 'equity', qboType: 'Equity', qboDetail: "Owner's Equity", taxLine: 'Balance sheet', description: 'Money the owner put into the business.' },
   { code: '3100', name: 'Owner draws', type: 'equity', qboType: 'Equity', qboDetail: "Owner's Equity", taxLine: 'Balance sheet', description: 'Money the owner took out of the business.' },
-  { code: '4000', name: 'Platform share of donations', type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "Tapua'i's disclosed 10% of each donation." },
-  { code: '4010', name: "Optional tips to Tapua'i", type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "The optional tip a donor adds for Tapua'i at checkout (100% Tapua'i)." },
+  { code: '4000', name: 'Platform share of gifts', type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "Tapua'i's disclosed 10% of each gift." },
+  { code: '4010', name: "Optional tips to Tapua'i", type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "The optional tip a giver adds for Tapua'i at checkout (100% Tapua'i)." },
   { code: '4020', name: 'Vault platform share', type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "Tapua'i's 20% of Exclusive / Vault sales." },
   { code: '4030', name: 'Booster sponsorship share', type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: "Tapua'i's 15% of booster sponsorships." },
   { code: '4040', name: 'Drip merchandise sales', type: 'revenue', qboType: 'Income', qboDetail: 'Sales of Product Income', taxLine: 'Gross receipts (sales tax may apply)', description: 'Drip store orders (100% Tapua\'i).' },
-  { code: '4050', name: 'Card fees covered by donors', type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: 'The card fee a donor chose to cover at checkout; offsets processing fees.' },
-  { code: '4900', name: 'Refunds and chargebacks', type: 'revenue', qboType: 'Income', qboDetail: 'Discounts/Refunds Given', taxLine: 'Returns and allowances', description: "Money returned to donors or buyers, Tapua'i's share only." },
+  { code: '4050', name: 'Processing fees covered by givers', type: 'revenue', qboType: 'Income', qboDetail: 'Service/Fee Income', taxLine: 'Gross receipts', description: 'The processing fee a giver chose to cover at checkout; offsets processing fees.' },
+  { code: '4900', name: 'Refunds and chargebacks', type: 'revenue', qboType: 'Income', qboDetail: 'Discounts/Refunds Given', taxLine: 'Returns and allowances', description: "Money returned to givers or buyers, Tapua'i's share only." },
   { code: '5000', name: 'Card processing fees', type: 'expense', qboType: 'Expense', qboDetail: 'Bank Charges', taxLine: 'Commissions and fees', description: 'Stripe fees, from the monthly Stripe balance report.' },
   { code: '5010', name: 'Merchandise cost', type: 'expense', qboType: 'Cost of Goods Sold', qboDetail: 'Supplies & Materials - COGS', taxLine: 'Cost of goods sold', description: 'What Drip stock cost Tapua\'i.' },
   { code: '6000', name: 'Software and hosting', type: 'expense', qboType: 'Expense', qboDetail: 'Office/General Administrative Expenses', taxLine: 'Other expenses (software)', description: 'Supabase, Expo, domains and other subscriptions.' },
   { code: '6010', name: 'App store and developer fees', type: 'expense', qboType: 'Expense', qboDetail: 'Dues & subscriptions', taxLine: 'Other expenses', description: 'Apple Developer ($99/yr), Google Play ($25).' },
   { code: '6020', name: 'Legal and professional', type: 'expense', qboType: 'Expense', qboDetail: 'Legal & Professional Fees', taxLine: 'Legal and professional services', description: 'Counsel, CPA, entity filings.' },
   { code: '6030', name: 'Marketing and advertising', type: 'expense', qboType: 'Expense', qboDetail: 'Advertising/Promotional', taxLine: 'Advertising', description: 'Ads, printed QR cards, events.' },
-  { code: '6040', name: 'Filmer rewards (paid by Tapua\'i)', type: 'expense', qboType: 'Expense', qboDetail: 'Other Miscellaneous Service Cost', taxLine: 'Contract labor (review 1099)', description: "Future: cash rewards to filmers from Tapua'i's own money, never from a donation." },
+  { code: '6040', name: 'Filmer rewards (paid by Tapua\'i)', type: 'expense', qboType: 'Expense', qboDetail: 'Other Miscellaneous Service Cost', taxLine: 'Contract labor (review 1099)', description: "Future: cash rewards to filmers from Tapua'i's own money, never from a gift." },
   { code: '6050', name: 'Game-day operator fees', type: 'expense', qboType: 'Expense', qboDetail: 'Other Miscellaneous Service Cost', taxLine: 'Contract labor (review 1099)', description: 'Future: payments to game-day stat operators.' },
   { code: '6090', name: 'Other business expenses', type: 'expense', qboType: 'Expense', qboDetail: 'Other Miscellaneous Expense', taxLine: 'Other expenses', description: 'Anything that fits nowhere else; say what it was in the memo.' },
   { code: '6100', name: 'Bank fees', type: 'expense', qboType: 'Expense', qboDetail: 'Bank Charges', taxLine: 'Other expenses', description: 'Bank account and wire fees.' },
@@ -162,12 +162,12 @@ const cents = (value: unknown): number => {
 
 /** Revenue stream → [family/payee liability account, Tapua'i income account]. */
 const STREAM_ACCOUNTS: Record<string, { payable: string | null; income: string; title: string }> = {
-  malo: { payable: '2000', income: '4000', title: 'Donation' },
+  malo: { payable: '2000', income: '4000', title: 'Gift' },
   tip: { payable: null, income: '4010', title: "Tip to Tapua'i" },
   vault: { payable: '2010', income: '4020', title: 'Vault sale' },
   booster: { payable: '2100', income: '4030', title: 'Booster sponsorship' },
   merch: { payable: null, income: '4040', title: 'Drip order' },
-  card_fee: { payable: null, income: '4050', title: 'Card fee covered by donor' },
+  card_fee: { payable: null, income: '4050', title: 'Processing fee covered by giver' },
 };
 
 
@@ -216,7 +216,7 @@ export function journalFromRevenue(row: RevenueLogInput): { entry: JournalEntry 
 }
 
 /**
- * SQL writes labels like "Mālo · Highlight via QR · New cleats · Kaleo". For donation and Vault labels
+ * SQL writes labels like "Mālo · Highlight via QR · New cleats · Kaleo". For gift and Vault labels
  * keep only the channel: the later segments are the athlete's name and free text a family typed (a Rally
  * or gear-goal title), and neither may reach an exported memo. Booster labels keep the business name.
  */
@@ -228,8 +228,8 @@ function cleanLabel(label: string): string {
 
 /**
  * @purpose Post a disbursement only once it is marked paid: the athlete's held money goes down with the
- *   Stripe balance. `held` is that athlete's balance in Donations held (2000) and Vault earnings held
- *   (2010) just before the payout; the payout uses donations first, then Vault earnings, and anything
+ *   Stripe balance. `held` is that athlete's balance in Gifts held (2000) and Vault earnings held
+ *   (2010) just before the payout; the payout uses gifts first, then Vault earnings, and anything
  *   beyond both stays on 2000 so the shortfall shows as a negative balance.
  */
 export function journalFromDisbursement(row: DisbursementInput, held: { donations: number; vault: number } = { donations: Infinity, vault: 0 }): JournalEntry | null {
@@ -283,7 +283,7 @@ export function buildJournal(input: BooksInput): { entries: JournalEntry[]; issu
     issues.push(...posted.issues);
   }
   // Payouts are posted in date order against each athlete's held balance on that day, so a payout
-  // reduces donations first, then Vault earnings (journalFromDisbursement).
+  // reduces gifts first, then Vault earnings (journalFromDisbursement).
   const byDate = (a: JournalEntry, b: JournalEntry) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
   entries.sort(byDate);
   const paid = input.disbursements
@@ -607,7 +607,7 @@ export function booksQualityIssues(entries: JournalEntry[], postingIssues: BookI
   const balanceOf = (code: string) => tb.find((row) => row.code === code)?.balance ?? 0;
   if (balanceOf('1999') !== 0) issues.push({ id: 'suspense', severity: 'warn', title: 'Suspense is not zero', detail: 'Some rows did not add up. Review them and clear Suspense with a correcting entry before closing the period.' });
   const negative = heldRollForward(entries, ctx.period).filter((row) => row.closing < 0);
-  for (const row of negative) issues.push({ id: `negative:${row.code}`, severity: 'block', title: `${row.name} is below zero`, detail: 'More was paid out than was recorded as received. A donation or sale is missing from the books, or a payout was marked paid twice.' });
+  for (const row of negative) issues.push({ id: `negative:${row.code}`, severity: 'block', title: `${row.name} is below zero`, detail: 'More was paid out than was recorded as received. A gift or sale is missing from the books, or a payout was marked paid twice.' });
   const shortAthletes = athleteHeld(entries, ctx.period.to).filter((row) => row.held < 0);
   if (shortAthletes.length) issues.push({ id: 'athlete-below-zero', severity: 'block', title: 'An athlete was paid more than was held for them', detail: `${shortAthletes.length} athlete account(s) are below zero (${shortAthletes.slice(0, 3).map((row) => `${row.athleteRef} ${row.held}¢`).join(', ')}). Another family's money covered the difference.`, count: shortAthletes.length });
   // Money held for others must stay in cash; anything less means it was spent as Tapua'i's own.
@@ -676,7 +676,7 @@ export const MANUAL_ENTRY_KINDS: ManualKind[] = [
   { id: 'owner_draw', label: 'Owner took money out', debit: '3100', credit: '1000', hint: 'A withdrawal for the owner.' },
   { id: 'repay_owner', label: 'Repay the owner', debit: '2300', credit: '1000', hint: 'Pays back costs the owner covered personally.' },
   { id: 'owner_cost_to_contribution', label: 'Owner costs become a contribution', debit: '2300', credit: '3000', hint: 'The owner will not be repaid; ask the CPA which they prefer.' },
-  { id: 'refund', label: 'Refund a donation or sale', debit: '4900', credit: '1010', hint: "Returns the whole charge: Tapua'i's share and the family's, athlete's or operator's share." },
+  { id: 'refund', label: 'Refund a gift or sale', debit: '4900', credit: '1010', hint: "Returns the whole charge: Tapua'i's share and the family's, athlete's or operator's share." },
 ];
 
 /** Where an expense was paid from. */
@@ -702,7 +702,7 @@ export function manualEntryLines(kindId: string, amountCents: number, paidFromId
 
 /** Streams a refund can reverse, with the payee's held account. */
 export const REFUND_STREAMS: { id: string; label: string; payable: string | null }[] = [
-  { id: 'malo', label: 'Donation', payable: '2000' },
+  { id: 'malo', label: 'Gift', payable: '2000' },
   { id: 'vault', label: 'Vault sale', payable: '2010' },
   { id: 'booster', label: 'Booster sponsorship', payable: '2100' },
   { id: 'merch', label: 'Drip order', payable: null },
@@ -835,7 +835,7 @@ export function chartOfAccountsCsv(): string {
 /** @purpose The year-end pack as one CSV a CPA can open: receipts, expenses by line, quarters, pass-through, payees. */
 export function taxSummaryCsv(summary: TaxYearSummary): string {
   const rows: (string | number)[][] = [['Section', 'Line', 'Amount', 'Note']];
-  rows.push(['Income', "Gross receipts (Tapua'i share only)", csvMoney(summary.grossReceipts), "Platform shares, optional tips for Tapua'i, Vault share, booster share, Drip, donor-covered card fees"]);
+  rows.push(['Income', "Gross receipts (Tapua'i share only)", csvMoney(summary.grossReceipts), "Platform shares, optional tips for Tapua'i, Vault share, booster share, Drip, giver-covered processing fees"]);
   rows.push(['Income', 'Returns and allowances', csvMoney(summary.refunds), '']);
   rows.push(['Cost of goods sold', 'Drip stock cost', csvMoney(summary.costOfSales), 'Merchandise only; card processing fees are under Expenses (commissions and fees)']);
   for (const line of summary.expensesByLine) rows.push(['Expenses', line.taxLine, csvMoney(line.amount), '']);

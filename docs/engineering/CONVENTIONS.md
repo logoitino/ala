@@ -1,3 +1,4 @@
+<!-- Naming and placement standards preserve APIs while transaction copy follows the current owner map. -->
 # Conventions — folders, file names, and where code goes
 
 Companion to [AGENTS.md](../../AGENTS.md) (which owns the directory *law*) and
@@ -142,9 +143,9 @@ comment at all.
 **When you change a file, keep its comments true.** A stale comment is worse than none. If a header still
 describes the old behaviour after your edit, fix it in the same commit.
 
-On-screen words follow `docs/product/VOICE.md`: money is **Donate / donation**; "Mālo!" is only a thank-you;
+On-screen words follow `docs/product/VOICE.md`: individual money is **Gift / Give**, program money **Donation / Donate to the program**; "Mālo!" is only a thank-you;
 **Seki** / **Highlights ⚡** are the product names. Persistence keeps the old code names (`tips`, `reels`,
-`useTipCheckout`, `malo*`) — do not rename them to match the UI; say "code name `tip` = donation" in a
+`useTipCheckout`, `malo*`) — do not rename them to match the UI; say "code name `tip` = individual gift" in a
 comment where it would confuse a reader.
 
 ---

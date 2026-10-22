@@ -16,9 +16,9 @@ const KINDS: Record<NotificationCategoryId, NotificationPayload['kind']> = {
 };
 const COPY: Record<NotificationCategoryId, { subject: string; body: string }> = {
   account: { subject: "Welcome to Tapua'i Sports", body: 'Your account is ready. Sign in to explore your account.' },
-  donation_receipts: { subject: 'Your donation update', body: 'There is an update for a donation you made. Sign in to review your donation history.' },
-  donations_received: { subject: 'A donation update is ready', body: 'There is a donation update you may be permitted to review. Sign in to see the current details.' },
-  payment_updates: { subject: 'An update for your donation', body: 'A recorded donation status has changed. Sign in to review the current details.' },
+  donation_receipts: { subject: 'Your gift update', body: 'There is an update for a gift you made. Sign in to review your gift history.' },
+  donations_received: { subject: 'A gift update is ready', body: 'There is a gift update you may be permitted to review. Sign in to see the current details.' },
+  payment_updates: { subject: 'An update for your gift', body: 'A recorded gift status has changed. Sign in to review the current details.' },
   social: { subject: "Your Tapua'i Sports activity", body: 'There is an activity update in your account. Sign in to review it.' },
   crew: { subject: 'Your Crew activity', body: 'There is a Crew or followed-athlete update in your account. Sign in to review it.' },
   workouts: { subject: 'Your workout activity', body: 'There is a workout invitation or response in your account. Sign in to review it.' },

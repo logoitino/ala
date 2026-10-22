@@ -1,6 +1,6 @@
 /**
  * Parent HQ: for a guardian, the linked athletes, consent for each (`setParentPlayerConsent`), the custodial
- * money card, the Rally card, a Share & Donate QR per athlete and teen supervision (MINOR-01).
+ * money card, the Rally card, a Share & Give QR per athlete and teen supervision (MINOR-01).
  * Failures show Retry rather than an empty list.
  */
 
@@ -157,7 +157,7 @@ export default function ParentHomeScreen() {
               style={styles.share}
             >
               <Text style={styles.shareLabel}>{`${SHARE_FUND_CTA} · ${displayValue(player.name, 'your athlete')}`}</Text>
-              <Text style={styles.muted}>A QR and link family can use to donate.</Text>
+              <Text style={styles.muted}>A QR and link family can use to give.</Text>
             </Pressable>
             {/* Rally goal (start / approve / close / thank) and donations to say thanks for. */}
             <RallyCard player={player} athleteName={displayValue(player.name, 'your athlete')} manage guardian />

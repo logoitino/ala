@@ -1,7 +1,8 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { paymentIntentIdFromSecret, resolveTipOrigin, tipChannelLabel } from '@/lib/finance';
 
 describe('resolveTipOrigin', () => {
-  it('tags a Rally donation as rally (a gear goal still wins)', () => {
+  it('tags a Rally gift as rally (a gear goal still wins)', () => {
     expect(resolveTipOrigin({ rallyId: 'r1' })).toBe('rally');
     expect(resolveTipOrigin({ rallyId: 'r1', origin: 'profile' })).toBe('rally');
     expect(resolveTipOrigin({ rallyId: 'r1', wishlistItemId: 'w1' })).toBe('wishlist');

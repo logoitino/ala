@@ -23,7 +23,7 @@ describe('GameCard scoreboard', () => {
     await render(<GameCard game={recordedGame} onPress={jest.fn()} />);
     expect(screen.getAllByRole('button')).toHaveLength(1);
     expect(screen.queryByText('View game & roster')).toBeNull();
-    expect(screen.getByRole('button', { name: /Community gym. View game, roster and donate/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Community gym. View game, roster and give/ })).toBeTruthy();
   });
   it('includes distinct school names in the spoken scoreboard identity', async () => {
     await render(<GameCard game={{ ...recordedGame, home_team: 'Falcons', away_team: 'Eagles' }} onPress={jest.fn()} />);

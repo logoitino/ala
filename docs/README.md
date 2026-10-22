@@ -84,6 +84,10 @@ order, then dip into the folders as you need them.
 | [design/EMAIL_NOTIFICATIONS_DESIGN.md](engineering/design/EMAIL_NOTIFICATIONS_DESIGN.md) | Approved account/donation email, Activity inbox and Profile preferences architecture; optional emails off by default; local implementation/delivery gates. |
 | [design/EMAIL_NOTIFICATIONS_IMPLEMENTATION_PLAN.md](engineering/design/EMAIL_NOTIFICATIONS_IMPLEMENTATION_PLAN.md) | Notification backend, money source, staff-before-app controls and verification tasks with file ownership. |
 | [Notification admin evidence](engineering/evidence/NOTIFY-01-admin.md) | Actual local staff/source review and checks, with SQL/provider and payment-authority limits. |
+| [Gift-language string table](engineering/evidence/GIFT_LANGUAGE_STRINGS.md) | Before/after production strings, updated tests and parsed residual classifications. |
+| [Gift-language residual grep](engineering/evidence/GIFT_LANGUAGE_RESIDUALS.md) | Every retained donat* source line, including identifiers and explicit holds. |
+| [Tip-model baseline](engineering/evidence/TIP_MODEL_BASELINE.md) | Pre-change10% calculation inventory, flag contracts and processing/settlement limits. |
+| [Gift-language report](engineering/evidence/GIFT_LANGUAGE_REPORT.md) | Actual copy changes, residual vocabulary, frozen/dynamic exceptions and release dependencies. |
 | [Notification app evidence](engineering/evidence/NOTIFY-01-app.md) | Profile/Activity implementation, final regression and local readiness with delivery limits. |
 | [evidence/FAMILY_FUN_BUILD_DECISIONS.md](engineering/evidence/FAMILY_FUN_BUILD_DECISIONS.md) | Concrete Fan Zone and quiz build decisions, reasons and cost of changing them. |
 | [evidence/QUIZ-01-app.md](engineering/evidence/QUIZ-01-app.md) | Actual local quiz participant/integration checks and remaining final gates. |
@@ -101,10 +105,11 @@ Also: [`supabase/migrations/README.md`](../supabase/migrations/README.md) for ho
 | --- | --- |
 | [ROADMAP.md](product/ROADMAP.md) | North Star, release waves, phases and mission track. |
 | [STORY.md](product/STORY.md) | The mission in plain words and the guardrails that keep athletes eligible. |
-| [VOICE.md](product/VOICE.md) | Money wording rules (Donate / donation). Enforced by `pnpm copy:check`. |
+| [VOICE.md](product/VOICE.md) | Money wording rules (Gift / Donation / Tip by recipient). Enforced by `pnpm copy:check`. |
 | [USER_GROWTH_PLANS.md](product/USER_GROWTH_PLANS.md) | Growth and mitigation plans for guests, fans, uploaders/filmers, donors, athletes, guardians and partner users; proposed 30/60/90-day sequence. |
 | [FAMILY_FUN_PLAYBOOK.md](product/FAMILY_FUN_PLAYBOOK.md) | Brainstorming draft: fan-video Game/Week/Month/Year recognition, family activities, badges, voluntary service, school spirit and separate money paths. |
 | [PUBLIC.md](product/PUBLIC.md) | Public one-pager. |
+| [APP_STORE_GIFT_DRAFT.md](product/APP_STORE_GIFT_DRAFT.md) | Current gift listing/review draft and held tip/processing copy; owner submits after counsel/build review. |
 | [STORE_LISTING.md](product/STORE_LISTING.md) | **Draft** App Store / Google Play copy using the approved message. Not submitted; LEGAL review required. |
 | [PRODUCT_FACTS.md](product/PRODUCT_FACTS.md) | Prices, splits, tiers. **Generated** by `pnpm docs:sync`; do not hand-edit. |
 
@@ -112,6 +117,7 @@ Also: [`supabase/migrations/README.md`](../supabase/migrations/README.md) for ho
 
 | Document | What it answers |
 | --- | --- |
+| [Gift / Donation / Tip Terms draft](legal/GIFT_DONATION_TIP_TERMS_DRAFT.md) | Separate proposed terms for counsel; not lawyer-final. |
 | [LEGAL_BRIEFING.md](legal/LEGAL_BRIEFING.md) | Every legal and money-copy risk as a lettered row. Owned by Legal. |
 | [VERIFICATION_AND_SAFE_GROWTH_REVIEW.md](legal/VERIFICATION_AND_SAFE_GROWTH_REVIEW.md) | Joint Legal/Growth/Dev source review, guardian/Stripe/school checks, consent gaps and proposed owner decisions. |
 | [IP protection plan](legal/IP_PROTECTION_PLAN.md) | Confidential copyright/patent/trademark/secret preparation, upkeep and presentation checklist. |

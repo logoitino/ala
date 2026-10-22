@@ -1,8 +1,8 @@
 /**
  * Pure helpers for the Revenue desk (`app/(protected)/money/page.tsx`, owned by COMMERCE).
- * Display words for ledger codes, UTC day grids, and the donation split read from the ledger.
+ * Display words for ledger codes, UTC day grids, and the gift split read from the ledger.
  * No fetching and no new measures: every number here is a field from `lib/reports.ts` or a
- * ratio of two of them. Money words follow docs/product/VOICE.md (Donate / donation; "tip" only
+ * ratio of two of them. Money words follow docs/product/VOICE.md (Give / gift; "tip" only
  * for the tip for Tapua'i). A value that is missing comes back as `null`, never a bare "—": the
  * table renders the dash aria-hidden with sr-only words (W3-COMMERCE #3).
  */
@@ -45,7 +45,7 @@ export function ledgerDetail(source: string, label: string): string {
   return cleaned || streamName(source, label);
 }
 
-/** Where a donation started, by `tips.origin`. Same keys as `maloOriginTitle`, in VOICE words. */
+/** Where a gift started, by `tips.origin`. Same keys as `maloOriginTitle`, in VOICE words. */
 export function originName(origin: string): string {
   if (origin === 'highlight') return 'Highlight';
   if (origin === 'qr') return 'QR link';
@@ -54,12 +54,12 @@ export function originName(origin: string): string {
   return 'Profile';
 }
 
-/** How a donation arrived, by `tips.entry`. */
+/** How a gift arrived, by `tips.entry`. */
 export function entryName(entry: string): string {
-  return entry === 'qr_link' ? 'QR donation link' : 'In the app';
+  return entry === 'qr_link' ? 'QR gift link' : 'In the app';
 }
 
-/** Origin plus entry plus the stored source label, for the donation table. */
+/** Origin plus entry plus the stored source label, for the gift table. */
 export function donationChannel(origin: string, entry: string, sourceLabel: string): string {
   const via = entry === 'qr_link' && origin !== 'qr' ? ' via QR' : '';
   const detail = sourceLabel.trim() ? ` · ${sourceLabel.trim()}` : '';
@@ -84,7 +84,7 @@ export function utcStamp(iso: string): string | null {
 
 /**
  * @purpose Fill the sparse `by_day` rows into every UTC day of the window. `get_admin_malo_breakdown`
- *   only returns days that had donations, and it reads every `tips` row since now − 14 days, so a day
+ *   only returns days that had gifts, and it reads every `tips` row since now − 14 days, so a day
  *   without a row is a real $0. The window can touch 15 calendar days (the first is partial); that
  *   earliest day is kept only when it has a row.
  * @param byDay Parsed `by_day` totals.
@@ -100,7 +100,7 @@ export function fillDays(byDay: MaloDay[], now: Date = new Date()): MaloDay[] {
   return [...extra, ...grid].sort().map((day) => ({ day, cents: totals.get(day) ?? 0 }));
 }
 
-/** The donation stream's split as recorded in the ledger (never the policy constant). */
+/** The gift stream's split as recorded in the ledger (never the policy constant). */
 export type DonationSplit = {
   gross: number;
   family: number;

@@ -1,4 +1,4 @@
-/** Donation declarations survive the shared Edge/Metro boundary; they do not confer server receipt authority. */
+/** Gift declarations survive the shared Edge/Metro boundary; they do not confer server receipt authority. */
 import { createPaymentIntent } from '@/lib/stripeIntent';
 
 const mockInvoke = jest.fn();
@@ -26,7 +26,7 @@ describe('createPaymentIntent', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('sends the optional tip to Tapua\'i only when the donor picked one', async () => {
+  it('sends the optional tip to Tapua\'i only when the gift sender picked one', async () => {
     mockInvoke.mockResolvedValue({ data: { clientSecret: 'pi_secret' }, error: null });
     await createPaymentIntent(1100, 'player-1', 100);
     expect(mockInvoke).toHaveBeenCalledWith('create-payment-intent', expect.objectContaining({
@@ -52,7 +52,7 @@ describe('createPaymentIntent', () => {
     await expect(createPaymentIntent(700)).resolves.toBe('pi_metro');
     expect(fetchMock).toHaveBeenCalledWith('/api/create-payment-intent', expect.objectContaining({ method: 'POST' }));
   });
-  it('preserves donation gift and fee choice across the Metro fallback', async () => {
+  it('preserves gift gift and fee choice across the Metro fallback', async () => {
     mockInvoke.mockResolvedValue({ data: null, error: { message: 'Not Found', context: { status: 404 } } });
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ clientSecret: 'pi_metro' }) });
     const donation = { giftCents: 500, coverFees: true, platformTipPercent: 10 };

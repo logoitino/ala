@@ -65,7 +65,7 @@ export function FanZoneScreen({ campaignId = null, initialSection }: {
     return <ScreenShell edges={['top', 'left', 'right']} style={fanStyles.docked}><View style={fanStyles.phone}><ScrollView style={fanStyles.scroll} contentContainerStyle={fanStyles.page}>
  <View style={fanStyles.stack}><FanButton label="Back" onPress={back}/><FanButton label="Account Home" onPress={home}/></View>
  <View style={fanStyles.hero}><Text style={fanStyles.heroKicker}>Fan Zone</Text><Text accessibilityRole="header" style={fanStyles.alias}>Fan Zone</Text><Text style={fanStyles.heroCopy}>Optional family fun · Approved-account testing only</Text></View>
- <Text style={fanStyles.copy}>Free ballots choose recognition. Donations, watching, service and Aura never add votes. No entry fee or cash award.</Text>
+ <Text style={fanStyles.copy}>Free ballots choose recognition. Gifts, watching, service and Aura never add votes. No entry fee or cash award.</Text>
  {state.loading && !s ? <Text>Checking Fan Zone availability…</Text> : null}{state.error ? <Text accessibilityRole="alert" style={fanStyles.notice}>{state.error}</Text> : null}{state.notice ? <Text style={fanStyles.notice}>{state.notice}</Text> : null}
  <FanButton label="Refresh Fan Zone" disabled={!!state.busy} onPress={() => { close(); void state.refresh(); }}/>
  {state.pendingBallot ? <FanPanel title="Pending ballot"><Text>Ballot confirmation is pending. Keep the original choice until it is resolved.</Text><FanButton label="Retry original ballot" disabled={busy} onPress={() => void state.vote(state.pendingBallot!.entryId)}/><Text>A receipt describes the original request; a fresh server read must confirm the current ballot.</Text></FanPanel> : null}

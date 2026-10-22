@@ -505,7 +505,7 @@ function telemetryTitle(eventType: string): string {
   if (eventType === 'video_stall') return 'Video stall';
   if (eventType === 'socket_reconnect') return 'Realtime reconnect';
   if (eventType === 'video_first_frame') return 'Time to first frame';
-  if (eventType === 'checkout_latency') return 'Donation checkout';
+  if (eventType === 'checkout_latency') return 'Gift checkout';
   if (eventType === 'tab_dwell') return 'Tab time';
   if (eventType === 'surface_scroll') return 'Scroll depth';
   if (eventType === 'feature_tap') return 'Feature tap';

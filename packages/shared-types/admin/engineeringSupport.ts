@@ -9,7 +9,7 @@ export const SUPPORT_FEATURES = {
   activity: { label: 'Activity', sensitivity: 'general' }, local: { label: 'Local', sensitivity: 'general' },
   spotlight: { label: 'Spotlight', sensitivity: 'general' }, drip: { label: 'Drip', sensitivity: 'general' },
   profile: { label: 'Profile', sensitivity: 'general' }, auth: { label: 'Sign in', sensitivity: 'security' },
-  donation: { label: 'Donate', sensitivity: 'finance' }, payouts: { label: 'Payouts', sensitivity: 'finance' },
+  donation: { label: 'Give', sensitivity: 'finance' }, payouts: { label: 'Payouts', sensitivity: 'finance' },
   operator: { label: 'Operator', sensitivity: 'general' }, upload: { label: 'Upload', sensitivity: 'general' },
   admin: { label: 'Admin', sensitivity: 'security' }, support: { label: 'Engineering Support', sensitivity: 'security' },
 } as const;

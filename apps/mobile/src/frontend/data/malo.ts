@@ -1,3 +1,4 @@
+/** Athlete-gift copy preserves legacy identifiers and the actual split; release wording follows VOICE. */
 import { MALO_ATHLETE_SHARE_BPS, MALO_PLATFORM_CUT_BPS } from '@/data/finance';
 import { AURA_PER_DOLLAR, displayValue, type Player } from '@/data/players';
 import type { HighlightClip } from '@/data/highlights';
@@ -10,11 +11,11 @@ import type { HighlightClip } from '@/data/highlights';
  */
 
 /** Button label for giving money. */
-export const DONATE_LABEL = 'Donate';
+export const DONATE_LABEL = 'Give';
 
 /** One-line mission, shown on first open and on the donate sheet. */
 export const DONATION_MISSION =
-  "Tapua'i helps families cover their young athlete's sports costs — fees, gear, travel — with donations from their community.";
+  "Tapua'i helps families cover their young athlete's sports costs — fees, gear, travel — with personal gifts from their community.";
 
 /**
  * Brand message (owner-approved 2026-10-07, BRAND-01). Shown on the welcome overlay, at the top of the
@@ -22,7 +23,7 @@ export const DONATION_MISSION =
  * copy. Plain text, never a heading. "Elevate" must never promise recruiting, scholarships or exposure,
  * and Donate stays the money verb (docs/product/VOICE.md; LEGAL_BRIEFING row W, counsel open).
  */
-export const TAGLINE_HEADLINE = 'Donate. Elevate. Celebrate.';
+export const TAGLINE_HEADLINE = 'Give. Elevate. Celebrate.';
 export const TAGLINE_LINE = 'Support their journey. Elevate their opportunities. Celebrate their story.';
 
 /** Plain answer to "where does my donation go?" (LEGAL row Q — counsel to confirm wording). */
@@ -124,11 +125,11 @@ export function maloAthleteCta(athleteName?: string | null): string {
  */
 export function maloAthleteSheetSubtitle(athleteName?: string | null): string {
   const name = displayValue(athleteName, 'this athlete');
-  return `Your donation goes to ${name}'s family account — not whoever uploaded the clip. You and ${name} each earn ${AURA_PER_DOLLAR} Aura Points per $1.`;
+  return `Your gift goes to ${name}'s family account — not whoever uploaded the clip. You and ${name} each earn ${AURA_PER_DOLLAR} Aura Points per $1.`;
 }
 
 export const MALO_PENDING_TAG_TOAST =
-  'This tag is waiting for the athlete to approve it. Donations open once they do, and go to the athlete in the clip, not the uploader.';
+  'This tag is waiting for the athlete to approve it. Gifts open once they do, and go to the athlete in the clip, not the uploader.';
 
 export const MALO_UNTAGGED_TOAST =
-  'Tag the athlete in this clip before donating. Tap the name when a roster row is linked.';
+  'Tag the athlete in this clip before giving. Tap the name when a roster row is linked.';

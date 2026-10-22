@@ -53,7 +53,7 @@ export default async function SoftWallAuthPage() {
   return (
     <PortalShell active="/auth">
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Donate Soft Wall" value={oversight.maloLive ? 'Armed' : 'Paused'} hint="Donate buttons, Features desk" tone={oversight.maloLive ? 'ok' : 'warn'} />
+        <StatCard label="Give Soft Wall" value={oversight.maloLive ? 'Armed' : 'Paused'} hint="Give buttons, Features desk" tone={oversight.maloLive ? 'ok' : 'warn'} />
         <StatCard label="Crew Soft Wall" value={oversight.crewLive ? 'Armed' : 'Paused'} hint="Crew buttons, Features desk" tone={oversight.crewLive ? 'ok' : 'warn'} />
         <StatCard
           label="Gear goal Soft Wall"
@@ -65,8 +65,8 @@ export default async function SoftWallAuthPage() {
 
       <Panel title="Zero lost context" kicker="Product lock">
         <p className="text-sm leading-6 text-[var(--ink-soft)]">
-          After a guest signs in with Apple, Google or a Magic Link, the app reopens what they were doing: the donate
-          sheet, the Crew toggle, or the gear-goal donation. Each gate is counted on the Coverage desk in Expo.
+          After a guest signs in with Apple, Google or a Magic Link, the app reopens what they were doing: the give
+          sheet, the Crew toggle, or the gear-goal gift. Each gate is counted on the Coverage desk in Expo.
         </p>
         <Keys title="Zero lost context">
           <Key label="Code" value="SoftWallModal · SoftWallContext" />

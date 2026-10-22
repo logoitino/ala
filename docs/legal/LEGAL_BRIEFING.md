@@ -1,3 +1,10 @@
+<!-- Dated framing notice preserves prior decisions while pointing to current transaction language. -->
+> **2026-10-22 wording/policy update:** individual athlete support is a **personal gift**;
+> program/club giving is a **donation**; optional platform support is a **tip**. Older donation
+> and 10%-share framing below is superseded history, not current release copy. Source-generated
+> facts still describe the checked-in test rail until the separate tip model changes it.
+> Current rules: [VOICE](../product/VOICE.md); counsel drafts: [Terms](GIFT_DONATION_TIP_TERMS_DRAFT.md), [store/review](../product/APP_STORE_GIFT_DRAFT.md).
+
 # Tapua'i — Legal and liability briefing
 
 ## Current local timed trivia review — QUIZ-02
@@ -41,9 +48,9 @@ Prices, PIN, Connect identity, RLS, and the Mālo disclaimer are generated from 
 <!-- product-facts:start -->
 | Fact | Where it lives |
 | --- | --- |
-| Donation amounts | $5 / $10 / $25 + custom (`TIP_AMOUNTS`) |
+| Gift amounts | $5 / $10 / $25 + custom (`TIP_AMOUNTS`) |
 | In-app claim | 90% of your donation goes to the athlete's family account. Tapua'i keeps 10% to run the app, including card processing. Nothing goes to the person who uploaded the clip. |
-| Donation split | 10% platform / 90% athlete's family account (`MALO_PLATFORM_CUT_BPS`), disclosed on the donate sheet; the optional tip for Tapua'i is separate and 100% platform (rows L, R) |
+| Current test-rail gift split | 10% platform / 90% athlete's family account (`MALO_PLATFORM_CUT_BPS`), disclosed on the current checkout; the optional tip for Tapua'i is separate and 100% platform (rows L, R) |
 | Exclusive | $4.99; +100 Aura (`EXCLUSIVE_MONTHLY_DOLLARS`) |
 | Boosters | Silver $50 / Gold $150 / Platinum $500 (`SPONSOR_TIERS`) |
 | Stripe Express | US individual (`createStripeAccount.ts`) |

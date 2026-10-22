@@ -1,5 +1,5 @@
 /**
- * Full-screen thank-you moment after a donation succeeds (confetti + card).
+ * Full-screen thank-you moment after a gift succeeds (confetti + card).
  * Driven by `CelebrationContext`: any screen sets a payload, this component, mounted once at the app root,
  * shows it and clears it on dismiss.
  */
@@ -88,11 +88,11 @@ export function BackedCelebration() {
 
         <Animated.View style={[styles.card, frame.card, cardEntranceStyle]}>
           <CardShine loopMs={2400} width={70} tint="rgba(0,230,118,0.35)" />
-          <Text style={styles.kicker}>MĀLO! DONATION SENT 🚀</Text>
+          <Text style={styles.kicker}>MĀLO! GIFT SENT 🚀</Text>
           <Text style={styles.headline}>
-            YOU DONATED TO {payload?.playerName.toUpperCase()}! 🏈
+            YOU SENT A GIFT TO {payload?.playerName.toUpperCase()}! 🏈
           </Text>
-          <Text style={styles.backers}>{payload?.backerCount ?? 0} Donors Tonight</Text>
+          <Text style={styles.backers}>{payload?.backerCount ?? 0} Supporters Tonight</Text>
           {payload?.auraPointsEarned ? (
             <Text style={styles.auraEarned}>+{payload.auraPointsEarned} Aura Points Earned! ⚡</Text>
           ) : null}

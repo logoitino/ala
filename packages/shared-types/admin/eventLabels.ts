@@ -4,7 +4,7 @@
  * `get_admin_reports.issues` joins as "event · surface" ("upload.retry · upload"), plus open bug
  * reports as "<surface> bug". A raw dotted key is never shown to a person: a key not mapped here is
  * spelled out in sentence case ("vault.subscribe.sheet" becomes "Vault subscribe sheet").
- * Money words follow docs/product/VOICE.md: `malo` and `tip` keys read as "Donate" / "donation",
+ * Money words follow docs/product/VOICE.md: `malo` and `tip` keys read as "Give" / "gift",
  * never "Mālo" or "tip". Pure functions, no React, so `node --test` can check them.
  */
 
@@ -13,10 +13,10 @@
  * mock keys seen in report reads. Hype buttons sit on a Highlight, so they say so.
  */
 const FEATURE_LABELS: Record<string, string> = {
-  malo: 'Donate',
-  'malo.blocked': 'Donate (not available)',
-  'reel.malo.open': 'Donate on a Highlight',
-  'peek.malo': 'Donate from the athlete card',
+  malo: 'Give',
+  'malo.blocked': 'Give (not available)',
+  'reel.malo.open': 'Give on a Highlight',
+  'peek.malo': 'Give from the athlete card',
   'peek.open': 'Open the athlete card',
   'peek.profile': 'Full profile from the athlete card',
   'peek.close': 'Close the athlete card',
@@ -34,10 +34,10 @@ const FEATURE_LABELS: Record<string, string> = {
   'reel.save': 'Save a Highlight',
   share: 'Share',
   more: 'More',
-  share_qr: 'QR donation link',
-  'share_qr.copy': 'Copy the QR donation link',
-  'share_qr.save': 'Save the QR donation link',
-  'share_qr.native': 'Share the QR donation link',
+  share_qr: 'QR gift link',
+  'share_qr.copy': 'Copy the QR gift link',
+  'share_qr.save': 'Save the QR gift link',
+  'share_qr.native': 'Share the QR gift link',
   upload: 'Upload',
   home_search: 'Search',
   home_search_clip: 'Open a clip from search',
@@ -47,12 +47,12 @@ const FEATURE_LABELS: Record<string, string> = {
   leaderboards: 'Leaderboards',
   cheer_poll: 'Cheer poll vote',
   'poll.vote': 'Cheer poll vote',
-  rally_donate: 'Donate to a Rally',
+  rally_donate: 'Give to a Rally',
   rally_create: 'Start a Rally',
   wishlist_gift: 'Gear goal',
-  wishlist_chip_in: 'Donate to a gear goal',
+  wishlist_chip_in: 'Give to a gear goal',
   vault_unlock: 'Vault unlock',
-  'vault.subscribe.sheet': 'Open Vault subscribe',
+  'vault.subscribe.sheet': 'Open Vault purchase',
   drip_item: 'Drip item',
   drip_buy: 'Drip buy',
   live_banner: 'Live game banner',
@@ -98,12 +98,12 @@ const FEATURE_LABELS: Record<string, string> = {
 const ISSUE_LABELS: Record<string, string> = {
   upload: 'Upload failed',
   'upload.retry': 'Upload retry',
-  checkout: 'Donation checkout error',
-  'malo.sheet.dismiss_error': 'Donate sheet closed with an error',
+  checkout: 'Gift checkout error',
+  'malo.sheet.dismiss_error': 'Give sheet closed with an error',
   report: 'Report or hide a Highlight',
   suggestion_bug: 'Bug report sent',
-  wishlist_gift: 'Gear goal donation failed',
-  received_malo_unavailable: 'Received donations did not load',
+  wishlist_gift: 'Gear goal gift failed',
+  received_malo_unavailable: 'Received gifts did not load',
   'video.stall_overlay': 'Video stalled',
   'poll.vote_timeout': 'Cheer poll vote timed out',
   'trivia.start_failed': 'Trivia Start failed',
@@ -142,9 +142,9 @@ const KEY_WORDS: Record<string, string> = {
   vault: 'Vault',
   drip: 'Drip',
   local: 'Local',
-  malo: 'donate',
-  tip: 'donation',
-  tips: 'donations',
+  malo: 'give',
+  tip: 'gift',
+  tips: 'gifts',
   qr: 'QR',
   ui: 'UI',
 };
@@ -203,7 +203,7 @@ export function surfaceLabel(surface: string): string {
  * @purpose A people word for one `get_admin_reports.issues` row, so no page prints
  *   "upload.retry · upload".
  * @param key "event · surface" for a UI issue, or "<surface> bug" for open bug reports.
- * @returns "Upload retry (upload)", "Donate sheet closed with an error (Home)",
+ * @returns "Upload retry (upload)", "Give sheet closed with an error (Home)",
  *   "Open bug reports (Profile)", or the parts spelled out in the same shape.
  */
 export function issueLabel(key: string): string {

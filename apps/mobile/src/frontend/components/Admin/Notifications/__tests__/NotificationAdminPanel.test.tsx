@@ -54,10 +54,10 @@ it('missing service does not show working controls or fake metrics', async () =>
   expect(screen.queryByLabelText('Save notification controls')).toBeNull();
 });
 
-it('unimplemented donation source is visibly unavailable', async () => {
+it('unimplemented gift source is visibly unavailable', async () => {
   await render(<NotificationAdminPanel />);
-  await waitFor(() => expect(screen.getByText('Donations you make')).toBeTruthy());
-  expect(screen.getByLabelText('Enable Donations you make')).toBeDisabled();
+  await waitFor(() => expect(screen.getByText('Gifts you make')).toBeTruthy());
+  expect(screen.getByLabelText('Enable Gifts you make')).toBeDisabled();
 });
 
 it('preview uses synthetic copy and sends nothing', async () => {

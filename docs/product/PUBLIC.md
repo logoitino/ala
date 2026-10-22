@@ -1,3 +1,10 @@
+<!-- Dated framing notice preserves prior decisions while pointing to current transaction language. -->
+> **2026-10-22 wording/policy update:** individual athlete support is a **personal gift**;
+> program/club giving is a **donation**; optional platform support is a **tip**. Older donation
+> and 10%-share framing below is superseded history, not current release copy. Source-generated
+> facts still describe the checked-in test rail until the separate tip model changes it.
+> Current rules: [VOICE](VOICE.md); counsel drafts: [Terms](../legal/GIFT_DONATION_TIP_TERMS_DRAFT.md), [store/review](APP_STORE_GIFT_DRAFT.md).
+
 # Tapua'i — Public one-pager
 
 **Donate. Elevate. Celebrate.** *Support their journey. Elevate their opportunities. Celebrate their story.*
@@ -21,7 +28,7 @@ This page is for parents, athletes, boosters, and schools. It is product copy, n
 The bar at the bottom is Reel · Local · Upload · Drip · Profile.
 
 <!-- product-facts:start -->
-**Live numbers (from code):** Donations $5 / $10 / $25 or custom. Exclusive $4.99. Boosters Silver $50 / Gold $150 / Platinum $500. Aura 10 points per donated dollar, 7 tiers (Slate Silver → Celestial Prism). Double-tap 1 Aura (Serve Like Me ×2). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. Athlete roster: Football / Basketball / Rugby / Volleyball / Soccer / Baseball / Softball / Wrestling / Track & Field / Lacrosse / Ice Hockey / Tennis, class '26 / '27 / '28, High School or NCAA. Profile tabs: Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar: Home / Spotlight. Stripe is in test mode. The operator PIN is a prototype.
+**Live numbers (from code):** Gifts $5 / $10 / $25 or custom. Exclusive $4.99. Boosters Silver $50 / Gold $150 / Platinum $500. Aura 10 points per gifted dollar, 7 tiers (Slate Silver → Celestial Prism). Double-tap 1 Aura (Serve Like Me ×2). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. Athlete roster: Football / Basketball / Rugby / Volleyball / Soccer / Baseball / Softball / Wrestling / Track & Field / Lacrosse / Ice Hockey / Tennis, class '26 / '27 / '28, High School or NCAA. Profile tabs: Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar: Home / Spotlight. Stripe is in test mode. The operator PIN is a prototype.
 <!-- product-facts:end -->
 
 ---

@@ -72,7 +72,7 @@ describe('source-to-ledger reconciliation', () => {
     expect(findings.filter((f) => f.severity !== 'info')).toEqual([]);
   });
 
-  it('catches a donation missing from the log, a changed amount and an orphan row', () => {
+  it('catches a gift missing from the log, a changed amount and an orphan row', () => {
     const revenue = fullLog().filter((row) => !(row.source === 'malo' && row.source_id === 't2')).map((row) => (row.source === 'merch' ? { ...row, gross_cents: 4000 } : row));
     revenue.push(log('tip', 'gone', 50));
     const { rows, findings } = reconcileSources(revenue, sources());
@@ -122,7 +122,7 @@ describe('transactions explorer', () => {
 
   it('summarizes each entry with its channel and both sides of the split', () => {
     const donation = rows.find((row) => row.entryId === 'rev:malo:t1')!;
-    expect(donation).toEqual(expect.objectContaining({ channel: 'Highlight via QR', amount: 1000, tapuai: 100, heldForOthers: 900, streamTitle: 'Donation' }));
+    expect(donation).toEqual(expect.objectContaining({ channel: 'Highlight via QR', amount: 1000, tapuai: 100, heldForOthers: 900, streamTitle: 'Gift' }));
     expect(rows.find((row) => row.entryId === 'rev:malo:t2')!.channel).toBe('Rally · Cleats');
     expect(rows.find((row) => row.origin === 'disbursement')!.heldForOthers).toBe(-500);
   });

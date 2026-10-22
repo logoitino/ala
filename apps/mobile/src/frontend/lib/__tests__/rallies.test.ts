@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import {
   parseRally,
   rallyDaysLeft,
@@ -25,10 +26,10 @@ describe('rallyProgress', () => {
     expect(rallyProgress({ raisedCents: 14000, targetCents: 25000, donationCount: 12 })).toEqual({
       fraction: 0.56,
       amountLine: '$140 of $250',
-      donorsLine: '12 donations',
+      donorsLine: '12 gifts',
     });
     expect(rallyProgress({ raisedCents: 30000, targetCents: 25000, donationCount: 1 }).fraction).toBe(1);
-    expect(rallyProgress({ raisedCents: 0, targetCents: 25000, donationCount: 0 }).donorsLine).toBe('Be the first to donate');
+    expect(rallyProgress({ raisedCents: 0, targetCents: 25000, donationCount: 0 }).donorsLine).toBe('Be the first to give');
     expect(rallyProgress({ raisedCents: 550, targetCents: 1000, donationCount: 1 }).amountLine).toBe('$5.50 of $10');
   });
 });

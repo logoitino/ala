@@ -56,7 +56,7 @@ export type HomeKpi = {
   tone: 'neutral' | 'ok' | 'warn' | 'danger';
   /** The key was not in this read. The tile shows "—" and "Not in this read". */
   missing: boolean;
-  /** Only donations and clips have a prior week. Every other tile is null. */
+  /** Only gifts and clips have a prior week. Every other tile is null. */
   delta: { current: number; previous: number } | null;
   goodDirection: 'up' | 'down' | 'none';
 };
@@ -149,7 +149,7 @@ export function weekChange(current: number, previous: number): WeekChange {
 
 /**
  * @purpose One sentence for a week change, using the caller's formatter for the raw numbers.
- * @param label What moved (donations, clips).
+ * @param label What moved (gifts, clips).
  * @param change Result of `weekChange`.
  * @param format Renders a count or a dollar amount.
  * @returns A sentence a teammate can read without a chart.
@@ -207,8 +207,8 @@ export const UNMEASURED = [
     why: 'There is no day-1 or day-7 return. A retention curve is not in this read.',
   },
   {
-    name: 'Donation conversion',
-    why: 'The donation count is donations, not the share of people who watched a Highlight and then donated.',
+    name: 'Gift conversion',
+    why: 'The gift count is gifts, not the share of people who watched a Highlight and then gave.',
   },
   {
     name: 'Cost to bring a family in',
@@ -226,7 +226,7 @@ function priorWeek(current: number | null, previous: number | null): { current: 
 
 /**
  * @purpose The eight numbers on the home dashboard, each labeled as what it actually counts.
- *   Only donations and clips carry a prior-week delta. A missing key is `missing`, never 0.
+ *   Only gifts and clips carry a prior-week delta. A missing key is `missing`, never 0.
  * @param input Counts already returned by reports and revenue.
  * @param formatUsd Cents as dollars.
  * @returns Tiles for the home grid, in display order.
@@ -241,9 +241,9 @@ export function homeKpis(input: DashboardInput, formatUsd: (cents: number) => st
   return [
     {
       id: 'donations',
-      label: 'Donations · 7d',
+      label: 'Gifts · 7d',
       value: isMeasured(input.donations7dCents) ? formatUsd(input.donations7dCents) : '—',
-      hint: donationsDelta ? 'Recorded donations, last 7 days' : 'The prior week is not in this read',
+      hint: donationsDelta ? 'Recorded gifts, last 7 days' : 'The prior week is not in this read',
       tone: 'neutral',
       missing: !isMeasured(input.donations7dCents),
       delta: donationsDelta,
@@ -251,13 +251,13 @@ export function homeKpis(input: DashboardInput, formatUsd: (cents: number) => st
     },
     {
       id: 'avgDonation',
-      label: 'Average donation · 7d',
+      label: 'Average gift · 7d',
       value: isMeasured(input.avgDonation7dCents) ? formatUsd(input.avgDonation7dCents) : '—',
       hint: !isMeasured(input.donationCount7d)
-        ? 'Donation count not in this read'
+        ? 'Gift count not in this read'
         : input.donationCount7d > 0
-          ? `Across ${formatCount(input.donationCount7d)} ${input.donationCount7d === 1 ? 'donation' : 'donations'}`
-          : 'No donations in this week',
+          ? `Across ${formatCount(input.donationCount7d)} ${input.donationCount7d === 1 ? 'gift' : 'gifts'}`
+          : 'No gifts in this week',
       tone: 'neutral',
       missing: !isMeasured(input.avgDonation7dCents),
       delta: null,
@@ -325,7 +325,7 @@ export function homeKpis(input: DashboardInput, formatUsd: (cents: number) => st
         ? 'Ledger not in this read'
         : platform == null
           ? 'No gross in the ledger yet'
-          : `The ledger records ${formatUsd(input.companyNetCents as number)} for Tapua'i out of ${formatUsd(input.grossCents as number)} gross across every stream. Donation policy: 90% to the family account, 10% to Tapua'i.`,
+          : `The ledger records ${formatUsd(input.companyNetCents as number)} for Tapua'i out of ${formatUsd(input.grossCents as number)} gross across every stream. Current test-mode model: 90% to the family account, 10% to Tapua'i.`,
       tone: 'neutral',
       missing: !ledger,
       delta: null,
@@ -367,8 +367,8 @@ export function teamTrends(
   }
   return [
     donations
-      ? weekSentence('Donations', weekChange(donations.current, donations.previous), formatUsd)
-      : 'Donations: this week or the prior week is not in this read.',
+      ? weekSentence('Gifts', weekChange(donations.current, donations.previous), formatUsd)
+      : 'Gifts: this week or the prior week is not in this read.',
     clips
       ? weekSentence('Clips uploaded', weekChange(clips.current, clips.previous), formatCount)
       : 'Clips uploaded: this week or the prior week is not in this read.',

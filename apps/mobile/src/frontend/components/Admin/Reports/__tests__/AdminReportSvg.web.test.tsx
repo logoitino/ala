@@ -22,7 +22,7 @@ it('keeps decorative figure and spark SVGs hidden without passing accessible=fal
   const errors = jest.spyOn(console, 'error').mockImplementation(() => undefined);
   try {
     const chart: AnalyticsChart = { ...base, kind: 'columns', points: [{ label: 'Mon', value: 1 }], windowLabel: 'Last 7 days' };
-    const markup = renderToStaticMarkup(<><AdminReportFigure chart={chart} /><AdminReportSpark item={{ label: 'Donations', value: '1', spark: { points: [{ label: 'Mon', value: 1 }], format: 'count', accent: 'jade' } }} /></>);
+    const markup = renderToStaticMarkup(<><AdminReportFigure chart={chart} /><AdminReportSpark item={{ label: 'Gifts', value: '1', spark: { points: [{ label: 'Mon', value: 1 }], format: 'count', accent: 'jade' } }} /></>);
     expect(markup).toContain('aria-hidden="true"');
     expect(markup).toContain('<svg');
     expect(markup).not.toContain(' accessible=');
@@ -44,7 +44,7 @@ it('keeps full large numeric values in wrapping web text instead of ellipsis or 
   data.reports.money = { malo_cents_7d: 318200, avg_tip_cents_7d: 123456789 };
   data.reports.engagement = { clips_7d: 123456789 }; data.reports.usage = { sessions_24h: 123456789 };
   const markup = renderToStaticMarkup(<><AdminReportHomeHero data={data} /><AdminReportKpi item={{ label: 'Gross volume', value: '$9,999,999.99' }} /></>);
-  for (const label of ['Donations this week: $3,182.00', 'Average donation · 7d: $1,234,567.89', 'Clips uploaded · 7d: 123,456,789', 'Tab opens · 24h: 123,456,789', 'Gross volume: $9,999,999.99']) {
+  for (const label of ['Gifts this week: $3,182.00', 'Average gift · 7d: $1,234,567.89', 'Clips uploaded · 7d: 123,456,789', 'Tab opens · 24h: 123,456,789', 'Gross volume: $9,999,999.99']) {
     const tag = valueTag(markup, label);
     const styles = appliedCss(tag) + tag;
     expect(styles).not.toContain('text-overflow:ellipsis'); expect(styles).not.toContain('overflow:hidden'); expect(styles).not.toContain('-webkit-line-clamp');

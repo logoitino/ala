@@ -23,7 +23,7 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
       <Text accessibilityRole="header" style={styles.title}>Notifications</Text>
       {page ? <Text style={styles.unread}>{page.unreadCount} unread{archived ? ' in inbox' : ''}</Text> : null}
     </View>
-    <MoreText style={styles.hint} lines={1}>{'New connected account updates appear here. Your donation history and invitations stay in their own sections.'}</MoreText>
+    <MoreText style={styles.hint} lines={1}>{'New connected account updates appear here. Your gift history and invitations stay in their own sections.'}</MoreText>
     <View style={styles.controls}>
       <Pressable accessibilityRole="tab" accessibilityLabel="Current notifications" accessibilityState={{ selected: !archived, disabled: locked }}
         disabled={locked} onPress={() => void state.showArchived(false)} style={[styles.action, !archived && styles.selected]}>

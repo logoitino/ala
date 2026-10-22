@@ -1,3 +1,11 @@
+<!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-10-22 — Gift-language copy phase
+
+Individual athlete/family support uses Gift/Give; program donations and optional platform tips
+stay distinct. Athlete page and personal-gift receipts say gifts are not tax-deductible.
+Checkout waits for the separate no-cut tip model. Older donation/10% entries below are
+superseded history. Counsel drafts and exceptions: [report](docs/engineering/evidence/GIFT_LANGUAGE_REPORT.md).
+
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 

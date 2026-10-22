@@ -1,5 +1,5 @@
 /** Main Expo admin reports retain twelve distinct destinations, complete analytics/catalog content,
- * donation privacy and read-error semantics. Fixtures never query a hosted database. */
+ * gift privacy and read-error semantics. Fixtures never query a hosted database. */
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
 const mockRefresh = jest.fn(async () => undefined);
@@ -7,7 +7,7 @@ const mockRouter = { push: jest.fn() };
 const missing = { configured: true, error: null };
 const mockSnapshot = {
   reports: { ...missing, generatedAt: null, engagement: {}, money: { malo_cents_7d: 0 }, content: {}, audience: {}, live: {}, reliability: {}, usage: {},
-    tabs: [], features: [], issues: [], scroll: [], leaders: { malo: [{ label: 'Private athlete donation total', value: 90000 }], hype: [], schools: [] },
+    tabs: [], features: [], issues: [], scroll: [], leaders: { malo: [{ label: 'Private athlete gift total', value: 90000 }], hype: [], schools: [] },
     series: { clips: [], malo: [], stalls: [], dwell: [] }, donationBands: null },
   revenue: { ...missing, gross_volume_cents: null, company_net_cents: null, payouts_cents: null, stripe_paid_cents: null, streams: [], recent: [] },
   breakdown: { ...missing, byOrigin: [], byEntry: [], byDay: [], recent: [], source: 'rpc' },
@@ -38,14 +38,14 @@ it.each(Object.entries(destinations))('renders the distinct %s report', async (p
   expect(screen.getByRole('header', { name: title })).toBeTruthy();
 });
 
-it('keeps the whole analytics catalog and eight dashboards available without named donation rankings', async () => {
+it('keeps the whole analytics catalog and eight dashboards available without named gift rankings', async () => {
   const Screen = report();
   await render(<Screen page="analytics" />);
-  for (const title of ['Highlights', 'Donations', 'Audience', 'Attention', 'Trust', 'Live games', 'Playback', 'Ledger', 'Measure catalog', 'List catalog', 'Not measured']) {
+  for (const title of ['Highlights', 'Gifts', 'Audience', 'Attention', 'Trust', 'Live games', 'Playback', 'Ledger', 'Measure catalog', 'List catalog', 'Not measured']) {
     expect(screen.getAllByText(title).length).toBeGreaterThan(0);
   }
-  expect(screen.queryByText('Private athlete donation total')).toBeNull();
-  await fireEvent.press(screen.getByRole('tab', { name: 'Donations' }));
+  expect(screen.queryByText('Private athlete gift total')).toBeNull();
+  await fireEvent.press(screen.getByRole('tab', { name: 'Gifts' }));
   expect(screen.getAllByText(/Needs the 2026-10-12 reports update/).length).toBeGreaterThan(0);
 });
 
@@ -77,25 +77,25 @@ it('keeps selected and focused report links valid through the actual Expo Slot',
   expect(mockRouter.push).toHaveBeenLastCalledWith('/admin/trends');
 });
 
-it('shows the complete Home donation hero, clip comparison and at-a-glance sentence', async () => {
+it('shows the complete Home gift hero, clip comparison and at-a-glance sentence', async () => {
   Object.assign(mockSnapshot.reports.money, { malo_cents_7d: 75000, malo_cents_prev_7d: 60000, malo_count_7d: 162 });
   Object.assign(mockSnapshot.reports.engagement, { clips_7d: 214, clips_prev_7d: 181 });
   const Screen = report(); await render(<Screen page="home" />);
-  expect(screen.getByText('162 donations recorded')).toBeTruthy();
+  expect(screen.getByText('162 gifts recorded')).toBeTruthy();
   expect(screen.getByText('+25% versus the prior week')).toBeTruthy();
   expect(screen.getByText('+18%')).toBeTruthy();
   expect(screen.getByText('Prior 7 days: 181 clips.')).toBeTruthy();
   expect(screen.getByText('Last 7 days: 214 clips.')).toBeTruthy();
-  expect(screen.getByText('$750.00 in recorded donations and 214 clips uploaded over the last 7 days.')).toBeTruthy();
+  expect(screen.getByText('$750.00 in recorded gifts and 214 clips uploaded over the last 7 days.')).toBeTruthy();
   await fireEvent.press(screen.getByRole('link', { name: 'View Trends' }));
   expect(mockRouter.push).toHaveBeenLastCalledWith('/admin/trends');
 });
 
-it('does not invent a growth percent when the prior donation week is zero', async () => {
+it('does not invent a growth percent when the prior gift week is zero', async () => {
   Object.assign(mockSnapshot.reports.money, { malo_cents_7d: 500, malo_cents_prev_7d: 0, malo_count_7d: 1 });
   Object.assign(mockSnapshot.reports.engagement, { clips_7d: 1, clips_prev_7d: 0 });
   const Screen = report(); await render(<Screen page="home" />);
-  expect(screen.getByText('1 donation recorded')).toBeTruthy();
+  expect(screen.getByText('1 gift recorded')).toBeTruthy();
   expect(screen.getAllByText('Prior week was zero; no percent comparison').length).toBeGreaterThan(0);
   expect(screen.queryByText('+100%')).toBeNull();
 });

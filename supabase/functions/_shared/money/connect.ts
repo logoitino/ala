@@ -225,7 +225,7 @@ export async function runStripeConnectForUser(
         defaults: {
           currency: 'usd',
           responsibilities: { fees_collector: 'application', losses_collector: 'application' },
-          profile: { product_description: "Tapua'i athlete receiving donations and subscriptions" },
+          profile: { product_description: "Tapua'i athlete receiving personal gifts and purchases" },
         },
         configuration: { recipient: { capabilities: { stripe_balance: { stripe_transfers: { requested: true } } } } },
         metadata: { tapuai_user_id: input.userId, ...(input.playerId ? {

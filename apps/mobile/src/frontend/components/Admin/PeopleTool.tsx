@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { useCallback, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
@@ -90,10 +91,10 @@ export function PeopleTool() {
   const confirmFreeze = (person: AdminPerson) => {
     const next = !person.malo_frozen;
     Alert.alert(
-      next ? 'Freeze donations?' : 'Unfreeze donations?',
+      next ? 'Freeze gifts?' : 'Unfreeze gifts?',
       next
-        ? `${person.full_name} will no longer be able to receive donations or new exclusive subscriptions. Use this only for a written school/association direction.`
-        : `${person.full_name} will be able to receive donations and new exclusive subscriptions again.`,
+        ? `${person.full_name} will no longer be able to receive gifts or new exclusive subscriptions. Use this only for a written school/association direction.`
+        : `${person.full_name} will be able to receive gifts and new exclusive subscriptions again.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -178,7 +179,7 @@ export function PeopleTool() {
       saveMode="instant"
     >
       <AdminNotice
-        text={`${fanCount} fan profiles · ${fansWeek} Soft-Wall signups in 7d. Guests browse without a row until they hit Donate / Crew / gear goals.`}
+        text={`${fanCount} fan profiles · ${fansWeek} Soft-Wall signups in 7d. Guests browse without a row until they hit Give / Crew / gear goals.`}
         tone="ok"
       />
       <AdminNotice text={message?.text ?? null} tone={message?.tone} />
@@ -231,7 +232,7 @@ export function PeopleTool() {
               person.is_fan ? 'Soft-Wall fan' : '',
               person.is_verified ? 'Verified' : 'Unverified',
               person.is_admin ? 'Admin' : '',
-              person.malo_frozen ? 'Donations frozen' : '',
+              person.malo_frozen ? 'Gifts frozen' : '',
               person.created_at ? new Date(person.created_at).toLocaleDateString() : '',
             ]
               .filter(Boolean)
@@ -250,7 +251,7 @@ export function PeopleTool() {
               onPress={() => confirmAdmin(person)}
             />
             <AdminBtn
-              label={busyId === person.id ? '…' : person.malo_frozen ? 'Unfreeze donations' : 'Freeze donations'}
+              label={busyId === person.id ? '…' : person.malo_frozen ? 'Unfreeze gifts' : 'Freeze gifts'}
               kind={person.malo_frozen ? 'ghost' : 'danger'}
               disabled={busyId === person.id}
               onPress={() => confirmFreeze(person)}

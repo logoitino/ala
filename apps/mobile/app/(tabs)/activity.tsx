@@ -132,7 +132,7 @@ export default function ActivityTab() {
             compact
             kicker="Activity"
             title="Sign in to see your activity"
-            lede="Donations you receive, donations you make, and highlights that tag you all land here."
+            lede="Gifts you receive, gifts you make, and highlights that tag you all land here."
             actionLabel="Sign in"
             onAction={() => requireAuth({ kind: 'signin', resume: () => undefined })}
             accent={ACCENT.color}
@@ -197,7 +197,7 @@ export default function ActivityTab() {
             compact
             kicker="Activity"
             title="Nothing yet"
-            lede="When a fan donates to you, an athlete thanks you, or a highlight tags you, it shows up here."
+            lede="When a fan gives to you, an athlete thanks you, or a highlight tags you, it shows up here."
             accent={ACCENT.color}
           />
         ) : null}

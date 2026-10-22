@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -23,7 +24,7 @@ export function SlangGuideBanner({ overlay = false }: SlangGuideBannerProps) {
   const insets = useSafeAreaInsets();
   const { live } = useAppRuntime();
   const [visible, setVisible] = useState(false);
-  const copy = live.copy.slangLine.trim() || 'Donations go to the athlete’s family • Seki = Awesome Play';
+  const copy = live.copy.slangLine.trim() || 'Gifts go to the athlete’s family • Seki = Awesome Play';
 
   useEffect(() => {
     let active = true;

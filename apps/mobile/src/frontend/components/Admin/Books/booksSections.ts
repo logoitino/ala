@@ -72,13 +72,13 @@ export function booksSections({ period, entries, issues, revenue, playerNames }:
       title: period.label,
       hint: `${inPeriod.length} entries · UTC days ${period.from} to ${period.to}`,
       sentences: [
-        "Only Tapua'i's shares are income. The family's 90% of each donation, the athlete's 80% of a Vault sale and the operator's 85% of a booster sponsorship are held for them until paid out.",
+        "Only Tapua'i's shares are income. The family's 90% of each gift, the athlete's 80% of a Vault sale and the operator's 85% of a booster sponsorship are held for them until paid out.",
       ],
       kpis: [
         { label: "Tapua'i income", value: booksUsd(pnl.totalIncome), hint: "Platform shares, optional tips for Tapua'i, Drip and covered card fees" },
         { label: 'Expenses recorded', value: booksUsd(pnl.totalExpenses), hint: 'Stripe fees and costs entered below' },
         { label: "Net for Tapua'i", value: booksUsd(pnl.net), tone: pnl.net < 0 ? 'warn' : undefined, hint: 'Income minus recorded expenses' },
-        { label: 'Received for families', value: booksUsd(sum(families, 'added')), hint: 'Donations and Vault earnings, not income' },
+        { label: 'Received for families', value: booksUsd(sum(families, 'added')), hint: 'Gifts and Vault earnings, not income' },
         { label: 'Paid out to families', value: booksUsd(sum(families, 'paidOut')), hint: 'Payouts marked paid' },
         { label: 'Still held for families', value: booksUsd(sum(families, 'closing')), tone: sum(families, 'closing') < 0 ? 'danger' : undefined, hint: `As of ${period.to}` },
       ],
@@ -116,7 +116,7 @@ export function booksSections({ period, entries, issues, revenue, playerNames }:
       sentences: ['Each athlete line below is a subledger; together they equal the two family accounts above it.'],
       tables: [
         { title: 'Money held, opening to closing', initiallyOpen: true, table: { columns: ['Account', 'Opening', 'Added', 'Paid out or reduced', 'Closing'], rows: held.map((row) => [row.name, booksUsd(row.opening), booksUsd(row.added), booksUsd(row.paidOut), booksUsd(row.closing)]) } },
-        { title: 'Held per athlete', table: { columns: ['Athlete', 'Donations', 'Vault', 'Paid out', 'Held'], rows: athletes.map((row) => [nameByRef[row.athleteRef] ?? row.athleteRef, booksUsd(row.donations), booksUsd(row.vault), booksUsd(row.paidOut), booksUsd(row.held)]) } },
+        { title: 'Held per athlete', table: { columns: ['Athlete', 'Gifts', 'Vault', 'Paid out', 'Held'], rows: athletes.map((row) => [nameByRef[row.athleteRef] ?? row.athleteRef, booksUsd(row.donations), booksUsd(row.vault), booksUsd(row.paidOut), booksUsd(row.held)]) } },
       ],
     },
     {
@@ -139,7 +139,7 @@ export function booksSections({ period, entries, issues, revenue, playerNames }:
       hint: 'For the CPA',
       sentences: [
         "Gross receipts are Tapua'i's shares only. Money held for families passes through and is not income, but Stripe's 1099-K reports the full charges, so give the CPA the pass-through line to reconcile the two.",
-        'Donations to individuals are not tax-deductible for donors, and Tapua\'i does not issue donation receipts for tax purposes.',
+        'Gifts to individual athletes are personal gifts and are not tax-deductible.',
         `Payees at or above ${booksUsd(INFO_RETURN_REVIEW_CENTS)} in a year are flagged for 1099 review. Confirm the current threshold and who files with the CPA.`,
         tax.merchSalesByMonth.length ? 'Drip sales are listed by month because sales tax may apply where buyers live; Tapua\'i does not collect it yet.' : 'No Drip sales this year, so there is no sales tax to review.',
       ],

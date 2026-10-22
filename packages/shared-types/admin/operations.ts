@@ -207,7 +207,7 @@ const TRIVIA_KIND_LABELS: Record<string, string> = {
 const MOUNT_SURFACE_LABELS: Record<string, string> = {
   home: 'Home',
   'sport-quiz': 'Sport Pop Quiz',
-  'donate-sheet': 'Donate sheet',
+  'donate-sheet': 'Give sheet',
   other: 'Other',
 };
 
@@ -313,7 +313,7 @@ function triviaDetails(trivia: TriviaReport | null): OperationsDetail[] {
 function smoothnessStats(smoothness: SmoothnessReport | null): OperationsStat[] {
   if (!smoothness) return [];
   return [
-    { key: 'avg_mount_ms_7d', label: 'Average screen mount · 7d', value: smoothness.avgMountMs7d, kind: 'ms', hint: 'Mount to first effect on Home, Sport Pop Quiz and the donate sheet', goodDirection: 'down' },
+    { key: 'avg_mount_ms_7d', label: 'Average screen mount · 7d', value: smoothness.avgMountMs7d, kind: 'ms', hint: 'Mount to first effect on Home, Sport Pop Quiz and the give sheet', goodDirection: 'down' },
     { key: 'mounts_7d', label: 'Screen mounts · 7d', value: smoothness.mounts7d, kind: 'count', hint: 'Mount timings logged', goodDirection: 'none' },
     { key: 'avg_start_ms_7d', label: 'Average cold start · 7d', value: smoothness.avgStartMs7d, kind: 'ms', hint: 'Bundle eval to first render', goodDirection: 'down' },
     { key: 'app_starts_7d', label: 'Cold starts · 7d', value: smoothness.appStarts7d, kind: 'count', hint: 'App launches that logged a time', goodDirection: 'none' },
@@ -500,13 +500,13 @@ export function buildOperations(input: OperationsInput): OperationsLens[] {
           tone: !isMeasured(reconnects24h) ? 'neutral' : reconnects24h > 0 ? 'warn' : 'ok',
           goodDirection: 'down',
         },
-        { key: 'checkouts_24h', label: 'Checkout step timings · 24h', value: reliability('checkouts_24h'), kind: 'count', hint: 'Donation checkout steps that logged a time', goodDirection: 'none' },
+        { key: 'checkouts_24h', label: 'Checkout step timings · 24h', value: reliability('checkouts_24h'), kind: 'count', hint: 'Gift checkout steps that logged a time', goodDirection: 'none' },
         {
           key: 'avg_checkout_ms_24h',
           label: 'Average checkout step · 24h',
           value: reliability('avg_checkout_ms_24h'),
           kind: 'ms',
-          hint: 'Mean across every logged donation checkout step, not one whole checkout',
+          hint: 'Mean across every logged gift checkout step, not one whole checkout',
           goodDirection: 'down',
         },
         {

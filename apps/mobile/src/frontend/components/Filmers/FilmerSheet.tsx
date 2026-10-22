@@ -72,7 +72,7 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
           <SheetHandle onDismiss={onClose} />
           <Text style={styles.title}>🎥 Filmed by {filmerName}</Text>
           <Text style={styles.lede}>
-            Fans who film help athletes get seen. Donations always go to the athlete in the clip.
+            Fans who film help athletes get seen. Gifts always go to the athlete in the clip.
           </Text>
           <FilmerCard stats={stats} />
           <Pressable

@@ -14,7 +14,7 @@ const base: OperationsInput = {
     { label: 'Profile', value: 10 },
   ],
   buttons: [
-    { label: 'Donate', value: 8 },
+    { label: 'Give', value: 8 },
     { label: 'Seki', value: 3 },
   ],
   appErrors: [{ label: 'Playback stall', value: 2 }],
@@ -27,7 +27,7 @@ const base: OperationsInput = {
 test('names the busiest place and the most used button', () => {
   const lenses = buildOperations(base);
   assert.equal(lenses[0]?.summary, 'Home is where people spend the most time.');
-  assert.equal(lenses[1]?.summary, 'Donate is the most tapped button.');
+  assert.equal(lenses[1]?.summary, 'Give is the most tapped button.');
   assert.equal(lenses[2]?.summary, 'Playback stall is the most reported app error.');
 });
 
@@ -111,8 +111,8 @@ test('button keys read as words, never as raw event keys', () => {
   // `featureLabel` is still exported here for older callers; the map lives in lib/eventLabels.ts.
   assert.equal(featureLabel('hype.seki'), 'Seki on a Highlight');
   assert.equal(featureLabel('reel.seki'), 'Seki on a Highlight');
-  assert.equal(featureLabel('malo'), 'Donate');
-  assert.equal(featureLabel('share_qr.copy'), 'Copy the QR donation link');
+  assert.equal(featureLabel('malo'), 'Give');
+  assert.equal(featureLabel('share_qr.copy'), 'Copy the QR gift link');
   assert.equal(featureLabel('spotlight.open_modal'), 'Open Spotlight');
   const buttons = buildOperations({ ...base, buttons: [{ label: 'hype.seki', value: 9 }, { label: 'crew.join', value: 2 }] }).find((lens) => lens.id === 'buttons');
   assert.equal(buttons?.summary, 'Seki on a Highlight is the most tapped button.');
@@ -132,7 +132,7 @@ test('error keys read as words in the headline, the chart and Every row (VISUAL_
   assert.equal(errors?.summary, 'Upload retry (upload) is the most reported app error.');
   assert.deepEqual(errors?.rankings[0]?.rows?.map((row) => row.label), [
     'Upload retry (upload)',
-    'Donate sheet closed with an error (Home)',
+    'Give sheet closed with an error (Home)',
     'Open bug reports (Profile)',
   ]);
   assert.deepEqual(errors?.bars.map((row) => row.label), errors?.rankings[0]?.rows?.map((row) => row.label));
@@ -199,7 +199,7 @@ test('callers without trivia or smoothness see the old tiles only', () => {
 
 const smoothness = {
   mounts7d: 300, avgMountMs7d: 180,
-  bySurface7d: [{ label: 'home', value: 210 }, { label: 'sport-quiz', value: 160 }, { label: 'donate-sheet', value: 140 }],
+    bySurface7d: [{ label: 'home', value: 210 }, { label: 'sport-quiz', value: 160 }, { label: 'donate-sheet', value: 140 }],
   appStarts7d: 120, avgStartMs7d: 900,
 };
 
@@ -212,7 +212,7 @@ test('smoothness tiles join the errors tab with averages and slowest-first scree
   assert.deepEqual(mounts?.rows, [
     { label: 'Home', value: 210 },
     { label: 'Sport Pop Quiz', value: 160 },
-    { label: 'Donate sheet', value: 140 },
+    { label: 'Give sheet', value: 140 },
   ]);
   assert.equal(mounts?.kind, 'ms');
   assert.ok(errors?.details.some((row) => row.label === 'Average cold start · 7d'));

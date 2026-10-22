@@ -41,7 +41,7 @@ export const AUDIENCE_LABEL: Record<Audience, string> = { everyone: 'Everyone', 
 
 /** What stays visible to everyone even on a private account, so tags, donations and recruiting keep working. */
 export const ALWAYS_PUBLIC_NOTE =
-  'Even when private, everyone still sees your name, the Highlights you approved being tagged in, Donate, Rally and gear goals, and Join Crew.';
+  'Even when private, everyone still sees your name, the Highlights you approved being tagged in, Give, Rally and gear goals, and Join Crew.';
 
 const DEFAULT_AUDIENCE: Record<PrivacyItem, Audience> = {
   photo: 'friends', bio: 'friends', school: 'friends', social_links: 'only_me',

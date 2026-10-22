@@ -1,3 +1,4 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { useFocusEffect } from 'expo-router';
@@ -158,7 +159,7 @@ export function WishlistTool() {
   return (
     <AdminPage
       title="Locker Room"
-      lede={`Gear goals fans donate to on Profile → Stats 📊. Fans donate $${WISHLIST_CHIP_IN_DOLLARS} a tap; hitting the goal equips the item and pays the athlete +${WISHLIST_EQUIP_AURA} Aura.`}
+      lede={`Gear goals fans give to on Profile → Stats 📊. Fans give $${WISHLIST_CHIP_IN_DOLLARS} a tap; hitting the goal equips the item and pays the athlete +${WISHLIST_EQUIP_AURA} Aura.`}
       refreshing={loading}
       onRefresh={() => void refresh()}
       error={error}
@@ -228,7 +229,7 @@ export function WishlistTool() {
         label="Rack"
         items={[
           { id: 'all', label: 'All' },
-          { id: 'funding', label: 'Donations so far' },
+          { id: 'funding', label: 'Gifts so far' },
           { id: 'equipped', label: 'Equipped' },
           { id: 'hidden', label: 'Hidden' },
         ]}
@@ -253,7 +254,7 @@ export function WishlistTool() {
       )}
 
       <Text style={styles.note}>
-        Gear-goal donations run through the same checkout, so every one also lands on the Revenue report.
+        Gear-goal gifts run through the same checkout, so every one also lands on the Revenue report.
       </Text>
     </AdminPage>
   );

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Donation-language check (owner, 2026-09-29). Tapua'i is a donation app: every screen that asks a fan
- * for money says "Donate" / "donation" so nobody is confused about what the money is for. This script
+ * Transaction-language check (owner, 2026-10-22). Individual support is a personal gift; program
+ * contributions are donations, with optional tips to Tapua'i kept separate. This script
  * fails when on-screen copy in the apps uses the words we retired or words that are risky for
  * student-athletes. Rules and reasons: docs/product/VOICE.md. The VOICE agent (.claude/agents/voice.md)
  * reviews what a regex can't (tone, performance ties, missing "where does it go" lines).
@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const SCAN_DIRS = ['apps/mobile/app', 'apps/mobile/src/frontend', 'packages/shared-types', 'apps/admin-portal/app'];
+const SCAN_DIRS = ['apps/mobile/app', 'apps/mobile/src/frontend', 'packages/shared-types', 'apps/admin-portal/app', 'apps/admin-portal/components', 'apps/admin-portal/lib', 'apps/mobile/src/backend/api', 'supabase/functions/_shared/money'];
 const SKIP = /(__tests__|\.test\.|\.d\.ts$|node_modules)/;
 
 /**
@@ -27,14 +27,14 @@ const SKIP = /(__tests__|\.test\.|\.d\.ts$|node_modules)/;
  * *to Tapua'i* at checkout (owner 2026-09-29) — never for money to an athlete.
  */
 const RULES = [
-  [/M[āĀ]LO(?!!)|Mālo(?!!)/, '"Mālo" is only a thank-you ("Mālo! Your donation is on its way")', 'Donate / donation'],
-  [/\b[Tt]ip(s|ped|ping|per)?\b/, '"tip" sounds like paying for a service or a play', 'donate / donation', /Tapua['’]i/],
-  [/\b[Bb]ack(ed|ing|ers?)\b/, '"backing" is vague about money', 'donate / donation / donors'],
-  [/\bChip In\b/i, '"Chip In" hides that it is a donation', 'Donate $5 to this goal'],
-  [/\b[Ff]und(s|ed|ing)?\b/, '"fund" reads like an investment', 'donate / donations'],
-  [/\b[Ii]nvest(s|ed|ing|ment|ments|or|ors)?\b/, 'investment language is banned for athletes (STORY.md guardrails)', 'donate'],
-  [/(?<!not |never |isn't |aren't )\btax[- ]deductible\b/i, 'donations to individuals are NOT tax-deductible', '"not tax-deductible"'],
-  [/\b(earn|get paid|paid) (per|for (a|the|that|every)) (touchdown|play|point|goal|stat|win|basket)\b/i, 'money tied to performance can cost a kid eligibility', 'donations for sports costs'],
+  [/M[āĀ]LO(?!!)|Mālo(?!!)/, '"Mālo" is only a thank-you ("Mālo! Your gift is on its way")', 'Give / gift'],
+  [/\b[Tt]ip(s|ped|ping|per)?\b/, '"tip" sounds like paying for a service or a play', 'give / gift', /Tapua['’]i/],
+  [/\b[Bb]ack(ed|ing|ers?)\b/, '"backing" is vague about money', 'give / gifts'],
+  [/\bChip In\b/i, '"Chip In" hides the personal gift', 'Give $5 toward this goal'],
+  [/\b[Ff]und(s|ed|ing)?\b/, '"fund" reads like an investment', 'give / gifts'],
+  [/\b[Ii]nvest(s|ed|ing|ment|ments|or|ors)?\b/, 'investment language is banned for athletes (STORY.md guardrails)', 'give'],
+  [/(?<!not |never |isn't |aren't )\btax[- ]deductible\b/i, 'gifts to individuals are NOT tax-deductible', '"not tax-deductible"'],
+  [/\b(earn|get paid|paid) (per|for (a|the|that|every)) (touchdown|play|point|goal|stat|win|basket)\b/i, 'money tied to performance can cost a kid eligibility', 'personal gifts for sports costs'],
 ];
 
 function walk(dir, out = []) {
@@ -89,7 +89,7 @@ for (const rel of SCAN_DIRS.flatMap((d) => walk(d))) {
 
 const unique = [...new Set(problems)];
 if (unique.length) {
-  console.error(`copy:check found ${unique.length} line(s) off the donation voice (docs/product/VOICE.md):\n`);
+  console.error(`copy:check found ${unique.length} line(s) off the transaction voice (docs/product/VOICE.md):\n`);
   console.error(unique.join('\n'));
   process.exit(1);
 }

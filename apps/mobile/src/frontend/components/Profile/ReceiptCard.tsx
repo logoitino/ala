@@ -1,3 +1,4 @@
+/** Personal-gift receipt, including the tax notice; legacy receipt fields keep their API names. */
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
@@ -23,7 +24,7 @@ function initialsFor(name: string): string {
 }
 
 function formatMaloAmount(cents: number): string {
-  return `$${(Math.max(0, cents) / 100).toFixed(2)} donation ⚡`;
+  return `$${(Math.max(0, cents) / 100).toFixed(2)} gift ⚡`;
 }
 
 function formatReceiptDate(iso: string): string {
@@ -91,6 +92,8 @@ export function ReceiptCard({ receipt, onViewReel, index = 0 }: ReceiptCardProps
           <Text style={styles.auraBadgeLabel}>{`+${auraGained} Aura`}</Text>
         </View>
       </View>
+
+      <Text style={styles.school}>Gifts to individual athletes are personal gifts and are not tax-deductible.</Text>
 
       {onViewReel ? (
         <AnimatedButton

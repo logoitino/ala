@@ -171,7 +171,7 @@ export function UploadVideoComposer(p: Props) {
                   {showLater ? (
                     <Pressable accessibilityRole="button" accessibilityLabel="Tag later" accessibilityState={{ selected: !p.playerId }}
                       onPress={() => { p.onPlayer(''); p.onSelect(null); Keyboard.dismiss(); }} style={[styles.option, !p.playerId && styles.selected]}>
-                      <Text style={styles.label}>Tag later</Text><Text style={styles.hint}>Donate stays off until an athlete is tagged.</Text>
+                      <Text style={styles.label}>Tag later</Text><Text style={styles.hint}>Give stays off until an athlete is tagged.</Text>
                     </Pressable>
                   ) : null}
                   {showOwn && own ? (

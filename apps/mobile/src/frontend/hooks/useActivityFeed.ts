@@ -1,5 +1,5 @@
 /**
- * The Activity tab timeline: donations received, donations sent, thank-yous from athletes, and pending tags,
+ * The Activity tab timeline: gifts received, gifts sent, thank-yous from athletes, and pending tags,
  * merged into one list with loading and error states. Builds on `useFanTipHistory`, `useReceivedMalo`,
  * `useMyDonationThanks` and `usePendingPlayerTags`.
  */
@@ -66,8 +66,8 @@ export function useActivityFeed() {
         id: `malo-in:${row.id}`,
         kind: 'malo_received',
         at: row.created_at,
-        title: `${row.fan_name || 'A fan'} donated to you`,
-        body: row.source_label?.trim() || 'A donation toward your sports costs. Say thanks from your profile.',
+        title: `${row.fan_name || 'A fan'} sent you a gift`,
+        body: row.source_label?.trim() || 'A gift toward your sports costs. Say thanks from your profile.',
         amountCents: row.amount_cents,
         reelId: row.reel_id,
       });
@@ -78,8 +78,8 @@ export function useActivityFeed() {
         id: `malo-out:${row.id}`,
         kind: 'malo_sent',
         at: row.created_at,
-        title: `You donated to ${row.athlete_name || 'an athlete'}`,
-        body: row.school_name?.trim() || row.source_label?.trim() || 'Donation received.',
+        title: `You sent a gift to ${row.athlete_name || 'an athlete'}`,
+        body: row.school_name?.trim() || row.source_label?.trim() || 'Gift received.',
         amountCents: row.amount_cents,
         reelId: row.reel_id,
       });
@@ -91,7 +91,7 @@ export function useActivityFeed() {
         kind: 'thanks_received',
         at: row.thankedAt,
         title: `${row.athleteName} said thanks`,
-        body: thanksText(row.messageKey) ?? 'Thank you for your donation.',
+        body: thanksText(row.messageKey) ?? 'Thank you for your gift.',
         amountCents: row.amountCents,
         playerId: row.playerId,
       });
@@ -103,7 +103,7 @@ export function useActivityFeed() {
         kind: 'tag_pending',
         at: row.created_at,
         title: 'A highlight tagged you',
-        body: `${row.title || 'Untitled clip'} — confirm it is you so donations can reach you.`,
+        body: `${row.title || 'Untitled clip'} — confirm it is you so gifts can reach you.`,
         reelId: row.id,
         actionable: true,
       });

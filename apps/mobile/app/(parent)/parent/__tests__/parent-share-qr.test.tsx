@@ -1,4 +1,4 @@
-/** Parent HQ: a guardian can hand family a donate QR for each linked athlete, keyed by athlete id so it resolves without a username. SDK58 shared fan presentation reads the route pathname from this boundary. */
+/** Parent HQ: a guardian can hand family a give QR for each linked athlete, keyed by athlete id so it resolves without a username. SDK58 shared fan presentation reads the route pathname from this boundary. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import Parent from '../index';
 
@@ -27,10 +27,10 @@ jest.mock('@/hooks/useRoster', () => ({ useRoster: () => ({ players: [athlete, {
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn() } }));
 jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: false, supabase: {} }));
 
-it('opens the Share & Donate QR for a linked athlete only', async () => {
+it('opens the Share & Give QR for a linked athlete only', async () => {
   await render(<Parent />);
-  expect(screen.getAllByRole('button', { name: /Share & Donate ⚡ for/ })).toHaveLength(1);
+  expect(screen.getAllByRole('button', { name: /Share & Give ⚡ for/ })).toHaveLength(1);
   expect(mockShare).not.toHaveBeenCalled();
-  await fireEvent.press(screen.getByRole('button', { name: 'Share & Donate ⚡ for Mele Tupou' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Share & Give ⚡ for Mele Tupou' }));
   expect(mockShare).toHaveBeenLastCalledWith(expect.objectContaining({ visible: true, athleteName: 'Mele Tupou', playerId: athlete.id }));
 });

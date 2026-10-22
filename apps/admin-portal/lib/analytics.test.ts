@@ -3,10 +3,10 @@
  * They prove every chart reads a catalog key, a missing key renders `—` (not 0), only the two
  * real prior-week pairs get a delta, a prior week of 0 gives no percent, failed and unconfigured
  * reads stay distinct, and the ledger ring adds an unsplit remainder only when gross is larger.
- * They also pin the W3 wording (Donations and Live games questions, payee and paid-out notes,
+ * They also pin the W3 wording (Gifts and Live games questions, payee and paid-out notes,
  * names shared with Health and Trends) and that Live games draws only the live/parked split.
  * Tap and UI-issue rankings use people words from lib/eventLabels.ts, never the raw key.
- * Donations draws the three `donation_bands` counts (no names, owner decision 2026-10-12) and never
+ * Gifts draws the three `donation_bands` counts (no names, owner decision 2026-10-12) and never
  * the named `leaders.malo` list; missing bands stay blank with the update note, not zeros.
  * Run: `node --import ./lib/analytics-resolver.mjs --test lib/*.test.ts`.
  */
@@ -100,7 +100,7 @@ const fullRevenue: PortalRevenue = {
   company_net_cents: 1000,
   payouts_cents: 8000,
   stripe_paid_cents: 9500,
-  streams: [{ source: 'malo', label: 'Donations', split: '10/90', gross_cents: 10000, platform_cents: 1000, payout_cents: 8000, payee: 'Athlete' }],
+  streams: [{ source: 'malo', label: 'Gifts', split: '10/90', gross_cents: 10000, platform_cents: 1000, payout_cents: 8000, payee: 'Athlete' }],
 };
 
 function chart(boards: ReturnType<typeof buildAnalytics>['boards'], id: string): AnalyticsChart {
@@ -181,7 +181,7 @@ test('every chart reads only catalog sources, and its points come from those key
   assert.equal(tabs.format, 'minutes');
   const streams = chart(boards, 'ledger-streams');
   assert.ok(streams.kind === 'stack');
-  assert.deepEqual(streams.rows, [{ label: 'Donations', segments: { platform_cents: 1000, payout_cents: 8000 }, total: 10000 }]);
+  assert.deepEqual(streams.rows, [{ label: 'Gifts', segments: { platform_cents: 1000, payout_cents: 8000 }, total: 10000 }]);
 });
 
 test('a missing measure stays blank and a recorded zero stays zero', () => {
@@ -208,7 +208,7 @@ test('a missing measure stays blank and a recorded zero stays zero', () => {
   assert.deepEqual(tabs.points, []);
 });
 
-test('only clips and donations get a delta, and a prior week of 0 gives no percent', () => {
+test('only clips and gifts get a delta, and a prior week of 0 gives no percent', () => {
   const { boards } = buildAnalytics(fullReports(), fullRevenue);
   const withDelta = boards.flatMap((board) => board.tiles).filter((tile) => tile.delta);
   assert.deepEqual(withDelta.map((tile) => tile.key).sort(), Object.keys(PRIOR_WEEK).sort());
@@ -343,7 +343,7 @@ test('streams use the VOICE names, never the raw database label', () => {
   });
   const streams = chart(raw.boards, 'ledger-streams');
   assert.ok(streams.kind === 'stack');
-  assert.deepEqual(streams.rows?.map((row) => row.label), ['Donations', "Optional tips for Tapua'i"]);
+  assert.deepEqual(streams.rows?.map((row) => row.label), ['Gifts', "Optional tips for Tapua'i"]);
   assert.deepEqual(streams.series.map((part) => [part.label, part.color]), [
     ['Payee share recorded', 'jade'],
     ["Tapua'i share", 'gold'],
@@ -360,9 +360,9 @@ test('ledger and payout wording stays Wave 0 safe and matches Trends', () => {
   assert.doesNotMatch(MEASURES.find((measure) => measure.key === 'flash_live')!.note, /vault/i);
   for (const measure of MEASURES) assert.doesNotMatch(`${measure.label} ${measure.note}`, /Stripe|M\u0101lo|\btip/i);
   assert.equal(BOARDS.find((board) => board.id === 'gameday')?.title, 'Live games');
-  assert.equal(RANKINGS.find((ranking) => ranking.id === 'malo')?.title, 'Donation totals by athlete (not drawn)');
+  assert.equal(RANKINGS.find((ranking) => ranking.id === 'malo')?.title, 'Gift totals by athlete (not drawn)');
   const bands = chart(buildAnalytics(fullReports(), fullRevenue).boards, 'bands-donations');
-  assert.ok(bands.kind === 'bars' && bands.keepOrder, 'donation bands render unranked');
+  assert.ok(bands.kind === 'bars' && bands.keepOrder, 'gift bands render unranked');
   assert.equal(RANKINGS.find((ranking) => ranking.id === 'schools')?.title, 'Schools by athletes listed');
   // One name across the portal (Health, Departments, Trends): "UI issues", never "Control issues".
   assert.equal(label('issues_24h'), 'UI issues, 24 hours');
@@ -397,17 +397,17 @@ test('Live games draws only the live and parked split; poll, booster and shop co
   assert.equal(BOARDS.find((board) => board.id === 'gameday')?.question, 'Which games are live, and how active are polls, boosters and the shop?');
 });
 
-test('W3 wording: Donations question, ledger notes, and names shared with Health and Trends', () => {
+test('W3 wording: Gifts question, ledger notes, and names shared with Health and Trends', () => {
   const measure = (key: string) => MEASURES.find((item) => item.key === key)!;
   const ranking = (id: string) => RANKINGS.find((item) => item.id === id)!;
-  assert.equal(BOARDS.find((board) => board.id === 'donations')?.question, 'How much was donated, how often, and are any payouts queued?');
+  assert.equal(BOARDS.find((board) => board.id === 'donations')?.question, 'How much was given, how often, and are any payouts queued?');
   assert.equal(measure('payouts_cents').note, 'Recorded for families, Vault athletes, and booster operators. Nothing is paid out in Wave 0.');
   assert.equal(
     measure('stripe_paid_cents').note,
-    'Disbursement rows marked paid. Same sum on the Donations and Ledger boards. Should be $0 while payouts are blocked in Wave 0.',
+    'Disbursement rows marked paid. Same sum on the Gifts and Ledger boards. Should be $0 while payouts are blocked in Wave 0.',
   );
   assert.equal(measure('checkouts_24h').label, 'Checkout step timings, 24 hours');
-  assert.equal(measure('checkouts_24h').note, 'Donation checkout steps that logged a time in the last day.');
+  assert.equal(measure('checkouts_24h').note, 'Gift checkout steps that logged a time in the last day.');
   assert.equal(measure('avg_checkout_ms_24h').label, 'Average checkout step, 24 hours');
   assert.equal(measure('avg_checkout_ms_24h').note, 'Mean across every logged checkout step, not one whole checkout.');
   assert.equal(ranking('tabs').title, 'Time on each tab');
@@ -434,14 +434,14 @@ test('Taps by control and UI issues name their rows, never the raw telemetry key
   ]);
   const issues = chart(boards, 'ranking-issues');
   assert.ok(issues.kind === 'bars');
-  assert.deepEqual(issues.points?.map((point) => point.label), ['Upload retry (upload)', 'Donate sheet closed with an error (Home)']);
+  assert.deepEqual(issues.points?.map((point) => point.label), ['Upload retry (upload)', 'Give sheet closed with an error (Home)']);
   // Other rankings keep their labels as read.
   const tabs = chart(boards, 'ranking-tabs');
   assert.ok(tabs.kind === 'bars');
   assert.deepEqual(tabs.points?.map((point) => point.label), ['Home']);
 });
 
-test('Donations draws athletes by all-time donations as three bands and never the named list (owner 3C, 2026-10-12)', () => {
+test('Gifts draws athletes by all-time gifts as three bands and never the named list (owner 3C, 2026-10-12)', () => {
   const reports = fullReports();
   const { boards, catalog, lists } = buildAnalytics(reports, fullRevenue);
   const donations = boards.find((board) => board.id === 'donations')!;
@@ -449,7 +449,7 @@ test('Donations draws athletes by all-time donations as three bands and never th
   assert.ok(!boards.flatMap((board) => board.charts).some((spec) => spec.id === 'ranking-malo' || spec.source === 'get_admin_reports.leaders.malo'));
   const bands = chart(boards, 'bands-donations');
   assert.ok(bands.kind === 'bars');
-  assert.equal(bands.title, 'Athletes by all-time donations');
+  assert.equal(bands.title, 'Athletes by all-time gifts');
   assert.equal(bands.caption, 'All time. Counts of athletes, no names.');
   assert.equal(bands.format, 'count');
   assert.equal(bands.accent, 'jade');
@@ -458,9 +458,9 @@ test('Donations draws athletes by all-time donations as three bands and never th
     { label: '$50–$250', value: 4 },
     { label: '$250 and up', value: 1 },
   ]);
-  assert.equal(bands.summary, 'Athletes by all-time donations. Under $50: 12 athletes; $50–$250: 4 athletes; $250 and up: 1 athlete.');
+  assert.equal(bands.summary, 'Athletes by all-time gifts. Under $50: 12 athletes; $50–$250: 4 athletes; $250 and up: 1 athlete.');
   assert.ok(!JSON.stringify(bands).includes('Kaleo'), 'no athlete name reaches the bands chart');
-  // Every band is a named catalog measure on Donations.
+  // Every band is a named catalog measure on Gifts.
   assert.deepEqual(bands.keys, ['get_admin_reports.donation_bands.under_50', 'get_admin_reports.donation_bands.50_to_250', 'get_admin_reports.donation_bands.250_plus']);
   for (const key of ['under_50', '50_to_250', '250_plus']) {
     assert.equal(MEASURES.find((measure) => measure.key === key)?.board, 'donations');
@@ -473,12 +473,12 @@ test('Donations draws athletes by all-time donations as three bands and never th
   assert.equal(lists.find((row) => row.id === 'leaders.malo')?.value, '1 row');
 });
 
-test('donation bands missing from a working read stay blank with the update note, never zeros', () => {
+test('gift bands missing from a working read stay blank with the update note, never zeros', () => {
   const { boards, catalog } = buildAnalytics({ ...fullReports(), donationBands: null }, fullRevenue);
   const bands = chart(boards, 'bands-donations');
   assert.ok(bands.kind === 'bars');
   assert.equal(bands.points, null);
-  assert.equal(bands.summary, 'Athletes by all-time donations: not in this read. Needs the 2026-10-12 reports update on this database.');
+  assert.equal(bands.summary, 'Athletes by all-time gifts: not in this read. Needs the 2026-10-12 reports update on this database.');
   for (const key of ['under_50', '50_to_250', '250_plus']) {
     const row = catalog.find((item) => item.key === key)!;
     assert.equal(row.value, '—');

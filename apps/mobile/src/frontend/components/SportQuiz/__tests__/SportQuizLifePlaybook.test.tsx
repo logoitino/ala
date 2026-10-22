@@ -2,7 +2,7 @@
  * the Life Playbook opt-in (notice version, Turn on / Not now / Turn off), the Life home (only returned chapters, no
  * age or unlock wording, progress as "seen N of M"), a Life round through quiz_life_start, quiet hiding when the Life
  * migration is missing, honest retry wording, history labels / correction notes / erase copy, group pages without
- * Life, and no Donate or money controls on Life screens. Database responses are synthetic.
+ * Life, and no Give or money controls on Life screens. Database responses are synthetic.
  */
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { AppState } from 'react-native';
@@ -296,7 +296,7 @@ it('a 30-second Life round is allowed and "any open chapter" sends a null chapte
     expect(calls('quiz_life_start')[0].args).toMatchObject({ p_chapter: null, p_duration_seconds: 30 });
 });
 
-it('Life screens and the Life round never show Donate, checkout or amounts', async () => {
+it('Life screens and the Life round never show Give, checkout or amounts', async () => {
     const snapshot = { ...separateSnapshot, week_spent: true, week_spent_by_kind: { personal: true, group: false, life: false } };
     mockClient.handler = server({ snapshot });
     await render(<SportQuizScreen/>);

@@ -1,6 +1,6 @@
 /**
  * Highlights overlay on top of each clip: athlete name and school, "Filmed by" credit, caption, and the right-hand
- * rail (Seki / Aura / Flex / donate / more). Photo stories add the current photo's description above the name.
+ * rail (Seki / Aura / Flex / give / more). Photo stories add the current photo's description above the name.
  * Only Aura plays a burst; Seki swaps its emoji briefly; Flex lights up.
  * A Seki play and a Flex ride pop in above the caption, then tuck into icons. An arrow opens them again.
  * Selecting springs the chip up a little. Clearing dips it, then the fill drains.
@@ -155,10 +155,10 @@ export function ReelActionOverlay({
     }
     if (id === 'malo' && live.buttons.malo) {
       const tipLabel = userTipped
-        ? `Donated to ${athleteName}, ${formatTipDollars(hype.total_tips_cents)} total`
+        ? `Sent a gift to ${athleteName}, ${formatTipDollars(hype.total_tips_cents)} total`
         : maloReady
           ? `${maloAthleteCta(athleteName)}, ${formatTipDollars(hype.total_tips_cents)} total`
-          : `Confirm ${athleteName} on this clip before donating`;
+          : `Confirm ${athleteName} on this clip before giving`;
       return (
         <AnimatedPressable
           key="malo"
@@ -176,7 +176,7 @@ export function ReelActionOverlay({
           ]}
         >
           <Text style={[styles.maloLabel, { color: userTipped ? ink : jade }]}>
-            {userTipped ? 'Donated' : 'Donate'}
+            {userTipped ? 'Gift sent' : 'Give'}
           </Text>
           <Text style={[styles.maloTotal, { color: userTipped ? ink : jade }]} numberOfLines={1}>
             {maloReady || userTipped ? formatTipDollars(hype.total_tips_cents) : 'Tag'}

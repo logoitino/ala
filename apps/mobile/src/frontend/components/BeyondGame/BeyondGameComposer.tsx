@@ -187,7 +187,7 @@ function ScopedComposer({ visible, active = true, category, onBack, onSubmitted 
   return <View style={styles.section}>
     <View style={styles.header}>
       <Text accessibilityRole="header" style={styles.heading}>Share a moment</Text>
-      <Text style={styles.body}>Workouts, service, learning and stories. No athlete tag or fundraising recipient is needed.</Text>
+      <Text style={styles.body}>Workouts, service, learning and stories. No athlete tag or gift recipient is needed.</Text>
     </View>
     <BeyondButton variant="quiet" label="Back to Beyond the Game" onPress={() => { if (alive.current && model.identityKey !== null && frame.current.key === model.identityKey && frame.current.version === model.version && !model.busy) onBack(); }} />
     <Text style={styles.hint}>Back keeps your draft in this screen's memory. Draft files are not saved for a future app session and are discarded when this screen is unloaded or the account changes.</Text>

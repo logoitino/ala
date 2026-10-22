@@ -1,8 +1,9 @@
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { THANKS_MESSAGES, parseDonationsToThank, parseThanksReceived, thanksText } from '@/lib/donationThanks';
 
 jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: false, supabase: {} }));
 
-describe('donation thank-yous', () => {
+describe('gift thank-yous', () => {
   it('offers presets only, and every preset says thank you', () => {
     expect(THANKS_MESSAGES.map((m) => m.key)).toEqual(['malo', 'season', 'gear', 'family', 'work']);
     for (const message of THANKS_MESSAGES) expect(message.text).toMatch(/thank/i);
@@ -10,7 +11,7 @@ describe('donation thank-yous', () => {
     expect(thanksText('hey call me')).toBeNull();
   });
 
-  it('parses donations to thank and drops unknown thank keys', () => {
+  it('parses gifts to thank and drops unknown thank keys', () => {
     const rows = parseDonationsToThank([
       { tip_id: 't1', amount_cents: 500, created_at: '2026-09-29T00:00:00Z', fan_name: 'Sina', rally_title: 'Cleats', thanked_key: 'malo' },
       { tip_id: 't2', amount_cents: 1000, thanked_key: 'free text' },

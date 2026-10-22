@@ -28,7 +28,7 @@ function query(result: unknown) {
 
 beforeEach(() => { mockRpc.mockReset(); mockFrom.mockReset(); });
 
-it('keeps partial report keys, decimal averages, empty lists and donation bands distinct', async () => {
+it('keeps partial report keys, decimal averages, empty lists and gift bands distinct', async () => {
   mockRpc.mockResolvedValue({ data: { usage: { avg_scroll_pct_7d: 12.5 }, tabs: [], donation_bands: { under_50: 0, '250_plus': 4 } }, error: null });
   const result = await fetchAdminReportSnapshot();
   expect(result.usage.avg_scroll_pct_7d).toBe(12.5);
@@ -52,13 +52,13 @@ it('keeps measured revenue zero and missing totals separate', async () => {
   expect(await fetchAdminRevenueSnapshot()).toMatchObject({ gross_volume_cents: 0, company_net_cents: null, stripe_paid_cents: null });
 });
 
-it('never substitutes a personal tips read after donation permission denial', async () => {
+it('never substitutes a personal tips read after gift permission denial', async () => {
   mockRpc.mockResolvedValue({ data: null, error: { code: '42501', message: 'Admin access required' } });
   expect(await fetchAdminDonationBreakdown()).toMatchObject({ source: null, error: 'Admin access required' });
   expect(mockFrom).not.toHaveBeenCalled();
 });
 
-it('labels the missing-RPC 200-row donation fallback as partial', async () => {
+it('labels the missing-RPC 200-row gift fallback as partial', async () => {
   mockRpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'Function not found' } });
   const listed = query({ data: [{ id: 'd1', amount_cents: 500, origin: 'highlight', created_at: '2026-10-12T00:00:00Z' }], error: null });
   mockFrom.mockReturnValue(listed);
