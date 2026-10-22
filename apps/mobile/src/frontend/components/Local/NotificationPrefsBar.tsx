@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: FOCAL.electricGold,
-    padding: 12,
-    gap: 10,
+    padding: 10,
+    gap: 6,
   },
   title: {
     fontSize: 13,
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 6,
     backgroundColor: colors.surface,
   },
   chipSelected: {

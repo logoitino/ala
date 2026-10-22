@@ -75,16 +75,16 @@ export function GameVenueCard({ game }: { game: Game }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.lg, padding: 16, gap: 8 },
-  heading: { color: colors.textMuted, fontSize: 13, fontWeight: '700' },
-  venue: { color: colors.text, fontSize: 18, fontWeight: '800' },
+  card: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.lg, padding: 12, gap: 4 },
+  heading: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
+  venue: { color: colors.text, fontSize: 16, fontWeight: '800' },
   school: { color: colors.text, fontSize: 14, fontWeight: '600' },
-  address: { color: colors.text, fontSize: 14, lineHeight: 21 },
+  address: { color: colors.text, fontSize: 13, lineHeight: 19 },
   arrival: { gap: 3, marginTop: 4 },
   noteLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
-  note: { color: colors.text, fontSize: 14, lineHeight: 21 },
-  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
-  button: { alignSelf: 'flex-start', minHeight: 44, minWidth: 44, paddingHorizontal: 16, paddingVertical: 12, marginTop: 4, borderRadius: radii.md, backgroundColor: colors.deepGreen, justifyContent: 'center' },
+  note: { color: colors.text, fontSize: 13, lineHeight: 19 },
+  hint: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
+  button: { alignSelf: 'flex-start', minHeight: 44, minWidth: 44, paddingHorizontal: 16, paddingVertical: 10, marginTop: 4, borderRadius: radii.md, backgroundColor: colors.deepGreen, justifyContent: 'center' },
   buttonLabel: { color: colors.onAccent, fontSize: 14, fontWeight: '700' },
   dimmed: { opacity: 0.6 },
   error: { color: colors.danger, fontSize: 13, lineHeight: 19 },

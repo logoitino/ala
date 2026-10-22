@@ -272,3 +272,9 @@ ember Drip join jade/sand. Absolute dock overlays Home video; actual wrap height
 reactions/peek and other tab footers, including paused recovery screens. Full-height video/pager/resize
 geometry uses one measured screen height. Independent source review accepted actual contrast/footer
 repairs. Local browser/Jest receipts and native/system-text gaps: [UX-10](../agents/UX-10.md).
+
+## UX-11 — compact panels and popups (2026-10-21)
+
+Popup frame `useSheetFrame` padding md/xs/sm and `MENU_METRICS` radii 24/16/14; step bar 32pt. `UI/MoreText` is the one
+"More / Less" disclosure for non-policy explanations; policy copy stays plain `Text` (guard test). Details: [UX-11](../agents/UX-11.md).
+

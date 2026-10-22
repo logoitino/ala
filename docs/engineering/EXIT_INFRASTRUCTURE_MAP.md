@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `934f9a1e1a55` |
-| Last announced plan | `934f9a1e1a55` — up to date |
+| Exit plan version (what the app uses on Supabase) | `d71e3a5d49d1` |
+| Last announced plan | `d71e3a5d49d1` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
 | Latest migration | `20261021233000_athlete_sports.sql` (49 files) |
 | Canonical schema hash | `77bdaaf5d4bdc7ae49ff4b50b613b4e206c10b65d61ee214a6cb8b7e64eff43e` (`schema.sql`) |
-| Complete source/configuration content hash | `934f9a1e1a55c08b923531d8817dc0943acd358af0b984aa0d94ed7803f27952` across 1270 files |
+| Complete source/configuration content hash | `d71e3a5d49d19e4dffc8a417fc3d6617663344bc6ecd4e9cfc4551aa3d487558` across 1274 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.

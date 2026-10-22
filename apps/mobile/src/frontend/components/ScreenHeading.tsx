@@ -12,6 +12,7 @@ import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useViewerSport } from '@/hooks/useViewerSport';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { MoreText } from '@/components/UI/MoreText';
 
 type ScreenHeadingProps = {
   kicker?: string;
@@ -51,7 +52,11 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
       ) : null}
       <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact, fan && styles.fanTitle, { color: live.theme.text }]}>{title}</Text>
       {compact ? null : <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.underline, { backgroundColor: mark }]} />}
-      {lede ? <Text style={[styles.lede, compact && styles.ledeCompact, fan && styles.fanLede]}>{lede}</Text> : null}
+      {/* Fan ledes may collapse to two lines with More. Role homes (parent, booster, operator…) keep admin-edited
+          ledes fully visible: they can mention consent or payouts, which must never sit behind More. */}
+      {lede ? (fan
+        ? <MoreText style={[styles.lede, compact && styles.ledeCompact, styles.fanLede]} lines={2}>{lede}</MoreText>
+        : <Text style={[styles.lede, compact && styles.ledeCompact]}>{lede}</Text>) : null}
     </View>
   );
 }

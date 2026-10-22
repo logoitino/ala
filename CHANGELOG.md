@@ -1,6 +1,12 @@
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-21 — More room for content
+
+- Show Profile counts on one line, the profile sections on one row, and Local polls in about half the space.
+- Tighten game-day cards and every popup while keeping buttons easy to tap.
+- Put long explanations behind More; policy and money messages always stay in full.
+
 ## 2026-10-21 — Sport accents and more room across fan tabs (UX-10)
 
 - Compact all seven fan destinations, including own/public Profile cards and Drip, with readable labels and44-point buttons.

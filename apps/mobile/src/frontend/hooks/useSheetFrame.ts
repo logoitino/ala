@@ -41,9 +41,10 @@ export function useSheetFrame(): SheetFrame {
       width: '100%',
       maxWidth: SHEET_MAX,
       alignSelf: 'center',
-      paddingHorizontal: compact ? space.md : space.lg,
-      paddingTop: space.sm,
-      paddingBottom: space.md,
+      // Compact popups (owner 2026-10-21): more of the screen for content, same 44pt controls inside.
+      paddingHorizontal: compact ? space.sm : space.md,
+      paddingTop: space.xs,
+      paddingBottom: space.sm,
       borderRadius: MENU_METRICS.sheetRadius,
       borderWidth: 1,
       borderColor: colors.border,

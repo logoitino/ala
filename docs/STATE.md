@@ -295,6 +295,17 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-10-21 — UX-11 compact panels and popups; staging SQL guide (Claude Code)
+
+Owner asked to keep shrinking panels and popups for more content, with long messages behind dropdowns but no
+policy message hidden. Profile count row is one line with Join at the end; profile section tabs fit one row; the
+Local poll puts percentages on its vote buttons; game-page cards, popup frame/radii/steps and the donate title are
+smaller; new `UI/MoreText` clamps non-policy explanations (Filmer card, Beyond header, notifications explainer, Rally
+story, athlete bio, fan ledes). 44pt targets kept. Independent review ACCEPT WITH FIXES, all fixed; a guard test fails
+if policy copy is ever wrapped. [UX-11](agents/UX-11.md).
+[STAGING_DATABASE_CATCHUP](engineering/STAGING_DATABASE_CATCHUP.md) lists the 41 migrations staging lacks since
+2026-10-01 (security fix first, development's fixes folded in); prepared from the folder, staging not read or changed.
+
 ### 2026-10-21 America/Denver — UX-10 sporty fan theme and full-height Highlights
 
 Owner-approved presentation continuation: warm sand/jade with cyan Local, violet Activity/Profile,

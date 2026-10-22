@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   title: {
-    fontSize: 21,
+    fontSize: 19,
     fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.3,

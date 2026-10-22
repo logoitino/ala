@@ -7,7 +7,7 @@ import * as Haptics from 'expo-haptics';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
-import { cardShadow, colors, radii } from '@/constants/theme';
+import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { COMPLIANCE_POLL } from '@/data/legal';
 import { useCheerPoll, type CheerSide } from '@/hooks/useCheerPoll';
 import { telemetry } from '@/services/TelemetryManager';
@@ -97,18 +97,19 @@ export function CheerPollCard({
 
   return (
     <View style={styles.card} accessibilityRole="summary" accessibilityLabel="Cheer poll">
+      {/* Compact: count joins the header; percentages live on the vote buttons. The policy line stays visible. */}
       <View style={styles.top}>
         <Text style={styles.kicker}>Live cheer poll</Text>
         <View style={styles.livePill}>
           <View style={styles.liveDot} />
           <Text style={styles.liveLabel}>LIVE</Text>
         </View>
+        <Text style={styles.voteCount}>{total.toLocaleString()} cheers</Text>
       </View>
-      <Text style={styles.title}>Who are you riding with?</Text>
-      <Text style={styles.matchup}>{COMPLIANCE_POLL}</Text>
-      <Text style={styles.matchup}>
-        {homeLabel} vs {awayLabel}
+      <Text style={styles.title}>
+        Who are you riding with? <Text style={styles.matchup}>{homeLabel} vs {awayLabel}</Text>
       </Text>
+      <Text style={styles.policy}>{COMPLIANCE_POLL}</Text>
 
       <View
         style={styles.track}
@@ -118,16 +119,12 @@ export function CheerPollCard({
         <Animated.View style={[styles.awayFill, awayBar]} />
       </View>
 
-      <View style={styles.pctRow}>
-        <Text style={[styles.homePct, leading === 'home' && styles.pctLeading]}>{homePct}%</Text>
-        <Text style={styles.voteCount}>{total.toLocaleString()} cheers</Text>
-        <Text style={[styles.awayPct, leading === 'away' && styles.pctLeading]}>{awayPct}%</Text>
-      </View>
-
       <View style={styles.actions}>
         <TeamVoteButton
           side="home"
           label={homeLabel}
+          pct={homePct}
+          leading={leading === 'home'}
           selected={myVote === 'home'}
           floats={floats}
           onDropFloat={dropFloat}
@@ -136,6 +133,8 @@ export function CheerPollCard({
         <TeamVoteButton
           side="away"
           label={awayLabel}
+          pct={awayPct}
+          leading={leading === 'away'}
           selected={myVote === 'away'}
           floats={floats}
           onDropFloat={dropFloat}
@@ -149,6 +148,8 @@ export function CheerPollCard({
 function TeamVoteButton({
   side,
   label,
+  pct,
+  leading,
   selected,
   floats,
   onDropFloat,
@@ -156,6 +157,8 @@ function TeamVoteButton({
 }: {
   side: CheerSide;
   label: string;
+  pct: number;
+  leading: boolean;
   selected: boolean;
   floats: VoteFloat[];
   onDropFloat: (id: number) => void;
@@ -171,7 +174,7 @@ function TeamVoteButton({
       <AnimatedPressable
         haptic="none"
         scaleTo={0.94}
-        accessibilityLabel={`Cheer ${label}`}
+        accessibilityLabel={`Cheer ${label}, ${pct}%`}
         accessibilityState={{ selected }}
         onPress={onPress}
         contentStyle={[
@@ -183,9 +186,10 @@ function TeamVoteButton({
         <View style={[styles.teamDot, side === 'home' ? styles.teamDotHome : styles.teamDotAway, selected && styles.teamDotChosen]}>
           <View pointerEvents="none" style={styles.teamDotGloss} />
         </View>
-        <Text style={[styles.teamBtnLabel, selected && (side === 'home' ? styles.homeLabelOn : styles.awayLabelOn)]} numberOfLines={2}>
+        <Text style={[styles.teamBtnLabel, selected && (side === 'home' ? styles.homeLabelOn : styles.awayLabelOn)]} numberOfLines={1}>
           {label}
         </Text>
+        <Text style={[side === 'home' ? styles.homePct : styles.awayPct, leading && styles.pctLeading]}>{pct}%</Text>
       </AnimatedPressable>
     </View>
   );
@@ -221,8 +225,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: FOCAL.electricGold,
-    padding: 12,
-    gap: 8,
+    padding: 10,
+    gap: 6,
     overflow: 'visible',
     ...cardShadow,
   },
@@ -263,7 +267,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
   },
   matchup: {
@@ -271,40 +275,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+  // Policy line: smaller than before but never clamped or muted into the background.
+  policy: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+  },
   track: {
     flexDirection: 'row',
-    height: 12,
+    height: 6,
     borderRadius: 999,
     overflow: 'hidden',
     backgroundColor: colors.background,
   },
   homeFill: {
-    height: 12,
+    height: 6,
     backgroundColor: FOCAL.jadeInk,
   },
   awayFill: {
-    height: 12,
+    height: 6,
     backgroundColor: FOCAL.islandCyan,
   },
-  pctRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   homePct: {
+    ...SCOREBOARD_DIGITS,
     color: colors.primary,
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 14,
   },
   awayPct: {
+    ...SCOREBOARD_DIGITS,
     color: FOCAL.cyanInk,
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 14,
   },
   pctLeading: {
-    fontSize: 19,
+    fontSize: 16,
   },
   voteCount: {
+    marginLeft: 'auto',
     color: colors.textMuted,
     fontSize: 12,
     fontWeight: '700',
@@ -331,9 +337,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   teamDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     overflow: 'hidden',
   },
   teamDotHome: {

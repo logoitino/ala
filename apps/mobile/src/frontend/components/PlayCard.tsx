@@ -314,18 +314,18 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: FOCAL.electricGold,
-    padding: 16,
-    gap: 12,
+    padding: 12,
+    gap: 8,
     ...cardShadow,
   },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   jersey: {
-    width: 56,
-    height: 56,
+    width: 44,
+    height: 44,
     borderRadius: 16,
     backgroundColor: FOCAL.goldInk,
     alignItems: 'center',
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   jerseyNumber: {
     color: colors.onAccent,
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
     letterSpacing: -0.4,
   },
@@ -353,13 +353,13 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   name: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.3,
   },
   play: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '800',
     letterSpacing: -0.2,
   },
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   drawer: {
-    gap: 12,
+    gap: 8,
   },
   tagInline: {
     alignSelf: 'flex-start',

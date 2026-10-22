@@ -65,6 +65,7 @@ import { fetchWishlistItems } from '@/lib/wishlist';
 import { FOCAL } from '@/theme/motion';
 import { ProfileFriendActions } from '@/components/Profile/ProfileFriendActions';
 import { LearnSportCard } from '@/components/SportQuiz/LearnSportCard';
+import { MoreText } from '@/components/UI/MoreText';
 
 export type AthleteProfileTab = 'highlights' | 'stats' | 'goals' | 'vault' | 'team' | 'manage';
 
@@ -477,7 +478,7 @@ export function AthleteProfileView({
           <Ionicons name={({ highlights: 'flash-outline', stats: 'stats-chart-outline', goals: 'gift-outline',
             vault: 'lock-closed-outline', team: 'people-outline', manage: 'settings-outline' } as const)[item.id]}
             size={15} color={tab === item.id ? colors.onAccent : FOCAL.violetInk} />
-          <Text style={[styles.sectionLabel, tab === item.id && styles.sectionLabelOn]}>
+          <Text style={[styles.sectionLabel, tab === item.id && styles.sectionLabelOn]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9}>
             {item.id === 'highlights' ? 'Highlights' : item.id === 'stats' ? 'Stats' : item.id === 'vault' ? 'Vault' : item.label}
           </Text>
         </AnimatedButton>)}
@@ -490,7 +491,7 @@ export function AthleteProfileView({
           {storyText || visibleSocialLinks.length > 0 ? (
             <View style={styles.story}>
               <Text accessibilityRole="header" style={styles.sectionTitle}>Story</Text>
-              {storyText ? <Text style={styles.storyBio}>{storyText}</Text> : null}
+              {storyText ? <MoreText style={styles.storyBio} lines={4}>{storyText}</MoreText> : null}
               {visibleSocialLinks.length > 0 ? (
                 <View style={styles.socialRow}>
                   {visibleSocialLinks.map(([platform, value]) => (
@@ -692,11 +693,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: FOCAL.electricViolet,
   },
-  sectionNav: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  sectionItem: { flexGrow: 1, minWidth: 78 },
-  sectionButton: { minHeight: 44, paddingHorizontal: 8, paddingVertical: 6, borderRadius: radii.md, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistViolet },
+  // One row for every section (icon over label) instead of wrapping Team onto its own line; still 44pt tall.
+  sectionNav: { flexDirection: 'row', gap: 4 },
+  sectionItem: { flex: 1, minWidth: 0 },
+  sectionButton: { minHeight: 44, paddingHorizontal: 2, paddingVertical: 4, borderRadius: radii.md, flexDirection: 'column', gap: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistViolet },
   sectionButtonOn: { backgroundColor: FOCAL.violetInk },
-  sectionLabel: { color: FOCAL.violetInk, fontSize: 12, fontWeight: '800', flexShrink: 1 },
+  sectionLabel: { color: FOCAL.violetInk, fontSize: 11, fontWeight: '800', flexShrink: 1 },
   sectionLabelOn: { color: colors.onAccent },
   donateTagline: { fontSize: 12, lineHeight: 17, fontWeight: '700', color: colors.textMuted },
   quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'stretch' },

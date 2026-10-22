@@ -13,6 +13,7 @@ import { WORKOUT_IDEAS_LINE } from '@/lib/safetyLabels';
 import { BeyondButton, BeyondGameComposer } from './BeyondGameComposer';
 import { BeyondGameMedia } from './BeyondGameMedia';
 import { beyondStyles as styles } from './BeyondGameStyles';
+import { MoreText } from '@/components/UI/MoreText';
 
 const categories: { id: BeyondCategory; label: string }[] = [
   { id: 'workout', label: 'Workouts' }, { id: 'service', label: 'Service' },
@@ -125,7 +126,7 @@ function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = 
       {/* UX-08: the same fading field band as every tab heading (viewer's sport, generic for fans). */}
       <View pointerEvents="none" style={styles.headerField}><SportField sport={viewerSport} fade="left" labels={false} opacity={0.11} /></View>
       <Text accessibilityRole="header" style={styles.title}>Beyond the Game</Text>
-      <Text style={styles.hint}>Share effort, kindness, learning and everyday stories. Highlights remains the game showcase.</Text>
+      <MoreText style={styles.hint} lines={1}>{'Share effort, kindness, learning and everyday stories. Highlights remains the game showcase.'}</MoreText>
     </View>
     <View style={styles.filters}>{categories.map(item => <BeyondButton variant="chip" key={item.id} label={item.label} icon={categoryIcons[item.id]} selected={category === item.id} disabled={model.busy || compose}
       onPress={() => { if (navigationCurrent() && !compose) { setCategory(item.id); setFeedBefore(null); } }} />)}</View>

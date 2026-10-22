@@ -7,6 +7,7 @@ import { cardShadow, colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useNotificationInbox } from '@/hooks/useNotifications';
 import { FOCAL } from '@/theme/motion';
+import { MoreText } from '@/components/UI/MoreText';
 
 /** @purpose Review read/unread and archived notifications without mutating receipt or invitation history. */
 export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
@@ -22,7 +23,7 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
       <Text accessibilityRole="header" style={styles.title}>Notifications</Text>
       {page ? <Text style={styles.unread}>{page.unreadCount} unread{archived ? ' in inbox' : ''}</Text> : null}
     </View>
-    <Text style={styles.hint}>New connected account updates appear here. Your donation history and invitations stay in their own sections.</Text>
+    <MoreText style={styles.hint} lines={1}>{'New connected account updates appear here. Your donation history and invitations stay in their own sections.'}</MoreText>
     <View style={styles.controls}>
       <Pressable accessibilityRole="tab" accessibilityLabel="Current notifications" accessibilityState={{ selected: !archived, disabled: locked }}
         disabled={locked} onPress={() => void state.showArchived(false)} style={[styles.action, !archived && styles.selected]}>

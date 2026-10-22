@@ -1892,6 +1892,67 @@
           ]
         }
       }
+    },
+    {
+      "id": "UX-11",
+      "title": "Compact panels, popups and More for long explanations",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-10-22T04:38:01.000Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Smaller padding/type on existing panels and popups, profile counts on one line, poll percentages on the vote buttons, and existing non-policy explanatory copy clamped behind More/Less (full text to screen readers). No data, write, permission, telemetry or reporting change; policy, money, safety, consent and rights copy stays fully visible (guard test).",
+        "reviewedBy": "Independent read-only Claude review subagent (UX-11 policy-visibility/accessibility review, 2026-10-21); ran after implementation, recorded in UX-11"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/profile",
+        "paths": [
+          "apps/mobile/src/frontend/components/UI/MoreText.tsx",
+          "apps/mobile/src/frontend/components/Profile/ProfileStatRow.tsx",
+          "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx",
+          "apps/mobile/src/frontend/components/Local/CheerPollCard.tsx",
+          "apps/mobile/src/frontend/components/Local/GameVenueCard.tsx",
+          "apps/mobile/src/frontend/components/Local/NotificationPrefsBar.tsx",
+          "apps/mobile/src/frontend/components/Local/TabSwitcher.tsx",
+          "apps/mobile/src/frontend/components/PlayCard.tsx",
+          "apps/mobile/src/frontend/hooks/useSheetFrame.ts",
+          "apps/mobile/src/frontend/constants/theme.ts",
+          "apps/mobile/src/frontend/components/UI/MenuChrome.tsx",
+          "apps/mobile/src/frontend/components/TipSheetModal.tsx",
+          "apps/mobile/src/frontend/components/Filmers/FilmerCard.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameScreen.tsx",
+          "apps/mobile/src/frontend/components/Activity/NotificationInbox.tsx",
+          "apps/mobile/src/frontend/components/Rally/RallyCard.tsx",
+          "apps/mobile/src/frontend/components/ScreenHeading.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-22T04:38:01.000Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-11.md",
+              "command": "Independent read-only review subagent: policy visibility, accessibility, correctness, tests",
+              "result": "ACCEPT WITH FIXES: no policy text hidden; Teammates badge width, stale comments, poll policy size, tab label scale, role-home ledes. Review ran after implementation."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-22T04:46:01.000Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-11.md",
+              "command": "Review fixes applied; mobile Jest (new CheerPollCard, ProfileStatRow, MoreText edge + policy guard tests), app typecheck, guards; 390x844 captures",
+              "result": "All review findings fixed; policy copy never wrapped (guard). Native devices unverified."
+            }
+          ]
+        }
+      }
     }
   ]
 }

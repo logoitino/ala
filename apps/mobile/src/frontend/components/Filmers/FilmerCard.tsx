@@ -7,6 +7,7 @@ import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme'
 import { filmerTier, nextFilmerTierHint, type FilmerStats } from '@/lib/filmers';
 import { formatCompactCount } from '@/lib/hype';
 import { FOCAL } from '@/theme/motion';
+import { MoreText } from '@/components/UI/MoreText';
 
 type FilmerCardProps = {
   stats: FilmerStats | null;
@@ -39,10 +40,9 @@ export function FilmerCard({ stats, own = false, onFilm }: FilmerCardProps) {
       <View style={styles.card}>
         <Text style={styles.kicker}>🎥 Filmer</Text>
         <Text style={styles.title}>Film a teammate’s play</Text>
-        <Text style={styles.lede}>
-          Every clip you post helps a family’s athlete get seen and supported. Tag who’s in it — when they confirm,
-          you earn Aura and a Filmer badge.
-        </Text>
+        <MoreText style={styles.lede} lines={2}>
+          {'Every clip you post helps a family’s athlete get seen and supported. Tag who’s in it — when they confirm, you earn Aura and a Filmer badge.'}
+        </MoreText>
         {onFilm ? (
           <AnimatedButton haptic="selection" onPress={onFilm} style={styles.cta} accessibilityLabel="Post a highlight">
             <Text style={styles.ctaLabel}>Post a highlight</Text>

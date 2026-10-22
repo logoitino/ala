@@ -1,10 +1,10 @@
 /**
- * The count row under the athlete hero: Seki, Riding, Crew and Squad, with the Join control under Crew
+ * The count row under the athlete hero: Seki, Riding, Crew and Squad, with the Join control at the end of the row
  * and the pulsing Teammates badge for a mutual follow (split out of AthleteProfileView.tsx for R4-03; behaviour unchanged).
  * The parent passes peak Seki / Flex; Crew and Squad come from `useCrew`, and Join goes through the soft wall.
  * @sideEffects `useCrew` RPC and toggle; SoftWall on Join.
  */
-import { type ReactNode, useEffect } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Reanimated, {
@@ -33,7 +33,7 @@ import type { Player } from '@/types/database';
 import { FOCAL } from '@/theme/motion';
 
 /**
- * @purpose Seki, Riding, Crew, and Squad as separate counts. Join sits under Crew only.
+ * @purpose Seki, Riding, Crew, and Squad as separate counts on one compact line. Join sits at the end of the row.
  * @param player Athlete whose Crew graph we load.
  * @param sekiCount Peak Seki on this athlete.
  * @param flexCount Peak Flex on this athlete.
@@ -80,13 +80,13 @@ export function ProfileStatRow({
         accessibilityState={{ disabled: crew.busy, selected: crew.following }}
         disabled={crew.busy}
         haptic="medium"
-        hitSlop={6}
+        hitSlop={8}
         onPress={onJoin}
         style={[styles.joinIcon, crew.following && styles.joinIconOn]}
       >
         <Ionicons
           name={crew.following ? 'checkmark' : 'flash'}
-          size={18}
+          size={15}
           color={crew.following ? FOCAL.jadeInk : '#FFFFFF'}
         />
       </Pressable>
@@ -95,8 +95,9 @@ export function ProfileStatRow({
 
   return (
     <View style={styles.statRow}>
-      <ProfileCount value={sekiCount} label="Seki" color={FOCAL.cyanInk} accessibilityLabel={`${formatCompactCount(sekiCount)} Seki`} reserveAction={showJoin} />
-      <ProfileCount value={flexCount} label="Riding" color={FOCAL.goldInk} accessibilityLabel={`${formatCompactCount(flexCount)} riding with ${player.name}`} reserveAction={showJoin} />
+      {/* Compact: one line of counts; the Crew join control sits at the end instead of opening a gap in every column. */}
+      <ProfileCount value={sekiCount} label="Seki" color={FOCAL.cyanInk} accessibilityLabel={`${formatCompactCount(sekiCount)} Seki`} />
+      <ProfileCount value={flexCount} label="Riding" color={FOCAL.goldInk} accessibilityLabel={`${formatCompactCount(flexCount)} riding with ${player.name}`} />
       {showCrew ? (
         <>
           <ProfileCount
@@ -104,15 +105,14 @@ export function ProfileStatRow({
             label="Crew"
             color={FOCAL.jadeInk}
             accessibilityLabel={`${CREW_COUNTER_LABEL} ${crew.crew_count}`}
-            action={join}
           />
           <ProfileCount
             value={crew.squad_count}
             label="Squad"
             color={FOCAL.violetInk}
             accessibilityLabel={`${SQUAD_COUNTER_LABEL} ${crew.squad_count}`}
-            reserveAction={showJoin}
           />
+          {join ? <View style={styles.joinCell}>{join}</View> : null}
         </>
       ) : null}
     </View>
@@ -124,22 +124,15 @@ function ProfileCount({
   label,
   color,
   accessibilityLabel,
-  action,
-  reserveAction = false,
 }: {
   value: number;
   label: string;
   color: string;
   accessibilityLabel: string;
-  action?: ReactNode;
-  reserveAction?: boolean;
 }) {
   return (
-    <View style={styles.stat} accessibilityRole={action ? undefined : 'text'} accessibilityLabel={action ? undefined : accessibilityLabel}>
-      <Text style={[styles.statValue, { color }]} accessibilityLabel={action ? accessibilityLabel : undefined}>
-        {formatCompactCount(value)}
-      </Text>
-      {action ?? (reserveAction ? <View style={styles.joinSlot} /> : null)}
+    <View style={styles.stat} accessibilityRole="text" accessibilityLabel={accessibilityLabel}>
+      <Text style={[styles.statValue, { color }]}>{formatCompactCount(value)}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
@@ -196,40 +189,41 @@ function TeammatesBadge({
 const styles = StyleSheet.create({
   statRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-around',
-    gap: 8,
-    marginTop: 2,
-    paddingTop: 8,
+    gap: 6,
+    marginTop: 0,
+    paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: 'rgba(15,20,22,0.08)',
   },
   stat: {
     flex: 1,
     alignItems: 'center',
-    gap: 2,
+    gap: 0,
     minWidth: 0,
   },
   statValue: {
     ...SCOREBOARD_DIGITS,
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 17,
+    lineHeight: 20,
     fontWeight: '900',
   },
   statLabel: {
     color: colors.text,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     textAlign: 'center',
   },
-  joinSlot: {
-    width: 44,
-    height: 44,
+  joinCell: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  // 30pt visible + hitSlop 8 keeps the 44pt touch target.
   joinIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: FOCAL.jadeInk,
@@ -317,6 +311,8 @@ const styles = StyleSheet.create({
   },
   teammatesHitCompact: {
     minHeight: 44,
+    // AnimatedButton has no hitSlop, so the mutual-follow badge keeps a full 44pt width itself.
+    minWidth: 44,
   },
   teammatesGlow: {
     ...StyleSheet.absoluteFill,

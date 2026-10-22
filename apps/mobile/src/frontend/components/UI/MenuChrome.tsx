@@ -39,8 +39,8 @@ export function MenuStepIndicator({ labels, current }: { labels: string[]; curre
 const styles = StyleSheet.create({
   art: { position: 'absolute', top: 0, right: 0, width: 160, height: 110, overflow: 'hidden' },
   orb: { position: 'absolute', width: 150, height: 150, borderRadius: 75, top: -60, right: -38 },
-  steps: { flexDirection: 'row', gap: 6, paddingBottom: 12 },
-  step: { flex: 1, minHeight: 38, paddingHorizontal: 6, paddingVertical: 8, borderRadius: MENU_METRICS.controlRadius, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  steps: { flexDirection: 'row', gap: 6, paddingBottom: 8 },
+  step: { flex: 1, minHeight: 32, paddingHorizontal: 6, paddingVertical: 5, borderRadius: MENU_METRICS.controlRadius, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   stepActive: { backgroundColor: colors.accentSoft, borderColor: colors.primary },
   number: { fontSize: 11, fontWeight: '800', color: colors.textMuted },
   numberActive: { color: colors.primary },

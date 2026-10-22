@@ -32,6 +32,7 @@ import {
 } from '@/lib/rallies';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { MoreText } from '@/components/UI/MoreText';
 
 type ClipChoice = { id: string; title: string };
 
@@ -159,7 +160,7 @@ export function RallyCard({
         <Text style={[styles.status, rally.status === 'filled' && styles.statusFilled]}>{rallyStatusLine(rally)}</Text>
       </View>
       <Text style={styles.title}>{rally.title}</Text>
-      {rally.story ? <Text style={styles.story}>{rally.story}</Text> : null}
+      {rally.story ? <MoreText style={styles.story} lines={3}>{rally.story}</MoreText> : null}
 
       <View
         style={styles.track}

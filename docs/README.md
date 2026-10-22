@@ -42,6 +42,7 @@ order, then dip into the folders as you need them.
 | [GROWTH_CAPACITY_REVIEW.md](engineering/GROWTH_CAPACITY_REVIEW.md) | One accountable growth/capacity team, accepted measurement sources, per-service review triggers and CTO/owner decisions. |
 | [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md) | Standing up the staging project and a tester build. |
 | [DEV_DATABASE_CATCHUP.md](engineering/DEV_DATABASE_CATCHUP.md) | Ordered SQL checklist to bring the development database up to date and switch Beyond posting on (owner decision 2026-10-16; not run). |
+| [STAGING_DATABASE_CATCHUP.md](engineering/STAGING_DATABASE_CATCHUP.md) | Ordered SQL checklist to bring staging up to date (41 files since 2026-10-01, security fix first); prepared 2026-10-21, not run. |
 | [TOOLING.md](engineering/TOOLING.md) | MCP servers for assistants (Playwright, Expo, Canva, Supabase dev, Figma): what each is for, sign-in, safety limits. |
 | [TROUBLESHOOTING.md](engineering/TROUBLESHOOTING.md) | Metro, Expo, env and payment failures and their fixes. |
 | [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) | What testers do per role, and what to ask them. |

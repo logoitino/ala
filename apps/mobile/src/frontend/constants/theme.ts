@@ -144,9 +144,9 @@ export const space = {
 
 /** One geometry rhythm for fan menus; avoid changing video overlays or business rules. */
 export const MENU_METRICS = {
-  sheetRadius: 28,
-  cardRadius: 20,
-  controlRadius: 16,
+  sheetRadius: 24,
+  cardRadius: 16,
+  controlRadius: 14,
   touchTarget: 44,
 } as const;
 
