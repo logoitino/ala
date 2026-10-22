@@ -1,6 +1,7 @@
 -- MONEY-TIPS-01: no athlete-gift cut; published default-OFF optional extras and immutable test quote admission.
 -- No historical financial rewrite, provider settlement, gift/Aura webhook credit, or payout activation.
--- Rollback: restore prior function definitions only after reconciling newly booked full-family gifts; never reprice history.
+-- Containment: pause new checkout, keep extras OFF and reconcile issued/paid quotes; never restore the gift cut.
+-- Forward repair must preserve zero-cut allocations and original financial history.
 begin;
 
 create or replace function public.company_revenue_bps(stream_source text)

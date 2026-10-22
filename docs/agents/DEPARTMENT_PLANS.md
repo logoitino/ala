@@ -1,6 +1,62 @@
 <!-- Current app duties cover every registered department; dated source and runtime evidence remain distinct. -->
 # Department plans — where we are, and what each team will do
 
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+[COORD-02](COORD-02.md) is the current whole-team reading path. All **115 callable role
+definitions across 17 department labels** and their descriptive registry handoffs carry
+role-specific duties. Actual work is performed by the named outside-session Codex executors;
+definitions do not establish 115 specialist runs, message delivery, staffing or approvals.
+Existing role names, paths, reporting leads, owned surfaces and pinned models remain.
+
+The owner's money map is **Gift / Give / Send a gift** for individuals, **Donation / Donate to
+the program** for programs, **Tip Tapua'i (optional)** for platform support and **Cover the
+processing fee** for optional Stripe-cost coverage. **Subscription** and digital **Purchase**
+remain separate from giving. Keep internal tips/donation_/malo identifiers and posted history.
+The old donation-everywhere, 90/10 and Donate. Elevate. Celebrate. instructions are superseded.
+
+Current local source has zero mandatory gift cut (0/10000) in both flag states. The default-off
+buttons.MONETIZATION_TIPS_ENABLED must be literal true to enable optional tips/processing
+estimates; it does not control the no-cut allocation. Local tests establish full gross family
+liability only. Actual processor fees/net settlement, Connect destination choice and refunds
+remain unverified. Payouts stay blocked and the client remains the sole tips credit writer.
+
+Source checkpoints: copy `5a95152`, model/admin `e9da05f`, checkout `4c54606`. Supplied original local
+receipts passed 266 suites / 2576 tests, 117 portal tests, 22 SQL cases and independent 71+21 checks;
+this documentation pass does not rerun or convert those receipts into hosted/device evidence.
+COORD-02 records the missing development/staging rollout prerequisites and actual new checks.
+
+LEGAL/counsel still own final Terms, signed guardian consent/versioning, gift-linked 10 Aura per $1
+digital-border eligibility and processor/store claims. Owner classification remains open for
+the mixed “Refund donation” label and booster placement (currently a Purchase, not proof of
+charity). Finance, Data/Privacy, Security, Minor Safety and independent QA retain their gates.
+
+### Current gift deliverables by department
+
+Each department retains its existing lead and domain authority. Exact primary task owners,
+reviewers and acceptance are in the [ordered queue](WORK_QUEUE.md#coord-02--ordered-remaining-gift-release-work-2026-10-22).
+
+| Existing department | Current deliverable / gate |
+| --- | --- |
+| Office of the CTO | CTO names one primary owner per remaining task; VP_OPERATIONS reconciles all 115 handoffs and records actual integration/evidence. Owner retains release, legal and spend decisions. |
+| Product | PRODUCT/RESEARCH turn gift/no-cut, bank-free first actions and optional later setup into acceptance; retain unknown growth/usability and owner classification decisions. |
+| Engineering | ENGINEERING and existing surface/API/shared-contract owners preserve no-cut/flag parity, raw identifiers, required notices and current SDK 58 contracts; Documentation integrates actual evidence. |
+| Database | BACKEND/DATABASE_MIGRATIONS/STORAGE prepare reviewed exact target dependencies, parity and actor/private negatives; owner/operator applies only the accepted scope. |
+| Security | SECURITY and its six specialists independently review session/RLS/credit/config/infrastructure/recovery boundaries; local checks do not close hosted financial authorization. |
+| IT infrastructure | OPERATIONS/RELEASE/CI/RECOVERY retain build/target/source custody; COST_OPERATIONS supplies actual processing/provider costs; no deployment or spend follows from role definitions. |
+| Finance | COMMERCE and its twelve specialists preserve staged review, one writer and blocked payouts; CONNECT/LEDGER/RECONCILIATION/REFUNDS/RECEIPTS own remaining destination, authority, net and reversal evidence. |
+| Finance and Accounting | CFO/CONTROLLER/TREASURY/INTERNAL_CONTROLS distinguish full gross family liability, voluntary tips, actual processing and held cash; TAX/CPA decides tax duties; tests do not close a bank reconciliation. |
+| Data Governance | DATA_GOVERNANCE/DATA_LINEAGE/CODE_HYGIENE retain raw history and classify each new field/RPC/export/path; quote quota/retention and erasure need accepted rules before implementation. |
+| Design | DESIGN/ACCESSIBILITY/MOTION/DESIGN_TOOLING preserve fixed navigation, optional defaults and readable tax/held/error text; supply current draft/device evidence without changing financial decisions. |
+| Legal and Compliance | LEGAL/COMPLIANCE/CONTENT_RIGHTS/PRIVACY_ENGINEERING coordinate final counsel text, signed consent, tax/store/Aura and processor claims; originals and unresolved decisions remain explicit. |
+| Quality | QA/TEST_AUTOMATION/VISUAL_QA/DEVICE_QA independently verify current source and actual configured/device journeys; retain unrun provider and release gates. |
+| Trust and Safety | TRUST_SAFETY/MINOR_SAFETY/ATHLETE_VERIFICATION/MODERATION preserve age, school/guardian relationship, rights and review controls; gifts create no new permission or real-family activation. |
+| Marketing | MARKETING/BRAND/GROWTH_ANALYTICS use the current naming map, superseded tagline history and consented stories; add actual economics/friction to the one Growth packet before any campaign or public claim. |
+| Partnerships | PARTNERSHIPS/ROLE_HQ/SCHOOL_PARTNERS/SPONSOR_ADS distinguish individual gifts, program donations and current paid placement purchases; owner/counsel classify ambiguous offers and permissions. |
+| Engineering support | SUPPORT/INCIDENT_TRIAGE/TELEMETRY/RELIABILITY pair with source owners on sanitized signals, payment-completed/recording-failed repair and regression; missing settlement sensors are explicit. |
+| Brand | VOICE applies gift/program/tip/processing vocabulary and separate Subscription/Purchase; exact tax/100% wording follows actual Legal/Finance review and never implies unverified settlement. |
+
+
 ## Current app testing handoff — APP-TEST-01 (2026-10-21 UTC)
 
 **115 registered roles / 17 department labels; all 115 current assignments are listed once in [TEAM_STATUS](TEAM_STATUS.md#current-all-role-assignment-coverage--115-roles).** The [registry](../../.claude/agents/registry.json) owns the calls, pins and reporting leads. This is a responsibility and dependency update, not 115 executed agents, a staffing claim or external team delivery. Actual Documentation/VP and independent review receipts belong to [COORD-01](COORD-01.md#current-app-roadmap-and-whole-team-refresh--2026-10-21-utc).
@@ -64,7 +120,7 @@ in the registry/definitions/TEAMS/hierarchy/department plans/expert standards. O
 checks and independent review are recorded in [REDUNDANCY-07](REDUNDANCY-07.md), not inferred from
 this roster. Historical COORD-01 counts and original receipts remain dated below.
 
-## Current main-checkout handoff — COORD-01 (2026-10-16 UTC)
+## Earlier main-checkout handoff — COORD-01 (2026-10-16 UTC)
 
 [TEAM_STATUS](TEAM_STATUS.md) is the all-role briefing and job-function mapping; [COORD-01](COORD-01.md) records actual outside-session executors, reviewed paths, checks and remaining issues. There are **107 callable definitions across 17 department labels**. This review does not mean107 specialists ran, staff are hired or a scheduler is installed. Existing reporting, model pins and independent Finance/Legal/Privacy/Security/QA authority remain.
 
@@ -267,7 +323,7 @@ Fans can browse Highlights, Activity, Spotlight, and Profile. Local (games, poll
 | --- | --- | --- | --- | --- |
 | Highlights | Reel pager, hype, search, report/hide, owner peek card, photo-story player, neighbor prefetch | View counts and filmer credit from the September SQL | Photo-story tables and storage owner-folder rule | Device paging; photo SQL not applied; one ordinary report does not hide a clip |
 | Upload | Compact video steps; photo steps hidden until the SQL exists; account-tag field | Rights-report reasons | Account-tag SQL; photo-story SQL | Device picker; failed photo attempts leave hidden rows |
-| Donate | Amount → Options → Review, 90/10 disclosed, tip for Tapua'i starts at No tip | Rally, platform tip, and origin tags from the September SQL | — | Client still inserts `tips` after payment; webhook crediting stays off; payouts return 503 |
+| Gift (current source overlay) | Amount → Options → Review, zero mandatory cut; optional Tip Tapua'i/processing estimates require literal true/default off, No tip/unchecked fee | Rally, platform tip, and origin tags from the September SQL | — | Client still inserts `tips` after payment; webhook crediting stays off; payouts return 503 |
 | Profile | Sport-matched stats, Goals/Team, Vault lock, Crew, verification UI | Verification ladder and school badge | Public sport column on the privacy view | Development database still allows self-verify |
 | Local | Game cards, polls, boosters, match detail | Leaderboards SQL | — | Native layout not rechecked |
 | Spotlight | Week/month/year board | Boards from the September SQL | — | Stories are not Spotlight features |
@@ -338,7 +394,7 @@ Later the same day, every agent was connected to a model, and each department le
 
 **Lead:** `PRODUCT`. **Specialist:** `RESEARCH`.
 
-**Where we are.** Wave 0 is the current product: internal test, test cards, staging. The mission is family donations and highlights, with Donate / donation as the money words.
+**Where we are.** Wave 0 is the current product: internal test, test cards, staging. The mission is family gifts and athlete highlights, with individual Gift/Give, program Donation, optional Tip Tapua'i and separate digital Subscription/Purchase as the current money map.
 
 **What we have.** Roadmap waves 0–3. Tester script. Owner decisions recorded in STATE §6. The list the owner can answer:
 
@@ -352,7 +408,7 @@ Later the same day, every agent was connected to a model, and each department le
 | 6 | 1-on-1 | Later. Counsel before any build. |
 | 7 | Pathway savings | Counsel. Do not hold that money in the app. |
 | 8 | How money reaches families | Open. Owner and payments counsel. |
-| 9 | Fee model | Decided: 90/10 plus an optional tip for Tapua'i. App Store gift rule is still open. |
+| 9 | Fee model | Current owner decision on 22 October: zero mandatory gift cut in both flag states; literal-true default-off flag controls optional tips/processing estimates. Previous 90/10 decision is superseded history. Store/Aura/processor/net claims remain open. |
 | 10 | Verification | Decided: gifts wait until a school adult confirms. The held-gift cap and refund window are still open. |
 | 11 | Fan signature on the Aura card | Later. Do not build it. |
 
@@ -531,13 +587,13 @@ from one VM.
 
 **Lead:** `COMMERCE`.
 
-**Where we are.** Donations work in test mode as a client-written `tips` row after PaymentSheet. Payouts are hard-blocked. Exclusive is a one-time PaymentIntent, not a subscription. Drip is off.
+**Where we are.** Gifts retain a client-written `tips` row after PaymentSheet in test mode; current no-cut source allocates the full gross gift to family liability, with actual fees/net settlement unverified. Payouts are hard-blocked. Exclusive is a one-time PaymentIntent, not a subscription. Drip is off.
 
 **What we have.**
 
 | Piece | Have | Public plan |
 | --- | --- | --- |
-| Checkout | Amount, options, review, 90/10, optional tip for Tapua'i, optional card-fee line | Counsel on App Store 3.2.1(vii) before any 10% share ships on iOS |
+| Checkout | Amount → Options → Review; no mandatory cut, optional Tip Tapua'i/Cover the processing fee only behind literal-true/default-off flag | Counsel/store/Aura/actual-processing review before release; old 90/10 and 10% policy is superseded history |
 | Ledger | One `tips` row is the record | Webhook credits once; the app stops inserting. Not both |
 | Connect | Express link from the Edge Function | Parent is the payee, after counsel. Athlete is not the minor's bank account |
 | Custodial | Records and parent cards in the app; SQL on staging | Nothing moves money until the ledger and counsel sign-off |
@@ -548,7 +604,7 @@ from one VM.
 | Refunds | Not a product flow | Design with the ledger, before live money |
 | Drip | Off | Wave 1 marketplace only after the owner turns the tab on |
 
-**What we will do.** Keep the donate sheet's disclosures. Prepare the single credit path as a design. Leave payouts at 503. Vault money from the ADM-01 review: the ledger records the Vault 80% for the athlete, but `get_custodial_summary` sums only `tips`, so it never shows in the custodial family account. The owner chose direction A on 2026-10-12 (credit it to the family account like donations); build it only after counsel, together with STATE §6 item 8.
+**What we will do.** Keep current gift tax/held/recipient/no-cut disclosures and optional controls behind the default-off literal-true flag. Prepare the single credit path as a design. Leave payouts at 503. Vault money from the ADM-01 review: the ledger records the Vault 80% for the athlete, but `get_custodial_summary` sums only `tips`, so it never shows in the custodial family account. The owner chose direction A on 2026-10-12 (credit it to the family account like donations); build it only after counsel, together with STATE §6 item 8.
 
 **What we will not do.** Live keys. Destination charges or a platform ledger until the owner and payments counsel pick one. Filmer cash. Holding Pathway savings.
 
@@ -599,7 +655,7 @@ Counsel decides the law. This team does not draft a Privacy Policy, a liability 
 | Privacy Policy | Not published. Inventory only |
 | Account export and deletion | Beyond/CHAL domain exports and support erasure exist locally; global account export/deletion and provider cleanup remain open (privacy map §3.4) |
 | Auto-renewal disclosure | Exclusive is one-time; renewal/cancellation obligations are assessed only for an approved recurring model, by counsel |
-| Donation words | 90/10, No tip default, and held-gift notice are on the review step. Brand checks the words |
+| Money words | Individual Gift/Give, program Donation, optional Tip Tapua'i/processing coverage; no mandatory gift cut, No tip/unchecked fee and held notice. VOICE checks source; actual 100%/processing/store claims need counsel/Finance evidence |
 | Footage and marks | Uploader confirms permission, sound, and marks. Game Day confirms real footage. Photo stories add a photo-permission line (LEGAL rows U and V). Counsel has not decided whether school marks may appear |
 | Reports | Legacy reports/hide and local Beyond pre-review/remove controls exist; real reviewer/support staffing and broader strikes/appeals remain open |
 | Age | MINOR-01 uses birth month/year, unknown-age handling and known-under13 closure; migrations remain unapplied |
@@ -619,7 +675,7 @@ These are the gaps already listed for counsel in LEGAL_BRIEFING §8 and the priv
 2. **Documents counsel writes,** which the app then links and versions: Terms of Use (including whatever liability language counsel chooses), Privacy Policy, parental consent, athlete/creator agreement. Booster or school paper only if those customers are real.
 3. **Written association and district position** before a commercial build shows a school mark or game film.
 4. **Privacy product path:** export, and a deletion design that says what is kept (donation records, other people's clips) and why. Product, Database, and Security build it only after that disclosure is agreed.
-5. **Fee and minor-payee questions** counsel still has open: App Store gift rules versus the 10% share, guardian handover age by state, whether a named Rally cost creates a duty to spend it that way, and tax reporting.
+5. **Fee and minor-payee questions** counsel still has open: App Store gift rails, gift-linked Aura/digital borders and actual processing/net claims (the old 10% gift cut is superseded), guardian handover age by state, whether a named Rally cost creates a duty to spend it that way, and tax reporting.
 6. **Photo stories (rows U and V):** counsel reviews photos of minors and bystanders, and whether JPEG stripping is enough. Beyond has local JPEG/MP4 scrub/compressor defenses; this does not certify decoder output or legacy video metadata stripping.
 7. **Trackers:** any future analytics stays off until a person opts in. No "accept all or leave" wall.
 8. **Auto-renewal:** write the disclosure and cancel path only if Exclusive becomes a subscription. It is not one today.
@@ -647,7 +703,7 @@ Same gaps as [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) "Compliance routing
 
 **Lead:** `VOICE`. **Message:** `BRAND` under Marketing.
 
-**Where we are.** Money language is Donate / donation. "Mālo!" is only a thank-you. The approved line "Donate. Elevate. Celebrate." is in the welcome overlay, the donate Amount step, and under an athlete's Donate button.
+**Where we are.** Current money language follows the October 22 Gift/program Donation/optional Tip Tapua'i map with separate Subscription/Purchase. "Mālo!" is only a thank-you. The prior Donate. Elevate. Celebrate. placement instruction is superseded history; do not invent a replacement tagline.
 
 **What we will do.** Run the copy check on every money-screen change and review store listing text with Legal before submission. ADM-01 wording/report-format review is complete locally. Vault stays "recorded for the athlete" until the owner/counsel direction-A family-account design is implemented and verified.
 

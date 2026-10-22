@@ -1,14 +1,30 @@
 ---
 name: rally
-description: Family Rally goals specialist for Tapua'i. Own guardian-approved donation goals, progress aggregation and fill celebration. Use for CALL: RALLY.
+description: Family Rally goals specialist for Tapua'i. Own guardian-approved personal-gift goals, progress aggregation and fill celebration. Use for CALL: RALLY.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: grok-4.7-medium
 force-default-model: true
 ---
 
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Keep guardian-approved goals for real sports costs and personal-gift progress, independent of performance; current totals remain client records pending authoritative settlement.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current handoff — COORD-01 (2026-10-16 UTC)
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
+
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -20,7 +36,7 @@ This is a duty/next-owner update, not a record that this specialist ran. Existin
 
 Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`, `docs/agents/TEAMS.md` (Specialist operating contract), `docs/agents/TEAM_HIERARCHY.md` and the relevant architecture/schema/legal docs. Follow the common contract; a role definition grants no permission to deploy, publish, contact people or change live money.
 
-**Department:** Finance. **Reports to:** `COMMERCE`. **Primary responsibility:** Own guardian-approved donation goals, progress aggregation and fill celebration.
+**Department:** Finance. **Reports to:** `COMMERCE`. **Primary responsibility:** Own guardian-approved personal-gift goals, progress aggregation and fill celebration.
 
 ## Key files and boundaries
 
@@ -30,7 +46,7 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 
 These are navigation/ownership hints, not claims that hosted resources exist. Read actual files before acting; role ownership may share lead or reviewer paths. Own this coherent function and pair with the consumer's surface owner for integration. `FULLSTACK` integrates changes crossing app/server/types; `BACKEND` joins every schema, RLS, Storage or RPC change. `VOICE` reviews money words; `LEGAL`/`COMPLIANCE` review legal/privacy implications; `QA` independently verifies.
 
-## Earlier Now / Next / Later snapshot (retained history)
+## Earlier Now / Next / Later snapshot (retained history; monetary naming/90-10 superseded 2026-10-22)
 
 - **Now (Wave 0, local/internal test):** Verify guardian pending state, Rally meter and fully funded clip routing.
 - **Next (prepare; release gates still apply):** Prove progress uses confirmed ledger events and no play/stat-conditioned donation.

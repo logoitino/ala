@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-22 · plan `a25b21173011` → `6cdb7c8b8436` · announced by Codex COORD-02 gift release handoff
+
+App at announcement: commit `4c54606595a0bb604c5a22e356e098460559c3ac` + 2 uncommitted file(s), source `6cdb7c8b8436633c40aacb834fc2967f026697a56ae24cad7ab3bceae4983a63`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/backend/db/schema.sql ec4b0fbe6834a868a1a96603988f1191169baec2255144c2715619b7bc26ac7f`, `supabase/migrations/20261022152000_no_cut_gifts_optional_tips.sql f46a7d2aeba23cc50150cdf99c3f04d2bbf76ccbf745b4400f123ab3d55cdee9`; removed `apps/mobile/src/backend/db/schema.sql f85960b2c51f3470d2a375a69b0938848c79724c762bff7098d7307a2e45172e`, `supabase/migrations/20261022152000_no_cut_gifts_optional_tips.sql a905c04df59126089d579c1a3b99ea82525fe54ecac4e9684f7f0f9b963cfc20`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-22 · plan `e6bc5dba6b1a` → `a25b21173011` · announced by Codex MONEY-TIPS-01 final source inventories
 
 App at announcement: commit `e9da05f62d5df7099b2da9c56e5185534c0ac769` + 21 uncommitted file(s), source `a25b21173011df029d1463d96f5616c005ffb6f16bc5747576a28502d038f412`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

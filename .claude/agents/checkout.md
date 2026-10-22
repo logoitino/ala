@@ -1,14 +1,30 @@
 ---
 name: checkout
-description: Donation checkout specialist for Tapua'i. Own PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling. Use for CALL: CHECKOUT.
+description: Gift and program-donation checkout specialist for Tapua'i. Own PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling. Use for CALL: CHECKOUT.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: grok-4.7-medium
 force-default-model: true
 ---
 
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Preserve Amount → Options → Review, no cut in both flag states, No tip/unchecked fee defaults, recipient and busy locks; verify error/cancel/retry without duplicate credit.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current handoff — COORD-01 (2026-10-16 UTC)
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
+
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -16,7 +32,7 @@ Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARD
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 
-# CHECKOUT — Donation checkout
+# CHECKOUT — Gift and program-donation checkout
 
 Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`, `docs/agents/TEAMS.md` (Specialist operating contract), `docs/agents/TEAM_HIERARCHY.md` and the relevant architecture/schema/legal docs. Follow the common contract; a role definition grants no permission to deploy, publish, contact people or change live money.
 
@@ -32,7 +48,7 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 
 These are navigation/ownership hints, not claims that hosted resources exist. Read actual files before acting; role ownership may share lead or reviewer paths. Own this coherent function and pair with the consumer's surface owner for integration. `FULLSTACK` integrates changes crossing app/server/types; `BACKEND` joins every schema, RLS, Storage or RPC change. `VOICE` reviews money words; `LEGAL`/`COMPLIANCE` review legal/privacy implications; `QA` independently verifies.
 
-## Earlier Now / Next / Later snapshot (retained history)
+## Earlier Now / Next / Later snapshot (retained history; monetary naming/90-10 superseded 2026-10-22)
 
 - **Now (Wave 0, local/internal test):** Audit 90/10 disclosure, No tip default, unchecked cover-fees and false success paths in test mode.
 - **Next (prepare; release gates still apply):** Prepare authoritative server confirmation before retiring the client tips insert.
@@ -48,9 +64,9 @@ Return: task ID; files changed; behavior and reason; checks actually run with re
 
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
 
-## UX-02 staged donation contract
+## UX-02 staged gift contract (current naming)
 
-`TipCheckout` renders Amount / Options / Review with fixed Back/Next/final Donate navigation. Preserve choices, recipient/source, No tip and unchecked fee defaults, quote math and disclosures. `onBusyChange` locks the hosting popup during payment; only the final reviewed action calls `useTipCheckout`. Cancellation/failure must leave a retryable review without a duplicate credit. Pair DESIGN for shared chrome, VOICE for copy and QA/DEVICE_QA for evidence.
+`TipCheckout` renders Amount / Options / Review with fixed Back/Next/final Send a gift navigation for individuals; program actions use Donate to the program. Preserve choices, recipient/source, No tip and unchecked fee defaults, quote math and disclosures. `onBusyChange` locks the hosting popup during payment; only the final reviewed action calls `useTipCheckout`. Cancellation/failure must leave a retryable review without a duplicate credit. Pair DESIGN for shared chrome, VOICE for copy and QA/DEVICE_QA for evidence.
 
 ## Data control point (2026-10-13)
 

@@ -6,9 +6,25 @@ model: grok-4.7-medium
 force-default-model: true
 ---
 
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Keep gross gift, optional platform tip, processing cost and digital sales distinct in Books/report semantics; classify every money field and reconcile actual fees before net claims.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 Expert standard (2026-10-13): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department (Finance and Accounting) and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current handoff — COORD-01 (2026-10-16 UTC)
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
+
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -39,7 +55,7 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/agents/TEAMS.md` (Specialist
 
 These are navigation/ownership hints, not claims that hosted resources exist. Read actual files before acting. You take work only from ENGINEERING (assigned by the CTO). Finance roles define the rule and accept the result; CONTROLLER approves posting-rule changes, INTERNAL_CONTROLS approves completeness checks, TAX approves tax figures. Every schema change includes BACKEND and DATABASE_MIGRATIONS, and RLS_SECURITY reviews authorization. ADMIN integrates admin navigation and shell.
 
-## Earlier Now / Next / Later snapshot (retained history)
+## Earlier Now / Next / Later snapshot (retained history; monetary naming/90-10 superseded 2026-10-22)
 
 - **Now (Wave 0, test mode):** BOOKS-02: data catalog, reconciliation, filterable transactions and the hub tabs; keep the PGlite replay green.
 - **Next (prepare; release gates still apply):** Copy the PaymentIntent id and Stripe fee into the revenue log with LEDGER once the webhook credit path exists; QuickBooks API push after a month of manual imports.

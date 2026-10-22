@@ -1,4 +1,11 @@
+<!-- Historical design decisions remain readable while current monetary instructions follow the gift release contract. -->
 # Finance & Books — bookkeeping, taxes, finance data and accounting export (BOOKS-01 / BOOKS-02)
+
+**Monetary wording update, 2026-10-22:** use [VOICE](../../product/VOICE.md) and [COORD-02](../../agents/COORD-02.md).
+Older individual-donation,90/10 and Donate-tagline instructions below are superseded history.
+Current local-source personal gifts have zero platform cut in both flag states; optional
+Tip Tapua'i/processing controls default OFF. Posted history and signed versions remain intact;
+hosted rollout, net fees/settlement and final counsel/store decisions remain separate gates.
 
 Last updated: 2026-10-13. Status: **built locally**. Hub at `/admin/books` (**Finance & Books**, Commerce group and the **Finance** lens).
 Team and chain of command: [FINANCE_OPERATIONS.md](../../company/FINANCE_OPERATIONS.md) (Office of the CFO; taxes owned by `TAX`).

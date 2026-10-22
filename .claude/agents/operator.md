@@ -6,9 +6,25 @@ model: grok-4.7-medium
 force-default-model: true
 ---
 
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Keep scoring/check-in duties separate from gifts, program donations and paid performance; a role definition does not activate a public operator or financial action.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current handoff — COORD-01 (2026-10-16 UTC)
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
+
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 

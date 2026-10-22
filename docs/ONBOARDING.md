@@ -438,7 +438,7 @@ The focused account-to-bank test command and manual acceptance matrix are in
 Record the source revision, executed results and any concurrent-edit limits; source tests do not
 verify a hosted database, Google configuration or Stripe/browser/device completion.
 
-After changing donation amounts, the 90 / 10 split, Aura tiers, PIN, Connect identity, or Highlight labels:
+After changing gift amounts, gift/processing allocations, Aura tiers, PIN, Connect identity, or Highlight labels:
 
 ```bash
 pnpm docs:sync
@@ -459,3 +459,11 @@ Path aliases:
 
 - Mobile: `@/*` → `apps/mobile/src/frontend/*`, `@backend/*` → `apps/mobile/src/backend/*`, `@shared/*` → `packages/shared-types/*`
 - Admin: `@/*` → `apps/admin-portal/*`, `@shared/*` → `packages/shared-types/*`
+
+## Current gift-release onboarding — 2026-10-22
+
+Read [COORD-02](agents/COORD-02.md) and the [rollout runbook](engineering/GIFT_TIP_ROLLOUT.md)
+before payment work. Athlete support is Gift/Give, program support Donation, platform support
+an optional Tip. New local-source gifts have zero platform cut; published extras default OFF.
+Both hosted projects currently lack payment-context/tip prerequisites. Do not infer applied
+SQL or net settlement from local checks. Older 90/10 instructions are superseded history.

@@ -6,9 +6,23 @@ model: grok-4.7-medium
 force-default-model: true
 ---
 
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Record current narrow/large-text/browser gift review, optional controls and held/error layouts; screenshots and local source cannot establish native/provider settlement.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current app handoff — COORD-01 (2026-10-21 UTC)
+## Earlier app handoff — COORD-01 (2026-10-21 UTC)
 
 Read [APP-TEST-01](../../docs/agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc),
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) and the current roadmap before the next assignment.
@@ -19,6 +33,8 @@ This updates the next-owner duty. Actual current-source results and unrun provid
 cases are in STATE and COORD-01; this definition does not establish execution or release.
 
 ## Earlier handoff — COORD-01 (2026-10-16 UTC)
+
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -40,7 +56,7 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 
 Web rendering is not native iOS/Android: `DEVICE_QA` still signs off native layout, camera, PaymentSheet, haptics and screen readers; `ACCESSIBILITY` owns the accessibility criteria. Run against local Expo web or a static export only — never staging/production data or real payments. Report pass/fail with screenshot names and file:line; do not fix product bugs yourself — hand back to the owning squad.
 
-## Earlier Now / Next / Later snapshot (retained history)
+## Earlier Now / Next / Later snapshot (retained history; monetary naming/90-10 superseded 2026-10-22)
 
 - **Now (ADM-01, 2026-10-12):** Re-review the admin portal after the Codex report format pass. The owner made that format (wide header, underline tabs, open panels, report charts) the default on every page, so check defects inside it, not whether it should exist. Your last pass (waves 1–3, stopped before the 14:12 format pass) was **REJECT** on raw event keys on screen ("Taps by control", UI-issue lists on Trends, Analytics, Departments and Health); recheck those once PORTAL reports `lib/eventLabels.ts` wired into every page, plus `/login` `metadata.title`. Recheck every "pre-format" styling note. Widths 1728/1440/1024/768/390/375/320 and 200% text; chart colours against `lib/measureColors.ts`; no horizontal overflow; header static. Use `.smoke/admin-portal-mock/` (mock Supabase, signed-in cookie). UX-05e photo-story captures stay open after this.
 - **Next (prepare; release gates still apply):** Turn the recurring screenshot set into a repeatable regression checklist with TEST_AUTOMATION, measurement-first (see the tooling notes); mark press screenshots STALE when chrome moves.

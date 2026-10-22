@@ -1,6 +1,44 @@
 <!-- Test procedures distinguish historical wave checks from current source, provider and device acceptance. -->
 # Tester script — Phase 3 internal wave
 
+## Current giving checks — MONEY-TIPS-01 (2026-10-22)
+
+Use the [rollout runbook](GIFT_TIP_ROLLOUT.md) and [COORD-02](../agents/COORD-02.md) first.
+Run these on a confirmed, deployed **test** target after prerequisites are verified. Older
+individual-donation/90/10/Donate-tagline scenarios below are retained as superseded history;
+they are not current expected results. No test result here establishes App Store approval.
+
+1. Open an athlete page, gift sheet, personal gift receipt, role HQ and matching admin reports.
+   Athlete/family money says Gift/Give; the athlete page and receipt say exactly:
+   **Gifts to individual athletes are personal gifts and are not tax-deductible.**
+2. With the published extras flag OFF, start a new $5 gift. Tip/processing controls and the
+   tip-step100% statement are absent. New source allocation is $5 gross family liability/$0
+   platform gift share. This verifies a ledger allocation, not bank settlement.
+3. Only in the separately approved test run with published extras ON, start a fresh gift.
+   **Tip Tapua'i (optional)** starts at No tip; **Cover the processing fee** starts unchecked.
+   The tip step contains the exact owner sentence and separate processing/test-rail disclosure:
+   **100% of your gift goes to the athlete's family. Tips go to Tapua'i and keep the platform free for families.**
+4. Review the gift, optional platform tip, estimated cover contribution and total separately.
+   Verify $1/$1000 inclusive limits, changed-total re-review and single final payment action.
+   A $5 gift +$0.50 tip +$1 configured cover charges $6.50; gift receipt/Highlight counter records
+   $5, family gross liability$5, platform gift share$0. Provider fee is checked separately.
+5. Change flag/catalog while the unpaid review is open; require a fresh valid review. After a
+   quote is issued or payment succeeds, preserve its original allocation through flag changes.
+   Double-tap, reconnect, stale recipient and paid-but-unsaved failure must not invite repayment.
+   Reconcile any old-client in-flight payment before admitting the new SQL guard.
+6. Inspect historical recorded shares/refunds without repricing. Missing family share remains
+   unknown; closed-period missing rows require Finance repair. Flag OFF never restores10%.
+7. Classify digital products independently: current Vault is a one-time Purchase; recurring
+   premium is Subscription. Record current gift-linked Aura/border behavior for counsel review;
+   do not claim “no digital benefit” or person-to-person eligibility until that decision lands.
+8. Existing booster logo/placement purchases are not charitable program donations. Test any
+   future charitable path only after its separate web implementation/status evidence exists.
+   Club-specific receipt wording must not promise an athlete gift deduction.
+
+Keep screenshots/string tables, build/commit, target, flag state, exact cents, failures and
+provider/SQL observations with the actual executor. No live card or public submission follows
+from these test instructions. Physical-device/provider cases remain unrun in this handoff.
+
 For the trusted first group (team, family, friendly coaches and boosters). Stripe is in **test
 mode**: no real money moves. Use card `4242 4242 4242 4242`, any future expiry, any CVC, any ZIP.
 

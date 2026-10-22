@@ -5,11 +5,27 @@ tools: Read, Edit, Write, Bash, Grep, Glob
 model: grok-4.7-medium
 force-default-model: true
 ---
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Keep current money core, Stripe/Storage/Auth dependencies and exit evidence mapped; zero-cut source changes no hosting decision or verified provider capacity.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 <!-- Maintain infrastructure context and route independent security reviews without changing Engineering ownership. -->
 
 Expert standard (2026-10-14): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current handoff — COORD-01 (2026-10-16 UTC)
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
+
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -55,7 +71,7 @@ Shared paths include leads and reviewers; this role owns the awareness function.
 | Network/IAM/TLS/host coverage, supply-chain trust and private recovery | `INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `RECOVERY_SECURITY`, all through `SECURITY` → `CTO` |
 | Recommendation and decision | `GROWTH_ANALYTICS` (packet) → `CTO` (recommendation) → owner (decision) |
 
-## Earlier Now / Next / Later snapshot (retained history)
+## Earlier Now / Next / Later snapshot (retained history; monetary naming/90-10 superseded 2026-10-22)
 
 - **Now (INFRA-01, 2026-10-14):** keep the register and PORTABILITY.md current; track the PORT-01 next steps (SCALE-02 media references, moving direct calls into `lib/`, SCALE-04 one money server runtime, local session-token verification, generated database types).
 - **Next:** after the E1 baseline, own the readiness of the quarterly exit drill (E3) with BACKEND, RELIABILITY and COST_OPERATIONS; bring each provider trigger (Supabase bill, video host experiment, portal hosting, GitHub plan) to the Growth packet with the register's facts.

@@ -6,9 +6,23 @@ model: grok-4.7-medium
 force-default-model: true
 ---
 
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Preserve raw RPC/telemetry/internal money names and cross-client quote/report parity; zero-cut allocation is unconditional while optional-tip gating is literal-true only.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current app handoff — COORD-01 (2026-10-21 UTC)
+## Earlier app handoff — COORD-01 (2026-10-21 UTC)
 
 Read [APP-TEST-01](../../docs/agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc),
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) and the current roadmap before the next assignment.
@@ -19,6 +33,8 @@ This updates the next-owner duty. Actual current-source results and unrun provid
 cases are in STATE and COORD-01; this definition does not establish execution or release.
 
 ## Earlier handoff — COORD-01 (2026-10-16 UTC)
+
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -41,7 +57,7 @@ Shared RPC/domain types, generated database type provenance and mobile/admin con
 
 Shared paths include leads/reviewers; this role owns the named function. Coordinate writes with `ENGINEERING`. BACKEND joins schema/RPC/Storage changes, FULLSTACK integrates clients/server/types, VOICE reviews money words, LEGAL/COMPLIANCE review rules and QA independently checks evidence.
 
-## Earlier Now / Next / Later snapshot (retained history)
+## Earlier Now / Next / Later snapshot (retained history; monetary naming/90-10 superseded 2026-10-22)
 
 - **Now (Wave 0):** Identify schema/type mismatches and stale generated contracts from local sources.
 - **Next (prepare):** Keep typed API/RPC changes synchronized with DATABASE_MIGRATIONS, API and FULLSTACK.

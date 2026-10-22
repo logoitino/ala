@@ -1,7 +1,44 @@
 <!-- Domain review standards and declared model pins; actual execution and acceptance require original scoped evidence. -->
 # Expert standards
 
-## Current main-checkout handoff — COORD-01 (2026-10-16 UTC)
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+[COORD-02](COORD-02.md) is the current whole-team reading path. All **115 callable role
+definitions across 17 department labels** and their descriptive registry handoffs carry
+role-specific duties. Actual work is performed by the named outside-session Codex executors;
+definitions do not establish 115 specialist runs, message delivery, staffing or approvals.
+Existing role names, paths, reporting leads, owned surfaces and pinned models remain.
+
+The owner's money map is **Gift / Give / Send a gift** for individuals, **Donation / Donate to
+the program** for programs, **Tip Tapua'i (optional)** for platform support and **Cover the
+processing fee** for optional Stripe-cost coverage. **Subscription** and digital **Purchase**
+remain separate from giving. Keep internal tips/donation_/malo identifiers and posted history.
+The old donation-everywhere, 90/10 and Donate. Elevate. Celebrate. instructions are superseded.
+
+Current local source has zero mandatory gift cut (0/10000) in both flag states. The default-off
+buttons.MONETIZATION_TIPS_ENABLED must be literal true to enable optional tips/processing
+estimates; it does not control the no-cut allocation. Local tests establish full gross family
+liability only. Actual processor fees/net settlement, Connect destination choice and refunds
+remain unverified. Payouts stay blocked and the client remains the sole tips credit writer.
+
+Source checkpoints: copy `5a95152`, model/admin `e9da05f`, checkout `4c54606`. Supplied original local
+receipts passed 266 suites / 2576 tests, 117 portal tests, 22 SQL cases and independent 71+21 checks;
+this documentation pass does not rerun or convert those receipts into hosted/device evidence.
+COORD-02 records the missing development/staging rollout prerequisites and actual new checks.
+
+LEGAL/counsel still own final Terms, signed guardian consent/versioning, gift-linked 10 Aura per $1
+digital-border eligibility and processor/store claims. Owner classification remains open for
+the mixed “Refund donation” label and booster placement (currently a Purchase, not proof of
+charity). Finance, Data/Privacy, Security, Minor Safety and independent QA retain their gates.
+
+For new API work use the exact [Expo 58 reference](https://docs.expo.dev/versions/v58.0.0/),
+with the installed-source/documentation access exception recorded in COORD-02. This team
+documentation work changes no API. Review actual source bytes and environment, not an older
+claim or screenshot. Preserve all grok-4.7-medium / force-default-model pins; outside-session
+Codex execution is recorded separately.
+
+
+## Earlier main-checkout handoff — COORD-01 (2026-10-16 UTC)
 
 [TEAM_STATUS](TEAM_STATUS.md) is the all-role briefing and job-function mapping; [COORD-01](COORD-01.md) records actual outside-session executors, reviewed paths, checks and remaining issues. There are **107 callable definitions across 17 department labels**. This review does not mean107 specialists ran, staff are hired or a scheduler is installed. Existing reporting, model pins and independent Finance/Legal/Privacy/Security/QA authority remain.
 
@@ -36,9 +73,9 @@ The 2026-10-09 research pass used other models. Those pins were removed the same
 
 ## Dev
 
-Lead: `ENGINEERING`. Read the [Expo SDK 57 reference](https://docs.expo.dev/versions/v57.0.0/) before a new API. SDK 57.0.0 is React Native 0.86. Routes stay file-based under `apps/mobile/app` ([Expo Router](https://docs.expo.dev/versions/v57.0.0/sdk/router/)).
+Lead: `ENGINEERING`. Read the exact [Expo SDK 58 reference](https://docs.expo.dev/versions/v58.0.0/) before a new API. The current repo uses React Native 0.88; SDK 57/React Native 0.86 is upgrade history. Routes stay file-based under `apps/mobile/app` ([Expo Router](https://docs.expo.dev/versions/v58.0.0/sdk/router/)).
 
-Reel playback is [expo-video](https://docs.expo.dev/versions/v57.0.0/sdk/video/): `useVideoPlayer` and `VideoView`. The hook disposes the player on unmount. `createVideoPlayer` does not; call `release()`. Change the source with `replaceAsync`. Do not wire `expo-av` for the reel player. Do not set `useCaching: true`.
+Reel playback is [expo-video](https://docs.expo.dev/versions/v58.0.0/sdk/video/): `useVideoPlayer` and `VideoView`. The hook disposes the player on unmount. `createVideoPlayer` does not; call `release()`. Change the source with `replaceAsync`. Do not wire `expo-av` for the reel player. Do not set `useCaching: true`.
 
 Prefetch only the immediate previous and next photo story. A missing photo column means the feed treats the row as video. October photo-story SQL is written and not applied.
 
@@ -104,7 +141,7 @@ Lead: `COMMERCE`. Stripe test mode only. The server creates the PaymentIntent. T
 
 Checked 2026-10-09: the donation PaymentIntent in this repo has no `transfer_data`, `application_fee_amount`, or `on_behalf_of`. It is a charge on the platform account. [Destination charges](https://docs.stripe.com/connect/destination-charges?platform=react-native) are the planned shape, not the code that runs. Under that shape, Stripe fees, refunds, and chargebacks come from the platform balance. Stripe calls the platform the business of record when `on_behalf_of` is omitted.
 
-Fulfill from the webhook, not from the client callback alone. Verify the signature. Make the handler idempotent ([webhooks](https://docs.stripe.com/webhooks)). Do not turn webhook crediting on while `useTipCheckout` still inserts `tips`. The donate sheet says Donate / donation, shows 90 / 10, and starts the optional tip for Tapua'i at No tip. Payouts stay blocked.
+Fulfill from the webhook, not from the client callback alone. Verify the signature. Make the handler idempotent ([webhooks](https://docs.stripe.com/webhooks)). Do not turn webhook crediting on while `useTipCheckout` still inserts `tips`. The gift sheet has no mandatory cut in either flag state; literal-true buttons.MONETIZATION_TIPS_ENABLED enables optional Tip Tapua'i/processing estimates only, default off and No tip/unchecked fee. Full gross family liability is local bookkeeping; actual fee/net settlement remains unverified. Payouts stay blocked.
 
 ## Finance and Accounting
 
@@ -126,15 +163,15 @@ Every table, view, database function and export has an owner, a writer, a reader
 
 Leads: `LEGAL`, `COMPLIANCE`; current model pins are in their role files and the connected-model table. This team does not draft legal text and does not pick which store rule applies.
 
-**Local product source:** MINOR-01 birth-month/year, unknown-age handling and known-under13 closure; Terms / NIL acknowledgement, 90 / 10 on donation review, Stripe test mode and blocked payouts. Local source/migrations are not hosted enforcement. **Counsel still produces:** Terms, a Privacy Policy, parental consent, and the athlete agreement. Beyond/CHAL domain-local own exports and privileged erasure exist; global account export/deletion, approved retention and provider physical cleanup remain gaps. Whether a store or a statute requires them is counsel's call. Apple's account-deletion page is the checklist item to track, not a conclusion written here: [offering account deletion](https://developer.apple.com/support/offering-account-deletion-in-your-app/).
+**Local product source:** MINOR-01 birth-month/year, unknown-age handling and known-under13 closure; Terms / NIL acknowledgement, current gift/no-cut review and optional extras off by default, Stripe test mode and blocked payouts. Local source/migrations are not hosted enforcement. **Counsel still produces:** Terms, a Privacy Policy, parental consent, and the athlete agreement. Beyond/CHAL domain-local own exports and privileged erasure exist; global account export/deletion, approved retention and provider physical cleanup remain gaps. Whether a store or a statute requires them is counsel's call. Apple's account-deletion page is the checklist item to track, not a conclusion written here: [offering account deletion](https://developer.apple.com/support/offering-account-deletion-in-your-app/).
 
 Pages opened, not applied: [FTC children's privacy](https://www.ftc.gov/business-guidance/privacy-security/childrens-privacy) and [App Store Review Guidelines](https://developer.apple.com/app-store/review/guidelines/). Numbers seen on Apple's page: 1.2 and 1.2.1 (user-generated content), 1.3 and 5.1.4 (kids), 3.1.1 and 3.1.3 (payments), 3.2.1(vi), 3.2.1(vii), and 3.2.2(iv). The owner and counsel decide which number fits a donation to an athlete. No SOC 2 claim. No uptime claim. No tracker before consent. Exclusive is a one-time PaymentIntent, so auto-renewal disclosure waits until it is a subscription.
 
 ## Brand
 
-Lead: `VOICE`. The owner-approved lines, exact, are "Donate. Elevate. Celebrate." and "Support their journey. Elevate their opportunities. Celebrate their story." Use the constants in `data/malo.ts`. Placements are the four rows in [VOICE.md](../product/VOICE.md): first open, donate sheet Amount page, athlete profile when that athlete can be donated to, and public docs plus the draft store listing.
+Lead: `VOICE`. Apply the owner's October 22 gift/program/tip naming map in [VOICE.md](../product/VOICE.md), using source constants. The October 7 Donate. Elevate. Celebrate. tagline/placement wording is superseded history, not a current copy requirement. Retain existing placements and obtain owner review for new taglines.
 
-Money words are Donate / donation. "Mālo!" is only a thank-you. The optional tip line names Tapua'i. "Elevate" is support, never recruiting, a scholarship, or a roster spot. Code names stay `tips`, `useTipCheckout`, and `malo*`. VOICE.md is the source. If this section disagrees, fix VOICE.md first.
+Money words are Gift/Give/Send a gift for individuals, Donation/Donate to the program for programs, optional Tip Tapua'i and Cover the processing fee, and separate Subscription/Purchase for digital access. "Mālo!" is only a thank-you. The optional tip line names Tapua'i. "Elevate" is support, never recruiting, a scholarship, or a roster spot. Code names stay `tips`, `useTipCheckout`, and `malo*`. VOICE.md is the source. If this section disagrees, fix VOICE.md first.
 
 ## Trust and Safety
 
@@ -162,7 +199,7 @@ Wave 0 is the test wave. Public release is not started. The owner decision list 
 
 ## Marketing
 
-Lead: `MARKETING`. No external campaign. The line is "Donate. Elevate. Celebrate." Family stories need written consent. The store listing is a draft and needs `LEGAL` before anyone submits it. Apple's product-page guidance, opened 2026-10-09: [product page](https://developer.apple.com/app-store/product-page/) and [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/).
+Lead: `MARKETING`. No external campaign. Use the current gift naming map; the old Donate. Elevate. Celebrate. line is superseded history. Family stories need written consent. The store listing is a draft and needs `LEGAL` before anyone submits it. Apple's product-page guidance, opened 2026-10-09: [product page](https://developer.apple.com/app-store/product-page/) and [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/).
 
 ## Engineering support
 

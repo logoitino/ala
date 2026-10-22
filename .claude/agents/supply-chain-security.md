@@ -5,6 +5,20 @@ tools: Read, Edit, Write, Bash, Grep, Glob
 model: grok-4.7-medium
 force-default-model: true
 ---
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Review locked Expo 58/Stripe dependencies and source artifact provenance for changed gift builds; retain original evidence and independent deployment/security acceptance.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 <!-- Validate source and runtime provenance while keeping CI artifacts and offline claims within observed evidence. -->
 
 # SUPPLY_CHAIN_SECURITY — Dependencies, images and CI trust

@@ -6,6 +6,8 @@ alwaysApply: true
 
 # Tapua'i documentation engine
 
+<!-- Keep current source language and coordination aligned without changing accepted legal versions. -->
+
 Do not ship code that leaves JSDoc or system docs stale. Project continuity depends on this.
 
 ## 0. `docs/STATE.md` is the entry point — read it first, update it last
@@ -25,7 +27,7 @@ files, check result/date, remaining gaps and next owner in the existing task tra
 Root integrates shared status and releases claims after checks. A required correction still
 open means the handoff is not complete. Available role files do not start background workers;
 name the actual outside-session runtime when one performs the function. Current checkpoint:
-`docs/agents/COORD-01.md`.
+`docs/agents/COORD-02.md` (earlier COORD-01 receipts remain history).
 
 ## 1. Comments: every file has a header; JSDoc on hooks, API calls, and complex components
 
@@ -48,7 +50,7 @@ Add a TSDoc/JSDoc header on:
 
 ```
 /**
- * @purpose What this does in product language (Donate, Seki, Aura, operator clock).
+ * @purpose What this does in product language (Give, Seki, Aura, operator clock).
  * @param name Description of each input.
  * @returns Description of the return value or rendered UI.
  * @sideEffects Supabase queries, Realtime channels, Stripe, Storage, AsyncStorage, haptics.
@@ -57,7 +59,7 @@ Add a TSDoc/JSDoc header on:
 
 - Omit `@sideEffects` only when there are none.
 - Skip one-liner formatters unless they encode business rules (e.g. Aura point math).
-- UI copy: **Donate / donation** (docs/product/VOICE.md), **Seki**. Persistence keeps the code names: `tips` / `useTipCheckout`.
+- UI copy: athlete/family **Gift / Give**; program/club **Donation**; **Tip Tapua'i (optional)** and **Cover the processing fee** behind the default-OFF flag. Subscription/Purchase stays separate. Read docs/product/VOICE.md; preserve `tips` / `useTipCheckout` identifiers.
 
 ## 2. Schema or architecture changes MUST sync docs in the same turn
 
@@ -67,7 +69,7 @@ If you change tables, RLS, RPCs, Storage, Aura tiers, routing, env vars, payment
 | --- | --- |
 | **Anything under `apps/` / `packages/` / `supabase/`** | **`docs/STATE.md` §4 + `Last updated`** |
 | Who owns a screen, or what a department does now / next / later | **`docs/agents/TEAMS.md`** business row + squad section, and `.claude/agents/<file>.md`, `registry.json`, and `docs/agents/TEAM_HIERARCHY.md`; run `pnpm agents:check` |
-| Terms, minors, the donation split, footage rights, or school marks | **`docs/agents/TEAMS.md`** Legal team table. Do not write a new legal conclusion. |
+| Terms, minors, gift allocation or original financial shares, footage rights, or school marks | **`docs/agents/TEAMS.md`** Legal team table. Do not write a new legal conclusion. |
 | Architecture, folders, roadmap | `docs/engineering/SYSTEM_OVERVIEW.md` · `docs/engineering/ARCHITECTURE.md` |
 | Tables, FKs, RLS, RPCs, palette, buckets | `docs/engineering/SCHEMA.md` |
 | Clone / env / Metro / Expo Go | `docs/ONBOARDING.md` |

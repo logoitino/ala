@@ -1,6 +1,44 @@
 <!-- Callable responsibility and escalation routing; original task receipts establish actual execution and acceptance. -->
 # Tapua'i department call sheet
 
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+[COORD-02](COORD-02.md) is the current whole-team reading path. All **115 callable role
+definitions across 17 department labels** and their descriptive registry handoffs carry
+role-specific duties. Actual work is performed by the named outside-session Codex executors;
+definitions do not establish 115 specialist runs, message delivery, staffing or approvals.
+Existing role names, paths, reporting leads, owned surfaces and pinned models remain.
+
+The owner's money map is **Gift / Give / Send a gift** for individuals, **Donation / Donate to
+the program** for programs, **Tip Tapua'i (optional)** for platform support and **Cover the
+processing fee** for optional Stripe-cost coverage. **Subscription** and digital **Purchase**
+remain separate from giving. Keep internal tips/donation_/malo identifiers and posted history.
+The old donation-everywhere, 90/10 and Donate. Elevate. Celebrate. instructions are superseded.
+
+Current local source has zero mandatory gift cut (0/10000) in both flag states. The default-off
+buttons.MONETIZATION_TIPS_ENABLED must be literal true to enable optional tips/processing
+estimates; it does not control the no-cut allocation. Local tests establish full gross family
+liability only. Actual processor fees/net settlement, Connect destination choice and refunds
+remain unverified. Payouts stay blocked and the client remains the sole tips credit writer.
+
+Source checkpoints: copy `5a95152`, model/admin `e9da05f`, checkout `4c54606`. Supplied original local
+receipts passed 266 suites / 2576 tests, 117 portal tests, 22 SQL cases and independent 71+21 checks;
+this documentation pass does not rerun or convert those receipts into hosted/device evidence.
+COORD-02 records the missing development/staging rollout prerequisites and actual new checks.
+
+LEGAL/counsel still own final Terms, signed guardian consent/versioning, gift-linked 10 Aura per $1
+digital-border eligibility and processor/store claims. Owner classification remains open for
+the mixed “Refund donation” label and booster placement (currently a Purchase, not proof of
+charity). Finance, Data/Privacy, Security, Minor Safety and independent QA retain their gates.
+
+**Routing:** CTO → one existing lead → one accountable specialist; specialists return
+original evidence through their lead. CFO retains independent accounting authority to the
+owner; Legal/Compliance, Data/Privacy, Security/Safety and QA retain their review decisions.
+DOCUMENTATION and VP_OPERATIONS synchronize source/team handoffs in COORD-02, with exact
+executors and claim release. [Ordered next work](WORK_QUEUE.md#coord-02--ordered-remaining-gift-release-work-2026-10-22)
+names the primary owners; no reporting/model/ownership edges change.
+
+
 **Legal/Commerce source handoff, 2026-10-22:** owner replaces individual-donation/10%-cut
 framing with personal gifts and an unconditional zero gift cut; club donations and optional
 Tapua'i tips remain distinct. Outside-session Codex implements/reviews local source; no pinned
@@ -46,7 +84,7 @@ DOCUMENTATION/VP_OPERATIONS reconcile this broadened duty in the definition, reg
 sheet and queue; the checked hierarchy retains the same routing. Actual executor and checks
 belong in COORD-01, not an inference from these assignments.
 
-## Current app roadmap handoff — 2026-10-21 UTC
+## Earlier app roadmap handoff — 2026-10-21 UTC (dated evidence)
 
 The current registry has **115 callable definitions across 17 department labels**. The owner
 requested current-app roadmap and whole-team reconciliation. Start with
@@ -110,7 +148,7 @@ source/environment/paths, commands/results, control/severity/limits, gaps and ne
 Use this when you **call a team** to fix or update one area. An app fix is assigned by the **CTO** (`CALL: CTO`). The **VP of Operations** (`CALL: VP_OPERATIONS`) reports to the CTO and updates roles, protocols, and priorities in the same turn they change. The CTO gives the fix to one department lead. That lead gives it to a specialist. The specialist reports to the lead. The lead reports the fix to the CTO and reports role or protocol drift to the VP of Operations. The owner (`FACILITATOR`) still decides prices, counsel, applying SQL, merging, and live money.
 
 **Repo:** `/Users/seiuliian/Downloads/ala-sports` · GitHub `logoitino/ala` · pnpm monorepo.
-**Copy:** money on screen is **Donate / donation** ([VOICE.md](../product/VOICE.md)). "Mālo!" is only a thank-you. **Seki** / **Highlights ⚡**. Persistence still `tips` / `reels` / `useTipCheckout`.
+**Copy:** use individual **Gift / Give**, program **Donation**, optional **Tip Tapua'i** and separate **Subscription / Purchase** ([VOICE.md](../product/VOICE.md)). "Mālo!" is only a thank-you. **Seki** / **Highlights ⚡**. Persistence still `tips` / `reels` / `useTipCheckout`.
 **Facts:** [SYSTEM_OVERVIEW.md](../engineering/SYSTEM_OVERVIEW.md) · [ARCHITECTURE.md](../engineering/ARCHITECTURE.md) · [SCHEMA.md](../engineering/SCHEMA.md) · [ALA_TEAM_BRIEF.md](../company/ALA_TEAM_BRIEF.md) · [CHANGELOG.md](../../CHANGELOG.md). Do not invent prices, Aura math, or legal conclusions — run `pnpm docs:sync` or read [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md).
 
 ---
@@ -272,16 +310,16 @@ These are the departments a company actually has. The names under **Builds it** 
 | **Database** | Schema, migrations, RPCs, Storage layout. | `BACKEND` (reports to `CTO`) · `DATABASE_MIGRATIONS` · `STORAGE`. `SECURITY` reviews RLS | Canonical `schema.sql`. Beyond/CHAL and earlier photo-story/account-tag SQL written, not applied | Hosted replay only when the owner asks | Domain-local export/erasure contracts exist; broader account/provider retention and deletion acceptance remains with counsel/Product |
 | **Security** | Authorization, sessions, secrets and independent cybersecurity review. | `SECURITY` (reports to `CTO`) · `RLS_SECURITY` · `SESSION_SECURITY` · `THREAT_DETECTION` · `INFRA_SECURITY` · `SUPPLY_CHAIN_SECURITY` · `RECOVERY_SECURITY` | DETECT-02 source trust, protected false-positive review and transactional audit verified locally (144 SQL replay checks). Client `tips`, public profile fields, parent payout policy and unapplied GPS/storage policies remain open | Approved hosted SQL and negative authorization/delivery tests; protected review and unsigned-audit trust limits stay explicit | Repeat on new sensitive data or capabilities |
 | **IT infrastructure** | Staging, CI, releases, recovery, cost, game day; pairs with Engineering Support on service detection. | `OPERATIONS` (reports to `CTO`) · `OPERATOR` · `RELEASE` · `CI` · `RECOVERY` · `COST_OPERATIONS` | Sideline PIN, GPS check-in, score and clock. Expo `/admin` is where staff edit. The Next portal is read-only oversight | The operator PIN is for internal test only. It is not a public login | Paid game-day coverage and a light game line (M5). No published uptime SLA |
-| **Finance** | Money in, the split, receipts, and money out. | `COMMERCE` lead · `CHECKOUT` · `LEDGER` · `RECONCILIATION` · `REFUNDS` · `CONNECT` · `CUSTODIAL` · `RALLY` · `DONATION_THANKS` · `BILLING` · `DRIP` · `WISHLIST` · `RECEIPTS`, with `BACKEND` | Staged Amount → Options → Review Donate popup (90 / 10, optional tip for Tapua'i starts at No tip), gear goals, Rally, receipts. Payouts stay blocked. Drip is off | One credit path: the webhook writes the donation, then the app stops inserting it. Parent is the payee. A server balance before any payout | Drip marketplace (Wave 1). Team gift and booster match (counsel first). Pathway labels only, no fund held here (M7). Filmer cash from Tapua'i's own budget (M11) — nothing in the UI mentions cash |
+| **Finance** | Money in, the split, receipts, and money out. | `COMMERCE` lead · `CHECKOUT` · `LEDGER` · `RECONCILIATION` · `REFUNDS` · `CONNECT` · `CUSTODIAL` · `RALLY` · `DONATION_THANKS` · `BILLING` · `DRIP` · `WISHLIST` · `RECEIPTS`, with `BACKEND` | Staged Amount → Options → Review gift popup (zero mandatory cut; literal-true default-off flag gates optional Tip Tapua'i/processing estimates, No tip default), gear goals, Rally, receipts. Payouts stay blocked. Drip is off | One credit path: the webhook writes the donation, then the app stops inserting it. Parent is the payee. A server balance before any payout | Drip marketplace (Wave 1). Team gift and booster match (counsel first). Pathway labels only, no fund held here (M7). Filmer cash from Tapua'i's own budget (M11) — nothing in the UI mentions cash |
 | **Finance and Accounting** (Office of the CFO, reports to the owner) | The books, every tax area, cash held for families and the financial plan. Taxes are owned by `TAX`. | `CFO` lead · `CONTROLLER` (`BOOKKEEPER`, `INTERNAL_CONTROLS`) · `TAX` (`INFO_RETURNS`, `SALES_TAX`) · `TREASURY` · `FPA`; data built by `FINANCE_DATA` (Engineering, assigned by the CTO). Chain of command and calendars: [FINANCE_OPERATIONS.md](../company/FINANCE_OPERATIONS.md) | Finance & Books hub at `/admin/books` (Overview, Transactions, Statements, Taxes, Reconcile, Data, Record & close, Export); data catalog and reconciliation tests in `pnpm check`; W0-10 staging rehearsal | P1-08: bank account, QuickBooks company, CPA, monthly close from the first live month | Outside audit, investor reporting, a staffed finance team |
 | **Data Governance** (reports to the CTO; the data control point) | Where every piece of data lives and moves: every table, view, database function and export has an owner, a writer, a reader and a purpose; no dead data or code. | `DATA_GOVERNANCE` lead · `DATA_LINEAGE` · `CODE_HYGIENE`; ties together PRIVACY_ENGINEERING's privacy map, FINANCE_DATA's finance catalog, ANALYST's measure catalog and the coverage map. Handbook: [DATA_GOVERNANCE.md](../engineering/DATA_GOVERNANCE.md) | DATA-01 findings closed locally; 62 entries archived with owner approval; buckets/switches mapped; 30-day rounded check-ins and shared helpers built. Closures replay 46/46; hosted migration unapplied | Keep ownership and dead-code guards current, regenerate Support topology on ownership changes; owner applies closures and hosted drift is reviewed after R2 | A staffed data team |
 | **Legal & Compliance** | What the company is allowed to say and do. Counsel decides. Agents place approved words and refuse false claims. | `LEGAL` · `COMPLIANCE` · `PRIVACY_ENGINEERING` · `CONTENT_RIGHTS` | Terms and ack toggles. `DATA_PRIVACY_MAP.md` inventory. No invented SOC 2 or uptime SLA. Conclusions stay in `LEGAL_BRIEFING.md` | Counsel: Privacy Policy, ToS liability, parental consent. Export / deletion product path. Processor list stays honest. Auto-renewal only if Billing lands | Formation, trademark, association letter (L0–L4). DPA for booster/sponsor/school B2B. Measured uptime SLO only after Ops exists. Agents do not file or draft counsel paper |
-| **Brand** | The words a parent reads. Donate / donation. No money tied to a play. | `VOICE`, with `BRAND` (Marketing) for the approved message | `pnpm copy:check` on every money screen; review the BRAND-01 tagline "Donate. Elevate. Celebrate." | Run again before a release | Every new money screen, including ones listed as Later |
+| **Brand** | The words a parent reads: personal gifts, program donations and optional platform tips. No money tied to a play. | `VOICE`, with `BRAND` (Marketing) for the approved message | `pnpm copy:check` on every money screen; review the current naming map; BRAND-01's old tagline is superseded history | Run again before a release | Every new money screen, including ones listed as Later |
 | **Trust & Safety** | Who may post, what may be reported, and what leaves the public feed. | `TRUST_SAFETY` · `MODERATION` · `ATHLETE_VERIFICATION` · `MINOR_SAFETY`, paired with `CONTENT_RIGHTS`, `LEGAL` and `ADMIN` | Upload confirms permission, sound, and marks. Reports name a reason. Some reasons hide the clip immediately. “Risky without a coach” does not hide the clip (SAFETY-01, local; counsel still open) | Existing local Beyond/admin review controls require real reviewer/support capacity and approved public/minor scope. Independent review of the coach-level notice, challenge invites, and teen publish is still open | Strikes, appeals, and a filmed-at-the-game badge. Not built |
 | **Partnerships** | Schools, families, booster clubs, and sponsors. | `PARTNERSHIPS` · `ROLE_HQ` · `SCHOOL_PARTNERS` · `SPONSOR_ADS`, paired with `LOCAL` and `PROFILE` | Parent, Booster, and Sponsor portals. A guardian approves an athlete's Rally | The parent stays the payee on paper. The payout button stays a stub | Real custodial payout only after Finance has a ledger. Written school permission before a commercial build shows a school mark |
 | **Operations** | Game day on the field, under IT infrastructure. | See **IT infrastructure** above | Sideline PIN, GPS check-in, score and clock | The operator PIN is for internal test only | Paid game-day coverage (M5) |
 | **Quality** | Whether a change is safe to hand to a tester — automated + product + compliance hygiene. | `QA` · `TEST_AUTOMATION` · `DEVICE_QA` · `VISUAL_QA` | UX-05e photo story + tagline browser evidence (VISUAL_QA, Playwright on Expo web) and native checks (DEVICE_QA). UX-02 small-phone/keyboard/review checks in TESTER_SCRIPT; typecheck, docs, copy, boundaries, comments, Jest, Soft-Wall, Profile, payments, no fake SOC 2 / SLA / trackers-before-consent | Feel check on the preview installs. Export/deletion path once built | A full pass by each department, then the public-beta gate |
-| **Marketing** | How families hear about Tapua'i; routes the single Growth and Capacity Review packet. | `MARKETING` · `GROWTH_ANALYTICS` · `BRAND`, with `PRODUCT` and `VOICE` | GROWTH-01 charter/first gap packet documented; GROWTH_ANALYTICS owns one growth/capacity/cost review through MARKETING; live measurements unknown. Internal messaging and BRAND-01 approved message "Donate. Elevate. Celebrate." in its approved placements; no external campaigns | Dated authorized growth/runtime/cost evidence and quality/domain reviews; CTO recommendation and owner decision; launch plan after Product/Legal gates | Rally stories from real families, with consent (M10) |
+| **Marketing** | How families hear about Tapua'i; routes the single Growth and Capacity Review packet. | `MARKETING` · `GROWTH_ANALYTICS` · `BRAND`, with `PRODUCT` and `VOICE` | GROWTH-01 charter/first gap packet documented; GROWTH_ANALYTICS owns one growth/capacity/cost review through MARKETING; live measurements unknown. Internal messaging follows the current gift/program/tip map in existing placements; old BRAND-01 tagline is superseded history; no external campaigns | Dated authorized growth/runtime/cost evidence and quality/domain reviews; CTO recommendation and owner decision; launch plan after Product/Legal gates | Rally stories from real families, with consent (M10) |
 | **Engineering support** | Detect failures across app, admin, backend, finance, data and UI; help Dev build sensors and repairs. | `SUPPORT` (reports to `ENGINEERING`) · `INCIDENT_TRIAGE` · `TELEMETRY` · `RELIABILITY` | DETECT-02 four-tab `/admin/support`, static team/source flow, bounded opt-in signals, protected reviews and isolated source recovery implemented locally; admin-ready before app-ready; full local gate 115 suites/827 tests, Next86 | Approved hosted capture/SQL and durable fatal intake; remaining telemetry self-health, settlement alerts, reusable QA harness and intake gaps with named owners; database-backup/compatibility and device checks | Hosted/scheduled alerting and external support require implementation and approved release |
 
 A business call uses the agent named above. A screen call uses the squad (`CALL: HIGHLIGHTS`). Schema, RLS, Storage, and Stripe secrets always include `BACKEND`. Publish-to-app always includes Quality. Money words always include Brand. Anything a parent, a school, or a regulator could read as a promise includes Legal.
@@ -346,7 +384,7 @@ Legal does not decide the law. A licensed attorney does. This team puts approved
 | **Publish processors** | `DATA_PRIVACY_MAP` §2 names Stripe, Supabase, Apple (Sign in with Apple), and Google (OAuth). No analytics or ad SDK in the app dependency lists. | Keep the list honest when a vendor is added. Counsel decides how the Privacy Policy classifies Apple and Google. | Show in Privacy Policy counsel drafts. |
 | **ToS tickbox** | Ack on Varsity apply, Connect Bank, and Claim athlete (`RoleSwitcherModal`). Version `LEGAL_TERMS_VERSION` `2026-09-27`. The in-app text is a prototype summary. | Counsel may require ack on sign-up too. | — |
 | **Real uptime SLA** | Do not publish 99.x% while Wave 0 hosting is best-effort. | — | Measured SLO only after Ops + paid hosting exist. |
-| **Money words** | Compact Donate review retains 90 / 10, No tip default, optional fees, total and held-gift notice. Brand (`VOICE`) checks wording. | Counsel reviews that line and App Store gift rules before live money. | Tax reporting is CPA / payments counsel (B6). |
+| **Money words** | Compact gift review retains zero mandatory cut, No tip/unchecked processing defaults when the literal-true flag permits them, total and held-gift notice. Brand (`VOICE`) checks wording. | Counsel reviews that line and App Store gift rules before live money. | Tax reporting is CPA / payments counsel (B6). |
 | **Minors** | MINOR-01 uses birth month/year, unknown-age handling and known-under13 closure; local source is not applied SQL. Thank-yous/CHAL responses remain presets; athlete Rally waits for guardian. | Parent is the payee until counsel signs the design. | Minor in-person time/location is prohibited even in future Vault work; other extensions require action-specific acceptance. |
 | **Footage, sound, and marks** | Upload confirms permission, sound, and marks. Game Day confirms real footage. Photo stories use a photo-permission line (`PHOTO_RIGHTS_VERSION` `2026-10-07`). Coach-level workouts use the proposed option A notice locally (LEGAL_BRIEFING row AC). Counsel has not approved that wording. | Counsel decides whether school marks may appear at all, and the workout-notice wording. | Strikes, appeals, filmed-at-the-game badge — not this wave. |
 | **Schools and associations** | Demo rosters are not a license to use a school's name or film. | — | Written association / district position before a metro launch. |
@@ -377,7 +415,7 @@ These four historical command roles remain a compatibility view of integration r
 | Role | Call as | Owns | Does not |
 | --- | --- | --- | --- |
 | **Ala Facilitator** | `FACILITATOR` | One next ship move. Who is on the call. Product copy (Mālo / Seki / Highlights ⚡). Roadmap. Investor / public memos via `pnpm docs:sync`. | Implement UI. Invent prices, Aura math, or legal conclusions. |
-| **Mobile Eng** | Staff for any fan/admin UI department | `apps/mobile` Expo SDK 57. Next portal UI only when `ADMIN` is on the call. | Stripe `sk_` in frontend. `expo-av` for the reel player. NativeWind in mobile. |
+| **Mobile Eng** | Staff for any fan/admin UI department | `apps/mobile` Expo SDK 58; exact https://docs.expo.dev/versions/v58.0.0/ reference before API work. Next portal UI only when `ADMIN` is on the call. | Stripe `sk_` in frontend. `expo-av` for the reel player. NativeWind in mobile. |
 | **Backend Eng** | Staff whenever data moves | `schema.sql`, `supabase/*.sql`, RLS, RPCs, Edge Functions, Storage buckets. Keep [SCHEMA.md](../engineering/SCHEMA.md) in the same turn. | Fan chrome, Look copy, Catalog dollar amounts (those are Catalogs + `pnpm docs:sync`). |
 | **Ship QA** | `QA` | `pnpm typecheck` · `pnpm docs:check`. Soft-Wall / Profile / Publish-to-app pitfalls. Pass/fail notes. Recapture `docs/company/press/*.png` or mark STALE. | Silent “looks fine”. Shipping a dirty Features draft. |
 
@@ -506,7 +544,7 @@ These are not extra companies. They are the Dev team, split by the part of the a
 ### COMMERCE — Donations, Drip, Wishlist, Connect, receipts
 
 **Call:** `COMMERCE`
-**Fan:** Donate sheet (90 / 10 split line, optional tip for Tapua'i, card-fee box) · Rally card · Say thanks · `/drip` · gear goals · `/receipts` · `/gift/[handle]` · `PayoutSetupCard`
+**Fan:** Gift sheet (zero mandatory cut; default-off/literal-true optional Tip Tapua'i and Cover the processing fee) · Rally card · Say thanks · `/drip` · gear goals · `/receipts` · `/gift/[handle]` · `PayoutSetupCard`
 **Admin:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers) · Next `/money` Revenue (read-only)
 **What it does:** Stripe **test** PaymentSheet. Mālo $5 / $10 / $25 / Custom → one `tips` row (where it started: Highlight, QR link, wishlist item, profile, or live play) + 10 Aura per tip dollar. Exclusive subscribe +100 Aura. Drip Buy Now. Wishlist Chip In writes that same `tips` row, then `chip_in_wishlist_item` only moves the item total. Connect Express (JWT Edge `create-stripe-account` only). Custodial payout from `profiles.stripe_connect_id`. Legal ack required before Connect and Varsity apply. The prototype terms (`LEGAL_TERMS_VERSION`) and the Mālo sheet say we keep that gift record and use it for receipts, athlete accounting, and to see which parts of the app bring in support.
 
@@ -644,9 +682,9 @@ current Codex execution is recorded as an owner-authorized outside session.
 ### VOICE — Donation language
 
 **Call:** `VOICE` (`.claude/agents/voice.md`)
-**Owns:** every word about money on screen and in public docs — Donate / donation, the "who gets it, what for, anything taken out" answers, no performance ties, warm thank-yous that keep people donating.
+**Owns:** every word about money on screen and in public docs — individual Gift/Give, program Donation, optional Tip Tapua'i, separate Subscription/Purchase, the "who gets it, what for, anything taken out" answers, no performance ties, warm preset thank-yous and deliberate reviewed giving.
 **Source:** [VOICE.md](../product/VOICE.md). CI gate: `pnpm copy:check` (`scripts/check-copy.mjs`).
-**Pair:** LEGAL for terms, tax and fee wording; COMMERCE for prices and splits; `BRAND` for the approved message "Donate. Elevate. Celebrate." (BRAND-01). Run after any copy change and before every release.
+**Pair:** LEGAL for terms, tax and fee wording; COMMERCE for prices and splits; `BRAND` for the current naming map in existing placements (old BRAND-01 tagline superseded). Run after any copy change and before every release.
 
 ---
 
@@ -761,7 +799,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 
 ## Specialist operating contract
 
-**Aligned:** 2026-10-16 UTC (COORD-01 whole-team refresh). **Registry:** `.claude/agents/registry.json`. Agent definitions describe available roles; they are not evidence that agents have run or features are complete. This roster does not hire people or staff a live moderation desk. The hierarchy is responsibility and escalation routing. Which model runs an agent is a separate field in that agent's file and in the registry. The bar for each department is [EXPERT_STANDARDS.md](EXPERT_STANDARDS.md).
+**Aligned:** 2026-10-22 (COORD-02 gift-release handoff; earlier COORD-01 evidence retained). **Registry:** `.claude/agents/registry.json`. Agent definitions describe available roles; they are not evidence that agents have run or features are complete. This roster does not hire people or staff a live moderation desk. The hierarchy is responsibility and escalation routing. Which model runs an agent is a separate field in that agent's file and in the registry. The bar for each department is [EXPERT_STANDARDS.md](EXPERT_STANDARDS.md).
 
 1. Read STATE before work, then AGENTS, CONVENTIONS and the relevant schema/privacy/voice/architecture docs. Use repo-root paths. Verify stale statements against current evidence; distinguish written, applied to staging, applied to development and tested.
 2. One app fix is assigned by `CTO` to one lead. That lead assigns one accountable specialist, with explicit acceptance criteria, exact files, dependency owners and an independent reviewer where financial or security behavior changes. The specialist reports to the lead. The lead reports the fix to the CTO. Role drift, protocol conflicts, and priority questions go to `VP_OPERATIONS`. When a role, protocol, or priority changes, `VP_OPERATIONS` updates the agent definition, the registry, TEAMS, the hierarchy, and the queue in the same turn. Each lead is the expert for that team and rejects untested, undocumented, or overly broad work. A local test pass is not hosted proof. A written migration is not applied SQL. `QA` can reject the result. Leads and reviewers may overlap path ownership; each functional task has one primary specialist.
@@ -802,7 +840,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 | `BACKEND` | Database | `CTO` | Database architecture and migration/security integration | [backend.md](../../.claude/agents/backend.md) |
 | `BILLING` | Finance | `COMMERCE` | Own current one-time Exclusive purchase semantics and future recurring billing design. | [billing.md](../../.claude/agents/billing.md) |
 | `BOOKKEEPER` | Finance and Accounting | `CONTROLLER` | Records Stripe fees, expenses, payouts to the bank and owner money with receipts; clears Suspense before close. | [bookkeeper.md](../../.claude/agents/bookkeeper.md) |
-| `BRAND` | Marketing | `MARKETING` | Own the approved message "Donate. Elevate. Celebrate." and its consistent use in the approved placements; VOICE reviews money words, LEGAL reviews claims. | [brand.md](../../.claude/agents/brand.md) |
+| `BRAND` | Marketing | `MARKETING` | Apply the current gift/program/tip naming map in existing placements; the old donation tagline is superseded history. VOICE reviews money words; LEGAL reviews claims. | [brand.md](../../.claude/agents/brand.md) |
 | `CATALOGS` | Engineering | `ADMIN` | Own sport/region/category/price catalog consistency and generated product facts. | [catalogs.md](../../.claude/agents/catalogs.md) |
 | `CFO` | Finance and Accounting | `FACILITATOR` | Head of Finance and Accounting: books, taxes, cash and plans. Assigns CONTROLLER, TAX, TREASURY and FPA; requests finance data through the CTO; accepts money-recording changes. | [cfo.md](../../.claude/agents/cfo.md) |
 | `CHECKOUT` | Finance | `COMMERCE` | Own staged Amount / Options / Review donation UI, PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling. | [checkout.md](../../.claude/agents/checkout.md) |

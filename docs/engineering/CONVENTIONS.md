@@ -109,7 +109,7 @@ comment at all.
    Stripe, Storage, AsyncStorage, or the device (haptics, camera).
 2. **Doc block on each exported hook, network / RPC helper, and complex component.** The
    `@purpose` / `@param` / `@returns` / `@sideEffects` block below. Skip one-line formatters unless they
-   encode a business rule (Aura maths, the 90 / 10 split, view thresholds).
+   encode a business rule (Aura maths, gift allocation and original refund shares, view thresholds).
 3. **Inline comments — the *why*, never the *what*.** Explain a constraint, a bug the line prevents,
    an order that matters, or a decision the owner made (with the date). Do not narrate code that reads
    clearly. A good comment answers "why is it done this odd way?"; delete one that only restates the line.

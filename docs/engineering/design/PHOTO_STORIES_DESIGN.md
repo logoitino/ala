@@ -1,6 +1,12 @@
 <!-- Photo-story app contract and dated cleanup repair evidence; hosted and device verification remain separate. -->
 # Photo stories in Highlights ⚡ — design and build contract
 
+**Monetary wording update, 2026-10-22:** use [VOICE](../../product/VOICE.md) and [COORD-02](../../agents/COORD-02.md).
+Older individual-donation,90/10 and Donate-tagline instructions below are superseded history.
+Current local-source personal gifts have zero platform cut in both flag states; optional
+Tip Tapua'i/processing controls default OFF. Posted history and signed versions remain intact;
+hosted rollout, net fees/settlement and final counsel/store decisions remain separate gates.
+
 **Status:** approved by the owner 2026-10-07; implemented locally (WORK_QUEUE `UX-05a–d`).
 Browser and device verification remain open in `UX-05e`. The migration is not applied anywhere;
 DATABASE_MIGRATIONS and RLS_SECURITY review and owner authorization precede hosted application.

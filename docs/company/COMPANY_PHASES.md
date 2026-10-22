@@ -1,4 +1,13 @@
+<!-- Company-stage history is preserved while current gift release gates stay explicit. -->
 # Tapua'i — Company phases
+
+**Current gift-release direction, 2026-10-22:** [COORD-02](../agents/COORD-02.md) joins
+[counsel drafts](../legal/GIFT_RELEASE_COUNSEL_PACKET.md), [rollout](../engineering/GIFT_TIP_ROLLOUT.md)
+and separate [IP preparation](../legal/IP_PROTECTION_PLAN.md). All old90/10, donation-everywhere
+and fee-model fallback instructions below are superseded history. New personal gifts have
+zero platform cut in local source, independent of the optional default-OFF tip flag. Actual
+company ownership, counsel approvals, provider movement and release evidence remain required.
+
 
 **Status:** Internal operating plan. **This is not legal advice, a filing, or a promise that any step makes the company lawful.**  
 **Date:** 24 September 2026

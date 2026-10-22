@@ -1,4 +1,11 @@
+<!-- Historical design decisions remain readable while current monetary instructions follow the gift release contract. -->
 # Figma UI/UX polish checkpoint
+
+**Monetary wording update, 2026-10-22:** use [VOICE](../../product/VOICE.md) and [COORD-02](../../agents/COORD-02.md).
+Older individual-donation,90/10 and Donate-tagline instructions below are superseded history.
+Current local-source personal gifts have zero platform cut in both flag states; optional
+Tip Tapua'i/processing controls default OFF. Posted history and signed versions remain intact;
+hosted rollout, net fees/settlement and final counsel/store decisions remain separate gates.
 
 <!-- Actual local presentation handoff; distinguishes Figma operations, source review, tests and browser evidence. -->
 

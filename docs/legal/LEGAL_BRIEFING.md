@@ -2,10 +2,18 @@
 > **2026-10-22 wording/policy update:** individual athlete support is a **personal gift**;
 > program/club giving is a **donation**; optional platform support is a **tip**. Older donation
 > and 10%-share framing below is superseded history, not current release copy. Source-generated
-> facts still describe the checked-in test rail until the separate tip model changes it.
+> facts describe the checked-in no-cut test rail; actual hosted rollout, processing and bank settlement remain unverified.
 > Current rules: [VOICE](../product/VOICE.md); counsel drafts: [Terms](GIFT_DONATION_TIP_TERMS_DRAFT.md), [store/review](../product/APP_STORE_GIFT_DRAFT.md).
 
 # Tapua'i — Legal and liability briefing
+
+**Current counsel work order, 2026-10-22:** [Gift release packet](GIFT_RELEASE_COUNSEL_PACKET.md),
+[proposed guardian revision](GIFT_GUARDIAN_CONSENT_DRAFT.md), [Terms](GIFT_DONATION_TIP_TERMS_DRAFT.md)
+and [COORD-02](../agents/COORD-02.md). The dated issues below retain the original record; no
+old fee/disclosure instruction overrides the current zero-cut source direction. Terms and
+consent drafts are unapproved; gift-linked Aura, net processing, Connect and store claims
+need actual counsel/owner decisions and provider evidence.
+
 
 ## Current local timed trivia review — QUIZ-02
 

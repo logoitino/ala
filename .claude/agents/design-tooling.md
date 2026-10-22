@@ -6,9 +6,25 @@ model: grok-4.7-medium
 force-default-model: true
 ---
 
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Use current gift source for draft design/screenshot handoffs and exact SDK 58 docs for API work; record current bytes and tool results, with no publication claim.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current handoff — COORD-01 (2026-10-16 UTC)
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
+
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -30,7 +46,7 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 
 These are navigation/ownership hints, not claims that hosted resources exist. **Never** connect a server to staging or production, widen `supabase-dev` beyond `read_only=true` on the development project, add a write-capable token, or start EAS builds/submissions (they spend quota and publish to testers) without explicit owner approval. Nothing is published to Figma, Canva or a store from the repo. Design tokens stay with `DESIGN`/`MOTION`; Stripe and GitHub MCPs stay out until a task and the owner require them. `QA` independently verifies.
 
-## Earlier Now / Next / Later snapshot (retained history)
+## Earlier Now / Next / Later snapshot (retained history; monetary naming/90-10 superseded 2026-10-22)
 
 - **Now (Wave 0, local/internal test):** TOOL-01: keep `.mcp.json` and TOOLING.md accurate; confirm servers load on the next Claude Code start in the repo; list pending OAuth sign-ins (Canva, Expo, Supabase) for the owner; give DESIGN a Figma/Canva → code handoff for UX-05 photo stories and BRAND-01 tagline art; give VISUAL_QA a repeatable Playwright run against Expo web.
 - **Next (prepare; release gates still apply):** Document Expo MCP read-only build status/log use for RELEASE; pin and bump tool versions on a machine with registry access.

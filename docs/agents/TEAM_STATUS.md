@@ -1,12 +1,175 @@
+<!-- Current gift duties preserve owner decisions and original evidence without implying specialist delivery or release. -->
 # Whole-team status and handoff
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+[COORD-02](COORD-02.md) is the current whole-team reading path. All **115 callable role
+definitions across 17 department labels** and their descriptive registry handoffs carry
+role-specific duties. Actual work is performed by the named outside-session Codex executors;
+definitions do not establish 115 specialist runs, message delivery, staffing or approvals.
+Existing role names, paths, reporting leads, owned surfaces and pinned models remain.
+
+The owner's money map is **Gift / Give / Send a gift** for individuals, **Donation / Donate to
+the program** for programs, **Tip Tapua'i (optional)** for platform support and **Cover the
+processing fee** for optional Stripe-cost coverage. **Subscription** and digital **Purchase**
+remain separate from giving. Keep internal tips/donation_/malo identifiers and posted history.
+The old donation-everywhere, 90/10 and Donate. Elevate. Celebrate. instructions are superseded.
+
+Current local source has zero mandatory gift cut (0/10000) in both flag states. The default-off
+buttons.MONETIZATION_TIPS_ENABLED must be literal true to enable optional tips/processing
+estimates; it does not control the no-cut allocation. Local tests establish full gross family
+liability only. Actual processor fees/net settlement, Connect destination choice and refunds
+remain unverified. Payouts stay blocked and the client remains the sole tips credit writer.
+
+Source checkpoints: copy `5a95152`, model/admin `e9da05f`, checkout `4c54606`. Supplied original local
+receipts passed 266 suites / 2576 tests, 117 portal tests, 22 SQL cases and independent 71+21 checks;
+this documentation pass does not rerun or convert those receipts into hosted/device evidence.
+COORD-02 records the missing development/staging rollout prerequisites and actual new checks.
+
+LEGAL/counsel still own final Terms, signed guardian consent/versioning, gift-linked 10 Aura per $1
+digital-border eligibility and processor/store claims. Owner classification remains open for
+the mixed “Refund donation” label and booster placement (currently a Purchase, not proof of
+charity). Finance, Data/Privacy, Security, Minor Safety and independent QA retain their gates.
+
+**Updated:** 2026-10-22. **Current assignment:** COORD-02 gift-release team reconciliation.
+
+### Current gift duty for every existing role
+
+This table and each definition/registry handoff assign the next duty. Original role reporting
+and owned paths remain; this is not actual delivery or acceptance by those specialists.
+
+| Existing role | Department | Reports to | Current next duty |
+| --- | --- | --- | --- |
+| [`ACCESSIBILITY`](../../.claude/agents/accessibility.md) | Design | `DESIGN` | Verify gift review, optional controls, held/error notices, focus order and large-text/screen-reader behavior; retain separate native evidence. |
+| [`ACCOUNT_TAGS`](../../.claude/agents/account-tags.md) | Engineering | `UPLOAD` | Keep tag permission and athlete recipient separate from uploader identity; gift language grants no tag or filming permission. |
+| [`ACTIVITY`](../../.claude/agents/activity.md) | Engineering | `HIGHLIGHTS` | Verify personal-gift labels, actor-bound history and failure states; existing activity records do not establish settled family credit. |
+| [`ADMIN`](../../.claude/agents/admin.md) | Engineering | `ENGINEERING` | Preserve Expo writes and Next read-only oversight; verify the literal-true tip switch, default off, availability and repair controls before publishing any configuration. |
+| [`ANALYST`](../../.claude/agents/analyst.md) | Engineering | `ADMIN` | Separate gifts, program donations, platform tips and digital purchases in report meaning; retain raw identifiers and distinguish gross test records from settled income. |
+| [`API`](../../.claude/agents/api.md) | Engineering | `ENGINEERING` | Preserve the shared Node/Edge money core and protected session boundary; no-cut source or a returned client secret proves neither provider settlement nor authorization to pay out. |
+| [`ATHLETE_STATS`](../../.claude/agents/athlete-stats.md) | Engineering | `PROFILE` | Keep gifts independent of sport statistics, ranking and recruiting outcomes; preserve athlete privacy and current sport identity. |
+| [`ATHLETE_VERIFICATION`](../../.claude/agents/athlete-verification.md) | Trust and Safety | `TRUST_SAFETY` | Keep school, Stripe identity/TIN and payee relationship evidence distinct; no-cut gifts do not remove verification or held-payment gates. |
+| [`AURA`](../../.claude/agents/aura.md) | Engineering | `ENGINEERING` | Preserve 10 Aura per dollar as noncash reputation; flag gift-linked digital-border eligibility for counsel/store review before release, with no digital access promised for giving. |
+| [`AUTH`](../../.claude/agents/auth.md) | Engineering | `ENGINEERING` | Keep guest browse and bank-free account creation; resume a reviewed gift only after account-bound sign-in, preserving recipient and single-flight locks. |
+| [`BACKEND`](../../.claude/agents/backend.md) | Database | `CTO` | Retain current schema/credit ownership; any authoritative settlement migration needs canonical parity, Data/Finance/Security review and an actual engine replay before authorized application. |
+| [`BILLING`](../../.claude/agents/billing.md) | Finance | `COMMERCE` | Keep one-time Exclusive a Purchase and premium a Subscription; neither is a gift benefit, and a label does not implement recurring billing. |
+| [`BOOKKEEPER`](../../.claude/agents/bookkeeper.md) | Finance and Accounting | `CONTROLLER` | Reconcile gross gift, separate optional tip and provider fee evidence; missing fees/net settlement remain unknown, with close/reversal and QuickBooks rehearsal still required. |
+| [`BRAND`](../../.claude/agents/brand.md) | Marketing | `MARKETING` | Use the current gift/program/tip naming map in existing placements; retain Donate. Elevate. Celebrate. only as superseded history and avoid invented replacement taglines or recruiting promises. |
+| [`CATALOGS`](../../.claude/agents/catalogs.md) | Engineering | `ADMIN` | Keep gift allocation independent of product price and the tip switch; preserve generated facts and separate program/digital catalogs. |
+| [`CFO`](../../.claude/agents/cfo.md) | Finance and Accounting | `FACILITATOR` | Review no-cut economics, processor cost, held liabilities and payout/refund evidence; owner and counsel retain financial/legal decisions and actual live-money authority. |
+| [`CHECKOUT`](../../.claude/agents/checkout.md) | Finance | `COMMERCE` | Preserve Amount → Options → Review, no cut in both flag states, No tip/unchecked fee defaults, recipient and busy locks; verify error/cancel/retry without duplicate credit. |
+| [`CI`](../../.claude/agents/ci.md) | IT infrastructure | `OPERATIONS` | Validate documentation/role consistency and current source gates on Node 24; original focused/full results are local evidence, with hosted and device gaps retained. |
+| [`CODE_HYGIENE`](../../.claude/agents/code-hygiene.md) | Data Governance | `DATA_GOVERNANCE` | Keep tips/donation_/malo identifiers and retained source intact; classify apparent unused gift code through Data Governance and owner-approved archiving. |
+| [`COMMERCE`](../../.claude/agents/commerce.md) | Finance | `CTO` | Integrate unconditional zero-cut gift source and reviewed checkout; obtain original provider fee/net/refund evidence, retain blocked payouts and one credit writer, and seek CFO/counsel acceptance. |
+| [`COMPLIANCE`](../../.claude/agents/compliance.md) | Legal and Compliance | `CTO` | Review actual notices, processor deductions, tax and store claims against source; naming/no-cut tests are not counsel approval or proof of consent and hosted enforcement. |
+| [`CONNECT`](../../.claude/agents/connect.md) | Finance | `COMMERCE` | Keep Express setup, Stripe identity/TIN, guardian relationship and money-destination decisions separate; current KYC recording source needs deployed/provider evidence, and payouts remain blocked. |
+| [`CONTENT_RIGHTS`](../../.claude/agents/content-rights.md) | Legal and Compliance | `LEGAL` | Keep filming/audio/marks permissions and consent unchanged by gifts; review public gift assets against original rights records, with no inferred school or family permission. |
+| [`CONTROLLER`](../../.claude/agents/controller.md) | Finance and Accounting | `CFO` | Review full gross gift allocation, separate optional-tip revenue and actual processing costs; test posting/reversal/Suspense reconciliation before accepting settlement or a close. |
+| [`COST_OPERATIONS`](../../.claude/agents/cost-operations.md) | IT infrastructure | `OPERATIONS` | Supply dated actual Stripe/store/provider costs to the existing Growth packet; no-cut source does not establish free processing, a cost winner or a spending decision. |
+| [`CREW`](../../.claude/agents/crew.md) | Engineering | `PROFILE` | Keep follows and account-bound resume independent of giving; gifts confer no institutional privilege, messaging permission or automatic notification enrollment. |
+| [`CTO`](../../.claude/agents/cto.md) | Office of the CTO | `FACILITATOR` | Route remaining gift-release work to one primary owner per task with Finance/Legal/Data/Security/Safety and independent QA gates; retain owner decisions and original evidence. |
+| [`CUSTODIAL`](../../.claude/agents/custodial.md) | Finance | `COMMERCE` | Preserve guardian/payee relationship, held funds and age/consent gates; gross gift allocation never establishes a settled family balance or permission to pay out. |
+| [`DATABASE_MIGRATIONS`](../../.claude/agents/database-migrations.md) | Database | `BACKEND` | Keep migration history append-only and canonical parity; future settlement/refund schema changes require reviewed Data ownership and engine/hosted receipts. |
+| [`DATA_GOVERNANCE`](../../.claude/agents/data-governance.md) | Data Governance | `CTO` | Review each changed money table/column/RPC/export/path and its purpose; keep the master map aligned while preserving internal identifiers and private financial data. |
+| [`DATA_LINEAGE`](../../.claude/agents/data-lineage.md) | Data Governance | `DATA_GOVERNANCE` | Trace personal gifts, optional platform tips and digital purchases separately through existing writers/readers; report unknown settlement and generated-map coverage honestly. |
+| [`DESIGN`](../../.claude/agents/design.md) | Design | `CTO` | Preserve the staged reviewed gift action, optional-control visibility and existing menu chrome; validate small/large-text layouts without deciding financial or legal claims. |
+| [`DESIGN_TOOLING`](../../.claude/agents/design-tooling.md) | Design | `DESIGN` | Use current gift source for draft design/screenshot handoffs and exact SDK 58 docs for API work; record current bytes and tool results, with no publication claim. |
+| [`DEVICE_QA`](../../.claude/agents/device-qa.md) | Quality | `QA` | Record native gift review, flag-off/on options, sign-in resume, cancellation, held state and retry on designated devices; local unit checks do not substitute for device/provider runs. |
+| [`DISCOVERY`](../../.claude/agents/discovery.md) | Engineering | `LOCAL` | Keep discovery and athlete story access independent of giving, purchases and payee setup; preserve recipient identity and privacy when opening a gift. |
+| [`DOCUMENTATION`](../../.claude/agents/documentation.md) | Engineering | `ENGINEERING` | Synchronize current gift/no-cut facts, superseded decisions, generated maps and remaining release gates in the same change; record actual executors and original evidence in COORD-02. |
+| [`DONATION_THANKS`](../../.claude/agents/donation-thanks.md) | Finance | `COMMERCE` | Keep the role/internal identifiers unchanged while showing gift thanks for individuals; presets only, with no free-text replies or settlement promise. |
+| [`DRIP`](../../.claude/agents/drip.md) | Finance | `COMMERCE` | Keep marketplace money a Purchase, separate from personal gifts and program donations; retain existing availability, catalog and order controls. |
+| [`ENGINEERING`](../../.claude/agents/engineering.md) | Engineering | `CTO` | Integrate source/admin/app contracts with exact SDK 58 docs; preserve zero-cut allocation, literal-true tip gating, internal identifiers and Support/QA evidence. |
+| [`FILMER_REWARDS`](../../.claude/agents/filmer-rewards.md) | Engineering | `HIGHLIGHTS` | Keep noncash recognition separate from gifts and any future paid creator path; no upload earns a promised gift share, and new cash models need their own reviews. |
+| [`FINANCE_DATA`](../../.claude/agents/finance-data.md) | Engineering | `ENGINEERING` | Keep gross gift, optional platform tip, processing cost and digital sales distinct in Books/report semantics; classify every money field and reconcile actual fees before net claims. |
+| [`FPA`](../../.claude/agents/fpa.md) | Finance and Accounting | `CFO` | Model zero mandatory gift-cut income and separate voluntary tips from verified source, usage and costs; scenarios and test rows are not actual cash or accepted forecasts. |
+| [`FULLSTACK`](../../.claude/agents/fullstack.md) | Engineering | `ENGINEERING` | Preserve the shared money core and mobile/admin/type parity with exact SDK 58 docs; keep no-cut allocation independent of optional flag state and giving separate from digital access. |
+| [`GROWTH_ANALYTICS`](../../.claude/agents/growth-analytics.md) | Marketing | `MARKETING` | Update the one Growth packet with gift/tip conversion definitions, unknown net costs and counsel/store friction; no-cut wording does not establish active users or cost sustainability. |
+| [`HIGHLIGHTS`](../../.claude/agents/highlights.md) | Engineering | `ENGINEERING` | Keep gift recipient bound to the eligible named athlete, independent of uploader, hype or play; preserve rights/privacy checks and current short-media limits. |
+| [`INCIDENT_TRIAGE`](../../.claude/agents/incident-triage.md) | Engineering support | `SUPPORT` | Route gift payment-completed/recording-failed reports without encouraging another charge; sanitize originals and assign financial incidents to Commerce/Support with independent review. |
+| [`INFO_RETURNS`](../../.claude/agents/info-returns.md) | Finance and Accounting | `TAX` | Prepare classified payee/payment totals for TAX/CPA review; personal-gift wording does not determine reporting duties, and SSNs remain provider-only. |
+| [`INFRASTRUCTURE`](../../.claude/agents/infrastructure.md) | Engineering | `ENGINEERING` | Keep current money core, Stripe/Storage/Auth dependencies and exit evidence mapped; zero-cut source changes no hosting decision or verified provider capacity. |
+| [`REDUNDANCY_LEAD`](../../.claude/agents/redundancy-lead.md) | Engineering | `ENGINEERING` | Preserve the current source/exit plan and money-core boundaries; source copies are separate from database/provider readiness and no second webhook credit writer is enabled. |
+| [`EXIT_SYNC`](../../.claude/agents/exit-sync.md) | Engineering | `REDUNDANCY_LEAD` | Keep exact source copies and exit-map notices current for gift changes; retain actual capture/verification status, with no inferred service activation or specialist delivery. |
+| [`EXIT_DATABASE`](../../.claude/agents/exit-database.md) | Engineering | `REDUNDANCY_LEAD` | Preserve gift/held-ledger schema, grants and single credit ownership in exit parity; restore/source hashes do not establish provider fees or settled money. |
+| [`EXIT_SERVICES`](../../.claude/agents/exit-services.md) | Engineering | `REDUNDANCY_LEAD` | Keep Stripe/Auth/Storage/Realtime adapters and existing money authority intact in exit plans; optional-tip config does not authorize provider switches or payment rewrites. |
+| [`EXIT_CLOUD`](../../.claude/agents/exit-cloud.md) | Engineering | `REDUNDANCY_LEAD` | Retain mapped dependencies, locked builds and isolated source evidence; no-cut gifts do not authorize cloud deployment, spending or cutover. |
+| [`INTERNAL_CONTROLS`](../../.claude/agents/internal-controls.md) | Finance and Accounting | `CONTROLLER` | Prove every gift/tip/purchase source and money column remains covered, with full gross allocation and reversible postings; unknown fee/net evidence remains an explicit discrepancy. |
+| [`LEADERBOARDS`](../../.claude/agents/leaderboards.md) | Engineering | `AURA` | Keep privacy-safe boards and noncash recognition independent of gifts and pay-for-performance; no-cut wording creates no award eligibility or donor-dollar ranking. |
+| [`LEDGER`](../../.claude/agents/ledger.md) | Finance | `COMMERCE` | Preserve the sole client tips writer until an atomic reviewed server replacement; full gross family allocation is local bookkeeping, with actual fees/net/refunds and payout balance checks still open. |
+| [`LEGAL`](../../.claude/agents/legal.md) | Legal and Compliance | `CTO` | Own final Terms, signed consent/versioning, personal-gift tax line and store/Aura/processing-claim review; coordinate counsel decisions without inferring legal acceptance from copy tests. |
+| [`LOCAL`](../../.claude/agents/local.md) | Engineering | `ENGINEERING` | Keep gifts to eligible athletes separate from program donations, boosters, free votes and game performance; no new fan ballot or paid recognition capability is inferred. |
+| [`MARKETING`](../../.claude/agents/marketing.md) | Marketing | `CTO` | Use gift/program/tip vocabulary from VOICE, accurate no-cut limits and consented family stories; preserve old tagline history and keep public/store claims behind domain/owner review. |
+| [`MINOR_SAFETY`](../../.claude/agents/minor-safety.md) | Trust and Safety | `TRUST_SAFETY` | Preserve age, guardian consent, held funds and communication safeguards; source gift wording neither signs consent nor activates real-family payments. |
+| [`MOBILE_PERFORMANCE`](../../.claude/agents/mobile-performance.md) | Engineering | `ENGINEERING` | Measure current gift-sheet mount/interaction behavior and preserve one-payment locks; unit timing and source changes do not establish native smoothness. |
+| [`MODERATION`](../../.claude/agents/moderation.md) | Trust and Safety | `TRUST_SAFETY` | Keep report/review/rights and appeals responsibilities independent of giving; gifts neither purchase visibility nor establish eligibility or staffing. |
+| [`MOTION`](../../.claude/agents/motion.md) | Design | `DESIGN` | Preserve fixed gift navigation and Reduce Motion without obscuring totals, holds or final payment; cosmetic changes cannot alter optional-money defaults. |
+| [`NOTIFICATIONS`](../../.claude/agents/notifications.md) | Engineering | `CREW` | Use personal-gift versus program-donation labels only from reviewed eligible events; optional email stays off and authority=false sources create neither mail nor a second credit writer. |
+| [`OFFLINE`](../../.claude/agents/offline.md) | Engineering | `ENGINEERING` | Preserve account-bound queued actions and duplicate prevention; never retry a completed payment as an offline action or treat ambiguous recording as permission to charge again. |
+| [`ONBOARDING`](../../.claude/agents/onboarding.md) | Engineering | `AUTH` | Use the gift naming map while keeping sign-up bank-free; resume only the original permitted action, and do not treat draft consent as real-family release permission. |
+| [`OPERATIONS`](../../.claude/agents/operations.md) | IT infrastructure | `CTO` | Coordinate approved test setup/build/configuration and original provider/hosted evidence; no-cut local source does not authorize live money, deployment or purchases. |
+| [`OPERATOR`](../../.claude/agents/operator.md) | IT infrastructure | `OPERATIONS` | Keep scoring/check-in duties separate from gifts, program donations and paid performance; a role definition does not activate a public operator or financial action. |
+| [`PARTNERSHIPS`](../../.claude/agents/partnerships.md) | Partnerships | `CTO` | Keep school/program donations distinct from individual gifts and booster placement purchases; owner classifies ambiguous offers and counsel verifies status/permissions before activation. |
+| [`PHOTO_STORIES`](../../.claude/agents/photo-stories.md) | Engineering | `HIGHLIGHTS` | Keep rights, recipient, short-media and cleanup guards when linking a personal gift; no settlement or filming permission is inferred from gift wording. |
+| [`PLAYBACK`](../../.claude/agents/playback.md) | Engineering | `HIGHLIGHTS` | Preserve expo-video lifecycle, private entitlement and current short-video boundaries with SDK 58 docs; viewing or gifting never implies digital purchase access. |
+| [`POLLS`](../../.claude/agents/polls.md) | Engineering | `LOCAL` | Keep free cheer votes and poll lifecycle independent of giving or platform tips; current counters do not implement a fan-award ballot capability. |
+| [`PORTAL`](../../.claude/agents/portal.md) | Engineering | `ADMIN` | Keep Next read-only and shared report labels accurate for gifts/program donations/tips/purchases; expose gross/test/missing-fee limits and retain historical raw keys. |
+| [`PRIVACY_ENGINEERING`](../../.claude/agents/privacy-engineering.md) | Legal and Compliance | `COMPLIANCE` | Review personal/guardian financial data, consent/versioning and provider handling for gift release; naming changes do not satisfy retention/deletion or authorize new collection. |
+| [`PRODUCT`](../../.claude/agents/product.md) | Product | `CTO` | Use gift/no-cut acceptance criteria while keeping account creation, fans and casual uploaders free of payee setup; owner resolves mixed refund/booster classification and release choices. |
+| [`PROFILE`](../../.claude/agents/profile.md) | Engineering | `ENGINEERING` | Show individual Gift/Give and the required personal-gift tax notice with correct athlete/guardian context; preserve held/verification state and keep digital Subscription/Purchase separate. |
+| [`QA`](../../.claude/agents/qa.md) | Quality | `CTO` | Independently verify no-cut both flag states, literal-true tip gating, defaults, review/resume/error and gross ledger invariants; retain unrun hosted/provider/device/counsel gates. |
+| [`RALLY`](../../.claude/agents/rally.md) | Finance | `COMMERCE` | Keep guardian-approved goals for real sports costs and personal-gift progress, independent of performance; current totals remain client records pending authoritative settlement. |
+| [`REALTIME`](../../.claude/agents/realtime.md) | Engineering | `ENGINEERING` | Keep subscriptions/reconnect and actor-bound updates intact; a live gift-history update does not prove provider settlement or authorize duplicate credit. |
+| [`RECEIPTS`](../../.claude/agents/receipts.md) | Finance | `COMMERCE` | Show personal-gift tax wording and separately classified program/tip/purchase history; preserve original identifiers and disclose actual status without claiming unverified net settlement. |
+| [`RECONCILIATION`](../../.claude/agents/reconciliation.md) | Finance | `COMMERCE` | Compare actual provider charge/fee/refund events with gross gift/tip/ledger records; ambiguous payments need repair evidence, and the current client stays sole writer. |
+| [`RECOVERY`](../../.claude/agents/recovery.md) | IT infrastructure | `OPERATIONS` | Preserve source/database/provider recovery as separate evidence; rehearse reviewed financial rollback without deleting originals or treating source restore as money reconciliation. |
+| [`REFUNDS`](../../.claude/agents/refunds.md) | Finance | `COMMERCE` | Prepare reviewed gift/tip/purchase reversal rules and single-writer idempotency; owner classifies the mixed “Refund donation” label before changing its financial meaning. |
+| [`RELEASE`](../../.claude/agents/release.md) | IT infrastructure | `OPERATIONS` | Bind tested gift source and runtime config to reviewed builds/environments; require original device/provider/counsel/owner release evidence before publishing the literal-true tip switch. |
+| [`RELIABILITY`](../../.claude/agents/reliability.md) | Engineering support | `SUPPORT` | Pair with gift developers on payment/recording/config failure reproduction, safe repair and regression; source tests are bounded sensors and missing settlement monitoring remains explicit. |
+| [`RESEARCH`](../../.claude/agents/research.md) | Product | `PRODUCT` | Evaluate the clear athlete story, bank-free first actions and optional gift review with consented feedback; proposals and local copy do not establish user growth or recruiting outcomes. |
+| [`RLS_SECURITY`](../../.claude/agents/rls-security.md) | Security | `SECURITY` | Review current gift/held-ledger actor grants and future authoritative writer changes; local no-cut tests do not prove hosted authorization or safe payout balances. |
+| [`ROLE_HQ`](../../.claude/agents/role-hq.md) | Partnerships | `PARTNERSHIPS` | Keep guardian gifts, program donations and sponsor/booster placement purchases distinct; preserve per-athlete target/consent, with ambiguous booster placement classified by the owner. |
+| [`ROSTERS`](../../.claude/agents/rosters.md) | Engineering | `LOCAL` | Keep athlete/team claim identity and navigation accurate for personal gifts; school/program affiliation does not imply charity status or marks permission. |
+| [`RUNTIME_CONFIG`](../../.claude/agents/runtime-config.md) | Engineering | `ADMIN` | Require buttons.MONETIZATION_TIPS_ENABLED to be literal true, default off; it controls optional tips/processing estimates only and must never restore a gift cut. |
+| [`SALES_TAX`](../../.claude/agents/sales-tax.md) | Finance and Accounting | `TAX` | Keep digital/Drip purchases separate from personal gifts/program donations in tax-watch evidence; CPA/counsel decides actual tax duties and jurisdiction. |
+| [`SCHOOL_PARTNERS`](../../.claude/agents/school-partners.md) | Partnerships | `PARTNERSHIPS` | Keep school confirmation and marks consent separate from program charity/payment status; no-cut gifts imply neither school endorsement nor permission to contact families. |
+| [`SECURITY`](../../.claude/agents/security.md) | Security | `CTO` | Retain independent session/RLS/financial-source review, blocked payouts and one credit writer; no-cut source does not close hosted storage, authorization or recovery gates. |
+| [`INFRA_SECURITY`](../../.claude/agents/infra-security.md) | Security | `SECURITY` | Preserve scoped infrastructure security and source/provider boundaries; gift source tests do not establish deployed IAM/TLS, continuous protection or payment security acceptance. |
+| [`SUPPLY_CHAIN_SECURITY`](../../.claude/agents/supply-chain-security.md) | Security | `SECURITY` | Review locked Expo 58/Stripe dependencies and source artifact provenance for changed gift builds; retain original evidence and independent deployment/security acceptance. |
+| [`RECOVERY_SECURITY`](../../.claude/agents/recovery-security.md) | Security | `SECURITY` | Keep private restore isolation, integrity and original custody separate from gift settlement; source capture does not establish database/provider recovery or cutover readiness. |
+| [`SESSION_SECURITY`](../../.claude/agents/session-security.md) | Security | `SECURITY` | Keep fresh server identity, admin role and account-bound gift/Connect context; test turnover/resume without confusing capability flags with KYC or payment authority. |
+| [`SHARED_CONTRACTS`](../../.claude/agents/shared-contracts.md) | Engineering | `ENGINEERING` | Preserve raw RPC/telemetry/internal money names and cross-client quote/report parity; zero-cut allocation is unconditional while optional-tip gating is literal-true only. |
+| [`SHARING`](../../.claude/agents/sharing.md) | Engineering | `PROFILE` | Keep athlete-bound Share & Give QR links, required tax wording and hidden identity safe; links do not guarantee hosted availability, account-free payment or settled delivery. |
+| [`SPONSOR_ADS`](../../.claude/agents/sponsor-ads.md) | Partnerships | `PARTNERSHIPS` | Keep booster/sponsor placement a Purchase under current source, separate from program charity; await owner classification and counsel review before relabeling or activation. |
+| [`SPOTLIGHT`](../../.claude/agents/spotlight.md) | Engineering | `ENGINEERING` | Keep awards based on existing hype/views and real IDs, with personal gifts separate; no payment buys ranking, recruiting outcomes or a new fan award. |
+| [`STORAGE`](../../.claude/agents/storage.md) | Database | `BACKEND` | Preserve public/private media permission, limits and cleanup controls for gift-linked assets; money wording provides no rights, hosting or deletion evidence. |
+| [`SUPPORT`](../../.claude/agents/support.md) | Engineering support | `ENGINEERING` | Integrate bounded gift/config/payment-recording sensors, sanitized originals and developer repair evidence; report missing provider/settlement detection rather than healthy. |
+| [`TAX`](../../.claude/agents/tax.md) | Finance and Accounting | `CFO` | Review personal gifts, program status, platform tips and purchases with CPA/counsel; source words do not decide deductibility/reporting or authorize tax-ID collection/filing. |
+| [`TELEMETRY`](../../.claude/agents/telemetry.md) | Engineering support | `SUPPORT` | Keep raw money event identifiers and safe existing signals; new IDs/funnels require Legal/Privacy/Data review and failed payment recording must not expose sensitive data. |
+| [`TEST_AUTOMATION`](../../.claude/agents/test-automation.md) | Quality | `QA` | Verify meaningful no-cut/flag/default/retry/account-bound and gross-ledger regressions with original commands/counts; do not claim provider, SQL application or devices from mocks. |
+| [`THREAT_DETECTION`](../../.claude/agents/threat-detection.md) | Security | `SECURITY` | Review trusted financial/security observations, false positives and original occurrences with Support; client gift events do not become server-confirmed payments or fraud proof. |
+| [`TREASURY`](../../.claude/agents/treasury.md) | Finance and Accounting | `CFO` | Reconcile held gross gifts, separate voluntary tips, actual provider fees and bank balances before any payout; an app balance is not verified cash or available settlement. |
+| [`TRUST_SAFETY`](../../.claude/agents/trust-safety.md) | Trust and Safety | `CTO` | Retain independent rights/age/guardian/school/communication review; gifts create neither permissions, paid visibility nor release approval. |
+| [`UPLOAD`](../../.claude/agents/upload.md) | Engineering | `HIGHLIGHTS` | Preserve draft Back navigation, athlete/caption/rights checks and short-media limits; uploading creates no promised gift income or digital entitlement. |
+| [`VAULT`](../../.claude/agents/vault.md) | Engineering | `PROFILE` | Keep private entitlement and one-time Purchase/premium Subscription separate from giving; preserve the existing digital split and counsel-gated family-account decision. |
+| [`VISUAL_QA`](../../.claude/agents/visual-qa.md) | Quality | `QA` | Record current narrow/large-text/browser gift review, optional controls and held/error layouts; screenshots and local source cannot establish native/provider settlement. |
+| [`VOICE`](../../.claude/agents/voice.md) | Brand | `CTO` | Apply Gift/Give/Send a gift for individuals, Donation for programs, optional Tip Tapua'i and Cover the processing fee; keep Subscription/Purchase separate and exact tax/held notices honest. |
+| [`VP_OPERATIONS`](../../.claude/agents/vp-operations.md) | Office of the CTO | `CTO` | Reconcile all 115 role handoffs and the ordered remaining gift gates with Documentation; preserve every role/model/reporting pin and record actual executors without claiming team delivery. |
+| [`WISHLIST`](../../.claude/agents/wishlist.md) | Finance | `COMMERCE` | Keep gear-goal personal gifts, correct athlete recipient and one existing tips record; a no-cut source allocation does not prove settled progress or authorize duplicate credit. |
+
+### Earlier APP-TEST-01 status and evidence — 2026-10-21
+
+The following snapshot preserves its original app-test assignments and check counts. Its old
+tagline/donation-only and KYC-unwired statements are superseded by current STATE/COORD-02;
+current KYC source recording is locally wired, with deployed/provider evidence still separate.
+
 
 <!-- Current app assignments cover the full registry; original execution receipts and dated history remain separate. -->
 
-**Updated:** 2026-10-21 UTC. **Current assignment:** [APP-TEST-01](WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc), current app testing and whole-team roadmap handoff. The registry contains **115 unique callable roles across 17 department labels**. This briefing assigns each role a concrete handoff; assignments do not establish 115 agent executions, human staffing, external delivery or scheduled workers. Model pins, reporting leads and independent domain authority remain in the [registry](../../.claude/agents/registry.json).
+**Earlier update:** 2026-10-21 UTC (APP-TEST-01 evidence retained). **Current assignment:** [APP-TEST-01](WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc), current app testing and whole-team roadmap handoff. The registry contains **115 unique callable roles across 17 department labels**. This briefing assigns each role a concrete handoff; assignments do not establish 115 agent executions, human staffing, external delivery or scheduled workers. Model pins, reporting leads and independent domain authority remain in the [registry](../../.claude/agents/registry.json).
 
 Start with [STATE](../STATE.md), this briefing, the [queue](WORK_QUEUE.md), [roadmap](../product/ROADMAP.md), the role definition and [department deliverables](DEPARTMENT_PLANS.md#current-app-deliverables-by-department). [TEAMS](TEAMS.md) and the [hierarchy](TEAM_HIERARCHY.md) retain specialist routing. Actual scoped executors, reviews and checks belong in [COORD-01](COORD-01.md#current-app-roadmap-and-whole-team-refresh--2026-10-21-utc).
 
-## Current app evidence and remaining gates
+## Earlier app evidence and remaining gates — 2026-10-21
 
 - **Executed local app baseline:** 226 mobile suites / 2,193 tests PASS in 138.861s; both app typechecks PASS. Independent media/duration review records 153 tests PASS. These are supplied original execution receipts in [media plan §6](../engineering/design/MEDIA_SERVICE_PLAN.md#6-current-app-testing-preparation--2026-10-21-utc), with Documentation/Data acceptance at 03:09:54 UTC. This team refresh does not rerun those app tests.
 - **Observed browser navigation:** localhost:8086 at 390×844, in a previously signed-in session: Home → Activity → Spotlight → Profile → Upload → library modal → Cancel → account settings. Activity/Spotlight had 390px document width. No fresh guest or sign-in gate, actual file selection/upload, browser clip decode, bank operation or native-device acceptance follows from that navigation.
@@ -23,7 +186,7 @@ Start with [STATE](../STATE.md), this briefing, the [queue](WORK_QUEUE.md), [roa
 
 Lanes D/E/F in APP-TEST-01 preserve release blockers, Legal-first instrumentation and current story/tab/accessibility/performance regression work. They are dependencies and existing role duties, not additional product launches. Each specialist returns original source/build/environment, actual command or journey, result/date, missing evidence and next owner to the registered lead; leads report to CTO. Finance and Accounting retains its registry routing through CFO. QA and independent Security/Legal/Privacy/Finance authority remain. On each assigned app change, DOCUMENTATION and VP_OPERATIONS update the affected role entry, department handoff and queue with the new source/evidence in the same reviewed change.
 
-## Current all-role assignment coverage — 115 roles
+## Earlier APP-TEST-01 all-role assignment coverage — 115 roles
 
 The following table lists each current registered call exactly once. Lane letters refer to APP-TEST-01; **Standby** means existing support/source awareness with no new infrastructure execution in this app task. The Reports-to column is copied from the registry, including its existing FACILITATOR routing. New work still requires the lead's scoped assignment and applicable domain review.
 
@@ -220,7 +383,7 @@ All 17 registry department labels and 107 role records are included below. Funct
 | Brand (1) | VOICE retains Donate/donation, exact fees/recipient and no legal or sporting outcome promises. | VOICE reviews each changed public/payment promise with Legal/Finance; proposed activities remain clearly labeled. |
 
 
-## All-role coverage
+## Earlier all-role coverage — COORD-01 snapshot
 
 All107 definitions now link to this brief and give their current handoff. The table below reflects the current registry. It establishes the reviewed assignment and reading path, not execution, staffing or completed feature work; operational/feature gates above still apply.
 

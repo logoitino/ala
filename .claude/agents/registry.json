@@ -14,7 +14,8 @@
       ],
       "tasks": [
         "Audit screen-reader labels, focus order, touch targets, contrast, text scaling and reduced motion.",
-        "Current app roadmap handoff (2026-10-21 UTC): Test keyboard/focus, screen readers, large text, contrast and reduced motion on current app journeys. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Test keyboard/focus, screen readers, large text, contrast and reduced motion on current app journeys. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Verify gift review, optional controls, held/error notices, focus order and large-text/screen-reader behavior; retain separate native evidence. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -28,7 +29,8 @@
         "supabase/migrations/20261002160000_reel_account_tags.sql"
       ],
       "tasks": [
-        "Account mention request/confirm/hide lifecycle, honest RPC errors and concurrent three-tag limit"
+        "Account mention request/confirm/hide lifecycle, honest RPC errors and concurrent three-tag limit",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep tag permission and athlete recipient separate from uploader identity; gift language grants no tag or filming permission. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -43,7 +45,8 @@
       ],
       "tasks": [
         "Own activity rows, pagination, actor navigation and empty/error states.",
-        "Current app roadmap handoff (2026-10-21 UTC): Verify account-specific donations, tags and empty/error states; navigation is not settled-money evidence. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Verify account-specific donations, tags and empty/error states; navigation is not settled-money evidence. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Verify personal-gift labels, actor-bound history and failure states; existing activity records do not establish settled family credit. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -69,7 +72,8 @@
       "tasks": [
         "Expo write control plane and read-only Next oversight; Next Trends (/reports) and lib/reports.ts",
         "ADM-02 main Expo admin: selected report design plus all editing desks, authenticated report loaders and integration; Next remains read-only",
-        "Maintain the locally integrated Expo write desks, Beyond/workout review and Support controls; Next remains oversight only, and date-range/export/Product-workbench work from fan-zone is not integrated into main. Expo admin Home lists controls whose database update is not applied."
+        "Maintain the locally integrated Expo write desks, Beyond/workout review and Support controls; Next remains oversight only, and date-range/export/Product-workbench work from fan-zone is not integrated into main. Expo admin Home lists controls whose database update is not applied.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve Expo writes and Next read-only oversight; verify the literal-true tip switch, default off, availability and repair controls before publishing any configuration. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -89,7 +93,8 @@
         "Shared read-only Expo/Next measure catalog and eight analytics dashboards; ANALYST reviews meaning, SHARED_CONTRACTS owns shared implementation",
         "Review shared Expo/Next measure definitions, source provenance, units/window/population/denominator and missing-value meaning for the single GROWTH_ANALYTICS packet; only clips/donations have current prior-week pairs, and MAU/retention/conversion remain unmeasured as defined.",
         "Use main's existing measure catalog and fixed report windows; preserve missing versus zero and source/denominator limits, with no invented MAU or claim that fan-zone range/export work exists here.",
-        "Current app roadmap handoff (2026-10-21 UTC): Report qualifying source/window/denominator and unknown funnels honestly; tab/profile counts are not unique active users. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Report qualifying source/window/denominator and unknown funnels honestly; tab/profile counts are not unique active users. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Separate gifts, program donations, platform tips and digital purchases in report meaning; retain raw identifiers and distinguish gross test records from settled income. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -108,7 +113,8 @@
       "tasks": [
         "Own request validation, JWT verification, authorization, typed responses and server error boundaries.",
         "Maintain the shared Node/Edge money-core boundary and canonical actor-bound Beyond/CHAL contracts; provider capability responses and local validation do not certify hosted authorization or settlement.",
-        "Current app roadmap handoff (2026-10-21 UTC): Verify protected Connect adapters and masked dependency errors after approved setup; never expose credentials or report an unconfirmed database save as success. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Verify protected Connect adapters and masked dependency errors after approved setup; never expose credentials or report an unconfirmed database save as success. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve the shared Node/Edge money core and protected session boundary; no-cut source or a returned client secret proves neither provider settlement nor authorization to pay out. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -123,7 +129,8 @@
         "apps/mobile/src/frontend/lib/socialLinks.ts"
       ],
       "tasks": [
-        "Own athlete bio/stat/social visibility and sport-specific stat shapes."
+        "Own athlete bio/stat/social visibility and sport-specific stat shapes.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep gifts independent of sport statistics, ranking and recruiting outcomes; preserve athlete privacy and current sport identity. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -141,7 +148,8 @@
       ],
       "tasks": [
         "Own claim/vouch/school confirmation ladder, token validity and verified badge semantics.",
-        "Current app roadmap handoff (2026-10-21 UTC): Keep school/payee verification distinct from account creation; positive Stripe identity/TIN recording remains unwired. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Keep school/payee verification distinct from account creation; positive Stripe identity/TIN recording remains unwired. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep school, Stripe identity/TIN and payee relationship evidence distinct; no-cut gifts do not remove verification or held-payment gates. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -154,7 +162,8 @@
         "apps/mobile/src/frontend/lib/aura.ts"
       ],
       "tasks": [
-        "Aura tiers and card reward math"
+        "Aura tiers and card reward math",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve 10 Aura per dollar as noncash reputation; flag gift-linked digital-border eligibility for counsel/store review before release, with no digital access promised for giving. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -168,7 +177,8 @@
       ],
       "tasks": [
         "Guest browse, sign-in and role flow integration",
-        "Current app roadmap handoff (2026-10-21 UTC): Follow the prepared Google setup guide, then test fresh/returning/canceled/failed callbacks and resumed actions. Development Google is disabled; existing sessions are not new-login evidence. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Follow the prepared Google setup guide, then test fresh/returning/canceled/failed callbacks and resumed actions. Development Google is disabled; existing sessions are not new-login evidence. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep guest browse and bank-free account creation; resume a reviewed gift only after account-bound sign-in, preserving recipient and single-flight locks. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -186,7 +196,8 @@
       "tasks": [
         "Database architecture, migrations, RPCs, Storage layout and pairing with Security",
         "Retain accepted local Beyond/CHAL actor-bound SQL and real replay evidence; prepare ordered, owner-authorized hosted application/negative readback with migration, Storage and Security owners.",
-        "Current app roadmap handoff (2026-10-21 UTC): Review written Connect-context and failed-photo-cleanup SQL; approved execution/apply and negative readback remain required. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Review written Connect-context and failed-photo-cleanup SQL; approved execution/apply and negative readback remain required. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Retain current schema/credit ownership; any authoritative settlement migration needs canonical parity, Data/Finance/Security review and an actual engine replay before authorized application. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -201,7 +212,8 @@
         "apps/mobile/src/frontend/lib/vault.ts"
       ],
       "tasks": [
-        "Own current one-time Exclusive purchase semantics and future recurring billing design."
+        "Own current one-time Exclusive purchase semantics and future recurring billing design.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep one-time Exclusive a Purchase and premium a Subscription; neither is a gift benefit, and a label does not implement recurring billing. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -214,8 +226,9 @@
         "docs/company/FINANCE_OPERATIONS.md"
       ],
       "tasks": [
-        "Monthly routine in BOOKKEEPING.md \u00a76 and FINANCE_OPERATIONS.md: Stripe fees, payouts to bank, receipts, Suspense, then hand to CONTROLLER",
-        "Keep every recorded entry referenced to a receipt, invoice or Stripe report; void by reversal, never by editing"
+        "Monthly routine in BOOKKEEPING.md §6 and FINANCE_OPERATIONS.md: Stripe fees, payouts to bank, receipts, Suspense, then hand to CONTROLLER",
+        "Keep every recorded entry referenced to a receipt, invoice or Stripe report; void by reversal, never by editing",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Reconcile gross gift, separate optional tip and provider fee evidence; missing fees/net settlement remain unknown, with close/reversal and QuickBooks rehearsal still required. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -231,7 +244,8 @@
         "docs/product/STORE_LISTING.md"
       ],
       "tasks": [
-        "Own the approved message \"Donate. Elevate. Celebrate.\" and its consistent use in the approved placements; VOICE reviews money words, LEGAL reviews claims."
+        "Apply the owner-approved gift/program/tip naming map in existing placements; old Donate. Elevate. Celebrate. is superseded history. VOICE reviews money words and LEGAL reviews claims.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Use the current gift/program/tip naming map in existing placements; retain Donate. Elevate. Celebrate. only as superseded history and avoid invented replacement taglines or recruiting promises. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -247,7 +261,8 @@
         "scripts/sync-front-docs.mjs"
       ],
       "tasks": [
-        "Own sport/region/category/price catalog consistency and generated product facts."
+        "Own sport/region/category/price catalog consistency and generated product facts.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep gift allocation independent of product price and the tip switch; preserve generated facts and separate program/digital catalogs. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -266,7 +281,8 @@
         "Request finance data and admin screens through the CTO (CTO -> ENGINEERING -> FINANCE_DATA) and give finance acceptance on the result",
         "Required finance reviewer on any change to splits, the revenue log, the chart of accounts, posting rules, payouts or tax wording",
         "Accept the existing local Books/catalog work with requesting finance reviewers; W0-10 staged close and P1-08 bank/CPA/first live-month controls remain pending, with no live money or tax-ID storage authority.",
-        "Current app roadmap handoff (2026-10-21 UTC): Keep test receipts separate from cash and require settlement/refund/held-balance and cost evidence before live-money/spending decisions. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Keep test receipts separate from cash and require settlement/refund/held-balance and cost evidence before live-money/spending decisions. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Review no-cut economics, processor cost, held liabilities and payout/refund evidence; owner and counsel retain financial/legal decisions and actual live-money authority. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -284,7 +300,8 @@
         "apps/mobile/src/frontend/components/TipCheckout.tsx"
       ],
       "tasks": [
-        "Own PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling."
+        "Own PaymentSheet/native-web differences, quote arithmetic, fees and payment failure handling.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve Amount → Options → Review, no cut in both flag states, No tip/unchecked fee defaults, recipient and busy locks; verify error/cancel/retry without duplicate credit. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -301,7 +318,8 @@
       "tasks": [
         "Own reproducible local/CI gates, workspace dependency consistency and agent/doc validation.",
         "Keep existing registry, documentation, data, boundary, type and detection gates reproducible; a structural pass is not semantic review, hosted health, device acceptance or evidence that all 115 roles ran.",
-        "Current app roadmap handoff (2026-10-21 UTC): Keep Node24/pinned-pnpm app and fixture checks reproducible; distinguish scoped checks from full CI and115 executed roles. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Keep Node24/pinned-pnpm app and fixture checks reproducible; distinguish scoped checks from full CI and115 executed roles. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Validate documentation/role consistency and current source gates on Node 24; original focused/full results are local evidence, with hosted and device gaps retained. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -315,7 +333,8 @@
       ],
       "tasks": [
         "Triage every unused export in data-ownership.json exportsTriage (keep | archive, with reason); remove stale entries",
-        "After owner approval, move archived code and its tests to archive/ in one reviewable change, and confirm typecheck and tests"
+        "After owner approval, move archived code and its tests to archive/ in one reviewable change, and confirm typecheck and tests",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep tips/donation_/malo identifiers and retained source intact; classify apparent unused gift code through Data Governance and owner-approved archiving. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -333,7 +352,8 @@
       "tasks": [
         "Financial design and payment specialist integration; Next Revenue (/money) and its components/revenue",
         "Maintain local Finance & Books and read-only Revenue meaning; guardian/payee, destination-charge choice, authoritative settlement/refund/held balances and live-money acceptance remain separate gates.",
-        "Current app roadmap handoff (2026-10-21 UTC): Lead optional later test-bank setup with Connect/Custodial and Finance reviewers; keep identity/destination/money-integrity gates. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Lead optional later test-bank setup with Connect/Custodial and Finance reviewers; keep identity/destination/money-integrity gates. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Integrate unconditional zero-cut gift source and reviewed checkout; obtain original provider fee/net/refund evidence, retain blocked payouts and one credit writer, and seek CFO/counsel acceptance. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -348,8 +368,9 @@
       ],
       "tasks": [
         "Privacy, commercial disclosures and evidence-backed claims",
-        "Supply privacy/consent/processor/retention and actual-exposure gaps to the standing Growth charter \u00a79 review; exchange Legal/Growth/Engineering findings, track counsel-approved alternatives and mandatory control acceptance without inventing policy.",
-        "Current app roadmap handoff (2026-10-21 UTC): Keep account creation, voluntary bank verification, media rights and provider evidence distinct; no new policy approval follows this refresh. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Supply privacy/consent/processor/retention and actual-exposure gaps to the standing Growth charter §9 review; exchange Legal/Growth/Engineering findings, track counsel-approved alternatives and mandatory control acceptance without inventing policy.",
+        "Current app roadmap handoff (2026-10-21 UTC): Keep account creation, voluntary bank verification, media rights and provider evidence distinct; no new policy approval follows this refresh. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Review actual notices, processor deductions, tax and store claims against source; naming/no-cut tests are not counsel approval or proof of consent and hosted enforcement. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -367,7 +388,8 @@
       "tasks": [
         "Own JWT-gated Express links, bank onboarding state and verification/payout readiness.",
         "Review actual canonical account/link/Terms and transfer-or-payout capability wiring; VERIFY-02's SSN-only-Stripe/guardian policy is an owner rule, not proof that age, guardian, bank and settlement gates are implemented.",
-        "Current app roadmap handoff (2026-10-21 UTC): Test adult and guardian per-athlete portal/status/return after reviewed SQL/Edge setup. Keep confirmed Terms and ownership; capability flags are not KYC and payouts stay503. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Test adult and guardian per-athlete portal/status/return after reviewed SQL/Edge setup. Keep confirmed Terms and ownership; capability flags are not KYC and payouts stay 503. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep Express setup, Stripe identity/TIN, guardian relationship and money-destination decisions separate; current KYC recording source needs deployed/provider evidence, and payouts remain blocked. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -382,7 +404,8 @@
       ],
       "tasks": [
         "Own implementation of approved filming, audio, mark permissions and rights-report language.",
-        "Review both full Beyond attestations, minor/non-user subjects and recorded review-versus-publication scope; photo/video scrubbing is local defense, not licensed footage or server-decoder proof."
+        "Review both full Beyond attestations, minor/non-user subjects and recorded review-versus-publication scope; photo/video scrubbing is local defense, not licensed footage or server-decoder proof.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep filming/audio/marks permissions and consent unchanged by gifts; review public gift assets against original rights records, with no inferred school or family permission. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -398,7 +421,8 @@
       "tasks": [
         "Chart of accounts, posting rules and statement definitions in bookkeeping.ts; any change needs this role's approval and a matching SQL seed",
         "Month-end close: Suspense at zero, held balances never below zero, Stripe balance agreed to Stripe, then close",
-        "QuickBooks Online / general-ledger export format and the import procedure"
+        "QuickBooks Online / general-ledger export format and the import procedure",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Review full gross gift allocation, separate optional-tip revenue and actual processing costs; test posting/reversal/Suspense reconciliation before accepting settlement or a close. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -416,7 +440,8 @@
       "tasks": [
         "Wave budgets, free quotas, media bandwidth and vendor cost evidence",
         "Contribute dated actual invoices/usage/verified quotas and loaded 30/90-day cost forecasts/options to the single GROWTH_ANALYTICS packet, with RELIABILITY and FINANCE_DATA/FPA/TREASURY/CFO; preserve OPERATIONS source controls and owner spending gates.",
-        "Current app roadmap handoff (2026-10-21 UTC): Supply dated media storage/delivery/processing and support cost evidence; local tests establish no purchase/provider decision. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Supply dated media storage/delivery/processing and support cost evidence; local tests establish no purchase/provider decision. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Supply dated actual Stripe/store/provider costs to the existing Growth packet; no-cut source does not establish free processing, a cost winner or a spending decision. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -430,7 +455,8 @@
         "apps/mobile/src/frontend/hooks/useCrew.ts"
       ],
       "tasks": [
-        "Own Join Crew, follow counts, self-action restrictions and sign-in resume."
+        "Own Join Crew, follow counts, self-action restrictions and sign-in resume.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep follows and account-bound resume independent of giving; gifts confer no institutional privilege, messaging permission or automatic notification enrollment. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -446,7 +472,8 @@
       "tasks": [
         "Assign every app fix to one department lead, review the evidence, and reject shortcuts",
         "Review the single GROWTH_ANALYTICS packet through MARKETING after source quality and domain/independent checks; record technical disposition and submit spending/service/release decisions to the owner, retaining $50 initial ceiling and no automatic upgrade.",
-        "Current app roadmap handoff (2026-10-21 UTC): Sequence APP-TEST-01 with one accountable lead per lane and independent domain/release gates. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Sequence APP-TEST-01 with one accountable lead per lane and independent domain/release gates. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Route remaining gift-release work to one primary owner per task with Finance/Legal/Data/Security/Safety and independent QA gates; retain owner decisions and original evidence. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -463,7 +490,8 @@
       ],
       "tasks": [
         "Own guardian approval, payee relationship, age handover and server payout policy invariants.",
-        "Current app roadmap handoff (2026-10-21 UTC): Verify two-athlete guardian selection, current consent/link/handover, Terms and account-safe bank return; local routing is not hosted acceptance. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Verify two-athlete guardian selection, current consent/link/handover, Terms and account-safe bank return; local routing is not hosted acceptance. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve guardian/payee relationship, held funds and age/consent gates; gross gift allocation never establishes a settled family balance or permission to pay out. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -480,7 +508,8 @@
       "tasks": [
         "Keep canonical schema, append-only migration order, rollback notes and schema documentation consistent.",
         "Maintain canonical parity and replay evidence for written MINOR/VERIFY/DATA/BOOKS/Support/Beyond/CHAL migrations; do not rebuild already complete local slices or apply hosted SQL without authorization.",
-        "Current app roadmap handoff (2026-10-21 UTC): Bind written migrations to canonical schema/types; retain replay/apply/readback gaps until actual evidence exists. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Bind written migrations to canonical schema/types; retain replay/apply/readback gaps until actual evidence exists. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep migration history append-only and canonical parity; future settlement/refund schema changes require reviewed Data ownership and engine/hosted receipts. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -497,7 +526,8 @@
         "Every table, view, database function and unused export has an owner and a decision in data-ownership.json; `pnpm data:map:check` stays green",
         "Approve new/changed data paths and feature-admin/migration ownership; keep locally closed DATA-01 findings, owner-approved archives and remaining hosted application/declared exceptions accurately scoped.",
         "Weekly drift review and a pre-release data review; owner approval before anything moves to archive/",
-        "Review Growth and Capacity Review source/version/window/cohort, quality/deduplication and privacy evidence; approve changed measurement paths through existing data controls, with unknown/partial distinct from zero."
+        "Review Growth and Capacity Review source/version/window/cohort, quality/deduplication and privacy evidence; approve changed measurement paths through existing data controls, with unknown/partial distinct from zero.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Review each changed money table/column/RPC/export/path and its purpose; keep the master map aligned while preserving internal identifiers and private financial data. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -512,7 +542,8 @@
       ],
       "tasks": [
         "Generator accuracy: overloads, dynamic table / function names, symbol-level screen tracing; add a rule when a new pattern appears",
-        "Regenerate DATA_MAP.md with every schema or data-path change; investigate any table with no writer or reader before an exception is recorded"
+        "Regenerate DATA_MAP.md with every schema or data-path change; investigate any table with no writer or reader before an exception is recorded",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Trace personal gifts, optional platform tips and digital purchases separately through existing writers/readers; report unknown settlement and generated-map coverage honestly. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -530,7 +561,8 @@
       "tasks": [
         "Visual design and interaction integration",
         "Calm Island is the owner's newer source direction after UX-06's frozen manifest; five published theme values may still override it until an authorized Look-to-Daylight publication, with native/accessibility checks open. The Rally and board-leader share sheet is local (M8-01). Backer wall, badges and the larger rivalry takeover stay later.",
-        "Current app roadmap handoff (2026-10-21 UTC): Improve current story/tab/account/upload clarity from reproducible findings, preserving rights and honest account/media/money states. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Improve current story/tab/account/upload clarity from reproducible findings, preserving rights and honest account/media/money states. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve the staged reviewed gift action, optional-control visibility and existing menu chrome; validate small/large-text layouts without deciding financial or legal claims. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -546,7 +578,8 @@
       "tasks": [
         "Own MCP/design-tool workflows: Figma/Canva handoff, Playwright screenshot evidence setup and Expo MCP build tooling.",
         "Never connect to production or grant write access without owner approval.",
-        "Record each actual Figma file and access/quota result separately: the original UX-06 draft is empty, but a later colour-comparison file succeeded; continue approved local work without buying access or promising Code Connect."
+        "Record each actual Figma file and access/quota result separately: the original UX-06 draft is empty, but a later colour-comparison file succeeded; continue approved local work without buying access or promising Code Connect.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Use current gift source for draft design/screenshot handoffs and exact SDK 58 docs for API work; record current bytes and tool results, with no publication claim. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -561,7 +594,8 @@
       ],
       "tasks": [
         "Own real-device fan/athlete/guardian/operator/booster journey evidence.",
-        "Current app roadmap handoff (2026-10-21 UTC): Run iOS/Android Google/bank return, real picker/compression/playback and accessibility after build/provider setup. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Run iOS/Android Google/bank return, real picker/compression/playback and accessibility after build/provider setup. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Record native gift review, flag-off/on options, sign-in resume, cancellation, held state and retry on designated devices; local unit checks do not substitute for device/provider runs. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -577,7 +611,8 @@
         "apps/mobile/src/frontend/components/Reels/HomeSearchOverlay.tsx"
       ],
       "tasks": [
-        "Local, team and Highlight search, pagination and eligibility-filtered discovery"
+        "Local, team and Highlight search, pagination and eligibility-filtered discovery",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep discovery and athlete story access independent of giving, purchases and payee setup; preserve recipient identity and privacy when opening a gift. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -600,7 +635,8 @@
         "Synchronize code comments, current state, team ownership, architecture, tester journeys and product evidence across departments in the same change; preserve generated facts and approved legal conclusions.",
         "On each assigned active feature/fix handoff, reconcile owner-supplied source/environment and dated evidence; record actual executor, changed paths, checks, gaps and next owner in the task ledger and coordinate role/protocol/priority changes with VP_OPERATIONS.",
         "Current app roadmap handoff (2026-10-21 UTC): Reconcile115roles, roadmap/tester/operator instructions and source receipts; preserve older checks as history. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
-        "IP-01: Maintain factual IP register/counsel packet on source, dependency, asset, contributor and disclosure changes; run ip:sync/ip:check, preserve decisions and stale-review evidence, and record actual execution. Local hooks/checks refresh hashes; no idle paid worker or legal conclusions."
+        "IP-01: Maintain factual IP register/counsel packet on source, dependency, asset, contributor and disclosure changes; run ip:sync/ip:check, preserve decisions and stale-review evidence, and record actual execution. Local hooks/checks refresh hashes; no idle paid worker or legal conclusions.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Synchronize current gift/no-cut facts, superseded decisions, generated maps and remaining release gates in the same change; record actual executors and original evidence in COORD-02. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -615,7 +651,8 @@
         "apps/mobile/src/frontend/components/Thanks"
       ],
       "tasks": [
-        "Own preset-only thanks, donor/athlete linkage and optional thank-you clip references."
+        "Own preset-only thanks, donor/athlete linkage and optional thank-you clip references.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep the role/internal identifiers unchanged while showing gift thanks for individuals; presets only, with no free-text replies or settlement promise. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -631,7 +668,8 @@
       ],
       "tasks": [
         "Own marketplace catalog, order lifecycle and unavailable/retry presentation.",
-        "The dedicated bottom slot moved to Beyond; Drip is reached from Profile. This navigation does not activate marketplace commerce, payments, fulfilment or its later-wave release gates."
+        "The dedicated bottom slot moved to Beyond; Drip is reached from Profile. This navigation does not activate marketplace commerce, payments, fulfilment or its later-wave release gates.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep marketplace money a Purchase, separate from personal gifts and program donations; retain existing availability, catalog and order controls. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -648,9 +686,10 @@
       ],
       "tasks": [
         "Technical architecture, typed contracts and specialist integration",
-        "Supply actual versioned client/server/provider/access, supported state, failure/retry and feasible recovery evidence for Growth charter \u00a79; exchange Legal/Growth findings before decision, retaining domain/QA acceptance and existing implementation gates.",
+        "Supply actual versioned client/server/provider/access, supported state, failure/retry and feasible recovery evidence for Growth charter §9; exchange Legal/Growth findings before decision, retaining domain/QA acceptance and existing implementation gates.",
         "Beyond/CHAL participant and admin slices are complete locally; preserve actor/focus/retry/permission boundaries while integrating only separately assigned fan-zone admin work and current release-path evidence.",
-        "Current app roadmap handoff (2026-10-21 UTC): Integrate Google, later test-bank and short-media rehearsals against current source; local repairs still need hosted/provider/device acceptance. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Integrate Google, later test-bank and short-media rehearsals against current source; local repairs still need hosted/provider/device acceptance. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Integrate source/admin/app contracts with exact SDK 58 docs; preserve zero-cut allocation, literal-true tip gating, internal identifiers and Support/QA evidence. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -668,7 +707,8 @@
         "Own Filmed by credit, Props/Aura noncash rewards and Top Filmers eligibility.",
         "Supply casual-uploader/repeat-filmer growth evidence and honest uploader-versus-camera attribution; distinguish confirmed eligibility/pending/error/removed/self-award states, public recognition permission and manipulation risks; retagging/new recognition/reversals/cash are proposals or later-wave gated, not implemented.",
         "Review owner-selected free fan-ballot recognition/badge design: staff eligibility/rights/safety, valid votes choose winner, direct newcomers/private acknowledgment, honest credit/Aura eligibility and tie/correction/appeal/network tradeoffs; voluntary service and money/paid work remain separate, with no new award implementation.",
-        "Keep new private Sport Learner completion acknowledgments and fan recognition recap separate from existing filmer Aura/cash eligibility; participation and voluntary service/posting never unlock earnings or add votes."
+        "Keep new private Sport Learner completion acknowledgments and fan recognition recap separate from existing filmer Aura/cash eligibility; participation and voluntary service/posting never unlock earnings or add votes.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep noncash recognition separate from gifts and any future paid creator path; no upload earns a promised gift share, and new cash models need their own reviews. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -689,7 +729,8 @@
         "Books data layer: bounded reads, source reconciliation, filters and CSV exports in the Finance & Books hub",
         "Bookkeeping SQL with BACKEND and DATABASE_MIGRATIONS, replayed on Postgres (scripts/replay) before the owner applies it",
         "Supply Books/catalog cost completeness, environment/payment-mode and reconciliation evidence for the single Growth and Capacity Review packet; Finance accepts economic meaning and donation rows are not settled income.",
-        "Maintain the built Books hub/catalog/reconciliation/CSV and local replay evidence; payment IDs/fees/authoritative settlement integration and the real staging close remain next work accepted by Finance."
+        "Maintain the built Books hub/catalog/reconciliation/CSV and local replay evidence; payment IDs/fees/authoritative settlement integration and the real staging close remain next work accepted by Finance.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep gross gift, optional platform tip, processing cost and digital sales distinct in Books/report semantics; classify every money field and reconcile actual fees before net claims. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -704,7 +745,8 @@
       "tasks": [
         "Plan versus actual from the journal each month, with COST_OPERATIONS for vendor costs",
         "Unit economics: Tapua'i's share, optional tips and covered fees minus processing per donation",
-        "Contribute accepted budget/runway and 30/90-day loaded service forecasts to the single GROWTH_ANALYTICS packet with COST_OPERATIONS and CFO; monthly invoice/close review does not authorize purchasing."
+        "Contribute accepted budget/runway and 30/90-day loaded service forecasts to the single GROWTH_ANALYTICS packet with COST_OPERATIONS and CFO; monthly invoice/close review does not authorize purchasing.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Model zero mandatory gift-cut income and separate voluntary tips from verified source, usage and costs; scenarios and test rows are not actual cash or accepted forecasts. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -719,7 +761,8 @@
       ],
       "tasks": [
         "Cross-feature implementation and end-to-end integration",
-        "Maintain completed main Beyond/CHAL app-SDK-admin integration with canonical actor guards; any fan-zone date/export/Product/Health work requires a distinct main integration assignment and review."
+        "Maintain completed main Beyond/CHAL app-SDK-admin integration with canonical actor guards; any fan-zone date/export/Product/Health work requires a distinct main integration assignment and review.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve the shared money core and mobile/admin/type parity with exact SDK 58 docs; keep no-cut allocation independent of optional flag state and giving separate from digital access. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -741,7 +784,8 @@
         "Maintain one Growth plan card for every overlapping user segment and gated/internal capacity: acquisition, first useful action, repeat/contribution, qualifying outcomes/gaps, action safeguards, loaded costs and next owner/decision; preserve non-donating fan value and authorized casual uploads; next October 20 packet, authorization-relative 30/60/90 stages.",
         "Extend family-fun segment cards in the October 20 packet with owner-selected free fan-ballot winners: staff checks eligibility/rights/safety, public candidate consent/private acknowledgment, honest newcomer/network tradeoffs, proportionate abuse/capacity costs and next trusted ballot design; badge/Aura/money and voluntary service remain separate proposals.",
         "Include current FUN-01/QUIZ-01 implementation status in October20 evidence packet with per-user optional completion/return, onboarding friction, correction/support burden and capacity; keep unknown actual measurements explicit; propose expansion only with Legal/Safety/Dev evidence and owner decisions.",
-        "Current app roadmap handoff (2026-10-21 UTC): Coordinate measured usage, allowances and loaded costs before long-video reconsideration; no follower threshold/live pilot is enabled. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Coordinate measured usage, allowances and loaded costs before long-video reconsideration; no follower threshold/live pilot is enabled. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Update the one Growth packet with gift/tip conversion definitions, unknown net costs and counsel/store friction; no-cut wording does not establish active users or cost sustainability. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -759,7 +803,8 @@
         "Integrate actual family-fun media/credit/status gaps for owner-selected fan-ballot awards; staff checks eligibility/rights/safety, votes choose winner, per-entry public candidate consent/private acknowledgment and withdrawal/recap corrections precede implementation; newcomer/network and trusted tally gaps stay explicit.",
         "Maintain default Highlights and the adjacent Beyond integration with UPLOAD/PLAYBACK/FULLSTACK; source-free or ambiguous legacy samples must not acquire an unrelated athlete/payee, and fan awards remain proposed. Coach-level label (SAFETY-01) is local; SQL 20261017090000 is not applied; counsel has not approved the wording. A missing database update does not show a red notice on Activity.",
         "Integrate current authorized curated free athlete stories and account Fan Zone/quiz discovery with Product/Privacy; never copy private fan media to public reels or substitute an unauthorized story; preserve optional existing Donate navigation.",
-        "Current app roadmap handoff (2026-10-21 UTC): Lead actual short-video/photo selection, publication and playback using synthetic fixtures; long videos remain off until costs are measured and live deferred. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Lead actual short-video/photo selection, publication and playback using synthetic fixtures; long videos remain off until costs are measured and live deferred. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep gift recipient bound to the eligible named athlete, independent of uploader, hype or play; preserve rights/privacy checks and current short-media limits. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -775,7 +820,8 @@
         "docs/agents/INCIDENT_TEMPLATE.md"
       ],
       "tasks": [
-        "Own severity, sanitized issue fingerprints, duplicate grouping, reproduction and domain-owner handoff."
+        "Own severity, sanitized issue fingerprints, duplicate grouping, reproduction and domain-owner handoff.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Route gift payment-completed/recording-failed reports without encouraging another charge; sanitize originals and assign financial incidents to Commerce/Support with independent review. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -791,7 +837,8 @@
         "Payees to review: year totals per payee and the 1099 review threshold (confirm each January)",
         "Have the CPA specify provider-handled payee tax documents and approved non-sensitive status before payouts; VERIFY-02 keeps SSNs only at Stripe, never Tapua'i, with CUSTODIAL, CONNECT and PRIVACY_ENGINEERING",
         "Have the CPA confirm payee/year/threshold reporting and a provider-handled tax-document workflow; VERIFY-02 directs SSNs only to Stripe, never Tapua'i, and non-sensitive status tracking grants no ID collection or filing authority.",
-        "Specify W-9 collection (guardian for a minor) before any payout path goes live, with CUSTODIAL, CONNECT and PRIVACY_ENGINEERING"
+        "Specify W-9 collection (guardian for a minor) before any payout path goes live, with CUSTODIAL, CONNECT and PRIVACY_ENGINEERING",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Prepare classified payee/payment totals for TAX/CPA review; personal-gift wording does not determine reporting duties, and SSNs remain provider-only. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -812,7 +859,8 @@
         "Standing dev member of the Growth and Capacity Review (GROWTH-01): technical context, integration depth, exits and options for every scalability recommendation, with COST_OPERATIONS, RELIABILITY, BACKEND, STORAGE, REALTIME; CTO recommends, owner decides",
         "Review every infrastructure diff (pnpm infra:register:check) and notify affected teams even when they did not ask",
         "PORT-01's shared money core, media references and local type/token follow-through are source-complete; maintain the actual register, unapplied beyond_game bucket and provider exits without implying hosting activation or prices.",
-        "Reconcile the infrastructure inventory with complete security control/report coverage and request INFRA_SECURITY, SUPPLY_CHAIN_SECURITY and RECOVERY_SECURITY review through SECURITY without changing Engineering reporting."
+        "Reconcile the infrastructure inventory with complete security control/report coverage and request INFRA_SECURITY, SUPPLY_CHAIN_SECURITY and RECOVERY_SECURITY review through SECURITY without changing Engineering reporting.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep current money core, Stripe/Storage/Auth dependencies and exit evidence mapped; zero-cut source changes no hosting decision or verified provider capacity. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -832,7 +880,8 @@
         "Lead the Redundancy & Exit team: keep the redundant database plan and the move off Supabase to AWS or Azure ready as the app changes (REDUNDANCY_TEAM, EXIT_INFRASTRUCTURE_MAP)",
         "Accept changes to exit-map.json (component mapping, build order, Auth capabilities, excluded functions) and close routed change notices with their reviewers",
         "Own hosted drill readiness with RECOVERY and EXIT_DATABASE; report exit readiness to the CTO and the Growth packet through INFRASTRUCTURE; owner decides provider, spend and cutover",
-        "Integrate independent INFRA_SECURITY/SUPPLY_CHAIN_SECURITY/RECOVERY_SECURITY findings and manual evidence gaps into the single Engineering exit packet; security reviewers report through SECURITY to CTO."
+        "Integrate independent INFRA_SECURITY/SUPPLY_CHAIN_SECURITY/RECOVERY_SECURITY findings and manual evidence gaps into the single Engineering exit packet; security reviewers report through SECURITY to CTO.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve the current source/exit plan and money-core boundaries; source copies are separate from database/provider readiness and no second webhook credit writer is enabled. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -850,7 +899,8 @@
       "tasks": [
         "Keep the backup version and the redundant database plan in step with every app change: the exit map regenerates automatically (Stop hook, pnpm check, CI) and its plan version follows the code",
         "Tell the rest of the team: announce each change with pnpm exit:map --acknowledge, routed by area to the agents who must review it (EXIT_CHANGE_LOG)",
-        "Chase open notices at the start of every task and report them to REDUNDANCY_LEAD; an announcement is a notice, not an approval"
+        "Chase open notices at the start of every task and report them to REDUNDANCY_LEAD; an announcement is a notice, not an approval",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep exact source copies and exit-map notices current for gift changes; retain actual capture/verification status, with no inferred service activation or specialist delivery. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -865,7 +915,8 @@
       "tasks": [
         "Work on the different database: keep a target PostgreSQL (self-hosted Supabase Postgres or RDS / Aurora / Azure Flexible Server) able to take the schema and data at any time",
         "Own the restore list, parity check and privilege reconciliation (infrastructure/migration); review every database change notice with DATABASE_MIGRATIONS, RLS_SECURITY and RECOVERY",
-        "Keep exit B's role and JWT-claims requirements current so RLS keeps working off Supabase"
+        "Keep exit B's role and JWT-claims requirements current so RLS keeps working off Supabase",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve gift/held-ledger schema, grants and single credit ownership in exit parity; restore/source hashes do not establish provider fees or settled money. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -880,7 +931,8 @@
       "tasks": [
         "Keep a working replacement for every Supabase service the app uses (Auth, Data API, Storage, Realtime, functions, email) for exit A and exit B on AWS and Azure",
         "Own the self-host Edge Function allowlist, the Auth capability list and the lib/ adapter seam; review every Auth, Storage, Realtime and function change notice",
-        "Never deploy stripe-webhook before P1-05; no provider account or purchase without the owner"
+        "Never deploy stripe-webhook before P1-05; no provider account or purchase without the owner",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep Stripe/Auth/Storage/Realtime adapters and existing money authority intact in exit plans; optional-tip config does not authorize provider switches or payment rewrites. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -896,7 +948,8 @@
       "tasks": [
         "Keep the AWS and Azure build ready: infrastructure as code, hosts or managed services, containers, network and TLS, secrets, monitoring and backup stores",
         "Review every hosting change notice (environment names, routes, functions, extensions) against the build; keep the build order executable and honest",
-        "No cloud account, terraform apply, DNS change or purchase without the owner; one VM is not high availability"
+        "No cloud account, terraform apply, DNS change or purchase without the owner; one VM is not high availability",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Retain mapped dependencies, locked builds and isolated source evidence; no-cut gifts do not authorize cloud deployment, spending or cutover. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -912,7 +965,8 @@
       "tasks": [
         "Every money-bearing column in schema.sql is classified in the finance data catalog (unit test fails otherwise)",
         "Source-to-ledger reconciliation: tips, optional tips, covered card fees, Vault, boosters, Drip and payouts each match the revenue log and journal",
-        "Sign off a month as complete before CONTROLLER closes it"
+        "Sign off a month as complete before CONTROLLER closes it",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Prove every gift/tip/purchase source and money column remains covered, with full gross allocation and reversible postings; unknown fee/net evidence remains an explicit discrepancy. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -928,7 +982,8 @@
       "tasks": [
         "Own donor/filmer ranking aggregation, windows, ties and privacy-safe display.",
         "Propose owner-selected fan-ballot tally/results with staff eligibility/rights/safety, most valid free ballots wins, no spend/view/follower/stat points, trusted limits/windows/idempotency/corrections/ties, newcomer/network fairness and public-entry consent/private acknowledgment; later school scoring/Aura/money remain distinct.",
-        "Review valid free-ballot finalization, shared ties, zero-ballot no award and recount after invalidation/revocation; weekly private quiz completion is not a public proficiency or school rank; later school scoring still requires its own design."
+        "Review valid free-ballot finalization, shared ties, zero-ballot no award and recount after invalidation/revocation; weekly private quiz completion is not a public proficiency or school rank; later school scoring still requires its own design.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep privacy-safe boards and noncash recognition independent of gifts and pay-for-performance; no-cut wording creates no award eligibility or donor-dollar ranking. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -944,7 +999,8 @@
       ],
       "tasks": [
         "Own immutable financial events, exactly-once credits, revenue/owed balances and lifecycle invariants.",
-        "Current app roadmap handoff (2026-10-21 UTC): Retain Phase1a payment-event/fee/refund/dispute/held-gift authority gaps; client tips are not a settled ledger. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Retain Phase1a payment-event/fee/refund/dispute/held-gift authority gaps; client tips are not a settled ledger. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve the sole client tips writer until an atomic reviewed server replacement; full gross family allocation is local bookkeeping, with actual fees/net/refunds and payout balance checks still open. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -961,9 +1017,10 @@
       ],
       "tasks": [
         "Approved legal wording and counsel decision tracking",
-        "Coordinate counsel classification of age/guardian/school/payment checks, approved alternatives and consent/notice decisions for Growth charter \u00a79; exchange findings with Growth/Engineering before the one packet, preserving counsel/domain acceptance and owner business decisions. SAFETY-01 option A wording is local only. LEGAL_BRIEFING row AC stays open.",
+        "Coordinate counsel classification of age/guardian/school/payment checks, approved alternatives and consent/notice decisions for Growth charter §9; exchange findings with Growth/Engineering before the one packet, preserving counsel/domain acceptance and owner business decisions. SAFETY-01 option A wording is local only. LEGAL_BRIEFING row AC stays open.",
         "Current app roadmap handoff (2026-10-21 UTC): Review scoped session/user telemetry policy before collection and existing minor/content/payee promises with counsel. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
-        "IP-01: Coordinate supplied counsel/ownership/disclosure reviews and verified receipts with DOCUMENTATION; no inferred novelty, inventorship, ownership, privilege or filing. Owner/counsel retain sharing, spend, legal drafting and actual filing/docket authority."
+        "IP-01: Coordinate supplied counsel/ownership/disclosure reviews and verified receipts with DOCUMENTATION; no inferred novelty, inventorship, ownership, privilege or filing. Owner/counsel retain sharing, spend, legal drafting and actual filing/docket authority.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Own final Terms, signed consent/versioning, personal-gift tax line and store/Aura/processing-claim review; coordinate counsel decisions without inferring legal acceptance from copy tests. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -981,7 +1038,8 @@
         "Game-day fan surfaces and live engagement integration",
         "Typed guest game claims, check-ins and roster access through guestGames.ts; route-layer data boundaries",
         "Coordinate owner-selected free fan-ballot design and separate later school scoring; staff eligibility/rights/safety, votes choose winner, similar school nominations/newcomers with honest network advantage, per-entry publicity/private acknowledgment and proportionate trusted ballot controls; no implementation.",
-        "Coordinate Fan Zone game/week context and all-role discovery with POLLS/Product; preserve the separate school-poll source and later school competition gates; actual source readiness and evidence supersede earlier brainstorming tasks."
+        "Coordinate Fan Zone game/week context and all-role discovery with POLLS/Product; preserve the separate school-poll source and later school competition gates; actual source readiness and evidence supersede earlier brainstorming tasks.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep gifts to eligible athletes separate from program donations, boosters, free votes and game performance; no new fan ballot or paid recognition capability is inferred. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1001,7 +1059,8 @@
         "Route standing joint verification/consent/safe-engagement review after Legal/Growth/Engineering exchange; require one evidence-based Growth packet with safety/manual-load tradeoffs, counsel/domain acceptance and owner decision; next standing review October 20, 2026.",
         "Route all user-segment growth cards and exchanged Product/Dev/Legal/Growth evidence through one packet; preserve truthful capability/credit/reward states, non-donating fan value, permission/cost/decision gates and October 20 follow-up; campaigns and proposed feature bridges remain separately authorized.",
         "Route owner-selected free fan-ballot design through the single Growth packet: staff checks eligibility/rights/safety, votes choose winner; truthful candidate/profile privacy, newcomer/network limits, ethical invitations and separate voluntary service/badge/Aura/money paths; no campaign or implementation.",
-        "Route FUN-01/QUIZ-01 source and per-user learning/fun plans through the single Growth packet; use actual reviewed local readiness, Content/VOICE fact approval and Data/Safety/SUPPORT acceptance; no institutional advantage, public badge claim, outreach or hosted launch without its existing authorization."
+        "Route FUN-01/QUIZ-01 source and per-user learning/fun plans through the single Growth packet; use actual reviewed local readiness, Content/VOICE fact approval and Data/Safety/SUPPORT acceptance; no institutional advantage, public badge claim, outreach or hosted launch without its existing authorization.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Use gift/program/tip vocabulary from VOICE, accurate no-cut limits and consented family stories; preserve old tagline history and keep public/store claims behind domain/owner review. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1018,7 +1077,8 @@
       "tasks": [
         "Own age gates, guardian consent evidence, restricted communication and safety acceptance criteria.",
         "Maintain MINOR birth-month/year, unknown-age and known-under13 closure plus teen consent/guardian limits; Beyond/CHAL age/friend gates stay action-specific, and minor in-person time/location remains prohibited even in future Vault work. Coach-level invites still work and show the notice. Teen pre-publish review is not built.",
-        "Current app roadmap handoff (2026-10-21 UTC): Preserve age, guardian and subject consent through Google, short posts and optional bank; draft consent is not approved for real families. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Preserve age, guardian and subject consent through Google, short posts and optional bank; draft consent is not approved for real families. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve age, guardian consent, held funds and communication safeguards; source gift wording neither signs consent nor activates real-family payments. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1034,7 +1094,8 @@
       ],
       "tasks": [
         "Feed rendering, media memory, startup and measured interaction performance",
-        "Current app roadmap handoff (2026-10-21 UTC): Measure first-tab transitions and one-active-video resources on actual builds; unit timings are not device performance. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Measure first-tab transitions and one-active-video resources on actual builds; unit timings are not device performance. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Measure current gift-sheet mount/interaction behavior and preserve one-payment locks; unit timing and source changes do not establish native smoothness. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1049,7 +1110,8 @@
       ],
       "tasks": [
         "Own report reasons, immediate-hide versus review threshold, review evidence and appeals design.",
-        "Beyond's local pre-review/remove/support-erasure desk and legacy report controls exist; confirm staffed capacity, rights, block/closure and removal behavior before public use, with strikes/appeals still separately gated. Risky without a coach never hides the clip and does not count toward the three-report hide."
+        "Beyond's local pre-review/remove/support-erasure desk and legacy report controls exist; confirm staffed capacity, rights, block/closure and removal behavior before public use, with strikes/appeals still separately gated. Risky without a coach never hides the clip and does not count toward the three-report hide.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep report/review/rights and appeals responsibilities independent of giving; gifts neither purchase visibility nor establish eligibility or staffing. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1065,7 +1127,8 @@
         "apps/mobile/src/frontend/components/Effects"
       ],
       "tasks": [
-        "Maintain motion tokens, haptics, sheet geometry and reduced-motion behavior."
+        "Maintain motion tokens, haptics, sheet geometry and reduced-motion behavior.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve fixed gift navigation and Reduce Motion without obscuring totals, holds or final payment; cosmetic changes cannot alter optional-money defaults. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1084,7 +1147,8 @@
       ],
       "tasks": [
         "Optional notification events, account-bound preferences, recipient inbox and safe delivery; crew_push_queue privacy and deduplication remain distinct from external push",
-        "NOTIFY-01 (2026-10-21 UTC): implement the owner-approved security-only email default, reviewed source permissions, Expo admin/Health controls and bounded delivery repair before fan UI. AUTH and COMMERCE retain account/financial source authority; independent Security, Data/Privacy, Minor/Custodial, Finance and QA acceptance remains required. Local disabled-source app-ready checkpoint recorded at 2026-10-21T15:50:54Z; hosted SQL, real email delivery, provider activation and release remain unverified."
+        "NOTIFY-01 (2026-10-21 UTC): implement the owner-approved security-only email default, reviewed source permissions, Expo admin/Health controls and bounded delivery repair before fan UI. AUTH and COMMERCE retain account/financial source authority; independent Security, Data/Privacy, Minor/Custodial, Finance and QA acceptance remains required. Local disabled-source app-ready checkpoint recorded at 2026-10-21T15:50:54Z; hosted SQL, real email delivery, provider activation and release remain unverified.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Use personal-gift versus program-donation labels only from reviewed eligible events; optional email stays off and authority=false sources create neither mail nor a second credit writer. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1097,7 +1161,8 @@
         "apps/mobile/src/frontend/services/OfflineQueue.ts"
       ],
       "tasks": [
-        "Own durable action queue, retry policy, duplicate prevention and logout boundary behavior."
+        "Own durable action queue, retry policy, duplicate prevention and logout boundary behavior.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve account-bound queued actions and duplicate prevention; never retry a completed payment as an offline action or treat ambiguous recording as permission to charge again. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1115,7 +1180,8 @@
         "Own first-open onboarding, birth-month/year age confirmation, athlete claim and pending action resume.",
         "Maintain browse-first onboarding and MINOR birth-month/year confirmation, unknown-age and known-closed recovery; guest post-auth resumes must not reuse an outgoing actor's retained intent.",
         "Own first-open onboarding, 13+ acknowledgement, athlete claim and pending action resume.",
-        "Current app roadmap handoff (2026-10-21 UTC): Verify Google creation with existing age rules and preserved drafts; bank attachment stays optional and later. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Verify Google creation with existing age rules and preserved drafts; bank attachment stays optional and later. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Use the gift naming map while keeping sign-up bank-free; resume only the original permitted action, and do not treat draft consent as real-family release permission. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1130,7 +1196,8 @@
         "docs/STATE.md"
       ],
       "tasks": [
-        "IT infrastructure: staging, releases, CI, reliability, recovery, cost and game-day operations"
+        "IT infrastructure: staging, releases, CI, reliability, recovery, cost and game-day operations",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Coordinate approved test setup/build/configuration and original provider/hosted evidence; no-cut local source does not authorize live money, deployment or purchases. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1144,7 +1211,8 @@
         "apps/mobile/src/frontend/lib/operator.ts"
       ],
       "tasks": [
-        "Sideline PIN/check-in/score/clock console"
+        "Sideline PIN/check-in/score/clock console",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep scoring/check-in duties separate from gifts, program donations and paid performance; a role definition does not activate a public operator or financial action. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1159,7 +1227,8 @@
         "apps/mobile/src/frontend/lib/boosterPortal.ts"
       ],
       "tasks": [
-        "Coordinate guardian, school, booster and sponsor requirements without inventing permissions."
+        "Coordinate guardian, school, booster and sponsor requirements without inventing permissions.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep school/program donations distinct from individual gifts and booster placement purchases; owner classifies ambiguous offers and counsel verifies status/permissions before activation. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1175,9 +1244,10 @@
         "docs/engineering/design/PHOTO_STORIES_DESIGN.md"
       ],
       "tasks": [
-        "Own photo story upload and data flow: 1\u201310 photos, reorder, per-photo descriptions, set_reel_photos client and story photo reads.",
+        "Own photo story upload and data flow: 1–10 photos, reorder, per-photo descriptions, set_reel_photos client and story photo reads.",
         "Keep photo stories graceful before the SQL exists and never publish a partially uploaded story.",
-        "Current app roadmap handoff (2026-10-21 UTC): Test1\u201310JPEG order/descriptions/rights, interrupted publication and claimed physical cleanup after approved SQL; partial stories cannot publish. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Test1–10JPEG order/descriptions/rights, interrupted publication and claimed physical cleanup after approved SQL; partial stories cannot publish. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep rights, recipient, short-media and cleanup guards when linking a personal gift; no settlement or filming permission is inferred from gift wording. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1194,7 +1264,8 @@
       "tasks": [
         "Own expo-video playback lifecycle, pager resource use, signed URL resolution and 3-second view counting.",
         "Maintain PLAY-01-owned lifecycle and signed/private entitlement boundaries; Beyond legacy cards are discovery only and do not authorize edits to held player files or imply native playback/TTL verification.",
-        "Current app roadmap handoff (2026-10-21 UTC): Test actual uploaded codecs on web/iOS/Android, one active decoded Highlight and private expiry/retry; URL/unit tests do not decode an app video. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Test actual uploaded codecs on web/iOS/Android, one active decoded Highlight and private expiry/retry; URL/unit tests do not decode an app video. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve expo-video lifecycle, private entitlement and current short-video boundaries with SDK 58 docs; viewing or gifting never implies digital purchase access. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1210,7 +1281,8 @@
       "tasks": [
         "Own cheer eligibility, vote math, poll lifecycle and offline vote semantics.",
         "Design owner-selected fan-ballot validity with one free eligible-account ballot/window, server limits/idempotency/closure/freeze/ties/corrections/appeals and proportionate abuse without blanket Stripe KYC; staff checks entry eligibility/rights/safety, votes choose winner; current cheer counts unreliable and no unique-person claim or implementation.",
-        "Implement and maintain FUN-01 free ballot/consent-linked operational source and QUIZ-01 weekly private noncash learning with ADMIN/BACKEND; preserve server limits, pause, exact retries and audited corrections; actual admin-first evidence precedes participant integration, no hosted or money authority."
+        "Implement and maintain FUN-01 free ballot/consent-linked operational source and QUIZ-01 weekly private noncash learning with ADMIN/BACKEND; preserve server limits, pause, exact retries and audited corrections; actual admin-first evidence precedes participant integration, no hosted or money authority.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep free cheer votes and poll lifecycle independent of giving or platform tips; current counters do not implement a fan-award ballot capability. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1241,7 +1313,8 @@
       "tasks": [
         "Own read-only Next portal shell, Home/Audience/Health/Departments/Product, chart presentation and owner-adopted report format; ADMIN owns Trends and COMMERCE Revenue. SHARED_CONTRACTS owns shared report helpers in packages/shared-types/admin (measureColors, chartScale, eventLabels); PORTAL maintains their Next lib compatibility exports and presentation integration with DESIGN/ACCESSIBILITY review.",
         "ADM-02 universal report presentation in main Expo admin, with DESIGN/ACCESSIBILITY and ANALYST/COMMERCE review",
-        "Maintain main's accepted read-only report shell and fixed-window pages; fan-zone exports/date ranges/Product workbench/Health template are not main capabilities until a scoped integration is assigned. Health lists controls whose database update is not applied."
+        "Maintain main's accepted read-only report shell and fixed-window pages; fan-zone exports/date ranges/Product workbench/Health template are not main capabilities until a scoped integration is assigned. Health lists controls whose database update is not applied.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep Next read-only and shared report labels accurate for gifts/program donations/tips/purchases; expose gross/test/missing-fee limits and retain historical raw keys. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1258,7 +1331,8 @@
       "tasks": [
         "Own privacy data flow inventory, visibility, export/deletion design and processor mapping implementation.",
         "Beyond/CHAL own exports, support erasure/redaction and quota/cleanup metadata exist locally; global account export/deletion, provider physical deletion, retention, known-closed and remote revocation evidence remain separate gaps.",
-        "Current app roadmap handoff (2026-10-21 UTC): Review purpose/visibility/retention before telemetry IDs; preserve private media/export/removal boundaries. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Review purpose/visibility/retention before telemetry IDs; preserve private media/export/removal boundaries. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Review personal/guardian financial data, consent/versioning and provider handling for gift release; naming changes do not satisfy retention/deletion or authorize new collection. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1273,11 +1347,12 @@
         "docs/STATE.md"
       ],
       "tasks": [
-        "Translate the family donation and recruitment mission into acceptance criteria and dependencies.",
+        "Translate the family gift and athlete-story mission into reviewed acceptance criteria and dependencies, without promising recruitment outcomes.",
         "Define per-segment jobs, first/repeat/cross-user value, accepted outcomes and capability gaps with Growth/Research/domain owners; retain action safeguards, loaded support/service costs, proposals and authorization-relative 30/60/90 acceptance/stop decisions without imposing athlete/payee gates on unrelated permitted fan activity.",
         "Refine family-fun entry and owner-selected fan-ballot Game/Week design: staff eligibility/rights/safety, most valid free votes wins, per-entry publicity/private acknowledgment, one eligible-account ballot/window, trusted limits/closure/ties/corrections/appeals, proportional abuse and honest newcomer/network fairness; no enrollment.",
         "Integrate authorized FUN-01 and QUIZ-01 account journeys for fans/filmers/families/friends/athletes/guardians and optional personal learning by donor/booster/sponsor/staff/operator accounts; keep Not now/Skip/no pressure, consent and private completion badges clear; actual admin-first gates precede app source.",
-        "Current app roadmap handoff (2026-10-21 UTC): Keep athlete storytelling, simple Google creation and optional later bank attachment central; short Highlights stay available under existing eligibility. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Keep athlete storytelling, simple Google creation and optional later bank attachment central; short Highlights stay available under existing eligibility. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Use gift/no-cut acceptance criteria while keeping account creation, fans and casual uploaders free of payee setup; owner resolves mixed refund/booster classification and release choices. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1292,7 +1367,8 @@
       ],
       "tasks": [
         "Own/public athlete identity and feature integration",
-        "Current app roadmap handoff (2026-10-21 UTC): Verify current own/public athlete identity, delayed account switches and optional later bank setup without stale-user data. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Verify current own/public athlete identity, delayed account switches and optional later bank setup without stale-user data. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Show individual Gift/Give and the required personal-gift tax notice with correct athlete/guardian context; preserve held/verification state and keep digital Subscription/Purchase separate. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1308,7 +1384,8 @@
       "tasks": [
         "Independent final verification gate",
         "Preserve retained local Beyond/CHAL/UX-06 passes as dated evidence; review newer Calm Island/configured theme and require distinct hosted, actual-build/native and policy acceptance rather than recertifying old hashes.",
-        "Current app roadmap handoff (2026-10-21 UTC): Accept each APP-TEST-01 lane separately;226suites/2193local tests do not accept Google/bank/upload/device or public release. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Accept each APP-TEST-01 lane separately;226suites/2193local tests do not accept Google/bank/upload/device or public release. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Independently verify no-cut both flag states, literal-true tip gating, defaults, review/resume/error and gross ledger invariants; retain unrun hosted/provider/device/counsel gates. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1323,7 +1400,8 @@
         "apps/mobile/src/frontend/components/Rally"
       ],
       "tasks": [
-        "Own guardian-approved donation goals, progress aggregation and fill celebration. A filled Rally can open the phone share sheet without a donation amount (M8-01)."
+        "Own guardian-approved donation goals, progress aggregation and fill celebration. A filled Rally can open the phone share sheet without a donation amount (M8-01).",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep guardian-approved goals for real sports costs and personal-gift progress, independent of performance; current totals remain client records pending authoritative settlement. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1338,7 +1416,8 @@
         "apps/mobile/src/frontend/hooks/useGameEventBroadcast.ts"
       ],
       "tasks": [
-        "Own subscription lifecycle, live score/event consistency and reconnect behavior."
+        "Own subscription lifecycle, live score/event consistency and reconnect behavior.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep subscriptions/reconnect and actor-bound updates intact; a live gift-history update does not prove provider settlement or authorize duplicate credit. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1352,7 +1431,8 @@
         "apps/mobile/app/(tabs)/receipts.tsx"
       ],
       "tasks": [
-        "Donor receipt/history access, payment status and fee/split disclosure"
+        "Donor receipt/history access, payment status and fee/split disclosure",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Show personal-gift tax wording and separately classified program/tip/purchase history; preserve original identifiers and disclose actual status without claiming unverified net settlement. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1368,7 +1448,8 @@
       ],
       "tasks": [
         "Own Stripe-event versus ledger reconciliation, discrepancies, receipts and revenue reporting evidence.",
-        "Current app roadmap handoff (2026-10-21 UTC): Verify processor-event/receipt/ledger reconciliation separately from bank attachment and positive KYC evidence. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Verify processor-event/receipt/ledger reconciliation separately from bank attachment and positive KYC evidence. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Compare actual provider charge/fee/refund events with gross gift/tip/ledger records; ambiguous payments need repair evidence, and the current client stays sole writer. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1385,7 +1466,8 @@
         "scripts/__tests__/recovery-capsule.test.mjs"
       ],
       "tasks": [
-        "Migration rollback, backup/restore evidence and data recovery runbooks"
+        "Migration rollback, backup/restore evidence and data recovery runbooks",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve source/database/provider recovery as separate evidence; rehearse reviewed financial rollback without deleting originals or treating source restore as money reconciliation. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1399,7 +1481,8 @@
         "apps/mobile/src/backend/services/payouts.ts"
       ],
       "tasks": [
-        "Own refund/dispute lifecycle design and reversal effects on revenue, entitlements and owed funds."
+        "Own refund/dispute lifecycle design and reversal effects on revenue, entitlements and owed funds.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Prepare reviewed gift/tip/purchase reversal rules and single-writer idempotency; owner classifies the mixed “Refund donation” label before changing its financial meaning. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1416,7 +1499,8 @@
       ],
       "tasks": [
         "Own preview profiles, environment binding, signing/device eligibility and rollback artifact evidence.",
-        "Current app roadmap handoff (2026-10-21 UTC): Prepare development build/origin/device prerequisites; local tests alone cannot publish or accept release. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Prepare development build/origin/device prerequisites; local tests alone cannot publish or accept release. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Bind tested gift source and runtime config to reviewed builds/environments; require original device/provider/counsel/owner release evidence before publishing the literal-true tip switch. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1437,7 +1521,8 @@
       "tasks": [
         "Build local detection scans, failure/recovery checks and root-cause repairs together with domain developers.",
         "Contribute accepted workload/denominator, game-night runtime/capacity and recovery evidence to the single Growth and Capacity Review packet through existing SUPPORT/ENGINEERING reporting; local tests do not establish hosted headroom or uptime.",
-        "Current app roadmap handoff (2026-10-21 UTC): Test upload/auth/Connect recovery with Dev/QA; preserve explicit dependency errors and unverified uptime/capacity. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Test upload/auth/Connect recovery with Dev/QA; preserve explicit dependency errors and unverified uptime/capacity. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Pair with gift developers on payment/recording/config failure reproduction, safe repair and regression; source tests are bounded sensors and missing settlement monitoring remains explicit. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1452,7 +1537,8 @@
       ],
       "tasks": [
         "Test family, athlete, guardian, filmer and operator journeys using consented feedback.",
-        "Current app roadmap handoff (2026-10-21 UTC): Collect consented feedback for browse, athlete story, signup, permitted short post and optional bank; record actual friction. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Collect consented feedback for browse, athlete story, signup, permitted short post and optional bank; record actual friction. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Evaluate the clear athlete story, bank-free first actions and optional gift review with consented feedback; proposals and local copy do not establish user growth or recruiting outcomes. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1467,7 +1553,8 @@
       ],
       "tasks": [
         "Audit grants, RLS, security-definer RPCs, storage policies and ownership boundaries.",
-        "Current app roadmap handoff (2026-10-21 UTC): Review service-only Connect CAS and claimed cleanup grants/triggers with denied unrelated writes; approved hosted readback remains required. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Review service-only Connect CAS and claimed cleanup grants/triggers with denied unrelated writes; approved hosted readback remains required. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Review current gift/held-ledger actor grants and future authoritative writer changes; local no-cut tests do not prove hosted authorization or safe payout balances. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1482,7 +1569,8 @@
         "apps/mobile/app/(sponsor)"
       ],
       "tasks": [
-        "Parent, booster and sponsor role portal integration"
+        "Parent, booster and sponsor role portal integration",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep guardian gifts, program donations and sponsor/booster placement purchases distinct; preserve per-athlete target/consent, with ambiguous booster placement classified by the owner. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1498,7 +1586,8 @@
         "apps/mobile/src/frontend/hooks/useTeamSearch.ts"
       ],
       "tasks": [
-        "Own roster claim identity, team search, CSV import validation and athlete navigation."
+        "Own roster claim identity, team search, CSV import validation and athlete navigation.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep athlete/team claim identity and navigation accurate for personal gifts; school/program affiliation does not imply charity status or marks permission. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1514,7 +1603,8 @@
       ],
       "tasks": [
         "Own draft/published flag states, pause behavior, role lenses and fan control coverage.",
-        "Keep discovery tabs.beyond separate from server contribution/challenge switches default off; current Calm Island source may be overridden by five published theme values, and republishing Look requires authorization."
+        "Keep discovery tabs.beyond separate from server contribution/challenge switches default off; current Calm Island source may be overridden by five published theme values, and republishing Look requires authorization.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Require buttons.MONETIZATION_TIPS_ENABLED to be literal true, default off; it controls optional tips/processing estimates only and must never restore a gift cut. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1528,7 +1618,8 @@
       ],
       "tasks": [
         "Sales-tax watch in the Taxes tab: Drip and Vault sales by month (and by state once buyer location is recorded)",
-        "Collection and remittance plan with COMMERCE and DRIP before Drip goes live"
+        "Collection and remittance plan with COMMERCE and DRIP before Drip goes live",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep digital/Drip purchases separate from personal gifts/program donations in tax-watch evidence; CPA/counsel decides actual tax duties and jurisdiction. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1543,7 +1634,8 @@
         "docs/legal/LEGAL_BRIEFING.md"
       ],
       "tasks": [
-        "Own school onboarding requirements, AD/coach confirmation workflow and marks permission records design."
+        "Own school onboarding requirements, AD/coach confirmation workflow and marks permission records design.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep school confirmation and marks consent separate from program charity/payment status; no-cut gifts imply neither school endorsement nor permission to contact families. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1559,7 +1651,8 @@
       "tasks": [
         "Critical review of RLS, sessions, secrets and storage authorization",
         "Lead independent portable-infrastructure security review with INFRA_SECURITY, SUPPLY_CHAIN_SECURITY and RECOVERY_SECURITY alongside existing RLS/session/threat specialists; report evidence and manual gaps to CTO.",
-        "Current app roadmap handoff (2026-10-21 UTC): Independently review current OAuth/Connect/cleanup ownership and public-beta blockers; local tests cannot accept hosted operations or live money. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Independently review current OAuth/Connect/cleanup ownership and public-beta blockers; local tests cannot accept hosted operations or live money. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Retain independent session/RLS/financial-source review, blocked payouts and one credit writer; no-cut source does not close hosted storage, authorization or recovery gates. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1579,7 +1672,8 @@
       ],
       "tasks": [
         "Review network exposure, least-privilege IAM, TLS/upstream routing and host hardening; own complete governed-infrastructure security control/report coverage without equating source checks with deployed acceptance.",
-        "Return fixed redacted source findings and missing manual/hosted evidence to SECURITY; coordinate implementation through REDUNDANCY_LEAD/INFRASTRUCTURE and retain RLS/session/threat domain authority."
+        "Return fixed redacted source findings and missing manual/hosted evidence to SECURITY; coordinate implementation through REDUNDANCY_LEAD/INFRASTRUCTURE and retain RLS/session/threat domain authority.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve scoped infrastructure security and source/provider boundaries; gift source tests do not establish deployed IAM/TLS, continuous protection or payment security acceptance. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1601,7 +1695,8 @@
       ],
       "tasks": [
         "Review locked dependencies/build scripts, pinned upstream/image provenance, least-privilege CI trust, source-only artifact boundaries and offline installation material.",
-        "Record original source/runtime identity and trust limits; missing caches, mutable pins and unsigned hashes remain explicit gaps; CI/RELEASE/EXIT_* retain implementation and SECURITY retains acceptance."
+        "Record original source/runtime identity and trust limits; missing caches, mutable pins and unsigned hashes remain explicit gaps; CI/RELEASE/EXIT_* retain implementation and SECURITY retains acceptance.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Review locked Expo 58/Stripe dependencies and source artifact provenance for changed gift builds; retain original evidence and independent deployment/security acceptance. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1621,7 +1716,8 @@
       ],
       "tasks": [
         "Review private backup/retrieval/restore isolation and integrity, target/config/archive binding, original snapshot age, key rotation and independently held custody evidence.",
-        "Preserve implementation with RECOVERY/EXIT_DATABASE/EXIT_SYNC and grants/JWT/incident judgments with existing specialists; no access grant, destructive restore, live rotation or fabricated custody/readiness follows from review."
+        "Preserve implementation with RECOVERY/EXIT_DATABASE/EXIT_SYNC and grants/JWT/incident judgments with existing specialists; no access grant, destructive restore, live rotation or fabricated custody/readiness follows from review.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep private restore isolation, integrity and original custody separate from gift settlement; source capture does not establish database/provider recovery or cutover readiness. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1638,7 +1734,8 @@
       ],
       "tasks": [
         "Own JWT/session handling, role boundaries, OAuth redirect integrity and server identity checks.",
-        "Current app roadmap handoff (2026-10-21 UTC): Verify exact Google return origin/path, concurrent callbacks and stale Auth/Connect lifetimes on current source. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Verify exact Google return origin/path, concurrent callbacks and stale Auth/Connect lifetimes on current source. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep fresh server identity, admin role and account-bound gift/Connect context; test turnover/resume without confusing capability flags with KYC or payment authority. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1655,7 +1752,8 @@
       "tasks": [
         "Shared RPC/domain types, generated database type provenance and mobile/admin contract parity",
         "ADM-02 platform-neutral admin reporting models and package exports shared by Expo and Next",
-        "Current app roadmap handoff (2026-10-21 UTC): Keep normalized duration and account/payee DTOs aligned; shared types do not establish hosted schema/provider parity. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Keep normalized duration and account/payee DTOs aligned; shared types do not establish hosted schema/provider parity. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve raw RPC/telemetry/internal money names and cross-client quote/report parity; zero-cut allocation is unconditional while optional-tip gating is literal-true only. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1671,7 +1769,8 @@
         "apps/mobile/app/gift"
       ],
       "tasks": [
-        "Own public athlete QR, share links, deep links and safe preview content."
+        "Own public athlete QR, share links, deep links and safe preview content.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep athlete-bound Share & Give QR links, required tax wording and hidden identity safe; links do not guarantee hosted availability, account-free payment or settled delivery. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1686,7 +1785,8 @@
         "apps/mobile/src/frontend/lib/boosterPortal.ts"
       ],
       "tasks": [
-        "Own approved sponsor placement, booster tier display and role portal consistency."
+        "Own approved sponsor placement, booster tier display and role portal consistency.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep booster/sponsor placement a Purchase under current source, separate from program charity; await owner classification and counsel review before relabeling or activation. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1700,7 +1800,8 @@
         "apps/mobile/src/frontend/lib/tags.ts"
       ],
       "tasks": [
-        "Awards board, real athlete IDs and tag queue. Share the leader uses hype and views only (M8-01)."
+        "Awards board, real athlete IDs and tag queue. Share the leader uses hype and views only (M8-01).",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep awards based on existing hype/views and real IDs, with personal gifts separate; no payment buys ranking, recruiting outcomes or a new fan award. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1716,7 +1817,8 @@
       "tasks": [
         "Public versus private bucket policies, MIME/size controls, signed URLs and deletion lifecycle",
         "Maintain the locally written private beyond_game draft/review/cleanup policies and Vault gap with RLS_SECURITY; actual provisioning, signed-URL lifetime and provider physical deletion remain hosted acceptance.",
-        "Current app roadmap handoff (2026-10-21 UTC): Verify ownership/MIME/byte/deletion controls with RLS_SECURITY; canonical server quotas and legacy public Vault bytes remain gaps. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Verify ownership/MIME/byte/deletion controls with RLS_SECURITY; canonical server quotas and legacy public Vault bytes remain gaps. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve public/private media permission, limits and cleanup controls for gift-linked assets; money wording provides no rights, hosting or deletion evidence. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1743,7 +1845,8 @@
       "tasks": [
         "Own cross-system detection coverage, incident/fix coordination, safe support intake and Dev reporting.",
         "Maintain implemented DETECT-02 main-admin issue/review/flow/recovery coordination with Dev and independent Security/QA; distinguish local capture/containment from remaining hosted delivery, durable crash intake and legacy telemetry gaps.",
-        "Current app roadmap handoff (2026-10-21 UTC): Route actual tester failures with current source and one feature owner; unknown provider/device/hosted states are not healthy. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Route actual tester failures with current source and one feature owner; unknown provider/device/hosted states are not healthy. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Integrate bounded gift/config/payment-recording sensors, sanitized originals and developer repair evidence; report missing provider/settlement detection rather than healthy. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1758,9 +1861,10 @@
       ],
       "tasks": [
         "Tax calendar and deadlines (financeTax.ts) and the Taxes tab of the Finance & Books hub",
-        "Year-end tax pack, quarterly estimated-tax figures and the CPA question list (BOOKKEEPING.md \u00a78)",
+        "Year-end tax pack, quarterly estimated-tax figures and the CPA question list (BOOKKEEPING.md §8)",
         "1099-K reconciliation: Stripe gross versus Tapua'i receipts plus pass-through money",
-        "Keep provider-handled payee-document/SSN boundaries and CPA-validated tax dates/thresholds; test-mode tax packs do not authorize Tapua'i tax-ID storage, e-filing, registrations or filings."
+        "Keep provider-handled payee-document/SSN boundaries and CPA-validated tax dates/thresholds; test-mode tax packs do not authorize Tapua'i tax-ID storage, e-filing, registrations or filings.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Review personal gifts, program status, platform tips and purchases with CPA/counsel; source words do not decide deductibility/reporting or authorize tax-ID collection/filing. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1777,7 +1881,8 @@
       ],
       "tasks": [
         "Build cross-system runtime sensors, safe bounded logs, correlation, delivery health and honest coverage gaps.",
-        "Current app roadmap handoff (2026-10-21 UTC): Preserve bounded behavior logs; session/user IDs remain unbuilt until policy review, then require approved schema/client/Health coverage. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Preserve bounded behavior logs; session/user IDs remain unbuilt until policy review, then require approved schema/client/Health coverage. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep raw money event identifiers and safe existing signals; new IDs/funnels require Legal/Privacy/Data review and failed payment recording must not expose sensitive data. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1794,7 +1899,8 @@
       ],
       "tasks": [
         "Own meaningful regression, boundary/security and finance invariant checks.",
-        "Current app roadmap handoff (2026-10-21 UTC): Maintain duration, stale-account, Terms, private-access and retry regressions plus offline fixture safety checks in regular builds. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Maintain duration, stale-account, Terms, private-access and retry regressions plus offline fixture safety checks in regular builds. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Verify meaningful no-cut/flag/default/retry/account-bound and gross-ledger regressions with original commands/counts; do not claim provider, SQL application or devices from mocks. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1812,7 +1918,8 @@
       "tasks": [
         "Review trusted security signals, false positives, audit integrity and safe recovery with Engineering Support and Dev.",
         "Share infrastructure/provenance/recovery findings with INFRA_SECURITY, SUPPLY_CHAIN_SECURITY and RECOVERY_SECURITY while retaining trusted-signal, false-positive and audit judgments under SECURITY.",
-        "Current app roadmap handoff (2026-10-21 UTC): Preserve trusted source/actor and reproducible app findings; guest telemetry/vote/hype abuse and missing sensors remain explicit. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Preserve trusted source/actor and reproducible app findings; guest telemetry/vote/hype abuse and missing sensors remain explicit. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Review trusted financial/security observations, false positives and original occurrences with Support; client gift events do not become server-confirmed payments or fraud proof. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1827,9 +1934,10 @@
       "tasks": [
         "Held-for-families roll-forward and per-athlete balances agree before any payout is approved",
         "Payout queue review in Payouts (MoneyTool) with CUSTODIAL and CONNECT; payouts stay blocked in Wave 0",
-        "Advocate Connect destination charges (STATE \u00a76 item 8) with COMMERCE and payments counsel",
+        "Advocate Connect destination charges (STATE §6 item 8) with COMMERCE and payments counsel",
         "Verify approved infrastructure ceiling and actual billing/cash obligations for the single Growth and Capacity Review packet with FPA/CFO; owner decides spending and test gross is not available company cash.",
-        "Current app roadmap handoff (2026-10-21 UTC): Keep payout approval/withdrawal caps gated on authoritative balances and payee context; bank attachment grants no cash authority. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Keep payout approval/withdrawal caps gated on authoritative balances and payee context; bank attachment grants no cash authority. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Reconcile held gross gifts, separate voluntary tips, actual provider fees and bank balances before any payout; an app balance is not verified cash or available settlement. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1844,7 +1952,8 @@
       ],
       "tasks": [
         "Coordinate moderation, identity, minor safety and rights safeguards as independent release gates.",
-        "Maintain local Beyond pre-review and CHAL friend/preset/private-badge safeguards; real reviewer/support staffing, public/minor action scope and appeals policy remain release prerequisites, with no minor in-person location/time. SAFETY-01 still needs an independent review. Risky without a coach does not hide a clip."
+        "Maintain local Beyond pre-review and CHAL friend/preset/private-badge safeguards; real reviewer/support staffing, public/minor action scope and appeals policy remain release prerequisites, with no minor in-person location/time. SAFETY-01 still needs an independent review. Risky without a coach does not hide a clip.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Retain independent rights/age/guardian/school/communication review; gifts create neither permissions, paid visibility nor release approval. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1868,7 +1977,8 @@
         "Supply actual casual-video/photo/right/age/audience behavior for fan-ballot entries; staff eligibility/rights/safety and per-entry public candidate consent/private acknowledgment, restricted media/status/withdrawal and trusted ballot gaps remain proposed; no blanket Stripe KYC or implemented workflow.",
         "Keep existing Highlight/photo rights and draft behavior distinct from Beyond's private pending video/JPEG review pipeline; current actor/consent/metadata/retry boundaries do not prove server decoding or public media safety. A new Train Like Me upload can set the coach-level label only when layouts.coachLevel is on.",
         "Maintain private Fan Zone reserved MP4 upload, sanitized verification, revocable viewing and all-revision tracked removal with BACKEND/Safety; casual learning/upload needs no athlete/Stripe/school status; hosted provider/device/access/deletion proof remains required.",
-        "Current app roadmap handoff (2026-10-21 UTC): Preserve web-seconds/native-milliseconds duration through publication, finite positive45s metadata and8MiB post-compression cap; actual picker/server media verification remains separate. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Preserve web-seconds/native-milliseconds duration through publication, finite positive45s metadata and8MiB post-compression cap; actual picker/server media verification remains separate. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Preserve draft Back navigation, athlete/caption/rights checks and short-media limits; uploading creates no promised gift income or digital entitlement. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1885,7 +1995,8 @@
       "tasks": [
         "Own private video entitlements, signed playback URLs and subscription-request access.",
         "Keep private entitlement/signed playback separate from public workout discovery and presets; workout Vault protection, try videos, season access and minor in-person prohibitions remain later action-specific gates.",
-        "Current app roadmap handoff (2026-10-21 UTC): Test authorized/unrelated/expired private access; new private uploads do not remove legacy public Vault objects or revoke existing signed URLs. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Test authorized/unrelated/expired private access; new private uploads do not remove legacy public Vault objects or revoke existing signed URLs. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep private entitlement and one-time Purchase/premium Subscription separate from giving; preserve the existing digital split and counsel-gated family-account decision. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1899,7 +2010,8 @@
       ],
       "tasks": [
         "Record browser/visual regression evidence with the Playwright MCP on Expo web: narrow widths, large text and screenshots in AUDIT_REPORT; native sign-off stays with DEVICE_QA.",
-        "Current app roadmap handoff (2026-10-21 UTC): Verify fresh guest and signed-in story/auth/upload paths, narrow/large-text/keyboard layouts; prior390px checks cover only recorded screens. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Verify fresh guest and signed-in story/auth/upload paths, narrow/large-text/keyboard layouts; prior390px checks cover only recorded screens. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Record current narrow/large-text/browser gift review, optional controls and held/error layouts; screenshots and local source cannot establish native/provider settlement. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1913,7 +2025,8 @@
         "scripts/check-copy.mjs"
       ],
       "tasks": [
-        "Donation language and honest product copy"
+        "Gift/program/tip language, separate Subscription/Purchase, and honest recipient/allocation/processing claims under the current VOICE map.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Apply Gift/Give/Send a gift for individuals, Donation for programs, optional Tip Tapua'i and Cover the processing fee; keep Subscription/Purchase separate and exact tax/held notices honest. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1936,7 +2049,8 @@
         "Reconcile roles, reporting lines, protocols and current priorities on assigned changes and affected handoffs; pair with DOCUMENTATION, preserve model pins/domain authority and report drift to CTO.",
         "Record actual executor, checked documents/roles/priorities, changed paths, dated check results, unresolved drift and next owner in the existing task ledger; release shared claims after integration/checks. Definitions are task-triggered, with no unattended scheduler configured.",
         "Reconcile all 115 current role duties against main/task evidence and documented job-function gaps; preserve reporting/models and report actual reviewed/changed paths, checks, next owners and uncorrected outside-scope docs.",
-        "Current app roadmap handoff (2026-10-21 UTC): Reconcile115roles/17departments against APP-TEST-01; preserve pins/leads and record coverage, blockers, actual reviews and claim release. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Reconcile115roles/17departments against APP-TEST-01; preserve pins/leads and record coverage, blockers, actual reviews and claim release. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Reconcile all 115 role handoffs and the ordered remaining gift gates with Documentation; preserve every role/model/reporting pin and record actual executors without claiming team delivery. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
@@ -1950,7 +2064,8 @@
         "apps/mobile/src/frontend/components/Profile/LockerRoomWishlist.tsx"
       ],
       "tasks": [
-        "Gear-goal configuration, donation allocation and confirmed progress"
+        "Gear-goal configuration, donation allocation and confirmed progress",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep gear-goal personal gifts, correct athlete recipient and one existing tips record; a no-cut source allocation does not prove settled progress or authorize duplicate credit. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     }

@@ -24,7 +24,10 @@ Historical applied SQL and posted90/10 rows are retained rather than silently re
 
 ## Exact change size versus copy base
 
-`git diff 5a95152 --numstat -- <listed file>`; additions/removals include truthful comments.
+`git diff 5a95152 4c54606 --numstat -- <listed file>`; this table records the checkout
+checkpoint, including truthful comments. COORD-02 later adds one net comment line in each
+no-cut SQL file (migration now441 added lines; canonical append444). Executable SQL is unchanged;
+containment explicitly forbids restoring the gift cut.
 The SQL migration combines the no-cut overrides with the separately authorized tip authority.
 
 | Source file | Added / removed lines | Why |
@@ -88,3 +91,11 @@ app metadata checkpoint preserves earlier admin evidence; no release or settleme
 
 Selected `pnpm feature-admin:check --feature MONEY-TIPS-01 --require app-ready` passed
 for25 registered features after the final evidence was recorded. Earlier admin checkpoint preserved.
+
+## Whole-team continuation — COORD-02
+
+The [current packet](../../agents/COORD-02.md) joins115 role handoffs, counsel/guardian drafts
+and the [rollout runbook](../GIFT_TIP_ROLLOUT.md). Fresh read-only migration/catalog checks
+find no tip/payment-context prerequisites on development or staging. This is new hosted
+metadata evidence, not application/settlement proof. Historical source/test receipts above
+remain bound to their original versions; the current-turn final gate is recorded in COORD-02.

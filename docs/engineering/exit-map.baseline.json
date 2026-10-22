@@ -1,5 +1,5 @@
 {
- "planVersion": "a25b21173011",
+ "planVersion": "6cdb7c8b8436",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1670,7 +1670,7 @@
    "apps/mobile/src/backend/db/connectAccountContext.replay.mjs 1757aec7830468eec917d207518f95d3880a9055730dc7810cb6ee8ee0ee3bfa",
    "apps/mobile/src/backend/db/failedPhotoStoryCleanup.replay.py edb77e6bcdfdeb58af63e4c52eb8636e4f3ad835e05ee637e6aa6396e8ed4dd7",
    "apps/mobile/src/backend/db/notifications.replay.mjs 9f04f4a1e24e6360331e3183c56026fe6dd492e22ab75faee971fe5714ca4dcc",
-   "apps/mobile/src/backend/db/schema.sql f85960b2c51f3470d2a375a69b0938848c79724c762bff7098d7307a2e45172e",
+   "apps/mobile/src/backend/db/schema.sql ec4b0fbe6834a868a1a96603988f1191169baec2255144c2715619b7bc26ac7f",
    "apps/mobile/src/backend/services/__fixtures__/fanZoneMp4Fixture.ts 337d454a4a404dbaa1c9abc3dfdcf7dec05462c34d7361149ff170ea1026550a",
    "apps/mobile/src/backend/services/__tests__/fanZoneMp4.test.ts d966212a5b0f134315f3b6ffdc6af7fd8503adc33d49d24f97fab449e1587ec5",
    "apps/mobile/src/backend/services/fanZoneMedia.ts 73df19ed56e9f0b5e2eb11a5a66310cf7e86d91e41e7105a5d5bcc35dfc8ad39",
@@ -2728,7 +2728,7 @@
    "supabase/migrations/20261022120000_drop_public_update_profiles.sql 91579cfbb99eabdc8ffb93bafd4954dcfbbcb4314bfc95ffe94c67a32a840633",
    "supabase/migrations/20261022130000_vote_and_hype_limits.sql 41935a0d030280173c7a9c5d95d1e94f4e955a90382ecfd0e04d78a9afe08ea6",
    "supabase/migrations/20261022140000_record_stripe_kyc_dedupe.sql 4853323e75a3e8d55fdfd0bee00c2d43fd6ad217a40ef4e54ac0b7f4671a8b48",
-   "supabase/migrations/20261022152000_no_cut_gifts_optional_tips.sql a905c04df59126089d579c1a3b99ea82525fe54ecac4e9684f7f0f9b963cfc20",
+   "supabase/migrations/20261022152000_no_cut_gifts_optional_tips.sql f46a7d2aeba23cc50150cdf99c3f04d2bbf76ccbf745b4400f123ab3d55cdee9",
    "supabase/migrations/README.md 639e6a7b79be0664336750dc386fae6323d1b3e308ddbc820429386811483411",
    "supabase/player_vault_lock.sql 7268b913a13c5798260e25bb3bade574a0969ebf408c8ffe563e3339a0b07c98",
    "supabase/players.sql 8bc9c0a10168e0b611ef22cf116928ee9d3a9e5bb3c0140ec197fc98f6a0e205",

@@ -1,6 +1,42 @@
 <!-- Responsibility graph and current reconciliation; definitions and diagrams do not establish executed or hosted services. -->
 # Tapua'i — Team hierarchy & agents
 
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+[COORD-02](COORD-02.md) is the current whole-team reading path. All **115 callable role
+definitions across 17 department labels** and their descriptive registry handoffs carry
+role-specific duties. Actual work is performed by the named outside-session Codex executors;
+definitions do not establish 115 specialist runs, message delivery, staffing or approvals.
+Existing role names, paths, reporting leads, owned surfaces and pinned models remain.
+
+The owner's money map is **Gift / Give / Send a gift** for individuals, **Donation / Donate to
+the program** for programs, **Tip Tapua'i (optional)** for platform support and **Cover the
+processing fee** for optional Stripe-cost coverage. **Subscription** and digital **Purchase**
+remain separate from giving. Keep internal tips/donation_/malo identifiers and posted history.
+The old donation-everywhere, 90/10 and Donate. Elevate. Celebrate. instructions are superseded.
+
+Current local source has zero mandatory gift cut (0/10000) in both flag states. The default-off
+buttons.MONETIZATION_TIPS_ENABLED must be literal true to enable optional tips/processing
+estimates; it does not control the no-cut allocation. Local tests establish full gross family
+liability only. Actual processor fees/net settlement, Connect destination choice and refunds
+remain unverified. Payouts stay blocked and the client remains the sole tips credit writer.
+
+Source checkpoints: copy `5a95152`, model/admin `e9da05f`, checkout `4c54606`. Supplied original local
+receipts passed 266 suites / 2576 tests, 117 portal tests, 22 SQL cases and independent 71+21 checks;
+this documentation pass does not rerun or convert those receipts into hosted/device evidence.
+COORD-02 records the missing development/staging rollout prerequisites and actual new checks.
+
+LEGAL/counsel still own final Terms, signed guardian consent/versioning, gift-linked 10 Aura per $1
+digital-border eligibility and processor/store claims. Owner classification remains open for
+the mixed “Refund donation” label and booster placement (currently a Purchase, not proof of
+charity). Finance, Data/Privacy, Security, Minor Safety and independent QA retain their gates.
+
+The existing graph and registry remain the authority for reporting and model pins.
+[Current role duties](TEAM_STATUS.md#current-gift-duty-for-every-existing-role) and the
+[ordered queue](WORK_QUEUE.md#coord-02--ordered-remaining-gift-release-work-2026-10-22)
+update the gift handoff without creating roles, teams, reporting edges or deployed services.
+
+
 ## IP preparation upkeep — 2026-10-22
 
 [IP-01](IP-01.md): DOCUMENTATION (`.claude/agents/documentation.md`) → ENGINEERING owns factual
@@ -10,7 +46,7 @@ contribute existing reviews. No reporting/model changes. Retained counsel and ow
 docketing, sharing, spend and filings. [Process](../legal/IP_PROTECTION_PLAN.md). Automatic facts
 are not continuous AI execution, legal acceptance or proof of privacy.
 
-## Current app roadmap handoff — 2026-10-21 UTC
+## Earlier app roadmap handoff — 2026-10-21 UTC (dated evidence)
 
 The current registry has **115 callable definitions across 17 department labels**. The owner
 requested current-app roadmap and whole-team reconciliation. Start with
@@ -58,7 +94,7 @@ Guide: [INFRASTRUCTURE_SECURITY](../engineering/INFRASTRUCTURE_SECURITY.md).
 
 **Purpose:** See who owns each critical function, where it escalates and which callable agent definition to open. **Plans:** [DEPARTMENT_PLANS.md](DEPARTMENT_PLANS.md). **Expert bar and models:** [EXPERT_STANDARDS.md](EXPERT_STANDARDS.md). **Detail:** [TEAMS.md](TEAMS.md). **Execution:** [WORK_QUEUE.md](WORK_QUEUE.md), when present. **Current product and hosted state:** [STATE.md](../STATE.md).
 
-Last aligned: 2026-10-20 UTC (REDUNDANCY-07; 115 roles, existing reporting lines/model pins preserved). Registry: `.claude/agents/registry.json`.
+Last aligned: 2026-10-22 (COORD-02 gift-release duties; 115 roles, existing reporting lines/model pins preserved; REDUNDANCY-07 routing retained). Registry: `.claude/agents/registry.json`.
 
 Actual documentation/team-coordination executors, claims, dated checks and close-out are in
 [COORD-01](COORD-01.md). DOCUMENTATION runs on assigned feature/fix handoffs; VP_OPERATIONS
@@ -363,7 +399,7 @@ Detail and status: [WORK_QUEUE.md](WORK_QUEUE.md). Build contract: [PHOTO_STORIE
 - An app fix starts with `CTO`. The CTO assigns one lead. The lead assigns one specialist. The specialist reports to the lead. The lead reports the fix to the CTO. `VP_OPERATIONS` updates roles, protocols, and priorities in the same turn and reports team drift to the CTO. `QA` can reject the result. The owner (`FACILITATOR`) still decides prices, counsel, applying SQL, merging, and live money.
 - Surface owner integrates user-facing behavior; specialist owns its function. FULLSTACK integrates app/server/shared-type work.
 - Every schema/RPC/Storage change includes BACKEND plus DATABASE_MIGRATIONS; RLS_SECURITY independently verifies sensitive authorization.
-- Every money change includes COMMERCE and the specific financial owner. CHECKOUT success alone never proves a settled donation. LEDGER owns a single authoritative credit path; REFUNDS and RECONCILIATION verify reversals and discrepancies.
+- Every money change includes COMMERCE and the specific financial owner. CHECKOUT success alone never proves a settled gift or program donation. LEDGER owns a single authoritative credit path; REFUNDS and RECONCILIATION verify reversals and discrepancies.
 - Minor, footage, school-mark and privacy decisions include the relevant safety/privacy specialist and LEGAL/COMPLIANCE. Counsel and the owner retain legal and business decisions.
 - DOCUMENTATION receives an assigned handoff from each active feature/fix owner; VP_OPERATIONS receives role/protocol/priority changes, including completed work changing next duties. Record actual executor, checked documents/roles/priorities, changed paths, check command/result/date, unresolved drift and next owner in the existing task ledger. COORD-01 records actual Codex execution. Feature owners supply verified facts; generated blocks and approved legal conclusions retain their owners.
 - QA records actual automated and product results. DEVICE_QA records actual native/device evidence. Unrun checks and hosted prerequisites stay named.

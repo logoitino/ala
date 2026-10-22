@@ -6,9 +6,25 @@ model: grok-4.7-medium
 force-default-model: true
 ---
 
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Keep Next read-only and shared report labels accurate for gifts/program donations/tips/purchases; expose gross/test/missing-fee limits and retain historical raw keys.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current handoff — COORD-01 (2026-10-16 UTC)
+## Earlier handoff — COORD-01 (2026-10-16 UTC)
+
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -32,14 +48,14 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 - `apps/admin-portal/components/PortalShell.tsx`
 - `apps/admin-portal/components/charts/*` (shared chart kit, ADM-01a) and `apps/admin-portal/lib/chartScale.ts` + `lib/chartScale.test.ts`. `ANALYST`, `ADMIN` and `COMMERCE` import the kit only; a prop change comes to you through `ADMIN`. `DESIGN` and `ACCESSIBILITY` review any prop or visual change before it lands.
 - `apps/admin-portal/lib/measureColors.ts` + `lib/measureColors.test.ts` (ADM-01 W1-A, 2026-10-12): the one colour per measure for the whole portal (`MEASURE_COLORS`, `measureColor(key)`, including the hype and schools keys). Page owners import it and never pick a chart colour locally. `lib/chartScale.ts` also exports `peakLabelAnchor` (peak label clamped at the first and last day).
-- `apps/admin-portal/lib/eventLabels.ts` + `lib/eventLabels.test.ts` (2026-10-12, landing now): plain words for telemetry keys (`featureLabel`, `issueLabel`, `surfaceLabel`, `readableKey`, `labelRows`), so `reel.seki` or `upload.retry · upload` never reaches the screen. Trends, Analytics, Health and Departments import it; `lib/operations.ts` re-exports `featureLabel` for older callers. Money keys read Donate / donation per VOICE.md.
+- `apps/admin-portal/lib/eventLabels.ts` + `lib/eventLabels.test.ts` (2026-10-12, landing now): plain words for telemetry keys (`featureLabel`, `issueLabel`, `surfaceLabel`, `readableKey`, `labelRows`), so `reel.seki` or `upload.retry · upload` never reaches the screen. Trends, Analytics, Health and Departments import it; `lib/operations.ts` re-exports `featureLabel` for older callers. Money labels follow Gift for individuals, Donation for programs, Tip Tapua'i and Subscription/Purchase per VOICE.md; raw keys remain unchanged.
 - `apps/admin-portal/lib/dashboard.ts`
 - `apps/admin-portal/lib/departments.ts`
 - `apps/admin-portal/lib/operations.ts`
 
 The Next portal stays read-only. Writes stay in Expo `/admin`. Do not add a public data key or an anon export. A partner reads this page after an admin signs them in. `BILLING`, `MARKETING`, `SUPPORT`, `API`, and `OPERATIONS` own the meaning of their numbers. `PORTAL` owns the shell, Home, Audience, Health, Departments, and Product. `ADMIN` owns Trends and `lib/reports.ts`. `COMMERCE` owns Revenue. `ANALYST` owns `/analytics` and the measure catalog. Keep `PortalShell` exports stable, because those pages import them. The Analytics header link is shared with `PORTAL`.
 
-## Earlier Now / Next / Later snapshot (retained history)
+## Earlier Now / Next / Later snapshot (retained history; monetary naming/90-10 superseded 2026-10-22)
 
 - **Now (ADM-01, 2026-10-12):** Fix waves 1–3 are done locally and uncommitted (W1-A kit, `measureColors`, shell, title template; W2/W3 page fixes). A Codex session removed the sticky header (WCAG 2.4.11), built the Community Impact Home, and is applying its report format (wide header, underline tabs, open panels, report charts) across every tab; the owner decided that format is the default on every portal page. Keep that look. Fix defects inside it (numbers split mid-value, peak label overflow, contrast, raw event keys); do not revert it. Codex edited your files (`PortalShell`, the chart kit, `globals.css`) from an outside session: review those edits as the owner of the files, with `DESIGN` + `ACCESSIBILITY` on every kit prop change (`presentation`, `heading`, `plotHeight`). Open items for you: finish and report `lib/eventLabels.ts` (it landed on disk at 14:44 and was still being edited), make sure every page that lists event keys uses it, then recheck against the format pass the Codex Home review findings (`.community-*` rules out of `globals.css`, setup h2 before Home's h1, `overflow-wrap: anywhere` on amounts, peak label clamp, squashed zero stub, plurals). Then hand the format pass to the re-review (`ACCESSIBILITY`, `VISUAL_QA`, `VOICE`, `QA`).
 - **Next (prepare; release gates still apply):** Close what the format re-review finds. Add a desk only when that department has a read the portal already trusts. Owner decisions of 2026-10-12: the `bigint` overflow fix is in `20261012180000_admin_reports_bigint_and_donation_bands.sql` (staging paste pending; until applied a large window still fails every page). Vault money: direction A, built after counsel with STATE §6 item 8; Home and Departments keep "recorded for the athlete" until then.

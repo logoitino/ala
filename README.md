@@ -1,7 +1,13 @@
+<!-- Repo entry points distinguish current gift source from legal and hosted release acceptance. -->
 # Tapua'i Sports
 
+Current gift-release team/counsel/rollout packet: [COORD-02](docs/agents/COORD-02.md).
+Athlete support is Gift/Give, program support Donation, optional platform support Tip;
+new local-source gifts have zero platform cut. Hosted rollout and final counsel/store
+acceptance remain separate from source checks.
+
 A fan and athlete app for high-school sports: families post highlights of their kid, fans hype
-and share them, and anyone can donate toward real sports costs (cleats, travel, camps). Tapua'i
+and share them, and anyone can send a personal gift toward real sports costs (cleats, travel, camps). Tapua'i
 replaces the GoFundMe link families pass around today. Built as a **pnpm monorepo**: an Expo
 (React Native) app, a read-only Next.js admin portal, and a Supabase (Postgres) backend.
 

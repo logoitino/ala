@@ -9,6 +9,16 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-22 — Whole-team gift release documentation (COORD-02)
+
+- Reconcile115 role definitions/17 departments and current dispatch duties with Gift/Donation/Tip
+  and the zero-cut source contract; preserve pinned reporting/model values and dated history.
+- Add counsel/guardian review packets and a source-bound coordinated rollout with concrete
+  pending decisions. Fresh read-only hosted checks prove missing tip/payment-context prerequisites.
+- Correct rollback comments to require containment/forward repair without restoring the gift cut;
+  no executable payment or SQL logic changes. Final current verification is in COORD-02.
+
+
 ## 2026-10-22 — No-cut personal gifts and optional Tapua'i support (local)
 
 Source/admin checkpoint e9da05f and subsequent checkout language on codex/tip-model. New gifts

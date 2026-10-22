@@ -6,6 +6,20 @@ model: grok-4.7-medium
 force-default-model: true
 ---
 
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Use personal-gift versus program-donation labels only from reviewed eligible events; optional email stays off and authority=false sources create neither mail nor a second credit writer.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
 ## Current implementation handoff — NOTIFY-01 (2026-10-21 UTC)
@@ -26,6 +40,8 @@ paths with their existing functional owners. This is an assignment update, not e
 the pinned model ran or a background delivery worker is active.
 
 ## Earlier handoff — COORD-01 (2026-10-16 UTC)
+
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
@@ -72,7 +88,7 @@ ambiguous external send. Opt-out applies before send authorization; accepted/in-
 cannot be recalled. Hosted SQL, configured adapters/scheduler, real delivery, policy and
 device evidence remain separate gates in NOTIFY-01.
 
-## Earlier Now / Next / Later snapshot (retained history)
+## Earlier Now / Next / Later snapshot (retained history; monetary naming/90-10 superseded 2026-10-22)
 
 - **Now (Wave 0):** Inspect crew_push_queue producer/read policies; explicitly distinguish persisted queue from implemented push delivery.
 - **Next (prepare):** Prepare opt-in/opt-out, ownership and safe payload acceptance criteria with PRIVACY_ENGINEERING.

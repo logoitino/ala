@@ -1,6 +1,12 @@
 <!-- UX-07 proposal grounded in existing navigation, Calm Island tokens and allowed authored profile data; rendering/privacy verification remains separately evidenced. -->
 # Primary tabs and athlete-story UI improvement plan
 
+**Monetary wording update, 2026-10-22:** use [VOICE](../../product/VOICE.md) and [COORD-02](../../agents/COORD-02.md).
+Older individual-donation,90/10 and Donate-tagline instructions below are superseded history.
+Current local-source personal gifts have zero platform cut in both flag states; optional
+Tip Tapua'i/processing controls default OFF. Posted history and signed versions remain intact;
+hosted rollout, net fees/settlement and final counsel/store decisions remain separate gates.
+
 **Task:** [UX-07](../../agents/UX-07.md). **Design direction:** the owner's approved Calm Island Daylight.
 **Status:** bounded presentation-only scope accepted by actual outside Codex source review at
 `2026-10-20T17:45:26Z`; original admin checkpoint recorded at `2026-10-20T17:46:47.469Z`.

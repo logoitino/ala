@@ -6,14 +6,29 @@ order, then dip into the folders as you need them.
 
 ## Entry points (read in this order)
 
+Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
+[counsel packet](legal/GIFT_RELEASE_COUNSEL_PACKET.md), [guardian draft](legal/GIFT_GUARDIAN_CONSENT_DRAFT.md),
+[Terms](legal/GIFT_DONATION_TIP_TERMS_DRAFT.md), [store draft](product/APP_STORE_GIFT_DRAFT.md).
+
+| Document | What it answers |
+| --- | --- |
+| [COORD-02](agents/COORD-02.md) | Current whole-team Gift/Donation/Tip work order, actual executor receipts and remaining release owners. |
+| [Gift counsel packet](legal/GIFT_RELEASE_COUNSEL_PACKET.md) | Source-bound legal decisions and draft review checklist, held for retained counsel. |
+| [Guardian consent draft](legal/GIFT_GUARDIAN_CONSENT_DRAFT.md) | Proposed gift clauses and counsel-controlled version/re-ack plan; accepted consent remains intact. |
+
 | Document | What it answers |
 | --- | --- |
 | [../README.md](../README.md) | What this is, the repo map, how to run it, how we work. |
 | [ONBOARDING.md](ONBOARDING.md) | Full setup (env, auth providers, simulator), your first day, where things are. |
-| [GLOSSARY.md](GLOSSARY.md) | Code names vs. product words (`tips` = donations, `reels` = Highlights, …). |
+| [GLOSSARY.md](GLOSSARY.md) | Code names vs. product words (`tips` = personal gifts, `reels` = Highlights, …). |
 | [STATE.md](STATE.md) | Where the project is **right now**: recent changes, known breakage, open decisions, next steps. The living log; update it with every code change. |
 
 ## engineering/ — how the system is built
+
+| Document | What it answers |
+| --- | --- |
+| [Gift/tip rollout](engineering/GIFT_TIP_ROLLOUT.md) | Prerequisite chain, coordinated checkout rollout, zero-cut containment and unverified provider/native gates. |
+| [Gift rollout preflight](engineering/evidence/GIFT_ROLLOUT_PREFLIGHT.md) | Source bindings and actual bounded local/hosted read-only observations. |
 | [PORTABLE_INTEGRATIONS](engineering/PORTABLE_INTEGRATIONS.md) | Shared app connection contract, matching target profiles and local installed-SDK compatibility tests. |
 | [Infrastructure Security](engineering/INFRASTRUCTURE_SECURITY.md) | Security roles, current registered-source coverage and independent operational review workflow. |
 | [Infrastructure Security report](engineering/INFRASTRUCTURE_SECURITY_REPORT.md) | Generated safe source binding, Security reviewers and unverified operational requirements. |

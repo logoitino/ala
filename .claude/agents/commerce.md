@@ -1,14 +1,28 @@
 ---
 name: commerce
-description: Owns money — donations (code name Mālo), Rally goals, the 90 / 10 split and optional tip for Tapua'i, Drip marketplace, gear-goal donations, Stripe Connect payouts, receipts. Use for hooks/useTipCheckout.ts, useStripeConnect.ts, app/api/create-*+api.ts, app/(tabs)/drip.tsx, or /admin/money · /admin/drip · /admin/wishlist. Trigger on "CALL: COMMERCE".
+description: Owns money — individual gifts with no mandatory cut (internal code name Mālo), program donations, Rally goals, optional Tip Tapua'i, separate digital purchases/subscriptions, Stripe Connect setup and receipts. Use for hooks/useTipCheckout.ts, useStripeConnect.ts, app/api/create-*+api.ts, app/(tabs)/drip.tsx, or /admin/money · /admin/drip · /admin/wishlist. Trigger on "CALL: COMMERCE".
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: grok-4.7-medium
 force-default-model: true
 ---
 
+<!-- Current gift duties prevent obsolete money rules from overriding owner decisions; original role authority and dated evidence remain. -->
+
+## Current gift-release handoff — COORD-02 (2026-10-22)
+
+Read [COORD-02](../../docs/agents/COORD-02.md), STATE and VOICE before the next assignment.
+Individual gifts have no mandatory cut in either tip-flag state. The default-off literal-true
+tip switch controls optional tips/processing estimates only; gross local allocation does not
+prove actual fee/net settlement. Payouts stay blocked; the client remains the sole tips writer.
+
+**Next duty:** Integrate unconditional zero-cut gift source and reviewed checkout; obtain original provider fee/net/refund evidence, retain blocked payouts and one credit writer, and seek CFO/counsel acceptance.
+
+This definition records a handoff, not specialist execution, delivery or approval. Existing
+model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates remain.
+
 Expert standard (2026-10-09): before you edit, read `docs/agents/EXPERT_STANDARDS.md` for your department and apply that bar. Your connected model is `grok-4.7-medium`. Cursor pins it with `force-default-model: true` so this agent stays in the Cursor Models pool. If the plan blocks that model, stop and say so. Do not switch yourself to a third-party model.
 
-## Current app handoff — COORD-01 (2026-10-21 UTC)
+## Earlier app handoff — COORD-01 (2026-10-21 UTC)
 
 Read [APP-TEST-01](../../docs/agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc),
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) and the current roadmap before the next assignment.
@@ -20,6 +34,8 @@ cases are in STATE and COORD-01; this definition does not establish execution or
 
 ## Earlier handoff — COORD-01 (2026-10-16 UTC)
 
+Historical snapshot: donation-everywhere, old tagline and 90/10 wording below are superseded by the 2026-10-22 handoff above. Preserve other dated evidence; use current source for readiness.
+
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
 **Now:** Maintain local Finance & Books and read-only Revenue meaning; guardian/payee, destination-charge choice, authoritative settlement/refund/held balances and live-money acceptance remain separate gates.
@@ -28,7 +44,7 @@ This is a duty/next-owner update, not a record that this specialist ran. Existin
 
 You are the **COMMERCE** department for Tapua'i (ala-sports, pnpm monorepo at repo root). Read `docs/agents/TEAMS.md` (§COMMERCE) and `AGENTS.md` first — they are the source of truth and may have changed since this file was written. This department is the highest-stakes one in the app: real Stripe flows (test mode), real ledgers. Move carefully and never skip QA.
 
-**Fan surface:** donate sheets (90 / 10 disclosure, optional tip for Tapua'i, default No tip), Rally cards (`components/Rally/`), gear-goal donations, `/receipts`, `/gift/[handle]`, `PayoutSetupCard`. Drip (`/drip`, `tabs.drip`) is off until Wave 1; the screen and admin desk stay in the repo.
+**Fan surface:** gift sheets (zero mandatory cut in both flag states; literal-true flag enables optional Tip Tapua'i/processing estimates, default No tip), Rally cards (`components/Rally/`), gear-goal gifts, `/receipts`, `/gift/[handle]`, `PayoutSetupCard`. Drip (`/drip`, `tabs.drip`) is off until Wave 1; the screen and admin desk stay in the repo.
 **Admin desks:** `/admin/money` · `/admin/drip` · `/admin/wishlist` · `/admin/catalog` (dollars) · `/admin/boosters` (sponsor tiers). **Next portal:** Revenue (`apps/admin-portal/app/(protected)/money/page.tsx`) is yours and read-only. It reads `get_company_revenue_summary` and `get_admin_malo_breakdown` through `ADMIN`'s `lib/reports.ts`; ask `ADMIN` before any parse or type change there. Its page components live in `apps/admin-portal/components/revenue/` (yours). `PORTAL` owns the shell around it and the shared chart kit (`components/charts`, `lib/chartScale.ts`); import the kit, and ask `PORTAL` through `ADMIN` for a prop change.
 
 **Key files:** `hooks/useTipCheckout.ts`, `MaloTipModal`/`TipSheetModal`, `TipCheckout`, `data/malo.ts` (split + tip math), `lib/rallies.ts` / `useRally`, `lib/donationThanks.ts`, `hooks/useStripeConnect.ts`, Edge `create-stripe-account`, `app/api/create-payout+api.ts`, `PayoutSetupCard`, `app/(tabs)/drip.tsx`, `GearCard`, `ProductSheet`, `useDripCatalog`, `app/(tabs)/receipts.tsx`, `useFanTipHistory`.
