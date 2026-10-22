@@ -307,8 +307,9 @@ Tracker inventory, hosted SQL, and a device pass were not re-checked this pass.
 `app/gift/[handle].tsx` now shows **Donate to {name}** (the existing `maloAthleteCta`), the line
 "Donate to {name} here, or pass this page on to family and friends.", and not-found / retry text with
 no money words. The donate sheet itself is unchanged (90 / 10, No tip, held notice). The existing QR
-subtitle still says families can donate "without downloading the app"; that is only true once the
-web app is hosted at the QR origin, which it is not yet. `copy:check` passes.
+subtitle used to promise families could donate "instantly without downloading the app"; donors sign in
+first and the web app is not hosted, so it now reads "Scan or share to support {name}. Friends and family can
+donate from the link." (2026-10-21). LEGAL / VOICE to confirm. `copy:check` passes.
 
 ### Who does the next product work
 

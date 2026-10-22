@@ -1,6 +1,21 @@
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-21 — Truthful QR line and more sign-in / donate tests
+
+- Change the Share & Donate QR line to "Friends and family can donate from the link." — no instant, app-free promise.
+- Test the sign-in hold-and-resume, the held-donation notice and failed sign-in messages.
+
+## 2026-10-21 — Multiple athlete sports and compact fan layout (local implementation)
+
+- Keep one manually chosen primary sport for field artwork, with independent teams/positions/jerseys and stats for additional sports.
+- Keep profile sport-chip selection temporary; new videos/photos can record an explicit sport, and old unassigned Highlights stay in All.
+- Add participation repair to Sports, recorded-tag correction to Highlights and original-log classification to Stats. Published sport choices distinguish empty/unavailable sources and retry without losing drafts.
+- Shrink Local cards/type and keep Games/Polls/Boosters icon labels visible; place sponsor content under Boosters.
+- Use an inset translucent bottom dock with opaque controls; scrolling softens only its background, with stop/focus/accessibility recovery.
+- Enrollment, admin-first checkpoint and actual local/hosted evidence tracked in [MULTISPORT-01](docs/agents/MULTISPORT-01.md) and [UX-09](docs/agents/UX-09.md). SQL remains unapplied.
+
+
 ## 2026-10-21 — Sport field theme across the app, and athlete profiles load again
 
 - Carry the field lines on every tab heading, role home, Beyond the Game, empty and paused cards and every profile.

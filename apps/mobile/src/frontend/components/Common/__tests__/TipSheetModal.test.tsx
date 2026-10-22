@@ -3,13 +3,15 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { MaloTipModal } from '@/components/TipSheetModal';
 import type { Player } from '@/data/players';
 import { TAGLINE_HEADLINE } from '@/data/malo';
+import { GIFT_HELD_NOTICE } from '@/data/verification';
 const mockStart = jest.fn();
 const mockClose = jest.fn();
 let mockDeferClose = false;
 let mockFinishClose: ((finished: boolean) => void) | undefined;
 let mockDonatePress: (() => void) | undefined;
 jest.mock('@/hooks/useTipCheckout', () => ({ useTipCheckout: () => ({ startCheckout: mockStart, busy: false }) }));
-jest.mock('@/lib/payoutGate', () => ({ fetchPayoutAllowed: async () => true }));
+const mockPayoutAllowed = jest.fn<Promise<boolean>, [string]>();
+jest.mock('@/lib/payoutGate', () => ({ fetchPayoutAllowed: (id: string) => mockPayoutAllowed(id) }));
 jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: { catalog: { maloAmounts: [5, 10, 25], maloFeeDollars: 1 } } }) }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 jest.mock('expo-blur', () => ({ BlurView: jest.requireActual('react-native').View }));
@@ -25,7 +27,25 @@ jest.mock('react-native-reanimated', () => {
 });
 const player = { id: 'p1', name: 'Ana', backer_count: 1 } as Player;
 describe('donation popup session', () => {
-  beforeEach(() => { jest.clearAllMocks(); mockDeferClose = false; mockFinishClose = undefined; mockStart.mockResolvedValue(undefined); });
+  beforeEach(() => { jest.clearAllMocks(); mockPayoutAllowed.mockResolvedValue(true); mockDeferClose = false; mockFinishClose = undefined; mockStart.mockResolvedValue(undefined); });
+  it("tells the donor their donation is held only when this athlete's payouts are not set up", async () => {
+    mockPayoutAllowed.mockResolvedValue(false);
+    const view = await render(<MaloTipModal player={player} onClose={mockClose} />);
+    expect(await screen.findByText(GIFT_HELD_NOTICE)).toBeTruthy();
+    expect(mockPayoutAllowed).toHaveBeenCalledWith(player.id);
+    await view.unmount();
+
+    mockPayoutAllowed.mockResolvedValue(true);
+    await render(<MaloTipModal player={player} onClose={mockClose} />);
+    await act(async () => undefined);
+    expect(screen.queryByText(GIFT_HELD_NOTICE)).toBeNull();
+  });
+  it('does not claim the donation is held while the payout check is still loading', async () => {
+    mockPayoutAllowed.mockReturnValue(new Promise<boolean>(() => undefined));
+    await render(<MaloTipModal player={player} onClose={mockClose} />);
+    await act(async () => undefined);
+    expect(screen.queryByText(GIFT_HELD_NOTICE)).toBeNull();
+  });
   it('blocks a stale Donate press during the close animation', async () => {
     await render(<MaloTipModal player={player} onClose={mockClose} />);
     await fireEvent.press(screen.getByLabelText('$5, +50 Aura Points ⚡'));

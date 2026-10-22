@@ -1,5 +1,5 @@
 /** QR links may only open a trusted web origin; a bad setting falls back to tapuai.app instead of printing a broken code. */
-import { formatGiftUrl, webOrigin } from '@/data/share';
+import { formatGiftUrl, shareQrSubtitle, webOrigin } from '@/data/share';
 
 describe('webOrigin', () => {
   it('keeps an https origin and drops any path', () => {
@@ -23,3 +23,13 @@ describe('formatGiftUrl', () => {
     expect(formatGiftUrl('@Mele')).toBe('https://tapuai.app/gift/mele');
   });
 });
+
+describe('shareQrSubtitle', () => {
+  it('names the athlete without promising an instant, app-free donation', () => {
+    const line = shareQrSubtitle('Mele');
+    expect(line).toBe('Scan or share to support Mele. Friends and family can donate from the link.');
+    expect(line).not.toMatch(/instantly|without downloading/i);
+    expect(shareQrSubtitle('  ')).toMatch(/support this athlete/);
+  });
+});
+

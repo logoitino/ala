@@ -116,6 +116,30 @@ describe('SoftWallModal email form', () => {
     expect(mockSignInWithEmailPassword).toHaveBeenCalledWith(EMAIL, PASSWORD);
   });
 
+  it('shows why sign-in failed, keeps the form for a retry, and clears the message when it works', async () => {
+    mockSignInWithEmailPassword.mockRejectedValueOnce(new Error('Invalid login credentials'));
+    await openSheet();
+    await typeEmail();
+    await typePassword();
+
+    await fireEvent.press(signInButton());
+    expect(await screen.findByText('Invalid login credentials')).toBeTruthy();
+    expect(signInButton()).toBeEnabled();
+
+    await fireEvent.press(signInButton());
+    expect(mockSignInWithEmailPassword).toHaveBeenCalledTimes(2);
+    expect(screen.queryByText('Invalid login credentials')).toBeNull();
+  });
+
+  it('falls back to a plain message when the failure has no text', async () => {
+    mockSignInWithEmailPassword.mockRejectedValueOnce('network down');
+    await openSheet();
+    await typeEmail();
+    await typePassword();
+    await fireEvent.press(signInButton());
+    expect(await screen.findByText('Could not sign in.')).toBeTruthy();
+  });
+
   it('keeps Create account disabled until a birth month and year are given', async () => {
     await openSheet();
     await typeEmail();

@@ -33,7 +33,8 @@ export const TAPUAI_WEB_ORIGIN = webOrigin(process.env.EXPO_PUBLIC_WEB_ORIGIN);
  */
 export function shareQrSubtitle(athleteName: string): string {
   const name = athleteName.trim() || 'this athlete';
-  return `Scan or share to support ${name}. Friends and family can donate instantly without downloading the app!`;
+  // No "instantly" / "without the app" promise: donors sign in first, and the web app is not hosted yet (UX-08 review).
+  return `Scan or share to support ${name}. Friends and family can donate from the link.`;
 }
 
 /**
