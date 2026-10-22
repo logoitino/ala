@@ -1,7 +1,9 @@
+/** Profile Filmer recognition card shows confirmed clip credit and the existing upload invitation.
+ * Badge tiers and earned Aura stay separate from athlete donations and school verification. */
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { cardShadow, colors, radii, space, SCOREBOARD_DIGITS } from '@/constants/theme';
+import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { filmerTier, nextFilmerTierHint, type FilmerStats } from '@/lib/filmers';
 import { formatCompactCount } from '@/lib/hype';
 import { FOCAL } from '@/theme/motion';
@@ -77,12 +79,16 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    padding: space.md,
-    gap: 10,
+    padding: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: FOCAL.electricViolet,
     ...cardShadow,
   },
   header: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     alignItems: 'center',
     justifyContent: 'space-between',
   },
@@ -95,16 +101,16 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '800',
   },
   lede: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
   tierChip: {
-    backgroundColor: FOCAL.jadeInk,
+    backgroundColor: FOCAL.violetInk,
     borderRadius: radii.pill,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -121,17 +127,19 @@ const styles = StyleSheet.create({
   stat: {
     alignItems: 'center',
     flex: 1,
+    minWidth: 0,
   },
   statValue: {
     ...SCOREBOARD_DIGITS,
     color: colors.text,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
   },
   statLabel: {
     color: colors.textMuted,
     fontSize: 12,
     fontWeight: '700',
+    textAlign: 'center',
   },
   aura: {
     color: FOCAL.jadeInk,
@@ -144,15 +152,16 @@ const styles = StyleSheet.create({
   },
   cta: {
     alignSelf: 'flex-start',
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: radii.pill,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     justifyContent: 'center',
-    backgroundColor: FOCAL.jadeInk,
+    backgroundColor: FOCAL.violetInk,
   },
   ctaLabel: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
 });

@@ -2,6 +2,7 @@
  * Fan tab bar (Highlights / Activity / Spotlight / Profile around Upload), the global upload sheet and its
  * Highlight-or-Beyond chooser. Drip lives in Profile. Beyond, Local, athlete profiles and receipts
  * stay off the bar. They keep a real href: SDK 58 sends `href: null` back to Home (owner 2026-10-16).
+ * The custom dock positions itself absolutely; ordinary TabScreen content reserves its measured height.
  */
 
 import { Platform, StyleSheet } from 'react-native';
@@ -39,6 +40,7 @@ function FanTabs() {
           },
           sceneStyle: { backgroundColor: live.theme.background },
           tabBarStyle: {
+            position: 'absolute',
             backgroundColor: 'transparent',
             borderTopWidth: 0,
             elevation: 0,

@@ -1,5 +1,5 @@
 /**
- * The Home pill row: Home / Beyond feed tabs with clip counts, the sliding gold indicator, and the Local jump
+ * The Home pill row: Home / Beyond feed tabs with clip counts, the sliding jade indicator, and the Local jump
  * (split out of app/(tabs)/index.tsx for R4-03; behaviour unchanged). The route keeps the filter state, the pill
  * layout measurements and the indicator animation, so hook order in the route is unchanged; this file renders them.
  * Local is a destination, not a filter, so it navigates instead of switching the feed.
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.videoScrim,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255,215,0,0.35)',
+    borderColor: `${FOCAL.neonJade}66`,
     padding: 3,
   },
   feedPill: {
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     bottom: 3,
     left: 0,
     borderRadius: 999,
-    backgroundColor: FOCAL.goldInk,
+    backgroundColor: FOCAL.jadeInk,
   },
   feedPillCount: {
     color: colors.onVideoMuted,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     borderColor: `${TAB_ACCENTS.local.glow}55`,
   },
   localPillLabel: {
-    color: TAB_ACCENTS.local.mist,
+    color: TAB_ACCENTS.local.glow,
   },
   feedPillLabel: {
     color: colors.onVideoMuted,

@@ -1,6 +1,13 @@
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-21 — Sport accents and more room across fan tabs (UX-10)
+
+- Compact all seven fan destinations, including own/public Profile cards and Drip, with readable labels and44-point buttons.
+- Add vibrant cyan/violet/gold/ember accents and decorative sport icons matching the existing jade/sand theme.
+- Extend Highlights video behind the floating dock; measure dock clearance for captions, reactions and non-video page footers, and preserve page alignment on resize.
+- Repair the installed web video view’s intrinsic sizing with explicit full-frame dimensions. Local verification and separate device checks: [UX-10](docs/agents/UX-10.md).
+
 ## 2026-10-21 — Truthful QR line and more sign-in / donate tests
 
 - Change the Share & Donate QR line to "Friends and family can donate from the link." — no instant, app-free promise.

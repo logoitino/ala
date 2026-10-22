@@ -223,13 +223,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   joinSlot: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
   },
   joinIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: FOCAL.jadeInk,

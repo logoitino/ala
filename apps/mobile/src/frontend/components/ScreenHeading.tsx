@@ -1,16 +1,17 @@
 /**
  * Shared, wrapping page hierarchy keeps published Look-desk copy and colors authoritative.
  * UX-08: the viewer's sport (generic field for non-athletes) fades in behind the right side of every heading.
- * UX-09: fan pages use compact hierarchy; role/operator headings retain their current sizing.
+ * UX-10: compact fan headings use a sport mark and an ink-on-mist kicker; role headings keep their sizing.
  */
 import { StyleSheet, Text, View } from 'react-native';
 import { usePathname } from 'expo-router';
 
 import { SportField } from '@/components/Effects/SportField';
+import { SportIcon } from '@/components/UI/SportIcon';
 import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useViewerSport } from '@/hooks/useViewerSport';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 
 type ScreenHeadingProps = {
   kicker?: string;
@@ -35,6 +36,7 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
   const sport = useViewerSport();
   const path = usePathname();
   const fan = !/^\/(operator|parent|athlete|booster|sponsor|admin)(\/|$)/.test(path ?? '');
+  const mist = Object.values(TAB_ACCENTS).find(value => value.color === mark)?.mist ?? FOCAL.mistGold;
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact, fan && styles.fanWrap]}>
       {/* Field lines stay on the right and fade in, so the title always sits on clear ground. */}
@@ -42,8 +44,8 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
         <SportField sport={sport} fade="left" labels={false} opacity={0.11} />
       </View>
       {kicker ? (
-        <View style={styles.kickerRow}>
-          <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.accentDot, { backgroundColor: mark }]} />
+        <View style={[styles.kickerRow, fan && styles.fanKickerBadge, fan && { backgroundColor: mist }]}>
+          {fan ? <SportIcon sport={sport} color={mark} size={16} /> : <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.accentDot, { backgroundColor: mark }]} />}
           <Text style={[styles.kicker, compact && styles.kickerCompact, { color: mark }]}>{kicker}</Text>
         </View>
       ) : null}
@@ -56,8 +58,9 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
 
 const styles = StyleSheet.create({
   fanWrap: { gap: 5, paddingTop: 4, paddingBottom: 4 },
-  fanTitle: { fontSize: 24, letterSpacing: -0.3 },
-  fanLede: { fontSize: 14, lineHeight: 20 },
+  fanTitle: { fontSize: 22, letterSpacing: -0.3 },
+  fanLede: { fontSize: 13, lineHeight: 19 },
+  fanKickerBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, maxWidth: '100%' },
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   accentDot: { width: 6, height: 6, borderRadius: 3 },
   field: {

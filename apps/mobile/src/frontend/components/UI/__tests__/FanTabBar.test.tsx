@@ -5,13 +5,13 @@ import type {BottomTabBarProps} from 'expo-router/tabs';
 import {FanTabBar} from '../FanTabBar';
 import {cloneAppRuntime,DEFAULT_APP_RUNTIME} from '@/lib/runtime';
 const mockNavigate=jest.fn(),mockEmit=jest.fn(()=>({defaultPrevented:false})),mockUpload=jest.fn();
-const mockRestore=jest.fn();
+const mockRestore=jest.fn(), mockMeasure=jest.fn();
 let mockSoftened=false, mockReduceTransparency=false;
 let mockLive=cloneAppRuntime(DEFAULT_APP_RUNTIME);
 jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 jest.mock('@/context/AppRuntimeContext',()=>({useAppRuntime:()=>({live:mockLive})}));
 jest.mock('@/context/UploadSheetContext',()=>({useUploadSheet:()=>({openUpload:mockUpload})}));
-jest.mock('@/context/FanNavigationContext',()=>({useFanNavigation:()=>({restore:mockRestore}),useFanDockSoftened:()=>mockSoftened}));
+jest.mock('@/context/FanNavigationContext',()=>({useFanNavigation:()=>({restore:mockRestore}),useFanDockSoftened:()=>mockSoftened,useMeasureFanDock:()=>mockMeasure}));
 jest.mock('@/hooks/useReduceTransparency',()=>({useReduceTransparency:()=>mockReduceTransparency}));
 jest.mock('@/lib/supabase',()=>({isSupabaseConfigured:false,supabase:{}}));
 const props={state:{index:0,routes:['index','beyond','activity','spotlight','drip','profile','local'].map(name=>({name,key:name}))},emitter:{emit:mockEmit},navigateToTab:mockNavigate,insets:{top:0,right:0,left:0,bottom:0},descriptors:{}} as unknown as BottomTabBarProps;
@@ -64,4 +64,12 @@ it('preserves prevented tab presses and focused-tab stack events', async () => {
  await fireEvent.press(screen.getByRole('tab', { name: 'Home', selected: true }));
  expect(mockNavigate).not.toHaveBeenCalled();
  expect(mockEmit).toHaveBeenLastCalledWith({ type: 'tabPress', target: 'index', canPreventDefault: true });
+});
+
+it('measures the complete absolute dock wrap including safe footer and enlarged labels', async () => {
+ await render(<FanTabBar {...props} insets={{ ...props.insets, bottom: 34 }} />);
+ const wrap=screen.getByTestId('fan-dock-wrap');
+ expect(StyleSheet.flatten(wrap.props.style)).toMatchObject({ position: 'absolute', bottom: 0, paddingBottom: 34 });
+ await fireEvent(wrap,'layout',{nativeEvent:{layout:{height:118,width:390,x:0,y:0}}});
+ expect(mockMeasure).toHaveBeenCalledWith(118);
 });

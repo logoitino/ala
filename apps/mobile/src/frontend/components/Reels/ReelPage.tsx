@@ -1,3 +1,6 @@
+/** Highlights media uses the full pager height while hint/profile peek clear measured header and dock.
+ * Horizontal peek preserves the existing gestures, lazy profile reads and single-video parent contract.
+ */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -72,9 +75,10 @@ const HINT_CHIP_CLEARANCE = 104;
  * @param height Page height. @param insetTop Header clearance passed as `peekInsetTop`.
  * @returns The top offset, or null on a screen too short to fit it between chips and caption (skip the hint).
  */
-export function peekHintTop(height: number, insetTop: number): number | null {
-  const top = Math.max(height * 0.46, insetTop + HINT_CHIP_CLEARANCE);
-  return top <= height * 0.62 ? top : null;
+export function peekHintTop(height: number, insetTop: number, insetBottom = 0): number | null {
+  const available = Math.max(0, height - insetBottom);
+  const top = Math.max(available * 0.46, insetTop + HINT_CHIP_CLEARANCE);
+  return top <= available * 0.62 ? top : null;
 }
 
 export type ReelPageProps = {
@@ -133,7 +137,7 @@ export function ReelPage({
   const [width, setWidth] = useState(0);
   const [open, setOpen] = useState<PeekSide>(0);
   const hint = usePeekHint(active, index);
-  const hintTop = peekHintTop(height, peekInsetTop);
+  const hintTop = peekHintTop(height, peekInsetTop, peekInsetBottom);
   const pageWidth = useSharedValue(0);
   const peekX = useSharedValue(0);
   const side = useSharedValue<PeekSide>(0);

@@ -14,6 +14,23 @@ perfect. "This felt slow" counts as a bug.
 
 ---
 
+## Sport theme and floating dock — UX-10
+
+1. On320/390-point phones, open Home, Activity, Spotlight, Profile, Local, Beyond and Drip.
+   Check compact panels, visible sport/icon labels, readable colors and44-point action targets.
+2. With a playable Highlight, confirm video reaches behind the floating dock. Caption, reactions,
+   swipe hint and athlete peek must remain above it. Scroll between clips, rotate/resize and return:
+   paging stays on the active clip and retains one active video.
+3. Increase system text size. Labels wrap, dock remains visible, and all final non-video page actions
+   scroll clear of the dock. Open athlete peek and confirm its large-text scroll fallback stays usable.
+4. On your own and a private public Profile, change temporary sport/Stats chips. Primary sport artwork,
+   hidden school/privacy notices and independent Stats remain correct. Check Drip and long names.
+5. Check the dock's softened scrolling background, opaque buttons, stop/focus recovery, VoiceOver/
+   TalkBack and Reduce Motion on physical devices. Check current published Look colors separately.
+
+Local browser fixtures and source/Jest checks are separate from native system-text, screen-reader,
+gesture and hosted acceptance. Actual receipts: [UX-10](../agents/UX-10.md).
+
 ## Game venue checks — LOCAL-02 (local implementation; activation pending)
 
 After the owner applies `20261021220000_game_venues.sql` to the approved test environment:

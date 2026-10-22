@@ -96,7 +96,7 @@ export function ReelOwnerPeek({
   onClose,
 }: ReelOwnerPeekProps) {
   const { width: windowWidth, fontScale } = useWindowDimensions();
-  // Under 380 pt (a 320 / 375 phone) the card slims its header so identity + stats + the pinned actions fit.
+  // Narrow peeks move verification onto the avatar; both layouts use compact panels, with a scrolling large-text footer.
   const compact = windowWidth < 380;
   // At large text sizes a pinned footer would take most of the card, so it scrolls with the content instead.
   const largeText = fontScale >= 1.3;
@@ -512,9 +512,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    paddingHorizontal: 18,
+    paddingHorizontal: 12,
     paddingTop: 4,
-    paddingBottom: 16,
+    paddingBottom: 10,
   },
   heroCompact: {
     gap: 12,
@@ -523,9 +523,9 @@ const styles = StyleSheet.create({
   },
   body: {
     gap: 12,
-    paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 16,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   bodyCompact: {
     gap: 6,
@@ -564,8 +564,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(15,20,22,0.12)',
   },
   avatarWrap: {
-    width: 84,
-    height: 84,
+    width: 68,
+    height: 68,
   },
   avatarWrapCompact: {
     width: 62,
@@ -578,9 +578,9 @@ const styles = StyleSheet.create({
     bottom: -4,
   },
   ring: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     borderWidth: 3,
     alignItems: 'center',
     justifyContent: 'center',
@@ -597,9 +597,9 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
   },
   avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   avatarCompact: {
     width: 52,
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
   name: {
     flexShrink: 1,
     color: FOCAL.ink,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
     letterSpacing: -0.2,
   },
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
   },
   clipTag: {
     color: FOCAL.ink,
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '800',
     lineHeight: 20,
   },
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
   // passing behind it.
   footer: {
     gap: 8,
-    paddingHorizontal: 18,
+    paddingHorizontal: 12,
     paddingTop: 10,
     paddingBottom: 12,
     backgroundColor: FOCAL.backgroundBase,
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     textAlign: 'center',
     color: FOCAL.jadeInk,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
   tipBtn: {
@@ -846,7 +846,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     textAlign: 'center',
     color: FOCAL.ink,
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '900',
   },
   tipLabelPending: {
@@ -872,7 +872,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     textAlign: 'center',
     color: FOCAL.ink,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
   pressed: {

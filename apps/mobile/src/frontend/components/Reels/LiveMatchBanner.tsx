@@ -8,12 +8,15 @@ import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
+  useReducedMotion,
+  cancelAnimation,
   withRepeat,
   withSequence,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
+import { SportIcon } from '@/components/UI/SportIcon';
 import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
 import { colors, palette, radii } from '@/constants/theme';
 import { gameScore, gameScoreboardStatus, gameTeamName } from '@/components/Local/gamePresentation';
@@ -52,6 +55,7 @@ export function LiveMatchBanner({
   live: liveFromParent,
 }: LiveMatchBannerProps) {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
   const hooked = useLiveGame(gameId, { enabled: !liveFromParent });
   const { game, clockLabel, lastPlay, clearLastPlay } = liveFromParent ?? hooked;
   const homeTeam = gameTeamName(game?.home_team, game?.home_school);
@@ -90,11 +94,13 @@ export function LiveMatchBanner({
     if (!homeUp && !awayUp) return;
     if (id) dismissedLiveGames.delete(id);
     setIsDismissed(false);
+    if (reduceMotion) { scoreScale.value = 1; return; }
     scoreScale.value = withSequence(withSpring(1.18, SPRING_BOUNCE), withSpring(1, SPRING_CARD));
-  }, [awayScore, game?.id, homeScore, scoreScale]);
+  }, [awayScore, game?.id, homeScore, scoreScale, reduceMotion]);
 
   useEffect(() => {
-    if (!isLive) {
+    if (!isLive || reduceMotion) {
+      cancelAnimation(pulse);
       pulse.value = 1;
       return;
     }
@@ -103,7 +109,8 @@ export function LiveMatchBanner({
       -1,
       true,
     );
-  }, [isLive, pulse]);
+    return () => cancelAnimation(pulse);
+  }, [isLive, pulse, reduceMotion]);
 
   useEffect(() => {
     if (!playToasts || !lastPlay) return;
@@ -162,6 +169,7 @@ export function LiveMatchBanner({
         >
           <View style={styles.badge}>
             <View style={styles.metaRow}>
+              <SportIcon sport={game.sport} color={FOCAL.islandCyan} size={16} />
               <View style={styles.liveChip}>
                 <Animated.View style={[styles.pulse, !isLive && styles.pulseIdle, pulseStyle]} />
                 <Text style={[styles.liveLabel, !isLive && styles.idleLabel]}>{status.label}</Text>
@@ -192,15 +200,17 @@ export function LiveMatchBanner({
 }
 
 function PlayToast({ title, detail }: { title: string; detail: string }) {
+  const reduceMotion = useReducedMotion();
   const opacity = useSharedValue(0);
   const rise = useSharedValue(-12);
   const scale = useSharedValue(0.92);
 
   useEffect(() => {
+    if (reduceMotion) { opacity.value = 1; rise.value = 0; scale.value = 1; return; }
     opacity.value = withTiming(1, { duration: 160 });
     rise.value = withSpring(0, SPRING_CARD);
     scale.value = withSpring(1, SPRING_BOUNCE);
-  }, [opacity, rise, scale]);
+  }, [opacity, rise, scale, reduceMotion]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -239,9 +249,9 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: 'rgba(255, 215, 0, 0.45)',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingRight: 36,
-    paddingVertical: 10,
+    paddingVertical: 8,
     gap: 4,
   },
   metaRow: {
@@ -284,8 +294,8 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     color: colors.onVideo,
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: '800',
   },
   scoreline: {
@@ -293,8 +303,8 @@ const styles = StyleSheet.create({
     minWidth: 36,
     textAlign: 'right',
     color: colors.onVideo,
-    fontSize: 22,
-    lineHeight: 26,
+    fontSize: 20,
+    lineHeight: 24,
     fontVariant: ['tabular-nums'],
     fontWeight: '800',
   },

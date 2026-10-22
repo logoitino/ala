@@ -1,4 +1,4 @@
-/** Account notification inbox adds read/archive state while factual Activity and invitation queues retain their own history. */
+/** Compact violet Activity rows keep notifications, factual history and invitation actions separate. */
 import { useIsFocused, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react-native';
@@ -28,11 +28,11 @@ import { ChallengeInbox } from '@/components/Challenges/ChallengeInbox';
 
 const ACCENT = TAB_ACCENTS.activity;
 
-const KIND_META: Record<ActivityKind, { icon: keyof typeof Ionicons.glyphMap; tint: string }> = {
-  malo_received: { icon: 'gift', tint: FOCAL.neonJade },
-  malo_sent: { icon: 'heart', tint: FOCAL.ember },
-  tag_pending: { icon: 'pricetag', tint: FOCAL.electricGold },
-  thanks_received: { icon: 'happy', tint: FOCAL.neonJade },
+const KIND_META: Record<ActivityKind, { icon: keyof typeof Ionicons.glyphMap; tint: string; ink: string; mist: string }> = {
+  malo_received: { icon: 'gift', tint: FOCAL.neonJade, ink: FOCAL.jadeInk, mist: FOCAL.mistJade },
+  malo_sent: { icon: 'heart', tint: FOCAL.ember, ink: FOCAL.emberInk, mist: FOCAL.mistEmber },
+  tag_pending: { icon: 'pricetag', tint: FOCAL.electricGold, ink: FOCAL.goldInk, mist: FOCAL.mistGold },
+  thanks_received: { icon: 'happy', tint: FOCAL.neonJade, ink: FOCAL.jadeInk, mist: FOCAL.mistJade },
 };
 
 /** "3m", "5h", "2d" — short enough to sit on one line beside the title. */
@@ -64,8 +64,8 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
       onPress={onPress}
       style={({ pressed }) => [styles.row, item.actionable && styles.rowActionable, pressed && styles.rowPressed]}
     >
-      <View style={[styles.rowIcon, { backgroundColor: `${meta.tint}1F`, borderColor: meta.tint }]}>
-        <Ionicons name={meta.icon} size={18} color={meta.tint} />
+      <View style={[styles.rowIcon, { backgroundColor: meta.mist, borderColor: meta.tint }]}>
+        <Ionicons name={meta.icon} size={16} color={meta.ink} />
       </View>
       <View style={styles.rowBody}>
         <Text style={styles.rowTitle}>{item.title}</Text>
@@ -75,7 +75,7 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
         <View style={styles.rowDetails}>
           <Text style={styles.rowAgo}>{shortAgo(item.at)}</Text>
           {typeof item.amountCents === 'number' ? (
-            <Text style={[styles.rowAmount, { color: meta.tint }]}>{formatUsd(item.amountCents)}</Text>
+            <Text style={[styles.rowAmount, { color: meta.ink }]}>{formatUsd(item.amountCents)}</Text>
           ) : null}
         </View>
         {item.actionable ? <Text style={[styles.rowCta, { color: ACCENT.color }]}>Needs your confirmation</Text> : null}
@@ -113,7 +113,7 @@ export default function ActivityTab() {
   }, [refresh]);
 
   if (!live.tabs.activity) {
-    return <RuntimePaused title="Activity" lede="Activity is off right now." adminHref="/admin/features" />;
+    return <TabScreen><RuntimePaused title="Activity" lede="Activity is off right now." adminHref="/admin/features" /></TabScreen>;
   }
 
   if (!user || isGuest) {
@@ -129,6 +129,7 @@ export default function ActivityTab() {
             />
           </ScrollFxParallax>
           <EmptyState
+            compact
             kicker="Activity"
             title="Sign in to see your activity"
             lede="Donations you receive, donations you make, and highlights that tag you all land here."
@@ -181,6 +182,7 @@ export default function ActivityTab() {
 
         {!loading && items.length === 0 && error ? (
           <EmptyState
+            compact
             kicker="Activity"
             title="Could not load your activity"
             lede="Check your connection and try again."
@@ -192,6 +194,7 @@ export default function ActivityTab() {
 
         {!loading && items.length === 0 && !error ? (
           <EmptyState
+            compact
             kicker="Activity"
             title="Nothing yet"
             lede="When a fan donates to you, an athlete thanks you, or a highlight tags you, it shows up here."
@@ -238,15 +241,15 @@ export default function ActivityTab() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingTop: 8,
-    paddingBottom: 120,
-    gap: 16,
+    paddingBottom: 16,
+    gap: 10,
   },
   sectionTitle: {
     color: colors.text,
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: '800',
     marginTop: 8,
   },
@@ -258,12 +261,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     minHeight: 44,
     alignItems: 'flex-start',
-    gap: 12,
+    gap: 8,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
+    padding: 12,
     ...cardShadow,
   },
   rowActionable: {
@@ -274,9 +277,9 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   rowIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
@@ -288,8 +291,8 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     color: colors.text,
-    fontSize: 15,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: '800',
   },
   rowAgo: {
@@ -300,24 +303,24 @@ const styles = StyleSheet.create({
   },
   rowLede: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 19,
   },
   rowDetails: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
   rowCta: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
     marginTop: 2,
   },
   rowAmount: {
     ...SCOREBOARD_DIGITS,
-    fontSize: 15,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 20,
     flexShrink: 1,
     fontWeight: '900',
   },

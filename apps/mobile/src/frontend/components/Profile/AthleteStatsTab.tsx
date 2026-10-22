@@ -3,6 +3,7 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { EmptyState } from '@/components/UI/EmptyState';
+import { SportIcon } from '@/components/UI/SportIcon';
 import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
 import { athleteStatsPlaybookForSport, type AthleteStatsBundle } from '@/data/athleteStats';
@@ -51,13 +52,16 @@ export function AthleteStatsTab({ stats, loading = false, config }: AthleteStats
   return (
     <View style={styles.wrap}>
       <View style={styles.tableHead}>
+        <SportIcon sport={career.sport} color={FOCAL.violetInk} size={16} />
         <Text style={styles.kicker}>
-          {playbook.emoji} {career.sport || 'Sport not set'} · Career stats
+          {career.sport || 'Sport not set'} · Career stats
         </Text>
         {loading ? <ActivityIndicator color={colors.primary} size="small" /> : null}
       </View>
       {rows.length === 0 ? (
         <EmptyState
+          compact
+          accent={FOCAL.violetInk}
           kicker="Career"
           title="No career stats published for this sport"
           lede="Career stats appear here once this athlete's sport is set and stats are published."
@@ -88,6 +92,8 @@ export function AthleteStatsTab({ stats, loading = false, config }: AthleteStats
       <Text style={styles.kicker}>Game log</Text>
       {logs.length === 0 ? (
         <EmptyState
+          compact
+          accent={FOCAL.violetInk}
           kicker="Game log"
           title="No games logged yet"
           lede="Recent matches for this sport show here once game logs are published."
@@ -120,11 +126,12 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: 12,
+    gap: 8,
   },
   kicker: {
-    color: colors.textMuted,
-    fontSize: 11,
+    color: FOCAL.violetInk,
+    fontSize: 12,
+    flexShrink: 1,
     fontWeight: '800',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
@@ -141,27 +148,27 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     gap: 4,
   },
   metricValue: {
-    color: FOCAL.jadeInk,
-    fontSize: 18,
+    color: FOCAL.violetInk,
+    fontSize: 16,
     fontWeight: '800',
   },
   metricLabel: {
     color: colors.textMuted,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
   },
-  statTile: { flexGrow: 1, flexBasis: '44%', minWidth: 100, padding: 14, gap: 4, borderRadius: radii.md, backgroundColor: FOCAL.mistJade, borderTopWidth: 3, borderTopColor: FOCAL.neonJade },
-  statValue: { color: FOCAL.jadeInk, fontSize: 30, fontWeight: '900' },
-  statLabel: { color: FOCAL.jadeInk, fontSize: 12, fontWeight: '800' },
+  statTile: { flexGrow: 1, flexBasis: '44%', minWidth: 100, padding: 10, gap: 3, borderRadius: radii.md, backgroundColor: FOCAL.mistViolet, borderTopWidth: 3, borderTopColor: FOCAL.electricViolet },
+  statValue: { color: FOCAL.violetInk, fontSize: 24, fontWeight: '900' },
+  statLabel: { color: FOCAL.violetInk, fontSize: 12, fontWeight: '800' },
   tableHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    flexWrap: 'wrap',
     gap: 8,
   },
   log: {
@@ -169,12 +176,13 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     gap: 4,
   },
   logTop: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 10,
   },
@@ -190,7 +198,7 @@ const styles = StyleSheet.create({
   },
   logOpp: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
   },
   empty: {

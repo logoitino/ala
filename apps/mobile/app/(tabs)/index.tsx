@@ -1,5 +1,6 @@
 /**
- * Athlete discovery keeps the existing feed/player contracts, with readable recovery and 44-point chrome.
+ * Athlete discovery fills the shell behind the floating dock, with measured unobstructed chrome.
+ * Pager, media, snap and resized active offsets use one page height; single-video ownership stays intact.
  * R4-03 split (behaviour unchanged): the empty feed, campaign copy and pill row render from `components/Reels/`
  * (`HomeFeedEmpty`, `HomeCampaignCopy`, `HomeFeedSwitch`); this route keeps every hook, state and callback.
  */
@@ -32,6 +33,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
+import { useFanDockHeight } from '@/context/FanNavigationContext';
 import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 import {
   HIGHLIGHT_CLIPS,
@@ -76,6 +78,7 @@ export default function HighlightsTab() {
   useScreenMountTime('home');
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const dockHeight = useFanDockHeight();
   const listRef = useRef<FlatList<FeedItem>>(null);
   const guestSeen = useRef(new Set<string>());
   const guestAllowedIndex = useRef(0);
@@ -93,6 +96,9 @@ export default function HighlightsTab() {
   const [pageHeight, setPageHeight] = useState(0);
   const [chromeHeight, setChromeHeight] = useState(96);
   const [activeIndex, setActiveIndex] = useState(0);
+  const activePage = useRef(0);
+  activePage.current = activeIndex;
+  const previousHeight = useRef(0);
   const [refreshing, setRefreshing] = useState(false);
   const [cacheReady, setCacheReady] = useState(false);
   // Web server render and the first browser paint share this shell. The feed mounts after that.
@@ -127,6 +133,18 @@ export default function HighlightsTab() {
       pagerY.value = event.contentOffset.y;
     },
   });
+  useEffect(() => {
+    const before = previousHeight.current;
+    previousHeight.current = pageHeight;
+    if (before <= 0 || pageHeight <= 0 || before === pageHeight) return;
+    // Rotation/resizing changes every page offset. Re-anchor the current clip after new rows lay out.
+    const frame = requestAnimationFrame(() => {
+      const offset = activePage.current * pageHeight;
+      pagerY.value = offset;
+      listRef.current?.scrollToOffset({ offset, animated: false });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [pageHeight, pagerY]);
 
   useEffect(() => {
     let active = true;
@@ -470,6 +488,7 @@ export default function HighlightsTab() {
   return (
     <TabScreen dark>
       <View
+        testID="home-pager-viewport"
         style={styles.fill}
         onLayout={(event) => setPageHeight(event.nativeEvent.layout.height)}
       >
@@ -541,7 +560,7 @@ export default function HighlightsTab() {
                   totalTipsCents={liveReel?.total_tips_cents ?? item.clip.totalTipsCents ?? 0}
                   peekEnabled={!tipTarget && !spotlight.visible && !searchOpen}
                   peekInsetTop={chromeHeight + 12}
-                  peekInsetBottom={insets.bottom + 24}
+                  peekInsetBottom={dockHeight + 12}
                   onOpenProfile={openProfile}
                   onTip={item.player ? () => void tipPlayer(item.player, item.clip.id) : undefined}
                   onPeekChange={setPeekOpen}
@@ -555,6 +574,7 @@ export default function HighlightsTab() {
                     active={index === activeIndex}
                     height={pageHeight}
                     overlayInsetTop={chromeHeight + 8}
+                    overlayInsetBottom={dockHeight + 8}
                     tipping={Boolean(tipTarget) || spotlight.visible}
                     playbackActive={!spotlight.visible && !tipTarget}
                     sekiPlay={item.clip.sekiPlay}
@@ -723,7 +743,7 @@ const styles = StyleSheet.create({
     left: 12,
     right: 12,
     zIndex: 24,
-    gap: 8,
+    gap: 6,
   },
   chromeRow: {
     flexDirection: 'row',
@@ -753,7 +773,7 @@ const styles = StyleSheet.create({
     borderColor: FOCAL.electricGold,
     color: colors.onVideo,
     paddingHorizontal: 14,
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '700',
   },
   boot: {

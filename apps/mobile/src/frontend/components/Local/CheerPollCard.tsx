@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: FOCAL.electricGold,
     padding: 12,
-    gap: 10,
+    gap: 8,
     overflow: 'visible',
     ...cardShadow,
   },

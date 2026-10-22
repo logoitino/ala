@@ -66,9 +66,9 @@ export function AccountTagInbox() {
 
 const styles = StyleSheet.create({
   card: {
-    gap: 10,
-    marginTop: 12,
-    padding: 16,
+    gap: 8,
+    marginTop: 4,
+    padding: 12,
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
   },
@@ -80,9 +80,11 @@ const styles = StyleSheet.create({
     color: colors.deepGreen,
   },
   row: { gap: 8 },
-  title: { fontSize: 15, fontWeight: '700', color: colors.text },
-  actions: { flexDirection: 'row', gap: 8 },
+  title: { fontSize: 14, fontWeight: '700', color: colors.text },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   yes: {
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: radii.pill,
     backgroundColor: colors.deepGreen,
     paddingHorizontal: 12,
@@ -90,6 +92,8 @@ const styles = StyleSheet.create({
   },
   yesLabel: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
   no: {
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: radii.pill,
     borderWidth: 1.5,
     borderColor: colors.border,

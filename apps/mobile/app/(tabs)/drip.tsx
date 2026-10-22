@@ -63,7 +63,7 @@ export default function DripTab() {
   const categoryLabel = categoryPills.find((item) => item.id === filter)?.label ?? '';
 
   if (!live.tabs.drip) {
-    return <RuntimePaused title="Drip is paused" lede="Turn Drip back on in Admin → Features, then Publish to app." />;
+    return <TabScreen><RuntimePaused title="Drip is paused" lede="Turn Drip back on in Admin → Features, then Publish to app." /></TabScreen>;
   }
 
   return (
@@ -107,6 +107,7 @@ export default function DripTab() {
         ) : null}
         {!loading && error ? (
           <EmptyState
+            compact
             kicker="Drip"
             title="Could not load the rack"
             lede={error}
@@ -116,6 +117,7 @@ export default function DripTab() {
           />
         ) : !loading && items.length === 0 ? (
           <EmptyState
+            compact
             kicker="Drip"
             title={filteredEmpty ? `No items in ${categoryLabel}` : live.copy.dripEmpty}
             lede={filteredEmpty
@@ -148,17 +150,18 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 120,
-    gap: 20,
+    // TabScreen owns dock clearance, so catalog cards need only a small final scroll inset.
+    paddingBottom: 12,
+    gap: 8,
   },
   loading: {
-    paddingVertical: 32,
+    paddingVertical: 20,
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
   loadingLabel: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

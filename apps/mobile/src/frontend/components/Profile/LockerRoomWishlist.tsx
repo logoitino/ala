@@ -1,3 +1,6 @@
+/** Profile sports-goal rack keeps each gear target, donation progress and Share controls together.
+ * Existing donation review, fulfilled gear and private upload rules remain in their respective services.
+ * @sideEffects Wishlist reads, donation checkout, image linking and haptics through existing helpers. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
@@ -418,7 +421,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   headShare: {
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radii.md,
@@ -435,7 +438,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
   },
   lede: {
@@ -449,7 +452,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   row: {
-    gap: 12,
+    gap: 8,
     paddingRight: 4,
     paddingVertical: 2,
   },
@@ -504,7 +507,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     lineHeight: 20,
   },

@@ -61,11 +61,11 @@ export function FriendRequestsCard() {
 }
 
 const styles = StyleSheet.create({
-  card: { gap: 8, marginTop: 12, padding: 16, borderRadius: radii.lg, backgroundColor: colors.surface },
+  card: { gap: 8, marginTop: 8, padding: 12, borderRadius: radii.lg, backgroundColor: colors.surface },
   kicker: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, color: colors.textMuted, textTransform: 'uppercase' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text },
-  button: { minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, justifyContent: 'center' },
+  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  name: { flex: 1, minWidth: 100, fontSize: 14, fontWeight: '700', color: colors.text },
+  button: { minHeight: 44, minWidth: 44, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, justifyContent: 'center' },
   buttonOn: { backgroundColor: FOCAL.violetInk, borderColor: FOCAL.violetInk },
   label: { fontSize: 13, fontWeight: '700', color: colors.text },
   labelOn: { color: colors.onAccent },

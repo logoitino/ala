@@ -1,3 +1,4 @@
+/** Shared motion and sport accents keep fan destinations consistent; bright glows never replace readable text inks. */
 import { Platform, type ViewStyle } from 'react-native';
 import type { WithSpringConfig } from 'react-native-reanimated';
 
@@ -66,15 +67,15 @@ export const SCROLL_FX = {
 } as const;
 
 /**
- * Focal color hierarchy — Calm Island (owner-selected 2026-10-15 from the Figma comparison
- * "Tapua'i — Look & colour refresh": one brand colour does the work).
+ * Focal color hierarchy — Calm Island with the owner's 2026-10-21 sporty accent continuation.
+ * Jade anchors the brand; destination inks and mist fills add color without changing reward meaning.
  *
  * | Role | Color | Where |
  * | --- | --- | --- |
  * | Brand / Donate / Aura | Deep jade ink + bright jade glow | Primary CTAs, Upload, the active tab on every destination |
  * | Rank / Spotlight | Gold ink + soft gold | Kickers, #1 ranks, Spotlight, Flex — awards only |
- * | Live / heat | Ember | LIVE pills, Crimson Ember tier, errors — nothing decorative |
- * | Seki / Flex-adjacent | Island Cyan / Electric Violet | Hype bursts and Aura tiers, mostly over video |
+ * | Live / heat / Drip | Ember | LIVE pills, errors and Drip's apparel accent |
+ * | Sport / community | Island Cyan / Electric Violet | Local, Activity/Profile, hype bursts and Aura tiers |
  *
  * The app ships **light** on a warm sand-white canvas (`backgroundBase`). Use `ink` on bright
  * fills, `*Ink` for coloured text on light surfaces, `mist*` washes for cards, and `videoBase`
@@ -106,18 +107,17 @@ export const FOCAL = {
 const JADE_ACCENT = { color: FOCAL.jadeInk, mist: FOCAL.mistJade, glow: FOCAL.neonJade } as const;
 
 /**
- * @purpose Screen accent per fan destination (headings, kickers, light-tab chrome). Calm Island keeps one
- * brand jade everywhere; Spotlight alone stays gold because gold now means awards. The fan bar itself
- * always uses `TAB_ACCENTS.index` so the active tab reads the same on every destination.
+ * @purpose Screen accents for the approved sporty fan theme. Dark inks sit on their mist fills;
+ * bright glows belong on dark media. Jade remains Donate/Upload and gold remains awards.
  */
 export const TAB_ACCENTS = {
   index: JADE_ACCENT,
   beyond: JADE_ACCENT,
-  local: JADE_ACCENT,
-  activity: JADE_ACCENT,
+  local: { color: FOCAL.cyanInk, mist: FOCAL.mistCyan, glow: FOCAL.islandCyan },
+  activity: { color: FOCAL.violetInk, mist: FOCAL.mistViolet, glow: FOCAL.electricViolet },
   spotlight: { color: FOCAL.goldInk, mist: FOCAL.mistGold, glow: FOCAL.electricGold },
-  drip: JADE_ACCENT,
-  profile: JADE_ACCENT,
+  drip: { color: FOCAL.emberInk, mist: FOCAL.mistEmber, glow: FOCAL.ember },
+  profile: { color: FOCAL.violetInk, mist: FOCAL.mistViolet, glow: FOCAL.electricViolet },
 } as const;
 
 

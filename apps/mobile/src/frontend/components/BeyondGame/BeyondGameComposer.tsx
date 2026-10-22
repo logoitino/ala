@@ -15,9 +15,11 @@ import { prepareBeyondPhoto, prepareBeyondVideo, type PreparedBeyondMedia } from
 import { colors } from '@/constants/theme';
 import { beyondStyles as styles } from './BeyondGameStyles';
 
-export function BeyondButton({ label, onPress, disabled = false, selected = false, variant = 'secondary' }: {
+export function BeyondButton({ label, onPress, disabled = false, selected = false, variant = 'secondary', icon }: {
   label: string; onPress: () => void; disabled?: boolean; selected?: boolean;
   variant?: 'secondary' | 'primary' | 'quiet' | 'danger' | 'choice' | 'chip';
+  /** Decorative category mark leaves the visible text and accessible action name intact. */
+  icon?: keyof typeof Ionicons.glyphMap;
 }) {
   return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled, selected }}
     disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.button,
@@ -25,6 +27,7 @@ export function BeyondButton({ label, onPress, disabled = false, selected = fals
       variant === 'chip' && styles.chip, selected && (variant === 'chip' ? styles.chipSelected : styles.selected),
       pressed && !disabled && styles.pressed, disabled && styles.disabled]}>
     {variant === 'choice' ? <Ionicons accessible={false} name={selected ? 'checkbox' : 'square-outline'} size={22} color={selected ? colors.primary : colors.textMuted} /> : null}
+    {icon ? <Ionicons accessible={false} name={icon} size={16} color={(selected && variant === 'chip') || variant === 'primary' ? colors.onAccent : colors.primary} /> : null}
     <Text style={[styles.buttonLabel, selected && styles.selectedLabel,
       (variant === 'primary' || (variant === 'chip' && selected)) && styles.primaryLabel,
       variant === 'quiet' && styles.quietLabel, variant === 'danger' && styles.dangerLabel]}>{label}</Text>

@@ -1,6 +1,7 @@
 /**
  * The expo-video layer of one Highlight card (split out of ReelCard.tsx for R4-03; behaviour unchanged).
  * Only the card on screen gets a file; a mounted neighbour renders an empty view (one decoded Highlight at a time).
+ * Explicit dimensions also fill the browser video element: absolute offsets alone retain its intrinsic size.
  * Playback decisions live in `reelPlayback.ts`; this component wires the player, focus/lock/mute and telemetry.
  * @sideEffects expo-video player; `TelemetryManager` first-frame, stall and playback-failure events.
  */
@@ -153,5 +154,8 @@ export function ReelVideoLayer({ clipId, videoUrl, active, focused, locked, mute
 const styles = StyleSheet.create({
   videoFill: {
     ...StyleSheet.absoluteFill,
+    // Expo Video web forwards raw styles to <video>, a replaced element that does not stretch from inset alone.
+    width: '100%',
+    height: '100%',
   },
 });

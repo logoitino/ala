@@ -1,3 +1,6 @@
+/** Profile sports-goal Rally card shows the existing donation target, status and preset thank-you.
+ * Guardian approval, eligibility and payment review stay in the current hooks and checkout flow.
+ * @sideEffects Rally reads/actions, donation checkout and published Share through existing helpers. */
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -176,7 +179,7 @@ export function RallyCard({
             {athleteName}: {thanks}
           </Text>
           {rally.thanksReelId && onOpenClip ? (
-            <Pressable accessibilityRole="button" onPress={() => onOpenClip(rally.thanksReelId as string)}>
+            <Pressable accessibilityRole="button" onPress={() => onOpenClip(rally.thanksReelId as string)} style={styles.linkHit}>
               <Text style={styles.link}>▶ Watch what it paid for</Text>
             </Pressable>
           ) : null}
@@ -237,7 +240,7 @@ export function RallyCard({
                         onPress={() => setThanksClip((current) => (current === clip.id ? null : clip.id))}
                         style={[styles.clip, thanksClip === clip.id && styles.clipOn]}
                       >
-                        <Text style={styles.clipText} numberOfLines={1}>
+                        <Text style={styles.clipText}>
                           {clip.title || 'Highlight'}
                         </Text>
                       </Pressable>
@@ -306,16 +309,17 @@ export function RallyCard({
 
 const styles = StyleSheet.create({
   card: {
-    gap: 10,
-    marginTop: 12,
-    padding: 16,
+    gap: 8,
+    marginTop: 4,
+    padding: 12,
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: FOCAL.mistJade,
+    borderColor: FOCAL.electricViolet,
   },
   headRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
@@ -337,7 +341,7 @@ const styles = StyleSheet.create({
     color: colors.deepGreen,
   },
   title: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '800',
     color: colors.text,
   },
@@ -359,6 +363,8 @@ const styles = StyleSheet.create({
   },
   numbers: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     justifyContent: 'space-between',
   },
   amount: {
@@ -388,35 +394,42 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.deepGreen,
   },
+  linkHit: { minHeight: 44, justifyContent: 'center' },
   actions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   flex: {
     flex: 1,
+    minWidth: 120,
   },
   primary: {
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: radii.md,
     backgroundColor: colors.deepGreen,
-    paddingVertical: 12,
+    paddingVertical: 6,
     paddingHorizontal: 12,
   },
   primaryText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '800',
     color: '#FFFFFF',
   },
   secondary: {
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: radii.md,
     borderWidth: 1.5,
     borderColor: colors.deepGreen,
-    paddingVertical: 12,
+    paddingVertical: 6,
     paddingHorizontal: 12,
   },
   secondaryText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '800',
     color: colors.deepGreen,
   },
@@ -442,6 +455,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   clip: {
+    minHeight: 44,
+    justifyContent: 'center',
     maxWidth: 160,
     borderRadius: radii.pill,
     borderWidth: 1,
@@ -459,7 +474,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   textButton: {
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 6,
   },
   textButtonLabel: {

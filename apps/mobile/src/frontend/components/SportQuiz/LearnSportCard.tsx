@@ -9,6 +9,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { learnableSport, useTriviaAvailability } from '@/hooks/useTriviaAvailability';
 import { colors, radii } from '@/constants/theme';
+import { SportIcon } from '@/components/UI/SportIcon';
+import { FOCAL } from '@/theme/motion';
 import { QuizButton } from './QuizButton';
 
 /** @purpose Visibility gate; the router is only touched once the card is actually shown. */
@@ -23,13 +25,14 @@ function LearnSportCardBody({ sport, firstName, athletePlayerId }: { sport: stri
     const router = useRouter();
     const title = `Learn ${sport} with ${firstName}`;
     return <View style={styles.card}>
-        <Text accessibilityRole="header" style={styles.title}>{title}</Text>
+        <View style={styles.heading}><SportIcon sport={sport} size={16} color={FOCAL.violetInk} /><Text accessibilityRole="header" style={styles.title}>{title}</Text></View>
         <Text style={styles.copy}>{`A quick trivia round about ${sport}, using your own weekly round. Your answers are just for you. ${firstName} never sees who played, only a rough monthly count if one of their fun facts comes up.`}</Text>
         <QuizButton label={title} onPress={() => router.push({ pathname: '/sport-quiz', params: athletePlayerId ? { sport, athlete: athletePlayerId } : { sport } } as unknown as Href)}/>
     </View>;
 }
 const styles = StyleSheet.create({
-    card: { gap: 8, padding: 16, marginHorizontal: 16, marginTop: 12, borderRadius: radii.lg, backgroundColor: colors.accentSoft },
-    title: { color: colors.text, fontSize: 18, fontWeight: '700' },
-    copy: { color: colors.textMuted, fontSize: 15, lineHeight: 21 },
+    card: { gap: 8, padding: 12, marginTop: 4, borderRadius: radii.lg, backgroundColor: FOCAL.mistViolet },
+    heading: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    title: { color: FOCAL.violetInk, fontSize: 15, fontWeight: '700', flexShrink: 1 },
+    copy: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
 });

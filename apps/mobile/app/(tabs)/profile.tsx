@@ -453,7 +453,7 @@ export default function MyHubTab() {
               onPress={() => setMenuOpen(true)}
               style={styles.menuHit}
             >
-              <Ionicons name="menu-outline" size={26} color={FOCAL.jadeInk} />
+              <Ionicons name="menu-outline" size={22} color={FOCAL.violetInk} />
             </Pressable>
           }
           onDropMalo={dropMalo}
@@ -526,8 +526,9 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 4,
-    paddingBottom: 120,
-    gap: 12,
+    // TabScreen reserves the measured floating dock; only this small scroll inset is needed here.
+    paddingBottom: 12,
+    gap: 8,
   },
   menuHit: {
     width: 44,
@@ -535,9 +536,9 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: FOCAL.mistJade,
+    backgroundColor: FOCAL.mistViolet,
     borderWidth: 1,
-    borderColor: 'rgba(0,115,60,0.18)',
+    borderColor: FOCAL.electricViolet,
   },
   menuFooter: {
     marginTop: 4,

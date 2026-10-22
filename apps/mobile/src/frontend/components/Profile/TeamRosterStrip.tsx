@@ -1,3 +1,6 @@
+/** Profile Team pane lists the existing school roster with labeled compact jersey rows.
+ * A claim badge remains a separate read from school verification; selecting a row opens that athlete.
+ * @sideEffects Reads claimed player ids through the roster library. */
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   row: {
-    minHeight: 52,
+    minHeight: 44,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -135,7 +138,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   rowSelf: {
     borderColor: FOCAL.jadeInk,
@@ -150,7 +153,7 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   name: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: colors.text,
   },

@@ -20,6 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useRef, useState } from 'react';
 
+import { SportIcon } from '@/components/UI/SportIcon';
 import { HypeBurst } from '@/components/Effects/HypeBurst';
 import { HypeStoryPills } from '@/components/Reels/HypeStoryPills';
 import { hypeStories } from '@/data/hypeStory';
@@ -42,6 +43,7 @@ export const REEL_REACTIONS = [
 
 type ReelActionOverlayProps = {
   athleteName: string;
+  sport?: string | null;
   /**
    * The athlete tag's state (PRIV-01): an approved tag shows a solid ✓ chip, a pending one a grey dashed "Tag
    * pending" chip, so viewers can tell them apart. Omitted: no chip.
@@ -89,6 +91,7 @@ type ReelActionOverlayProps = {
  */
 export function ReelActionOverlay({
   athleteName,
+  sport,
   tagState,
   schoolName,
   jerseyNumber,
@@ -118,8 +121,9 @@ export function ReelActionOverlay({
   const { live } = useAppRuntime();
   const reactions = REEL_REACTIONS.filter((reaction) => live.buttons[reaction.id]);
   const rail = live.highlights;
-  const jade = live.theme.jade;
-  const ink = live.theme.background;
+  // Video chrome must retain bright contrast even when Look publishes a light-page palette.
+  const jade = FOCAL.neonJade;
+  const ink = FOCAL.videoBase;
   const [auraBurst, setAuraBurst] = useState<{ x: number; y: number; key: number } | null>(null);
   const railFrame = useRef({ x: 0, y: 0, width: 56 });
   const railScrollY = useRef(0);
@@ -239,6 +243,7 @@ export function ReelActionOverlay({
             (!canOpenAthlete || !onOpenAthlete) && styles.disabled,
           ]}
         >
+          <SportIcon sport={sport} color={FOCAL.neonJade} size={18} />
           <Text style={styles.athleteName} numberOfLines={2}>
             {athleteName}
           </Text>
@@ -264,6 +269,7 @@ export function ReelActionOverlay({
             disabled={!onOpenFilmer}
             haptic="selection"
             hitSlop={6}
+            style={styles.filmerHit}
             onPress={onOpenFilmer}
           >
             <Text style={styles.filmedBy} numberOfLines={1}>
@@ -322,9 +328,9 @@ export function ReelActionOverlay({
 const SEKI_BALL = '🏈';
 
 const HALO_RINGS = [
-  { size: 74, opacity: 0.16 },
-  { size: 66, opacity: 0.28 },
-  { size: 58, opacity: 0.4 },
+  { size: 58, opacity: 0.16 },
+  { size: 52, opacity: 0.28 },
+  { size: 48, opacity: 0.4 },
 ] as const;
 
 /** Soft selected glow, painted in rings so the rail cannot clip a shadow against the circle. */
@@ -341,8 +347,8 @@ function HypeHalo({ kind, color }: { kind: PlayReactionId; color: string }) {
             borderRadius: ring.size / 2,
             backgroundColor: color,
             opacity: ring.opacity,
-            top: (76 - ring.size) / 2,
-            left: (76 - ring.size) / 2,
+            top: (60 - ring.size) / 2,
+            left: (60 - ring.size) / 2,
           }}
         />
       ))}
@@ -503,7 +509,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     minHeight: 44,
     justifyContent: 'center',
-    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
     paddingVertical: 4,
     backgroundColor: colors.videoScrim,
     ...Platform.select({
@@ -518,7 +527,8 @@ const styles = StyleSheet.create({
   },
   athleteName: {
     color: colors.onVideo,
-    fontSize: 21,
+    fontSize: 18,
+    flexShrink: 1,
     fontWeight: '900',
     letterSpacing: -0.4,
   },
@@ -545,6 +555,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
+  filmerHit: { minHeight: 44, justifyContent: 'center' },
   filmedBy: {
     color: 'rgba(243,251,247,0.82)',
     fontSize: 12,
@@ -557,8 +568,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     maxWidth: '100%',
     color: colors.onVideo,
-    fontSize: 14,
-    lineHeight: 19,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: '600',
     backgroundColor: colors.videoScrimSoft,
     borderRadius: 10,
@@ -568,9 +579,9 @@ const styles = StyleSheet.create({
   },
   caption: {
     color: colors.onVideo,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    lineHeight: 19,
+    lineHeight: 18,
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -578,12 +589,12 @@ const styles = StyleSheet.create({
   rail: {
     gap: 6,
     alignItems: 'center',
-    minWidth: 84,
+    minWidth: 68,
     paddingVertical: 6,
   },
-  railScroll: { maxHeight: '100%', flexGrow: 0, flexShrink: 0, minWidth: 84, maxWidth: '42%' },
+  railScroll: { maxHeight: '100%', flexGrow: 0, flexShrink: 0, minWidth: 68, maxWidth: '42%' },
   chipWrap: {
-    width: 84,
+    width: 68,
     alignItems: 'center',
     overflow: 'visible',
     zIndex: 2,
@@ -610,22 +621,22 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   face: {
-    width: 76,
-    height: 76,
+    width: 60,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
   },
   haloSlot: {
     position: 'absolute',
-    width: 76,
-    height: 76,
+    width: 60,
+    height: 60,
     top: 0,
     left: 0,
   },
   react: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.videoScrim,
     borderWidth: 1.5,
     borderColor: 'rgba(243,251,247,0.18)',
@@ -651,14 +662,14 @@ const styles = StyleSheet.create({
   },
   reactLabel: {
     color: 'rgba(243,251,247,0.88)',
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '800',
     marginTop: 2,
   },
   reactCount: {
     ...SCOREBOARD_DIGITS,
     color: colors.onVideo,
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '800',
     marginTop: -2,
   },
@@ -679,7 +690,7 @@ const styles = StyleSheet.create({
   },
   maloLabel: {
     color: FOCAL.neonJade,
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '800',
   },
   maloTotal: {

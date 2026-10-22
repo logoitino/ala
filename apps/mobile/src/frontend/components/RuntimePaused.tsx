@@ -1,5 +1,6 @@
+/** Paused surfaces keep recovery actions scrollable at large text sizes; caller owns safe-area/dock clearance. */
 import { type Href, useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
 import { EmptyState } from '@/components/UI/EmptyState';
 import { useAuth } from '@/context/AuthContext';
@@ -33,7 +34,7 @@ export function RuntimePaused({
   const { live } = useAppRuntime();
   const { isAdmin } = useAuth();
   return (
-    <View style={styles.wrap} accessibilityRole="text" accessibilityLabel={title}>
+    <ScrollView style={styles.root} contentContainerStyle={styles.wrap} accessibilityLabel={title}>
       <EmptyState
         kicker={isAdmin ? 'Paused from admin' : 'Paused'}
         title={title}
@@ -44,16 +45,18 @@ export function RuntimePaused({
         adminLabel={adminLabel}
         accent={FOCAL.goldInk}
       />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: FOCAL.backgroundBase },
   wrap: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: FOCAL.backgroundBase,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 28,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
 });

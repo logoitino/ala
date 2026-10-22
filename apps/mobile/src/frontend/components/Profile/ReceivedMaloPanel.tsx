@@ -1,3 +1,6 @@
+/** Private Profile and Parent HQ donation list retains the family-account amounts and preset-only thanks.
+ * Compact rows must preserve every donation origin and amount disclosure.
+ * @sideEffects Reads received donations and submits the selected thank-you through existing hooks. */
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -96,11 +99,12 @@ export function ReceivedMaloPanel({ playerId }: { playerId: string }) {
 const styles = StyleSheet.create({
   amounts: {
     alignItems: 'flex-end',
+    flexShrink: 1,
   },
   card: {
     gap: 8,
-    marginTop: 12,
-    padding: 16,
+    marginTop: 4,
+    padding: 12,
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
   },
@@ -112,7 +116,7 @@ const styles = StyleSheet.create({
     color: colors.deepGreen,
   },
   total: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: colors.text,
   },
@@ -138,9 +142,10 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 8,
   },
   thanked: {
     fontSize: 12,
@@ -149,6 +154,8 @@ const styles = StyleSheet.create({
   },
   thankButton: {
     alignSelf: 'flex-start',
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: radii.pill,
     borderWidth: 1.5,
     borderColor: colors.deepGreen,
@@ -165,7 +172,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   name: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: colors.text,
   },

@@ -1,6 +1,6 @@
 /**
  * `ReelCard` props, the memo comparison that keeps hype taps from re-rendering every mounted card, and the
- * small hype-burst helpers and layout constants the card shares with its styles
+ * small hype-burst helpers and measured chrome clearances the card shares with its styles
  * (split out of ReelCard.tsx for R4-03; behaviour unchanged — the memo wrapper itself stays in ReelCard.tsx).
  */
 
@@ -16,6 +16,8 @@ export type ReelCardProps = {
   height: number;
   /** Measured feed header clearance; oversized text stays scrollable below its scoreboard. */
   overlayInsetTop?: number;
+  /** Floating dock clearance applies only to chrome; media retains the full measured page. */
+  overlayInsetBottom?: number;
   tipping: boolean;
   sekiPlay?: boolean;
   /** When true, play if `active` even if the host route is not focused (profile / athlete modal). */
@@ -50,7 +52,7 @@ export function countFor(hype: ReelHype, kind: PlayReactionId): number {
 }
 
 export const LIVE_BANNER_RESERVE = 108;
-/** Scene already ends at the fan bar; keep chrome on the clip, just above the nav. */
+/** Default for standalone/modal reels; Home passes its measured floating-dock clearance. */
 export const OVERLAY_BOTTOM_INSET = 8;
 
 /**
@@ -68,6 +70,7 @@ export function sameReelCardProps(prev: ReelCardProps, next: ReelCardProps): boo
     prev.active !== next.active ||
     prev.height !== next.height ||
     prev.overlayInsetTop !== next.overlayInsetTop ||
+    prev.overlayInsetBottom !== next.overlayInsetBottom ||
     prev.tipping !== next.tipping ||
     prev.playbackActive !== next.playbackActive ||
     prev.userTipped !== next.userTipped ||

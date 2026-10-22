@@ -1,3 +1,5 @@
+/** Own Profile Vault control shows the current published lock rule and preserves its explanatory copy.
+ * The parent owns the save and busy state; this card only requests the selected existing lock action. */
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -54,12 +56,12 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: FOCAL.electricGold,
-    padding: 14,
+    padding: 12,
     gap: 8,
   },
   kicker: {
     color: FOCAL.emberInk,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
   },
   body: {

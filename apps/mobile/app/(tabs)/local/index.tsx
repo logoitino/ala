@@ -244,7 +244,7 @@ export default function LocalTab() {
 
   // Local left the fan bar for a Home pill, so this guard is now what `tabs.local` enforces.
   if (!live.tabs.local) {
-    return <RuntimePaused title="Local is paused" lede="Turn Local back on in Admin → Features, then Publish to app." />;
+    return <TabScreen><RuntimePaused title="Local is paused" lede="Turn Local back on in Admin → Features, then Publish to app." /></TabScreen>;
   }
 
   return (
@@ -292,6 +292,7 @@ export default function LocalTab() {
           <ScrollFxScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} onScroll={onScroll}>
             {hubs.length === 0 ? (
               <EmptyState
+            compact
                 kicker="Local"
                 title="Local boards are paused"
                 lede="Local matchups, polls and booster boards are unavailable right now."
@@ -324,6 +325,7 @@ export default function LocalTab() {
                 </View>
               ) : error ? (
                 <EmptyState
+            compact
                   kicker="Local"
                   title="Couldn’t load games"
                   lede={error}
@@ -335,6 +337,7 @@ export default function LocalTab() {
                 />
               ) : filteredGames.length === 0 ? (
                 <EmptyState
+            compact
                   kicker="Live matchups"
                   title={games.length === 0 ? live.copy.localEmpty : 'No games in this region'}
                   lede={
@@ -381,6 +384,7 @@ export default function LocalTab() {
               <Text style={styles.hubCopy}>Choose a team to add your cheer and see the community’s support.</Text>
               {visiblePolls.length === 0 ? (
                 <EmptyState
+            compact
                   kicker="School polls"
                   title={schoolFilter ? `No polls for ${schoolFilter}` : 'No school polls yet'}
                   lede={
@@ -489,8 +493,8 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 12,
     paddingTop: 8,
-    paddingBottom: 24,
-    gap: 10,
+    paddingBottom: 16,
+    gap: 8,
   },
   searchWrap: {
     flexDirection: 'row',
@@ -509,7 +513,7 @@ const styles = StyleSheet.create({
   search: {
     flex: 1,
     minWidth: 0,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.text,
     paddingVertical: 8,
   },
@@ -527,8 +531,8 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   sectionTitle: {
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: '800',
     color: colors.text,
     marginTop: 4,
@@ -538,12 +542,12 @@ const styles = StyleSheet.create({
   },
   hubCopy: {
     color: colors.textMuted,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    lineHeight: 20,
+    lineHeight: 19,
   },
   pollStack: {
-    gap: 10,
+    gap: 8,
   },
   pollHead: {
     flexDirection: 'row',
@@ -577,13 +581,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   sponsorRail: {
-    gap: 10,
+    gap: 8,
     paddingRight: 8,
     paddingBottom: 4,
   },
   ctaCard: {
-    width: 154,
-    minHeight: 144,
+    width: 144,
+    minHeight: 124,
     backgroundColor: TAB_ACCENTS.local.mist,
     borderRadius: radii.lg,
     borderWidth: 1.5,
@@ -596,13 +600,13 @@ const styles = StyleSheet.create({
   },
   ctaPlus: {
     color: TAB_ACCENTS.local.color,
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
-    lineHeight: 32,
+    lineHeight: 28,
   },
   ctaTitle: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
   },
   ctaLede: {
@@ -617,10 +621,10 @@ const styles = StyleSheet.create({
     display: 'none',
   },
   list: {
-    gap: 10,
+    gap: 8,
   },
   matchesPane: {
-    gap: 10,
+    gap: 8,
   },
   loadingBlock: {
     gap: 12,
@@ -639,7 +643,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '800',
     color: colors.text,
   },
@@ -654,7 +658,7 @@ const styles = StyleSheet.create({
   },
   retryLabel: {
     color: colors.onAccent,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
 });

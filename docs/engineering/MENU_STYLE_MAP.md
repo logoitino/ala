@@ -1,7 +1,7 @@
 <!-- Current shared UI source coverage is separate from dated rendered/native acceptance. -->
 # Menu and page style coverage
 
-**Current source alignment:** 2026-10-21 America/Denver · Calm Island after UX-07; UX-06 retained; earlier UX-02/UX-03 evidence below remains dated history. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
+**Current source alignment:** 2026-10-21 America/Denver · Calm Island with UX-10 sporty fan accents/compact layouts; UX-06 retained; earlier UX-02/UX-03 evidence below remains dated history. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
 `ACCESSIBILITY`, `DEVICE_QA` review; `DOCUMENTATION` keeps this map current.
 
 This is a source inventory of shared presentation coverage. It is not a rendered-device audit.
@@ -20,7 +20,8 @@ Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATU
 | `hooks/useSheetFrame.ts` | Centered sheets up to 440px, compact gutters, home-indicator clearance, common radius/border/shadow |
 | `ScreenShell.tsx` / `TabScreen.tsx` | Calm Island light page canvas without MenuBackdrop/corner decoration; dark video layouts retain contrast |
 | `ScreenHeading.tsx` | Wrapping screen header, readable supporting text and decorative accent; published text/gold and caller accent remain authoritative |
-| `UI/FanTabBar.tsx` / `UI/AnimatedButton.tsx` | Existing fan destinations/actions, wrapping labels, selected/disabled semantics, 44-point targets and OS Reduce Motion feedback |
+| `UI/FanTabBar.tsx` / `UI/AnimatedButton.tsx` | Absolute measured floating fan dock, wrapping labels, selected/disabled semantics,44-point targets and OS Reduce Motion; Home media extends behind it, normal TabScreen reserves actual dock height. |
+| `UI/SportIcon.tsx` / `theme/motion.ts` | Decorative installed sport marks beside visible text; neutral fallback, custom volleyball seams; destination ink/mist accents preserve primary field artwork and reward semantics. |
 
 Donation uses Amount → Options → Review in the same popup. Upload uses Video → Details →
 Review with optional settings/selection subpages. Persistent navigation stays outside page
@@ -258,5 +259,16 @@ My Sports uses existing Profile sheet chrome and retained draft Back/Save. Parti
 Sports AdminChrome; recorded sport corrections reuse Highlights; unknown/original game log correction reuses
 Stats. Local Games/Polls/Boosters retains always-visible short icon labels in a44-point row. Sponsor rail and
 sponsor CTA belong under Boosters. Floating fan dock uses56-point body plus safe footer, opaque targets and
-background-only scroll softening; reserved footer preserves Home video onLayout geometry. Existing destinations
-and runtime menus are unchanged. Actual local verification/physical gaps are in the feature trackers.
+background-only scroll softening. That UX-09 checkpoint reserved the footer; owner-approved UX-10 now
+overlays full-height Home media and measures clearance only for controls and normal page footers. Existing
+destinations/runtime menus are unchanged. Actual local verification/physical gaps are in the feature trackers.
+
+
+### 2026-10-21 America/Denver — UX-10 sporty presentation continuation
+
+All seven fan destinations compact panels/headings/cards and retain44-point actions/text scaling.
+Installed sport icons accompany visible labels; cyan Local, violet Activity/Profile, gold awards and
+ember Drip join jade/sand. Absolute dock overlays Home video; actual wrap height clears captions/
+reactions/peek and other tab footers, including paused recovery screens. Full-height video/pager/resize
+geometry uses one measured screen height. Independent source review accepted actual contrast/footer
+repairs. Local browser/Jest receipts and native/system-text gaps: [UX-10](../agents/UX-10.md).

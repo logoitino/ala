@@ -10,6 +10,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { SportField } from '@/components/Effects/SportField';
+import { SportIcon } from '@/components/UI/SportIcon';
 import { ProfileAvatarPicker } from '@/components/Profile/ProfileAvatarPicker';
 import { SubscriberCrest } from '@/components/Profile/SubscriberCrest';
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
@@ -117,7 +118,7 @@ export function ProfileHeroAvatar({
           <View style={styles.compactAvatarStage}>
             {schoolBadge ? <View style={styles.compactSchoolBand}><SchoolHeroBand badge={schoolBadge} /></View> : null}
             <View style={[styles.avatarRing, styles.compactAvatarRing, { borderColor: tier.color, backgroundColor: tier.face }]}>
-              <ProfileAvatarPicker uri={avatarUrl} editable={canEditAvatar} size={80} onUploaded={onAvatarUploaded}>
+              <ProfileAvatarPicker uri={avatarUrl} editable={canEditAvatar} size={64} onUploaded={onAvatarUploaded}>
                 <Text style={[styles.initials, styles.compactInitials, { color: tier.ink }]}>{initials}</Text>
               </ProfileAvatarPicker>
               {subscriberCrest ? <View style={styles.crest}><SubscriberCrest /></View> : null}
@@ -144,6 +145,7 @@ export function ProfileHeroAvatar({
           <View style={styles.compactDetails}>
             {details.map((detail) => (
               <View key={detail.label} style={styles.compactDetail} accessible accessibilityLabel={`${detail.label}: ${detail.value}`}>
+                {detail.label === 'Sport' ? <SportIcon sport={detail.value} size={15} color={FOCAL.violetInk} /> : null}
                 <Text style={styles.compactDetailValue}>{detail.label === 'Class' ? `Class ${detail.value}` : detail.value}</Text>
               </View>
             ))}
@@ -277,24 +279,24 @@ const styles = StyleSheet.create({
     padding: 12,
     paddingTop: 12,
     paddingBottom: 12,
-    gap: 10,
+    gap: 8,
     borderTopWidth: 3,
     borderTopColor: FOCAL.electricViolet,
   },
   // The identity can take a second line at large text sizes instead of shrinking the athlete's name.
-  compactIdentityRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
-  compactAvatarStage: { width: 88, paddingTop: 2, paddingBottom: 8 },
-  compactAvatarRing: { width: 88, height: 88, borderRadius: 44 },
-  compactInitials: { fontSize: 28 },
-  compactSchoolBand: { position: 'absolute', top: 8, left: 0, right: 0, height: 64, borderRadius: radii.sm, overflow: 'hidden' },
+  compactIdentityRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
+  compactAvatarStage: { width: 72, paddingTop: 2, paddingBottom: 8 },
+  compactAvatarRing: { width: 72, height: 72, borderRadius: 36 },
+  compactInitials: { fontSize: 24 },
+  compactSchoolBand: { position: 'absolute', top: 8, left: 0, right: 0, height: 52, borderRadius: radii.sm, overflow: 'hidden' },
   compactSchoolCrest: { position: 'absolute', right: -8, bottom: 2 },
   compactIdentity: { flexGrow: 1, flexShrink: 1, flexBasis: 120, minWidth: 0, gap: 3 },
   compactLeft: { textAlign: 'left', letterSpacing: 0.9 },
-  compactName: { marginTop: 0, fontSize: 25, lineHeight: 29, letterSpacing: -0.6, textAlign: 'left' },
+  compactName: { marginTop: 0, fontSize: 22, lineHeight: 27, letterSpacing: -0.4, textAlign: 'left' },
   compactSchool: { fontSize: 12, textAlign: 'left' },
   compactDetails: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  compactDetail: { maxWidth: '100%', flexShrink: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: FOCAL.mistViolet },
-  compactDetailValue: { color: FOCAL.violetInk, fontSize: 12, fontWeight: '800' },
+  compactDetail: { maxWidth: '100%', flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: FOCAL.mistViolet },
+  compactDetailValue: { color: FOCAL.violetInk, fontSize: 12, fontWeight: '800', flexShrink: 1 },
   compactAuraRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   compactAura: { flexGrow: 1, flexShrink: 1, flexBasis: 120, gap: 5 },
   compactAuraLabel: { textAlign: 'left', fontWeight: '900' },

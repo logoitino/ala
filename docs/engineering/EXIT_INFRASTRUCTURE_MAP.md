@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `4686ad56e9ed` |
-| Last announced plan | `4686ad56e9ed` — up to date |
+| Exit plan version (what the app uses on Supabase) | `934f9a1e1a55` |
+| Last announced plan | `934f9a1e1a55` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
 | Latest migration | `20261021233000_athlete_sports.sql` (49 files) |
-| Canonical schema hash | `937e105b0edcbb51769797afdb672b7045a79455b8e8c22eff0c90d6a84cb181` (`schema.sql`) |
-| Complete source/configuration content hash | `4686ad56e9edbf20ab4b6f4571b0029417b22a481204b474417f93938359396f` across 1268 files |
+| Canonical schema hash | `77bdaaf5d4bdc7ae49ff4b50b613b4e206c10b65d61ee214a6cb8b7e64eff43e` (`schema.sql`) |
+| Complete source/configuration content hash | `934f9a1e1a55c08b923531d8817dc0943acd358af0b984aa0d94ed7803f27952` across 1270 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.

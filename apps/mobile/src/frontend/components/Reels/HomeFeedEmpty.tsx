@@ -57,14 +57,14 @@ export function HomeFeedEmpty({
 const styles = StyleSheet.create({
   empty: {
     color: colors.onVideo,
-    fontSize: 18,
-    lineHeight: 26,
+    fontSize: 13,
+    lineHeight: 22,
     fontWeight: '700',
     textAlign: 'center',
   },
   emptyActions: {
-    marginTop: 18,
-    gap: 10,
+    marginTop: 12,
+    gap: 8,
     alignItems: 'center',
   },
   emptyPrimary: {
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   },
   emptyPrimaryLabel: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '800',
   },
   emptySecondary: {
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   },
   emptySecondaryLabel: {
     color: colors.onVideo,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
 });

@@ -69,7 +69,7 @@ export default function SpotlightTab() {
 
   if (!live.tabs.spotlight) {
     return (
-      <RuntimePaused title="Spotlight is paused" lede="Turn Spotlight back on in Admin → Features, then Publish to app." />
+      <TabScreen><RuntimePaused title="Spotlight is paused" lede="Turn Spotlight back on in Admin → Features, then Publish to app." /></TabScreen>
     );
   }
 
@@ -111,6 +111,7 @@ export default function SpotlightTab() {
           </ScrollFxItem>
         ) : !loading ? (
           <EmptyState
+            compact
             kicker="Spotlight"
             title={live.copy.spotlightEmpty}
             lede="When an athlete is featured, their Spotlight and Highlight appear here."
@@ -216,10 +217,10 @@ export default function SpotlightTab() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingTop: 8,
-    paddingBottom: 120,
-    gap: 20,
+    paddingBottom: 16,
+    gap: 10,
   },
   boot: {
     minHeight: 80,
@@ -230,16 +231,16 @@ const styles = StyleSheet.create({
   },
   loadingLabel: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 19,
   },
   list: {
-    gap: 16,
+    gap: 8,
   },
   section: {
     color: FOCAL.goldInk,
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: '800',
     letterSpacing: -0.2,
   },

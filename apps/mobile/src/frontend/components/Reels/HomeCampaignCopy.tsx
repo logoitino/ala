@@ -5,6 +5,7 @@
  */
 import { StyleSheet, Text, View } from 'react-native';
 
+import { colors } from '@/constants/theme';
 import type { AppRuntimeConfig } from '@/lib/runtime';
 import { FOCAL } from '@/theme/motion';
 
@@ -19,7 +20,7 @@ export function HomeCampaignCopy({ runtime }: { runtime: AppRuntimeConfig }) {
         <View style={[styles.campaign, { borderColor: FOCAL.electricGold }]}>
           <Text style={[styles.campaignTitle, { color: FOCAL.electricGold }]}>{runtime.copy.homeBannerTitle}</Text>
           {runtime.copy.homeBannerBody.trim() ? (
-            <Text style={[styles.campaignBody, { color: runtime.theme.text }]}>{runtime.copy.homeBannerBody}</Text>
+            <Text style={[styles.campaignBody, { color: colors.onVideo }]}>{runtime.copy.homeBannerBody}</Text>
           ) : null}
         </View>
       ) : null}
@@ -29,7 +30,7 @@ export function HomeCampaignCopy({ runtime }: { runtime: AppRuntimeConfig }) {
             <Text style={[styles.homeKicker, { color: FOCAL.electricGold }]}>{runtime.copy.homeKicker}</Text>
           ) : null}
           {runtime.copy.homeLede.trim() ? (
-            <Text style={[styles.homeLede, { color: runtime.theme.text }]}>{runtime.copy.homeLede}</Text>
+            <Text style={[styles.homeLede, { color: colors.onVideo }]}>{runtime.copy.homeLede}</Text>
           ) : null}
         </View>
       ) : null}
@@ -43,8 +44,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     backgroundColor: 'rgba(15,20,22,0.78)',
     borderColor: FOCAL.electricGold,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     gap: 4,
   },
   campaignTitle: {

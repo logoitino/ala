@@ -1,4 +1,5 @@
-/** One Spotlight award row; the featured card adds award-gold field lines and a jersey patch (UX-08). */
+/** Compact Spotlight award rows keep readable names, award-gold field lines and jersey patches. */
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
 import { CardShine } from '@/components/Effects/CardShine';
@@ -65,7 +66,7 @@ export function SpotlightAwardCard({ award, featured = false, onPress }: Spotlig
       </View>
       {featured ? (
         <View style={styles.crown}>
-          <Text style={styles.crownEmoji}>👑</Text>
+          <Ionicons name="trophy" size={14} color={FOCAL.goldInk} accessible={false} />
         </View>
       ) : null}
       <View style={styles.copy}>
@@ -89,15 +90,15 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   card: {
-    minHeight: 96,
+    minHeight: 80,
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: FOCAL.electricGold,
     backgroundColor: FOCAL.mistGold,
-    padding: 14,
+    padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 10,
     overflow: 'hidden',
   },
   featured: {
@@ -123,9 +124,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   portrait: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     borderWidth: 2.5,
     backgroundColor: colors.surface,
     alignItems: 'center',
@@ -145,7 +146,7 @@ const styles = StyleSheet.create({
   crown: {
     position: 'absolute',
     top: -6,
-    left: 58,
+    left: 46,
     width: 26,
     height: 26,
     borderRadius: 13,
@@ -165,16 +166,14 @@ const styles = StyleSheet.create({
       default: { boxShadow: `0px 0px 6px ${FOCAL.electricGold}` },
     }),
   },
-  crownEmoji: {
-    fontSize: 13,
-  },
   initials: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     letterSpacing: 0.6,
   },
   copy: {
     flex: 1,
+    minWidth: 0,
     gap: 3,
   },
   kicker: {
@@ -188,12 +187,12 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
   },
   headline: {
     color: FOCAL.goldInk,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   tier: {

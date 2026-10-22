@@ -1,6 +1,7 @@
 /** Dock scroll composition must leave the existing deepest-scroll and dwell telemetry unchanged. */
 import { act, renderHook } from '@testing-library/react-native';
 import { type ReactNode } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { FanNavigationProvider, useFanDockSoftened } from '@/context/FanNavigationContext';
 import { useSurfaceUsage } from '../useSurfaceUsage';
 import { telemetry } from '@/services/TelemetryManager';
@@ -11,7 +12,8 @@ jest.mock('expo-router', () => ({
   useFocusEffect: (callback: () => (() => void)) => require('react').useEffect(() => mockFocused ? callback() : undefined, [callback, mockFocused]),
 }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn(), trackTabDwell: jest.fn(), trackScroll: jest.fn(), trackIssue: jest.fn() } }));
-const wrapper = ({ children }: { children: ReactNode }) => <FanNavigationProvider>{children}</FanNavigationProvider>;
+// Match the real root safe-area boundary while retaining the original telemetry/scroll assertions.
+const wrapper = ({ children }: { children: ReactNode }) => <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, right: 0, bottom: 34, left: 0 } }}><FanNavigationProvider>{children}</FanNavigationProvider></SafeAreaProvider>;
 beforeEach(() => { jest.useFakeTimers(); jest.clearAllMocks(); mockPath = '/local'; mockFocused=true; });
 afterEach(() => jest.useRealTimers());
 

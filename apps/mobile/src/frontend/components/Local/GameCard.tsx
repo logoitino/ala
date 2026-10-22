@@ -6,6 +6,7 @@
  */
 import { Image, StyleSheet, Text, View } from 'react-native';
 
+import { SportIcon } from '@/components/UI/SportIcon';
 import { SportField } from '@/components/Effects/SportField';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { gameScore, gameScoreboardStatus, gameTeamName } from '@/components/Local/gamePresentation';
@@ -90,7 +91,7 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
         <SportField sport={sport} opacity={0.08} />
       </View>
       <View style={styles.topRow}>
-        <Text style={styles.sport}>{sport || 'Game day'}</Text>
+        <View style={styles.sportBadge}><SportIcon sport={sport} size={16} color={TAB_ACCENTS.local.color} /><Text style={styles.sport}>{sport || 'Game day'}</Text></View>
         <View style={[styles.statusTag, status.isLive && styles.statusLive]}>
           <Text style={[styles.statusText, status.isLive && styles.statusLiveText]}>{status.label}</Text>
         </View>
@@ -139,6 +140,7 @@ const styles = StyleSheet.create({
     gap: 8,
     ...cardShadow,
   },
+  sportBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1, maxWidth: '100%' },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',

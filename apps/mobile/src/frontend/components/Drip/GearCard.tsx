@@ -1,3 +1,5 @@
+/** Compact Drip rack card uses ember recognition while preserving catalog copy, price and earned Aura.
+ * The whole tile opens ProductSheet; checkout and purchase disclosures stay in that existing sheet. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -43,7 +45,7 @@ export function GearCard({ item, onPress }: GearCardProps) {
       <View style={styles.top}>
         <View style={styles.iconWrap}>
           <View pointerEvents="none" style={styles.iconGloss} />
-          <Ionicons name={ICONS[item.icon]} size={22} color={FOCAL.emberInk} />
+          <Ionicons name={ICONS[item.icon]} size={18} color={FOCAL.emberInk} />
         </View>
         <View style={styles.badges}>
           <View style={[styles.badge, styles.priceBadge]}>
@@ -67,21 +69,21 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: FOCAL.ember,
-    padding: 14,
-    gap: 6,
+    padding: 10,
+    gap: 5,
     ...cardShadow,
   },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: 8,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: FOCAL.mistGold,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     backgroundColor: colors.surface,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
   },
   priceBadge: {
@@ -128,14 +130,14 @@ const styles = StyleSheet.create({
   },
   kind: {
     color: colors.textMuted,
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   name: {
     color: colors.text,
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '800',
   },
   blurb: {

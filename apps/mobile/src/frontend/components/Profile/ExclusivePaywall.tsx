@@ -1,3 +1,5 @@
+/** Public Profile Vault callout retains the one-time access-pass terms supplied by the published catalog.
+ * Opening checkout still uses the parent's existing purchase flow and reviewed payment sheet. */
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -48,7 +50,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: FOCAL.jadeInk,
-    padding: 16,
+    padding: 12,
     gap: 8,
   },
   kicker: {

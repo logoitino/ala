@@ -224,3 +224,4 @@ with these files.
 | [Multiple sport plan](engineering/design/MULTISPORT_PROFILE_PLAN.md) | Backend/admin-first and athlete/public profile execution. |
 | [Compact fan design](engineering/design/COMPACT_FAN_UI_DESIGN.md) | Compact labeled menus, Local hierarchy and dock behavior. |
 | [Compact fan plan](engineering/design/COMPACT_FAN_UI_PLAN.md) | Exemption, geometry, scroll state and verification tasks. |
+| [UX-10](agents/UX-10.md) | Sport accents, compact fan tabs and video behind the floating dock; ownership and actual local/native evidence. |

@@ -64,10 +64,10 @@ export function CrewAlertsCard() {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.border, padding: 16, gap: 10 },
+  card: { backgroundColor: colors.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.border, padding: 12, gap: 10 },
   kicker: { color: colors.textMuted, fontSize: 12, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
   row: { minHeight: 44, justifyContent: 'center', gap: 2 },
-  title: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  title: { color: colors.text, fontSize: 14, fontWeight: '700' },
   body: { color: colors.textMuted, fontSize: 13 },
   error: { color: colors.danger, fontSize: 13 },
   clear: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center', paddingHorizontal: 12 },

@@ -1,7 +1,8 @@
 /**
  * Wrapper for each fan tab: safe-area handling, runtime background colour, and a short fade between tabs.
  * Feature containment uses fixed route scopes; money/access never offer automatic retry.
- * Pages carry no corner decoration (Calm Island, owner 2026-10-15). `dark` switches to the night background and drops the top inset (full-bleed screens such as Highlights).
+ * Ordinary fan screens reserve the measured floating dock. Dark Highlights fill the shell behind it;
+ * only their interactive chrome reserves dock clearance, so video and paging use the same full height.
  */
 
 import { usePathname } from 'expo-router';
@@ -14,6 +15,7 @@ import Animated, { FadeIn, FadeInDown, FadeOut, useReducedMotion } from 'react-n
 
 import { colors } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useFanDockHeight } from '@/context/FanNavigationContext';
 
 type TabScreenProps = {
   children: ReactNode;
@@ -25,10 +27,11 @@ export function TabScreen({ children, style, dark = false }: TabScreenProps) {
   const { live } = useAppRuntime();
   const pathname = usePathname();
   const reduce = useReducedMotion();
+  const dockHeight = useFanDockHeight();
   return (
     <SafeAreaView
       edges={dark ? ['left', 'right'] : ['top', 'left', 'right']}
-      style={[styles.root, { backgroundColor: dark ? colors.night : live.theme.background }, style]}
+      style={[styles.root, { backgroundColor: dark ? colors.night : live.theme.background }, style, { paddingBottom: dark ? 0 : dockHeight }]}
     >
       <Animated.View
         entering={reduce ? FadeIn.duration(80) : FadeInDown.duration(240)}

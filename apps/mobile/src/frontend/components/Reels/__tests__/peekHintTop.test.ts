@@ -2,6 +2,11 @@
 import { peekHintTop } from '@/components/Reels/ReelPage';
 
 describe('peekHintTop', () => {
+  it('accounts for the measured floating dock and skips hints squeezed against the caption', () => {
+    expect(peekHintTop(770, 342, 112)).toBeNull();
+    expect(peekHintTop(770, 56, 112)).toBeCloseTo(302.68);
+  });
+
   it('drops below the chips when the Home header is tall', () => {
     // 770pt page under a ~330pt scoreboard + rivalry banner + pill row.
     expect(peekHintTop(770, 342)).toBe(446);

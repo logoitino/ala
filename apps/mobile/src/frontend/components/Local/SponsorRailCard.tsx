@@ -64,7 +64,7 @@ export function SponsorRailCard({
 
 const styles = StyleSheet.create({
   sponsorCard: {
-    width: 154,
+    width: 144,
     backgroundColor: FOCAL.mistCyan,
     borderRadius: radii.lg,
     borderWidth: 1,
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   sponsorName: {
     color: colors.text,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
   sponsorSchool: {

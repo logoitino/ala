@@ -5,6 +5,7 @@
 
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
+import { SportIcon } from '@/components/UI/SportIcon';
 import * as Haptics from 'expo-haptics';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -383,7 +384,7 @@ export function AuraTradingCard({
                       <View style={styles.teamBlock}>
                         <View style={styles.teamRow}>
                           {schoolBadge ? <SchoolCrestMark badge={schoolBadge} size={24} /> : null}
-                          <Text style={styles.teamLine} numberOfLines={1}>
+                          <Text style={styles.teamLine}>
                             {teamLine}
                           </Text>
                         </View>
@@ -422,12 +423,15 @@ export function AuraTradingCard({
               }}
             >
               <CardChrome tier={tier}>
+                <View style={styles.sportHeading}>
+                {isAthleteFace && sport?.trim() ? <SportIcon sport={sport} size={15} color={tier.ink} /> : null}
                 <Text style={styles.backKicker}>
                   {rankLabel}
                   {isAthleteFace && sport?.trim() ? ` · ${sport.trim()}` : ''}
                   {teamLine ? ` · ${teamLine}` : ''}
                   {divisionLine ? ` · ${divisionLine}` : isFan && isAthleteFace ? ' · Fan + athlete sheet' : ' · Stats sheet'}
                 </Text>
+                </View>
                 <View style={styles.grid}>
                   {careerPreview && careerPreview.length > 0
                     ? careerPreview.slice(0, 3).map((stat, index) => (
@@ -496,7 +500,7 @@ export function AuraTradingCard({
               onPress={() => {
                 if (!active) flip();
               }}
-              style={[styles.faceToggleItem, active && { backgroundColor: tier.color }]}
+              style={[styles.faceToggleItem, active && { backgroundColor: tier.ink }]}
             >
               <Text style={[styles.faceToggleLabel, { color: active ? '#FFFFFF' : tier.ink }]}>
                 {side === 'season' ? 'Stats' : 'Identity'}
@@ -573,8 +577,8 @@ const styles = StyleSheet.create({
   face: {
     borderRadius: radii.lg,
     borderWidth: 1.5,
-    padding: 14,
-    gap: 10,
+    padding: 10,
+    gap: 8,
     overflow: 'hidden',
   },
   tick: {
@@ -626,15 +630,15 @@ const styles = StyleSheet.create({
   identity: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   avatarWrap: {
-    width: 72,
-    height: 72,
+    width: 64,
+    height: 64,
   },
   avatar: {
-    width: 72,
-    height: 72,
+    width: 64,
+    height: 64,
     borderRadius: 16,
     backgroundColor: colors.surface,
     borderWidth: 1.5,
@@ -669,11 +673,12 @@ const styles = StyleSheet.create({
   },
   copy: {
     flex: 1,
+    minWidth: 0,
     gap: 4,
   },
   name: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
   },
   handle: {
@@ -726,6 +731,7 @@ const styles = StyleSheet.create({
   },
   progressMeta: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: 'baseline',
     gap: 8,
@@ -751,12 +757,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   backKicker: {
+    flexShrink: 1,
     color: colors.textMuted,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
+  sportHeading: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -835,6 +843,7 @@ const styles = StyleSheet.create({
   },
   faceToggle: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignSelf: 'center',
     borderWidth: 1,
     borderRadius: 999,
@@ -844,9 +853,10 @@ const styles = StyleSheet.create({
   },
   faceToggleItem: {
     minWidth: 112,
-    minHeight: 36,
+    minHeight: 44,
     borderRadius: 999,
     paddingHorizontal: 14,
+    paddingVertical: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -856,7 +866,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   verifyBtn: {
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: radii.md,
     borderWidth: 1.5,
     borderColor: FOCAL.neonJade,

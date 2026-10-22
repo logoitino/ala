@@ -5,6 +5,7 @@
  * the player, and loads its source on activation (regression: the lazy-load ref was seeded with the URL, so
  * a card's first clip was never loaded).
  */
+import { StyleSheet } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { ReelCard } from '@/components/Reels/ReelCard';
@@ -24,7 +25,7 @@ jest.mock('expo-video', () => {
       mockCreatePlayer(source);
       return mockVideoPlayer;
     },
-    VideoView: () => <View testID="video-view" />,
+    VideoView: ({ style }: { style: import('react-native').StyleProp<import('react-native').ViewStyle> }) => <View testID="video-view" style={style} />,
   };
 });
 jest.mock('expo', () => ({ useEventListener: (_player: unknown, event: string, callback: (payload: any) => void) => { mockVideoEvents[event] = callback; } }));
@@ -125,6 +126,20 @@ beforeEach(() => {
 });
 
 describe('ReelCard photo-story branch', () => {
+  it('gives the real web video explicit dimensions so its replaced element fills the measured page', async () => {
+    await renderCard({ ...base, id: 'v1', videoUrl: 'https://x/v.mp4' });
+    expect(StyleSheet.flatten(screen.getByTestId('video-view').props.style)).toMatchObject({ width: '100%', height: '100%' });
+  });
+
+  it('updates memoized chrome when enlarged dock clearance changes while media keeps its full page', async () => {
+    const clip={...base,id:'v1',videoUrl:'https://x/v.mp4'},onTip=jest.fn();
+    const view=await render(<ReelCard clip={clip} player={null} active height={800} overlayInsetBottom={70} tipping={false} onTip={onTip} />);
+    const renders=mockOverlay.mock.calls.length;
+    await view.rerender(<ReelCard clip={clip} player={null} active height={800} overlayInsetBottom={118} tipping={false} onTip={onTip} />);
+    expect(mockOverlay.mock.calls.length).toBeGreaterThan(renders);
+    expect(StyleSheet.flatten(screen.getByTestId('video-view').props.style)).toMatchObject({width:'100%',height:'100%'});
+  });
+
   it('renders photos instead of a video player and counts a view after 3 s once a photo loaded', async () => {
     await renderCard({ ...base, mediaType: 'photo_story', photoCount: 3, coverUrl: 'https://x/0.jpg' });
     await act(async () => {});

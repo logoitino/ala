@@ -1841,6 +1841,57 @@
           "apps/mobile/src/frontend/components/ScreenHeading.tsx"
         ]
       }
+    },
+    {
+      "id": "UX-10",
+      "title": "Sport accents, compact fan tabs and full-height Highlights",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-10-22T02:39:23.346Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Existing fan theme/icon/type/padding and measured floating dock/video layout only; no new data, business action, write, access, collection or reporting duty. Existing runtime/destinations/player behavior preserved.",
+        "reviewedBy": "Outside-session Codex root and independent source/accessibility reviewer"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/mobile/app/(tabs)/index.tsx",
+          "apps/mobile/app/(tabs)/_layout.tsx",
+          "apps/mobile/src/frontend/components/UI/FanTabBar.tsx",
+          "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx",
+          "apps/mobile/src/frontend/components/TabScreen.tsx",
+          "apps/mobile/src/frontend/components/Reels/ReelVideoLayer.tsx",
+          "apps/mobile/src/frontend/components/UI/SportIcon.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-10-22T02:40:45.206Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-10.md",
+              "command": "Independent read-only source/accessibility exemption review of current fan layout/dock, Home measuredpager, TabScreen and fan/profile presentation before appcode",
+              "result": "ACCEPT: existing visual/presentation and in-memory measured dock only; no new data/businessaction/write/access/collection/reporting. Full-height media/offset and footer/contrast/text/primary/privacy safeguards recorded. Native/hosted verification remains separate."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-22T03:04:49.434Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-10.md",
+              "command": "pnpm detection:scan (pnpm check plus portal106 tests); independent source review; current local browser320/390/150%CSStext fixtures and actual visible route captures",
+              "result": "PASS local source/presentation: final full gate and portal tests, no skipped checks; dock/video/page bottoms match and controls clear measured dock, Profile primary/privacy preserved. Drip runtime off, original-source playback, native/DynamicType/keyboard/hosted acceptance remain unverified. Source binding and retained run receipts in tracker."
+            }
+          ]
+        }
+      }
     }
   ]
 }

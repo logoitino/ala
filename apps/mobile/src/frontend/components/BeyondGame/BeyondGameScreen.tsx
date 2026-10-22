@@ -1,4 +1,4 @@
-/** BEYOND-01 actor-bound discovery/history/export with UX-06 token-based browsing hierarchy. */
+/** Actor-bound Beyond discovery/history/export uses compact sport-marked categories without changing submission/privacy guards. */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import type { BeyondCategory, BeyondPost } from '@tapuai/shared-types/beyondGame';
@@ -119,6 +119,7 @@ function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = 
   </View>;
   const viewerSport = useViewerSport();
   const continuing = exportState.current.started && Object.values(exportState.current.cursors).some(Boolean);
+  const categoryIcons = { workout: 'barbell-outline', service: 'heart-outline', learning: 'school-outline', story: 'book-outline' } as const;
   return <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.screen}>
     <View style={styles.header}>
       {/* UX-08: the same fading field band as every tab heading (viewer's sport, generic for fans). */}
@@ -126,7 +127,7 @@ function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = 
       <Text accessibilityRole="header" style={styles.title}>Beyond the Game</Text>
       <Text style={styles.hint}>Share effort, kindness, learning and everyday stories. Highlights remains the game showcase.</Text>
     </View>
-    <View style={styles.filters}>{categories.map(item => <BeyondButton variant="chip" key={item.id} label={item.label} selected={category === item.id} disabled={model.busy || compose}
+    <View style={styles.filters}>{categories.map(item => <BeyondButton variant="chip" key={item.id} label={item.label} icon={categoryIcons[item.id]} selected={category === item.id} disabled={model.busy || compose}
       onPress={() => { if (navigationCurrent() && !compose) { setCategory(item.id); setFeedBefore(null); } }} />)}</View>
     {category === 'workout' ? <Text style={styles.hint}>{WORKOUT_IDEAS_LINE}</Text> : null}
     {!compose && active ? renderLegacy?.(category) : null}

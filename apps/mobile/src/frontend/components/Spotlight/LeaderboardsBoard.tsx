@@ -119,6 +119,7 @@ export function LeaderboardsBoard({ boards, loading, error, onRetry, onOpenAthle
   if (error && !boards) {
     return (
       <EmptyState
+            compact
         kicker="Boards"
         title="The boards did not load"
         lede={error}
@@ -213,7 +214,7 @@ export function LeaderboardsBoard({ boards, loading, error, onRetry, onOpenAthle
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: 10,
+    gap: 8,
   },
   header: {
     flexDirection: 'row',
@@ -233,8 +234,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tab: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: colors.border,
@@ -264,8 +267,8 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 19,
   },
   list: {
     gap: 8,
@@ -273,9 +276,11 @@ const styles = StyleSheet.create({
   share: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
   shareText: { color: FOCAL.goldInk, fontWeight: '800' },
   row: {
+    minHeight: 44,
+    flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
     paddingHorizontal: space.sm,
     paddingVertical: 10,
     borderRadius: radii.lg,
@@ -313,7 +318,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
   },
   subtitle: {

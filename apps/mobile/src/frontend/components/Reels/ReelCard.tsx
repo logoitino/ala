@@ -1,6 +1,7 @@
 /**
  * One full-screen Highlights clip: video player, hype rail (Seki / Aura / Flex), donate button, save, report,
- * owner peek, "Filmed by" credit and the live play banner.
+ * owner peek, "Filmed by" credit and the live play banner. Media fills the page behind the dock;
+ * the measured bottom inset moves only caption/reaction chrome.
  * `ReelCard` is a thin wrapper that passes identity-stable callbacks to the memoised `ReelCardImpl`; keep that
  * split or a stale handler can run (see STATE.md, 2026-09-29 pre-merge fixes). View counting needs 3 s of real
  * playback (`useReelViewTracker`). The Rally meter is not here; Home (app/(tabs)/index.tsx) places it.
@@ -106,6 +107,7 @@ function ReelCardImpl({
   active,
   height,
   overlayInsetTop = 0,
+  overlayInsetBottom = 8,
   tipping,
   sekiPlay: _sekiPlay = false,
   playbackActive,
@@ -687,9 +689,10 @@ function ReelCardImpl({
         {loopFlash ? <Text style={styles.loopFlash}>Full replay</Text> : null}
       </View>
 
-      <View pointerEvents="box-none" style={[styles.actionsLayer, { top: overlayInsetTop }]}>
+      <View pointerEvents="box-none" style={[styles.actionsLayer, { top: overlayInsetTop, bottom: overlayInsetBottom }]}>
         <ReelActionOverlay
           athleteName={playerName}
+          sport={clip.sport}
           tagState={clip.tagStatus === 'pending' ? 'pending' : clip.playerId && clip.tagStatus !== 'rejected' ? 'approved' : undefined}
           schoolName={schoolName}
           jerseyNumber={player?.jersey_number}

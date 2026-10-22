@@ -1,15 +1,15 @@
-/** Calm, readable recovery cards retain fan/admin action boundaries and truthful source copy; UX-08 field lines sit behind. */
+/** Readable recovery cards preserve truthful copy and fan/admin action boundaries; compact fan cards retain full text and targets. */
 import { type Href, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { SportField } from '@/components/Effects/SportField';
-import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { MenuBackdrop, type MenuAccent } from '@/components/UI/MenuChrome';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { cardShadow, colors, MENU_METRICS, space } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useViewerSport } from '@/hooks/useViewerSport';
 import type { AdminNavHref } from '@/lib/admin';
-import { FOCAL } from '@/theme/motion';
+import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 
 type EmptyStateProps = {
   kicker?: string;
@@ -21,6 +21,8 @@ type EmptyStateProps = {
   adminHref?: AdminNavHref;
   adminLabel?: string;
   accent?: string;
+  /** Fan pages recover space while operator recovery cards keep their existing hierarchy. */
+  compact?: boolean;
 };
 
 /**
@@ -45,21 +47,24 @@ export function EmptyState({
   adminHref,
   adminLabel = 'Open in Admin',
   accent,
+  compact = false,
 }: EmptyStateProps) {
   const router = useRouter();
   const { isAdmin } = useAuth();
   const mark = accent ?? FOCAL.goldInk;
   const showAdmin = Boolean(isAdmin && adminHref);
   const sport = useViewerSport();
+  const mist = Object.values(TAB_ACCENTS).find(value => value.color === mark)?.mist ?? FOCAL.mistGold;
+  const tone: MenuAccent = !compact ? 'gold' : mark === FOCAL.violetInk ? 'violet' : mark === FOCAL.cyanInk ? 'cyan' : mark === FOCAL.emberInk ? 'ember' : mark === FOCAL.jadeInk ? 'jade' : 'gold';
 
   return (
-    <View style={styles.card} accessibilityRole="summary" accessibilityLabel={title}>
-      <MenuBackdrop accent="gold" />
+    <View style={[styles.card, compact && styles.compactCard, compact && { backgroundColor: mist }]} accessibilityRole="summary" accessibilityLabel={title}>
+      <MenuBackdrop accent={tone} />
       {/* An empty page is still game day: the viewer's field, faint, in the card's own gold ink. */}
       <SportField sport={sport} color={mark} labels={false} opacity={0.08} />
       {kicker ? <Text style={[styles.kicker, { color: mark }]}>{kicker}</Text> : null}
-      <Text accessibilityRole="header" style={styles.title}>{title}</Text>
-      {lede ? <Text style={styles.lede}>{lede}</Text> : null}
+      <Text accessibilityRole="header" style={[styles.title, compact && styles.compactTitle]}>{title}</Text>
+      {lede ? <Text style={[styles.lede, compact && styles.compactLede]}>{lede}</Text> : null}
       {actionLabel && onAction ? (
         <AnimatedButton
           haptic="medium"
@@ -85,6 +90,9 @@ export function EmptyState({
 }
 
 const styles = StyleSheet.create({
+  compactCard: { padding: 12, gap: 8, borderRadius: 16 },
+  compactTitle: { fontSize: 16 },
+  compactLede: { fontSize: 13, lineHeight: 19 },
   card: {
     alignSelf: 'stretch',
     backgroundColor: FOCAL.mistGold,

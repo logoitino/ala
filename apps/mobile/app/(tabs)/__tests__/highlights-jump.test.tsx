@@ -1,8 +1,12 @@
+/** Home keeps pager/media geometry synchronized when its overlay dock and viewport resize. */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import HighlightsTab from '../index';
+import { FlatList } from 'react-native';
 import { FUN_IDS } from '@/lib/__fixtures__/fanZoneFixtures';
 let mockRealDiscovery = false;
+let mockDockHeight = 92;
+jest.mock('@/context/FanNavigationContext', () => ({ useFanDockHeight: () => mockDockHeight }));
 const mockDiscoveryReads: string[] = [];
 jest.mock('@/services/MediaUploadService', () => ({ bytesFromUri: jest.fn(), compressHighlight: jest.fn() }));
 jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: { rpc: async (fn: string) => {
@@ -55,15 +59,15 @@ jest.mock('@/components/FamilyFun/FamilyFunDiscovery', () => ({ FamilyFunDiscove
 jest.mock('@/components/TipSheetModal', () => ({ MaloTipModal: () => null }));
 jest.mock('@/components/Reels/ReelPage', () => {
   const { View, Text } = require('react-native');
-  return { ReelPage: ({ children, peekInsetTop }: { children?: React.ReactNode; peekInsetTop: number }) => <View><Text>{`peek:${peekInsetTop}`}</Text>{children}</View> };
+  return { ReelPage: ({ children, peekInsetTop, peekInsetBottom, height }: { children?: React.ReactNode; peekInsetTop: number; peekInsetBottom: number; height: number }) => <View testID="measured-reel-page" height={height} peekInsetBottom={peekInsetBottom}><Text>{`peek:${peekInsetTop}`}</Text>{children}</View> };
 });
 
 // The only signal the tests need: which clip the pager considers active.
 jest.mock('@/components/Reels/ReelCard', () => {
   const { Text: RNText } = require('react-native');
   return {
-    ReelCard: ({ clip, active }: { clip: { id: string }; active: boolean }) =>
-      active ? <RNText>{`active:${clip.id}`}</RNText> : null,
+    ReelCard: ({ clip, active, height, overlayInsetBottom }: { clip: { id: string }; active: boolean; height: number; overlayInsetBottom: number }) =>
+      active ? <RNText testID="active-reel-card" height={height} overlayInsetBottom={overlayInsetBottom}>{`active:${clip.id}`}</RNText> : null,
   };
 });
 
@@ -291,4 +295,23 @@ it('actual Home keeps private Fan review inside measured chrome and preserves se
   expect(searchToggle()).toBeTruthy(); expect(pill('Home')).toBeTruthy();
   expect(mockDiscoveryReads.every(fn => ['fun_snapshot', 'quiz_snapshot'].includes(fn))).toBe(true);
 });
+});
+
+it('keeps full media height and clears caption/peek by the measured dock, then realigns the active page on resize', async () => {
+ const scroll=jest.spyOn(FlatList.prototype,'scrollToOffset');
+ const renderPager=jest.spyOn(FlatList.prototype,'render');
+ await mountTab();
+ await fireEvent.press(searchToggle());
+ await fireEvent.press(screen.getByLabelText('search-result-hl-2'));
+ await waitFor(() => expect(screen.getByText('active:hl-2')).toBeTruthy());
+ scroll.mockClear();
+ await fireEvent(screen.getByTestId('home-pager-viewport'),'layout',{nativeEvent:{layout:{width:320,height:640}}});
+ await waitFor(() => expect(scroll).toHaveBeenCalledWith({offset:640,animated:false}));
+ expect(screen.getByTestId('active-reel-card').props).toMatchObject({height:640,overlayInsetBottom:mockDockHeight+8});
+ for(const page of screen.getAllByTestId('measured-reel-page')) expect(page.props).toMatchObject({height:640,peekInsetBottom:mockDockHeight+12});
+ const pager=renderPager.mock.contexts[renderPager.mock.contexts.length-1] as FlatList;
+ expect(pager.props.snapToInterval).toBe(640);
+ expect(pager.props.getItemLayout!(pager.props.data!,1)).toEqual({length:640,offset:640,index:1});
+ scroll.mockRestore();
+ renderPager.mockRestore();
 });

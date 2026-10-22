@@ -65,8 +65,8 @@ export default function BeyondTab() {
 
 const styles = StyleSheet.create({
   bar: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingHorizontal: 12,
+    paddingTop: 4,
     paddingBottom: 4,
   },
   back: {
@@ -79,8 +79,8 @@ const styles = StyleSheet.create({
   },
   backLabel: {
     color: colors.primary,
-    fontSize: 15,
-    lineHeight: 21,
+    fontSize: 13,
+    lineHeight: 19,
     fontWeight: '700',
     flexShrink: 1,
   },

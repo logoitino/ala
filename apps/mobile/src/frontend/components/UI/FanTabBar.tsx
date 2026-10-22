@@ -1,5 +1,5 @@
-/** Inset fan dock keeps every label/control opaque while only its backdrop softens on scroll.
- * Its compact reserved footer preserves the Highlights measured video frame and SDK58 tab events.
+/** Floating fan dock overlays full-height Highlights while every label/control stays opaque.
+ * Report the complete wrap height so captions and normal fan screens clear safe foot and enlarged labels.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef } from 'react';
@@ -12,7 +12,7 @@ import { colors } from '@/constants/theme';
 import { HIGHLIGHT_NAV_LABEL, SPOTLIGHT_NAV_LABEL } from '@/data/highlights';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
-import { useFanDockSoftened, useFanNavigation } from '@/context/FanNavigationContext';
+import { useFanDockSoftened, useFanNavigation, useMeasureFanDock } from '@/context/FanNavigationContext';
 import { useReduceTransparency } from '@/hooks/useReduceTransparency';
 import { useReduceMotion } from '@/hooks/useReduceMotion';
 import { impactPress } from '@/lib/haptics';
@@ -25,9 +25,6 @@ const TAB_META: Record<string, { label: string; accessibilityLabel?: string; ico
     spotlight: { label: SPOTLIGHT_NAV_LABEL, icon: 'trophy-outline', activeIcon: 'trophy' },
     profile: { label: 'Profile', icon: 'person-outline', activeIcon: 'person' },
   };
-
-/** Calm Island: one brand accent for the active tab, indicator and Upload on every destination. */
-const BAR_ACCENT = TAB_ACCENTS.index;
 
 type TabButtonProps = {
   focused: boolean;
@@ -85,7 +82,7 @@ function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accen
 }
 
 /**
- * @purpose Fan bar: Highlights / Activity / Upload / Spotlight / Profile. Upload sits in the middle; Beyond and Local open from the Highlights pill row and Drip from Profile. A jade accent bar springs along the top edge to whichever tab is focused; every destination shares the one brand accent.
+ * @purpose Fan bar: Home / Activity / Upload / Spotlight / Profile over the screen, with each destination's sport accent. Upload stays jade; Beyond and Local open from the Highlights pill row and Drip from Profile.
  * @param state React Navigation tab state.
  * @param emitter Tab event emitter; a second tap on the focused tab lets that tab’s stack pop to its `index` (SDK 58).
  * @param navigateToTab Switches to an unfocused tab by route key.
@@ -94,6 +91,7 @@ function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accen
  * @sideEffects Opens `UploadSheetContext` on plus press; Reanimated spring on the indicator when focus changes.
  */
 export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
+  const measureDock = useMeasureFanDock();
   const reduceMotion = useReduceMotion();
   const reduceTransparency = useReduceTransparency();
   const softened = useFanDockSoftened();
@@ -108,6 +106,8 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   const indicatorW = useSharedValue(0);
   const indicatorOp = useSharedValue(0);
   const focusedKey = state.routes[state.index]?.key ?? '';
+  const focusedName = state.routes[state.index]?.name ?? 'index';
+  const barAccent = TAB_ACCENTS[focusedName as keyof typeof TAB_ACCENTS] ?? TAB_ACCENTS.index;
   useEffect(() => { restore(); }, [focusedKey, restore]);
   const backdropStyle = useAnimatedStyle(() => ({ opacity: reduceMotion ? backdropOpacity : withTiming(backdropOpacity, { duration: 160 }) }), [backdropOpacity, reduceMotion]);
 
@@ -175,8 +175,8 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
           accessibilityLabel={meta.accessibilityLabel}
           icon={meta.icon}
           activeIcon={meta.activeIcon}
-          accentColor={BAR_ACCENT.color}
-          accentMist={BAR_ACCENT.mist}
+          accentColor={(TAB_ACCENTS[route.name as keyof typeof TAB_ACCENTS] ?? TAB_ACCENTS.index).color}
+          accentMist={(TAB_ACCENTS[route.name as keyof typeof TAB_ACCENTS] ?? TAB_ACCENTS.index).mist}
           onInteract={restore}
           onPress={() => {
             restore();
@@ -194,7 +194,7 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   };
 
   return (
-    <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 6) }]}>
+    <View testID="fan-dock-wrap" pointerEvents="box-none" onLayout={({ nativeEvent }) => measureDock(nativeEvent.layout.height)} style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 6) }]}>
       <View style={styles.bar}>
         {/* Web uses the current React value: installed Reanimated web timing can retain the initial shared opacity. */}
         <Animated.View testID="fan-dock-backdrop" pointerEvents="none" style={[styles.backdrop, backdropStyle, Platform.OS === 'web' && { opacity: backdropOpacity }]}>
@@ -205,7 +205,7 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
           pointerEvents="none"
           style={[
             styles.indicator,
-            { backgroundColor: BAR_ACCENT.color, shadowColor: BAR_ACCENT.glow },
+            { backgroundColor: barAccent.color, shadowColor: barAccent.glow },
             indicatorStyle,
           ]}
         />
@@ -233,6 +233,12 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
 
 const styles = StyleSheet.create({
   wrap: {
+    // SDK58 renders custom bars directly: screenOptions.tabBarStyle does not position this wrapper.
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 30,
     width: '100%',
     paddingHorizontal: 8,
     backgroundColor: 'transparent',

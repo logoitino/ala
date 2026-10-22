@@ -175,9 +175,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(46,229,157,0.4)',
   },
-  title: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  title: { color: colors.text, fontSize: 14, fontWeight: '700' },
   titleVideo: { color: colors.onVideo },
-  copy: { color: colors.textMuted, fontSize: 14, lineHeight: 19 },
+  copy: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
   copyVideo: { color: colors.onVideoMuted },
   row: { flexDirection: 'row', alignItems: 'stretch', gap: 8 },
 });

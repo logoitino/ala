@@ -341,8 +341,9 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 4,
-    paddingBottom: 120,
-    gap: 12,
+    // The shell already clears the measured fan dock, including enlarged navigation labels.
+    paddingBottom: 12,
+    gap: 8,
   },
   missing: {
     flex: 1,
