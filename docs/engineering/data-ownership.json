@@ -505,6 +505,14 @@
     "athlete_sport_entries": {
       "owner": "PROFILE",
       "purpose": "MULTISPORT-01 bounded profile-owned sport participation and independent team/position/jersey; manual primary mirrors legacy profile fields. RPC-only reads apply existing school/stats/account/block/minor/guardian policy; revision-confirmed self athlete/admin writes do not confer verification or money authority."
+    },
+    "cheer_poll_votes": {
+      "owner": "POLLS",
+      "purpose": "One stored side per signed-in account per cheer poll, so a vote counts once and a switch moves one vote (20261022130000)."
+    },
+    "player_hype_votes": {
+      "owner": "POLLS",
+      "purpose": "One hype per account per player per kind per UTC day, so live-play hype cannot be stuffed (20261022130000)."
     }
   },
   "buckets": {
@@ -1572,6 +1580,12 @@
     "stripe_webhook_events": {
       "noWriter": "Historical PaymentIntent claims retained after unsafe claim-before-business-commit path retired; current notification payment observations do not treat these as financial or send authority. Owner-controlled archival/retention only.",
       "noReader": "Historical claims retained as evidence; no current receipt or financial code consumes them. Do not delete or reuse them as notification proof."
+    },
+    "cheer_poll_votes": {
+      "noReader": "Read only inside cast_cheer_vote (the stored side for this account); clients have no access and no screen needs it."
+    },
+    "player_hype_votes": {
+      "noReader": "Read only by the primary-key conflict inside increment_player_hype; clients have no access and no screen needs it."
     }
   },
   "exportsTriage": [

@@ -7,6 +7,8 @@ const mockVote = jest.fn();
 jest.mock('@/hooks/useCheerPoll', () => ({
   useCheerPoll: () => ({ poll: { slug: 's', home_label: 'Westlake', away_label: 'Lone Peak', home_votes: 130, away_votes: 102 }, myVote: null, vote: mockVote }),
 }));
+const mockRequireAuth = jest.fn((intent: { resume: () => void }) => intent.resume());
+jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: mockRequireAuth }) }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn() } }));
 jest.mock('expo-haptics', () => ({ impactAsync: jest.fn(), ImpactFeedbackStyle: { Light: 'light' } }));
 
@@ -24,5 +26,8 @@ describe('CheerPollCard (compact)', () => {
     expect(screen.getByLabelText('Cheer Lone Peak, 44%')).toBeTruthy();
     expect(screen.getByText('56%')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Cheer Westlake, 56%'));
+    // Votes go through the soft wall: guests sign in first, then the vote lands.
+    expect(mockRequireAuth).toHaveBeenCalledWith(expect.objectContaining({ kind: 'signin' }));
+    expect(mockVote).toHaveBeenCalledWith('home');
   });
 });

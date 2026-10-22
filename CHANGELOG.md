@@ -1,6 +1,12 @@
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-22 — Security holes closed on staging and development
+
+- Ask guests to sign in before they cheer in a poll; each account counts once and can switch sides.
+- Stop anyone from listing uploaded files, editing other people's profiles, or writing admin and game data without the right account.
+- Bring staging level with development's security fixes.
+
 ## 2026-10-21 — More room for content
 
 - Show Profile counts on one line, the profile sections on one row, and Local polls in about half the space.

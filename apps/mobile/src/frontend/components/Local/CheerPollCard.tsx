@@ -9,6 +9,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { COMPLIANCE_POLL } from '@/data/legal';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { useCheerPoll, type CheerSide } from '@/hooks/useCheerPoll';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
@@ -45,6 +46,7 @@ export function CheerPollCard({
   awayLabel = DEFAULT_AWAY,
 }: CheerPollCardProps) {
   const { poll, myVote, vote } = useCheerPoll(slug, homeLabel, awayLabel);
+  const { requireAuth } = useSoftWall();
   const rawTotal = poll.home_votes + poll.away_votes;
   const homePct = rawTotal === 0 ? 50 : Math.round((poll.home_votes / rawTotal) * 100);
   const awayPct = rawTotal === 0 ? 50 : 100 - homePct;
@@ -76,6 +78,13 @@ export function CheerPollCard({
 
   const handleVote = (side: CheerSide, event?: GestureResponderEvent) => {
     if (myVote === side) return;
+    const x = event?.nativeEvent.locationX ?? 48;
+    const y = event?.nativeEvent.locationY ?? 18;
+    // One cheer per account (20261022130000): guests sign in first, then the vote lands; signed-in fans vote at once.
+    requireAuth({ kind: 'signin', resume: () => castVote(side, x, y) });
+  };
+
+  const castVote = (side: CheerSide, x: number, y: number) => {
     replayFromZero.current = true;
     telemetry.trackFeature('cheer_poll', 'local');
     try {
@@ -85,8 +94,6 @@ export function CheerPollCard({
     }
     const id = floatSeq.current + 1;
     floatSeq.current = id;
-    const x = event?.nativeEvent.locationX ?? 48;
-    const y = event?.nativeEvent.locationY ?? 18;
     setFloats((current) => [...current, { id, side, x, y }]);
     void vote(side);
   };

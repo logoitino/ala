@@ -1694,6 +1694,28 @@
       ]
     },
     {
+      "name": "cheer_poll_votes",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "One stored side per signed-in account per cheer poll, so a vote counts once and a switch moves one vote (20261022130000).",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "cast_cheer_vote"
+      ],
+      "sqlReaders": [],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/",
+        "/admin/qa",
+        "/local",
+        "/profile",
+        "/spotlight",
+        "/user/[id]"
+      ]
+    },
+    {
       "name": "cheer_polls",
       "kind": "table",
       "owner": "POLLS",
@@ -3353,6 +3375,25 @@
       "triggers": [],
       "screens": [
         "/admin/people"
+      ]
+    },
+    {
+      "name": "player_hype_votes",
+      "kind": "table",
+      "owner": "POLLS",
+      "purpose": "One hype per account per player per kind per UTC day, so live-play hype cannot be stuffed (20261022130000).",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "increment_player_hype"
+      ],
+      "sqlReaders": [],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/game/[id]",
+        "/local/game/[id]",
+        "/player/[id]"
       ]
     },
     {
@@ -8190,6 +8231,7 @@
       ],
       "manual": null,
       "writes": [
+        "cheer_poll_votes",
         "cheer_polls"
       ],
       "reads": [
@@ -10512,6 +10554,7 @@
       ],
       "manual": null,
       "writes": [
+        "player_hype_votes",
         "players"
       ],
       "reads": [

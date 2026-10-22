@@ -757,6 +757,34 @@ Local School Polls. Fans vote through `cast_cheer_vote`. Admins publish labels a
 
 **RLS:** public SELECT. Writes require `current_user_role() = 'admin'` (`anon` bypass dropped). Votes stay on `cast_cheer_vote`. Incremental: `supabase/cheer_polls.sql` + `admin_portal.sql`.
 
+### `cheer_poll_votes`
+
+One row per signed-in account per poll (20261022130000). Written only by `cast_cheer_vote`, which now requires sign-in,
+ignores the client's `previous_side` and moves one vote when an account switches sides.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `poll_slug` | text FK → `cheer_polls.slug` | PK with `voter_id` |
+| `voter_id` | uuid | `auth.uid()` of the voter |
+| `side` | text | `home` / `away` |
+| `updated_at` | timestamptz | |
+
+**RLS:** on, no client grants (definer function only).
+
+### `player_hype_votes`
+
+One row per account, player, hype kind and UTC day (20261022130000). `increment_player_hype` requires sign-in and adds
+to `players` counts only when this row is new.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `voter_id` | uuid | PK part |
+| `player_id` | uuid FK → `players.id` | PK part |
+| `hype_kind` | text | `view` / `aura` / `flex` / `seki` |
+| `voted_on` | date | UTC day; PK part |
+
+**RLS:** on, no client grants (definer function only).
+
 ### `upsert_cheer_poll`
 
 ```sql

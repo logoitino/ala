@@ -7,12 +7,12 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 
 | Measure | Count |
 | --- | --- |
-| Tables | 123 |
+| Tables | 125 |
 | Views | 3 |
 | Storage buckets | 6 |
 | Feature switches read by the fan app | 41 of 41 |
 | Database functions | 609 (250 used by hand, 61 trigger functions) |
-| Tables reached by at least one screen or server route | 123 of 126 |
+| Tables reached by at least one screen or server route | 125 of 128 |
 | Code files that read or write the database | 84 |
 | Exported symbols nothing imports | 42 (0 proposed for archive, 42 kept on purpose) |
 | Operational data exports | 15 |
@@ -48,7 +48,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `PARTNERSHIPS` | `sponsorships` | 0 |
 | `PHOTO_STORIES` | `reel_photos`, `reel_photos_feed` | 2 |
 | `PLAYBACK` | `reel_views` | 0 |
-| `POLLS` | `cheer_polls`, `fan_zone_ballots`, `fan_zone_campaigns`, `fan_zone_reflections`, `fan_zone_requests`, `quiz_athlete_facts`, `sport_quiz_attempts`, `sport_quiz_exposures`, `sport_quiz_group_codes`, `sport_quiz_group_members`, `sport_quiz_group_sets`, `sport_quiz_groups`, `sport_quiz_life_chapters`, `sport_quiz_question_stats`, `sport_quiz_questions`, `sport_quiz_reports`, `sport_quiz_requests`, `sport_quiz_round_items`, `sport_quiz_settings`, `sport_quiz_week_guards` | 114 |
+| `POLLS` | `cheer_poll_votes`, `cheer_polls`, `fan_zone_ballots`, `fan_zone_campaigns`, `fan_zone_reflections`, `fan_zone_requests`, `player_hype_votes`, `quiz_athlete_facts`, `sport_quiz_attempts`, `sport_quiz_exposures`, `sport_quiz_group_codes`, `sport_quiz_group_members`, `sport_quiz_group_sets`, `sport_quiz_groups`, `sport_quiz_life_chapters`, `sport_quiz_question_stats`, `sport_quiz_questions`, `sport_quiz_reports`, `sport_quiz_requests`, `sport_quiz_round_items`, `sport_quiz_settings`, `sport_quiz_week_guards` | 114 |
 | `PROFILE` | `athlete_sport_entries`, `friend_request_log`, `friendships`, `guardian_approval_requests`, `guardian_invite_attempts`, `guardian_invites`, `guardian_links`, `notification_preferences`, `profiles`, `sport_quiz_preferences`, `supervision_events`, `user_blocks`, `profiles_public` | 95 |
 | `RALLY` | `rallies` | 7 |
 | `RECONCILIATION` | `notification_payment_observations` | 1 |
@@ -276,6 +276,15 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `admin_challenge_nudge_senders`, `admin_challenge_status`, `challenge_invite`
 - Removed by: `admin_hold_challenge_sender`, `challenge_erase_profile`
 - Screens: `/admin/highlights`, `/beyond`
+
+### `cheer_poll_votes`
+
+**Owner:** `POLLS` · One stored side per signed-in account per cheer poll, so a vote counts once and a switch moves one vote (20261022130000).
+
+- Written by: —; database functions: `cast_cheer_vote`
+- Read by: —; database functions: —
+- Screens: `/`, `/admin/qa`, `/local`, `/profile`, `/spotlight`, `/user/[id]`
+- Exception: noReader — Read only inside cast_cheer_vote (the stored side for this account); clients have no access and no screen needs it.
 
 ### `cheer_polls`
 
@@ -680,6 +689,15 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `admin_decide_payout_override`, `admin_request_payout_override`
 - Read by: —; database functions: `admin_decide_payout_override`, `admin_payee_overview`, `admin_payee_report`
 - Screens: `/admin/people`
+
+### `player_hype_votes`
+
+**Owner:** `POLLS` · One hype per account per player per kind per UTC day, so live-play hype cannot be stuffed (20261022130000).
+
+- Written by: —; database functions: `increment_player_hype`
+- Read by: —; database functions: —
+- Screens: `/game/[id]`, `/local/game/[id]`, `/player/[id]`
+- Exception: noReader — Read only by the primary-key conflict inside increment_player_hype; clients have no access and no screen needs it.
 
 ### `players`
 
@@ -1359,7 +1377,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `cancel_custodial_withdrawal` | `CUSTODIAL` | `@/lib/custodial.ts` | `custodial_withdrawals` | `profiles` |
 | `cancel_my_approval_request` | `PROFILE` | `@/lib/minors.ts` | `guardian_approval_requests` | — |
 | `capture_support_audit` | `THREAT_DETECTION` | By hand: Transactional change trigger on selected admin/financial tables. | `support_audit_events` | — |
-| `cast_cheer_vote` | `POLLS` | `@/lib/cheerPoll.ts` | `cheer_polls` | `cheer_polls` |
+| `cast_cheer_vote` | `POLLS` | `@/lib/cheerPoll.ts` | `cheer_poll_votes`, `cheer_polls` | `cheer_polls` |
 | `challenge_admin_profile` | `HIGHLIGHTS` | By hand: Private expected-actor matched nonclosed admin gate for all7 challenge admin RPCs. | — | — |
 | `challenge_athlete_allows` | `HIGHLIGHTS` | `sql:challenge_my_status`, `sql:challenge_reel_check`, `sql:set_allow_challenges` | — | `challenge_athlete_settings` |
 | `challenge_award_badge` | `HIGHLIGHTS` | `sql:challenge_respond`, `sql:check constraint` | `challenge_badges` | `challenge_responses` |
@@ -1523,7 +1541,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `handle_new_auth_user` | `PROFILE` | `trigger:on_auth_user_created on auth` | `profiles` | — |
 | `hash_secret` | `BACKEND` | `sql:admin_add_school_confirmer`, `sql:create_guardian_invite`, `sql:guardian_invite_for_code` +10 more | — | — |
 | `increment_backer_count` | `ROSTERS` | `@/lib/payments.ts`, `sql:check constraint` | `players` | — |
-| `increment_player_hype` | `ROSTERS` | `@/lib/hype.ts` | `players` | `players` |
+| `increment_player_hype` | `ROSTERS` | `@/lib/hype.ts` | `player_hype_votes`, `players` | `players` |
 | `increment_reel_hype` | `HIGHLIGHTS` | `@/lib/reelVotes.ts`, `@/lib/reels.ts` | `reel_hype_votes`, `reels` | `reels` |
 | `increment_reel_tips` | `HIGHLIGHTS` | `@/lib/reels.ts`, `sql:check constraint` | `reels` | — |
 | `insert_support_signal` | `TELEMETRY` | By hand: Private helper validates and appends client/trusted observations. | `support_signals` | — |

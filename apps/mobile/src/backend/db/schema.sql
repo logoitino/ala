@@ -30554,3 +30554,223 @@ begin
     end if;
   end loop;
 end $$;
+
+
+-- Canonical public bucket listing lock: 20261022100000_public_bucket_listing_owner_only.sql
+-- Public media buckets stop being listable by everyone (STATE §5 "Legacy Vault objects in public Storage").
+--
+-- Threat: "Public read …" SELECT policies let anyone list every object in reels / game_highlights / avatars, so a clip
+-- moved into the Vault after upload (its file stays in the public reels bucket) could be enumerated and downloaded.
+-- Public buckets serve files by URL without any SELECT policy, so playback, avatars and logos keep working. SELECT is
+-- still needed for the owner's own folder: Storage upsert checks SELECT, and photo-story cleanup lists its folder.
+-- Owner folders match the existing write rules: <uid>/… , reels/<uid>/… (Highlights and the game_highlights fallback),
+-- sponsors/<uid>/… (booster logos). Development also carried three older duplicate policies; all six are dropped.
+--
+-- Applied: staging and development 2026-10-22 (Claude Code). Replay: scripts/replay/public-bucket-listing-replay.mjs.
+-- Rollback: drop policy "Owner lists own public media" on storage.objects; then
+--   create policy "Public read reels bucket" on storage.objects for select using (bucket_id = 'reels');
+--   create policy "Public read game highlights" on storage.objects for select using (bucket_id = 'game_highlights');
+--   create policy "Public read avatars" on storage.objects for select using (bucket_id = 'avatars');
+
+drop policy if exists "Public read reels bucket" on storage.objects;
+drop policy if exists "Public read game highlights" on storage.objects;
+drop policy if exists "Public read avatars" on storage.objects;
+drop policy if exists "Public Read Reels" on storage.objects;
+drop policy if exists "Public Access Highlights" on storage.objects;
+drop policy if exists "Public Read Avatars" on storage.objects;
+
+drop policy if exists "Owner lists own public media" on storage.objects;
+create policy "Owner lists own public media" on storage.objects for select to authenticated
+  using (
+    bucket_id in ('reels', 'game_highlights', 'avatars')
+    and (
+      (storage.foldername(name))[1] = auth.uid()::text
+      or ((storage.foldername(name))[1] in ('reels', 'sponsors') and (storage.foldername(name))[2] = auth.uid()::text)
+    )
+  );
+
+
+-- Canonical anon-branch removal: 20261022110000_remove_anon_write_branch.sql
+-- Remove the auth.role() = 'anon' branch from admin and operator policies (STATE §5, internal-testing hole 2).
+--
+-- Threat: any guest with the public key passed the anon branch, so could rewrite games and scores, post plays, edit
+-- sport configs, shop, sponsorships, wishlists, schools, cheer polls and read every app_feedback row. Studio Unlock and
+-- the Operator PIN are client-only checks, so the branch never limited anything to them. Admin desks now need a
+-- signed-in admin; the operator console a signed-in operator or admin (WORK_QUEUE P1-06 owns real operator sessions).
+-- Development also carried five older write policies that are not in schema.sql (open to everyone); they are dropped.
+-- Each policy below is the schema.sql definition with only the anon branch removed.
+--
+-- Applied: staging and development 2026-10-22 (Claude Code). Replay: scripts/replay/anon-branch-replay.mjs.
+-- Rollback: re-create each policy from schema.sql before this file (the anon branch restored).
+
+drop policy if exists "Public Update/Insert Games" on public.games;
+drop policy if exists "Public Operator Update Games" on public.games;
+drop policy if exists "Operators Can Update Games" on public.games;
+drop policy if exists "Public Insert Game Events" on public.game_events;
+drop policy if exists "Booster Insert Sponsorships" on public.sponsorships;
+
+drop policy if exists "Admin read app feedback" on public.app_feedback;
+create policy "Admin read app feedback" on public.app_feedback for select
+  using (public.current_user_role() = 'admin');
+drop policy if exists "Admin write app feedback" on public.app_feedback;
+create policy "Admin write app feedback" on public.app_feedback for update
+  using (public.current_user_role() = 'admin') with check (public.current_user_role() = 'admin');
+
+do $$
+declare t text;
+begin
+  -- Same admin-only write rule on each desk table; the policy names are unchanged.
+  foreach t in array array['cheer_polls', 'schools_and_teams', 'shop_products', 'sponsorships', 'sport_configs', 'wishlist_items'] loop
+    execute format('drop policy if exists %I on public.%I', 'Admin write ' || replace(t, '_', ' '), t);
+    execute format('create policy %I on public.%I for all using (public.current_user_role() = %L) with check (public.current_user_role() = %L)',
+      'Admin write ' || replace(t, '_', ' '), t, 'admin', 'admin');
+  end loop;
+end $$;
+
+drop policy if exists "Operators insert game_events" on public.game_events;
+create policy "Operators insert game_events" on public.game_events for insert
+  with check (public.current_user_role() in ('operator', 'admin'));
+drop policy if exists "Operators update games" on public.games;
+create policy "Operators update games" on public.games for update
+  using (public.current_user_role() in ('operator', 'admin')) with check (public.current_user_role() in ('operator', 'admin'));
+drop policy if exists "Operators insert checkins" on public.operator_checkins;
+create policy "Operators insert checkins" on public.operator_checkins for insert to authenticated
+  with check (public.current_user_role() in ('operator', 'admin'));
+drop policy if exists "Operators write gigs" on public.operator_gigs;
+create policy "Operators write gigs" on public.operator_gigs for all
+  using (public.current_user_role() in ('operator', 'admin')) with check (public.current_user_role() in ('operator', 'admin'));
+
+
+-- Canonical open-profile-update drop: 20261022120000_drop_public_update_profiles.sql
+-- Drop the open "Public Update Profiles" policy (STATE §5, internal-testing hole 3; development only).
+--
+-- Threat: UPDATE using (true) let any caller rewrite any profile row (name, bio, username, avatar, privacy settings).
+-- Owners keep their own edits through "Users update own profile" (user_id = auth.uid() or admin) from schema.sql.
+-- Staging never had this policy; the drop is a no-op there.
+--
+-- Applied: development and staging 2026-10-22 (Claude Code). Replay: scripts/replay/profile-update-replay.mjs.
+-- Rollback: create policy "Public Update Profiles" on public.profiles for update using (true);
+
+drop policy if exists "Public Update Profiles" on public.profiles;
+
+
+-- Canonical vote and hype limits: 20261022130000_vote_and_hype_limits.sql
+-- One cheer vote per account per poll; one hype per account per player per kind per day (STATE §5 hole 4,
+-- WORK_QUEUE DATA-01-F11).
+--
+-- Threat: cast_cheer_vote and increment_player_hype were guest-callable with no limit, and cast_cheer_vote trusted
+-- the caller's previous_side, so one script could add a vote to one side and remove one from the other per call, and
+-- inflate player hype that feeds Spotlight. A client-sent device id is forgeable, so the limit is the signed-in account.
+-- Both stay security definer and keep their signatures and return shape; previous_side is now ignored (the server
+-- remembers each account's side). Votes lock the poll row, so concurrent calls from one account cannot double count;
+-- hype uses the vote row's primary key, so a repeat the same day is a no-op.
+--
+-- Applied: staging and development 2026-10-22 (Claude Code). Replay: scripts/replay/vote-limits-replay.mjs.
+-- Rollback: drop table public.cheer_poll_votes, public.player_hype_votes; re-create both functions from schema.sql
+-- before this file and grant execute on them to anon again.
+
+create table if not exists public.cheer_poll_votes (
+  poll_slug text not null references public.cheer_polls (slug) on delete cascade,
+  voter_id uuid not null,
+  side text not null check (side in ('home', 'away')),
+  updated_at timestamptz not null default now(),
+  primary key (poll_slug, voter_id)
+);
+create table if not exists public.player_hype_votes (
+  voter_id uuid not null,
+  player_id uuid not null references public.players (id) on delete cascade,
+  hype_kind text not null check (hype_kind in ('view', 'aura', 'flex', 'seki')),
+  voted_on date not null default (timezone('utc', now()))::date,
+  primary key (voter_id, player_id, hype_kind, voted_on)
+);
+-- Only the two definer functions touch these rows; clients get no direct access.
+alter table public.cheer_poll_votes enable row level security;
+alter table public.player_hype_votes enable row level security;
+revoke all on public.cheer_poll_votes, public.player_hype_votes from public, anon, authenticated;
+
+create or replace function public.cast_cheer_vote(
+  poll_slug text,
+  side text,
+  previous_side text default null,
+  home_name text default 'Westlake Thunder',
+  away_name text default 'Lone Peak Knights'
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  voter uuid := auth.uid();
+  prior text;
+  result public.cheer_polls%rowtype;
+begin
+  if voter is null then
+    raise exception 'Sign in to cheer' using errcode = '42501';
+  end if;
+  if side not in ('home', 'away') then
+    raise exception 'Invalid cheer side %', side;
+  end if;
+
+  insert into public.cheer_polls (slug, home_label, away_label, home_votes, away_votes)
+  values (poll_slug, coalesce(nullif(btrim(home_name), ''), 'Westlake Thunder'),
+    coalesce(nullif(btrim(away_name), ''), 'Lone Peak Knights'), 0, 0)
+  on conflict (slug) do nothing;
+  -- Serialise votes on this poll so one account's concurrent calls see each other's stored side.
+  select * into result from public.cheer_polls where slug = poll_slug for update;
+
+  select v.side into prior from public.cheer_poll_votes v where v.poll_slug = cast_cheer_vote.poll_slug and v.voter_id = voter;
+  if prior is distinct from side then
+    insert into public.cheer_poll_votes (poll_slug, voter_id, side) values (cast_cheer_vote.poll_slug, voter, side)
+    on conflict on constraint cheer_poll_votes_pkey do update set side = excluded.side, updated_at = now();
+    update public.cheer_polls
+    set home_votes = greatest(home_votes + (case when side = 'home' then 1 else 0 end) - (case when prior = 'home' then 1 else 0 end), 0),
+        away_votes = greatest(away_votes + (case when side = 'away' then 1 else 0 end) - (case when prior = 'away' then 1 else 0 end), 0),
+        updated_at = now()
+    where slug = poll_slug
+    returning * into result;
+  end if;
+
+  return jsonb_build_object('home_votes', coalesce(result.home_votes, 0), 'away_votes', coalesce(result.away_votes, 0));
+end;
+$$;
+
+create or replace function public.increment_player_hype(target_player_id uuid, hype_kind text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  voter uuid := auth.uid();
+  added integer;
+  result public.players%rowtype;
+begin
+  if voter is null then
+    raise exception 'Sign in to hype' using errcode = '42501';
+  end if;
+  if hype_kind not in ('view', 'aura', 'flex', 'seki') then
+    raise exception 'Unknown hype_kind %', hype_kind;
+  end if;
+
+  insert into public.player_hype_votes (voter_id, player_id, hype_kind) values (voter, target_player_id, hype_kind)
+  on conflict do nothing;
+  get diagnostics added = row_count;
+
+  update public.players
+  set view_count = coalesce(view_count, 0) + (case when added = 1 and hype_kind = 'view' then 1 else 0 end),
+      aura_count = coalesce(aura_count, 0) + (case when added = 1 and hype_kind = 'aura' then 1 else 0 end),
+      flex_count = coalesce(flex_count, 0) + (case when added = 1 and hype_kind = 'flex' then 1 else 0 end),
+      seki_count = coalesce(seki_count, 0) + (case when added = 1 and hype_kind = 'seki' then 1 else 0 end)
+  where id = target_player_id
+  returning * into result;
+
+  return jsonb_build_object('view_count', coalesce(result.view_count, 0), 'aura_count', coalesce(result.aura_count, 0),
+    'flex_count', coalesce(result.flex_count, 0), 'seki_count', coalesce(result.seki_count, 0));
+end;
+$$;
+
+revoke all on function public.cast_cheer_vote(text, text, text, text, text) from public, anon;
+revoke all on function public.increment_player_hype(uuid, text) from public, anon;
+grant execute on function public.cast_cheer_vote(text, text, text, text, text) to authenticated, service_role;
+grant execute on function public.increment_player_hype(uuid, text) to authenticated, service_role;
