@@ -60,6 +60,18 @@ Exchange findings with Growth and Engineering before the single GROWTH_ANALYTICS
 
 ## Documentation handoff
 
+### IP preparation coordination — IP-01 (owner, 2026-10-22)
+
+Coordinate counsel intake and supplied decisions for
+[IP_PROTECTION_PLAN](../../docs/legal/IP_PROTECTION_PLAN.md), the IP register and generated packet.
+DOCUMENTATION → ENGINEERING owns factual upkeep/tooling; source owners supply technical and
+human/AI evidence. Track rights/assignments/licenses, disclosure history, counsel questions and
+verified receipts with source/date references. No novelty/inventorship/ownership/privilege/status
+is inferred. This is administrative coordination within the implementation-only boundary:
+counsel drafts opinions/claims/forms/instruments; owner selects counsel, jurisdictions, budget
+and recipients/filings. No filing, docket/paid worker, contact or public handoff is performed.
+Actual checks/limits: [IP-01](../../docs/agents/IP-01.md).
+
 Pair with `DOCUMENTATION` for same-turn code and team documentation updates. Supply changed paths, behavior, APIs, executed checks and unresolved device/hosted evidence; follow the synchronization table in `.cursor/rules/documentation.mdc`. Coordinate shared doc writes with the lead. Ownership or workflow changes must update registry, TEAMS and hierarchy together.
 
 ## Data control point (2026-10-13)

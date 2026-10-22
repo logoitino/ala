@@ -1,0 +1,100 @@
+{
+  "_comment": "Internal counsel intake facts and unresolved questions. Scripts refresh hashes only; supplied reviews, decisions and receipts are never invented or overwritten.",
+  "version": 1,
+  "recordDate": "2026-10-22",
+  "project": "Tapua'i Sports",
+  "jurisdictionAssumption": "US-first planning; intended markets and actual filing jurisdictions require owner and counsel decisions.",
+  "candidates": [
+    {
+      "id": "IP-C01",
+      "title": "Athlete-tagged Highlights and changing privacy permissions",
+      "owner": "HIGHLIGHTS with ACCOUNT_TAGS / PRIVACY_ENGINEERING",
+      "problem": "A Highlight can identify an athlete while audience, approval or block state changes. Review how displayed identity and access remain consistent across those changes.",
+      "baseline": "Tagged media and audience controls are established patterns. No prior-art search or measured comparative baseline has been completed for this candidate.",
+      "mechanism": "Investigate the implemented request/approval and feed-reading sequence across the Highlights and privacy SDKs and canonical SQL. Engineering must trace exact states, denied actors and revocation behavior before proposing a technical distinction.",
+      "alternatives": "Compare ordinary access checks, feed-time identity filtering and approval-based tagging. These are investigation options, not documented search results.",
+      "limitations": "Source references establish a reading scope only. Current hosted behavior, novelty, inventorship and claim scope are unverified.",
+      "sources": [
+        "apps/mobile/src/frontend/lib/reels.ts",
+        "apps/mobile/src/frontend/lib/privacy.ts",
+        "apps/mobile/src/backend/db/schema.sql"
+      ],
+      "technicalEvidence": ["docs/engineering/design/PROFILE_PRIVACY_DESIGN.md"],
+      "humanContributions": "Unknown: collect specific human conception/authorship, dates, AI involvement and assignment evidence from the owner and contributors.",
+      "counselQuestions": [
+        "Is there a precise qualifying technical contribution beyond familiar tagged-media and privacy techniques?",
+        "Which states/steps and evidence would support a useful claim or justify keeping know-how confidential?"
+      ],
+      "review": null,
+      "decisions": []
+    },
+    {
+      "id": "IP-C02",
+      "title": "Private media entitlement and access revocation",
+      "owner": "VAULT / STORAGE with RLS_SECURITY",
+      "problem": "Private media must remain restricted as entitlements and permissions change. Review the boundary between client references, trusted authorization and delivery.",
+      "baseline": "Entitlements, signed media access and revocation are established techniques. No novelty or freedom-to-operate study has been performed.",
+      "mechanism": "Trace Vault SDK requests and canonical database permissions, then compare provider-neutral media references with private access enforcement. Identify actual denial/revocation behavior and legacy gaps rather than treating a UI lock as authorization.",
+      "alternatives": "Compare short-lived signed URLs, trusted streaming authorization and entitlement checks; provider-specific behavior requires separate evidence.",
+      "limitations": "Legacy/public-byte and hosted authorization boundaries require current source and environment review. No patentability, rights or production-security conclusion is recorded.",
+      "sources": [
+        "apps/mobile/src/frontend/lib/vault.ts",
+        "apps/mobile/src/frontend/lib/media.ts",
+        "apps/mobile/src/backend/db/schema.sql"
+      ],
+      "technicalEvidence": ["docs/engineering/design/MEDIA_SERVICE_PLAN.md"],
+      "humanContributions": "Unknown: obtain human contribution dates, AI-assisted work history, employer/contract context and assignments.",
+      "counselQuestions": [
+        "Does any verified mechanism differ meaningfully from existing entitlement and private-media systems?",
+        "What technical disclosure and commercially relevant claim scope would justify a filing?"
+      ],
+      "review": null,
+      "decisions": []
+    },
+    {
+      "id": "IP-C03",
+      "title": "Live-score event reconciliation and reconnect behavior",
+      "owner": "OPERATOR / LIVE_SCORES with BACKEND",
+      "problem": "A sideline score display can receive delayed or conflicting events and reconnect after losing a connection. Review the merge/refetch decisions and resulting score consistency.",
+      "baseline": "Event ordering, duplicate handling and reconnect reconciliation are common distributed-system patterns. A comparative performance/correctness baseline and prior-art search are absent.",
+      "mechanism": "Trace the per-game Broadcast merge/refetch helper into the live-score hook and canonical SQL. Document exact inputs, ordering assumptions, fallback requests and failure cases; identify which paths are behind a default-off switch.",
+      "alternatives": "Compare refetch-only updates, sequence-based reconciliation and event replay. Test relevant duplicates, reorderings and reconnects before claiming improvements.",
+      "limitations": "Local source and disabled switches do not establish deployed behavior or technical novelty. Engineering must supply current test and hosted evidence where relevant.",
+      "sources": [
+        "apps/mobile/src/frontend/lib/liveScoreSync.ts",
+        "apps/mobile/src/frontend/hooks/useLiveScores.ts",
+        "apps/mobile/src/backend/db/schema.sql"
+      ],
+      "technicalEvidence": ["docs/agents/SCALE-03.md"],
+      "humanContributions": "Unknown: collect human conception and implementation contributions, dates, AI usage and ownership records.",
+      "counselQuestions": [
+        "Is any demonstrated reconciliation method eligible, new and non-obvious relative to prior event-sync systems?",
+        "What actual evidence distinguishes technical benefit from ordinary use of the provider SDK?"
+      ],
+      "review": null,
+      "decisions": []
+    }
+  ],
+  "rightsChecklist": [
+    {"id": "R01", "category": "Original source code and documentation", "status": "pending", "needed": "Human authorship, creation/publication dates, work versions, claimant and signed assignment/employment records; counsel selects registration and deposits."},
+    {"id": "R02", "category": "AI-assisted code and assets", "status": "pending", "needed": "Specific human/AI contributions and tool terms; counsel evaluates eligible authorship, inventorship and any excluded material."},
+    {"id": "R03", "category": "Direct/transitive dependencies and patches", "status": "pending", "needed": "License/notice audit against the exact lockfile, upstream patches, examples and provider terms; manifests alone do not prove compliance."},
+    {"id": "R04", "category": "GUI, logo, fonts, icons, art and sound", "status": "pending", "needed": "Creator/license evidence, stable originals and design history; counsel assesses copyright/design-patent scope and trademark clearance."},
+    {"id": "R05", "category": "Contributors, employees and contractors", "status": "pending", "needed": "Contributor roles, specific human contributions and counsel-reviewed signed assignments or licenses; Git names are not inventorship proof."},
+    {"id": "R06", "category": "School marks and uploaded/sample media", "status": "pending", "needed": "Actual permissions/licenses for footage, photos, music and school/provider marks; user content is not automatically company IP."},
+    {"id": "R07", "category": "Confidential know-how and source access", "status": "pending", "needed": "Owner-approved private storage, actual repository/provider access review, confidentiality agreements and disclosure/patent-publication choices."}
+  ],
+  "disclosureEvents": [
+    {"date": "2026-10-22", "actor": "Owner / FACILITATOR", "kind": "owner-statement", "summary": "Owner reports nothing has been made public. This is not an independently verified audit; counsel must check earlier sharing, sales/offers and intended launch dates.", "evidence": "Owner reply in the current IP planning conversation, 2026-10-22; actual repository visibility and historical events unverified."}
+  ],
+  "decisions": [],
+  "filings": [],
+  "counselQuestions": [
+    "Which jurisdictions, deadlines and searches should be prioritized before public disclosure?",
+    "Which human authors/inventors and assignment documents are required for this AI-assisted project?",
+    "Which works, exclusions, registration groups and safe deposits fit copyright protection?",
+    "Which candidates warrant a patent search, provisional/full filing, trade-secret treatment or a documented decision to decline?",
+    "What trademark clearance, original GUI design review and separate freedom-to-operate scope are justified?",
+    "What engagement fees, filing/response costs, actual docket ownership and approved sharing controls are required?"
+  ]
+}

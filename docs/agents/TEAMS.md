@@ -1,6 +1,17 @@
 <!-- Callable responsibility and escalation routing; original task receipts establish actual execution and acceptance. -->
 # Tapua'i department call sheet
 
+## IP documentation upkeep — IP-01 (2026-10-22)
+
+DOCUMENTATION (`.claude/agents/documentation.md`) → ENGINEERING maintains the owner-requested
+[IP plan/register/packet](../legal/IP_PROTECTION_PLAN.md); LEGAL (`.claude/agents/legal.md`) → CTO
+coordinates supplied counsel decisions and rights/disclosure records. Source owners supply
+technical/human-AI evidence; CONTENT_RIGHTS/COMPLIANCE/Security review provenance and safe handoff.
+Owner/counsel retain legal, filing, spend, docket and sharing authority.
+Local full checks/Claude Stop refresh facts; CI checks committed currency. Semantic upkeep
+follows actual assignments. Existing115 roles/reporting/model pins remain; no idle paid AI
+worker or external delivery. Actual Codex `/root` execution/checks/claims: [IP-01](IP-01.md).
+
 ## Notification implementation handoff — NOTIFY-01 (2026-10-21 UTC)
 
 The owner approved the [notification architecture](../engineering/design/EMAIL_NOTIFICATIONS_DESIGN.md)
@@ -331,6 +342,7 @@ Legal does not decide the law. A licensed attorney does. This team puts approved
 | **Footage, sound, and marks** | Upload confirms permission, sound, and marks. Game Day confirms real footage. Photo stories use a photo-permission line (`PHOTO_RIGHTS_VERSION` `2026-10-07`). Coach-level workouts use the proposed option A notice locally (LEGAL_BRIEFING row AC). Counsel has not approved that wording. | Counsel decides whether school marks may appear at all, and the workout-notice wording. | Strikes, appeals, filmed-at-the-game badge — not this wave. |
 | **Schools and associations** | Demo rosters are not a license to use a school's name or film. | — | Written association / district position before a metro launch. |
 | **Company paper** | Stripe stays in test mode. | Counsel retained before filings. | LLC, trademark, patent triage — founder + counsel. Agents do not file. |
+| **IP counsel packet** | [IP-01](IP-01.md) maintains source-bound candidates, rights gaps and owner-reported disclosure history. | Source-owner and actual counsel/ownership review; approve sharing scope. | DOCUMENTATION keeps facts current; LEGAL records supplied decisions/receipts. Filings and deadlines belong to counsel and owner. |
 
 **Pairs:** Brand for words on screen. Finance for prices and the split. Trust & Safety for reports. Partnerships for a school or guardian. Engineering (BACKEND / FULLSTACK) for export, deletion, and processors. Quality fails false SOC 2 / fake SLA / trackers-before-consent. Product when counsel must decide before anyone builds. Who may do the next product step, and what stays stopped, is in [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md) under "Compliance routing — 2026-10-10".
 

@@ -592,12 +592,15 @@
         "CHANGELOG.md",
         "docs",
         ".claude/agents",
-        ".cursor/rules/documentation.mdc"
+        ".cursor/rules/documentation.mdc",
+        "scripts/ip-docs.mjs",
+        "scripts/ip-docs-guard.sh"
       ],
       "tasks": [
         "Synchronize code comments, current state, team ownership, architecture, tester journeys and product evidence across departments in the same change; preserve generated facts and approved legal conclusions.",
         "On each assigned active feature/fix handoff, reconcile owner-supplied source/environment and dated evidence; record actual executor, changed paths, checks, gaps and next owner in the task ledger and coordinate role/protocol/priority changes with VP_OPERATIONS.",
-        "Current app roadmap handoff (2026-10-21 UTC): Reconcile115roles, roadmap/tester/operator instructions and source receipts; preserve older checks as history. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Reconcile115roles, roadmap/tester/operator instructions and source receipts; preserve older checks as history. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "IP-01: Maintain factual IP register/counsel packet on source, dependency, asset, contributor and disclosure changes; run ip:sync/ip:check, preserve decisions and stale-review evidence, and record actual execution. Local hooks/checks refresh hashes; no idle paid worker or legal conclusions."
       ],
       "model": "grok-4.7-medium"
     },
@@ -952,12 +955,15 @@
       "lead": "CTO",
       "owns": [
         "docs/legal/LEGAL_BRIEFING.md",
-        "apps/mobile/src/frontend/components/Legal"
+        "apps/mobile/src/frontend/components/Legal",
+        "docs/legal/IP_PROTECTION_PLAN.md",
+        "docs/legal/ip-register.json"
       ],
       "tasks": [
         "Approved legal wording and counsel decision tracking",
         "Coordinate counsel classification of age/guardian/school/payment checks, approved alternatives and consent/notice decisions for Growth charter \u00a79; exchange findings with Growth/Engineering before the one packet, preserving counsel/domain acceptance and owner business decisions. SAFETY-01 option A wording is local only. LEGAL_BRIEFING row AC stays open.",
-        "Current app roadmap handoff (2026-10-21 UTC): Review scoped session/user telemetry policy before collection and existing minor/content/payee promises with counsel. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution."
+        "Current app roadmap handoff (2026-10-21 UTC): Review scoped session/user telemetry policy before collection and existing minor/content/payee promises with counsel. Read APP-TEST-01 and TEAM_STATUS before the next assignment; this is a duty, not evidence of execution.",
+        "IP-01: Coordinate supplied counsel/ownership/disclosure reviews and verified receipts with DOCUMENTATION; no inferred novelty, inventorship, ownership, privilege or filing. Owner/counsel retain sharing, spend, legal drafting and actual filing/docket authority."
       ],
       "model": "grok-4.7-medium"
     },

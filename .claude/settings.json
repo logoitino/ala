@@ -15,6 +15,12 @@
             "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/exit-map-guard.sh\"",
             "timeout": 60,
             "statusMessage": "Updating the exit plan map"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/ip-docs-guard.sh\"",
+            "timeout": 60,
+            "statusMessage": "Refreshing IP counsel evidence"
           }
         ]
       }

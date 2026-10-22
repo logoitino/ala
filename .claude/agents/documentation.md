@@ -43,6 +43,17 @@ Read `docs/STATE.md` first, then `AGENTS.md`, `docs/engineering/CONVENTIONS.md`,
 
 ## Synchronization contract
 
+### IP preparation upkeep — IP-01 (owner, 2026-10-22)
+
+Maintain [IP_PROTECTION_PLAN](../../docs/legal/IP_PROTECTION_PLAN.md), the factual register and
+generated counsel packet with source owners and LEGAL. On source/dependency/asset/contributor/
+disclosure changes, review the safe inventory, update candidates/rights gaps in the same turn,
+run `pnpm ip:sync` / `pnpm ip:check`, and record actual executor/checks/limits in
+[IP-01](../../docs/agents/IP-01.md). Preserve reviews/decisions/receipts; changed evidence needs
+revalidation. Fingerprints cannot infer inventions or legal status. Owner approves sharing/spend/filings.
+Local full checks/Claude Stop refresh facts; CI checks committed currency. Semantic upkeep
+follows actual assignments, without an idle paid AI worker, legal docket or external delivery.
+
 Collect exact changed paths, APIs, behavior, executed tests and limitations from every active owner. Review the full documentation obligation table. Update only documents whose claims or navigation change; record untouched schema/payment/privacy/legal boundaries when relevant. Never hand-edit generated product-facts blocks; run `pnpm docs:sync` only when its source facts change. Preserve counsel-approved conclusions and ask LEGAL/COMPLIANCE to review changed promises. Mark stale screenshots; never claim screenshots, native payments, accessibility, hosted SQL or deployment verification without evidence.
 
 ### Task-triggered handoff duty

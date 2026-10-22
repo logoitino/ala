@@ -8,6 +8,19 @@ import { gzipSync, gunzipSync } from 'node:zlib';
 import { execFileSync } from 'node:child_process';
 import * as recovery from '../recovery-capsule.mjs';
 
+// IP-01 adds one factual documentation format; neighboring private/runtime JSON stays blocked.
+test('IP intake metadata travels with private source without allowing other legal data JSON', async () => fixture(async (root) => {
+  await mkdir(path.join(root, 'docs/legal'), { recursive: true });
+  const metadata = '{"_comment":"Synthetic factual intake","version":1,"candidates":[]}';
+  await writeFile(path.join(root, 'docs/legal/ip-register.json'), metadata);
+  const files = await recovery.collectSource(root);
+  const row = files.find((file) => file.path === 'docs/legal/ip-register.json');
+  assert.ok(row);
+  assert.equal(Buffer.from(row.data, 'base64').toString('utf8'), metadata);
+  await writeFile(path.join(root, 'docs/legal/client-records.json'), '{"private":"synthetic-only"}');
+  await assert.rejects(recovery.collectSource(root), /Unreviewed source\/data format/);
+}));
+
 async function fixture(fn) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'tapuai-capsule-'));
   try {

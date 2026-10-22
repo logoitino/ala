@@ -129,6 +129,15 @@ and rehearse an approved database backup before release; restoring source does n
 
 ### Innovation and outside handoff
 
+**Continuing IP preparation (IP-01):** Read [IP_PROTECTION_PLAN](docs/legal/IP_PROTECTION_PLAN.md).
+DOCUMENTATION → ENGINEERING maintains factual candidates/rights gaps in `docs/legal/ip-register.json`
+on source/dependency/asset/contributor/disclosure changes; run `pnpm ip:sync` / `pnpm ip:check`
+in the same turn. Local full checks/Claude Stop refresh facts; CI checks committed currency.
+Source owners review technical/human-AI evidence; LEGAL coordinates supplied counsel decisions.
+Preserve reviews/decisions/receipts and revalidate stale evidence. No inferred novelty/ownership/
+legal status, idle paid worker, filing or external delivery. Owner/counsel retain sharing/spend/
+filing authority; actual receipts: [IP-01](docs/agents/IP-01.md).
+
 Follow [INNOVATION_AND_HANDOFF](docs/engineering/INNOVATION_AND_HANDOFF.md) for new work.
 Record observed struggles or explicit potential failures, a baseline, alternatives, a bounded
 experiment, success/stop criteria and actual results in the existing task/design/incident record.

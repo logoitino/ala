@@ -134,6 +134,14 @@ File on the name and logo you will ship, in the classes counsel picks (downloada
 
 ### L3 — Patent triage
 
+**Continuing preparation, owner 2026-10-22:** use the
+[IP protection plan](../legal/IP_PROTECTION_PLAN.md) and
+[source-bound counsel packet](../legal/IP_COUNSEL_PACKET.md) for copyright, patents, trademarks,
+trade secrets, ownership and disclosure history. Counsel coordinates priority deadlines and
+company assignments; formation must not silently delay a time-sensitive decision. Owner reports
+nothing public as of2026-10-22; this is not an independent audit. Historical steps below are an
+initial conversation order, not approved filing instructions.
+
 A patent is not part of forming the company, and filing one is not assumed.
 
 1. Counsel (patent attorney, not only the LLC lawyer) reads the product: tagged Highlights, Mālo as a gift to the athlete rather than the uploader, Vault entitlement, sideline scoring.

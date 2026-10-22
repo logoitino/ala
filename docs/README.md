@@ -32,6 +32,8 @@ order, then dip into the folders as you need them.
 | [SYSTEM_OVERVIEW.md](engineering/SYSTEM_OVERVIEW.md) | Executive summary, tech stack, directory map, feature tracker. |
 | [CONVENTIONS.md](engineering/CONVENTIONS.md) | Folder rules, file naming, where code goes, the comment standard (§5). |
 | [INNOVATION_AND_HANDOFF.md](engineering/INNOVATION_AND_HANDOFF.md) | Test new solutions, retain decisions and evidence, and prepare understandable engineering/legal/investor handoffs. |
+| [IP documentation implementation plan](engineering/design/IP_DOCUMENTATION_IMPLEMENTATION_PLAN.md) | Source-bound packet, safe update triggers and verification steps. |
+| [Historical Recovery screenshot](engineering/evidence/recovery-reference-2026-10-13.png) | Local 2026-10-13 reference with synthetic identifiers/source hashes; not current hosted or IP verification. |
 | [LOCAL-02](agents/LOCAL-02.md) | Game venue details and directions: approved scope, admin-first implementation and verification. |
 | [SCHEMA.md](engineering/SCHEMA.md) | Every table, RPC, policy and storage bucket. Checked by `pnpm docs:check`. |
 | [Timed trivia plan](engineering/design/TIMED_TRIVIA_IMPLEMENTATION_PLAN.md) | Approved 30/90-second server/admin/player work and local verification. |
@@ -112,6 +114,9 @@ Also: [`supabase/migrations/README.md`](../supabase/migrations/README.md) for ho
 | --- | --- |
 | [LEGAL_BRIEFING.md](legal/LEGAL_BRIEFING.md) | Every legal and money-copy risk as a lettered row. Owned by Legal. |
 | [VERIFICATION_AND_SAFE_GROWTH_REVIEW.md](legal/VERIFICATION_AND_SAFE_GROWTH_REVIEW.md) | Joint Legal/Growth/Dev source review, guardian/Stripe/school checks, consent gaps and proposed owner decisions. |
+| [IP protection plan](legal/IP_PROTECTION_PLAN.md) | Confidential copyright/patent/trademark/secret preparation, upkeep and presentation checklist. |
+| [IP counsel packet](legal/IP_COUNSEL_PACKET.md) | Generated source-bound disclosures, rights gaps and supplied decisions/receipts; intake draft, not a filing. |
+| [IP register](legal/ip-register.json) | Factual input, contribution/license gaps and preserved review/decision/filing records. |
 
 ## company/ — business context
 
@@ -142,6 +147,7 @@ location (tracked in [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_P
 | [FEATURE_ADMIN_TEMPLATE.md](agents/FEATURE_ADMIN_TEMPLATE.md) | Future feature registration and readiness checkpoint template. |
 | [feature-admin.json](agents/feature-admin.json) | Enrolled future feature contracts checked by `pnpm feature-admin:check`. |
 | [WORK_QUEUE.md](agents/WORK_QUEUE.md) | Ordered tasks with acceptance criteria and owners. |
+| [IP-01](agents/IP-01.md) | Actual documentation/tooling execution, local checks and pending counsel work. |
 | [REDUNDANCY-03.md](agents/REDUNDANCY-03.md) | Current exact-source release, Storage/runtime/evidence safeguards, actual independent reviews and pending cloud drill. |
 | [REDUNDANCY-04.md](agents/REDUNDANCY-04.md) | Automatic current-source watcher, all-branch CI, actual activation and crash/failure/retention evidence. |
 | [REDUNDANCY-01.md](agents/REDUNDANCY-01.md) | Actual backup/migration implementation receipts, independent review findings and pending operational rehearsal. |

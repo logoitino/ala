@@ -431,6 +431,22 @@
       ],
       "limitation": "Local source/tests only; SQL unapplied, hosted denied-actor and telemetry intake/delivery unverified. No attendance inference, passive location or new background monitor. Stored-catalog failure has visible UI/retry and local regression coverage only; that read adds no Health observation or verified delivery sensor.",
       "next": "PROFILE+ADMIN correct primary/list through Sports; ATHLETE_STATS correct recorded sport data through existing Stats; SUPPORT reproduces fixed failures without student/team payload; QA verifies hosted migration/privacy and physical device before release."
+    },
+    {
+      "id": "ip-source-currency",
+      "area": "tooling",
+      "owner": "DOCUMENTATION",
+      "status": "implemented",
+      "detects": "Safe source/register drift, missing references, stale recorded candidate reviews and deterministic counsel packet currency through ip:sync/ip:check/ip:test; local check and Claude Stop refresh facts, CI checks committed source.",
+      "evidence": [
+        "scripts/ip-docs.mjs",
+        "scripts/ip-docs-guard.sh",
+        "scripts/__tests__/ip-docs.test.mjs",
+        "docs/legal/IP_PROTECTION_PLAN.md",
+        "docs/agents/IP-01.md"
+      ],
+      "limitation": "Only executes on actual invocation/Claude Stop/CI. Hashes cannot discover omitted inventions, verify private access, authorship/licenses, legal conclusions, filing receipts or docket deadlines; semantic and counsel reviews remain separate.",
+      "next": "DOCUMENTATION repairs invalid/missing input and reruns sync/check; source owner revalidates stale scope, LEGAL coordinates actual counsel evidence and owner decides sharing/spend/filings."
     }
   ]
 }

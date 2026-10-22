@@ -1,6 +1,15 @@
 <!-- Responsibility graph and current reconciliation; definitions and diagrams do not establish executed or hosted services. -->
 # Tapua'i — Team hierarchy & agents
 
+## IP preparation upkeep — 2026-10-22
+
+[IP-01](IP-01.md): DOCUMENTATION (`.claude/agents/documentation.md`) → ENGINEERING owns factual
+register/packet/update tooling. LEGAL (`.claude/agents/legal.md`) → CTO coordinates actual counsel
+inputs and rights/disclosure/owner records. Source owners and CONTENT_RIGHTS/COMPLIANCE/Security
+contribute existing reviews. No reporting/model changes. Retained counsel and owner control law,
+docketing, sharing, spend and filings. [Process](../legal/IP_PROTECTION_PLAN.md). Automatic facts
+are not continuous AI execution, legal acceptance or proof of privacy.
+
 ## Current app roadmap handoff — 2026-10-21 UTC
 
 The current registry has **115 callable definitions across 17 department labels**. The owner

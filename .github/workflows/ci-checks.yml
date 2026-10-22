@@ -66,6 +66,10 @@ jobs:
       - name: Local documentation links resolve after folder changes
         run: pnpm docs:links
 
+      # Source currency only; missing rights/counsel/filing evidence stays explicit in the packet.
+      - name: IP counsel packet source currency and safe refresh regressions
+        run: pnpm ip:check && pnpm ip:test
+
       - name: Check donation language in on-screen copy (docs/product/VOICE.md)
         run: pnpm copy:check
 

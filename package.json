@@ -32,7 +32,7 @@
     "test": "pnpm --filter @tapuai/mobile test -- --watchman=false",
     "app:test:media": "node scripts/media-test-assets.mjs",
     "app:test:assets": "node --test scripts/__tests__/media-test-assets.test.mjs",
-    "check": "pnpm typecheck && pnpm test && pnpm app:test:assets && pnpm docs:check && pnpm docs:links && pnpm copy:check && pnpm life:bank:check && pnpm app:data-boundaries && pnpm comments:check && pnpm feature-admin:test && pnpm feature-admin:check && pnpm data:map:check && pnpm code:unused && pnpm recovery:test && pnpm redundancy:test && pnpm detection:test && pnpm detection:check && pnpm agents:check && pnpm security:client-keys && pnpm security:no-ssn && pnpm infra:register:check && pnpm exit:test && pnpm portability:test && pnpm security:infra:test && pnpm security:infra:check && pnpm exit:map:check && pnpm exit:sync ensure",
+    "check": "pnpm ip:sync && pnpm ip:check && pnpm ip:test && pnpm typecheck && pnpm test && pnpm app:test:assets && pnpm docs:check && pnpm docs:links && pnpm copy:check && pnpm life:bank:check && pnpm app:data-boundaries && pnpm comments:check && pnpm feature-admin:test && pnpm feature-admin:check && pnpm data:map:check && pnpm code:unused && pnpm recovery:test && pnpm redundancy:test && pnpm detection:test && pnpm detection:check && pnpm agents:check && pnpm security:client-keys && pnpm security:no-ssn && pnpm infra:register:check && pnpm exit:test && pnpm portability:test && pnpm security:infra:test && pnpm security:infra:check && pnpm exit:map:check && pnpm exit:sync ensure",
     "feature-admin:check": "node scripts/check-feature-admin.mjs",
     "feature-admin:test": "node --test scripts/__tests__/check-feature-admin.test.mjs",
     "data:map": "node scripts/data-map.mjs",
@@ -70,7 +70,10 @@
     "security:infra": "node infrastructure/security/report.mjs --write",
     "security:infra:check": "node infrastructure/security/report.mjs --check",
     "security:infra:report": "node infrastructure/security/report.mjs --json",
-    "security:infra:test": "node --test infrastructure/security/tests/*.test.mjs"
+    "security:infra:test": "node --test infrastructure/security/tests/*.test.mjs",
+    "ip:sync": "node scripts/ip-docs.mjs",
+    "ip:check": "node scripts/ip-docs.mjs --check",
+    "ip:test": "node --test scripts/__tests__/ip-docs.test.mjs"
   },
   "pnpm": {
     "patchedDependencies": {

@@ -29,6 +29,13 @@ name the actual outside-session runtime when one performs the function. Current 
 
 ## 1. Comments: every file has a header; JSDoc on hooks, API calls, and complex components
 
+**IP-01 upkeep:** On source/dependency/asset/contributor/disclosure changes, DOCUMENTATION and
+source owners update factual candidates/rights gaps in `docs/legal/ip-register.json`, then run
+`pnpm ip:sync` / `pnpm ip:check`. Read `docs/legal/IP_PROTECTION_PLAN.md`; preserve reviews
+and supplied decisions. Hashes cannot infer inventions/ownership or renew stale reviews.
+LEGAL coordinates counsel; owner approves sharing/spend/filings. Record actual checks in IP-01.
+Local full checks refresh facts; no idle paid AI worker or automatic filing is established.
+
 Every source file under `apps/mobile/app` and `apps/mobile/src` starts with a short header comment (what it is,
 where it fits, what it touches). `pnpm comments:check` enforces it in CI. Inline comments explain *why*, not
 *what*. Full rules: `docs/engineering/CONVENTIONS.md` §5.

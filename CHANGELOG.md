@@ -7,6 +7,18 @@
   verification can complete on the server. Nothing is recorded until Stripe has answered, and a
   repeated answer adds no history (migration `20261022140000`, applied to development and staging). Payouts stay blocked.
 
+## 2026-10-22 — Continuing IP preparation (IP-01)
+
+- Final local full check/detection and106 portal tests pass; earlier stale-map/timeout gaps resolved for commit. Preserve the historical Recovery screenshot with engineering evidence.
+
+- Add an evolving internal counsel packet and plan covering copyright, patent investigation,
+  trademarks, trade secrets, ownership and disclosure history.
+- Refresh source fingerprints through local checks/Claude Stop; flag changed review evidence
+  and preserve supplied decisions. CI checks committed currency; no idle paid AI worker.
+- Assign factual upkeep to Documentation and supplied counsel coordination to Legal. Actual
+  rights decisions, legal documents, filings, docket deadlines and sharing remain owner/counsel work.
+
+
 ## 2026-10-22 — Security holes closed on staging and development
 
 - Ask guests to sign in before they cheer in a poll; each account counts once and can switch sides.

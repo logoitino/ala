@@ -1,6 +1,27 @@
 <!-- Current priorities and dated task evidence; queue assignments do not authorize hosted operations or release. -->
 # Specialist work queue
 
+## IP-01 — Continuing IP preparation and counsel packet — 2026-10-22
+
+**Local documentation/tooling verification:** full check + retained detection PASS at2026-10-22T14:31:55Z; portal106/106 and private source refresh PASS. Counsel/rights/presentation gates remain open.
+
+Owner authorized an evolving plan/document and automatic factual upkeep. LEGAL → CTO coordinates
+counsel; DOCUMENTATION → ENGINEERING maintains facts with source owners and existing domain reviewers.
+[Plan](../legal/IP_PROTECTION_PLAN.md) · [Packet](../legal/IP_COUNSEL_PACKET.md) · [Receipts](IP-01.md).
+
+1. Establish candidate disclosures, rights/license/AI/contributor gaps and owner-reported disclosure
+   history. Novelty/ownership and actual private access remain unverified.
+2. Implement safe deterministic refresh, stale-review detection and local Stop/check + read-only CI
+   triggers; verify decision preservation, unsafe input and failed-write behavior.
+3. Reconcile definitions/registry/teams and record actual local checks/limits.
+4. Next LEGAL/owner: verify access/disclosure history, complete contributions/assignments/licenses,
+   retain counsel and approve a scoped intake handoff.
+5. Counsel analyzes protections/search/FTO and jurisdictions/deadlines/costs; owner approves filings.
+   Record actual advice/receipts and maintain actual deadlines through counsel.
+
+Tooling acceptance needs focused/full checks; presentation requires semantic/rights/counsel/owner
+review. No filing, idle paid worker, public release or outside contact follows from this work.
+
 ## NOTIFY-01 — Email, notification inbox and Profile controls — 2026-10-21 UTC
 
 **Status: local disabled-source app-ready at15:50:54UTC, after admin checkpoint15:31:03UTC.233 suites/2,287 tests and both app/shared typechecks pass. Hosted SQL and live delivery remain unavailable.** The owner approved
