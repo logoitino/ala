@@ -1,9 +1,10 @@
 /**
- * Donate sheet checkbox that lets a donor cover the optional processing fee. Amount comes from
- * `live.catalog.maloFeeDollars` (runtime config). Defaults to off.
+ * Gift checkout's optional Stripe processing coverage uses the configured estimate, never a Tapua'i fee.
+ * The monetization flag must be literal true; turning it off removes this control, and selections default off.
  */
 
 import { Checkbox } from 'expo-checkbox';
+import { useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
@@ -20,13 +21,17 @@ type FeeCheckboxProps = {
 export function FeeCheckbox({ playerName, checked, disabled = false, onChange }: FeeCheckboxProps) {
   const { live } = useAppRuntime();
   const fee = live.catalog.maloFeeDollars;
+  const enabled = live.buttons?.MONETIZATION_TIPS_ENABLED === true;
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
+  if (!enabled) return null;
   return (
     <Pressable
       accessibilityRole="checkbox"
-      accessibilityLabel={`Cover card fees (optional): add $${fee.toFixed(2)}. ${playerName}'s share stays the same; this helps Tapua'i pay the card company.`}
+      accessibilityLabel={`Cover the processing fee: add $${fee.toFixed(2)} toward estimated Stripe processing for ${playerName}'s gift. Optional; actual costs may vary.`}
       accessibilityState={{ checked, disabled }}
       disabled={disabled}
-      onPress={() => onChange(!checked)}
+      onPress={() => { if (enabledRef.current && !disabled) onChange(!checked); }}
       style={[styles.row, disabled && { opacity: 0.45 }]}
     >
       <Checkbox
@@ -37,10 +42,8 @@ export function FeeCheckbox({ playerName, checked, disabled = false, onChange }:
         style={styles.checkbox}
       />
       <View style={styles.copy}>
-        <Text style={styles.label}>
-          Add ${fee.toFixed(2)} to cover card fees. {playerName}&apos;s share stays the same — this
-          helps Tapua&apos;i pay the card company.
-        </Text>
+        <Text style={styles.label}>Cover the processing fee</Text>
+        <Text style={styles.label}>Optional: add ${fee.toFixed(2)} toward estimated Stripe processing for {playerName}&apos;s gift. Actual costs may vary.</Text>
       </View>
     </Pressable>
   );

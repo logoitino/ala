@@ -1,5 +1,13 @@
 # Tapua'i architecture
 
+**MONEY-TIPS-01 local boundary (2026-10-22):** the existing runtime-neutral payment core uses
+`serverDonationContextAdapter` in both Node/Edge adapters. Service-only SQL quotes store provisional
+allocations in existing private notification contexts, then promote once to real test intents.
+The authenticated client still writes gifts; observation-only webhook credit authority stays false.
+Default-OFF published extras and unconditional zero gift cut are separate. [Source evidence](evidence/MONEY-TIPS-01-admin.md)
+records history, bounds, roles and hosted/provider/retention gaps; no new table or credit writer.
+
+
 Current state and hand-off: [STATE.md](../STATE.md) (read first). System overview for the pnpm monorepo. Schema detail: [SCHEMA.md](SCHEMA.md). Product numbers: [PRODUCT_FACTS.md](../product/PRODUCT_FACTS.md). Engineer map: [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md). Who owns each tab: [TEAMS.md](../agents/TEAMS.md).
 
 ## Monorepo map

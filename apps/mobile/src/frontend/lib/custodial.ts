@@ -7,7 +7,6 @@
  */
 
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import { ATHLETE_SHARE_PERCENT, PLATFORM_SHARE_PERCENT } from '@/data/malo';
 import { isMissingFunction } from '@/lib/dbErrors';
 
 export type CustodialViewerRole = 'admin' | 'guardian' | 'athlete';
@@ -166,11 +165,10 @@ export function athleteMoneyNotice(summary: CustodialSummary): string {
 }
 
 /**
- * @purpose The money line for a family: what fans donated and what is recorded for the family account (after
- *   Tapua'i's share). "Recorded", not "received" or "held": payouts are not live and withdrawals are not subtracted
+ * @purpose Family money copy uses the recorded gift allocation, including original historical shares. "Recorded", not "received" or "held": payouts are not live and withdrawals are not subtracted
  *   (VOICE + LEGAL review 2026-10-13). The amount Tapua'i kept is stated from the books, so it always matches the
- *   numbers even if the split changes. Without the family share (older database) it states the split, never a guess.
- * @param donatedCents What fans donated in total.
+ *   numbers even if the split changes. A missing family share stays unknown; today's zero-cut rate cannot restate past allocations.
+ * @param donatedCents What fans gave in total.
  * @param familyCents The family account's share from the books, or null when the database has not been updated.
  * @param format Money formatter for the screen.
  */
@@ -182,9 +180,7 @@ export function receivedLines(
   if (familyCents == null) {
     return {
       headline: `${format(donatedCents)} given`,
-      detail: PLATFORM_SHARE_PERCENT === 0
-        ? 'All of each gift is recorded for the family account.'
-        : `${ATHLETE_SHARE_PERCENT}% of each gift is recorded for the family account. Tapua'i keeps ${PLATFORM_SHARE_PERCENT}% to run the app, including card processing.`,
+      detail: 'The recorded family share is unavailable. Check the original gift receipts.',
     };
   }
   const kept = Math.max(0, donatedCents - familyCents);
@@ -192,7 +188,7 @@ export function receivedLines(
     headline: `${format(familyCents)} recorded for your family account so far`,
     detail: kept === 0
       ? `Fans gave ${format(donatedCents)}. All of it is recorded for your family account.`
-      : `Fans gave ${format(donatedCents)}. Tapua'i kept ${format(kept)} to run the app, including card processing.`,
+      : `Fans gave ${format(donatedCents)}. Historical Tapua'i gift share recorded: ${format(kept)}.`,
   };
 }
 

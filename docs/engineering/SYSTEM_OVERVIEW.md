@@ -1,5 +1,13 @@
 # Tapua'i — System Architecture Overview
 
+**2026-10-22 local MONEY-TIPS-01:** individual gifts allocate their full gross to family liability,
+with zero platform gift revenue independently of `MONETIZATION_TIPS_ENABLED` (default OFF).
+Published literal true authorizes optional tips/estimated Stripe coverage; service-issued contexts
+bind the allocation before PaymentSheet. Existing client ledger writer remains; webhook authority
+is false. Historical rows are preserved. [Model evidence](evidence/MONEY-TIPS-01-admin.md) records
+unapplied rollout, processing/settlement and counsel gaps. Older 90/10 descriptions are superseded history.
+
+
 **Timed trivia addition:** [QUIZ-02](../agents/QUIZ-02.md) owns the approved optional30/90-second
 replacement for the earlier untimed Quiz. A reviewed server bank, private preferences,
 issued-family history, exact request recovery and bounded quota feed the Expo admin desk

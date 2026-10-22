@@ -1,4 +1,4 @@
-/** Shared athlete CTA tests retain checkout expectations until the separate tip-model branch. */
+/** Athlete gift copy binds the zero-cut allocation to source rates and keeps optional tips separate. */
 import {
   donationWhereItGoes,
   canDropMaloOnHighlight,
@@ -85,19 +85,21 @@ describe('Malo copy helpers', () => {
   });
 });
 
-describe('donation split and the optional tip to Tapua\'i', () => {
+describe('gift allocation and the optional tip to Tapua\'i', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const malo = require('@/data/malo') as typeof import('@/data/malo');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { MALO_DISCLAIMER } = require('@/data/players') as typeof import('@/data/players');
 
-  it('discloses the 90 / 10 split on the sheet', () => {
-    expect(malo.donationSplitLine('Kaleo')).toBe("90% goes to Kaleo's family account. Tapua'i keeps 10% to run the app.");
-    expect(MALO_DISCLAIMER).toMatch(/^90% of your donation goes to the athlete's family account\. Tapua'i keeps 10%/);
+  it('discloses100% allocation and no platform cut without promising a transfer', () => {
+    expect(malo.donationSplitLine('Kaleo')).toBe("100% of your gift is allocated to Kaleo's family account. Tapua'i takes no cut.");
+    expect(MALO_DISCLAIMER).toMatch(/^100% of your gift is allocated to the athlete's family account\. Tapua'i takes no cut/);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { MALO_ATHLETE_SHARE_BPS, MALO_PLATFORM_CUT_BPS } = require('@/data/finance') as typeof import('@/data/finance');
     expect(MALO_DISCLAIMER.startsWith(`${MALO_ATHLETE_SHARE_BPS / 100}% `)).toBe(true);
-    expect(MALO_DISCLAIMER).toContain(`keeps ${MALO_PLATFORM_CUT_BPS / 100}% `);
+    expect(MALO_PLATFORM_CUT_BPS).toBe(0);
+    expect(MALO_DISCLAIMER).toContain('Stripe processing costs may reduce');
+    expect(MALO_DISCLAIMER).toContain('not a completed transfer');
   });
 
   it('starts the tip at 0% and computes tip cents from the donation', () => {
@@ -111,10 +113,10 @@ describe('donation split and the optional tip to Tapua\'i', () => {
 
   it('spells out where every dollar goes', () => {
     expect(malo.donationBreakdownLine({ athleteName: 'Kaleo', donationDollars: 10, feeDollars: 0, tipPercent: 0 })).toBe(
-      "On a $10.00 donation: $9.00 to Kaleo's family, $1.00 to Tapua'i. You pay $10.00.",
+      "On a $10.00 gift: $10.00 allocated to Kaleo's family. You pay $10.00.",
     );
     expect(malo.donationBreakdownLine({ athleteName: 'Kaleo', donationDollars: 10, feeDollars: 0.5, tipPercent: 10 })).toBe(
-      "On a $10.00 donation: $9.00 to Kaleo's family, $1.00 to Tapua'i + $0.50 card fee + $1.00 tip to Tapua'i. You pay $11.50.",
+      "On a $10.00 gift: $10.00 allocated to Kaleo's family + $0.50 toward estimated Stripe processing + $1.00 tip to Tapua'i. You pay $11.50.",
     );
   });
 });

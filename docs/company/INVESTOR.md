@@ -65,7 +65,7 @@ Prices below are generated from source (`pnpm docs:sync`). Do not edit inside th
 <!-- product-facts:start -->
 | Line | Price (as coded) | Notes |
 | --- | --- | --- |
-| Donations | $5 / $10 / $25 + custom | 90% of your donation goes to the athlete's family account. Tapua'i keeps 10% to run the app, including card processing. Nothing goes to the person who uploaded the clip. |
+| Donations | $5 / $10 / $25 + custom | 100% of your gift is allocated to the athlete's family account. Tapua'i takes no cut. This is a test-mode allocation, not a completed transfer. Stripe processing costs may reduce the amount available for payout and actual costs may vary. Nothing goes to the person who uploaded the clip. |
 | Current test-rail splits | Gifts 0%/100% athlete · Boosters 15%/85% operator · Vault 20%/80% athlete · Drip 100% platform | Control plane on `/admin/money`. New individual gifts allocate the full gross amount to the family with no platform gift share (owner, 2026-10-22); original historical records are preserved. Optional tips to Tapua'i at checkout are 100% platform. |
 | Exclusive | $4.99 one-time PaymentIntent stored as a `subscriptions` row | +100 Aura to the payer. Not Stripe Billing yet. |
 | Boosters | Silver $50 / Gold $150 / Platinum $500 | Silver / Gold / Platinum. One-time price, no billing period. |

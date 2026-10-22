@@ -14,7 +14,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Database functions | 612 (253 used by hand, 62 trigger functions) |
 | Tables reached by at least one screen or server route | 125 of 128 |
 | Code files that read or write the database | 84 |
-| Exported symbols nothing imports | 42 (0 proposed for archive, 42 kept on purpose) |
+| Exported symbols nothing imports | 43 (0 proposed for archive, 43 kept on purpose) |
 | Operational data exports | 15 |
 | Rule failures | 0 |
 
@@ -1234,7 +1234,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `buttons.aura` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.flex` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.malo` | `apps/mobile/app/gift/[handle].tsx`, `@/components/Profile/AthleteProfileView.tsx`, `@/components/Rally/RallyCard.tsx`, `@/components/Rally/RallyMeter.tsx` +1 more |
-| `buttons.MONETIZATION_TIPS_ENABLED` | `@/components/Reels/ReelActionOverlay.tsx` |
+| `buttons.MONETIZATION_TIPS_ENABLED` | `@/components/FeeCheckbox.tsx`, `@/components/Reels/ReelActionOverlay.tsx`, `@/components/TipCheckout.tsx`, `@/hooks/useTipCheckout.ts` |
 | `buttons.more` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.subscribe` | `@/components/Profile/AthleteProfileView.tsx`, `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.crew` | `@/components/Profile/ProfileStatRow.tsx`, `@/components/Reels/ReelActionOverlay.tsx` |
@@ -1899,6 +1899,7 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | `@/data/guardianConsent.ts` | `guardianConsentTemplate` | keep | The exact signed text; guardianConsent.test.ts hashes it and pins it to the migration's guardian_consent_form_sha256 (MINOR-01). |
 | `@/data/highlights.ts` | `HIGHLIGHT_FEED_ALL` | keep | Feed switch parked while All is off the Highlight bar (owner, 2026-10-11). |
 | `@/data/highlights.ts` | `HIGHLIGHT_FEED_SEKI` | keep | Feed switch parked while Seki is off the Highlight bar (owner, 2026-10-11). |
+| `@/data/malo.ts` | `PLATFORM_SHARE_PERCENT` | keep | Owner requires existing identifiers preserved. This tested zero-cut percentage remains a compatibility/split reference; missing family allocations must stay unknown rather than deriving historical results from this current rate. |
 | `@/hooks/useStoryPhotos.ts` | `resetStoryPhotoCache` | keep | Test hook (clears the story cache between tests). |
 | `@/lib/__fixtures__/fanZoneFixtures.ts` | `fanSnapshotFixture` | keep | FUN-01 participant snapshot for screen and hook tests. The data map skips __tests__ imports. |
 | `@/lib/__fixtures__/fanZoneFixtures.ts` | `fanRemovalFixture` | keep | FUN-01 removal receipt for the admin Fan Zone desk tests. The data map skips __tests__ imports. |

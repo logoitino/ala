@@ -47,6 +47,16 @@ Exclusive payment must not be described as a recurring subscription.
 - Final Terms/versioned acknowledgment and signed guardian consent. This draft does not
   silently change a previously signed consent version.
 - Validate all 100% claims against actual processor deductions. The exact tip-step sentence
-  remains held until its implementation and truthful disclosure are ready.
+  is now implemented locally behind the default-OFF flag with a processing/test-rail disclosure;
+  source evidence does not approve the claim for release.
 
 Implementation and remaining copy exceptions: [copy report](../engineering/evidence/GIFT_LANGUAGE_REPORT.md).
+
+## Source facts counsel must reconcile
+
+The local no-cut model assigns the full gross gift to family liability in both flag states.
+Actual Stripe processing and bank settlement are unverified; the existing cover amount is a
+configurable estimate/contribution. Existing gifts still award 10 Aura per $1, and Aura changes
+profile/card borders. This could be digital consideration under store rules. The proposed
+no-entitlement clauses above are drafting instructions, not a finding that the build complies.
+Counsel/owner must classify Aura, distinct Vault purchases and booster placement before submission.

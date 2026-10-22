@@ -1,3 +1,4 @@
+<!-- Prototype press captures stay stale until an actual device capture supersedes them. -->
 # Press stills
 
 Captured 13 September 2026 from the Expo **web** preview at `http://localhost:8081` (development shell). The left column is the app; the black field is unused desktop canvas. The **DEV ROLE** switcher is visible at the bottom — hide that for investor decks by capturing **Expo Go on a phone** instead.
@@ -19,3 +20,7 @@ If Reel / Local / Profile chrome changes, recapture these PNGs from Expo Go when
 **2026-10-07 upload composer STALE:** Video → Details → Review and More options replace the long upload form. No native screenshots captured; small-phone/keyboard fit requires a device check.
 
 **2026-10-07 UX-02 STALE:** staged Donate popup, polished upload steps, shared Daylight sheet/page chrome. No new native screenshots captured; device and keyboard fit remain unverified.
+
+**2026-10-22 gift/checkout STALE:** Give/Gift labels, athlete-page tax notice and default-OFF
+optional tip/estimated processing controls now differ from these historical captures. No new
+device captures; changed giving screens have a source string-table diff in the engineering evidence.

@@ -9,6 +9,17 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-22 — No-cut personal gifts and optional Tapua'i support (local)
+
+Source/admin checkpoint e9da05f and subsequent checkout language on codex/tip-model. New gifts
+allocate full gross to family liability, zero gift cut independently of the default-OFF extras
+flag. Historical posted allocations remain intact. Immutable service quotes/ledger guards,
+cap and in-flight/re-review protections, separate tip/estimated processing lines and gift wording
+are locally verified. See [model evidence](docs/engineering/evidence/MONEY-TIPS-01-admin.md) and
+[checkout evidence](docs/engineering/evidence/MONEY-TIPS-01-app.md). Rollout, actual processor costs,
+bank settlement, signed consent and counsel/store approval remain pending.
+
+
 ## 2026-10-22 — Payee checks record Stripe's answer
 
 - Bank setup now records Stripe's own identity and tax-ID result for a linked account, so payee

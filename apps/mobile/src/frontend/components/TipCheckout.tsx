@@ -1,8 +1,8 @@
 /**
- * Short donation pages shared by the fan popup and inline athlete cards.
- * Amount selection never pays: donors review all disclosures before the deliberate final action.
+ * Short personal-gift pages shared by the fan popup and inline athlete cards.
+ * Amount selection never pays: givers review the exact allocation before the deliberate final action.
  * The Amount page opens with the small owner-approved brand line (TAGLINE_HEADLINE); later pages stay plain.
- * @sideEffects Stripe checkout through useTipCheckout; both optional Tapua'i extras default off (LEGAL R).
+ * @sideEffects Stripe checkout through useTipCheckout. Optional tips and Stripe coverage require the literal-true flag.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Keyboard, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View, type ScrollViewInstance } from 'react-native';
@@ -34,12 +34,19 @@ function parseCustomTip(value: string): number | null {
   // Reject malformed currency rather than silently converting letters, signs or multiple decimal points.
   if (!/^\d+(?:\.\d{0,2})?$/.test(value.trim())) return null;
   const amount = Number(value);
-  return Number.isFinite(amount) && amount >= 1 ? Math.round(amount * 100) / 100 : null;
+  return Number.isFinite(amount) && amount >= 1 && amount <= 1000 ? Math.round(amount * 100) / 100 : null;
+}
+
+/** Captured review/charge values keep a published configuration change from silently altering payment. */
+type GiftAllocation = { playerId: string; tipAmount: number; coverFees: boolean; platformTipPercent: number; feeCents: number; totalCents: number };
+function sameAllocation(a: GiftAllocation | null, b: GiftAllocation | null): boolean {
+  return a != null && b != null && a.playerId === b.playerId && a.tipAmount === b.tipAmount &&
+    a.coverFees === b.coverFees && a.platformTipPercent === b.platformTipPercent && a.feeCents === b.feeCents && a.totalCents === b.totalCents;
 }
 
 /**
- * @purpose Amount → optional extras → review inside one donation surface, with navigation outside the scroll.
- * @sideEffects Opens Stripe only on final Donate; a synchronous ref prevents duplicate payments and early dismissal.
+ * @purpose Amount → Options → Review inside one gift surface, with navigation outside the scroll.
+ * @sideEffects Opens Stripe only on final Give; synchronous guards preserve the reviewed amount and prevent repeat charges.
  */
 export function TipCheckout({ player, compact = false, hideHeader = false, embedded = false, reelId, origin, entry, wishlistItemId, rallyId, sourceLabel, onBacked, onTipped, onBusyChange, canInteract }: TipCheckoutProps) {
   useScreenMountTime('donate-sheet');
@@ -52,6 +59,9 @@ export function TipCheckout({ player, compact = false, hideHeader = false, embed
   const [submitting, setSubmitting] = useState(false);
   const [complete, setComplete] = useState(false);
   const [paid, setPaid] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [paymentSnapshot, setPaymentSnapshot] = useState<GiftAllocation | null>(null);
+  const reviewRef = useRef<GiftAllocation | null>(null);
   const paidRef = useRef(false);
   const paymentRef = useRef(false);
   const mountedRef = useRef(true);
@@ -66,13 +76,35 @@ export function TipCheckout({ player, compact = false, hideHeader = false, embed
   const { live } = useAppRuntime();
   const { height } = useWindowDimensions();
   const locked = busy || submitting;
-  const tipAmounts = live.catalog.maloAmounts.length ? live.catalog.maloAmounts : [5, 10, 25];
+  const enabled = live.buttons?.MONETIZATION_TIPS_ENABLED === true;
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
+  const stepRef = useRef(step);
+  stepRef.current = step;
+  const lockedRef = useRef(locked);
+  lockedRef.current = locked;
+  // Keep the existing SQL gift cap (100000 cents) and never offer an invalid published preset.
+  const presets = live.catalog.maloAmounts.filter((value) => Number.isFinite(value) && value >= 1 && value <= 1000 && Math.round(value * 100) / 100 === value);
+  const tipAmounts = presets.length ? presets : [5, 10, 25];
   const playerName = displayValue(player.name, 'this athlete');
   const customAmount = useMemo(() => parseCustomTip(customValue), [customValue]);
-  const amount = customOpen ? customAmount : selectedAmount;
-  const fee = coverFees ? live.catalog.maloFeeDollars : 0;
-  const total = amount == null ? 0 : (Math.round(amount * 100) + Math.round(fee * 100) + platformTipCentsFor(amount, tipPercent)) / 100;
-  const breakdown = amount == null ? '' : donationBreakdownLine({ athleteName: playerName, donationDollars: amount, feeDollars: fee, tipPercent });
+  const draftAmount = customOpen ? customAmount : selectedAmount;
+  const draftCoverFees = enabled && coverFees;
+  const draftTipPercent = enabled ? tipPercent : 0;
+  const draftFeeCents = draftCoverFees ? Math.round(live.catalog.maloFeeDollars * 100) : 0;
+  const allocation: GiftAllocation | null = draftAmount == null ? null : {
+    playerId: player.id, tipAmount: draftAmount, coverFees: draftCoverFees, platformTipPercent: draftTipPercent,
+    feeCents: draftFeeCents, totalCents: Math.round(draftAmount * 100) + draftFeeCents + platformTipCentsFor(draftAmount, draftTipPercent),
+  };
+  const allocationRef = useRef(allocation);
+  allocationRef.current = allocation;
+  // The review must keep the issued allocation while Stripe or paid-ledger recording is in flight.
+  const displayed = (paymentRef.current || paidRef.current) && paymentSnapshot ? paymentSnapshot : allocation;
+  const amount = displayed?.tipAmount ?? null;
+  const fee = (displayed?.feeCents ?? 0) / 100;
+  const total = (displayed?.totalCents ?? 0) / 100;
+  const breakdown = amount == null ? '' : donationBreakdownLine({ athleteName: playerName, donationDollars: amount, feeDollars: fee, tipPercent: displayed?.platformTipPercent ?? 0 });
+  const staleExtras = !enabled && (coverFees || tipPercent !== 0);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -82,56 +114,81 @@ export function TipCheckout({ player, compact = false, hideHeader = false, embed
     // Changing the target must never carry another family's amount or optional extras across.
     setStep(1); setSelectedAmount(null); setCoverFees(false); setTipPercent(0);
     setCustomOpen(false); setCustomValue(''); setComplete(false); setPaid(false); paidRef.current = false;
+    setNotice(''); setPaymentSnapshot(null); reviewRef.current = null;
   }, [player.id]);
+  useEffect(() => {
+    if (paymentRef.current || paidRef.current || locked) return;
+    if (!enabled && (coverFees || tipPercent !== 0)) {
+      // Uncharged extras disappear on OFF; returning to Options requires the new total to be reviewed.
+      setCoverFees(false); setTipPercent(0); reviewRef.current = null; setStep(2);
+      setNotice('Optional extras are now off. Review your gift total again before giving.');
+    } else if (step === 3 && reviewRef.current && !sameAllocation(reviewRef.current, allocationRef.current)) {
+      reviewRef.current = null; setStep(2);
+      setNotice('Your gift total changed. Review it again before giving.');
+    }
+  }, [enabled, coverFees, tipPercent, locked, step, draftAmount, draftFeeCents]);
   useEffect(() => { busyCallbackRef.current?.(locked); }, [locked]);
   useEffect(() => () => { busyCallbackRef.current?.(false); }, []);
   useEffect(() => { scrollRef.current?.scrollTo({ y: 0, animated: false }); }, [step, complete]);
 
   const navigate = (next: number) => {
     if (paymentRef.current || paidRef.current || locked || canInteract?.() === false) return;
+    if (next === 3) reviewRef.current = allocationRef.current ? { ...allocationRef.current } : null;
     Keyboard.dismiss(); setStep(next);
   };
   const pay = async () => {
-    if (paymentRef.current || paidRef.current || locked || canInteract?.() === false || amount == null || step !== 3 || complete) return;
+    if (paymentRef.current || paidRef.current || lockedRef.current || canInteract?.() === false || stepRef.current !== 3 || complete) return;
+    const reviewed = reviewRef.current;
+    const current = allocationRef.current;
+    if (!current || current.playerId !== player.id || current.tipAmount < 1 || current.tipAmount > 1000) return;
+    if ((!enabledRef.current && (coverFees || tipPercent !== 0)) || !sameAllocation(reviewed, current)) {
+      reviewRef.current = null; setStep(2); setNotice('Your gift total changed. Review it again before giving.'); return;
+    }
     paymentRef.current = true; setSubmitting(true); busyCallbackRef.current?.(true); Keyboard.dismiss();
+    setPaymentSnapshot({ ...current });
     const generation = recipientRef.current.generation;
     const isCurrentRecipient = () => mountedRef.current && recipientRef.current.generation === generation;
     try {
-      await startCheckout({ player, tipAmount: amount, coverFees, reelId, origin, entry, wishlistItemId, rallyId, sourceLabel, platformTipPercent: tipPercent,
+      await startCheckout({ player, tipAmount: current.tipAmount, coverFees: current.coverFees, reelId, origin, entry, wishlistItemId, rallyId, sourceLabel, platformTipPercent: current.platformTipPercent,
+        reviewedTotalCents: current.totalCents, reviewedFeeCents: current.feeCents,
         // Once Stripe succeeds, failures in recording/counters must never offer another charge.
         onPaid: () => { if (isCurrentRecipient()) { paidRef.current = true; setPaid(true); } },
         onBacked: (count) => { if (isCurrentRecipient()) { setComplete(true); onBacked?.(count); } },
         onTipped: (cents) => { if (isCurrentRecipient()) onTipped?.(cents); } });
     } finally {
       paymentRef.current = false;
-      if (mountedRef.current) { setSubmitting(false); busyCallbackRef.current?.(false); }
+      if (mountedRef.current) { if (!paidRef.current) setPaymentSnapshot(null); setSubmitting(false); busyCallbackRef.current?.(false); }
     }
   };
 
   return (
     <View style={[styles.section, compact && styles.compact, embedded ? styles.embedded : { maxHeight: Math.max(320, Math.min(590, height - 100)) }]}>
-      {!compact && !hideHeader ? <Text style={styles.title}>Donate to {playerName}</Text> : null}
+      {!compact && !hideHeader ? <Text style={styles.title}>Send a gift to {playerName}</Text> : null}
       {!complete && !paid ? <MenuStepIndicator labels={['Amount', 'Options', 'Review']} current={step} /> : null}
       <ScrollView ref={scrollRef} style={[styles.body, embedded && styles.embeddedBody]} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} bounces={false}>
-        {complete ? <View style={styles.hero}><Text style={styles.kicker}>MĀLO! ✨</Text><Text style={styles.title}>Thanks for showing up</Text><Text style={styles.copy}>Your donation to {playerName} is on its way.</Text></View> : null}
-        {paid && !complete ? <View style={styles.hero}><Text style={styles.title}>Payment received</Text><Text style={styles.copy}>{locked ? 'Finishing your donation…' : 'Your payment went through. Contact support to check your donation before paying again.'}</Text></View> : null}
+        {notice && !complete && !paid ? <Text accessibilityRole="alert" style={styles.disclaimer}>{notice}</Text> : null}
+        {complete ? <View style={styles.hero}><Text style={styles.kicker}>MĀLO! ✨</Text><Text style={styles.title}>Thanks for showing up</Text><Text style={styles.copy}>Your gift to {playerName} is recorded.</Text></View> : null}
+        {paid && !complete ? <View style={styles.hero}><Text style={styles.title}>Payment received</Text><Text style={styles.copy}>{locked ? 'Finishing your gift record…' : 'Your payment went through. Contact support to check your gift before paying again.'}</Text><Text style={styles.breakdown}>{breakdown}</Text></View> : null}
         {!complete && !paid && step === 1 ? <>
           {/* Brand line (BRAND-01) sits above the Amount page only; Options and Review stay plain financial copy. */}
           <Text style={styles.tagline}>{TAGLINE_HEADLINE}</Text>
-          <View style={styles.hero}><Text style={styles.kicker}>COMMUNITY LOVE 💚</Text><Text style={styles.pageTitle}>Choose your donation</Text><Text style={styles.split}>{donationSplitLine(playerName)}</Text><Text style={styles.copy}>For {playerName}'s sports costs — fees, gear and travel.</Text></View>
+          <View style={styles.hero}><Text style={styles.kicker}>COMMUNITY LOVE 💚</Text><Text style={styles.pageTitle}>Choose your gift</Text><Text style={styles.split}>{donationSplitLine(playerName)}</Text><Text style={styles.copy}>For {playerName}'s sports costs — fees, gear and travel.</Text></View>
           <View style={styles.tipRow}>{tipAmounts.map((value) => <TipButton key={value} amount={value} label={`$${value}`} disabled={locked} selected={!customOpen && selectedAmount === value} onPress={() => { setCustomOpen(false); setSelectedAmount(value); }} />)}<TipButton label="Custom" sublabel="Your amount" disabled={locked} selected={customOpen} onPress={() => setCustomOpen(true)} /></View>
-          {customOpen ? <View style={styles.customBlock}><TextInput accessibilityLabel="Custom donation amount" editable={!locked} keyboardType="decimal-pad" onChangeText={setCustomValue} placeholder="Minimum $1.00" placeholderTextColor={colors.textMuted} returnKeyType="done" style={styles.input} value={customValue} /><Text style={styles.copy}>{customAmount == null ? 'Enter $1 or more, with up to two decimal places.' : `+${auraPointsForTip(customAmount)} Aura Points ⚡`}</Text></View> : null}
+          {customOpen ? <View style={styles.customBlock}><TextInput accessibilityLabel="Custom gift amount" editable={!locked} keyboardType="decimal-pad" onChangeText={setCustomValue} placeholder="$1.00–$1,000.00" placeholderTextColor={colors.textMuted} returnKeyType="done" style={styles.input} value={customValue} /><Text style={styles.copy}>{customAmount == null ? 'Enter $1–$1,000, with up to two decimal places.' : `+${auraPointsForTip(customAmount)} Aura Points ⚡`}</Text></View> : null}
           <Text style={styles.auraHint}>You and {playerName} each earn {AURA_PER_DOLLAR} Aura Points per $1 ⚡</Text>
           <Text style={styles.disclaimer}>Selecting an amount does not charge you.</Text>
         </> : null}
         {!complete && !paid && step === 2 ? <>
-          <View style={styles.hero}><Text style={styles.kicker}>YOUR CHOICE ✨</Text><Text style={styles.pageTitle}>Optional extras</Text><Text style={styles.copy}>Your donation is ${amount?.toFixed(2)}. You can keep both extras off and continue.</Text></View>
-          <View style={styles.tipBlock}><Text style={styles.tipTitle}>{PLATFORM_TIP_TITLE}</Text><View style={styles.tipChips} accessibilityRole="radiogroup">{PLATFORM_TIP_PERCENTS.map((percent) => <Pressable key={percent} accessibilityRole="radio" accessibilityLabel={percent === 0 ? "No tip for Tapua'i" : `${percent}% tip for Tapua'i`} accessibilityState={{ selected: tipPercent === percent, disabled: locked }} disabled={locked} onPress={() => setTipPercent(percent)} style={[styles.tipChip, tipPercent === percent && styles.tipChipOn]}><Text style={[styles.tipChipText, tipPercent === percent && styles.tipChipTextOn]}>{platformTipChipLabel(percent)}</Text></Pressable>)}</View><Text style={styles.disclaimer}>{PLATFORM_TIP_HINT}</Text></View>
-          <FeeCheckbox playerName={playerName} checked={coverFees} disabled={locked} onChange={setCoverFees} />
+          <View style={styles.hero}><Text style={styles.kicker}>YOUR CHOICE ✨</Text><Text style={styles.pageTitle}>{enabled ? 'Optional extras' : 'Your gift'}</Text><Text style={styles.copy}>Your gift is ${amount?.toFixed(2)}.{enabled ? ' You can keep both extras off and continue.' : ' Continue to review before giving.'}</Text></View>
+          {enabled ? <>
+            <View style={styles.tipBlock}><Text style={styles.tipTitle}>{PLATFORM_TIP_TITLE}</Text><View style={styles.tipChips} accessibilityRole="radiogroup">{PLATFORM_TIP_PERCENTS.map((percent) => <Pressable key={percent} accessibilityRole="radio" accessibilityLabel={percent === 0 ? "No tip for Tapua'i" : `${percent}% tip for Tapua'i`} accessibilityState={{ selected: tipPercent === percent, disabled: locked }} disabled={locked} onPress={() => { if (enabledRef.current && !paymentRef.current && !paidRef.current) setTipPercent(percent); }} style={[styles.tipChip, tipPercent === percent && styles.tipChipOn]}><Text style={[styles.tipChipText, tipPercent === percent && styles.tipChipTextOn]}>{platformTipChipLabel(percent)}</Text></Pressable>)}</View><Text style={styles.disclaimer}>{PLATFORM_TIP_HINT}</Text></View>
+            <FeeCheckbox playerName={playerName} checked={coverFees} disabled={locked} onChange={setCoverFees} />
+            <Text style={styles.disclaimer}>{MALO_DISCLAIMER}</Text>
+          </> : null}
           <Text style={styles.breakdown}>{breakdown}</Text>
         </> : null}
         {!complete && !paid && step === 3 ? <>
-          <View style={styles.hero}><Text style={styles.kicker}>READY TO REVIEW 💚</Text><Text style={styles.pageTitle}>Your donation to {playerName}</Text><Text style={styles.total}>${total.toFixed(2)}</Text><Text style={styles.copy}>Total you pay</Text><Text style={styles.breakdown}>{breakdown}</Text></View>
+          <View style={styles.hero}><Text style={styles.kicker}>READY TO REVIEW 💚</Text><Text style={styles.pageTitle}>Your gift to {playerName}</Text><Text style={styles.total}>${total.toFixed(2)}</Text><Text style={styles.copy}>Total you pay</Text><Text style={styles.breakdown}>{breakdown}</Text></View>
           <Text style={styles.disclaimer}>{donationWhereItGoes(playerName)}</Text>
           <Text style={styles.disclaimer}>{MALO_DISCLAIMER}</Text>
           <View style={styles.testNotice}><Text style={styles.disclaimer}>{COMPLIANCE_PAYMENT}</Text></View>
@@ -140,7 +197,7 @@ export function TipCheckout({ player, compact = false, hideHeader = false, embed
       </ScrollView>
       {!complete && !paid ? <View style={styles.footer}>
         {step > 1 ? <Pressable accessibilityRole="button" accessibilityLabel="Back" accessibilityState={{ disabled: locked }} disabled={locked} onPress={() => navigate(step - 1)} style={[styles.back, locked && styles.disabled]}><Text style={styles.backText}>Back</Text></Pressable> : null}
-        <Pressable accessibilityRole="button" accessibilityLabel={step === 3 ? `Donate $${total.toFixed(2)}` : 'Next'} accessibilityState={{ disabled: locked || amount == null }} disabled={locked || amount == null} onPress={() => { if (step === 3) void pay(); else navigate(step + 1); }} style={[styles.next, (locked || amount == null) && styles.disabled]}>{locked ? <ActivityIndicator color={colors.onAccent} /> : null}<Text style={styles.nextText}>{locked ? 'Opening payment…' : step === 3 ? `Donate $${total.toFixed(2)}` : 'Next →'}</Text></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={step === 3 ? `Send a gift · Pay $${total.toFixed(2)}` : 'Next'} accessibilityState={{ disabled: locked || amount == null || staleExtras }} disabled={locked || amount == null || staleExtras} onPress={() => { if (step === 3) void pay(); else navigate(step + 1); }} style={[styles.next, (locked || amount == null || staleExtras) && styles.disabled]}>{locked ? <ActivityIndicator color={colors.onAccent} /> : null}<Text style={styles.nextText}>{locked ? 'Opening payment…' : step === 3 ? `Send a gift · Pay $${total.toFixed(2)}` : 'Next →'}</Text></Pressable>
       </View> : null}
     </View>
   );

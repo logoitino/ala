@@ -28,14 +28,15 @@ Program/club donations use the program's web checkout and its own status and rec
 
 > Users send optional monetary gifts to individual athletes; 100% of each gift passes to the receiver (guideline 3.2.1(vii)). No charitable collection occurs in the app; team/club donations run through web checkout.
 
-The submitted build must substantiate this statement. The current test rail's historical
-90/10 computation does not. The owner has directed a separate no-cut tip model, default-OFF
-`MONETIZATION_TIPS_ENABLED`, before checkout wording is stacked onto that branch.
+The submitted build must substantiate this statement. Local branch `codex/tip-model` removes
+the gift cut independently of default-OFF `MONETIZATION_TIPS_ENABLED`; new gift ledger tests
+assign the full gross gift to family liability. Historical posted 90/10 rows remain history.
+The migration/Edge rollout and provider verification have not been performed by this change.
 Processing deductions must be reconciled with the 100% claim; a 100% gross allocation is not
 proof of 100% net receipt. Staff must verify the web-only program path, not infer it from
 existing booster sponsorship/pass controls.
 
-## Held checkout copy for that release
+## Checkout copy implemented locally for that release
 
 **Tip Tapua'i (optional)**
 
@@ -43,6 +44,12 @@ existing booster sponsorship/pass controls.
 
 **Cover the processing fee**
 
-These words stay out of checkout until the implementation/flag and disclosure checks pass.
+These words are gated in checkout by the literal published flag; default OFF hides optional
+controls and defaults them off. The exact 100% line is accompanied by processing/test-mode
+disclosure. Local implementation is not permission to submit it as a verified settlement claim.
 Optional extras start unselected. No store submission, payment activation or approval is
 established by this draft, a source check or a test-mode PaymentIntent.
+
+Existing gift-linked Aura affects digital profile/card borders. Owner/counsel must review
+that consideration before claiming guideline 3.2.1(vii) eligibility or using the no-digital-benefit
+listing clauses. This document preserves the requested review-note sentence as a held draft.

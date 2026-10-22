@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `569c7a49f5af` |
-| Last announced plan | `569c7a49f5af` — up to date |
+| Exit plan version (what the app uses on Supabase) | `a25b21173011` |
+| Last announced plan | `a25b21173011` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
 | Latest migration | `20261022152000_no_cut_gifts_optional_tips.sql` (56 files) |
 | Canonical schema hash | `f85960b2c51f3470d2a375a69b0938848c79724c762bff7098d7307a2e45172e` (`schema.sql`) |
-| Complete source/configuration content hash | `569c7a49f5af6467ef0f02d46c872263642473537755cf90f4537473c733f1c0` across 1296 files |
+| Complete source/configuration content hash | `a25b21173011df029d1463d96f5616c005ffb6f16bc5747576a28502d038f412` across 1297 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -159,11 +159,11 @@ Counts come from static statements in `schema.sql` and the source; the live data
 | Realtime features | 3 | `broadcast`, `postgres_changes`, `private channels` |
 | Public client environment names | 16 | `EXPO_PUBLIC_ADMIN_REQUIRE_MFA`, `EXPO_PUBLIC_API_ORIGIN`, `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `EXPO_PUBLIC_LIVE_SCORES_BROADCAST`, `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPPORT_ENVIRONMENT`, `EXPO_PUBLIC_SUPPORT_RELEASE`, `EXPO_PUBLIC_SUPPORT_SENSORS_ENABLED`, `EXPO_PUBLIC_WEB_ORIGIN`, `NEXT_PUBLIC_ADMIN_REQUIRE_MFA`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL` |
 | Server environment names | 8 | `ANALYTICS_TEST_RESOLVER`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `SUPPORT_ENVIRONMENT`, `SUPPORT_RELEASE_ID` |
-| Direct Supabase calls outside `lib/` | 37 | places an exit B adapter change must touch (may only shrink, `pnpm app:data-boundaries`) |
+| Direct Supabase calls outside `lib/` | 35 | places an exit B adapter change must touch (may only shrink, `pnpm app:data-boundaries`) |
 
 ### SDK callsite coverage
 
-AST callsites: 1109; literal targets: 482; explicit owner-review candidates: 95.
+AST callsites: 1105; literal targets: 480; explicit owner-review candidates: 95.
 The complete machine inventory (`node scripts/exit-map.mjs --json`) records each detected callsite path, line, column,
 operation and literal target. Dynamic arguments and unresolved client origins require owner review. Syntax inspection
 does not prove runtime/provider coverage; overloads, dynamic SQL and deployed drift require live catalog parity.
@@ -212,7 +212,7 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `apps/mobile/src/frontend/lib/beyondGame.ts:126:30` | `storage.remove` | not-applicable; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/frontend/lib/bookkeeping.ts:126:19` | `database.from` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/cheerPoll.ts:48:19` | `realtime.channel` | dynamic; client resolved | `EXIT_SERVICES`, `REALTIME` |
-| `apps/mobile/src/frontend/lib/custodial.ts:257:27` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/custodial.ts:253:27` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/fanZone.ts:195:39` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/guestGames.ts:75:19` | `realtime.channel` | dynamic; client resolved | `EXIT_SERVICES`, `REALTIME` |
 | `apps/mobile/src/frontend/lib/liveGames.ts:82:19` | `realtime.channel` | dynamic; client resolved | `EXIT_SERVICES`, `REALTIME` |

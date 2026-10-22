@@ -93,16 +93,16 @@ describe('ReceivedMaloPanel family share', () => {
     ];
     await render(<ReceivedMaloPanel playerId="p1" />);
     expect(screen.getByText('$13.50 recorded for your family account so far')).toBeTruthy();
-    expect(screen.getByText("Fans gave $15.00. Tapua'i kept $1.50 to run the app, including card processing.")).toBeTruthy();
+    expect(screen.getByText("Fans gave $15.00. Historical Tapua'i gift share recorded: $1.50.")).toBeTruthy();
     expect(screen.getByText('$4.50 for your family account')).toBeTruthy();
     expect(screen.getByText('$10.00')).toBeTruthy();
   });
 
-  it('says the split instead of guessing when the database has no family share yet', async () => {
+  it('keeps historical allocations unknown when the database has no family share yet', async () => {
     mockRows = [{ id: 't1', fan_name: 'Sina', amount_cents: 500, origin: 'rally', entry: 'in_app', source_label: 'New cleats' }];
     await render(<ReceivedMaloPanel playerId="p1" />);
     expect(screen.getByText('$5.00 given')).toBeTruthy();
-    expect(screen.getByText("90% of each gift is recorded for the family account. Tapua'i keeps 10% to run the app, including card processing.")).toBeTruthy();
+    expect(screen.getByText("The recorded family share is unavailable. Check the original gift receipts.")).toBeTruthy();
     expect(screen.queryByText(/for your family account/)).toBeNull();
   });
 });

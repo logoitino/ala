@@ -1958,7 +1958,7 @@
       "id": "MONEY-TIPS-01",
       "title": "Optional tip for Tapua'i and processing-fee coverage with the full gift allocated to the family",
       "owner": "COMMERCE",
-      "status": "admin-ready",
+      "status": "app-ready",
       "plannedAt": "2026-10-22T15:03:49.233Z",
       "exemption": null,
       "source": {
@@ -2041,7 +2041,16 @@
             }
           ]
         },
-        "app": null
+        "app": {
+          "date": "2026-10-22T15:39:25.836Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/MONEY-TIPS-01-app.md",
+              "command": "pnpm detection:scan (executes pnpm check and portal node --test); focused checkout/family tests and independent source/Babel review",
+              "result": "Local full quality-gate and portal tests both passed with no skipped checks; current app suite266/2576 and portal117. Independent checkout71 and historical-family21 passed. Default-OFF controls, no-cut allocation, re-review, immutable paid fields and denied input checked; hosted/provider/device/domain/counsel release gaps remain."
+            }
+          ]
+        }
       }
     }
   ]

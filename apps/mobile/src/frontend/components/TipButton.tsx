@@ -1,6 +1,6 @@
 /**
- * The animated amount button on the donate sheet (preset amounts, custom, selected state).
- * (Code name `Tip` = donation; on-screen words follow docs/product/VOICE.md.)
+ * The animated amount button on the gift sheet (preset amounts, custom, selected state).
+ * (Code name `Tip` = gift; on-screen words follow docs/product/VOICE.md.)
  */
 
 import { useEffect } from 'react';
@@ -38,7 +38,7 @@ export function TipButton({
   wide = false,
   onPress,
 }: TipButtonProps) {
-  const title = label ?? `Donate $${amount}`;
+  const title = label ?? `Give $${amount}`;
   const detail = sublabel ?? (amount != null ? `+${auraPointsForTip(amount)} Aura Points ⚡` : undefined);
 
   const selectProgress = useSharedValue(selected ? 1 : 0);

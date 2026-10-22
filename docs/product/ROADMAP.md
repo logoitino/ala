@@ -1,6 +1,16 @@
 <!-- Current-app priorities distinguish implemented source from provider/device acceptance and retain historical phase evidence. -->
 # Tapua'i — Fix → Test-Prep → Advance → Team-Test Roadmap
 
+**2026-10-22 gift naming / MONEY-TIPS-01:** the outside-checkout copy sweep landed locally as
+`5a95152`; no-cut source/admin checkpoint passed on separate `codex/tip-model` as `e9da05f`.
+Checkout wording and optional controls are implemented after that preserved admin stage;
+full local check/detection scan and selected app metadata gate pass, with default-OFF
+`MONETIZATION_TIPS_ENABLED`. New gross family allocations are full gifts; historical ledger rows
+stay actual history. [Copy report](../engineering/evidence/GIFT_LANGUAGE_REPORT.md) and
+[model evidence](../engineering/evidence/MONEY-TIPS-01-admin.md) retain rollout, processing,
+settlement, signed consent, Aura consideration and counsel/store dependencies. No release approval.
+
+
 Companion to [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md), [COMPANY_PHASES.md](../company/COMPANY_PHASES.md) (security, billing, and legal phases, including LLC / trademark / patent triage), [AUDIT_REPORT.md](../engineering/AUDIT_REPORT.md), and [TEAMS.md](../agents/TEAMS.md#qa--ship-gate). This is the live tracker for closing the pre-launch security/compliance gaps, standing up real testing infrastructure, and running an internal test wave before any public beta. Update the status line under each phase as work lands — do not let this drift into a one-time snapshot.
 
 

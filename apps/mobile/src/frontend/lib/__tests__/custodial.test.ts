@@ -136,10 +136,10 @@ describe('receivedLines (what reaches the family account)', () => {
     expect(parseCustodialSummary(RAW)?.familyCents).toBeNull();
   });
   it('leads with the family share and shows the gave total beside it', () => {
-    expect(receivedLines(12500, 11250, money)).toEqual({ headline: '$112.50 recorded for your family account so far', detail: "Fans gave $125.00. Tapua'i kept $12.50 to run the app, including card processing." });
+    expect(receivedLines(12500, 11250, money)).toEqual({ headline: '$112.50 recorded for your family account so far', detail: "Fans gave $125.00. Historical Tapua'i gift share recorded: $12.50." });
   });
-  it('states the split instead of a guessed number when the share is unknown', () => {
-    expect(receivedLines(12500, null, money)).toEqual({ headline: '$125.00 given', detail: "90% of each gift is recorded for the family account. Tapua'i keeps 10% to run the app, including card processing." });
+  it('keeps a missing recorded share unknown rather than applying the current rate', () => {
+    expect(receivedLines(12500, null, money)).toEqual({ headline: '$125.00 given', detail: "The recorded family share is unavailable. Check the original gift receipts." });
   });
 });
 

@@ -133,7 +133,7 @@ export function BooksRecordTab({ period, today, entries, manual, closes, reopens
           </Text>
         </> : null}
         <AdminFieldRow>
-          <AdminField label="Memo" value={memo} onChangeText={setMemo} autoCapitalize="sentences" placeholder={isRefund ? 'Refund, giver request' : 'Supabase Pro, October'} />
+          <AdminField label="Memo" value={memo} onChangeText={setMemo} autoCapitalize="sentences" placeholder={isRefund ? 'Refund, donor request' : 'Supabase Pro, October'} />
           <AdminField label="Receipt, invoice or Stripe id" value={reference} onChangeText={setReference} placeholder={isRefund && refundStream === 'malo' ? 'Original gift reference required' : 'Optional'} />
         </AdminFieldRow>
         <AdminBtn kind="primary" label={busy === 'record' ? 'Recording…' : 'Record entry'} onPress={() => { void record(); }} disabled={!manualConfigured || manualReadFailed || busy != null} />

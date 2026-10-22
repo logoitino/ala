@@ -1,7 +1,7 @@
 /**
- * The donation popup keeps its header, Close and checkout navigation visible around short pages.
+ * The gift popup keeps its header, Close and checkout navigation visible around short pages.
  * Pending family payouts show the existing held notice; Stripe presentation locks every exit.
- * @sideEffects Reads athlete_payout_allowed; child checkout records test donations through Stripe.
+ * @sideEffects Reads athlete_payout_allowed; child checkout records test gifts through Stripe.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -35,7 +35,7 @@ type TipSheetModalProps = {
   origin?: TipOrigin;
   entry?: TipEntry;
   wishlistItemId?: string;
-  /** Rally goal this donation counts toward (ROADMAP M2). */
+  /** Rally goal this gift counts toward (ROADMAP M2). */
   rallyId?: string;
   sourceLabel?: string;
   onClose: () => void;
@@ -46,7 +46,7 @@ type TipSheetModalProps = {
 const SHEET_OFF = 640;
 
 /**
- * @purpose Bottom-sheet donation checkout over a blurred feed backdrop. Copy names the athlete who receives the gift (not the uploader).
+ * @purpose Bottom-sheet gift checkout over a blurred feed backdrop. Copy names the athlete who receives the gift (not the uploader).
  * The constrained card keeps navigation outside its changing page; only the short page body scrolls.
  * Shows a "held" line while payouts to this athlete are not unlocked (no school confirmation and no family Stripe ID check yet)
  * (owner decision 2026-09-29; copy flagged for LEGAL).
@@ -186,7 +186,7 @@ export function MaloTipModal({
                   <CardShine tint="rgba(0,230,118,0.4)" color="rgba(255,255,255,0.95)" loopMs={2600} />
                 ) : null}
                 <Text style={[styles.title, delivered && styles.successTitle]}>
-                  {delivered ? `Mālo! Your donation to ${playerName} is on its way 🚀` : maloAthleteCta(playerName)}
+                  {delivered ? `Mālo! Your gift to ${playerName} is recorded 🚀` : maloAthleteCta(playerName)}
                 </Text>
                 <Text style={styles.subtitle}>{maloAthleteSheetSubtitle(playerName)}</Text>
                 {verified === false && !delivered ? <Text style={styles.heldNotice}>{GIFT_HELD_NOTICE}</Text> : null}

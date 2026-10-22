@@ -11,10 +11,10 @@ export const LEGAL_MENU_LABEL = 'Terms of Service & NIL Compliance 📜';
 export const COMPLIANCE_ACCOUNT =
   'Payments are in test mode. These terms are a prototype summary, not a finished Terms of Service or Privacy Policy.';
 export const COMPLIANCE_PAYMENT =
-  'Test payment only. This does not send live money. A donation is a gift, not a wager or pay for a play. A school or association may restrict it.';
+  'Test payment only. This does not send live money. A personal gift is not a wager or pay for a play. A school or association may restrict it.';
 /** Shown on the Mālo sheet. The full statement lives in `LEGAL_SECTIONS` (Terms of Service & Privacy). */
 export const GIFT_RECORD_NOTICE =
-  'We record where this donation started — a Highlight, a QR gift link, a wishlist item, a profile, or a live play — and we use that record for your receipt, to account for the athlete, and to see which parts of Tapua\'i bring in support. Read Terms of Service & NIL Compliance for the full summary.';
+  'We record where this gift started — a Highlight, a QR gift link, a wishlist item, a profile, or a live play — and we use that record for your receipt, to account for the athlete, and to see which parts of Tapua\'i bring in support. Read Terms of Service & NIL Compliance for the full summary.';
 export const COMPLIANCE_PAYOUT =
   'This starts a US individual Express account in test mode. It is not a parent or guardian custodial payout, and it is not a live transfer.';
 export const COMPLIANCE_PARENT =

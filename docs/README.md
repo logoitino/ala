@@ -240,3 +240,11 @@ with these files.
 | [Compact fan design](engineering/design/COMPACT_FAN_UI_DESIGN.md) | Compact labeled menus, Local hierarchy and dock behavior. |
 | [Compact fan plan](engineering/design/COMPACT_FAN_UI_PLAN.md) | Exemption, geometry, scroll state and verification tasks. |
 | [UX-10](agents/UX-10.md) | Sport accents, compact fan tabs and video behind the floating dock; ownership and actual local/native evidence. |
+
+### Gift checkout / tip-model completion evidence
+
+| Document | Purpose |
+| --- | --- |
+| [GIFT_CHECKOUT_STRINGS](engineering/evidence/GIFT_CHECKOUT_STRINGS.md) | Before/after source string table stacked on the no-cut model |
+| [GIFT_CHECKOUT_RESIDUALS](engineering/evidence/GIFT_CHECKOUT_RESIDUALS.md) | Current accounted raw donat* matches and explicit exceptions |
+| [TIP_MODEL_REPORT](engineering/evidence/TIP_MODEL_REPORT.md) | Computation inventory, exact split-change size, flag tests and settlement limits |

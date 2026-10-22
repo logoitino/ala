@@ -1,6 +1,15 @@
 <!-- Callable responsibility and escalation routing; original task receipts establish actual execution and acceptance. -->
 # Tapua'i department call sheet
 
+**Legal/Commerce source handoff, 2026-10-22:** owner replaces individual-donation/10%-cut
+framing with personal gifts and an unconditional zero gift cut; club donations and optional
+Tapua'i tips remain distinct. Outside-session Codex implements/reviews local source; no pinned
+specialist or counsel approval is inferred. LEGAL owns final Terms, consent/versioning and
+App Store review including gift-linked Aura; COMMERCE owns hosted/payment/fee evidence.
+[Copy report](../engineering/evidence/GIFT_LANGUAGE_REPORT.md) and
+[Terms draft](../legal/GIFT_DONATION_TIP_TERMS_DRAFT.md) preserve open decisions and history.
+
+
 ## IP documentation upkeep — IP-01 (2026-10-22)
 
 DOCUMENTATION (`.claude/agents/documentation.md`) → ENGINEERING maintains the owner-requested

@@ -1,11 +1,11 @@
 /**
- * Donation checkout: opens the native Stripe PaymentSheet for a donation, Exclusive subscription, Drip order or
- * booster sponsorship, then records the result. Donations grant Aura to the donor and the athlete.
+ * Gift checkout: opens native Stripe PaymentSheet for a gift, one-time Exclusive purchase, Drip order or
+ * booster sponsorship purchase, then records the result. Gifts retain existing giver/athlete Aura; counsel must review digital consideration.
  * Code names keep `tip` / `malo`; on-screen words follow docs/product/VOICE.md. Needs a dev or preview build, not Expo Go.
  * @sideEffects Edge Function `create-payment-intent` (Metro route as fallback), Stripe PaymentSheet, inserts into `tips`.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
@@ -25,7 +25,6 @@ import { supportSignals } from '@/services/SupportSignalManager';
 import { telemetry } from '@/services/TelemetryManager';
 import type { Player } from '@/types/database';
 import { walletPayOptions } from '@/lib/walletPay';
-import { isMissingColumn } from '@/lib/dbErrors';
 
 export const MALO_DROPPED_KEY = 'tapuai.maloDroppedCount';
 
@@ -38,17 +37,20 @@ type StartCheckoutArgs = {
   origin?: TipOrigin;
   /** How the fan arrived. QR gift links use `qr_link`. */
   entry?: TipEntry;
-  /** `wishlist_items.id` when this Mālo funds one locker item. */
+  /** `wishlist_items.id` when this gift supports one locker item. */
   wishlistItemId?: string;
-  /** `rallies.id` when this donation counts toward the athlete's Rally goal. The server re-checks it. */
+  /** `rallies.id` when this gift counts toward the athlete's Rally goal. The server re-checks it. */
   rallyId?: string;
-  /** Optional tip to Tapua'i as a percent of the donation (0 = none). Charged on top, never counted as the donation. */
+  /** Optional tip to Tapua'i as a percent of the gift (0 = none). Charged on top, never counted as the gift. */
   platformTipPercent?: number;
   /** Item title or other detail analysts should see without another join. */
   sourceLabel?: string;
+  /** Final screen cents; a changed quote requires another review before charging. */
+  reviewedTotalCents?: number;
+  reviewedFeeCents?: number;
   /** Override Aura grant. Exclusive checkout uses 100 instead of `tipAmount * 10`. */
   auraPoints?: number;
-  /** Skip `increment_backer_count` and reel-tip counters (subscribe / Drip). */
+  /** Skip `increment_backer_count` and reel-tip counters (purchases / Drip). */
   skipBacker?: boolean;
   /** Replaces the exclusive unlock copy when `skipBacker` (Drip purchase toast). */
   successToast?: string;
@@ -84,9 +86,9 @@ function applyAuraAward(
 }
 
 /**
- * @purpose Native Stripe PaymentSheet for Mālo, exclusive subscribe, Drip, or booster sponsorships. Mālo grants Aura to the tipper and the athlete.
- * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may tip a reel.
- * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a donation (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`, `cover_fee_cents`, `stripe_payment_intent_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
+ * @purpose Native Stripe PaymentSheet for gifts, exclusive purchase, Drip, or booster sponsorships. Gifts retain Aura for the giver and the athlete.
+ * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may give to a tagged athlete.
+ * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a gift (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`, `cover_fee_cents`, `stripe_payment_intent_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
  */
 export function useTipCheckout() {
   const { user, refreshProfile } = useAuth();
@@ -94,6 +96,10 @@ export function useTipCheckout() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const celebration = useOptionalCelebration();
   const [busy, setBusy] = useState(false);
+  // State updates alone do not exclude two calls in the same render.
+  const checkoutRef = useRef(false);
+  const enabledRef = useRef(false);
+  enabledRef.current = live.buttons?.MONETIZATION_TIPS_ENABLED === true;
   const feeAmount = live.catalog.maloFeeDollars;
   const exclusiveAuraToast = exclusiveUnlockToast(live.catalog.exclusiveAura);
 
@@ -109,6 +115,8 @@ export function useTipCheckout() {
       rallyId,
       platformTipPercent = 0,
       sourceLabel,
+      reviewedTotalCents,
+      reviewedFeeCents,
       auraPoints,
       skipBacker = false,
       successToast,
@@ -116,25 +124,53 @@ export function useTipCheckout() {
       onTipped,
       onPaid,
     }: StartCheckoutArgs) => {
-      if (busy) return;
+      if (checkoutRef.current || busy) return;
 
       if (Platform.OS === 'web') {
         Alert.alert('Stripe payments', NATIVE_STRIPE_UNAVAILABLE_MESSAGE);
         return;
       }
 
+      const isGift = !skipBacker && !!player;
+      const pointsToAdd = auraPoints ?? auraPointsForTip(tipAmount);
+      const giftCents = Math.round(tipAmount * 100);
+      // Reject ledger-bound values before creating a charge; existing database caps remain authoritative.
+      if (isGift && (!Number.isFinite(tipAmount) || giftCents < 100 || giftCents > 100000 ||
+        !Number.isInteger(pointsToAdd) || pointsToAdd < 0 || pointsToAdd > 10000 ||
+        !Number.isFinite(platformTipPercent) || platformTipPercent < 0 || platformTipPercent > 100 ||
+        (entry != null && !['in_app', 'qr_link'].includes(entry)) ||
+        (origin != null && !['highlight', 'qr', 'wishlist', 'profile', 'live', 'rally'].includes(origin)))) {
+        Alert.alert('Review your gift', 'Choose a gift from $1 to $1,000 with valid gift options.');
+        return;
+      }
+      if (isGift && (coverFees || platformTipPercent > 0) && !enabledRef.current) {
+        Alert.alert('Review your gift', 'Optional extras are unavailable. Review your gift without extras before continuing.');
+        return;
+      }
+      const coveredCents = coverFees ? Math.round(feeAmount * 100) : 0;
+      if (isGift && (!Number.isSafeInteger(coveredCents) || coveredCents < 0 || coveredCents > Math.max(500, giftCents))) {
+        Alert.alert('Review your gift', 'Processing-fee coverage is unavailable. Review your gift without coverage.');
+        return;
+      }
+
       const playerName = player ? displayValue(player.name, 'this athlete') : "Tapua'i";
       const { amountCents: donationChargeCents } = getTipCharge(tipAmount, coverFees, feeAmount);
-      // Only a donation to an athlete carries the optional Tapua'i tip (not Drip / subscribe / boosters).
+      // Only a gift to an athlete carries the optional Tapua'i tip (separate from Drip / Exclusive / booster purchases).
       const platformTipCents = !skipBacker && player ? platformTipCentsFor(tipAmount, platformTipPercent) : 0;
       const amountCents = donationChargeCents + platformTipCents;
+      if (isGift && ((reviewedTotalCents != null && reviewedTotalCents !== amountCents) ||
+        (reviewedFeeCents != null && reviewedFeeCents !== coveredCents))) {
+        Alert.alert('Review your gift', 'The checkout amount changed. Review the current total before continuing.');
+        return;
+      }
 
+      checkoutRef.current = true;
       setBusy(true);
       let paymentSucceeded = false;
       const checkoutStartedAt = Date.now();
       try {
         const intentStartedAt = Date.now();
-        // skipBacker marks the existing Vault/Exclusive/Drip/sponsorship purchase paths. It cannot provide donation receipt authority.
+        // skipBacker marks the existing Vault/Exclusive/Drip/sponsorship purchase paths. It cannot provide gift receipt authority.
         const clientSecret = await createPaymentIntent(amountCents, player?.id ?? null, platformTipCents,
           !skipBacker && player ? { giftCents: Math.round(tipAmount * 100), coverFees, platformTipPercent } : undefined);
         telemetry.trackCheckoutLatency('payment_intent', Date.now() - intentStartedAt);
@@ -166,7 +202,6 @@ export function useTipCheckout() {
         paymentSucceeded = true;
         await onPaid?.();
 
-        const pointsToAdd = auraPoints ?? auraPointsForTip(tipAmount);
         const tipperId = user?.id ?? null;
         const recipientId = !skipBacker && player?.id ? player.id : null;
 
@@ -199,41 +234,15 @@ export function useTipCheckout() {
             cover_fee_cents: Math.max(0, donationChargeCents - Math.round(tipAmount * 100)),
             stripe_payment_intent_id: paymentIntentIdFromSecret(clientSecret),
           };
-          let { error: tipError } = await supabase.from('tips').insert({ ...ledger, ...bookkeeping });
-          // Before the bookkeeping migration those two columns are missing. Drop only them, so the
-          // channel, Rally and tip-to-Tapua'i columns are not lost to the broader retry below.
-          // Only a missing-column error (PostgREST PGRST204 / Postgres 42703) qualifies; a CHECK violation on these
-          // columns is a real problem and must not silently drop the fee and payment id.
-          const missingBooksColumn = isMissingColumn(tipError) && /cover_fee_cents|stripe_payment_intent_id/i.test(tipError?.message ?? '');
-          // A CHECK rejection of only these two fields must not cost the donation its record: keep the donation,
-          // and log a visible issue so Finance sees the fee or payment id was refused (Health report, Reconcile).
-          const rejectedBooksField = tipError?.code === '23514' && /tips_cover_fee_cents_check|tips_stripe_payment_intent_id_check/i.test(tipError?.message ?? '');
-          if (tipError && (missingBooksColumn || rejectedBooksField)) {
-            if (rejectedBooksField) {
-              telemetry.trackIssue('checkout.bookkeeping_fields_rejected', 'donate');
-              supportSignals.capture({ feature: 'donation', code: 'data_invalid' });
-            }
-            ({ error: tipError } = await supabase.from('tips').insert(ledger));
-          }
-          const missingChannel =
-            tipError?.code === '42703' ||
-            /origin|entry|wishlist_item_id|source_label|platform_tip_cents|rally_id/i.test(tipError?.message ?? '');
-          if (tipError && missingChannel) {
-            const retry = await supabase.from('tips').insert({
-              player_id: ledger.player_id,
-              amount_cents: ledger.amount_cents,
-              fan_id: ledger.fan_id,
-              reel_id: ledger.reel_id,
-              aura_points: ledger.aura_points,
-            });
-            tipError = retry.error;
-          }
+          // A paid allocation is immutable. Legacy retries that dropped fees, tips or the real
+          // payment reference could lose reconciliation/dedupe authority, even for a base gift.
+          const { error: tipError } = await supabase.from('tips').insert({ ...ledger, ...bookkeeping });
           if (tipError) {
             supportSignals.capture({ feature: 'donation', code: 'data_invalid' });
             tipInsertSucceeded = false;
             Alert.alert(
-              'Donation not recorded',
-              'Your payment went through, but this athlete cannot currently receive donations. Contact support if this seems wrong.',
+              'Gift not recorded',
+              'Your payment went through, but we could not record this gift. Contact support before paying again.',
             );
           }
         }
@@ -242,10 +251,11 @@ export function useTipCheckout() {
         if (!skipBacker && player && tipInsertSucceeded) {
           nextCount = await incrementBackerCount(player);
           onBacked?.(nextCount);
-          onTipped?.(donationChargeCents);
+          // Gift counters exclude separately added processing coverage and Tapua'i tips.
+          onTipped?.(giftCents);
           if (reelId) {
             const { addReelTips, EMPTY_REEL_HYPE } = await import('@/lib/reels');
-            await addReelTips(reelId, donationChargeCents, EMPTY_REEL_HYPE);
+            await addReelTips(reelId, giftCents, EMPTY_REEL_HYPE);
           }
           await bumpMaloDroppedCount();
         }
@@ -280,10 +290,11 @@ export function useTipCheckout() {
         const message = error instanceof Error ? error.message : 'Something went wrong.';
         // Recording and Aura can fail after Stripe has charged; another payment is not a retry.
         Alert.alert(paymentSucceeded ? 'Payment received — follow-up needed' : 'Payment failed',
-          paymentSucceeded ? 'Your payment went through, but we could not finish updating your donation. Contact support before paying again.' : message);
+          paymentSucceeded ? 'Your payment went through, but we could not finish updating your gift. Contact support before paying again.' : message);
         telemetry.trackIssue('checkout');
         supportSignals.capture({ feature: 'donation', code: paymentSucceeded ? 'data_invalid' : 'payment_failed' });
       } finally {
+        checkoutRef.current = false;
         setBusy(false);
       }
     },

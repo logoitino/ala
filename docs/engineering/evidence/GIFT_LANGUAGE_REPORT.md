@@ -1,7 +1,7 @@
 <!-- Source-bound copy review; language does not establish tax, store or payment acceptance. -->
 # Gift-language report — 2026-10-22
 
-## Copy phase
+## Copy phase — retained checkpoint `5a95152`
 
 **475 production string spans changed;161 test string spans updated.** The
 [before/after table](GIFT_LANGUAGE_STRINGS.md) lists every changed production string and the
@@ -70,3 +70,27 @@ payouts. It does not retain actual per-charge processing fees. A local100%gross 
 cannot prove bank settlement or100%net after Stripe processing. Item8money movement and
 processor disclosure remain explicit dependencies; they do not postpone removing the cut.
 Counsel owns final Terms, tax/status language, eligibility, signed consent and store review.
+
+## Completed follow-up on `codex/tip-model`
+
+Source/admin checkpoint `e9da05f` precedes checkout changes. The no-cut source/model is now
+implemented locally: zero platform gift share regardless of default-OFF optional-extras flag.
+[Model report](TIP_MODEL_REPORT.md) supplies pre-change inventory, exact files/line counts,
+OFF/ON gross allocation proof and actual settlement limits. [Checkout table](GIFT_CHECKOUT_STRINGS.md)
+adds112 user-facing spans to the475-span copy phase; [current residual audit](GIFT_CHECKOUT_RESIDUALS.md)
+accounts for544 source lines. The copy-phase held-checkout section above is now superseded history.
+
+Exact tip title and100%sentence are placed on Options only when the flag is literaltrue, paired
+with Stripe estimate/test-mode disclosure. Exact personal-gift tax notice remains on athlete page
+and receipt, and is also shown in checkout Review. No athlete deduction promise is introduced.
+Frozen guardian consent and mixed “Refund, donor request” remain unchanged; current booster
+placement still needs owner classification rather than a charitable receipt claim. Original
+475-span copy-only proof remains distinct from separately authorized model changes.
+
+Counsel still owns final Terms, signed consent/versioning, actual fee/net claims, Aura digital
+consideration, club status and App Store submission. No source/test report establishes approval.
+Final full-check and app gate counts: [app evidence](MONEY-TIPS-01-app.md).
+
+Final follow-up full `pnpm check`/detection scan PASS (266 suites/2576 tests, portal117); selected
+app metadata gate recorded separately. Two old90/10 assertions and two historical-label assertions
+were updated; missing historical family share remains explicitly unknown rather than inferred.

@@ -16162,7 +16162,10 @@
       "key": "MONETIZATION_TIPS_ENABLED",
       "path": "buttons.MONETIZATION_TIPS_ENABLED",
       "readers": [
-        "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx"
+        "apps/mobile/src/frontend/components/FeeCheckbox.tsx",
+        "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx",
+        "apps/mobile/src/frontend/components/TipCheckout.tsx",
+        "apps/mobile/src/frontend/hooks/useTipCheckout.ts"
       ]
     },
     {

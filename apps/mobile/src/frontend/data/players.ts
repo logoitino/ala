@@ -1,7 +1,7 @@
 /**
- * Athlete and donation constants plus small helpers: preset donation amounts, the processing fee, the 90 / 10
- * donation split disclosure, Aura per dollar, hype reaction ids, scorer actions, and `displayValue` / clock parsing.
- * `Player` and `Game` types come from `types/database.ts`. Code name `tip` = donation.
+ * Athlete and gift constants plus small helpers: preset gift amounts, the processing fee, the 100 / 0
+ * gift allocation disclosure, Aura per dollar, hype reaction ids, scorer actions, and `displayValue` / clock parsing.
+ * `Player` and `Game` types come from `types/database.ts`. Code name `tip` = gift.
  */
 
 import type { Player } from '@/types/database';
@@ -19,13 +19,12 @@ export function auraPointsForTip(tipAmount: number): number {
 }
 
 /**
- * Fee disclosure on the donate sheet (owner, 2026-09-29: keep the 10% and say so before the donor pays;
- * LEGAL row L). Numbers come from `data/finance.ts` so the words can't drift from the split.
+ * New gifts have no platform cut (owner, 2026-10-22). This is a ledger allocation, not proof of a
+ * transfer or a guarantee that Stripe's actual processing expense equals optional fee coverage.
+ * The literal stays readable by docs:sync; money constants and tests bind it to the source model.
  */
-// Plain literal so `scripts/sync-front-docs.mjs` can read it; `data/__tests__/malo.test.ts` keeps the
-// numbers in step with MALO_ATHLETE_SHARE_BPS / MALO_PLATFORM_CUT_BPS.
 export const MALO_DISCLAIMER =
-  "90% of your donation goes to the athlete's family account. Tapua'i keeps 10% to run the app, including card processing. Nothing goes to the person who uploaded the clip.";
+  "100% of your gift is allocated to the athlete's family account. Tapua'i takes no cut. This is a test-mode allocation, not a completed transfer. Stripe processing costs may reduce the amount available for payout and actual costs may vary. Nothing goes to the person who uploaded the clip.";
 
 export const QUICK_REACTIONS = [
   { id: 'aura', label: 'Aura ⚡', reaction: 'Aura' },

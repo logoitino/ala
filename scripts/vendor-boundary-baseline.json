@@ -9,7 +9,7 @@
   "apps/mobile/src/frontend/hooks/useEngineeringSupport.ts": 1,
   "apps/mobile/src/frontend/hooks/useGameEventBroadcast.ts": 6,
   "apps/mobile/src/frontend/hooks/useStripeConnect.ts": 2,
-  "apps/mobile/src/frontend/hooks/useTipCheckout.ts": 3,
+  "apps/mobile/src/frontend/hooks/useTipCheckout.ts": 1,
   "apps/mobile/src/frontend/services/MediaUploadService.ts": 5,
   "apps/mobile/src/frontend/services/SupportSignalManager.ts": 1,
   "apps/mobile/src/frontend/services/TelemetryManager.ts": 1
