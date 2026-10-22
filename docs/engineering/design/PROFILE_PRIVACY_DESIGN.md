@@ -100,3 +100,16 @@ touching existing settings; settings and blocks keep working.
 Messaging of any kind (none exists, by design); what a school sees; changing existing accounts' settings without the
 owner's call (existing accounts keep today's behaviour: everything they had visible maps to `everyone`, hidden items to
 `only_me`, account public — owner decision to flip them later).
+
+
+## MULTISPORT-01 — Secondary participation policy (2026-10-21 local source)
+
+Sport remains public athlete identity within authorized profile scope. New secondary school/team metadata
+uses the existing school audience; position uses stats audience; jersey requires both. Profile/account/private,
+block, age-block, minor-consent and guardian-on-record rules filter RPC snapshots, with no blanket base-table
+SELECT. Guardians gain no participation writes. Primary selection does not change verified school/player,
+guardian or payee identity. Public route waits for authorized target profile id and guards account/subject lifetime.
+Recorded media sport is an annotation, never proof of affiliation or consent; existing player tag and Vault CASE
+expressions are preserved. Unknown legacy sport stays unassigned. Fixed errors carry no student/team text.
+Admin-first source/privacy review ACCEPT and local replay56/56 pass; hosted policy/device/telemetry delivery
+remain separate in [MULTISPORT-01](../../agents/MULTISPORT-01.md).

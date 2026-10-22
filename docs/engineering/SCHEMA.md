@@ -2075,3 +2075,32 @@ New definers use empty search paths and schema-qualified relations; direct table
 revoked with RLS/RPC boundaries. Old actor-unguarded save/config/retry overloads are dropped.
 Written grants/policies are not deployed security evidence. Generated DB catalog remains
 unchanged until the SQL engine can regenerate it; the client uses the existing bound RPC SDK.
+
+
+## MULTISPORT-01 — Local unapplied participation and recorded sport source
+
+Migration: `supabase/migrations/20261021233000_athlete_sports.sql`.
+
+| Source | Contract |
+| --- | --- |
+| `athlete_sport_entries` | PK(profile_id,sport), school_id nullable directory FK, team_name≤120, position≤80, jersey≤12. No direct anon/authenticated grant; RPC privacy and self-athlete/admin writes. Up to16 unique canonical sports, exactly one primary. |
+| `profiles.athlete_sports_revision` | Nonnegative integer, profile-row-locked compare-and-save. Manual primary mirrors athlete_sport/position/jersey, preserves school_id/player/guardian/verification. Unmanaged onboarding remains compatible and advances revision; trusted managed opt-in rejects direct mutation. |
+| `athlete_career_stats` | Composite PK(player_id,sport), each sport preserved independently. |
+| `athlete_game_logs.sport` | Nullable recorded sport; all untagged old logs stay null until explicit staff classification. Old six-argument writer refuses ambiguous cases, explicit seventh p_sport available. |
+| `reels.sport`, `reels_feed.sport` | Optional initial video/photo recorded tag, legacy null never inferred. Preserve tag/avatar/Vault CASE; active-catalog validation and uploader historical-retag denial. |
+| `get_athlete_sports(uuid)` | Authorized privacy-filtered snapshot; school/team obey school audience, position stats audience, jersey both. Blocked/private/minor/guardian rules reused. |
+| `set_athlete_sports(uuid,text,jsonb,integer)` | Atomic complete list replacement, canonical active/retained sport validation and revision conflict. |
+| `admin_list_athlete_sports(text,integer)` | Protected existing Sports desk search, maximum40 rows. |
+| `guard_profile_athlete_sports`, `sync_legacy_athlete_sport`, `guard_reel_recorded_sport` | Trigger-only entry points, no public execute grants. |
+
+Removing participation preserves recorded stats/logs/Highlights. Source restoration does not apply SQL;
+local replay and hosted/device acceptance are separate in [tracker](../agents/MULTISPORT-01.md).
+
+
+Admin repair extensions: `admin_get_highlight_sport(uuid)` and `admin_set_highlight_sport(uuid,text,text)`
+provide one-row read/old-value compare-and-save in Highlights. `admin_list_unassigned_athlete_logs(uuid,integer)`
+returns at most20 original unknown logs; `admin_set_athlete_game_log_sport(uuid,uuid,text,text)` classifies or
+corrects the original target-player log without replacing id/date/values. `admin_athlete_sport_usage()` includes
+secondary participation in protected catalog usage. `profiles.athlete_sports_managed` is an internal trusted
+opt-in marker: legacy onboarding changes advance revision, avoiding a stale first save, while post-opt-in direct
+credential mutation remains rejected. No new guardian or verification authority.

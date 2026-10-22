@@ -148,6 +148,8 @@ export type HighlightClip = {
   createdAt?: string;
   /** `reels.category` — Game Day / Train Like Me / Serve Like Me. */
   category?: ReelCategory;
+  /** Recorded `reels.sport`; null/undefined history stays only in All and is never inferred. */
+  sport?: string | null;
   /** `reels.flash_unlock_until` — Vault clip is playable until this instant. */
   flashUnlockUntil?: string | null;
   /** `reels.tag_status` — pending tags do not elect Player of the Week. */

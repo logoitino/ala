@@ -23,7 +23,7 @@ jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({
 jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: false, supabase: {} }));
 jest.mock('@/lib/adminControls', () => ({
   ...jest.requireActual('@/lib/adminControls'),
-  fetchAthleteRecords: jest.fn(), saveCareerStats: jest.fn(), addGameLog: jest.fn(), removeGameLog: jest.fn(), setCustodialTerms: jest.fn(),
+  fetchAthleteRecords: jest.fn(), classifyGameLogSport: jest.fn(), saveCareerStats: jest.fn(), addGameLog: jest.fn(), removeGameLog: jest.fn(), setCustodialTerms: jest.fn(),
   fetchSchoolConfirmers: jest.fn(), addSchoolConfirmer: jest.fn(), revokeSchoolConfirmer: jest.fn(), setSchoolBranding: jest.fn(), fetchSchoolBranding: jest.fn(),
   fetchOperatorCheckins: jest.fn(), purgeOperatorCheckins: jest.fn(),
 }));
@@ -40,7 +40,7 @@ beforeEach(() => {
 });
 
 it('writes career stats and game lines for the selected athlete', async () => {
-  await render(<AthleteRecordsPanel playerId="p1" name="Kaleo" />);
+  await render(<AthleteRecordsPanel playerId="p1" name="Kaleo" defaultSport="Rugby" />);
   expect(await screen.findByText('2026-10-02 · Kahuku')).toBeTruthy();
   await fireEvent.changeText(screen.getByLabelText('Games played'), '9');
   await fireEvent.press(screen.getByLabelText('Save career stats'));
@@ -50,7 +50,7 @@ it('writes career stats and game lines for the selected athlete', async () => {
 });
 
 it('refuses a handover age outside 18–21 before calling the database', async () => {
-  await render(<AthleteRecordsPanel playerId="p1" name="Kaleo" />);
+  await render(<AthleteRecordsPanel playerId="p1" name="Kaleo" defaultSport="Rugby" />);
   await fireEvent.changeText(screen.getByLabelText('Handover age (18–21)'), '16');
   await fireEvent.press(screen.getByLabelText('Update custodial terms'));
   expect(await screen.findByText(/18 to 21/)).toBeTruthy();
@@ -115,8 +115,8 @@ it('never shows one athlete\'s stats under another when a slow response lands la
   m.fetchAthleteRecords
     .mockImplementationOnce(() => new Promise((resolve) => { resolveSlow = resolve; }))
     .mockResolvedValueOnce({ career: { sport: 'Volleyball', gamesPlayed: 3, scoringValue: 1, volumeValue: 2, mvpBadges: 0 }, logs: [] });
-  const view = await render(<AthleteRecordsPanel playerId="p1" name="Kaleo" />);
-  await view.rerender(<AthleteRecordsPanel playerId="p2" name="Sina" />);
+  const view = await render(<AthleteRecordsPanel playerId="p1" name="Kaleo" defaultSport="Rugby" />);
+  await view.rerender(<AthleteRecordsPanel playerId="p2" name="Sina" defaultSport="Volleyball" />);
   expect((await screen.findByLabelText('Games played')).props.value).toBe('3');
   resolveSlow({ career: { sport: 'Rugby', gamesPlayed: 99, scoringValue: 0, volumeValue: 0, mvpBadges: 0 }, logs: [] });
   await waitFor(() => expect(screen.getByLabelText('Games played').props.value).toBe('3'));
@@ -124,7 +124,7 @@ it('never shows one athlete\'s stats under another when a slow response lands la
 
 it('blocks saving stats when the read failed instead of offering zeros', async () => {
   m.fetchAthleteRecords.mockRejectedValue(new Error('permission denied'));
-  await render(<AthleteRecordsPanel playerId="p1" name="Kaleo" />);
+  await render(<AthleteRecordsPanel playerId="p1" name="Kaleo" defaultSport="Rugby" />);
   expect(await screen.findByText(/permission denied Saving is off/)).toBeTruthy();
   expect(screen.getByLabelText('Save career stats')).toBeDisabled();
 });
@@ -137,4 +137,22 @@ it('shows Crew alerts, opens the athlete and clears them', async () => {
   expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('p1'));
   await fireEvent.press(screen.getByLabelText('Clear Crew alerts'));
   await waitFor(() => expect(screen.queryByText('Crew alerts')).toBeNull());
+});
+
+it('loads and writes the selected sport without carrying the previous sport values',async()=>{
+ m.fetchAthleteRecords.mockImplementation(async(_id,sport)=>({career:{sport,gamesPlayed:sport==='Volleyball'?3:8,scoringValue:0,volumeValue:0,mvpBadges:0},logs:[]}));
+ await render(<AthleteRecordsPanel playerId="p1" name="Kaleo" defaultSport="Football" />);
+ await waitFor(()=>expect(screen.getByLabelText('Games played').props.value).toBe('8'));
+ await fireEvent.changeText(screen.getByLabelText('Sport'), 'Volleyball');
+ await fireEvent.press(screen.getByLabelText('Load selected sport'));
+ await waitFor(()=>expect(screen.getByLabelText('Games played').props.value).toBe('3'));
+ await fireEvent.press(screen.getByLabelText('Add game line'));
+ await waitFor(()=>expect(m.addGameLog).toHaveBeenCalledWith(expect.objectContaining({sport:'Volleyball'})));
+});
+it('classifies the original unassigned game line without deleting it',async()=>{
+ m.fetchAthleteRecords.mockResolvedValue({career:null,logs:[],unassignedLogs:[{id:'old',playedOn:'2026-10-01',opponentSchool:'Other',statLine:'Original',scoringValue:3,volumeValue:4}]});
+ await render(<AthleteRecordsPanel playerId="p1" name="Kaleo" defaultSport="Volleyball" />);
+ await fireEvent.press(await screen.findByLabelText('Assign sport to old'));
+ await waitFor(()=>expect(m.classifyGameLogSport).toHaveBeenCalledWith('old','p1','Volleyball',null));
+ expect(m.removeGameLog).not.toHaveBeenCalled();
 });

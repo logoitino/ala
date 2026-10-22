@@ -1,5 +1,5 @@
 /**
- * Local tab → Boosters hub: ranked fans who have boosted athletes' Aura, with a peek sheet per booster.
+ * Compact Local Boosters rail keeps ranked fans' full names and a peek sheet per booster.
  * Data from `hooks/useAuraBoosters`; tiers and colours from `lib/aura.ts`.
  */
 
@@ -102,10 +102,10 @@ function AuraBoosterCard({
           <View pointerEvents="none" style={styles.avatarGloss} />
           <Text style={[styles.initials, { color: tier.ink }]}>{initialsFor(booster.full_name)}</Text>
         </View>
-        <Text style={styles.name} numberOfLines={1}>
+        <Text style={styles.name}>
           {booster.full_name}
         </Text>
-        <Text style={styles.handle} numberOfLines={1}>
+        <Text style={styles.handle}>
           @{booster.username}
         </Text>
       </View>
@@ -221,7 +221,7 @@ export function TopAuraBoosters({ hideTitle = false }: TopAuraBoostersProps) {
 const styles = StyleSheet.create({
   section: {
     gap: 10,
-    marginHorizontal: -16,
+    marginHorizontal: -12,
   },
   sectionFlush: {
     marginTop: 2,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
     marginTop: 4,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   rail: {
     paddingHorizontal: 16,
@@ -239,11 +239,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   card: {
-    width: 196,
+    width: 168,
     borderRadius: radii.lg,
     borderWidth: 1.5,
     padding: 12,
-    gap: 10,
+    gap: 8,
     overflow: 'hidden',
   },
   tick: {
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   badgeLabel: {
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.2,
   },
@@ -330,8 +330,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   avatar: {
-    width: 52,
-    height: 52,
+    width: 44,
+    height: 44,
     borderRadius: 12,
     backgroundColor: colors.background,
     borderWidth: 1.5,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     textAlign: 'center',
   },

@@ -52,22 +52,29 @@ export async function fetchAthleteStats(
   if (isDemoAthleteId(id)) return demoAthleteStats(asPlayer(hydratedPlayer, id), targetSport);
   if (!isSupabaseConfigured || !isAuraUuid(id)) return initial;
 
-  const [playerResult, careerResult, logResult] = await Promise.all([
-    hydratedPlayer
-      ? Promise.resolve({ data: hydratedPlayer, error: null })
+  const requested = targetSport?.trim() || null;
+  let careerQuery = supabase.from('athlete_career_stats').select('*').eq('player_id', id);
+  if (requested) careerQuery = careerQuery.eq('sport', requested);
+  const [playerResult, careerResult] = await Promise.all([
+    hydratedPlayer ? Promise.resolve({ data: hydratedPlayer, error: null })
       : supabase.from('players').select('*').eq('id', id).maybeSingle(),
-    supabase.from('athlete_career_stats').select('*').eq('player_id', id).maybeSingle(),
-    supabase.from('athlete_game_logs').select('*').eq('player_id', id).order('played_on', { ascending: false }).limit(12),
+    careerQuery.limit(requested ? 1 : 2),
   ]);
-
   const nextPlayer = asPlayer((playerResult.data as Player | null) ?? hydratedPlayer, id);
-  const storedCareer = careerResult.error ? null : careerResult.data as AthleteCareerStat | null;
-  const sport = inferAthleteSport(nextPlayer.position, targetSport?.trim() || storedCareer?.sport);
-  // Logs have no sport column. Require the parent career sport to match before presenting their values.
-  const matchingCareer = Boolean(storedCareer?.sport.trim()
-    && inferAthleteSport(null, storedCareer.sport).toLowerCase() === sport.toLowerCase());
-  const careerRow = matchingCareer ? storedCareer : null;
-  const logs = matchingCareer && !logResult.error ? mapGameLogs(logResult.data as AthleteGameLog[] | null) : [];
+  const raw = careerResult.error ? [] : careerResult.data;
+  const careers = (Array.isArray(raw) ? raw : raw ? [raw] : []) as AthleteCareerStat[];
+  // The legacy no-target caller works only with one stored sport; ambiguous rows never borrow position defaults.
+  const candidates = requested ? careers.filter(c => c.sport === requested) : careers;
+  const careerRow = candidates.length === 1 ? candidates[0] : null;
+  const sport = requested || careerRow?.sport || (careers.length > 1 ? '' : inferAthleteSport(nextPlayer.position));
+  let logs: ReturnType<typeof mapGameLogs> = [];
+  if (sport) {
+    const logResult = await supabase.from('athlete_game_logs').select('*').eq('player_id', id).eq('sport', sport)
+      .order('played_on', { ascending: false }).limit(12);
+    // Filter again at the mapping boundary so malformed/mock/legacy responses cannot mix sport histories.
+    if (!logResult.error && Array.isArray(logResult.data)) logs = mapGameLogs((logResult.data as AthleteGameLog[])
+      .filter(log => log.player_id === id && log.sport === sport));
+  }
   const empty = emptyAthleteStats(nextPlayer, sport);
   const columns = careerColumnsForSport(sport);
   const career = careerRow

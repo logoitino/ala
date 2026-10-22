@@ -4,6 +4,7 @@
  * migration adds a column, view or RPC, update the matching type here in the same change.
  */
 import type { SchoolTeam } from '@/data/teams';
+import type { Json } from './database.generated';
 import type {
   ClientSupportCode, EngineeringSupportSnapshot, SupportAudit, SupportCode, SupportDisposition,
   SupportEnvironment, SupportFeature, SupportRelease, SupportReleaseManifest, SupportReview,
@@ -50,6 +51,10 @@ export type Profile = {
   school_id?: string | null;
   athlete_division?: string | null;
   athlete_sport?: string | null;
+  /** Revision of the complete profile-owned participation list. */
+  athlete_sports_revision?: number;
+  /** Server-owned marker distinguishing legacy onboarding from the atomic sports editor. */
+  athlete_sports_managed?: boolean;
   athlete_jersey?: string | null;
   athlete_position?: string | null;
   athlete_class_year?: string | null;
@@ -530,6 +535,8 @@ export type SubscriberRequest = {
 };
 
 export type Reel = {
+  /** Recorded upload sport; a mutable primary never relabels history. */
+  sport?: string | null;
   id: string;
   video_url: string;
   title: string;
@@ -656,6 +663,8 @@ export type AthleteCareerStat = {
 };
 
 export type AthleteGameLog = {
+  /** Recorded sport; legacy unclassified history stays null. */
+  sport?: string | null;
   id: string;
   player_id: string;
   played_on: string;
@@ -768,6 +777,7 @@ export type Database = {
         SchoolAndTeam,
         Pick<SchoolAndTeam, 'name' | 'level' | 'division' | 'region'> & Partial<SchoolAndTeam>
       >;
+      athlete_sport_entries: Table<{ profile_id: string; sport: string; school_id: string | null; team_name: string | null; position: string; jersey: string }>;
       athlete_career_stats: Table<
         AthleteCareerStat,
         Pick<AthleteCareerStat, 'player_id'> & Partial<AthleteCareerStat>
@@ -885,6 +895,14 @@ export type Database = {
       };
     };
     Functions: {
+      admin_get_highlight_sport: { Args:{p_reel_id:string};Returns:Json };
+      admin_set_highlight_sport: { Args:{p_reel_id:string;p_sport:string|null;p_expected_sport:string|null};Returns:Json };
+      admin_list_unassigned_athlete_logs: { Args:{p_player_id:string;p_limit?:number};Returns:AthleteGameLog[] };
+      admin_set_athlete_game_log_sport: { Args:{p_log_id:string;p_player_id:string;p_sport:string;p_expected_sport:string|null};Returns:AthleteGameLog };
+      admin_athlete_sport_usage: { Args: Record<string, never>; Returns: { sport:string; athletes:number }[] };
+      get_athlete_sports: { Args: { p_profile_id?: string | null }; Returns: Json };
+      set_athlete_sports: { Args: { p_profile_id: string; p_primary_sport: string; p_sports: Json; p_expected_revision: number }; Returns: Json };
+      admin_list_athlete_sports: { Args: { p_search?: string; p_limit?: number }; Returns: Json };
       /** Fixed bounded snapshot; errors/missing migration remain unread, never healthy empty data. */
       get_engineering_support_snapshot: { Args: Record<string, never>; Returns: EngineeringSupportSnapshot };
       record_support_signal: {

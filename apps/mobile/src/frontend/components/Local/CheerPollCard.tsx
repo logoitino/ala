@@ -1,3 +1,6 @@
+/** Compact Local cheer cards retain their legal notice, full team names and existing vote authority.
+ * @sideEffects Existing useCheerPoll votes, usage telemetry and haptic feedback.
+ */
 import { useEffect, useRef, useState } from 'react';
 import { type GestureResponderEvent, StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -218,7 +221,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: FOCAL.electricGold,
-    padding: 14,
+    padding: 12,
     gap: 10,
     overflow: 'visible',
     ...cardShadow,
@@ -260,7 +263,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
   },
   matchup: {
@@ -303,7 +306,7 @@ const styles = StyleSheet.create({
   },
   voteCount: {
     color: colors.textMuted,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
   },
   actions: {
@@ -316,7 +319,7 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   teamBtn: {
-    minHeight: 48,
+    minHeight: 44,
     flexDirection: 'row',
     borderRadius: radii.md,
     borderWidth: 1.5,

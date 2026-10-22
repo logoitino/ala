@@ -1,5 +1,5 @@
 /**
- * Local discovery scoreboard: recorded teams, sport and game state above the roster action.
+ * Compact Local discovery scoreboard: the entire card opens the game; a small arrow marks that action.
  * Neutral letter tiles identify teams without pretending to be approved school crests.
  * Booster logos display through `mediaUri` (legacy full URL or `sb:` reference, SCALE-02); no logo shows initials.
  * @sideEffects Light haptic through AnimatedPressable; parent owns match navigation.
@@ -101,9 +101,8 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
         <View style={styles.scoreDivider} />
         <TeamScoreRow name={away} school={game.away_school} side="Away" score={awayScore} />
       </View>
-      <Text style={styles.venue}>{game.venue?.trim() || 'Venue TBA'}</Text>
-      <View style={styles.cta}>
-        <Text style={styles.ctaLabel}>View game & roster</Text>
+      <View style={styles.venueRow}>
+        <Text style={styles.venue}>{game.venue?.trim() || 'Venue TBA'}</Text>
         <Text style={styles.ctaArrow} accessibilityElementsHidden importantForAccessibility="no">↗</Text>
       </View>
       {sponsors.length > 0 ? (
@@ -135,8 +134,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderTopWidth: 3,
     borderTopColor: TAB_ACCENTS.local.color,
-    padding: 16,
-    gap: 12,
+    minHeight: 44,
+    padding: 12,
+    gap: 8,
     ...cardShadow,
   },
   topRow: {
@@ -169,11 +169,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
-  scoreboard: { gap: 12 },
-  teamRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 12 },
+  scoreboard: { gap: 8 },
+  teamRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
   monogram: {
-    width: 42,
-    height: 42,
+    width: 34,
+    height: 34,
     borderRadius: radii.sm,
     backgroundColor: FOCAL.mistSlate,
     alignItems: 'center',
@@ -182,26 +182,20 @@ const styles = StyleSheet.create({
   monogramLabel: { color: colors.textMuted, fontSize: 15, fontWeight: '900' },
   // Large scores must wrap before they squeeze the team name into single-letter lines.
   teamIdentity: { flex: 1, minWidth: 100, gap: 3 },
-  side: { color: colors.textMuted, fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.7 },
-  teamName: { color: colors.text, fontSize: 17, fontWeight: '900', flexShrink: 1 },
+  side: { color: colors.textMuted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
+  teamName: { color: colors.text, fontSize: 14, fontWeight: '900', flexShrink: 1 },
   school: { color: colors.textMuted, fontSize: 12 },
-  score: { ...SCOREBOARD_DIGITS, color: colors.text, fontSize: 34, textAlign: 'right', marginLeft: 'auto', maxWidth: '100%' },
+  score: { ...SCOREBOARD_DIGITS, color: colors.text, fontSize: 30, textAlign: 'right', marginLeft: 'auto', maxWidth: '100%' },
   fieldLayer: { ...StyleSheet.absoluteFill, borderRadius: radii.lg, overflow: 'hidden' },
   scoreDivider: { height: 1, backgroundColor: colors.border },
-  venue: { color: colors.textMuted, fontSize: 12 },
-  cta: {
-    minHeight: 48,
-    borderRadius: radii.md,
-    backgroundColor: FOCAL.mistJade,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+  venue: { color: colors.textMuted, fontSize: 12, flex: 1 },
+  venueRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
   },
-  ctaLabel: { color: FOCAL.jadeInk, fontSize: 14, fontWeight: '800', flexShrink: 1 },
-  ctaArrow: { color: FOCAL.jadeInk, fontSize: 19, fontWeight: '800' },
+  ctaArrow: { color: FOCAL.jadeInk, fontSize: 17, fontWeight: '800' },
   sponsorRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
   sponsorCaption: { color: colors.textMuted, fontSize: 11, fontWeight: '700', marginRight: 2 },
   sponsorLogo: {

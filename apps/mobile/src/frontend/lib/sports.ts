@@ -21,6 +21,7 @@ import {
   type SportStatSource,
 } from '@/data/sports';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { callRpc } from '@/lib/rpc';
 import type { SportConfigRow } from '@/types/database';
 
 function asArray(value: unknown): unknown[] {
@@ -245,7 +246,7 @@ export async function seedSportConfigs(): Promise<number> {
 }
 
 export type SportUsage = {
-  /** Athletes whose `athlete_career_stats.sport` matches. */
+  /** Current profile-owned participations for this sport, including secondary entries. */
   athletes: number;
   /** Games on the board for this sport. */
   games: number;
@@ -254,7 +255,7 @@ export type SportUsage = {
 /**
  * @purpose Business context for the builder: how many athletes and games ride on each playbook.
  * @returns Map keyed by lowercase sport name.
- * @sideEffects `athlete_career_stats` + `games` SELECT (sport columns only).
+ * @sideEffects Protected `admin_athlete_sport_usage` aggregate + `games` sport SELECT.
  */
 export async function fetchSportUsage(): Promise<Record<string, SportUsage>> {
   const usage: Record<string, SportUsage> = {};
@@ -268,11 +269,14 @@ export async function fetchSportUsage(): Promise<Record<string, SportUsage>> {
   };
 
   const [stats, games] = await Promise.all([
-    supabase.from('athlete_career_stats').select('sport').limit(2000),
+    callRpc<{ sport:string; athletes:number }[]>('admin_athlete_sport_usage'),
     supabase.from('games').select('sport').limit(2000),
   ]);
 
-  if (Array.isArray(stats.data)) stats.data.forEach((row) => bump((row as { sport?: unknown }).sport, 'athletes'));
+  if (Array.isArray(stats)) stats.forEach(row => {
+    const name = row.sport.trim().toLowerCase();
+    usage[name] = { athletes: Number(row.athletes), games: 0 };
+  });
   if (Array.isArray(games.data)) games.data.forEach((row) => bump((row as { sport?: unknown }).sport, 'games'));
 
   return usage;

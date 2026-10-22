@@ -1205,22 +1205,22 @@
       "name": "athlete_career_stats",
       "kind": "table",
       "owner": "ATHLETE_STATS",
-      "purpose": "Career stat lines shown on athlete profiles.",
+      "purpose": "Career stat lines per (player_id,sport), preserving every recorded sport when primary changes (MULTISPORT-01); admin-only writes and existing privacy reads.",
       "writers": [],
       "readers": [
         "apps/mobile/src/frontend/lib/adminControls.ts",
-        "apps/mobile/src/frontend/lib/athleteStats.ts",
-        "apps/mobile/src/frontend/lib/sports.ts"
+        "apps/mobile/src/frontend/lib/athleteStats.ts"
       ],
       "sqlWriters": [
         "admin_upsert_athlete_career_stats"
       ],
-      "sqlReaders": [],
+      "sqlReaders": [
+        "admin_add_athlete_game_log"
+      ],
       "removers": [],
       "triggers": [],
       "screens": [
         "/admin/athletes",
-        "/admin/sports",
         "/profile",
         "/user/[id]"
       ]
@@ -1229,22 +1229,53 @@
       "name": "athlete_game_logs",
       "kind": "table",
       "owner": "ATHLETE_STATS",
-      "purpose": "Per-game stat lines shown on athlete profiles.",
+      "purpose": "Per-game stat lines with recorded nullable sport. All untagged legacy logs remain unknown because old one-row career writes could overwrite sport. Explicit admin target-bound original-row classification/correction and new sport writes preserve history (MULTISPORT-01).",
       "writers": [],
       "readers": [
         "apps/mobile/src/frontend/lib/adminControls.ts",
         "apps/mobile/src/frontend/lib/athleteStats.ts"
       ],
       "sqlWriters": [
-        "admin_add_athlete_game_log"
+        "admin_add_athlete_game_log",
+        "admin_set_athlete_game_log_sport"
       ],
-      "sqlReaders": [],
+      "sqlReaders": [
+        "admin_list_unassigned_athlete_logs"
+      ],
       "removers": [
         "admin_remove_athlete_game_log"
       ],
       "triggers": [],
       "screens": [
         "/admin/athletes",
+        "/profile",
+        "/user/[id]"
+      ]
+    },
+    {
+      "name": "athlete_sport_entries",
+      "kind": "table",
+      "owner": "PROFILE",
+      "purpose": "MULTISPORT-01 bounded profile-owned sport participation and independent team/position/jersey; manual primary mirrors legacy profile fields. RPC-only reads apply existing school/stats/account/block/minor/guardian policy; revision-confirmed self athlete/admin writes do not confer verification or money authority.",
+      "writers": [],
+      "readers": [],
+      "sqlWriters": [
+        "set_athlete_sports",
+        "sync_legacy_athlete_sport"
+      ],
+      "sqlReaders": [
+        "admin_add_athlete_game_log",
+        "admin_athlete_sport_usage",
+        "get_athlete_sports"
+      ],
+      "removers": [
+        "set_athlete_sports",
+        "sync_legacy_athlete_sport"
+      ],
+      "triggers": [],
+      "screens": [
+        "/admin/athletes",
+        "/admin/sports",
         "/profile",
         "/user/[id]"
       ]
@@ -2374,6 +2405,7 @@
         "/activity",
         "/admin/highlights",
         "/admin/people",
+        "/admin/sports",
         "/beyond",
         "/booster",
         "/dev/trivia-preview",
@@ -3481,7 +3513,7 @@
       "name": "profiles",
       "kind": "table",
       "owner": "PROFILE",
-      "purpose": "Account profiles, roles and settings; trusted Connect adapters conditionally persist the own-account binding/onboarding/capability flags before links. These flags do not assert identity/TIN verification.",
+      "purpose": "Account profiles, roles and settings; trusted Connect adapters conditionally persist the own-account binding/onboarding/capability flags before links. These flags do not assert identity/TIN verification. MULTISPORT-01 athlete_sports_revision plus trusted athlete_sports_managed opt-in marker guard atomic participation/primary corrections while preserving verified school/player/guardian identities.",
       "writers": [
         "apps/mobile/src/frontend/context/AuthContext.tsx",
         "apps/mobile/src/frontend/lib/adminCatalog.ts",
@@ -3523,15 +3555,19 @@
         "redeem_team_code",
         "save_stripe_connect_account",
         "school_confirm_athlete",
+        "set_athlete_sports",
         "set_malo_freeze",
         "set_my_birth_month"
       ],
       "sqlReaders": [
+        "admin_add_athlete_game_log",
         "admin_add_school_confirmer",
+        "admin_athlete_sport_usage",
         "admin_beyond_erase_profile",
         "admin_challenge_nudge_senders",
         "admin_hold_challenge_sender",
         "admin_list_age_blocked",
+        "admin_list_athlete_sports",
         "admin_minor_overview",
         "admin_minor_report",
         "admin_payee_overview",
@@ -3583,6 +3619,7 @@
         "get_active_spotlight_award",
         "get_admin_malo_breakdown",
         "get_admin_reports",
+        "get_athlete_sports",
         "get_aura_board",
         "get_crew_graph",
         "get_custodial_summary",
@@ -3683,7 +3720,9 @@
         "beyond_profile_erasure → beyond_profile_erasure",
         "quiz_groups_profile_rules → quiz_groups_on_profile",
         "quiz_facts_profile_rules → quiz_facts_on_profile",
-        "zz_notification_profile_activation → notification_profile_activation"
+        "zz_notification_profile_activation → notification_profile_activation",
+        "profiles_athlete_sports_guard → guard_profile_athlete_sports",
+        "profiles_athlete_sports_legacy → sync_legacy_athlete_sport"
       ],
       "screens": [
         "/",
@@ -4095,7 +4134,7 @@
       "name": "reels",
       "kind": "table",
       "owner": "HIGHLIGHTS",
-      "purpose": "Highlights: clips and photo stories with their tags and counters.",
+      "purpose": "Highlights: clips and photo stories with their tags and counters. MULTISPORT-01 optional explicit recorded sport on initial video/photo insert; legacy null never inferred, uploader cannot retag historical sport.",
       "writers": [
         "apps/mobile/src/frontend/lib/adminCatalog.ts",
         "apps/mobile/src/frontend/lib/crew.ts",
@@ -4109,6 +4148,7 @@
         "apps/mobile/src/frontend/services/MediaUploadService.ts"
       ],
       "sqlWriters": [
+        "admin_set_highlight_sport",
         "begin_failed_photo_story_cleanup",
         "block_user",
         "clear_reel_hype",
@@ -4127,6 +4167,7 @@
       ],
       "sqlReaders": [
         "admin_challenge_post_counts",
+        "admin_get_highlight_sport",
         "athlete_highlight_views",
         "begin_failed_photo_story_cleanup",
         "can_delete_failed_photo_story_object",
@@ -4173,7 +4214,8 @@
         "reels_reset_photo_count → reels_reset_photo_count",
         "reels_apply_tag_defaults → reels_apply_tag_defaults",
         "reels_guard_coach_label → guard_coach_label",
-        "guard_failed_photo_story_state → guard_failed_photo_story_state"
+        "guard_failed_photo_story_state → guard_failed_photo_story_state",
+        "reels_recorded_sport_guard → guard_reel_recorded_sport"
       ],
       "screens": [
         "/",
@@ -4369,7 +4411,9 @@
         "malo_target_frozen",
         "quiz_fact_text_problems",
         "redeem_team_code",
-        "search_schools_and_teams"
+        "search_schools_and_teams",
+        "set_athlete_sports",
+        "sync_legacy_athlete_sport"
       ],
       "removers": [],
       "triggers": [],
@@ -4618,14 +4662,20 @@
       "name": "sport_configs",
       "kind": "table",
       "owner": "ATHLETE_STATS",
-      "purpose": "Scoring, periods and stat fields per sport.",
+      "purpose": "Scoring, periods and stat fields per sport; stored active rows also authorize new participation and recorded-media write choices through the guarded client catalog reader.",
       "writers": [],
       "readers": [],
       "sqlWriters": [
         "upsert_sport_config"
       ],
       "sqlReaders": [
-        "get_sport_configs"
+        "admin_add_athlete_game_log",
+        "admin_set_athlete_game_log_sport",
+        "admin_set_highlight_sport",
+        "admin_upsert_athlete_career_stats",
+        "get_sport_configs",
+        "guard_reel_recorded_sport",
+        "set_athlete_sports"
       ],
       "removers": [
         "delete_sport_config"
@@ -4635,6 +4685,7 @@
         "/",
         "/admin/athletes",
         "/admin/games",
+        "/admin/highlights",
         "/admin/sports",
         "/game/[id]",
         "/local/game/[id]",
@@ -6526,7 +6577,7 @@
       "name": "reels_feed",
       "kind": "view",
       "owner": "HIGHLIGHTS",
-      "purpose": "Feed view of Highlights with Vault gating.",
+      "purpose": "Feed view of Highlights with Vault gating. MULTISPORT-01 appends recorded sport while retaining existing tag-privacy/avatar/Vault CASE expressions.",
       "writers": [],
       "readers": [
         "apps/mobile/src/frontend/lib/reels.ts",
@@ -6655,12 +6706,16 @@
       "callers": [
         "apps/mobile/src/frontend/lib/adminControls.ts"
       ],
-      "manual": null,
+      "manual": "Explicit seven-argument sport write plus old six-argument compatibility rejecting ambiguous sport.",
       "writes": [
         "athlete_game_logs"
       ],
       "reads": [
-        "players"
+        "athlete_career_stats",
+        "athlete_sport_entries",
+        "players",
+        "profiles",
+        "sport_configs"
       ]
     },
     {
@@ -6690,6 +6745,19 @@
         "players"
       ],
       "reads": []
+    },
+    {
+      "name": "admin_athlete_sport_usage",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/sports.ts"
+      ],
+      "manual": "Protected aggregate sport catalog participation usage includes secondary entries to prevent accidental removal.",
+      "writes": [],
+      "reads": [
+        "athlete_sport_entries",
+        "profiles"
+      ]
     },
     {
       "name": "admin_beyond_cleanup_finish",
@@ -6943,6 +7011,19 @@
       ]
     },
     {
+      "name": "admin_get_highlight_sport",
+      "owner": "HIGHLIGHTS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/athleteSports.ts",
+        "sql:admin_set_highlight_sport"
+      ],
+      "manual": "Admin-only single recorded Highlight sport lookup in existing desk.",
+      "writes": [],
+      "reads": [
+        "reels"
+      ]
+    },
+    {
       "name": "admin_get_privacy",
       "owner": "PROFILE",
       "callers": [
@@ -6984,6 +7065,18 @@
       ]
     },
     {
+      "name": "admin_list_athlete_sports",
+      "owner": "ADMIN",
+      "callers": [
+        "apps/mobile/src/frontend/lib/athleteSports.ts"
+      ],
+      "manual": "Admin-only bounded40 profile list, including unverified athletes, for existing Sports desk.",
+      "writes": [],
+      "reads": [
+        "profiles"
+      ]
+    },
+    {
       "name": "admin_list_operator_checkins",
       "owner": "OPERATOR",
       "callers": [
@@ -7005,6 +7098,18 @@
       "writes": [],
       "reads": [
         "school_confirmers"
+      ]
+    },
+    {
+      "name": "admin_list_unassigned_athlete_logs",
+      "owner": "ATHLETE_STATS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/adminControls.ts"
+      ],
+      "manual": "Protected bounded20 original unassigned log list for existing Stats repair.",
+      "writes": [],
+      "reads": [
+        "athlete_game_logs"
       ]
     },
     {
@@ -7194,6 +7299,20 @@
       "reads": []
     },
     {
+      "name": "admin_set_athlete_game_log_sport",
+      "owner": "ATHLETE_STATS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/adminControls.ts"
+      ],
+      "manual": "Admin-only target-player-bound original log sport correction with old sport compare-and-save; preserve date/stat/id.",
+      "writes": [
+        "athlete_game_logs"
+      ],
+      "reads": [
+        "sport_configs"
+      ]
+    },
+    {
       "name": "admin_set_birth_month",
       "owner": "PROFILE",
       "callers": [
@@ -7244,6 +7363,20 @@
       "reads": []
     },
     {
+      "name": "admin_set_highlight_sport",
+      "owner": "HIGHLIGHTS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/athleteSports.ts"
+      ],
+      "manual": "Admin-only row-locked null-safe recorded tag compare-and-save with full id/sport readback; preserves original media.",
+      "writes": [
+        "reels"
+      ],
+      "reads": [
+        "sport_configs"
+      ]
+    },
+    {
       "name": "admin_set_player_guardian",
       "owner": "ROSTERS",
       "callers": [
@@ -7276,12 +7409,13 @@
       "callers": [
         "apps/mobile/src/frontend/lib/adminControls.ts"
       ],
-      "manual": null,
+      "manual": "Existing admin career writer now preserves composite player/sport history.",
       "writes": [
         "athlete_career_stats"
       ],
       "reads": [
-        "players"
+        "players",
+        "sport_configs"
       ]
     },
     {
@@ -7946,12 +8080,20 @@
       "owner": "PROFILE",
       "callers": [
         "sql:RLS policy",
+        "sql:admin_athlete_sport_usage",
+        "sql:admin_get_highlight_sport",
+        "sql:admin_list_unassigned_athlete_logs",
+        "sql:admin_set_athlete_game_log_sport",
+        "sql:admin_set_highlight_sport",
         "sql:begin_failed_photo_story_cleanup",
         "sql:can_delete_failed_photo_story_object",
         "sql:challenge_missing_dependencies",
         "sql:check constraint",
         "sql:finish_failed_photo_story_cleanup",
-        "sql:guard_photo_story_storage_write"
+        "sql:get_athlete_sports",
+        "sql:guard_photo_story_storage_write",
+        "sql:guard_reel_recorded_sport",
+        "sql:set_athlete_sports"
       ],
       "manual": null,
       "writes": [],
@@ -8680,9 +8822,17 @@
       "callers": [
         "sql:RLS policy",
         "sql:add_user_role",
+        "sql:admin_add_athlete_game_log",
         "sql:admin_approve_player_consent",
+        "sql:admin_athlete_sport_usage",
+        "sql:admin_get_highlight_sport",
+        "sql:admin_list_athlete_sports",
+        "sql:admin_list_unassigned_athlete_logs",
+        "sql:admin_set_athlete_game_log_sport",
         "sql:admin_set_custodial_terms",
+        "sql:admin_set_highlight_sport",
         "sql:admin_set_player_guardian",
+        "sql:admin_upsert_athlete_career_stats",
         "sql:beyond_admin",
         "sql:beyond_can_view",
         "sql:beyond_storage_allowed",
@@ -8705,6 +8855,7 @@
         "sql:get_received_malo",
         "sql:guard_profiles_admin_escalation",
         "sql:guard_profiles_age",
+        "sql:guard_reel_recorded_sport",
         "sql:guardian_decide_approval",
         "sql:is_admin_or_db",
         "sql:is_school_operator_for",
@@ -8719,6 +8870,7 @@
         "sql:reels_apply_tag_defaults",
         "sql:register_support_release",
         "sql:require_admin_guard",
+        "sql:set_athlete_sports",
         "sql:set_coach_label",
         "sql:set_malo_freeze",
         "sql:set_player_vault_locked",
@@ -9591,6 +9743,21 @@
       ]
     },
     {
+      "name": "get_athlete_sports",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/athleteSports.ts",
+        "sql:admin_list_athlete_sports",
+        "sql:set_athlete_sports"
+      ],
+      "manual": "Privacy-filtered authorized snapshot RPC; no blanket participation SELECT.",
+      "writes": [],
+      "reads": [
+        "athlete_sport_entries",
+        "profiles"
+      ]
+    },
+    {
       "name": "get_aura_board",
       "owner": "PROFILE",
       "callers": [
@@ -10097,6 +10264,16 @@
       ]
     },
     {
+      "name": "guard_profile_athlete_sports",
+      "owner": "PROFILE",
+      "callers": [
+        "trigger:profiles_athlete_sports_guard on profiles"
+      ],
+      "manual": "Trigger rejects revision/direct credential mutation after opted-in CAS; trusted RPC transaction only.",
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "guard_profiles_admin_escalation",
       "owner": "BACKEND",
       "callers": [
@@ -10135,6 +10312,18 @@
       "manual": null,
       "writes": [],
       "reads": []
+    },
+    {
+      "name": "guard_reel_recorded_sport",
+      "owner": "HIGHLIGHTS",
+      "callers": [
+        "trigger:reels_recorded_sport_guard on reels"
+      ],
+      "manual": "Trigger validates explicit active recorded sport on initial upload; historical corrections admin-only.",
+      "writes": [],
+      "reads": [
+        "sport_configs"
+      ]
     },
     {
       "name": "guard_support_append_only",
@@ -10476,6 +10665,7 @@
         "sql:create_guardian_invite",
         "sql:enforce_minor_consent",
         "sql:fun_guardian",
+        "sql:get_athlete_sports",
         "sql:guardian_decide_approval",
         "sql:is_supervising_guardian",
         "sql:log_supervision_event",
@@ -10710,6 +10900,7 @@
         "sql:beyond_legacy_posts",
         "sql:enforce_minor_consent",
         "sql:fun_snapshot",
+        "sql:get_athlete_sports",
         "sql:guardian_decide_approval",
         "sql:minor_payout_hold_reason",
         "sql:minor_status_json",
@@ -10833,8 +11024,10 @@
         "sql:fun_case",
         "sql:fun_media_access",
         "sql:fun_snapshot",
+        "sql:get_athlete_sports",
         "sql:get_my_privacy",
         "sql:get_my_supervision",
+        "sql:guard_reel_recorded_sport",
         "sql:guardian_decide_approval",
         "sql:guardian_invite_for_code",
         "sql:guardian_list_minors",
@@ -11197,6 +11390,7 @@
         "sql:fun_guardian",
         "sql:fun_permission_valid",
         "sql:fun_snapshot",
+        "sql:get_athlete_sports",
         "sql:guardian_decide_approval",
         "sql:guardian_invite_for_code",
         "sql:guardian_list_minors",
@@ -11247,6 +11441,7 @@
         "sql:beyond_can_view",
         "sql:beyond_legacy_posts",
         "sql:beyond_missing",
+        "sql:get_athlete_sports",
         "sql:get_aura_board",
         "sql:get_leaderboards",
         "sql:get_top_filmers",
@@ -14520,7 +14715,6 @@
       "name": "require_admin_guard",
       "owner": "BACKEND",
       "callers": [
-        "sql:admin_add_athlete_game_log",
         "sql:admin_confirm_payee_check",
         "sql:admin_decide_payout_override",
         "sql:admin_end_friendship",
@@ -14543,7 +14737,6 @@
         "sql:admin_revoke_payee_check",
         "sql:admin_set_birth_month",
         "sql:admin_set_hide_from_search",
-        "sql:admin_upsert_athlete_career_stats",
         "sql:challenge_admin_profile",
         "sql:check constraint",
         "sql:close_ledger_period",
@@ -14735,6 +14928,22 @@
       ],
       "reads": [
         "profiles"
+      ]
+    },
+    {
+      "name": "set_athlete_sports",
+      "owner": "PROFILE",
+      "callers": [
+        "apps/mobile/src/frontend/lib/athleteSports.ts"
+      ],
+      "manual": "Self-athlete/admin complete list replacement with profile-row lock/revision guard and confirmed readback.",
+      "writes": [
+        "athlete_sport_entries",
+        "profiles"
+      ],
+      "reads": [
+        "schools_and_teams",
+        "sport_configs"
       ]
     },
     {
@@ -15046,6 +15255,20 @@
       ]
     },
     {
+      "name": "sync_legacy_athlete_sport",
+      "owner": "PROFILE",
+      "callers": [
+        "trigger:profiles_athlete_sports_legacy on profiles"
+      ],
+      "manual": "Trigger keeps revision-zero onboarding compatible without adding or rewriting verified identities.",
+      "writes": [
+        "athlete_sport_entries"
+      ],
+      "reads": [
+        "schools_and_teams"
+      ]
+    },
+    {
       "name": "sync_live_spotlight_awards",
       "owner": "BACKEND",
       "callers": [
@@ -15323,6 +15546,7 @@
       "owner": "BACKEND",
       "callers": [
         "sql:beyond_legacy_posts",
+        "sql:get_athlete_sports",
         "sql:get_aura_board",
         "sql:get_leaderboards",
         "sql:get_top_filmers",

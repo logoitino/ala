@@ -1,4 +1,4 @@
-/** Actual HQ routes keep their existing duties while exposing the real optional quiz through its own source. */
+/** Actual HQ routes keep their existing duties while exposing the real optional quiz through its own source. SDK58 shared headings require the route pathname boundary. */
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import Parent from '../../../../../app/(parent)/parent';
 import Booster from '../../../../../app/(booster)/booster';
@@ -20,7 +20,8 @@ const mockReads: string[] = [];
 jest.mock('@/services/MediaUploadService', () => ({ bytesFromUri: jest.fn(), compressHighlight: jest.fn() }));
 const mockPush = jest.fn();
 let mockRole = 'parent';
-jest.mock('expo-router', () => ({ Stack: { Screen: () => null }, useRouter: () => ({ push: mockPush }), useIsFocused: () => true }));
+jest.mock('expo-router', () => ({
+  usePathname: () => '/parent', Stack: { Screen: () => null }, useRouter: () => ({ push: mockPush }), useIsFocused: () => true }));
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: mockUserId }, profile: { id: mockProfileId, user_id: mockUserId, age_blocked_at:null }, role: mockRole, isGuest: false, loading: false }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: jest.requireActual('@/lib/runtime').DEFAULT_APP_RUNTIME }) }));
 jest.mock('@/components/ScreenShell', () => ({ ScreenShell: ({ children }: { children: React.ReactNode }) => children }));

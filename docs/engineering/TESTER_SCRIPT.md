@@ -882,3 +882,23 @@ hashes, failures and repair evidence. Legal/Privacy/Minor Safety/Content/Rights/
 release terms and permissions; Growth checks accepted return/participation/support/cost
 measures in the October 20 packet. These source checks do not certify real-world guardianship,
 moderation capacity, hosted deletion or growth uplift.
+
+
+## MULTISPORT-01 / UX-09 — Next local and device checks
+
+1. Athlete Profile → Edit → My Sports: add Basketball beside Football, enter its own team/position/jersey;
+   Save keeps Football primary. Switch profile chips and verify credentials/stats/tagged Highlights change,
+   field artwork stays primary, and All includes old unassigned content. Remove primary and choose replacement.
+2. Keep an unsaved draft through Back/reopen; failed/unavailable/revision-conflict saves preserve it. Switch
+   account/athlete while reads/save run; earlier private results must not reappear. Verify school/stats hiding,
+   blocks, private accounts and minor/guardian audiences after the owner applies SQL.
+3. Upload video and photo: optional explicit sport survives steps/Back, preserves required rights/caption/tag
+   checks and atomic insert; missing source blocks the requested tag without losing draft. Reload sport choices retries in place; explicit No sport remains usable. Empty stored catalogs must not offer starter sports.
+4. Admin Sports corrects primary/list; Highlights corrects/clears recorded sport; Stats classifies unknown or
+   corrects the original sport without replacing id/date/values. Catalog usage includes secondary participation. Retry published choices in either editor and confirm the edited draft survives.
+5. Local: Games/Polls/Boosters labels remain visible; sponsor rail/CTA appears in Boosters. Check narrow widths,
+   enlarged text, card taps, final item reach and keyboard. Dock icons stay readable when background softens;
+   scrolling up/stopping/focusing restores it. Test live Reduce Transparency and Reduce Motion on a phone.
+
+Local tests/replay/render evidence and unapplied SQL/device limitations are recorded in
+[MULTISPORT-01](../agents/MULTISPORT-01.md) and [UX-09](../agents/UX-09.md).

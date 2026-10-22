@@ -138,6 +138,51 @@ describe('replaceable upload storage', () => {
     expect(mockStorageFrom).not.toHaveBeenCalled();
   });
 
+  it('persists a requested sport in the initial video row and confirms its returned tag', async () => {
+    const result = await service(storage()).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Serve', durationMs: 1000,
+      compressed: true, sport: 'Volleyball' });
+    expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ sport: 'Volleyball' }));
+    expect(result.sport).toBe('Volleyball');
+  });
+
+  it('does not upload the previous owner’s draft after an account switch during file reading', async () => {
+    let resolve!: (value: { arrayBuffer: () => Promise<ArrayBuffer> }) => void;
+    global.fetch = jest.fn(() => new Promise(done => { resolve = done; })) as unknown as typeof fetch;
+    const adapter = storage();
+    const work = service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Owner A', durationMs: 1000,
+      compressed: true, expectedUserId: 'user-1', sport: 'Volleyball' });
+    while (!resolve) await Promise.resolve();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-2' } } });
+    resolve({ arrayBuffer: async () => dirtyJpeg().buffer });
+    await expect(work).rejects.toThrow(/account changed/i);
+    expect(adapter.upload).not.toHaveBeenCalled(); expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('does not insert the previous owner’s draft after account changes while storage finishes', async () => {
+    let resolve!: (value: { data: null; error: null }) => void;
+    const adapter = storage();
+    adapter.upload.mockImplementation(() => new Promise(done => { resolve = done; }));
+    const work = service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Owner A', durationMs: 1000,
+      compressed: true, expectedUserId: 'user-1' });
+    while (!resolve) await Promise.resolve();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-2' } } });
+    resolve({ data: null, error: null });
+    await expect(work).rejects.toThrow(/account changed/i);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('does not begin a fallback bucket upload after the captured owner changes', async () => {
+    let resolve!: (value: { data: null; error: { message: string } }) => void;
+    const adapter = storage();
+    adapter.upload.mockImplementation(() => new Promise(done => { resolve = done; }));
+    const work = service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Owner A', durationMs: 1000, compressed: true, expectedUserId: 'user-1' });
+    while (!resolve) await Promise.resolve();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-2' } } });
+    resolve({ data: null, error: { message: 'Bucket not found' } });
+    await expect(work).rejects.toThrow(/account changed/i);
+    expect(adapter.upload).toHaveBeenCalledTimes(1); expect(mockInsert).not.toHaveBeenCalled();
+  });
+
   it('keeps Vault storage private, stores its token and signs for exactly one hour', async () => {
     const adapter = storage();
     const result = await service(adapter).uploadHighlight({ uri: 'file:///clip.mp4', title: 'Private play', durationMs: 1000, playerId: 'p1', isExclusive: true, compressed: true });
@@ -349,6 +394,30 @@ describe('insertReelRow', () => {
   it('never retries a photo story as a video when the column is missing', async () => {
     mockInsert.mockResolvedValue({ data: null, error: { message: "Could not find the 'media_type' column of 'reels'" } });
     await expect(insertReelRow({ ...base, media_type: 'photo_story' })).rejects.toThrow('Photo stories need the latest database update');
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not silently remove a requested sport when the source column is unavailable', async () => {
+    mockInsert.mockResolvedValue({ data: null, error: { code: 'PGRST204', message: "Could not find the 'sport' column of 'reels'" } });
+    await expect(insertReelRow({ ...base, sport: 'Volleyball' })).rejects.toThrow('Sport tagging is unavailable');
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('retains the committed row receipt when the sport readback contradicts the requested annotation', async () => {
+    mockInsert.mockResolvedValue({ data: { id: 'committed', sport: 'Football' }, error: null });
+    const error = await insertReelRow({ ...base, sport: 'Volleyball' }).catch(caught => caught);
+    expect(error.code).toBe('HIGHLIGHT_SPORT_CONFIRMATION');
+    expect(error.reel).toEqual({ id: 'committed', sport: 'Football' });
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry a legacy-column insert under a different account', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'owner-a' } } });
+    mockInsert.mockImplementationOnce(async () => {
+      mockGetUser.mockResolvedValue({ data: { user: { id: 'owner-b' } } });
+      return { data: null, error: { message: "Could not find the 'category' column of 'reels'" } };
+    });
+    await expect(insertReelRow(base, { expectedUserId: 'owner-a' })).rejects.toThrow(/account changed/i);
     expect(mockInsert).toHaveBeenCalledTimes(1);
   });
 });

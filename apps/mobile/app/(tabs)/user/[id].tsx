@@ -1,4 +1,5 @@
-/** Public profiles read sport identity from the privacy-filtered view, then share it with Stats and Aura. */
+/** Public profiles commit subject/session-bound reads together. Sport chips use privacy-filtered participation,
+ * recorded Highlight tags and independent Stats while the manually chosen primary field remains stable. */
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -28,6 +29,7 @@ import { userProfileHref } from '@/lib/navigation';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { fetchPlayerVerification } from '@/lib/verification';
 import type { Reel, ReelWithPlayer, ProfilePublic } from '@/types/database';
+import { fetchAthleteSports, type AthleteSportsSnapshot } from '@/lib/athleteSports';
 
 // 2026-09 fix: this used to be shown directly (`{error}`) in the "Couldn't load athlete" screen,
 // leaking a developer-facing setup instruction to end users whenever Supabase wasn't configured.
@@ -80,11 +82,19 @@ export default function UserAthleteProfileScreen() {
   const [schoolClaimed, setSchoolClaimed] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [publicProfile, setPublicProfile] = useState<ProfilePublic | null>(null);
-  const { stats, loading: statsLoading } = useAthleteStats(playerId, player, publicProfile?.player_id === playerId ? publicProfile?.athlete_sport : undefined);
+  const [sportsSnapshot, setSportsSnapshot] = useState<AthleteSportsSnapshot | null>(null);
+  const [sportSelection, setSportSelection] = useState<{ playerId: string | undefined; sport: string | null }>({ playerId, sport: null });
+  const displaySport = sportSelection.playerId === playerId && sportsSnapshot?.sports.some(entry => entry.sport === sportSelection.sport) ? sportSelection.sport : null;
+  const primarySport = sportsSnapshot?.primarySport ?? (publicProfile?.player_id === playerId ? publicProfile?.athlete_sport : undefined);
+  const { stats, loading: statsLoading } = useAthleteStats(playerId, player, displaySport || primarySport);
   const { subscribed, grant } = useAthleteSubscription(playerId);
   const { startCheckout, busy } = useTipCheckout();
   const { live } = useAppRuntime();
-  const { isAthlete } = useAuth();
+  const { isAthlete, user, isSessionCurrent } = useAuth();
+  const actor = user?.id ?? 'guest';
+  const activeActor = useRef(actor); activeActor.current = actor;
+  const [loadedActor, setLoadedActor] = useState<string | null>(null);
+  const [loadedGuard, setLoadedGuard] = useState<{ guard: typeof isSessionCurrent } | null>(null);
   const { requireAuth } = useSoftWall();
   const { players: rosterPlayers, applyBackerCount } = useRoster();
   const uploadSheet = useOptionalUploadSheet();
@@ -92,10 +102,12 @@ export default function UserAthleteProfileScreen() {
 
   const load = useCallback(async () => {
     const request = ++loadRequest.current;
-    const current = () => loadRequest.current === request && currentId.current === playerId;
+    const current = () => loadRequest.current === request && currentId.current === playerId
+      && activeActor.current === actor && (!isSessionCurrent || isSessionCurrent());
     setLoading(true);
     setError(null);
     setPublicProfile(null);
+    setSportsSnapshot(null);
     if (!playerId) {
       setError(rawId ? 'This Spotlight highlight is not linked to an athlete profile yet. Watch the clip from Spotlight instead.' : 'Missing athlete id.');
       setLoadedId(playerId);
@@ -123,6 +135,13 @@ export default function UserAthleteProfileScreen() {
         fetchReelsForPlayer(playerId), fetchPlayerVerification(playerId, nextPlayer.name),
         fetchPublicProfileForPlayer(playerId),
       ]);
+      if (!current()) return;
+      let nextSports: AthleteSportsSnapshot | null = null;
+      // A denied or unavailable secondary read retains the existing legacy display without widening privacy.
+      if (publicProfileRow && publicProfileRow.player_id === playerId) {
+        try { nextSports = await fetchAthleteSports(publicProfileRow.id); } catch { /* SDK records a fixed failure code. */ }
+        if (nextSports?.profileId !== publicProfileRow.id) nextSports = null;
+      }
       // Commit the whole sheet together: no old profile or late result can replace the active athlete.
       if (!current()) return;
       setPlayer(nextPlayer);
@@ -130,12 +149,13 @@ export default function UserAthleteProfileScreen() {
       setVerificationStatus(verification.status); setSchoolClaimed(verification.schoolClaimed);
       setAvatarUrl(verification.avatarUrl);
       setPublicProfile(publicProfileRow);
+      setSportsSnapshot(nextSports); setLoadedActor(actor); setLoadedGuard({ guard: isSessionCurrent });
       setLoadedId(playerId); setLoading(false);
     } catch {
       if (!current()) return;
       setError('Please try again.'); setLoadedId(playerId); setLoading(false);
     }
-  }, [playerId, rawId, uploadSheet?.lastUploaded]);
+  }, [actor, isSessionCurrent, playerId, rawId, uploadSheet?.lastUploaded]);
 
   useFocusEffect(useCallback(() => {
     void load();
@@ -226,7 +246,8 @@ export default function UserAthleteProfileScreen() {
     );
   };
 
-  if (loading || loadedId !== playerId) {
+  if (loading || loadedId !== playerId || (!error && (loadedActor !== actor || loadedGuard?.guard !== isSessionCurrent
+    || (isSessionCurrent && !isSessionCurrent())))) {
     return (
       <TabScreen>
         <View style={styles.missing}>
@@ -272,6 +293,10 @@ export default function UserAthleteProfileScreen() {
           clips={clips}
           stats={stats}
           statsLoading={statsLoading}
+          primarySport={primarySport}
+          displaySport={displaySport}
+          sportEntries={sportsSnapshot?.sports}
+          onDisplaySportChange={sport => setSportSelection({ playerId, sport })}
           name={displayName}
           username={handleFromName(displayName)}
           jersey={player.jersey_number}

@@ -1,5 +1,5 @@
 /**
- * Local tab (game day): Matches, School Polls and Top Boosters hubs, plus search (`SearchResultsOverlay`).
+ * Compact Local: sticky Games/Polls/Boosters menus and search; sponsors and their action live in Boosters.
  * Booster logos display through `mediaUri` in `Local/SponsorRailCard` (legacy full URL or `sb:` reference, SCALE-02).
  * Matching helpers live in `data/localHub.ts`; the rail card and loading skeleton in `components/Local/` (R4-03).
  * Reached from the Home pill, not the tab bar. The `tabs.local` runtime flag can pause it (`RuntimePaused`).
@@ -27,6 +27,7 @@ import { SponsorshipModal } from '@/components/Local/SponsorshipModal';
 import { GameCard } from '@/components/Local/GameCard';
 import { MatchupSkeleton } from '@/components/Local/MatchupSkeleton';
 import { SponsorRailCard } from '@/components/Local/SponsorRailCard';
+import { LocalHubMenu } from '@/components/Local/LocalHubMenu';
 import { RuntimePaused } from '@/components/RuntimePaused';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
@@ -55,6 +56,7 @@ import { useSponsorships } from '@/hooks/useSponsorships';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { localGameHref, userProfileHref } from '@/lib/navigation';
+import { DEFAULT_APP_RUNTIME } from '@/lib/runtime';
 import { TAB_ACCENTS } from '@/theme/motion';
 
 type LocalHubId = 'matches' | 'polls' | 'boosters';
@@ -104,16 +106,17 @@ export default function LocalTab() {
       LOCAL_HUB_IDS.filter((id) => {
         if (id === 'matches') return live.layouts.liveMatches;
         if (id === 'polls') return live.layouts.cheerPolls;
-        if (id === 'boosters') return live.layouts.topBoosters;
+        // The sponsor rail/action have independent availability from the Aura leaderboard.
+        if (id === 'boosters') return live.layouts.topBoosters || live.layouts.sponsorshipModal || sponsors.length > 0;
         return true;
       }).map((id) => ({
         id,
         label:
           id === 'matches'
-            ? live.copy.localMatchesLabel
+            ? live.copy.localMatchesLabel === DEFAULT_APP_RUNTIME.copy.localMatchesLabel ? 'Games' : live.copy.localMatchesLabel
             : id === 'polls'
-              ? live.copy.localPollsLabel
-              : live.copy.localBoostersLabel,
+              ? live.copy.localPollsLabel === DEFAULT_APP_RUNTIME.copy.localPollsLabel ? 'Polls' : live.copy.localPollsLabel
+              : live.copy.localBoostersLabel === DEFAULT_APP_RUNTIME.copy.localBoostersLabel ? 'Boosters' : live.copy.localBoostersLabel,
       })),
     [
       live.copy.localBoostersLabel,
@@ -122,6 +125,8 @@ export default function LocalTab() {
       live.layouts.cheerPolls,
       live.layouts.liveMatches,
       live.layouts.topBoosters,
+      live.layouts.sponsorshipModal,
+      sponsors.length,
     ],
   );
 
@@ -224,14 +229,18 @@ export default function LocalTab() {
   const selectBooster = (sponsorId: string) => {
     setHighlightedSponsorId(sponsorId);
     setSchoolFilter(null);
-    setHub('polls');
+    setHub('boosters');
     closeExplore();
-    setTimeout(() => {
-      const x = sponsorX.current[sponsorId];
-      if (typeof x !== 'number') return;
-      sponsorRailRef.current?.scrollTo({ x: Math.max(0, x - 16), animated: true });
-    }, 120);
   };
+
+  useEffect(() => {
+    if (hub !== 'boosters' || !highlightedSponsorId) return;
+    const timer = setTimeout(() => {
+      const x = sponsorX.current[highlightedSponsorId];
+      if (typeof x === 'number') sponsorRailRef.current?.scrollTo({ x: Math.max(0, x - 12), animated: true });
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [highlightedSponsorId, hub]);
 
   // Local left the fan bar for a Home pill, so this guard is now what `tabs.local` enforces.
   if (!live.tabs.local) {
@@ -273,21 +282,14 @@ export default function LocalTab() {
             ) : null}
           </View>
           ) : null}
+          <LocalHubMenu items={hubs} value={hub} onChange={(id) => {
+            trackFeature(`hub.${id}`);
+            setHub(id);
+          }} />
         </View>
 
         <View style={styles.hubFrame}>
           <ScrollFxScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} onScroll={onScroll}>
-            <FilterPills
-              items={hubs}
-              value={hub}
-              onChange={(id) => {
-                if (id) {
-                  trackFeature(`hub.${id}`);
-                  setHub(id);
-                }
-              }}
-              accessibilityLabel="Local hub"
-            />
             {hubs.length === 0 ? (
               <EmptyState
                 kicker="Local"
@@ -363,40 +365,6 @@ export default function LocalTab() {
               style={[styles.pollStack, hub !== 'polls' ? styles.hubPaneHidden : undefined]}
               pointerEvents={hub === 'polls' ? 'auto' : 'none'}
             >
-              <Text accessibilityRole="header" style={styles.sectionTitle}>Team boosters & sponsors</Text>
-              <ScrollView
-                ref={sponsorRailRef}
-                horizontal
-                nestedScrollEnabled
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.sponsorRail}
-              >
-                {live.layouts.sponsorshipModal ? (
-                <AnimatedButton
-                  accessibilityLabel="+ Become a Team Sponsor"
-                  haptic="none"
-                  onPress={openSponsorSheet}
-                  contentStyle={styles.ctaCard}
-                >
-                  <Text style={styles.ctaPlus}>+</Text>
-                  <Text style={styles.ctaTitle}>Become a Team Sponsor</Text>
-                  <Text style={styles.ctaLede}>Silver · Gold · Platinum</Text>
-                </AnimatedButton>
-                ) : null}
-                {sponsors.map((sponsor, index) => (
-                  <ScrollFxItem key={sponsor.id} index={index} variant="zoom">
-                    <SponsorRailCard
-                      sponsor={sponsor}
-                      highlighted={highlightedSponsorId === sponsor.id}
-                      onLayoutX={(x) => {
-                        sponsorX.current[sponsor.id] = x;
-                      }}
-                      onPress={() => selectBooster(sponsor.id)}
-                    />
-                  </ScrollFxItem>
-                ))}
-              </ScrollView>
-
               <View style={styles.pollHead}>
                 <Text accessibilityRole="header" style={styles.sectionTitle}>School polls</Text>
                 {schoolFilter ? (
@@ -441,12 +409,47 @@ export default function LocalTab() {
               style={[styles.boosterStack, hub !== 'boosters' ? styles.hubPaneHidden : undefined]}
               pointerEvents={hub === 'boosters' ? 'auto' : 'none'}
             >
+              <Text accessibilityRole="header" style={styles.sectionTitle}>Team boosters & sponsors</Text>
+              <ScrollView
+                ref={sponsorRailRef}
+                horizontal
+                nestedScrollEnabled
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.sponsorRail}
+              >
+                {live.layouts.sponsorshipModal ? (
+                <AnimatedButton
+                  accessibilityLabel="+ Become a Team Sponsor"
+                  haptic="none"
+                  onPress={openSponsorSheet}
+                  contentStyle={styles.ctaCard}
+                >
+                  <Text style={styles.ctaPlus}>+</Text>
+                  <Text style={styles.ctaTitle}>Become a Team Sponsor</Text>
+                  <Text style={styles.ctaLede}>Silver · Gold · Platinum</Text>
+                </AnimatedButton>
+                ) : null}
+                {sponsors.map((sponsor) => (
+                    <SponsorRailCard key={sponsor.id}
+                      sponsor={sponsor}
+                      highlighted={highlightedSponsorId === sponsor.id}
+                      onLayoutX={(x) => {
+                        sponsorX.current[sponsor.id] = x;
+                      }}
+                      onPress={() => selectBooster(sponsor.id)}
+                    />
+                ))}
+              </ScrollView>
+
+              {live.layouts.topBoosters ? <>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>Top Aura Boosters</Text>
               <Text style={styles.hubCopy}>
                 Top Aura Boosters — Slate Silver through Celestial Prism. Tap a card to peek the profile.
               </Text>
               <ScrollFxItem variant="rise">
                 <TopAuraBoosters hideTitle />
               </ScrollFxItem>
+              </> : null}
             </View>
           </ScrollFxScrollView>
 
@@ -475,26 +478,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topChrome: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    gap: 10,
+    paddingHorizontal: 12,
+    paddingTop: 4,
+    gap: 6,
   },
   hubFrame: {
     flex: 1,
     position: 'relative',
   },
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 120,
-    gap: 20,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 24,
+    gap: 10,
   },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    minHeight: 52,
-    paddingHorizontal: 14,
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 10,
     backgroundColor: TAB_ACCENTS.local.mist,
     borderWidth: 1.5,
     borderColor: TAB_ACCENTS.local.color,
@@ -506,9 +509,9 @@ const styles = StyleSheet.create({
   search: {
     flex: 1,
     minWidth: 0,
-    fontSize: 16,
+    fontSize: 14,
     color: colors.text,
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   searchClear: {
     color: colors.textMuted,
@@ -540,7 +543,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   pollStack: {
-    gap: 16,
+    gap: 10,
   },
   pollHead: {
     flexDirection: 'row',
@@ -579,8 +582,8 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   ctaCard: {
-    width: 168,
-    minHeight: 168,
+    width: 154,
+    minHeight: 144,
     backgroundColor: TAB_ACCENTS.local.mist,
     borderRadius: radii.lg,
     borderWidth: 1.5,
@@ -614,10 +617,10 @@ const styles = StyleSheet.create({
     display: 'none',
   },
   list: {
-    gap: 12,
+    gap: 10,
   },
   matchesPane: {
-    gap: 14,
+    gap: 10,
   },
   loadingBlock: {
     gap: 12,

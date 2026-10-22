@@ -1,3 +1,6 @@
+/** Shared fan scroll reveals retain UI-thread effects and the existing400ms usage telemetry cadence.
+ * Bounded80ms dock direction samples change only local backdrop presentation.
+ */
 import { createContext, forwardRef, useCallback, useContext, useEffect, useRef, type ReactNode } from 'react';
 import {
   View,
@@ -24,6 +27,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { SCROLL_FX, SPRING_CARD } from '@/theme/motion';
+import { useFanNavigation } from '@/context/FanNavigationContext';
+import { useFocusEffect } from 'expo-router';
 
 type ScrollFxValue = {
   scrollY: SharedValue<number>;
@@ -56,6 +61,15 @@ export const ScrollFxScrollView = forwardRef<ScrollViewInstance, ScrollFxScrollV
   const viewportH = useSharedValue(0);
   const frameTop = useSharedValue(0);
   const lastJs = useSharedValue(0);
+  const lastDock = useSharedValue(0);
+  const { sample } = useFanNavigation();
+  const focused = useRef(false);
+  useFocusEffect(useCallback(() => {
+    focused.current = true;
+    return () => { focused.current = false; };
+  }, []));
+  // Queued UI-thread callbacks can arrive after an inactive mounted route has lost focus.
+  const sampleNavigation = useCallback((y: number) => { if (focused.current) sample(y); }, [sample]);
   const frameRef = useRef<ViewInstance>(null);
   const jsListener = useRef(onScroll);
   jsListener.current = onScroll;
@@ -69,6 +83,10 @@ export const ScrollFxScrollView = forwardRef<ScrollViewInstance, ScrollFxScrollV
       scrollY.value = event.contentOffset.y;
       viewportH.value = event.layoutMeasurement.height;
       const now = Date.now();
+      if (now - lastDock.value >= 80) {
+        lastDock.value = now;
+        runOnJS(sampleNavigation)(event.contentOffset.y);
+      }
       if (now - lastJs.value < JS_SCROLL_THROTTLE_MS) return;
       lastJs.value = now;
       runOnJS(forward)({

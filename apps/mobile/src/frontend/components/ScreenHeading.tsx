@@ -1,8 +1,10 @@
 /**
  * Shared, wrapping page hierarchy keeps published Look-desk copy and colors authoritative.
  * UX-08: the viewer's sport (generic field for non-athletes) fades in behind the right side of every heading.
+ * UX-09: fan pages use compact hierarchy; role/operator headings retain their current sizing.
  */
 import { StyleSheet, Text, View } from 'react-native';
+import { usePathname } from 'expo-router';
 
 import { SportField } from '@/components/Effects/SportField';
 import { colors } from '@/constants/theme';
@@ -31,8 +33,10 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
   const { live } = useAppRuntime();
   const mark = accent ?? live.theme.gold ?? FOCAL.goldInk;
   const sport = useViewerSport();
+  const path = usePathname();
+  const fan = !/^\/(operator|parent|athlete|booster|sponsor|admin)(\/|$)/.test(path ?? '');
   return (
-    <View style={[styles.wrap, compact && styles.wrapCompact]}>
+    <View style={[styles.wrap, compact && styles.wrapCompact, fan && styles.fanWrap]}>
       {/* Field lines stay on the right and fade in, so the title always sits on clear ground. */}
       <View pointerEvents="none" style={styles.field}>
         <SportField sport={sport} fade="left" labels={false} opacity={0.11} />
@@ -43,14 +47,17 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
           <Text style={[styles.kicker, compact && styles.kickerCompact, { color: mark }]}>{kicker}</Text>
         </View>
       ) : null}
-      <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact, { color: live.theme.text }]}>{title}</Text>
+      <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact, fan && styles.fanTitle, { color: live.theme.text }]}>{title}</Text>
       {compact ? null : <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.underline, { backgroundColor: mark }]} />}
-      {lede ? <Text style={[styles.lede, compact && styles.ledeCompact]}>{lede}</Text> : null}
+      {lede ? <Text style={[styles.lede, compact && styles.ledeCompact, fan && styles.fanLede]}>{lede}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  fanWrap: { gap: 5, paddingTop: 4, paddingBottom: 4 },
+  fanTitle: { fontSize: 24, letterSpacing: -0.3 },
+  fanLede: { fontSize: 14, lineHeight: 20 },
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   accentDot: { width: 6, height: 6, borderRadius: 3 },
   field: {

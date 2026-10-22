@@ -1,15 +1,21 @@
-/** Persistent fan destinations wrap labels and respect Reduce Motion while preserving SDK58 tab events. */
+/** Inset fan dock keeps every label/control opaque while only its backdrop softens on scroll.
+ * Its compact reserved footer preserves the Highlights measured video frame and SDK58 tab events.
+ */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef } from 'react';
-import { Platform, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import { Platform, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { BlurView } from 'expo-blur';
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 
-import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors, radii } from '@/constants/theme';
+import { colors } from '@/constants/theme';
 import { HIGHLIGHT_NAV_LABEL, SPOTLIGHT_NAV_LABEL } from '@/data/highlights';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useFanDockSoftened, useFanNavigation } from '@/context/FanNavigationContext';
+import { useReduceTransparency } from '@/hooks/useReduceTransparency';
+import { useReduceMotion } from '@/hooks/useReduceMotion';
+import { impactPress } from '@/lib/haptics';
 import { FOCAL, SPRING_BOUNCE, SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
 
 const TAB_META: Record<string, { label: string; accessibilityLabel?: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap }> =
@@ -32,6 +38,7 @@ type TabButtonProps = {
   accentColor: string;
   accentMist: string;
   onPress: () => void;
+  onInteract: () => void;
 };
 
 /**
@@ -41,43 +48,39 @@ type TabButtonProps = {
  * even though the route list length can change under runtime feature flags.
  * @sideEffects Reanimated `withSequence`/`withSpring` icon bounce + `withTiming` mist fade on focus change.
  */
-function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accentColor, accentMist, onPress }: TabButtonProps) {
-  const reduceMotion = useReducedMotion();
+function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accentColor, accentMist, onPress, onInteract }: TabButtonProps) {
+  const reduceMotion = useReduceMotion();
   const iconScale = useSharedValue(1);
-  const mist = useSharedValue(focused ? 1 : 0);
   const color = focused ? accentColor : colors.textMuted;
 
   useEffect(() => {
-    mist.value = reduceMotion ? (focused ? 1 : 0) : withTiming(focused ? 1 : 0, { duration: 180 });
     if (reduceMotion || !focused) {
       iconScale.value = 1;
     } else {
       iconScale.value = withSequence(withSpring(1.22, SPRING_BOUNCE), withSpring(1, SPRING_BOUNCE));
     }
-  }, [focused, iconScale, mist, reduceMotion]);
+  }, [focused, iconScale, reduceMotion]);
 
-  const mistStyle = useAnimatedStyle(() => ({ opacity: mist.value }));
   const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: iconScale.value }] }));
 
   return (
-    <AnimatedButton
-      haptic="selection"
+    <Pressable
       accessibilityRole="tab"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ selected: focused }}
-      style={styles.tabHit}
-      contentStyle={styles.tabInner}
-      onPress={onPress}
+      style={[styles.tabHit, styles.tabInner]}
+      onFocus={onInteract}
+      onPressIn={onInteract}
+      onPress={() => { impactPress('selection'); onPress(); }}
     >
-      <Animated.View pointerEvents="none" style={[styles.tabMist, { backgroundColor: accentMist }, mistStyle]} />
+      {focused ? <View pointerEvents="none" style={[styles.tabMist, { backgroundColor: accentMist }]} /> : null}
       <Animated.View style={iconStyle}>
-        <Ionicons name={focused ? activeIcon : icon} size={20} color={color} />
+        <Ionicons name={focused ? activeIcon : icon} size={18} color={color} />
       </Animated.View>
       <Text style={[styles.tabLabel, { color }]}>
         {label}
       </Text>
-      <View style={styles.tabDotSpacer} />
-    </AnimatedButton>
+    </Pressable>
   );
 }
 
@@ -91,7 +94,12 @@ function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accen
  * @sideEffects Opens `UploadSheetContext` on plus press; Reanimated spring on the indicator when focus changes.
  */
 export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBarProps) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
+  const reduceTransparency = useReduceTransparency();
+  const softened = useFanDockSoftened();
+  const { restore } = useFanNavigation();
+  const solid = reduceTransparency || (Platform.OS !== 'ios' && Platform.OS !== 'web');
+  const backdropOpacity = solid ? 1 : softened ? 0.46 : 0.94;
   const { openUpload } = useUploadSheet();
   const { live } = useAppRuntime();
   const slots = useRef<Record<string, { x: number; width: number }>>({});
@@ -100,6 +108,8 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   const indicatorW = useSharedValue(0);
   const indicatorOp = useSharedValue(0);
   const focusedKey = state.routes[state.index]?.key ?? '';
+  useEffect(() => { restore(); }, [focusedKey, restore]);
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: reduceMotion ? backdropOpacity : withTiming(backdropOpacity, { duration: 160 }) }), [backdropOpacity, reduceMotion]);
 
   const routes = state.routes.filter((route) => {
     if (!TAB_META[route.name] || (route.name === 'shop' || route.name === 'drip')) return false;
@@ -114,7 +124,7 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   const placeIndicator = (key: string, animate: boolean) => {
     const box = slots.current[key];
     if (!box || box.width <= 0 || !visibleKeys.has(key)) {
-      indicatorOp.value = reduceMotion ? 0 : withTiming(0, { duration: 120 });
+      indicatorOp.value = 0;
       return;
     }
     const width = Math.max(24, box.width * 0.5);
@@ -128,7 +138,7 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
     }
     indicatorX.value = withSpring(x, SPRING_SHEET);
     indicatorW.value = withSpring(width, SPRING_SHEET);
-    indicatorOp.value = withTiming(1, { duration: 180 });
+    indicatorOp.value = 1;
   };
 
   useEffect(() => {
@@ -167,7 +177,9 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
           activeIcon={meta.activeIcon}
           accentColor={BAR_ACCENT.color}
           accentMist={BAR_ACCENT.mist}
+          onInteract={restore}
           onPress={() => {
+            restore();
             // SDK 58: the nested stack hears this tabPress and pops to `index` when the tab is already focused.
             const event = emitter.emit({
               type: 'tabPress',
@@ -182,8 +194,13 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   };
 
   return (
-    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 6), backgroundColor: live.theme.surface }]}>
+    <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 6) }]}>
       <View style={styles.bar}>
+        {/* Web uses the current React value: installed Reanimated web timing can retain the initial shared opacity. */}
+        <Animated.View testID="fan-dock-backdrop" pointerEvents="none" style={[styles.backdrop, backdropStyle, Platform.OS === 'web' && { opacity: backdropOpacity }]}>
+          {!solid ? <BlurView tint="light" intensity={32} style={StyleSheet.absoluteFill} /> : null}
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: live.theme.surface, opacity: solid ? 1 : 0.82 }]} />
+        </Animated.View>
         <Animated.View
           pointerEvents="none"
           style={[
@@ -195,15 +212,17 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
         {left.map((route) => renderTab(route))}
         {live.tabs.upload ? (
         <View style={styles.fabSlot}>
-          <AnimatedButton
-            haptic="medium"
-            scaleTo={0.92}
+          <Pressable
+            accessibilityRole="button"
             accessibilityLabel="Upload"
-            contentStyle={styles.fab}
-            onPress={openUpload}
+            style={[styles.tabHit, styles.tabInner]}
+            onFocus={restore}
+            onPressIn={restore}
+            onPress={() => { restore(); impactPress('medium'); openUpload(); }}
           >
-            <Ionicons name="add" size={26} color="#FFFFFF" />
-          </AnimatedButton>
+            <View style={styles.fab}><Ionicons name="add" size={18} color="#FFFFFF" /></View>
+            <Text style={[styles.tabLabel, { color: FOCAL.jadeInk }]}>Upload</Text>
+          </Pressable>
         </View>
         ) : null}
         {right.map((route) => renderTab(route))}
@@ -215,17 +234,23 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
 const styles = StyleSheet.create({
   wrap: {
     width: '100%',
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    paddingHorizontal: 8,
+    backgroundColor: 'transparent',
   },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    minHeight: 64,
-    paddingHorizontal: 4,
-    paddingTop: 4,
+    minHeight: 56,
+    paddingHorizontal: 2,
+    borderRadius: 28,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 28,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   tabSlot: {
     flex: 1,
@@ -234,6 +259,7 @@ const styles = StyleSheet.create({
   tabHit: {
     flex: 1,
     minWidth: 0,
+    opacity: 1,
   },
   indicator: {
     position: 'absolute',
@@ -253,42 +279,41 @@ const styles = StyleSheet.create({
     }),
   },
   tabInner: {
-    minHeight: 56,
+    minHeight: 52,
+    // Opaque control faces retain text contrast when the softened backdrop sits over dark artwork.
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
-    paddingVertical: 6,
+    paddingVertical: 4,
     paddingHorizontal: 2,
-    borderRadius: radii.md,
+    borderRadius: 24,
     marginHorizontal: 2,
     marginVertical: 2,
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   tabMist: {
     ...StyleSheet.absoluteFill,
+    borderRadius: 24,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: -0.1,
     textAlign: 'center',
     flexShrink: 1,
-  },
-  tabDotSpacer: {
-    width: 5,
-    height: 5,
-    marginTop: 1,
+    maxWidth: '100%',
   },
   fabSlot: {
-    width: 52,
-    height: 52,
-    alignItems: 'center',
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'stretch',
     justifyContent: 'center',
   },
   fab: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: FOCAL.jadeInk,
     alignItems: 'center',
     justifyContent: 'center',

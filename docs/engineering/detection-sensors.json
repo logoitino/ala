@@ -410,6 +410,27 @@
       ],
       "limitation": "Local test execution only; map-provider accuracy/arrival, physical map launch, hosted SQL and telemetry delivery are unverified. No passive location or fleet monitoring.",
       "next": "LOCAL + ADMIN correct/clear public venue address in Games; SUPPORT investigates fixed failure with device reproduction; QA verifies configured venue and physical map handoff after owner applies SQL."
+    },
+    {
+      "id": "athlete-sport-participation",
+      "area": "app",
+      "owner": "PROFILE",
+      "status": "partial",
+      "detects": "MULTISPORT-01 existing bounded issue queue uses athlete_sports_read_failed/save_failed/admin_read_failed/revision_conflict with surface only, no student/team/exception payload; unavailable/conflict notices and invoked controls remain separate from hosted telemetry delivery. Executed admin/SDK and full-canonical PostgreSQL regressions cover revision locks, full readback, denied actors/privacy, independent career/log/media sport, original record correction and retained drafts. Authoritative stored-catalog states distinguish unavailable and empty from decorative starters; retained drafts and explicit no-tag paths are locally tested.",
+      "evidence": [
+        "apps/mobile/src/frontend/lib/athleteSports.ts",
+        "apps/mobile/src/frontend/components/Admin/AthleteSportsTool.tsx",
+        "apps/mobile/src/frontend/components/Admin/__tests__/AthleteSportsTool.test.tsx",
+        "scripts/replay/athlete-sports-replay.mjs",
+        "docs/agents/MULTISPORT-01.md",
+        "apps/mobile/src/frontend/components/Admin/HighlightSportPanel.tsx",
+        "apps/mobile/src/frontend/components/Admin/__tests__/HighlightSportPanel.test.tsx",
+        "apps/mobile/src/frontend/components/Admin/AthleteRecordsPanel.tsx",
+        "apps/mobile/src/frontend/hooks/useStoredSportChoices.ts",
+        "apps/mobile/src/frontend/hooks/__tests__/useStoredSportChoices.test.tsx"
+      ],
+      "limitation": "Local source/tests only; SQL unapplied, hosted denied-actor and telemetry intake/delivery unverified. No attendance inference, passive location or new background monitor. Stored-catalog failure has visible UI/retry and local regression coverage only; that read adds no Health observation or verified delivery sensor.",
+      "next": "PROFILE+ADMIN correct primary/list through Sports; ATHLETE_STATS correct recorded sport data through existing Stats; SUPPORT reproduces fixed failures without student/team payload; QA verifies hosted migration/privacy and physical device before release."
     }
   ]
 }

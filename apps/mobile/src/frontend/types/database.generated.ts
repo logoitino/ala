@@ -138,6 +138,7 @@ export type Database = {
           played_on: string
           player_id: string
           scoring_value: number
+          sport: string | null
           stat_line: string
           volume_value: number
         }
@@ -148,6 +149,7 @@ export type Database = {
           played_on: string
           player_id: string
           scoring_value?: number
+          sport?: string | null
           stat_line?: string
           volume_value?: number
         }
@@ -158,8 +160,36 @@ export type Database = {
           played_on?: string
           player_id?: string
           scoring_value?: number
+          sport?: string | null
           stat_line?: string
           volume_value?: number
+        }
+        Relationships: []
+      }
+      athlete_sport_entries: {
+        Row: {
+          jersey: string
+          position: string
+          profile_id: string
+          school_id: string | null
+          sport: string
+          team_name: string | null
+        }
+        Insert: {
+          jersey?: string
+          position?: string
+          profile_id: string
+          school_id?: string | null
+          sport: string
+          team_name?: string | null
+        }
+        Update: {
+          jersey?: string
+          position?: string
+          profile_id?: string
+          school_id?: string | null
+          sport?: string
+          team_name?: string | null
         }
         Relationships: []
       }
@@ -2254,6 +2284,8 @@ export type Database = {
           athlete_jersey: string | null
           athlete_position: string | null
           athlete_sport: string | null
+          athlete_sports_managed: boolean
+          athlete_sports_revision: number
           aura_points: number
           avatar_url: string | null
           bio: string | null
@@ -2299,6 +2331,8 @@ export type Database = {
           athlete_jersey?: string | null
           athlete_position?: string | null
           athlete_sport?: string | null
+          athlete_sports_managed?: boolean
+          athlete_sports_revision?: number
           aura_points?: number
           avatar_url?: string | null
           bio?: string | null
@@ -2344,6 +2378,8 @@ export type Database = {
           athlete_jersey?: string | null
           athlete_position?: string | null
           athlete_sport?: string | null
+          athlete_sports_managed?: boolean
+          athlete_sports_revision?: number
           aura_points?: number
           avatar_url?: string | null
           bio?: string | null
@@ -2675,6 +2711,7 @@ export type Database = {
           rights_version: string | null
           safety_label: string
           seki_count: number
+          sport: string | null
           tag_confirmed_at: string | null
           tag_confirmed_by: string | null
           tag_status: string
@@ -2705,6 +2742,7 @@ export type Database = {
           rights_version?: string | null
           safety_label?: string
           seki_count?: number
+          sport?: string | null
           tag_confirmed_at?: string | null
           tag_confirmed_by?: string | null
           tag_status?: string
@@ -2735,6 +2773,7 @@ export type Database = {
           rights_version?: string | null
           safety_label?: string
           seki_count?: number
+          sport?: string | null
           tag_confirmed_at?: string | null
           tag_confirmed_by?: string | null
           tag_status?: string
@@ -4534,6 +4573,7 @@ export type Database = {
           reported_by: string[] | null
           safety_label: string | null
           seki_count: number | null
+          sport: string | null
           tag_confirmed_at: string | null
           tag_confirmed_by: string | null
           tag_status: string | null
@@ -4579,17 +4619,30 @@ export type Database = {
         }
         Returns: string[]
       }
-      admin_add_athlete_game_log: {
-        Args: {
-          p_player_id: string
-          p_played_on: string
-          p_opponent_school: string
-          p_stat_line: string
-          p_scoring_value: number
-          p_volume_value: number
-        }
-        Returns: string
-      }
+      admin_add_athlete_game_log:
+        | {
+            Args: {
+              p_player_id: string
+              p_played_on: string
+              p_opponent_school: string
+              p_stat_line: string
+              p_scoring_value: number
+              p_volume_value: number
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_player_id: string
+              p_played_on: string
+              p_opponent_school: string
+              p_stat_line: string
+              p_scoring_value: number
+              p_volume_value: number
+              p_sport: string
+            }
+            Returns: string
+          }
       admin_add_school_confirmer: {
         Args: {
           target_school_id: string
@@ -4605,6 +4658,13 @@ export type Database = {
           target_player_id: string
         }
         Returns: undefined
+      }
+      admin_athlete_sport_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          sport: string
+          athletes: number
+        }[]
       }
       admin_beyond_cleanup_finish: {
         Args: {
@@ -4763,6 +4823,12 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_get_highlight_sport: {
+        Args: {
+          p_reel_id: string
+        }
+        Returns: Json
+      }
       admin_get_privacy: {
         Args: {
           target_profile_id: string
@@ -4785,6 +4851,13 @@ export type Database = {
           user_id: string
           blocked_at: string
         }[]
+      }
+      admin_list_athlete_sports: {
+        Args: {
+          p_search?: string
+          p_limit?: number
+        }
+        Returns: Json
       }
       admin_list_operator_checkins: {
         Args: {
@@ -4812,6 +4885,13 @@ export type Database = {
           expires_at: string
           last_used_at: string
         }[]
+      }
+      admin_list_unassigned_athlete_logs: {
+        Args: {
+          p_player_id: string
+          p_limit?: number
+        }
+        Returns: Database["public"]["Tables"]["athlete_game_logs"]["Row"][]
       }
       admin_minor_overview: {
         Args: {
@@ -4899,6 +4979,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_set_athlete_game_log_sport: {
+        Args: {
+          p_log_id: string
+          p_player_id: string
+          p_sport: string
+          p_expected_sport: string
+        }
+        Returns: Database["public"]["Tables"]["athlete_game_logs"]["Row"]
+      }
       admin_set_birth_month: {
         Args: {
           target_profile_id: string
@@ -4928,6 +5017,14 @@ export type Database = {
         Args: {
           target_profile_id: string
           hidden: boolean
+        }
+        Returns: Json
+      }
+      admin_set_highlight_sport: {
+        Args: {
+          p_reel_id: string
+          p_sport: string
+          p_expected_sport: string
         }
         Returns: Json
       }
@@ -5903,6 +6000,12 @@ export type Database = {
       get_app_feedback: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Tables"]["app_feedback"]["Row"][]
+      }
+      get_athlete_sports: {
+        Args: {
+          p_profile_id?: string
+        }
+        Returns: Json
       }
       get_aura_board: {
         Args: {
@@ -8080,6 +8183,15 @@ export type Database = {
         Args: {
           expected_actor_id: string
           allow: boolean
+        }
+        Returns: Json
+      }
+      set_athlete_sports: {
+        Args: {
+          p_profile_id: string
+          p_primary_sport: string
+          p_sports: Json
+          p_expected_revision: number
         }
         Returns: Json
       }

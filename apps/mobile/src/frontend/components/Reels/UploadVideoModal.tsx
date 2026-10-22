@@ -6,7 +6,8 @@
  * still need an athlete. The sheet does not play the clip, so choosing an athlete cannot cover the phone.
  * Video and photo drafts are kept separately, so switching Video ↔ Photos never discards either; switching clears the
  * rights confirmations because they belong to the media. Videos publish through `lib/reels.ts`; photo stories through
- * `lib/photoStories.ts` (nothing is published unless every photo uploads); after a failed story attempt the hidden reel id
+ * `lib/photoStories.ts` (nothing is published unless every photo uploads). Both formats may carry an optional recorded
+ * sport; only exact self athlete selection defaults primary. After a failed story attempt the hidden reel id
  * is kept until its files and row are retired before retry; Close persists removal intent before dismissing. Lost publication replies recover the stored
  * story without replacing it or attaching new mentions. Account mentions are pending until confirmed.
  * Picker durations become milliseconds at the boundary and stay attached through publication.
@@ -15,6 +16,8 @@
  */
 
 import { UploadVideoComposer, type UploadStep } from '@/components/Reels/UploadVideoComposer';
+import { sportForChosenAthlete, type UploadSportDraft } from '@/components/Reels/uploadSport';
+import { useStoredSportChoices } from '@/hooks/useStoredSportChoices';
 import type { DraftStoryPhoto } from '@/components/Reels/PhotoStoryPicker';
 import { createPhotoStory, movePhoto, photoStoriesAvailable, PhotoStoryPublishError, PhotoStoryAlreadyPublishedError } from '@/lib/photoStories';
 import { cleanupFailedPhotoStory, rememberPhotoStoryCleanup, queuedPhotoStoryCleanups } from '@/lib/photoStoryCleanup';
@@ -64,7 +67,7 @@ type PickedVideo = {
   compressed?: boolean;
 };
 
-type OpenSelect = 'game' | 'player' | null;
+type OpenSelect = 'game' | 'player' | 'sport' | null;
 type PickSource = 'library' | 'camera';
 
 /**
@@ -121,7 +124,7 @@ function fireSuccess() {
  */
 export function UploadVideoModal({ visible, players, onClose, onUploaded }: UploadVideoModalProps) {
   const { live } = useAppRuntime();
-  const { profile, isGuest, user } = useAuth();
+  const { profile, isGuest, user, isSessionCurrent } = useAuth();
   const ownerId = user?.id ?? profile?.user_id ?? undefined;
   const ownerRef = useRef(ownerId);
   ownerRef.current = ownerId;
@@ -129,6 +132,8 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   visibleRef.current = visible;
   const draftEpoch = useRef(0);
   const previousOwner = useRef(ownerId);
+  const previousSessionGuard = useRef(isSessionCurrent);
+  const draftIdentityCurrent = previousOwner.current === ownerId && previousSessionGuard.current === isSessionCurrent;
   const categoryPills = labeledReelCategories(live.catalog.reelCategories);
   const exclusiveDollars = live.catalog.exclusiveDollars;
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -140,6 +145,8 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const [games, setGames] = useState<Game[]>([]);
   const [gameId, setGameId] = useState('');
   const [playerId, setPlayerId] = useState('');
+  const { sportNames, status: catalogStatus, reload: reloadSportChoices } = useStoredSportChoices(visible);
+  const [sportDraft, setSportDraft] = useState<UploadSportDraft>({ value: '', explicit: false });
   const [accountTags, setAccountTags] = useState<AccountTagHit[]>([]);
   const [caption, setCaption] = useState('');
   const [asset, setAsset] = useState<PickedVideo | null>(null);
@@ -150,6 +157,8 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const [progress, setProgress] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [sportConfirmationPending, setSportConfirmationPending] = useState(false);
+  const uncertainSportReceipt = useRef<Reel | null>(null);
   const [statusLabel, setStatusLabel] = useState('Uploading Seki play…');
   const [isExclusive, setIsExclusive] = useState(false);
   const [category, setCategory] = useState<ReelCategory>(REEL_CATEGORY_GAME);
@@ -176,7 +185,8 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     return result;
   };
   const isCurrentDraft = (epoch: number, owner: string | undefined) =>
-    visibleRef.current && draftEpoch.current === epoch && ownerRef.current === owner;
+    visibleRef.current && draftEpoch.current === epoch && ownerRef.current === owner
+    && previousOwner.current === owner && previousSessionGuard.current === isSessionCurrent && (!isSessionCurrent || isSessionCurrent());
   const closeUpload = async () => {
     if (uploading || submitLock.current) return;
     const epoch = draftEpoch.current;
@@ -219,9 +229,14 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
 
   const mediaReady = isPhotos ? photosAvailable && photos.length > 0 : Boolean(asset);
   const athleteReady = isPhotos ? Boolean(selectedPlayer) : true;
-  const canSubmit = Boolean(mediaReady && caption.trim() && athleteReady) && rightsReady(rights, category, mediaKind) && !uploading;
+  const sportReady = !sportDraft.value || (catalogStatus === 'ready' && sportNames.includes(sportDraft.value));
+  const sportSourceNotice = catalogStatus === 'loading' ? 'Loading sport choices. Your draft stays here.' : catalogStatus === 'unavailable' ? 'Sport choices are unavailable right now. Your draft stays here. Reload sport choices or choose no sport tag.'
+    : sportDraft.value && !sportReady ? 'Your selected sport is no longer available. Keep the draft or choose another sport before publishing.'
+      : sportNames.length === 0 ? 'No active sport tags are available. You can publish without a sport tag.' : null;
+  const canSubmit = draftIdentityCurrent && sportReady && Boolean(mediaReady && caption.trim() && athleteReady) && rightsReady(rights, category, mediaKind) && !uploading && !sportConfirmationPending;
   const choosePlayer = (id: string) => {
     setPlayerId(id);
+    setSportDraft(current => sportForChosenAthlete(current, id, profile?.player_id, profile?.athlete_sport, sportNames));
     if (!id) setIsExclusive(false);
   };
 
@@ -266,8 +281,9 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
 
   useEffect(() => {
     draftEpoch.current += 1;
-    const accountChanged = previousOwner.current !== ownerId;
+    const accountChanged = previousOwner.current !== ownerId || previousSessionGuard.current !== isSessionCurrent;
     previousOwner.current = ownerId;
+    previousSessionGuard.current = isSessionCurrent;
     if (!visible || accountChanged) pendingStory.current = null;
     if (!visible || accountChanged) {
       for (const pending of unfinishedStories.current.values()) {
@@ -284,6 +300,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       setCaption('');
       setGameId('');
       setPlayerId('');
+      setSportDraft({ value: '', explicit: false });
       setAccountTags([]);
       setProgress(0);
       setUploading(false);
@@ -291,6 +308,8 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       setPickSource(null);
       setLoadError(null);
       setUploadError(null);
+      setSportConfirmationPending(false);
+      uncertainSportReceipt.current = null;
       setStatusLabel('Uploading Seki play…');
       setLibraryOpen(false);
       setIsExclusive(false);
@@ -348,7 +367,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     return () => {
       active = false;
     };
-  }, [visible, ownerId]);
+  }, [isSessionCurrent, visible, ownerId]);
 
   // Mālo follows the tag, so never guess it: an athlete posting their own clip starts tagged as
   // themself; everyone else must pick who is in the video. (This used to preselect a demo athlete,
@@ -358,6 +377,11 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     if (!visible || !ownPlayerId || !players.some((player) => player.id === ownPlayerId)) return;
     setPlayerId((current) => current || ownPlayerId);
   }, [visible, players, ownPlayerId]);
+  useEffect(() => {
+    if (!visible || !ownPlayerId || playerId !== ownPlayerId || catalogStatus !== 'ready') return;
+    // A shown default becomes part of the draft. Refreshing source choices must never silently erase its annotation.
+    setSportDraft(current => current.value || current.explicit ? current : sportForChosenAthlete(current, ownPlayerId, ownPlayerId, profile?.athlete_sport, sportNames));
+  }, [visible, playerId, ownPlayerId, catalogStatus, sportNames]);
 
   const applyPickedAsset = (source: PickSource, next: ImagePicker.ImagePickerAsset) => {
     // The platform declares the unit; a short native clip must never be mistaken for seconds.
@@ -452,7 +476,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   };
 
   const submit = async () => {
-    if (!canSubmit || submitLock.current) return;
+    if (!canSubmit || submitLock.current || uncertainSportReceipt.current || !draftIdentityCurrent) return;
     if (isGuest) {
       setUploadError('Create an account to post a Highlight.');
       return;
@@ -480,13 +504,15 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       const reuse = pending?.reelId ?? null;
       const reel = isPhotos ? await createPhotoStory({
         existingReelId: reuse,
-        expectedUserId: owner,
         photos: photos.map(({ uri, width, height, description }) => ({ uri, width, height, description })),
         title: caption,
         playerId,
         gameId: gameId || null,
         category,
         rightsVersion: PHOTO_RIGHTS_VERSION,
+        sport: sportDraft.value || null,
+        expectedUserId: owner,
+        isSessionCurrent,
         onProgress: (done, total) => {
           if (!isCurrentDraft(epoch, owner)) return;
           setProgress(0.08 + 0.84 * (done / total));
@@ -503,6 +529,9 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         isExclusive,
         category,
         coachLevel,
+        sport: sportDraft.value || null,
+        expectedUserId: owner,
+        isSessionCurrent,
         compressed: asset!.compressed,
         onProgress: (value) => { if (isCurrentDraft(epoch, owner)) setProgress(value); },
         onStatus: (label) => { if (isCurrentDraft(epoch, owner)) setStatusLabel(label); },
@@ -542,6 +571,15 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
           : 'Your clip is published, but we could not save the account mentions.');
       }
     } catch (caught) {
+      if (caught && typeof caught === 'object' && 'code' in caught && caught.code === 'HIGHLIGHT_SPORT_CONFIRMATION' && 'reel' in caught) {
+        if (!isCurrentDraft(epoch, owner)) return;
+        uncertainSportReceipt.current = caught.reel as Reel;
+        setSportConfirmationPending(true); setProgress(0);
+        setUploadError('Highlight saved, but its sport could not be confirmed. Check your posted Highlights before another upload. Your draft is still here.');
+        setStatusLabel('Recorded sport needs confirmation');
+        telemetry.trackIssue('highlight_sport_confirmation_failed', 'home');
+        return;
+      }
       if (caught instanceof PhotoStoryPublishError) {
         if (pending && pending.reelId !== caught.reelId) forgetPending(pending);
         const residue = { reelId: caught.reelId, playerId, gameId, ownerId: owner };
@@ -584,6 +622,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     outputRange: ['0%', '100%'],
   });
 
+  if (!draftIdentityCurrent) return null;
   return (
     <Modal testID="upload-modal" visible={visible} animationType="slide" presentationStyle="pageSheet"
       onRequestClose={() => {
@@ -599,6 +638,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         games={games} players={sortedPlayers} gameId={gameId} playerId={playerId} ownPlayerId={profile?.player_id ?? null}
         gameLabel={gameLabel} playerLabel={playerLabel} onGame={setGameId} onPlayer={choosePlayer}
         openSelect={openSelect} onSelect={setOpenSelect}
+        sport={sportDraft.value} sportNames={sportNames} sportSourceNotice={sportSourceNotice} onReloadSports={reloadSportChoices} sportChoicesLoading={catalogStatus === 'loading'} onSport={value => setSportDraft({ value, explicit: true })}
         caption={caption} onCaption={setCaption} category={category} onCategory={setCategory}
         showCoachSwitch={live.layouts.coachLevel !== false} coachLevel={coachLevel} onCoachLevel={setCoachLevel}
         categoryPills={categoryPills} accountTags={accountTags} onAccountTags={setAccountTags}

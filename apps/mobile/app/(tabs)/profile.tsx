@@ -1,4 +1,5 @@
-/** Own profile shares the public sports layout; current-account notification settings open after the Account menu dismisses. */
+/** Own profile shares the public sports layout and binds clips/sport reads to the current account and linked athlete.
+ * Primary artwork is manually chosen; temporary chips never write it. Account settings retain their current-owner boundary. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { type Href, useFocusEffect, useIsFocused, useRouter } from 'expo-router';
@@ -25,6 +26,7 @@ import { markExclusiveClips } from '@/data/exclusive';
 import { displayValue, type Player } from '@/data/players';
 import { useAthleteSubscription } from '@/hooks/useAthleteSubscription';
 import { useAthleteStats } from '@/hooks/useAthleteStats';
+import { useAthleteSports } from '@/hooks/useAthleteSports';
 import { useFilmerStats } from '@/hooks/useFilmerStats';
 import { countStoredCheerVotes } from '@/hooks/useCheerPoll';
 import { useRoster } from '@/hooks/useRoster';
@@ -54,7 +56,7 @@ const FAN_SELF_PREFIX = 'fan-self';
  */
 export default function MyHubTab() {
   const router = useRouter();
-  const { profile, role, roles, isAthlete, isAdmin, activeRole, isGuest, signOut } = useAuth();
+  const { profile, role, roles, isAthlete, isAdmin, activeRole, isGuest, signOut, user, isSessionCurrent } = useAuth();
   const { stats: filmerStats } = useFilmerStats(isGuest ? null : profile?.id);
   const uploadSheet = useOptionalUploadSheet();
   const { live } = useAppRuntime();
@@ -64,6 +66,7 @@ export default function MyHubTab() {
   const { onScroll, trackFeature } = useSurfaceUsage('profile');
   const [tips, setTips] = useState<TipLedgerEntry[]>([]);
   const [taggedRows, setTaggedRows] = useState<ReelWithPlayer[]>([]);
+  const [taggedOwner, setTaggedOwner] = useState<{ account: string | null | undefined; playerId: string; guard: typeof isSessionCurrent } | null>(null);
   const [auraById, setAuraById] = useState<Record<string, number>>({});
   const [tipsDropped, setTipsDropped] = useState(0);
   const [pollVotes, setPollVotes] = useState(0);
@@ -81,6 +84,11 @@ export default function MyHubTab() {
   const [localOnboardTeam, setLocalOnboardTeam] = useState<SchoolTeam | null>(null);
 
   const profileOpen = useIsFocused();
+  const sports = useAthleteSports(profile?.id, isAthlete && !isGuest && profileOpen);
+  const [sportSelection, setSportSelection] = useState<{ profileId: string | undefined; sport: string | null }>({ profileId: profile?.id, sport: null });
+  const displaySport = sportSelection.profileId === profile?.id && sports.snapshot?.sports.some(entry => entry.sport === sportSelection.sport)
+    ? sportSelection.sport : null;
+  const primarySport = sports.snapshot?.primarySport ?? profile?.athlete_sport;
 
   const rosterAthlete = useMemo(() => {
     if (profile?.player_id) {
@@ -108,7 +116,7 @@ export default function MyHubTab() {
   }, [auraById, rosterAthlete]);
 
   const ownsRoster = Boolean(isAthlete && profile?.player_id && profile.player_id === athlete.id);
-  const { stats, loading: statsLoading } = useAthleteStats(athlete.id, athlete, isAthlete && profile?.player_id === athlete.id ? profile.athlete_sport : undefined, profileOpen);
+  const { stats, loading: statsLoading } = useAthleteStats(athlete.id, athlete, isAthlete && profile?.player_id === athlete.id ? displaySport || primarySport : undefined, profileOpen);
   const { subscribed, grant } = useAthleteSubscription(athlete.id);
 
   const hubAuraPoints = useMemo(() => {
@@ -119,6 +127,7 @@ export default function MyHubTab() {
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
+      const valid = () => !cancelled && (!isSessionCurrent || isSessionCurrent());
       void fetchRecentTips().then((rows) => {
         if (!cancelled) setTips(rows);
       });
@@ -137,24 +146,28 @@ export default function MyHubTab() {
         setTaggedRows([]);
       } else {
         void fetchReelsForPlayer(athlete.id).then((rows) => {
-          if (!cancelled) setTaggedRows(rows);
+          if (valid()) { setTaggedRows(rows); setTaggedOwner({ account: user?.id ?? profile?.user_id, playerId: athlete.id, guard: isSessionCurrent }); }
+        }, () => {
+          if (valid()) { setTaggedRows([]); setTaggedOwner(null); }
         });
       }
       return () => {
         cancelled = true;
         unsubscribeAura();
       };
-    }, [athlete.id]),
+    }, [athlete.id, isSessionCurrent, profile?.user_id, user?.id]),
   );
 
   const taggedReels = useMemo(
     () =>
       sortClipsNewestFirst(
         markExclusiveClips(
-          taggedRows.map((reel) => reelToClip(reel, playerFromReel(reel, [athlete]))),
+          (taggedOwner?.account === (user?.id ?? profile?.user_id) && taggedOwner?.playerId === athlete.id
+            && taggedOwner.guard === isSessionCurrent && (!isSessionCurrent || isSessionCurrent()) ? taggedRows : [])
+            .map((reel) => reelToClip(reel, playerFromReel(reel, [athlete]))),
         ),
       ),
-    [athlete, taggedRows],
+    [athlete, isSessionCurrent, profile?.user_id, taggedOwner, taggedRows, user?.id],
   );
 
   const malosReceived = useMemo(() => {
@@ -386,6 +399,10 @@ export default function MyHubTab() {
           clips={taggedReels}
           stats={stats}
           statsLoading={statsLoading}
+          primarySport={primarySport}
+          displaySport={displaySport}
+          sportEntries={sports.snapshot?.sports}
+          onDisplaySportChange={sport => setSportSelection({ profileId: profile?.id, sport })}
           name={hubName}
           username={hubUsername}
           jersey={cardJersey}
@@ -496,7 +513,7 @@ export default function MyHubTab() {
       <RoleSwitcherModal visible={roleSheetOpen} onClose={() => setRoleSheetOpen(false)} />
       <LegalModal visible={legalOpen} onClose={() => setLegalOpen(false)} />
       <VerifyAthleteModal visible={verifyOpen} onClose={() => setVerifyOpen(false)} />
-      <EditProfileModal visible={editProfileOpen} onClose={() => setEditProfileOpen(false)} onOpenPrivacy={() => setPrivacyOpen(true)} />
+      <EditProfileModal visible={editProfileOpen} onClose={() => setEditProfileOpen(false)} onOpenPrivacy={() => setPrivacyOpen(true)} onSportsSaved={sports.acceptConfirmed} />
       <PrivacySettingsSheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
       <NotificationSettingsSheet visible={notificationsOpen && profileOpen && !isGuest} onClose={() => setNotificationsOpen(false)} />
       <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />

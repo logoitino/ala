@@ -19,6 +19,12 @@ const recordedGame: Game = {
 };
 
 describe('GameCard scoreboard', () => {
+  it('offers one direct scorecard action without a repeated full-width roster panel', async () => {
+    await render(<GameCard game={recordedGame} onPress={jest.fn()} />);
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.queryByText('View game & roster')).toBeNull();
+    expect(screen.getByRole('button', { name: /Community gym. View game, roster and donate/ })).toBeTruthy();
+  });
   it('includes distinct school names in the spoken scoreboard identity', async () => {
     await render(<GameCard game={{ ...recordedGame, home_team: 'Falcons', away_team: 'Eagles' }} onPress={jest.fn()} />);
     expect(screen.getByRole('button', { name: /Falcons, North Valley High School 72 against Eagles, South Ridge High School 68/ })).toBeTruthy();

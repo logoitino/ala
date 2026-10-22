@@ -7,6 +7,7 @@
  * Network/auth feed failures stop legacy fallback queries; opted-in safe reads recover at most once.
  * Screens call this, not Supabase. Uploading a clip is `services/MediaUploadService` plus `UploadVideoModal`.
  * Upload inputs retain the normalized duration so the service can enforce the short-clip limit.
+ * Recorded sport annotations come only from reel rows; mutable profile primaries never annotate history.
  * @sideEffects `reels`, `reel_hype_votes` and related RPCs; AsyncStorage for local hides and the peek hint.
  */
 
@@ -41,6 +42,9 @@ export type UploadSekiPlayInput = {
   category?: ReelCategory;
   /** Persist `reels.safety_label` on a new Train Like Me clip. Dropped if the column is not applied yet. */
   coachLevel?: boolean;
+  sport?: string | null;
+  expectedUserId?: string;
+  isSessionCurrent?: () => boolean;
   /** True when `HighlightPickerModal` already ran `Video.compress`. */
   compressed?: boolean;
   onProgress?: (value: number) => void;
@@ -48,9 +52,10 @@ export type UploadSekiPlayInput = {
 };
 
 export function playerFromReel(reel: ReelWithPlayer, roster: Player[] = []): Player | null {
+  if (!reel.player_id) return null;
   const joined = reel.players;
   const tagged = Array.isArray(joined) ? joined[0] : joined;
-  if (tagged) return tagged;
+  if (tagged && tagged.id === reel.player_id) return tagged;
   if (!reel.player_id) return null;
   return roster.find((player) => player.id === reel.player_id) ?? null;
 }
@@ -134,6 +139,7 @@ export function isListableReel(reel: Reel): boolean {
 }
 
 export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
+  if (!reel.player_id || player?.id !== reel.player_id) player = null;
   const hype = hypeFromReel(reel);
   const media = reelMedia(reel);
   const vaultOnly = Boolean(reel.is_vault_only ?? reel.is_exclusive);
@@ -146,7 +152,7 @@ export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
     sekiPlay: true,
     exclusive: vaultOnly,
     isVaultOnly: vaultOnly,
-    playerId: reel.player_id ?? player?.id ?? null,
+    playerId: reel.player_id ?? null,
     gameId: reel.game_id ?? null,
     sekiCount: hype.seki_count,
     auraCount: hype.aura_count,
@@ -154,6 +160,7 @@ export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
     totalTipsCents: hype.total_tips_cents,
     createdAt: reel.created_at,
     category: parseReelCategory(reel.category),
+    sport: reel.sport?.trim() || null,
     flashUnlockUntil: reel.flash_unlock_until ?? null,
     tagStatus: reel.tag_status === 'pending' || reel.tag_status === 'rejected' ? reel.tag_status : 'confirmed',
     uploadedBy: reel.uploaded_by ?? null,
@@ -283,6 +290,7 @@ const REEL_COLUMNS_CREDIT = `${REEL_COLUMNS_TAG}, view_count, uploader_name, upl
 /** Photo stories (migration 20261007230000). Falls back to the credit tier until applied; those rows are all video. */
 const REEL_COLUMNS_MEDIA = `${REEL_COLUMNS_CREDIT}, media_type, photo_count, cover_path`;
 const REEL_COLUMNS_LABEL = `${REEL_COLUMNS_MEDIA}, safety_label`;
+const REEL_COLUMNS_SPORT = `${REEL_COLUMNS_LABEL}, sport`;
 const REEL_COLUMNS_BASIC = 'id, video_url, title, player_id, game_id, created_at';
 const HIDDEN_REELS_KEY = 'tapuai.hiddenReels';
 
@@ -384,6 +392,7 @@ async function attachPlayers(rows: Reel[]): Promise<ReelWithPlayer[]> {
 
 // Newest schema first; each older tier drops columns a database without that migration lacks.
 const REEL_TIERS: Array<{ columns: string; keep: (row: Reel) => boolean }> = [
+  { columns: REEL_COLUMNS_SPORT, keep: isListableReel },
   { columns: REEL_COLUMNS_LABEL, keep: isListableReel },
   { columns: REEL_COLUMNS_MEDIA, keep: isListableReel },
   { columns: REEL_COLUMNS_CREDIT, keep: (row) => Boolean(row.video_url) && row.is_removed !== true },

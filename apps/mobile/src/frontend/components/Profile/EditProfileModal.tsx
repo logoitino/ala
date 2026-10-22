@@ -1,10 +1,10 @@
 /** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
  * QUIZ-05: athletes also see "Share a fun fact?" here (FunFactShare saves on its own; it hides itself when the server
- * says this account can't share or fun facts are off). */
+ * says this account can't share or fun facts are off). My sports saves its own confirmed atomic draft. */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -30,6 +30,9 @@ import { FOCAL, SPRING_CARD } from '@/theme/motion';
 import type { ProfileVisibility } from '@/types/database';
 import { fetchMyPrivacy } from '@/lib/privacy';
 import { FunFactShare } from '@/components/Profile/FunFactShare';
+import { MySportsModal } from '@/components/Profile/MySportsModal';
+import { useAthleteSports } from '@/hooks/useAthleteSports';
+import type { AthleteSportsSnapshot } from '@/lib/athleteSports';
 
 const SHEET_TRAVEL = 520;
 const BIO_MAX = 500;
@@ -60,6 +63,7 @@ type EditProfileModalProps = {
   onClose: () => void;
   /** Opens Profile → Privacy. When the database has the privacy update it replaces the old show/hide switches. */
   onOpenPrivacy?: () => void;
+  onSportsSaved?: (snapshot: AthleteSportsSnapshot) => void;
 };
 
 /**
@@ -68,9 +72,12 @@ type EditProfileModalProps = {
  * of these flags; hiding only ever narrows the public `/user/[id]` view for other users.
  * @sideEffects `AuthContext.updateProfile` → `profiles` UPDATE (bio / social_links / profile_visibility / full_name / username).
  */
-export function EditProfileModal({ visible, onClose, onOpenPrivacy }: EditProfileModalProps) {
+export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSaved }: EditProfileModalProps) {
   const frame = useSheetFrame();
   const { profile, updateProfile, isAthlete } = useAuth();
+  const sports = useAthleteSports(profile?.id, isAthlete && visible);
+  const [sportsOpen, setSportsOpen] = useState(false);
+  const initialized = useRef<string | null>(null);
   const { showToast } = useCelebration();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -87,6 +94,8 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy }: EditProfil
   useEffect(() => {
     if (!visible) return;
     setOpen(true);
+    if (initialized.current === profile?.id) return;
+    initialized.current = profile?.id ?? null;
     setFullName(profile?.full_name ?? '');
     setUsername(profile?.username ?? '');
     setBio(profile?.bio ?? '');
@@ -96,6 +105,7 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy }: EditProfil
     translateY.value = withSpring(0, SPRING_CARD);
     backdropOpacity.value = withTiming(1, { duration: 200 });
   }, [backdropOpacity, profile, translateY, visible]);
+  useEffect(() => { if (!visible) { initialized.current = null; setSportsOpen(false); } }, [visible]);
 
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
   const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
@@ -140,7 +150,7 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy }: EditProfil
   };
 
   return (
-    <Modal transparent animationType="none" visible={visible} onRequestClose={dismiss} onDismiss={() => setOpen(false)}>
+    <><Modal transparent animationType="none" visible={visible && !sportsOpen} onRequestClose={dismiss} onDismiss={() => { if (!sportsOpen) setOpen(false); }}>
       <View style={styles.root}>
         <Pressable haptic="none" style={styles.backdrop} onPress={dismiss}>
           <Animated.View style={[StyleSheet.absoluteFill, backdropStyle]}>
@@ -161,6 +171,10 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy }: EditProfil
               style={styles.scroll}
               contentContainerStyle={styles.scrollContent}
             >
+              {isAthlete ? <Pressable accessibilityRole="button" accessibilityLabel="My sports" disabled={saving}
+                onPress={() => setSportsOpen(true)} style={styles.visRow}><View style={styles.visText}>
+                  <Text style={styles.visLabel}>My sports</Text><Text style={styles.visHint}>Primary sport, school / team, position and jersey for each sport</Text>
+                </View><Ionicons name="chevron-forward" size={18} color={colors.textMuted} /></Pressable> : null}
               <Text style={styles.fieldLabel}>Display name</Text>
               <TextInput
                 value={fullName}
@@ -285,6 +299,9 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy }: EditProfil
         </KeyboardAvoidingView>
       </View>
     </Modal>
+    {profile?.id && isAthlete ? <MySportsModal visible={visible && sportsOpen} profileId={profile.id}
+      snapshot={sports.snapshot} onClose={() => setSportsOpen(false)} onReload={() => void sports.reload()}
+      onSaved={snapshot => { sports.acceptConfirmed(snapshot); onSportsSaved?.(snapshot); }} /> : null}</>
   );
 }
 

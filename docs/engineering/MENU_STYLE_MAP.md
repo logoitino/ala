@@ -250,3 +250,13 @@ App-wide (same day, owner request): `ScreenHeading`, Beyond's header and `EmptyS
 gold ink. All profile heroes carry a field. `SCOREBOARD_DIGITS` and `JerseyBadge` cover the remaining counts,
 amounts and standalone jersey numbers. Video surfaces and admin desks are deliberately unchanged.
 
+
+
+### 2026-10-21 — MULTISPORT-01 and UX-09
+
+My Sports uses existing Profile sheet chrome and retained draft Back/Save. Participation corrections reuse
+Sports AdminChrome; recorded sport corrections reuse Highlights; unknown/original game log correction reuses
+Stats. Local Games/Polls/Boosters retains always-visible short icon labels in a44-point row. Sponsor rail and
+sponsor CTA belong under Boosters. Floating fan dock uses56-point body plus safe footer, opaque targets and
+background-only scroll softening; reserved footer preserves Home video onLayout geometry. Existing destinations
+and runtime menus are unchanged. Actual local verification/physical gaps are in the feature trackers.

@@ -1,4 +1,4 @@
-/** UX-07 route-state tests: truthful pending/filter states retain existing auth, admin and navigation boundaries. */
+/** UX-07 route-state tests: truthful pending/filter states retain existing auth, admin and navigation boundaries. SDK58 shared fan presentation reads the route pathname from this boundary. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import type { ActivityItem } from '@/hooks/useActivityFeed';
 import type { DripItem } from '@/data/shop';
@@ -26,6 +26,7 @@ let mockActivity = { items: [] as ActivityItem[], loading: false, error: null as
 let mockGames = { games: [], loading: false, error: null as string | null, refresh: mockRefresh };
 
 jest.mock('expo-router', () => ({
+  usePathname: () => '/local',
   useRouter: () => ({ push: mockPush }),
   useLocalSearchParams: () => ({ compose: mockCompose }),
   useFocusEffect: () => undefined,

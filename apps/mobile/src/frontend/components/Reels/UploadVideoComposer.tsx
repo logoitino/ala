@@ -7,6 +7,7 @@
  * keep Next on the menu, not on the screen edge. Photo stories are public only: no Vault control.
  * The sheet does not play the chosen video. A video view inside this page sheet covers the phone
  * when the athlete list opens and closes.
+ * The optional sport chooser records an annotation for video or photos; its draft belongs to the parent.
  */
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -37,7 +38,8 @@ type Props = {
   pickSource: 'library' | 'camera' | null; onPick: (source: 'library' | 'camera') => void; simulator: boolean;
   games: Game[]; players: Player[]; gameId: string; playerId: string; ownPlayerId: string | null;
   gameLabel: string; playerLabel: string; onGame: (id: string) => void; onPlayer: (id: string) => void;
-  openSelect: 'game' | 'player' | null; onSelect: (select: 'game' | 'player' | null) => void;
+  openSelect: 'game' | 'player' | 'sport' | null; onSelect: (select: 'game' | 'player' | 'sport' | null) => void;
+  sport: string; sportNames: string[]; sportSourceNotice?: string | null; onReloadSports?: () => void; sportChoicesLoading?: boolean; onSport: (sport: string) => void;
   caption: string; onCaption: (caption: string) => void; category: ReelCategory; onCategory: (category: ReelCategory) => void;
   categoryPills: { id: ReelCategory; label: string }[]; accountTags: AccountTagHit[]; onAccountTags: (tags: AccountTagHit[]) => void;
   isExclusive: boolean; onExclusive: (enabled: boolean) => void; exclusiveDollars: number;
@@ -66,7 +68,7 @@ export function UploadVideoComposer(p: Props) {
   const isPhotos = p.mediaKind === 'photo_story';
   const mediaReady = isPhotos ? p.photos.length > 0 : Boolean(p.asset);
   const photoCountLabel = `${p.photos.length} ${p.photos.length === 1 ? 'photo' : 'photos'}`;
-  const title = p.openSelect === 'player' ? 'Choose athlete' : p.openSelect === 'game' ? 'Choose game'
+  const title = p.openSelect === 'player' ? 'Choose athlete' : p.openSelect === 'game' ? 'Choose game' : p.openSelect === 'sport' ? 'Tag a sport'
     : p.step === 'clip' ? isPhotos ? 'Choose your photos' : 'Choose your clip' : p.step === 'details' ? 'Add the details'
       : p.step === 'options' ? 'More options' : 'Ready to share?';
   const categoryLabel = p.categoryPills.find((pill) => pill.id === p.category)?.label ?? p.category;
@@ -94,7 +96,7 @@ export function UploadVideoComposer(p: Props) {
       </Pressable>
     </View>
   ) : null;
-  const selectRow = (label: string, value: string, select: 'player' | 'game') => (
+  const selectRow = (label: string, value: string, select: 'player' | 'game' | 'sport') => (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityValue={{ text: value }} disabled={p.uploading}
@@ -148,11 +150,18 @@ export function UploadVideoComposer(p: Props) {
         {!p.openSelect && p.step !== 'options' ? <MenuStepIndicator labels={['Media', 'Details', 'Review']} current={number} /> : null}
         <ScrollView key={p.openSelect || p.step} style={styles.scroll} contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator>
+          {p.sportSourceNotice ? <Text accessibilityRole="alert" style={styles.error}>{p.sportSourceNotice}</Text> : null}
+          {p.sportSourceNotice && p.onReloadSports ? <Pressable accessibilityRole="button" accessibilityLabel="Reload sport choices" disabled={p.uploading || p.sportChoicesLoading} onPress={p.onReloadSports} style={styles.smallButton}><Text style={styles.link}>Reload sport choices</Text></Pressable> : null}
           {p.openSelect ? (
             <>
-              <TextInput accessibilityLabel={p.openSelect === 'player' ? 'Search athletes' : 'Search games'} value={query} onChangeText={setQuery}
-                placeholder={p.openSelect === 'player' ? 'Name, school or jersey number' : 'Team or venue'} placeholderTextColor={colors.textMuted} style={styles.input} />
-              {p.openSelect === 'player' ? (() => {
+              <TextInput accessibilityLabel={p.openSelect === 'player' ? 'Search athletes' : p.openSelect === 'sport' ? 'Search sports' : 'Search games'} value={query} onChangeText={setQuery}
+                placeholder={p.openSelect === 'player' ? 'Name, school or jersey number' : p.openSelect === 'sport' ? 'Sport name' : 'Team or venue'} placeholderTextColor={colors.textMuted} style={styles.input} />
+              {p.openSelect === 'sport' ? <>
+                <Pressable accessibilityRole="button" accessibilityLabel="No sport tag" style={styles.option} onPress={() => { p.onSport(''); p.onSelect(null); }}><Text style={styles.label}>No sport tag</Text><Text style={styles.hint}>Optional. Legacy Highlights keep their original annotation.</Text></Pressable>
+                {p.sportNames.filter(sport => sport.toLowerCase().includes(query.trim().toLowerCase())).map(sport =>
+                  <Pressable key={sport} accessibilityRole="button" accessibilityLabel={`Choose ${sport} sport`} accessibilityState={{ selected: p.sport === sport }} style={[styles.option, p.sport === sport && styles.selected]}
+                    onPress={() => { p.onSport(sport); p.onSelect(null); Keyboard.dismiss(); }}><Text style={styles.label}>{sport}</Text></Pressable>)}
+              </> : p.openSelect === 'player' ? (() => {
                 const needle = query.trim().toLowerCase();
                 const rows = p.players.filter((player) => `${player.name} ${player.school_name} ${player.jersey_number}`.toLowerCase().includes(needle));
                 const own = p.players.find((player) => player.id === p.ownPlayerId) ?? null;
@@ -239,6 +248,7 @@ export function UploadVideoComposer(p: Props) {
                 </Pressable>
               ) : null}
               {selectRow(isPhotos ? 'Who’s in these photos?' : 'Who’s in this clip?', p.playerLabel, 'player')}
+              {selectRow('Tag a sport (optional)', p.sport || 'No sport tag', 'sport')}
               <View style={styles.field}><Text style={styles.label}>Category</Text><View style={styles.categoryRow}>
                 {p.categoryPills.map((pill) => <Pressable key={pill.id} accessibilityRole="button" accessibilityLabel={pill.label} accessibilityState={{ selected: pill.id === p.category }}
                   disabled={p.uploading} onPress={() => p.onCategory(pill.id)} style={[styles.category, pill.id === p.category && styles.categoryActive]}>
@@ -273,6 +283,7 @@ export function UploadVideoComposer(p: Props) {
                 <View style={styles.sourceRow}><Text style={[styles.hint, styles.flex]} numberOfLines={1}>{p.asset?.fileName || 'Selected video'}{p.asset?.durationMs ? ` · ${Math.round(p.asset.durationMs / 1000)}s` : ''}</Text><Pressable accessibilityRole="button" accessibilityLabel="Change video" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}><Text style={styles.link}>Change</Text></Pressable></View>
               )}
               <View style={styles.summary}><Text style={styles.label} numberOfLines={2}>{p.caption}</Text><Text style={styles.hint}>{p.playerLabel} · {categoryLabel}</Text>
+                <Text style={styles.hint}>Sport: {p.sport || 'No sport tag'}</Text>
                 <Text style={styles.hint}>{p.gameId ? p.gameLabel : 'No game linked'} · {p.accountTags.length ? `${p.accountTags.length} account mentions pending confirmation` : 'No account mentions'}</Text>
                 <Text style={styles.link}>{isPhotos ? 'Public photo story' : p.isExclusive ? 'One-time Exclusive only' : 'Public Highlight'}</Text>
               </View>

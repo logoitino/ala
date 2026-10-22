@@ -1,5 +1,5 @@
 /**
- * One booster card on the Local "Top Aura Boosters" rail: logo or initials, business, school and tier badge.
+ * Compact sponsor card on Local Boosters: logo or initials, full business/school names and tier badge.
  * Reports its x offset so the hub can scroll a searched booster into view
  * (split out of app/(tabs)/local/index.tsx for R4-03; behaviour unchanged).
  */
@@ -64,7 +64,7 @@ export function SponsorRailCard({
 
 const styles = StyleSheet.create({
   sponsorCard: {
-    width: 168,
+    width: 154,
     backgroundColor: FOCAL.mistCyan,
     borderRadius: radii.lg,
     borderWidth: 1,
@@ -87,9 +87,9 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   sponsorLogo: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1.5,
     borderColor: colors.primary,
     backgroundColor: colors.photoPlaceholder,
@@ -98,8 +98,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   sponsorLogoImage: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
   },
   sponsorInitials: {
     color: colors.primary,
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   },
   sponsorSchool: {
     color: colors.primary,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
   },
   tierBadge: {
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   tierBadgeLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
   },
 });

@@ -1,5 +1,6 @@
 /**
  * Expo /admin → Sports desk: edit a sport's positions, scoring actions, stat fields and sideline callouts,
+ * Participation repair shares this desk before the fan multi-sport experience is enabled.
  * with a live preview of what the scorer and profile will show. Saves through `lib/sports.ts`.
  * @sideEffects Writes sport configs to Supabase.
  */
@@ -18,6 +19,7 @@ import {
   AdminPills,
   AdminRow,
 } from '@/components/Admin/AdminChrome';
+import { AthleteSportsTool } from '@/components/Admin/AthleteSportsTool';
 import { colors, radii } from '@/constants/theme';
 import {
   GENERIC_SPORT_CONFIG,
@@ -219,6 +221,8 @@ export function SportsTool() {
           );
         })}
       </AdminPanel>
+
+      <AthleteSportsTool />
 
       {draft ? (
         <SportEditor

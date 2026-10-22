@@ -10,6 +10,8 @@
  */
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { mapGameLogs, type AthleteGameLogRow } from '@/data/athleteStats';
+import type { AthleteGameLog } from '@/types/database';
+import { isMissingColumn } from '@/lib/dbErrors';
 import { callRpc, NOT_SWITCHED_ON } from '@/lib/rpc';
 
 export { NOT_SWITCHED_ON };
@@ -26,13 +28,14 @@ export async function saveCareerStats(input: CareerStatsInput): Promise<void> {
   });
 }
 
-export type GameLogInput = { playerId: string; playedOn: string; opponent: string; statLine: string; scoringValue: number; volumeValue: number };
+export type GameLogInput = { playerId: string; sport?: string; playedOn: string; opponent: string; statLine: string; scoringValue: number; volumeValue: number };
 
 /** @purpose Add one game line to an athlete's log (F1). */
 export async function addGameLog(input: GameLogInput): Promise<string> {
   return String(await call('admin_add_athlete_game_log', {
     p_player_id: input.playerId, p_played_on: input.playedOn, p_opponent_school: input.opponent,
     p_stat_line: input.statLine, p_scoring_value: input.scoringValue, p_volume_value: input.volumeValue,
+    ...(input.sport ? { p_sport: input.sport } : {}),
   }));
 }
 
@@ -108,24 +111,29 @@ export async function setCustodialTerms(input: { playerId: string; handoverAge: 
 export type AthleteRecords = {
   career: { sport: string; gamesPlayed: number; scoringValue: number; volumeValue: number; mvpBadges: number } | null;
   logs: AthleteGameLogRow[];
+  /** Bounded original legacy rows awaiting an explicit admin sport classification. */
+  unassignedLogs?: AthleteGameLogRow[];
 };
 
 /**
  * @purpose Raw career line and recent game lines for one athlete, with row ids, for the admin Stats panel (F1).
  * @sideEffects `athlete_career_stats` and `athlete_game_logs` SELECT (public read).
  */
-export async function fetchAthleteRecords(playerId: string): Promise<AthleteRecords> {
-  if (!isSupabaseConfigured || !playerId) return { career: null, logs: [] };
-  const [career, logs] = await Promise.all([
-    supabase.from('athlete_career_stats').select('sport, games_played, scoring_value, volume_value, mvp_badges').eq('player_id', playerId).maybeSingle(),
-    supabase.from('athlete_game_logs').select('id, played_on, opponent_school, stat_line, scoring_value, volume_value').eq('player_id', playerId).order('played_on', { ascending: false }).limit(20),
+export async function fetchAthleteRecords(playerId: string, sport: string): Promise<AthleteRecords> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  if (!playerId || !sport.trim()) throw new Error('Choose a sport before reading stats.');
+  const [career, logs, unassigned] = await Promise.all([
+    supabase.from('athlete_career_stats').select('sport, games_played, scoring_value, volume_value, mvp_badges').eq('player_id', playerId).eq('sport', sport).maybeSingle(),
+    supabase.from('athlete_game_logs').select('id, player_id, sport, played_on, opponent_school, stat_line, scoring_value, volume_value').eq('player_id', playerId).eq('sport', sport).order('played_on', { ascending: false }).limit(20),
+    callRpc<AthleteGameLog[]>('admin_list_unassigned_athlete_logs',{p_player_id:playerId,p_limit:20}),
   ]);
   // A failed read must not look like an empty record: saving zeros over real stats would destroy data.
-  if (career.error || logs.error) throw new Error((career.error ?? logs.error)?.message || 'Could not read this athlete\'s stats.');
+  if (career.error || logs.error) throw new Error(isMissingColumn(career.error ?? logs.error) ? NOT_SWITCHED_ON : (career.error ?? logs.error)?.message || 'Could not read this athlete\'s stats.');
   const c = career.data as { sport: string; games_played: number; scoring_value: number; volume_value: number; mvp_badges: number } | null;
   return {
-    career: c ? { sport: c.sport, gamesPlayed: c.games_played, scoringValue: c.scoring_value, volumeValue: c.volume_value, mvpBadges: c.mvp_badges } : null,
-    logs: mapGameLogs(logs.data as Parameters<typeof mapGameLogs>[0]),
+    career: c && c.sport === sport ? { sport: c.sport, gamesPlayed: c.games_played, scoringValue: c.scoring_value, volumeValue: c.volume_value, mvpBadges: c.mvp_badges } : null,
+    unassignedLogs: mapGameLogs(unassigned.filter(row=>row.player_id===playerId&&row.sport===null)),
+    logs: mapGameLogs((logs.data ?? []).filter(row => row.player_id === playerId && row.sport === sport) as Parameters<typeof mapGameLogs>[0]),
   };
 }
 
@@ -140,4 +148,11 @@ export async function fetchSchoolBranding(schoolId: string): Promise<{ logoUrl: 
   if (error) throw new Error(/logo_url|color_primary|does not exist/i.test(error.message) ? NOT_SWITCHED_ON : error.message);
   const row = (data ?? {}) as { logo_url?: string | null; color_primary?: string | null; color_secondary?: string | null };
   return { logoUrl: row.logo_url ?? '', colorPrimary: row.color_primary ?? '', colorSecondary: row.color_secondary ?? '' };
+}
+
+/** Classify or correct the original game log row only if its original sport and target athlete still match. */
+export async function classifyGameLogSport(logId:string,playerId:string,sport:string,expectedSport:string|null):Promise<AthleteGameLogRow> {
+ const row=await callRpc<AthleteGameLog>('admin_set_athlete_game_log_sport',{p_log_id:logId,p_player_id:playerId,p_sport:sport.trim(),p_expected_sport:expectedSport});
+ if(!row || row.id!==logId || row.player_id!==playerId || row.sport!==sport.trim() || typeof row.played_on!=='string')throw new Error('Could not confirm the corrected game line. Reload first.');
+ return mapGameLogs([row])[0];
 }

@@ -1,11 +1,11 @@
-/** Parent HQ: a guardian can hand family a donate QR for each linked athlete, keyed by athlete id so it resolves without a username. */
+/** Parent HQ: a guardian can hand family a donate QR for each linked athlete, keyed by athlete id so it resolves without a username. SDK58 shared fan presentation reads the route pathname from this boundary. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import Parent from '../index';
 
 const mockShare = jest.fn();
 const athlete = { id: '3f2b8c1e-5a4d-4c2b-9e1f-0a1b2c3d4e5f', name: 'Mele Tupou', guardian_id: 'guardian-profile', parental_consent_approved: true };
 
-jest.mock('expo-router', () => ({ Stack: { Screen: () => null }, useRouter: () => ({ push: jest.fn() }), useIsFocused: () => true }));
+jest.mock('expo-router', () => ({ usePathname: () => '/parent', Stack: { Screen: () => null }, useRouter: () => ({ push: jest.fn() }), useIsFocused: () => true }));
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'guardian-user' }, profile: { id: 'guardian-profile' }, role: 'parent', isGuest: false, loading: false }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: jest.requireActual('@/lib/runtime').DEFAULT_APP_RUNTIME }) }));
 jest.mock('@/components/ScreenShell', () => ({ ScreenShell: ({ children }: { children: React.ReactNode }) => children }));

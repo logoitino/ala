@@ -1,4 +1,5 @@
 /**
+ * MULTISPORT-01: optional recorded sport is fixed in the initial row with caption and athlete, before any photos publish.
  * Photo stories data layer (PHOTO_STORIES_DESIGN.md): publish a story of 1–10 photos, read a story's
  * photos for the feed, and probe whether the photo-story SQL exists yet. Screens call this, not Supabase.
  * Rule: a story is never half-published. The `reels` row is inserted exactly like a video's
@@ -291,9 +292,12 @@ export async function createPhotoStory(input: {
   playerId: string;
   gameId?: string | null;
   category: ReelCategory;
+  /** Optional recorded annotation, fixed in the initial row together with caption/recipient. */
+  sport?: string | null;
   rightsVersion: string;
   existingReelId?: string | null;
   expectedUserId?: string;
+  isSessionCurrent?: () => boolean;
   onProgress?: (done: number, total: number) => void;
 }): Promise<Reel> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured. Add EXPO_PUBLIC keys to .env.local.');
@@ -304,6 +308,14 @@ export async function createPhotoStory(input: {
   if (!caption) throw new Error('Add a caption.');
   if (!input.playerId) throw new Error('Tag the athlete before sharing.');
   const category = parseReelCategory(input.category);
+  const verifyOwner = async () => {
+    if (input.isSessionCurrent && !input.isSessionCurrent()) throw new Error('Your account changed. Reopen Upload before sharing.');
+    if (input.expectedUserId) {
+      const { data } = await supabase.auth.getUser();
+      if (data.user?.id !== input.expectedUserId || (input.isSessionCurrent && !input.isSessionCurrent())) throw new Error('Your account changed. Reopen Upload before sharing.');
+    }
+  };
+  await verifyOwner();
 
   const existingId = input.existingReelId?.trim();
   if (existingId) {
@@ -319,19 +331,25 @@ export async function createPhotoStory(input: {
       throw new PhotoStoryPublishError('The earlier story may already be shared. Check your connection and try again; it was not removed.', existingId);
     }
   }
-  if (input.expectedUserId) {
-    const current = await supabase.auth.getUser();
-    if (current.error || current.data.user?.id !== input.expectedUserId) {
-      throw new Error('The account changed. Open your upload again before sharing.');
-    }
-  }
+  await verifyOwner();
   // Every retry retires its old row and all attempt files first. Timestamped leftovers cannot
   // survive on a successfully published replacement; the local draft and rights remain intact.
-  const reel = await insertReelRow({
+  let reel: Reel;
+  try { reel = await insertReelRow({
     video_url: '', title: caption, player_id: input.playerId, game_id: input.gameId || null,
     is_exclusive: false, is_vault_only: false, category, attested_at: new Date().toISOString(),
     rights_version: input.rightsVersion, media_type: 'photo_story',
-  });
+    ...(input.sport?.trim() ? { sport: input.sport.trim() } : {}),
+  }, input.expectedUserId || input.isSessionCurrent ? { expectedUserId: input.expectedUserId, isSessionCurrent: input.isSessionCurrent } : undefined); } catch (caught) {
+    if (caught && typeof caught === 'object' && 'code' in caught && caught.code === 'HIGHLIGHT_SPORT_CONFIRMATION' && 'reel' in caught) {
+      const receipt = caught.reel as Reel;
+      // No photo upload has started. The confirmed empty story is unpublished and can use the existing safe retirement path.
+      if (receipt.id && receipt.media_type === 'photo_story' && receipt.photo_count === 0) {
+        throw new PhotoStoryPublishError('Your photo story was not published because its sport could not be confirmed. Your draft is still here. Retry to check and replace the unfinished story.', receipt.id);
+      }
+    }
+    throw caught;
+  }
 
   const total = photos.length;
   input.onProgress?.(0, total);
@@ -339,7 +357,8 @@ export async function createPhotoStory(input: {
   for (let index = 0; index < total; index += 1) {
     const photo = photos[index];
     try {
-      const result = await uploadStoryPhoto(photo.uri, reel.id, index);
+      await verifyOwner();
+      const result = await uploadStoryPhoto(photo.uri, reel.id, index, input.expectedUserId, input.isSessionCurrent);
       uploaded.push({
         imagePath: result.imagePath,
         description: cleanDescription(photo.description),
@@ -354,6 +373,7 @@ export async function createPhotoStory(input: {
 
   let count: number;
   try {
+    await verifyOwner();
     count = await setStoryPhotos(reel.id, uploaded);
   } catch (caught) {
     if (caught instanceof PhotoStoryAlreadyPublishedError) throw caught;

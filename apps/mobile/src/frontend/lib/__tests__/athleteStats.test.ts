@@ -81,7 +81,7 @@ it('rejects football values and sportless logs when the profile selects volleyba
 it('retains matching recorded logs without adding synthetic matches', async () => {
   mockCareer = { player_id: player.id, sport: 'Volleyball', games_played: 0,
     scoring_value: 0, volume_value: 0, mvp_badges: 0 };
-  mockLogs = [{ id: 'log', player_id: player.id, played_on: '2026-09-04',
+  mockLogs = [{ id: 'log', player_id: player.id, sport:'Volleyball', played_on: '2026-09-04',
     opponent_school: 'South High', stat_line: '3 kills', scoring_value: 3, volume_value: 2 }];
   const stats = await fetchAthleteStats(player.id, player, 'Volleyball');
   expect(stats.logs).toHaveLength(1);
@@ -99,4 +99,20 @@ it('does not borrow physicals or position from a stale hydrated player during na
   const stats = await fetchAthleteStats('new-athlete', player);
   expect(stats.physicals.height).toBe('—');
   expect(stats.career.sport).toBe('');
+});
+
+it('reads independent volleyball career and only explicitly tagged volleyball logs', async () => {
+  mockCareer = [{ player_id:player.id,sport:'Football',games_played:8,scoring_value:48,volume_value:901,mvp_badges:2 },
+    { player_id:player.id,sport:'Volleyball',games_played:4,scoring_value:3,volume_value:7,mvp_badges:0 }];
+  mockLogs = [{id:'v',player_id:player.id,sport:'Volleyball',played_on:'2026-10-01',stat_line:'3 kills'},
+    {id:'f',player_id:player.id,sport:'Football',played_on:'2026-10-01',stat_line:'2 TD'},
+    {id:'legacy',player_id:player.id,sport:null,played_on:'2026-10-01',stat_line:'Unassigned'}];
+  const stats=await fetchAthleteStats(player.id,player,'Volleyball');
+  expect(stats.career.scoringValue).toBe(3);
+  expect(stats.logs.map(r=>r.statLine)).toEqual(['3 kills']);
+});
+it('does not guess a sport when multiple careers are returned without an explicit target',async()=>{
+  mockCareer=[{player_id:player.id,sport:'Football',games_played:8},{player_id:player.id,sport:'Volleyball',games_played:4}];
+  const stats=await fetchAthleteStats(player.id,player);
+  expect(stats.career.gamesPlayed).toBeNull();expect(stats.logs).toEqual([]);
 });

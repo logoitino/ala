@@ -14,11 +14,13 @@ const mockUpdate = jest.fn();
 const mockRowQuery = jest.fn();
 const mockCoverQuery = jest.fn();
 const mockCleanup = jest.fn();
+let mockPhotoOwner = 'owner-a';
 jest.mock('@/lib/photoStoryCleanup', () => ({ cleanupFailedPhotoStory: (...args: unknown[]) => mockCleanup(...args) }), { virtual: true });
 
 jest.mock('@/lib/supabase', () => ({
   isSupabaseConfigured: true,
   supabase: {
+    auth: { getUser: async () => ({ data: { user: { id: mockPhotoOwner } }, error: null }) },
     rpc: (...args: unknown[]) => mockRpc(...args),
     storage: { from: (bucket: string) => ({ getPublicUrl: (path: string) => ({ data: { publicUrl: `https://cdn.test/${bucket}/${path}` } }) }) },
     from: (relation: string) => ({
@@ -55,6 +57,7 @@ import {
 beforeEach(() => {
   jest.clearAllMocks();
   resetPhotoStoriesProbe();
+  mockPhotoOwner = 'owner-a';
   mockCleanup.mockResolvedValue('discarded');
   mockCoverQuery.mockResolvedValue({ data: { image_path: 'original.jpg' }, error: null });
 });
@@ -230,7 +233,7 @@ describe('createPhotoStory', () => {
     expect(mockInsertReelRow).toHaveBeenCalledWith(expect.objectContaining({
       video_url: '', title: 'Serving at the food bank', player_id: 'p1', game_id: null, media_type: 'photo_story',
       is_exclusive: false, is_vault_only: false, category: 'serve_like_me', rights_version: '2026-10-07', attested_at: expect.any(String),
-    }));
+    }), undefined);
     expect(mockUploadStoryPhoto.mock.calls.map((call) => call.slice(0, 3))).toEqual([
       ['file:///a.jpg', 'reel-1', 0], ['file:///b.jpg', 'reel-1', 1],
     ]);
@@ -244,6 +247,31 @@ describe('createPhotoStory', () => {
     });
     expect(reel).toEqual(expect.objectContaining({ id: 'reel-1', photo_count: 2, cover_path: 'u1/stories/reel-1/0-1700000000000.jpg' }));
     expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('records a photo-story sport together with the initial recipient and caption', async () => {
+    const result = await createPhotoStory({ ...input, sport: 'Volleyball' });
+    expect(mockInsertReelRow).toHaveBeenCalledWith(expect.objectContaining({ sport: 'Volleyball', player_id: input.playerId }), undefined);
+    expect(result.id).toBe('reel-1');
+  });
+
+  it('routes a confirmed empty story sport mismatch into safe unfinished-story recovery', async () => {
+    mockInsertReelRow.mockRejectedValueOnce(Object.assign(new Error('Uncertain sport'), { code: 'HIGHLIGHT_SPORT_CONFIRMATION',
+      reel: { id: 'unfinished', media_type: 'photo_story', photo_count: 0, sport: null } }));
+    const error = await createPhotoStory({ ...input, sport: 'Volleyball' }).catch(caught => caught);
+    expect(error).toBeInstanceOf(PhotoStoryPublishError); expect(error.reelId).toBe('unfinished');
+    expect(mockUploadStoryPhoto).not.toHaveBeenCalled();
+  });
+
+  it('never publishes A’s photos after the account changes during an awaited photo upload', async () => {
+    let resolve!: (value: { imagePath: string }) => void;
+    mockUploadStoryPhoto.mockReturnValueOnce(new Promise(done => { resolve = done; }));
+    const work = createPhotoStory({ ...input, photos: [input.photos[0]], expectedUserId: 'owner-a' });
+    while (mockUploadStoryPhoto.mock.calls.length === 0) await Promise.resolve();
+    mockPhotoOwner = 'owner-b'; resolve({ imagePath: 'owner-a/stories/reel-1/0.jpg' });
+    const error = await work.catch(caught => caught);
+    expect(error).toBeInstanceOf(PhotoStoryPublishError);
+    expect(mockRpc).not.toHaveBeenCalledWith('set_reel_photos', expect.anything());
   });
 
   it('stops at a failed photo, never calls set_reel_photos, and returns the reel id for a retry', async () => {
@@ -271,7 +299,7 @@ describe('createPhotoStory', () => {
     const reel = await createPhotoStory({ ...input, title: 'Food bank, round two', existingReelId: 'reel-old' });
     expect(mockCleanup).toHaveBeenCalledWith('reel-old');
     expect(mockCleanup.mock.invocationCallOrder[0]).toBeLessThan(mockInsertReelRow.mock.invocationCallOrder[0]);
-    expect(mockInsertReelRow).toHaveBeenCalledWith(expect.objectContaining({ title: 'Food bank, round two' }));
+    expect(mockInsertReelRow).toHaveBeenCalledWith(expect.objectContaining({ title: 'Food bank, round two' }), undefined);
     expect(mockUpdate).not.toHaveBeenCalled();
     expect(mockUploadStoryPhoto.mock.calls.map((call) => call[1])).toEqual(['reel-1', 'reel-1']);
     expect(reel).toEqual(expect.objectContaining({ id: 'reel-1', photo_count: 2 }));

@@ -13,6 +13,7 @@ import type { Player } from '@/types/database';
 
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 const mockUpload = jest.fn();
+const mockReloadSportChoices = jest.fn();
 const mockAttach = jest.fn();
 jest.mock('@/lib/accountTags', () => ({ attachAccountTags: (...args: unknown[]) => mockAttach(...args) }));
 jest.mock('@/lib/reels', () => ({
@@ -28,7 +29,10 @@ jest.mock('@/lib/supabase', () => ({
 }));
 let mockOwnerId = '11111111-1111-4111-8111-111111111111';
 let mockOwnPlayerId: string | null = 'p1';
-jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: mockOwnerId }, profile: { user_id: mockOwnerId, player_id: mockOwnPlayerId } }) }));
+let mockSessionGuard = () => true;
+let mockSportChoices = { sportNames: ['Football', 'Volleyball'], status: 'ready' };
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: mockOwnerId }, profile: { user_id: mockOwnerId, player_id: mockOwnPlayerId, athlete_sport: 'Football' }, isSessionCurrent: mockSessionGuard }) }));
+jest.mock('@/hooks/useStoredSportChoices', () => ({ useStoredSportChoices: () => ({ ...mockSportChoices, reload: mockReloadSportChoices }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({
   useAppRuntime: () => ({ live: { catalog: { reelCategories: [], exclusiveDollars: 5 }, layouts: {} } }),
 }));
@@ -106,7 +110,9 @@ const confirmRights = async () => {
 
 describe('staged Highlight upload', () => {
   beforeEach(() => {
+    mockSportChoices = { sportNames: ['Football', 'Volleyball'], status: 'ready' };
     mockClipDurationMs = 1000;
+    mockSessionGuard = () => true;
     mockLaunchCamera.mockReset();
     mockUpload.mockReset();
     jest.clearAllMocks(); mockCleanupStory.mockReset().mockResolvedValue('discarded'); mockRememberCleanup.mockReset().mockResolvedValue(undefined); mockQueuedCleanup.mockReset().mockResolvedValue([]); mockOwnerId = '11111111-1111-4111-8111-111111111111'; mockOwnPlayerId = 'p1';
@@ -117,6 +123,101 @@ describe('staged Highlight upload', () => {
     }
   });
   afterEach(() => jest.restoreAllMocks());
+
+  it('keeps an explicit optional sport through review, Back and a failed publish', async () => {
+    mockUpload.mockRejectedValueOnce(new Error('offline'));
+    await render(<UploadVideoModal {...props} />); await chooseClip();
+    await fireEvent.changeText(screen.getByLabelText('Highlight caption'), 'Volleyball game');
+    await fireEvent.press(screen.getByRole('button', { name: 'Tag a sport (optional)' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Choose Volleyball sport' }));
+    await fireEvent.press(screen.getByLabelText('Next'));
+    expect(screen.getByText('Sport: Volleyball')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Back'));
+    expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Volleyball');
+    await fireEvent.press(screen.getByLabelText('Next')); await confirmRights();
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    await waitFor(() => expect(mockUpload).toHaveBeenCalledWith(expect.objectContaining({ sport: 'Volleyball' })));
+    await fireEvent.press(screen.getByLabelText('Back'));
+    expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Volleyball');
+  });
+
+  it('defaults sport only when the uploader chooses their exact linked athlete', async () => {
+    await render(<UploadVideoModal {...props} />); await chooseClip();
+    expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Football');
+    await fireEvent.press(screen.getByLabelText('Who’s in this clip?'));
+    await fireEvent.press(screen.getByLabelText('Tag later'));
+    expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('No sport tag');
+    await fireEvent.press(screen.getByLabelText('Who’s in this clip?'));
+    await fireEvent.press(screen.getByLabelText('This is me'));
+    expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Football');
+  });
+
+  it('retains an explicit sport and blocks publish when stored choices become unavailable', async () => {
+    const view = await render(<UploadVideoModal {...props} />); await chooseClip();
+    await fireEvent.changeText(screen.getByLabelText('Highlight caption'), 'Volleyball game');
+    await fireEvent.press(screen.getByLabelText('Tag a sport (optional)'));
+    await fireEvent.press(screen.getByLabelText('Choose Volleyball sport'));
+    await fireEvent.press(screen.getByLabelText('Next')); await confirmRights();
+    mockSportChoices = { sportNames: [], status: 'unavailable' };
+    await view.rerender(<UploadVideoModal {...props} />);
+    expect(screen.getByText(/Sport choices are unavailable/)).toBeTruthy();
+    await act(async () => mockPublishPress?.());
+    expect(mockUpload).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByLabelText('Back'));
+    expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Volleyball');
+    expect(screen.getByLabelText('Highlight caption').props.value).toBe('Volleyball game');
+    await fireEvent.press(screen.getByLabelText('Reload sport choices'));
+    expect(mockReloadSportChoices).toHaveBeenCalledTimes(1);
+    mockSportChoices = { sportNames: ['Football', 'Volleyball'], status: 'ready' };
+    await view.rerender(<UploadVideoModal {...props} />);
+    expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Volleyball');
+    expect(screen.getByLabelText('Highlight caption').props.value).toBe('Volleyball game');
+    mockUpload.mockReturnValue(new Promise(() => {}));
+    await fireEvent.press(screen.getByLabelText('Next'));
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    await waitFor(() => expect(mockUpload).toHaveBeenCalledWith(expect.objectContaining({ sport: 'Volleyball', title: 'Volleyball game' })));
+  });
+
+  it('retains a visible self default through catalog reload until the uploader explicitly removes it', async () => {
+    const view = await render(<UploadVideoModal {...props} />); await details(); await confirmRights();
+    expect(screen.getByText('Sport: Football')).toBeTruthy();
+    for (const status of ['loading', 'unavailable', 'ready']) {
+      mockSportChoices = { sportNames: [], status };
+      await view.rerender(<UploadVideoModal {...props} />);
+      expect(screen.getByText('Sport: Football')).toBeTruthy();
+      await act(async () => mockPublishPress?.());
+      expect(mockUpload).not.toHaveBeenCalled();
+    }
+    await fireEvent.press(screen.getByLabelText('Back'));
+    await fireEvent.press(screen.getByLabelText('Tag a sport (optional)'));
+    await fireEvent.press(screen.getByLabelText('No sport tag'));
+    await fireEvent.press(screen.getByLabelText('Next'));
+    mockUpload.mockReturnValue(new Promise(() => {}));
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    await waitFor(() => expect(mockUpload).toHaveBeenCalledWith(expect.objectContaining({ sport: null })));
+  });
+
+  it('blocks repeat publication after a committed sport readback needs confirmation', async () => {
+    mockUpload.mockRejectedValueOnce(Object.assign(new Error('Saved, confirmation unknown'), { code: 'HIGHLIGHT_SPORT_CONFIRMATION', reel: { id: 'saved-reel', sport: null } }));
+    await render(<UploadVideoModal {...props} />); await details(); await confirmRights();
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    await waitFor(() => expect(screen.getByText(/Highlight saved, but its sport/)).toBeTruthy());
+    await act(async () => { mockPublishPress?.(); });
+    expect(mockUpload).toHaveBeenCalledTimes(1);
+    expect(mockCleanupStory).not.toHaveBeenCalled();
+  });
+
+  it('discards a delayed upload completion after A→B→A replaces the session lifetime', async () => {
+    let resolve!: (row: { id: string }) => void;
+    mockUpload.mockReturnValue(new Promise(done => { resolve = done; }));
+    const view = await render(<UploadVideoModal {...props} />); await details(); await confirmRights();
+    await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
+    mockSessionGuard = () => true;
+    await view.rerender(<UploadVideoModal {...props} />);
+    expect(screen.getByText('Step 1 of 3')).toBeTruthy();
+    await act(async () => resolve({ id: 'old-session-reel' }));
+    expect(props.onUploaded).not.toHaveBeenCalled();
+  });
 
   it('keeps the library duration in milliseconds when publishing an exactly 45-second clip', async () => {
     mockClipDurationMs = 45000;

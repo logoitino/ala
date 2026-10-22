@@ -199,3 +199,15 @@ or case records blindly. Hosted compatibility, counsel review of group notices/r
 The replay uses the actual canonical schema and external PGlite, without provider calls or app dependencies.
 It checks competing captured bindings, not multi-connection lock scheduling. Authorized hosted application,
 negative readback, real Stripe returns and provider/counsel acceptance are separate prerequisites.
+
+## Multiple sport profiles — MULTISPORT-01
+
+| File | Purpose | Applied? |
+| --- | --- | --- |
+| `20261021233000_athlete_sports.sql` | After the current canonical PRIV-01/MINOR-01/catalog source: profile-owned bounded participation, manual primary and revision-checked writes; legacy onboarding sync and internal managed marker; per-sport career key and all untagged legacy logs preserved as unknown for explicit original-row classification; optional initial recorded video/photo sport and unchanged feed privacy CASE; bounded admin profile/usage/Highlight/unassigned-log reads and CAS original-row correction. Changing participation preserves school verification, recorded media and stats. | **No.** Written locally, not applied. `node scripts/replay/athlete-sports-replay.mjs <external-pglite-dist>` executes full canonical/actor cases; `--baseline` reproduces original missing/destructive behavior. |
+
+The Supabase CLI is unavailable in this local environment. The versioned migration is appended verbatim
+onto canonical `schema.sql`; installed external PGlite supplies real local PostgreSQL execution and type
+generation. SQL application, hosted denials, physical device behavior and release acceptance remain separate.
+Rollback requires a reviewed forward disable/repair migration retaining participation, media and log history;
+never collapse multiple career rows or recreate classified logs. New sport choices require a stored active catalog.

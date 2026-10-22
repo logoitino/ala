@@ -4,6 +4,13 @@
 Companion to [LEGAL_BRIEFING.md](../legal/LEGAL_BRIEFING.md), [COMPANY_PHASES.md](../company/COMPANY_PHASES.md) (security, billing, and legal phases, including LLC / trademark / patent triage), [AUDIT_REPORT.md](../engineering/AUDIT_REPORT.md), and [TEAMS.md](../agents/TEAMS.md#qa--ship-gate). This is the live tracker for closing the pre-launch security/compliance gaps, standing up real testing infrastructure, and running an internal test wave before any public beta. Update the status line under each phase as work lands — do not let this drift into a one-time snapshot.
 
 
+**2026-10-21 MULTISPORT-01 / UX-09:** owner-approved manual primary/multiple sports and compact labeled
+Local/floating dock are implemented locally. Final full check/detection scan and independent review passed. Multi-sport admin-ready passed independent review with
+56/56 full-canonical replay before fan production. Source preserves independent credentials/stats/recorded
+video/photo sport and existing privacy; repair remains in Sports/Highlights/Stats. Local app-ready evidence and
+pending hosted SQL/device checks are tracked in [MULTISPORT-01](../agents/MULTISPORT-01.md) and [UX-09](../agents/UX-09.md).
+
+
 **Historical execution checkpoint (2026-10-15 America/Denver):** the registry then had **107 callable roles**, including DOCUMENTATION and INFRASTRUCTURE. [TEAM_STATUS](../agents/TEAM_STATUS.md) gives current assignments and boundaries; [COORD-01](../agents/COORD-01.md) records actual outside-session reviews, not execution or delivery to every role/person. BEYOND-01/CHAL-01a and UX-06 are implemented and accepted locally. The newer owner-selected Calm Island source refresh changes shared fan colours/chips and removes page-corner decoration; published runtime colours may still override the local Daylight preset. Current source, supplied checks and pending rendered/native/hosted evidence are in [STATE](../STATE.md) and the [UI checkpoint](../engineering/design/UI_UX_FIGMA_POLISH.md). UX-06's retained 148-suite/1,188-test +86portal run predates that newer colour source; the final whole-team gate remains root-owned.
 
 **Dated 2026-10-07 history:** UX-02's 50-suite/242-test and eight targeted checkout checks, app typechecks, web/mobile exports and Next build were local evidence at that checkpoint. Preserve those results as history; they do not establish current native/accessibility/payment, installed-build or hosted acceptance.

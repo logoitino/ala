@@ -6,6 +6,7 @@
  * Used by both the fan tab's own profile and any athlete opened from elsewhere. `onOpenClip` lets other
  * components (for example a Rally thank-you) jump to a specific clip in the Highlights tab.
  * Story names only the existing caller-visible authored text and social links in that same Highlights pane.
+ * MULTISPORT-01: temporary sport chips select independent credentials/stats and recorded media; primary field art stays fixed.
  * R4-03 split (behaviour unchanged): the hero count row lives in `ProfileStatRow.tsx`, the Aura card sheet in `AuraCardFlipModal.tsx`.
  * @sideEffects Reads athlete, crew, school badge, leaderboard and reel data through hooks / lib.
  */
@@ -57,6 +58,7 @@ import { fetchAthleteHighlightViews } from '@/lib/leaderboards';
 import { nonEmptySocialLinks, resolveSocialLinkUrl, socialLinkLabel } from '@/lib/socialLinks';
 import type { Player, ProfileSocialLinks, UserRole } from '@/types/database';
 import type { ReelHype } from '@/lib/reels';
+import type { AthleteSportEntry } from '@/lib/athleteSports';
 import { isVaultSealed } from '@/lib/vault';
 import { fetchWishlistItems } from '@/lib/wishlist';
 import { FOCAL } from '@/theme/motion';
@@ -79,6 +81,10 @@ type AthleteProfileViewProps = {
   clips: HighlightClip[];
   stats: AthleteStatsBundle;
   statsLoading?: boolean;
+  primarySport?: string | null;
+  displaySport?: string | null;
+  sportEntries?: AthleteSportEntry[];
+  onDisplaySportChange?: (sport: string | null) => void;
   name: string;
   /** Public visibility flag prevents roster fallback/confirmed crest from restoring a hidden school. */
   schoolVisible?: boolean;
@@ -152,6 +158,10 @@ export function AthleteProfileView({
   clips,
   stats,
   statsLoading = false,
+  primarySport,
+  displaySport,
+  sportEntries = [],
+  onDisplaySportChange,
   name,
   schoolVisible = true,
   username,
@@ -211,8 +221,9 @@ export function AthleteProfileView({
   const ownCredentials = athleteIdentity && Boolean(profile?.player_id && profile.player_id === player.id);
   const editAvatar = Boolean(canEditAvatar && (ownCredentials || headerRight));
   const ownerTools = ownCredentials || Boolean(headerRight);
-  // Stats, hero and Aura use one sport. Old totals cannot become another sport's numbers by relabeling.
-  const selectedSport = (ownCredentials ? profile?.athlete_sport?.trim() : '') || stats.career.sport;
+  const primary = primarySport?.trim() || (ownCredentials ? profile?.athlete_sport?.trim() : '') || stats.career.sport;
+  const selectedEntry = sportEntries.find(entry => entry.sport === displaySport);
+  const selectedSport = selectedEntry?.sport || primary;
   const sportStats = applyAthleteStatsPlaybook(
     selectedSport.trim().toLowerCase() === stats.career.sport.trim().toLowerCase()
       ? stats : emptyAthleteStats(player, selectedSport),
@@ -241,7 +252,8 @@ export function AthleteProfileView({
   const flipOpen = auraCardOpen ?? internalFlip;
   const setFlipOpen = onAuraCardOpenChange ?? setInternalFlip;
 
-  const publicClips = useMemo(() => clips.filter((clip) => !isClipVaultOnly(clip)), [clips]);
+  const displayClips = useMemo(() => clips.filter(clip => !displaySport || clip.sport === displaySport), [clips, displaySport]);
+  const publicClips = useMemo(() => displayClips.filter((clip) => !isClipVaultOnly(clip)), [displayClips]);
   // Public callers already filter these fields; a new section must never fall back to viewer or roster data.
   const storyText = aboutBio?.trim();
   const visibleSocialLinks = nonEmptySocialLinks(socialLinks);
@@ -255,7 +267,7 @@ export function AthleteProfileView({
         .map((clip) => ({ id: clip.id, title: clip.tag })),
     [player.id, publicClips],
   );
-  const vaultClips = useMemo(() => clips.filter((clip) => isClipVaultOnly(clip)), [clips]);
+  const vaultClips = useMemo(() => displayClips.filter((clip) => isClipVaultOnly(clip)), [displayClips]);
   const sealed = isVaultSealed(vaultLocked);
   const vaultUnlocked = manageVault || subscribed || !sealed;
   const schoolLabel = schoolVisible ? teamName?.trim() || player.school_name : '';
@@ -413,7 +425,7 @@ export function AthleteProfileView({
         school={schoolLabel}
         jersey={jersey}
         athlete={athleteIdentity}
-        sport={athleteIdentity ? selectedSport : undefined}
+        sport={athleteIdentity ? primary : undefined}
         position={athleteIdentity ? (ownCredentials ? profile?.athlete_position?.trim() || player.position : player.position) : undefined}
         classYear={ownCredentials ? profile?.athlete_class_year : undefined}
         auraPoints={auraPoints}
@@ -436,6 +448,22 @@ export function AthleteProfileView({
           />
         }
       />
+      {athleteIdentity && sportEntries.length && onDisplaySportChange ? <View style={styles.sportPicker}>
+        <View accessibilityRole="tablist" accessibilityLabel="Athlete sports" style={styles.sportChips}>
+          {[null, ...sportEntries.map(entry => entry.sport)].map(sport => <Pressable key={sport ?? 'all'}
+            accessibilityRole="tab" accessibilityLabel={sport ? `${sport} sport` : 'All sports'}
+            accessibilityState={{ selected: (displaySport ?? null) === sport }} onPress={() => onDisplaySportChange(sport)}
+            style={[styles.sportChip, (displaySport ?? null) === sport && styles.sportChipOn]}>
+            <Text style={(displaySport ?? null) === sport ? styles.sportLabelOn : styles.sportLabel}>{sport ?? 'All'}{sport === primary ? ' · Primary' : ''}</Text>
+          </Pressable>)}
+        </View>
+        {selectedEntry ? <View><Text style={styles.sportLabel}>Viewing {selectedEntry.sport}</Text>
+          <Text style={styles.sectionHint}>{[schoolVisible ? selectedEntry.teamName : null, selectedEntry.position,
+            selectedEntry.jersey ? `Jersey ${selectedEntry.jersey}` : null].filter(Boolean).join(' · ') || 'No sport details shared.'}</Text>
+          {/* Participation details are self-recorded; the primary school crest above confirms only its existing school. */}
+          <Text style={styles.sectionHint}>Recorded sport details · Primary: {primary}</Text>
+        </View> : <Text style={styles.sectionHint}>All recorded Highlights, including those without a sport tag. Stats: {primary}.</Text>}
+      </View> : null}
       {live.profile.actionsOnTop ? null : quickActions}
       {/* Brand line (BRAND-01) only where this athlete can actually be donated to; plain text, not a heading. */}
       {showDonateTagline ? <Text style={styles.donateTagline}>{TAGLINE_HEADLINE}</Text> : null}
@@ -578,6 +606,10 @@ export function AthleteProfileView({
 }
 
 const styles = StyleSheet.create({
+  sportPicker: { gap: 8, paddingVertical: 8 }, sportChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  sportChip: { minHeight: 44, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, justifyContent: 'center' },
+  sportChipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  sportLabel: { color: colors.text, fontSize: 14, fontWeight: '700' }, sportLabelOn: { color: colors.onAccent, fontSize: 14, fontWeight: '700' },
   root: {
     gap: 12,
     overflow: 'visible',

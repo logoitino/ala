@@ -1,14 +1,19 @@
 /** Public profile navigation keeps the active route identity and passes privacy-filtered sport/school settings. */
-import { act, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import UserAthleteProfileScreen from '../user/[id]';
 import type { Player, ProfilePublic } from '@/types/database';
 import { emptyAthleteStats } from '@/data/athleteStats';
+import type { AthleteSportsSnapshot } from '@/lib/athleteSports';
 
 const firstId = '6bdfe860-3579-4eb0-8f80-1cb2bb702521';
 const secondId = 'bbc57d92-4cfa-4c7b-ae25-fdfc3948af17';
 let mockRouteId = firstId;
 const mockPlayers = new Map<string, Promise<{ data: Player | null; error: null }>>();
 const mockProfiles = new Map<string, ProfilePublic>();
+const mockSports = new Map<string, AthleteSportsSnapshot>();
+let mockSessionGuard = () => true;
+const mockRenderedNames: string[] = [];
+jest.mock('@/lib/athleteSports', () => ({ fetchAthleteSports: async (id: string) => mockSports.get(id) ?? null }));
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: jest.fn(), push: jest.fn() }),
   useLocalSearchParams: () => ({ id: mockRouteId }),
@@ -42,7 +47,7 @@ jest.mock('@/lib/athleteStats', () => ({ fetchAthleteStats: async (_id: string, 
 jest.mock('@/lib/aura', () => ({
   ...jest.requireActual('@/lib/aura'), subscribePlayerAura: () => () => {},
 }));
-jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ isAthlete: false }) }));
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ isAthlete: false, user: { id: 'viewer-a' }, isSessionCurrent: mockSessionGuard }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({
   live: jest.requireActual('@/lib/runtime').DEFAULT_APP_RUNTIME,
 }) }));
@@ -61,12 +66,17 @@ jest.mock('@/components/TabScreen', () => ({ TabScreen: ({ children }: { childre
 jest.mock('@/components/Filmers/FilmerCard', () => ({ FilmerCard: () => null }));
 jest.mock('@/components/Profile/AthleteProfileView', () => ({ AthleteProfileView: (props: {
   name: string; schoolVisible?: boolean; teamName?: string; bio?: string; stats: ReturnType<typeof emptyAthleteStats>;
+  primarySport?: string; displaySport?: string | null; sportEntries?: AthleteSportsSnapshot['sports']; onDisplaySportChange?: (sport: string | null) => void;
 }) => {
-  const { Text } = jest.requireActual('react-native');
+  const { Text, Pressable } = jest.requireActual('react-native');
+  mockRenderedNames.push(props.name);
   return <>
     <Text accessibilityRole="header">{props.name}</Text>
     <Text>{`School visible: ${String(props.schoolVisible)}`}</Text>
     <Text>{`Profile sport: ${props.stats.career.sport}`}</Text>
+    <Text>{`Primary sport: ${props.primarySport ?? ''}`}</Text>
+    {props.sportEntries?.map(entry => <Pressable key={entry.sport} accessibilityRole="button" accessibilityLabel={`View ${entry.sport}`}
+      onPress={() => props.onDisplaySportChange?.(entry.sport)}><Text>{entry.sport}</Text></Pressable>)}
     {props.teamName ? <Text>{props.teamName}</Text> : null}
     {props.bio ? <Text>{props.bio}</Text> : null}
   </>;
@@ -80,7 +90,7 @@ function deferredPlayer() {
   const promise = new Promise<{ data: Player; error: null }>((yes) => { resolve = yes; });
   return { promise, resolve };
 }
-beforeEach(() => { mockRouteId = firstId; mockPlayers.clear(); mockProfiles.clear(); });
+beforeEach(() => { mockRouteId = firstId; mockPlayers.clear(); mockProfiles.clear(); mockSports.clear(); mockRenderedNames.length = 0; mockSessionGuard = () => true; });
 
 it('removes the old athlete immediately while another profile loads in the same route', async () => {
   mockPlayers.set(firstId, Promise.resolve({ data: player(firstId, 'Ana First'), error: null }));
@@ -120,4 +130,33 @@ it('passes hidden-school settings and the chosen public sport without exposing s
   expect(screen.getByText('School visible: false')).toBeTruthy();
   expect(screen.getByText('Profile sport: Volleyball')).toBeTruthy();
   expect(screen.queryByText(/North High/)).toBeNull();
+});
+
+it('loads secondary sports for the exact privacy-filtered profile and selects their own stats while retaining primary', async () => {
+  mockPlayers.set(firstId, Promise.resolve({ data: player(firstId, 'Ana First'), error: null }));
+  mockProfiles.set(firstId, { id: 'profile-a', player_id: firstId, username: null,
+    full_name: 'Ana First', avatar_url: null, is_verified: false, is_verified_athlete: false,
+    school_visible: false, athlete_sport: 'Football', bio: null, social_links: {} });
+  mockSports.set('profile-a', { profileId: 'profile-a', revision: 3, primarySport: 'Football', sports: [
+    { sport: 'Football', schoolId: null, teamName: null, position: '', jersey: '' },
+    { sport: 'Volleyball', schoolId: null, teamName: null, position: '', jersey: '' },
+  ] });
+  await render(<UserAthleteProfileScreen />); await act(async () => {});
+  await fireEvent.press(screen.getByRole('button', { name: 'View Volleyball' }));
+  await act(async () => {});
+  expect(screen.getByText('Profile sport: Volleyball')).toBeTruthy();
+  expect(screen.getByText('Primary sport: Football')).toBeTruthy();
+  expect(screen.queryByText(/North High/)).toBeNull();
+});
+
+it('does not paint a committed private view after the viewer returns with a new session lifetime', async () => {
+  mockPlayers.set(firstId, Promise.resolve({ data: player(firstId, 'Ana First'), error: null }));
+  const view = await render(<UserAthleteProfileScreen />); await act(async () => {});
+  expect(screen.getByRole('header', { name: 'Ana First' })).toBeTruthy();
+  mockRenderedNames.length = 0;
+  mockPlayers.set(firstId, new Promise(() => {}));
+  mockSessionGuard = () => true;
+  await view.rerender(<UserAthleteProfileScreen />);
+  expect(mockRenderedNames).not.toContain('Ana First');
+  expect(screen.queryByRole('header', { name: 'Ana First' })).toBeNull();
 });

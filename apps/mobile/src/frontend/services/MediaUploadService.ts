@@ -7,6 +7,7 @@
  * lives in services/ (PascalCase) rather than lib/.
  * Avatar uploads write through `mediaValueToStore` (SCALE-02 switch in lib/media, off for now).
  * Storage transport is bound by `createMediaUploadService`; authentication, rights and row writes stay here.
+ * Optional sport annotations are inserted atomically and read back; a requested tag is never dropped for old source.
  * @sideEffects Reads device media; writes through the media storage adapter; inserts `reels` rows.
  */
 
@@ -24,6 +25,7 @@ import { parseReelCategory, type HighlightMediaType, type ReelCategory } from '@
 import { mediaValueToStore } from '@/lib/media';
 import { mediaStorage, type MediaStorageAdapter } from '@/lib/mediaStorage';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isMissingColumn } from '@/lib/dbErrors';
 import type { Database, Reel } from '@/types/database';
 
 export const REELS_BUCKET = 'reels';
@@ -60,6 +62,9 @@ export type UploadHighlightInput = PickedHighlight & {
   isExclusive?: boolean;
   category?: ReelCategory;
   coachLevel?: boolean;
+  sport?: string | null;
+  expectedUserId?: string;
+  isSessionCurrent?: () => boolean;
   onProgress?: CompressProgress;
   onStatus?: (message: string) => void;
 };
@@ -90,6 +95,14 @@ async function sessionUserId(): Promise<string> {
   if (!isSupabaseConfigured) return 'guest';
   const { data } = await supabase.auth.getUser();
   return data.user?.id ?? 'guest';
+}
+
+/** Revalidate captured ownership after media work; a draft started by A must never use B's active session. */
+async function confirmUploadOwner(expected?: string, guard?: () => boolean): Promise<string> {
+  if (guard && !guard()) throw new Error('Your account changed. Reopen Upload before sharing.');
+  const owner = await sessionUserId();
+  if ((expected && owner !== expected) || (guard && !guard())) throw new Error('Your account changed. Reopen Upload before sharing.');
+  return owner;
 }
 
 /**
@@ -183,9 +196,11 @@ async function uploadToBucket(
   // Story photos pass false: each path is new (timestamped), so an existing object means something is wrong
   // and must not be silently replaced. Videos and avatars keep their existing upsert behaviour.
   upsert = true,
+  actor?: { expectedUserId?: string; isSessionCurrent?: () => boolean },
 ): Promise<{ bucket: string; publicUrl: string }> {
   let lastError = 'Upload failed.';
   for (const bucket of buckets) {
+    if (actor) await confirmUploadOwner(actor.expectedUserId, actor.isSessionCurrent);
     const { error } = await storage.upload(bucket, path, body, {
       contentType,
       upsert,
@@ -214,7 +229,14 @@ export type ReelInsertRow = {
   /** Omitted for videos (column default `video`); `photo_story` rows store `video_url = ''`. */
   media_type?: HighlightMediaType;
   safety_label?: 'none' | 'coach_level';
+  sport?: string | null;
 };
+
+/** A committed row with an uncertain sport readback must not invite duplicate media creation or deletion. */
+export class HighlightSportConfirmationError extends Error {
+  readonly code = 'HIGHLIGHT_SPORT_CONFIRMATION';
+  constructor(readonly reel: Reel) { super('Highlight saved, but its recorded sport could not be confirmed. Check your posted Highlights before uploading again.'); }
+}
 
 /**
  * @purpose The single `reels` insert used by videos and photo stories, so both get the same insert policy, the
@@ -226,18 +248,24 @@ export type ReelInsertRow = {
  * @throws When `media_type` is rejected: dropping it would publish a broken *video* row with an empty URL.
  * @sideEffects `reels` INSERT.
  */
-export async function insertReelRow(baseRow: ReelInsertRow): Promise<Reel> {
-  type InsertRow = Database['public']['Tables']['reels']['Insert'] & { media_type?: HighlightMediaType; safety_label?: 'none' | 'coach_level' };
+export async function insertReelRow(baseRow: ReelInsertRow, actor?: { expectedUserId?: string; isSessionCurrent?: () => boolean }): Promise<Reel> {
+  type InsertRow = Database['public']['Tables']['reels']['Insert'] & { media_type?: HighlightMediaType; safety_label?: 'none' | 'coach_level'; sport?: string | null };
   let row: InsertRow = { ...baseRow };
   if (!row.media_type) delete row.media_type;
+  if (!row.sport?.trim()) delete row.sport;
+  else row.sport = row.sport.trim();
   let lastError: { message: string } | null = null;
   for (let attempt = 0; attempt < 5; attempt += 1) {
+    if (actor) await confirmUploadOwner(actor.expectedUserId, actor.isSessionCurrent);
     const withCategory = await supabase
       .from('reels')
       .insert(row as Database['public']['Tables']['reels']['Insert'])
-      .select('id, video_url, title, player_id, game_id, created_at, is_exclusive, is_vault_only, category')
+      .select('*')
       .single();
     if (!withCategory.error && withCategory.data) {
+      if (row.sport && (withCategory.data as Reel).sport !== row.sport) {
+        throw new HighlightSportConfirmationError(withCategory.data as Reel);
+      }
       const inserted: Reel = {
         ...(withCategory.data as Reel),
         is_exclusive: Boolean(row.is_exclusive),
@@ -250,6 +278,10 @@ export async function insertReelRow(baseRow: ReelInsertRow): Promise<Reel> {
     }
     lastError = withCategory.error;
     const message = withCategory.error?.message ?? '';
+    if (row.sport && isMissingColumn(withCategory.error) && message.includes('sport')) {
+      throw new Error('Sport tagging is unavailable right now. Your draft is still here. Try again later or choose no sport tag.');
+    }
+    if (message.includes('REEL_SPORT_INVALID')) throw new Error('That sport is unavailable. Your draft is still here. Choose an available sport or no sport tag.');
     if (row.media_type && message.includes('media_type')) {
       throw new Error('Photo stories need the latest database update. Share a video instead for now.');
     }
@@ -292,6 +324,9 @@ async function uploadHighlightWithStorage(storage: MediaStorageAdapter, {
   isExclusive = false,
   category = 'game_play',
   coachLevel = false,
+  sport,
+  expectedUserId,
+  isSessionCurrent,
   compressed = false,
   onProgress,
   onStatus,
@@ -311,6 +346,7 @@ async function uploadHighlightWithStorage(storage: MediaStorageAdapter, {
   if (!uri) throw new Error('Pick or record a clip before uploading.');
   const taggedPlayerId = playerId?.trim() || null;
   if (isExclusive && !taggedPlayerId) throw new Error('Tag an athlete before one-time Exclusive.');
+  const capturedOwner = await confirmUploadOwner(expectedUserId, isSessionCurrent);
 
   let localUri = uri;
   if (!compressed) {
@@ -322,11 +358,12 @@ async function uploadHighlightWithStorage(storage: MediaStorageAdapter, {
   onStatus?.("Uploading to Tapua'i…");
   onProgress?.(0.36);
 
-  const owner = await sessionUserId();
+  const owner = await confirmUploadOwner(capturedOwner, isSessionCurrent);
   if (isExclusive && owner === 'guest') {
     throw new Error('Sign in before uploading a Vault clip.');
   }
   const body = await bytesFromUri(localUri);
+  await confirmUploadOwner(capturedOwner, isSessionCurrent);
   if (body.byteLength > HIGHLIGHT_MAX_BYTES) throw new Error(HIGHLIGHT_TOO_BIG);
   onProgress?.(0.48);
 
@@ -346,12 +383,15 @@ async function uploadHighlightWithStorage(storage: MediaStorageAdapter, {
       filePath,
       body,
       'video/mp4',
+      true,
+      { expectedUserId: capturedOwner, isSessionCurrent },
     );
     videoUrl = uploaded.publicUrl;
   }
 
   onProgress?.(0.82);
   onStatus?.('Saving reel…');
+  await confirmUploadOwner(capturedOwner, isSessionCurrent);
 
   const nextCategory = parseReelCategory(category);
   const reel = await insertReelRow({
@@ -363,9 +403,10 @@ async function uploadHighlightWithStorage(storage: MediaStorageAdapter, {
     is_vault_only: isExclusive,
     category: nextCategory,
     ...(coachLevel && nextCategory === 'train_like_me' ? { safety_label: 'coach_level' as const } : {}),
+    ...(sport?.trim() ? { sport: sport.trim() } : {}),
     attested_at: new Date().toISOString(),
     rights_version: RIGHTS_VERSION,
-  });
+  }, { expectedUserId: capturedOwner, isSessionCurrent });
 
   onProgress?.(1);
   onStatus?.('Seki play uploaded.');
@@ -587,6 +628,8 @@ async function uploadStoryPhotoWithStorage(
   uri: string,
   reelId: string,
   position: number,
+  expectedUserId?: string,
+  isSessionCurrent?: () => boolean,
 ): Promise<{ imagePath: string; imageUrl: string; width?: number; height?: number }> {
   if (!isSupabaseConfigured) {
     throw new Error('Supabase is not configured. Add EXPO_PUBLIC keys to .env.local.');
@@ -597,9 +640,11 @@ async function uploadStoryPhotoWithStorage(
   const { data } = await supabase.auth.getUser();
   const userId = data.user?.id;
   if (!userId) throw new Error('Sign in to share photos.');
+  if ((expectedUserId && expectedUserId !== userId) || (isSessionCurrent && !isSessionCurrent())) throw new Error('Your account changed. Reopen Upload before sharing.');
 
   const localUri = await compressStoryPhoto(uri);
   const raw = new Uint8Array(await bytesFromUri(localUri));
+  await confirmUploadOwner(userId, isSessionCurrent);
   const parsed = parseJpeg(raw);
   if (!parsed) {
     // PNG / HEIC / broken files can carry metadata we cannot remove here, so they are refused, not uploaded as-is.
@@ -607,7 +652,7 @@ async function uploadStoryPhotoWithStorage(
   }
   const cleaned = buildCleanJpeg(raw, parsed);
   const imagePath = `${userId}/stories/${reelId}/${position}-${Date.now()}.jpg`;
-  const { publicUrl } = await uploadToBucket(storage, [REELS_BUCKET], imagePath, cleaned.buffer, 'image/jpeg', false);
+  const { publicUrl } = await uploadToBucket(storage, [REELS_BUCKET], imagePath, cleaned.buffer, 'image/jpeg', false, { expectedUserId: userId, isSessionCurrent });
   const quarterTurn = (parsed.orientation ?? 1) >= 5;
   return {
     imagePath,
@@ -660,7 +705,7 @@ async function uploadAvatarWithStorage(storage: MediaStorageAdapter, uri: string
 export function createMediaUploadService(storage: MediaStorageAdapter = mediaStorage) {
   return {
     uploadHighlight: (input: UploadHighlightInput) => uploadHighlightWithStorage(storage, input),
-    uploadStoryPhoto: (uri: string, reelId: string, position: number) => uploadStoryPhotoWithStorage(storage, uri, reelId, position),
+    uploadStoryPhoto: (uri: string, reelId: string, position: number, expectedUserId?: string, isSessionCurrent?: () => boolean) => uploadStoryPhotoWithStorage(storage, uri, reelId, position, expectedUserId, isSessionCurrent),
     uploadAvatar: (uri: string, onProgress?: CompressProgress) => uploadAvatarWithStorage(storage, uri, onProgress),
   };
 }

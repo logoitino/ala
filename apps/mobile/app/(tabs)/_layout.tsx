@@ -17,6 +17,7 @@ import { useUploadSheet } from '@/context/UploadSheetContext';
 import { colors } from '@/constants/theme';
 import { USER_ROLES } from '@/lib/roles';
 import { useRoster } from '@/hooks/useRoster';
+import { FanNavigationProvider } from '@/context/FanNavigationContext';
 
 function FanTabs() {
   const { players } = useRoster();
@@ -80,7 +81,7 @@ function FanTabs() {
 export default function FanTabsLayout() {
   return (
     <RoleGate allow={USER_ROLES}>
-      <FanTabs />
+      <FanNavigationProvider><FanTabs /></FanNavigationProvider>
     </RoleGate>
   );
 }

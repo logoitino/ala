@@ -1,3 +1,4 @@
+/** Highlights retains recorded sport repairs in its existing editor; metadata and historical tags remain separate. */
 import { useCallback, useMemo, useState } from 'react';
 import {  useFocusEffect, useRouter } from 'expo-router';
 
@@ -13,6 +14,7 @@ import {
 } from '@/components/Admin/AdminChrome';
 import { WorkoutChallengesPanel } from '@/components/Admin/WorkoutChallengesPanel';
 import { BeyondGamePanel } from '@/components/Admin/BeyondGamePanel';
+import { HighlightSportPanel } from '@/components/Admin/HighlightSportPanel';
 import { SafetyLabelPanel } from '@/components/Admin/SafetyLabelPanel';
 import { labeledReelCategories, parseReelCategory, type ReelCategory } from '@/data/highlights';
 import { fetchAdminHighlights, patchHighlight, setHighlightRemoved, type AdminHighlightRow } from '@/lib/adminCatalog';
@@ -141,6 +143,7 @@ export function HighlightsTool() {
             disabled={busyId === selected.id}
             onPress={() => void act(selected.id, async () => { await toggleReelVaultStatus(selected.id, selected.is_vault_only); })}
           />
+          <HighlightSportPanel reelId={selected.id} />
           <AdminBtn label="Close" onPress={() => setSelected(null)} />
           <AdminNotice text={message} />
         </AdminPanel>

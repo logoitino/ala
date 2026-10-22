@@ -27,7 +27,8 @@ jest.mock('@/lib/supabase', () => ({
   },
 }));
 
-import { fetchReelsForPlayer } from '@/lib/reels';
+import { fetchReelsForPlayer, playerFromReel, reelToClip } from '@/lib/reels';
+import type { ReelWithPlayer, Player } from '@/types/database';
 
 const row = (id: string, playerId: string | null) => ({
   id, title: id, video_url: `https://x/${id}.mp4`, player_id: playerId, created_at: '2026-10-21T00:00:00Z',
@@ -39,6 +40,17 @@ beforeEach(() => {
 });
 
 describe('clip athletes without the players embed', () => {
+  it('preserves a recorded sport and never restores a privacy-blanked player identity', () => {
+    const athlete = { id: 'private-player', name: 'Private' } as Player;
+    const tagged = { ...row('private', null), sport: 'Volleyball', players: athlete } as ReelWithPlayer;
+    expect(playerFromReel(tagged, [athlete])).toBeNull();
+    const clip = reelToClip(tagged, athlete);
+    expect(clip.sport).toBe('Volleyball');
+    expect(clip.playerId).toBeNull();
+    expect(clip.athleteName).toBe('Not tagged yet');
+    expect(clip.school).toBe('');
+    expect(reelToClip({ ...tagged, sport: undefined }, null).sport).toBeNull();
+  });
   it('never asks reels_feed to embed players and attaches them from one players read', async () => {
     mockReelSelect.mockReturnValue({ data: [row('a', 'p1'), row('b', 'p1'), row('c', null)], error: null, status: 200 });
     mockPlayerIn.mockReturnValue({ data: [{ id: 'p1', name: 'Mele Tupou' }], error: null });

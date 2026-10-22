@@ -79,6 +79,39 @@ const stats: AthleteStatsBundle = {
   logs: [], topThree: [],
 };
 
+/** A temporary sport chip selects recorded media and independent credentials without changing the primary hero. */
+describe('multi-sport profile display', () => {
+  const sports = [
+    { sport: 'Football', schoolId: null, teamName: 'North High', position: 'QB', jersey: '8' },
+    { sport: 'Volleyball', schoolId: null, teamName: 'South High', position: 'Setter', jersey: '12' },
+  ];
+  const clips = [
+    { id: 'old', athleteName: 'Ana', school: '', tag: 'Legacy', videoUrl: 'old.mp4' },
+    { id: 'football', athleteName: 'Ana', school: '', tag: 'Game', videoUrl: 'football.mp4', sport: 'Football' },
+    { id: 'volley', athleteName: 'Ana', school: '', tag: 'Serve', videoUrl: 'volley.mp4', sport: 'Volleyball' },
+  ];
+  beforeEach(() => { mockProfile = { id: 'owner', user_id: 'owner-user', full_name: 'Ana', role: 'athlete', is_verified: false,
+    player_id: player.id, athlete_sport: 'Football', athlete_position: 'QB' }; });
+  it('renders All including untagged history and filters only recorded sport tags', async () => {
+    const onDisplaySportChange = jest.fn();
+    const view = await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={clips} stats={stats}
+      auraPoints={9} primarySport="Football" displaySport={null} sportEntries={sports} onDisplaySportChange={onDisplaySportChange} />);
+    expect(screen.getByText('Visible clips: old, football, volley')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('tab', { name: 'Volleyball sport' }));
+    expect(onDisplaySportChange).toHaveBeenCalledWith('Volleyball');
+    await view.rerender(<AthleteProfileView player={player} name={player.name} role="athlete" clips={clips} stats={stats}
+      auraPoints={9} primarySport="Football" displaySport="Volleyball" sportEntries={sports} onDisplaySportChange={onDisplaySportChange} />);
+    expect(screen.getByText('Visible clips: volley')).toBeTruthy();
+    expect(screen.getByLabelText('Sport: Football')).toBeTruthy();
+    expect(screen.getByText(/Viewing Volleyball/)).toBeTruthy();
+    expect(screen.getByText(/South High/)).toBeTruthy();
+    expect(screen.getByText(/Setter/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('tab', { name: /Stats/ }));
+    expect(screen.getByText(/^Stats: Volleyball/)).toBeTruthy();
+    expect(screen.getByText(/Kills: —/)).toBeTruthy();
+  });
+});
+
 describe('AthleteProfileView hero credential ownership', () => {
   beforeEach(() => {
     mockProfile = {

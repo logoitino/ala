@@ -1686,6 +1686,161 @@
           ]
         }
       }
+    },
+    {
+      "plannedAt": "2026-10-21T23:21:36.288Z",
+      "status": "app-ready",
+      "readiness": {
+        "admin": {
+          "date": "2026-10-21T23:34:05.877Z",
+          "evidence": [
+            {
+              "path": "scripts/replay/athlete-sports-replay.mjs",
+              "command": "node scripts/replay/athlete-sports-replay.mjs .claude/worktrees/fan-zone/.smoke/runtime/pglite-cache/package/dist",
+              "result": "Independent actual full-canonical PostgreSQL replay56/56 PASS, serialSupabase stubs. Denied/privacy/managed/CAS/recorded history/original repair cases. Hosted SQL and multi-connection race unverified."
+            },
+            {
+              "path": "apps/mobile/src/frontend/components/Admin/__tests__/AthleteSportsTool.test.tsx",
+              "command": "pnpm --filter @tapuai/mobile test -- --watchman=false --runInBand AthleteSportsTool HighlightSportPanel",
+              "result": "Actual root2suites11tests PASS; draft/replacement/busy/stale query/account/recorded-tag CAS and unavailable distinctions."
+            },
+            {
+              "path": "docs/agents/MULTISPORT-01.md",
+              "command": "Independent outside-session Codex read-only admin/source Data/Security/SUPPORT/QA review plus6focused suites",
+              "result": "ACCEPT after documented repairs. Independent6suites59tests PASS, exact canonical migration and feed CASE preservation. No pinned Grok execution, hosted/native/provider/release acceptance."
+            },
+            {
+              "path": "scripts/replay/athlete-sports-replay.mjs",
+              "command": "Actual old-career-overwrite replay RED55/56 then amended canonical replay56/56 PASS; independent SQL/history review",
+              "result": "Amended untagged old logs stay null until original-row staff classification. Independent56/56 PASS and exact canonical append; migrationSHA4c4056a68d9d5b8174b28f242d1e778dc351475a8d7c95de116c54fecf7ac0db. Prior checkpoint date is preserved; old byte receipt is historical."
+            },
+            {
+              "path": "docs/agents/MULTISPORT-01.md",
+              "command": "Final independent catalog/admin/source repair review and7focused suites",
+              "result": "ACCEPT,84/84 PASS. Existing stored catalog reader, visit/request guards and separate in-place retries preserve drafts; no new SQL/API/access. Original admin checkpoint stays preserved as historical work order."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-22T00:04:39.734Z",
+          "evidence": [
+            {
+              "path": "docs/agents/MULTISPORT-01.md",
+              "command": "pnpm detection:scan (full pnpm check plus portal library tests), final independent source review and dedicated Expo web component/route checks",
+              "result": "Actual final quality-gate exit0 and portal106/106 PASS, 2026-10-22T00:03:58.308Z. Independent source/local regressions ACCEPT; browser evidence limits recorded. SQL remains unapplied; hosted/native/provider/release readiness unverified."
+            }
+          ]
+        }
+      },
+      "id": "MULTISPORT-01",
+      "title": "Multiple athlete sports and manual primary",
+      "owner": "PROFILE",
+      "exemption": null,
+      "source": {
+        "description": "Profile-owned bounded participation, manual primary legacy field, revision-checked atomic saves, existing catalog/directory, per-sport stats/logs and explicit reels.sport. Missing source is unavailable; legacy values remain readable. No inferred historical sport tags.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/athleteSports.ts",
+          "apps/mobile/src/backend/db/schema.sql",
+          "apps/mobile/src/frontend/hooks/useStoredSportChoices.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/sports",
+        "actions": [
+          "Find athlete profile, review and correct sports/primary/credentials with confirmed readback",
+          "Reuse existing Stats panel for career/log sport and original unknown-log classification/correction; preserve history",
+          "Correct or clear recorded video/photo sport in existing Highlights editor with old-value CAS and confirmed readback"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/AthleteSportsTool.tsx",
+          "apps/mobile/src/frontend/lib/adminControls.ts",
+          "apps/mobile/src/frontend/components/Admin/HighlightSportPanel.tsx",
+          "apps/mobile/src/frontend/components/Admin/AthleteRecordsPanel.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/sports",
+        "metrics": [
+          "Bounded profile search and all recorded entries are the Data report. No aggregate attendance/participation metric introduced. SUPPORT fixed failure/revision codes contain no student/team payload; missing/hosted delivery remains unknown."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/AthleteSportsTool.tsx",
+          "docs/engineering/detection-sensors.json",
+          "apps/mobile/src/frontend/components/Admin/HighlightSportPanel.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Correct primary/list in Sports, original log classification in Stats, and recorded Highlight sport in Highlights without deleting stats/media. Failed/missing migrations keep legacy display and retained edit draft with unavailable notice; no lossy retries. Existing catalog usage includes secondary entries, activation/pause preserved. PROFILE+ADMIN+ATHLETE_STATS repair source; SUPPORT reproduces fixed safe failures, hosted delivery unknown.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/athleteSports.ts",
+          "docs/agents/MULTISPORT-01.md"
+        ]
+      },
+      "access": {
+        "roles": [
+          "athlete",
+          "admin"
+        ],
+        "deniedBehavior": "Self athlete and DB-guarded admin write; existing guardians retain read/privacy rights. Public secondary credentials obey existing audience/school/stats/block/minor policy via RPC, no blanket table SELECT. No verification or money authority granted by sport selection. Hosted application/denial separate.",
+        "paths": [
+          "apps/mobile/src/backend/db/schema.sql",
+          "apps/mobile/src/frontend/lib/athleteSports.ts"
+        ]
+      },
+      "app": {
+        "route": "/profile",
+        "paths": [
+          "apps/mobile/src/frontend/components/Profile/MySportsModal.tsx",
+          "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx"
+        ]
+      }
+    },
+    {
+      "plannedAt": "2026-10-21T23:21:36.288Z",
+      "status": "app-ready",
+      "readiness": {
+        "admin": {
+          "date": "2026-10-21T23:22:19.353Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-09.md",
+              "command": "Manual source/scope review of FanTabBar, fan layout, Local route/GameCard and ScreenHeading against COMPACT_FAN_UI_DESIGN before UI mutations",
+              "result": "Existing sources and actions inspected; scope changes only presentation and in-memory scroll feedback. No new business/write/access/collection/report duty; actual source review qualifies exemption, independent final review/rendered/native checks remain pending."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-10-22T00:04:39.734Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-09.md",
+              "command": "pnpm detection:scan (full pnpm check plus portal library tests), final independent source review and dedicated Expo web component/route checks",
+              "result": "Actual final quality-gate exit0 and portal106/106 PASS, 2026-10-22T00:03:58.308Z. Independent source/local regressions ACCEPT; browser evidence limits recorded. SQL remains unapplied; hosted/native/provider/release readiness unverified."
+            }
+          ]
+        }
+      },
+      "id": "UX-09",
+      "title": "Compact Local and floating fan navigation",
+      "owner": "DESIGN",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Only fan layout/type/dock background presentation and local in-memory scroll state change; no data/write/permission/collection/reporting obligation. Existing fan destinations/events and Local actions preserved.",
+        "reviewedBy": "Outside-session Codex root (DESIGN scope review)"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/local",
+        "paths": [
+          "apps/mobile/src/frontend/components/UI/FanTabBar.tsx",
+          "apps/mobile/app/(tabs)/local/index.tsx",
+          "apps/mobile/src/frontend/components/ScreenHeading.tsx"
+        ]
+      }
     }
   ]
 }

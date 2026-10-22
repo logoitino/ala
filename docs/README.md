@@ -213,3 +213,14 @@ with these files.
 | Document | Purpose |
 | --- | --- |
 | [REDUNDANCY-05](agents/REDUNDANCY-05.md) | Private backup setup and operational health execution. |
+
+## Manual sport identity and compact fan UI (2026-10-21)
+
+| Document | Purpose |
+| --- | --- |
+| [MULTISPORT-01](agents/MULTISPORT-01.md) | Current source/admin/app evidence and remaining activation gates. |
+| [UX-09](agents/UX-09.md) | Compact Local/floating dock exemption and actual verification. |
+| [Multiple sport design](engineering/design/MULTISPORT_PROFILE_DESIGN.md) | Approved manual primary, per-sport records and privacy. |
+| [Multiple sport plan](engineering/design/MULTISPORT_PROFILE_PLAN.md) | Backend/admin-first and athlete/public profile execution. |
+| [Compact fan design](engineering/design/COMPACT_FAN_UI_DESIGN.md) | Compact labeled menus, Local hierarchy and dock behavior. |
+| [Compact fan plan](engineering/design/COMPACT_FAN_UI_PLAN.md) | Exemption, geometry, scroll state and verification tasks. |

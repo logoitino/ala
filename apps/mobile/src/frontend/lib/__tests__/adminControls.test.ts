@@ -8,6 +8,7 @@ import {
   NOT_SWITCHED_ON, addGameLog, addSchoolConfirmer, fetchOperatorCheckins, fetchSchoolConfirmers, purgeOperatorCheckins,
   removeGameLog, revokeVerification, saveCareerStats, setCustodialTerms, setSchoolBranding,
 } from '@/lib/adminControls';
+import * as controls from '@/lib/adminControls';
 import { clearMyCrewAlerts, fetchMyCrewAlerts } from '@/lib/crew';
 
 beforeEach(() => { mockRpc.mockReset().mockResolvedValue({ data: null, error: null }); mockFrom.mockReset(); });
@@ -55,4 +56,15 @@ it('reads and clears the fan\'s own Crew alerts', async () => {
   mockRpc.mockResolvedValueOnce({ data: 1, error: null });
   await expect(clearMyCrewAlerts()).resolves.toBe(1);
   expect(mockRpc).toHaveBeenLastCalledWith('clear_my_crew_alerts', {});
+});
+
+it('explicit game-log sport cannot fall back to the old ambiguous writer',async()=>{
+ mockRpc.mockResolvedValue({data:'log',error:null});
+ await addGameLog({playerId:'p1',sport:'Volleyball',playedOn:'2026-10-02',opponent:'Other',statLine:'3 kills',scoringValue:3,volumeValue:4});
+ expect(mockRpc).toHaveBeenCalledWith('admin_add_athlete_game_log',expect.objectContaining({p_sport:'Volleyball'}));
+});
+it('classification writes the original row with expected old sport',async()=>{
+ mockRpc.mockResolvedValue({data:{id:'log1',player_id:'p1',sport:'Volleyball',played_on:'2026-10-02',opponent_school:'Other',stat_line:'3 kills',scoring_value:3,volume_value:4},error:null});
+ await expect(controls.classifyGameLogSport('log1','p1','Volleyball',null)).resolves.toMatchObject({id:'log1',statLine:'3 kills'});
+ expect(mockRpc).toHaveBeenCalledWith('admin_set_athlete_game_log_sport',{p_log_id:'log1',p_player_id:'p1',p_sport:'Volleyball',p_expected_sport:null});
 });
