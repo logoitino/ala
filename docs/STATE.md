@@ -118,7 +118,12 @@ acceptance criteria and dependent decisions. Use the registry and hierarchy to d
 primary owner and required reviewer. Local code completion is separate from hosted/device evidence.
 
 **Next up, in order.**
-1. Preview builds queued 2026-10-11 night with the local app, including the popup swipe and the upload black-screen fix. Android (any phone):
+1. **New preview builds queued 2026-10-21 (commit `fb16f40`: sport theme, QR Donate, notifications, compact UX-09–11).**
+   Android: https://expo.dev/accounts/logoitino/projects/ala-sports/builds/ca07b666-e187-43d3-af11-e89ba1b59193
+   iOS (registered iPad only): https://expo.dev/accounts/logoitino/projects/ala-sports/builds/4f568cdb-d440-4e7a-acad-a72b554b23b3
+   They use the preview EAS environment (staging), which lacks the 41 migrations in STAGING_DATABASE_CATCHUP, so features
+   needing that SQL show as unavailable until it is applied. Older builds below.
+   Previous: preview builds queued 2026-10-11 night with the local app, including the popup swipe and the upload black-screen fix. Android (any phone):
    https://expo.dev/accounts/logoitino/projects/ala-sports/builds/5cca4a55-cfc3-4c58-9346-34b9e0433b27
    iOS (registered iPad only — the iPhone is not on the profile yet):
    https://expo.dev/accounts/logoitino/projects/ala-sports/builds/c5255651-06e3-4f46-9861-5a47ad1b434a
