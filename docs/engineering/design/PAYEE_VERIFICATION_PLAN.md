@@ -163,7 +163,8 @@ no open `individual.id_number` requirement and no tax-id/id-number error code; `
 currently/past due non-empty; bank = the saved capability flag. The core records only for a stored
 account, after the binding save, best effort (a failed read or record leaves the gate closed and the
 next request retries; the link is never blocked). `20261022140000` makes an identical answer a no-op
-and serializes calls per account. Open: Stripe collects only the last four SSN digits for small
+and serializes calls per account (applied to development and staging 2026-10-22; the Edge Function
+is not redeployed yet). Open: Stripe collects only the last four SSN digits for small
 volumes (`eventually_due` lists `individual.ssn_last_4`), so most payees stay `pending` (identity
 true, TIN false) until Stripe asks for the full number. Whether to request the full number up front
 is a CONNECT/TAX/owner decision, not defaulted here. The `account.updated` webhook path is not built;

@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `ec67cd6b3966` |
-| Last announced plan | `ec67cd6b3966` — up to date |
+| Exit plan version (what the app uses on Supabase) | `8d0d3a25bf7f` |
+| Last announced plan | `8d0d3a25bf7f` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
 | Latest migration | `20261022140000_record_stripe_kyc_dedupe.sql` (55 files) |
-| Canonical schema hash | `fb5a382360d34ff47d985dce752c54800acf947850d80abf5bffda28075cc13f` (`schema.sql`) |
-| Complete source/configuration content hash | `ec67cd6b39660c72c4d8aac7ca79910a87e1472aa9188cb44dd5457c511dc389` across 1284 files |
+| Canonical schema hash | `c8325565c5a05fa5714a49ab77053ca8a35bf435a120f807e41b6d442775f3dd` (`schema.sql`) |
+| Complete source/configuration content hash | `8d0d3a25bf7fa30b22082b0f10b0fe90b3a679a27730468948997c2e1b160506` across 1284 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.

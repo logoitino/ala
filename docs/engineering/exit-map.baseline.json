@@ -1,5 +1,5 @@
 {
- "planVersion": "ec67cd6b3966",
+ "planVersion": "8d0d3a25bf7f",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1661,7 +1661,7 @@
    "apps/mobile/src/backend/db/connectAccountContext.replay.mjs 1757aec7830468eec917d207518f95d3880a9055730dc7810cb6ee8ee0ee3bfa",
    "apps/mobile/src/backend/db/failedPhotoStoryCleanup.replay.py edb77e6bcdfdeb58af63e4c52eb8636e4f3ad835e05ee637e6aa6396e8ed4dd7",
    "apps/mobile/src/backend/db/notifications.replay.mjs 9f04f4a1e24e6360331e3183c56026fe6dd492e22ab75faee971fe5714ca4dcc",
-   "apps/mobile/src/backend/db/schema.sql fb5a382360d34ff47d985dce752c54800acf947850d80abf5bffda28075cc13f",
+   "apps/mobile/src/backend/db/schema.sql c8325565c5a05fa5714a49ab77053ca8a35bf435a120f807e41b6d442775f3dd",
    "apps/mobile/src/backend/services/__fixtures__/fanZoneMp4Fixture.ts 337d454a4a404dbaa1c9abc3dfdcf7dec05462c34d7361149ff170ea1026550a",
    "apps/mobile/src/backend/services/__tests__/fanZoneMp4.test.ts d966212a5b0f134315f3b6ffdc6af7fd8503adc33d49d24f97fab449e1587ec5",
    "apps/mobile/src/backend/services/fanZoneMedia.ts 73df19ed56e9f0b5e2eb11a5a66310cf7e86d91e41e7105a5d5bcc35dfc8ad39",
@@ -2710,8 +2710,8 @@
    "supabase/migrations/20261022110000_remove_anon_write_branch.sql e7816d0964968fb5e3cff6586da923e555e0b3003a0545253f42b95a42dc9d54",
    "supabase/migrations/20261022120000_drop_public_update_profiles.sql 91579cfbb99eabdc8ffb93bafd4954dcfbbcb4314bfc95ffe94c67a32a840633",
    "supabase/migrations/20261022130000_vote_and_hype_limits.sql 41935a0d030280173c7a9c5d95d1e94f4e955a90382ecfd0e04d78a9afe08ea6",
-   "supabase/migrations/20261022140000_record_stripe_kyc_dedupe.sql fb64b27cef8456f30de00d8e76af18200f963ae886fe870e22cf94e8ce67d4a6",
-   "supabase/migrations/README.md e24ff29a21f296682c5aa3e804cb9e9ce941f5f3ce74f187699607616bacf2f6",
+   "supabase/migrations/20261022140000_record_stripe_kyc_dedupe.sql 4853323e75a3e8d55fdfd0bee00c2d43fd6ad217a40ef4e54ac0b7f4671a8b48",
+   "supabase/migrations/README.md ddc87d6262c33ff445fdad50b9a0603695e00e13539e44e4b02a423ce278fc21",
    "supabase/player_vault_lock.sql 7268b913a13c5798260e25bb3bade574a0969ebf408c8ffe563e3339a0b07c98",
    "supabase/players.sql 8bc9c0a10168e0b611ef22cf116928ee9d3a9e5bb3c0140ec197fc98f6a0e205",
    "supabase/profile_customization.sql c5d839c3062d71946580a6b857da85484cef0bb1e92684edd89c20dd17801bee",

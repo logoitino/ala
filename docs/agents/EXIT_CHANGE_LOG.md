@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-22 · plan `ec67cd6b3966` → `8d0d3a25bf7f` · announced by Claude Code workstream 3 (record_stripe_kyc applied to development + staging)
+
+App at announcement: commit `7d4e232e9af226c016a01570734b285fc2c2651a` + 3 uncommitted file(s), source `8d0d3a25bf7fa30b22082b0f10b0fe90b3a679a27730468948997c2e1b160506`, app 1.0.0, latest migration `20261022140000_record_stripe_kyc_dedupe.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/backend/db/schema.sql c8325565c5a05fa5714a49ab77053ca8a35bf435a120f807e41b6d442775f3dd`, `supabase/migrations/20261022140000_record_stripe_kyc_dedupe.sql 4853323e75a3e8d55fdfd0bee00c2d43fd6ad217a40ef4e54ac0b7f4671a8b48`, `supabase/migrations/README.md ddc87d6262c33ff445fdad50b9a0603695e00e13539e44e4b02a423ce278fc21`; removed `apps/mobile/src/backend/db/schema.sql fb5a382360d34ff47d985dce752c54800acf947850d80abf5bffda28075cc13f`, `supabase/migrations/20261022140000_record_stripe_kyc_dedupe.sql fb64b27cef8456f30de00d8e76af18200f963ae886fe870e22cf94e8ce67d4a6`, `supabase/migrations/README.md e24ff29a21f296682c5aa3e804cb9e9ce941f5f3ce74f187699607616bacf2f6`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-22 · plan `fc0cb39dfec7` → `ec67cd6b3966` · announced by Claude Code workstream 3 (VERIFY-02 KYC recording)
 
 App at announcement: commit `cb2a6f783ec0d60061d26addcf84be79046cd0a6` + 9 uncommitted file(s), source `ec67cd6b39660c72c4d8aac7ca79910a87e1472aa9188cb44dd5457c511dc389`, app 1.0.0, latest migration `20261022140000_record_stripe_kyc_dedupe.sql`.

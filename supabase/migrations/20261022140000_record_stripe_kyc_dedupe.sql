@@ -7,7 +7,7 @@
 -- A different answer still supersedes, so a real Stripe downgrade (verified -> pending) is recorded.
 -- The caller only invokes this when Stripe returned a verification status; "unknown" never reaches it.
 --
--- Applied: not yet. Replay: scripts/replay/stripe-kyc-replay.mjs.
+-- Applied: development and staging 2026-10-22 (Claude Code); guest call refused 42501 on both. Replay: scripts/replay/stripe-kyc-replay.mjs.
 -- Rollback: re-run the record_stripe_kyc body from 20261014120000_payee_verification.sql.
 
 create or replace function public.record_stripe_kyc(account_id text, identity_verified boolean, tin_verified boolean, transfers_active boolean, details_due boolean default false)

@@ -5,7 +5,7 @@
 
 - Bank setup now records Stripe's own identity and tax-ID result for a linked account, so payee
   verification can complete on the server. Nothing is recorded until Stripe has answered, and a
-  repeated answer adds no history (migration `20261022140000`, not applied). Payouts stay blocked.
+  repeated answer adds no history (migration `20261022140000`, applied to development and staging). Payouts stay blocked.
 
 ## 2026-10-22 — Security holes closed on staging and development
 
