@@ -4278,6 +4278,7 @@
         "reels_reset_photo_count → reels_reset_photo_count",
         "reels_apply_tag_defaults → reels_apply_tag_defaults",
         "reels_guard_coach_label → guard_coach_label",
+        "reels_audit_coach_label → audit_coach_label_on_insert",
         "guard_failed_photo_story_state → guard_failed_photo_story_state",
         "reels_recorded_sport_guard → guard_reel_recorded_sport"
       ],
@@ -4358,6 +4359,7 @@
       "writers": [],
       "readers": [],
       "sqlWriters": [
+        "audit_coach_label_on_insert",
         "set_coach_label",
         "set_own_coach_label"
       ],
@@ -7753,6 +7755,18 @@
       ],
       "manual": null,
       "writes": [],
+      "reads": []
+    },
+    {
+      "name": "audit_coach_label_on_insert",
+      "owner": "HIGHLIGHTS",
+      "callers": [
+        "trigger:reels_audit_coach_label on reels"
+      ],
+      "manual": null,
+      "writes": [
+        "safety_label_events"
+      ],
       "reads": []
     },
     {

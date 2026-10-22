@@ -47,7 +47,7 @@ Local libraries (no outside service): 50. App configuration variables: `NODE_ENV
 | Measure | Count | Meaning |
 | --- | --- | --- |
 | `auth.uid()` / `auth.role()` in SQL | 301 / 121 | Identity calls a non-Supabase host must provide (prefer `my_profile_id()` in new SQL) |
-| Grants to `anon` / `authenticated` / `service_role` | 395 | The PostgREST role model |
+| Grants to `anon` / `authenticated` / `service_role` | 396 | The PostgREST role model |
 | `storage.*` references in SQL | 137 | Storage policies and bucket rules |
 | Realtime references in SQL / client channels | 28 / 12 | Live updates to replace on another host |
 | Realtime publication tables | 4 | `app_runtime_config`, `cheer_polls`, `game_events`, `games` |

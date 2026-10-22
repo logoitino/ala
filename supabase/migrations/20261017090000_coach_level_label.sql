@@ -1,5 +1,10 @@
 -- Coach-level move (SAFETY-01). Design: docs/engineering/design/COACH_LEVEL_LABEL_DESIGN.md
--- Written 2026-10-16. Not applied anywhere.
+-- Written 2026-10-16. Applied: development 2026-10-22 (Claude Code; hosted bodies match the replay). Staging waits for
+-- Beyond, which it alters (feature freeze). Replay: scripts/replay/coach-level-replay.mjs.
+-- 2026-10-22 (workstream 4 RLS review): the app sets the label at insert, which skipped the Train Like Me rule
+-- and the audit row; reels_audit_coach_label now enforces both on insert. Also fixed before any apply: client inserts
+-- could not write safety_label (column grant), report_reel's count was ambiguous (every report failed), and the
+-- 20-minute window compared against a zone-less timestamp.
 -- Adds reels.safety_label and beyond_posts.safety_label (none | coach_level, default none),
 -- an append-only audit, admin add/remove with a reason, and an uploader set only on a new upload.
 -- A "Risky without a coach" report is stored and never hides the clip.
@@ -9,6 +14,7 @@
 --   drop trigger if exists reels_guard_coach_label on public.reels;
 --   drop trigger if exists beyond_posts_guard_coach_label on public.beyond_posts;
 --   drop function public.guard_coach_label();
+--   drop trigger if exists reels_audit_coach_label on public.reels; drop function public.audit_coach_label_on_insert();
 --   alter table public.reels drop column if exists safety_label;
 --   alter table public.beyond_posts drop column if exists safety_label;
 --   drop table if exists public.safety_label_events;
@@ -63,6 +69,24 @@ drop trigger if exists beyond_posts_guard_coach_label on public.beyond_posts;
 create trigger beyond_posts_guard_coach_label before update on public.beyond_posts
   for each row execute function public.guard_coach_label();
 
+-- Uploads set the label on insert (MediaUploadService). Same rule and audit as set_own_coach_label; uploaded_by is
+-- already forced to the caller by reels_apply_tag_defaults. Security definer only to write the admin-only audit.
+create or replace function public.audit_coach_label_on_insert()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if new.safety_label = 'coach_level' then
+    if new.category is distinct from 'train_like_me' then
+      raise exception 'Only a Train Like Me clip can be marked as an advanced move.';
+    end if;
+    insert into public.safety_label_events(target_kind, target_id, old_label, new_label, actor_id, reason)
+    values ('reel', new.id, 'none', 'coach_level', new.uploaded_by, 'uploader');
+  end if;
+  return null;
+end $$;
+drop trigger if exists reels_audit_coach_label on public.reels;
+create trigger reels_audit_coach_label after insert on public.reels
+  for each row execute function public.audit_coach_label_on_insert();
+
 create or replace function public.set_own_coach_label(target_kind text, target_id uuid, label text)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare me uuid := public.my_profile_id();
@@ -75,7 +99,7 @@ begin
   if target_kind = 'reel' then
     update public.reels set safety_label = 'coach_level'
      where id = target_id and uploaded_by = me and category = 'train_like_me' and safety_label = 'none'
-       and created_at > timezone('utc', now()) - interval '20 minutes';
+       and created_at > now() - interval '20 minutes';
     if not found then raise exception 'Only the uploader can mark a new Train Like Me clip.'; end if;
   else
     update public.beyond_posts set safety_label = 'coach_level'
@@ -152,6 +176,9 @@ begin
 end $$;
 
 revoke all on function public.guard_coach_label() from public, anon, authenticated;
+revoke all on function public.audit_coach_label_on_insert() from public, anon, authenticated;
+-- Uploads send the label on insert; the 2026-10-13 column list predates it. The audit trigger enforces the rule.
+grant insert (safety_label) on public.reels to authenticated;
 revoke all on function public.set_own_coach_label(text, uuid, text) from public, anon;
 revoke all on function public.set_coach_label(text, uuid, text, text) from public, anon;
 revoke all on function public.coach_label_desk() from public, anon;
@@ -281,8 +308,8 @@ begin
 
   -- A coach-level suggestion never hides the clip and does not count toward the three-report hide.
   select count(*)::integer into report_count
-  from public.reel_reports
-  where reel_id = target_reel_id and reason is distinct from 'coach_level';
+  from public.reel_reports rr
+  where rr.reel_id = target_reel_id and rr.reason is distinct from 'coach_level';
 
   if reason = 'coach_level' then
     update public.reels

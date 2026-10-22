@@ -11,7 +11,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Views | 3 |
 | Storage buckets | 6 |
 | Feature switches read by the fan app | 42 of 42 |
-| Database functions | 612 (253 used by hand, 62 trigger functions) |
+| Database functions | 613 (253 used by hand, 63 trigger functions) |
 | Tables reached by at least one screen or server route | 125 of 128 |
 | Code files that read or write the database | 84 |
 | Exported symbols nothing imports | 43 (0 proposed for archive, 43 kept on purpose) |
@@ -37,7 +37,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `DONATION_THANKS` | `donation_thanks` | 3 |
 | `DRIP` | `shop_orders`, `shop_products` | 0 |
 | `FILMER_REWARDS` | `filmer_props`, `filmer_rewards` | 4 |
-| `HIGHLIGHTS` | `beyond_admin_events`, `beyond_media`, `beyond_posts`, `beyond_reports`, `beyond_settings`, `beyond_submission_quota`, `challenge_athlete_settings`, `challenge_badges`, `challenge_mutes`, `challenge_nudges`, `challenge_response_quota`, `challenge_responses`, `reel_hype_votes`, `reels`, `safety_label_events`, `saved_reels`, `reels_feed` | 57 |
+| `HIGHLIGHTS` | `beyond_admin_events`, `beyond_media`, `beyond_posts`, `beyond_reports`, `beyond_settings`, `beyond_submission_quota`, `challenge_athlete_settings`, `challenge_badges`, `challenge_mutes`, `challenge_nudges`, `challenge_response_quota`, `challenge_responses`, `reel_hype_votes`, `reels`, `safety_label_events`, `saved_reels`, `reels_feed` | 58 |
 | `INCIDENT_TRIAGE` | `support_reviews` | 1 |
 | `LEDGER` | `company_revenue_logs`, `stripe_webhook_events`, `tips` | 7 |
 | `LOCAL` | `games` | 3 |
@@ -794,14 +794,14 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/lib/adminCatalog.ts`, `@/lib/crew.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `admin_set_highlight_sport`, `begin_failed_photo_story_cleanup`, `block_user`, `clear_reel_hype`, `close_under_13_account`, `confirm_reel_player_tag` +10 more
 - Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/photoStories.ts`, `@/services/MediaUploadService.ts`; database functions: `admin_challenge_post_counts`, `admin_get_highlight_sport`, `athlete_highlight_views`, `begin_failed_photo_story_cleanup`, `can_delete_failed_photo_story_object`, `can_read_reel_vault` +32 more
 - Removed by: `finish_failed_photo_story_cleanup`
-- Triggers: `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_filmer_rewards → reels_filmer_rewards`, `reels_reset_photo_count → reels_reset_photo_count`, `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_guard_coach_label → guard_coach_label`, `guard_failed_photo_story_state → guard_failed_photo_story_state` +1 more
+- Triggers: `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_filmer_rewards → reels_filmer_rewards`, `reels_reset_photo_count → reels_reset_photo_count`, `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_guard_coach_label → guard_coach_label`, `reels_audit_coach_label → audit_coach_label_on_insert` +2 more
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
 
 ### `safety_label_events`
 
 **Owner:** `HIGHLIGHTS` · Append-only record of who added or removed a Coach-level workout label, with the reason and time. Admin read. RPC writes only.
 
-- Written by: —; database functions: `set_coach_label`, `set_own_coach_label`
+- Written by: —; database functions: `audit_coach_label_on_insert`, `set_coach_label`, `set_own_coach_label`
 - Read by: —; database functions: `coach_label_desk`
 - Screens: `/admin/highlights`, `/beyond`
 
@@ -1345,6 +1345,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `athlete_school_badge` | `PROFILE` | `@/lib/schoolBadge.ts` | — | `profiles`, `school_confirmers`, `schools_and_teams` +1 more |
 | `athlete_stats_visible` | `PROFILE` | `sql:RLS policy` | — | `profiles` |
 | `audience_allows` | `BACKEND` | `sql:profile_item_visible`, `sql:view` | — | — |
+| `audit_coach_label_on_insert` | `HIGHLIGHTS` | `trigger:reels_audit_coach_label on reels` | `safety_label_events` | — |
 | `authorize_notification_send` | `NOTIFICATIONS` | By hand: Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified. | — | `notification_config`, `notification_deliveries`, `notification_preferences` |
 | `award_filmer_aura` | `FILMER_REWARDS` | `sql:give_filmer_props`, `sql:reels_filmer_rewards` | `filmer_rewards`, `profiles` | — |
 | `begin_failed_photo_story_cleanup` | `PHOTO_STORIES` | By hand: Authenticates the exact uploader, locks and retires an unpublished story; preserves committed stories. | `reels` | `profiles`, `reels` |

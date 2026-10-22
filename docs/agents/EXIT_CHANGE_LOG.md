@@ -10,6 +10,16 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-22 · plan `363314bc533d` → `49755cf71dce` · announced by Claude Code workstream 4 (coach-level 20261017090000 fixed + applied to development)
+
+App at announcement: commit `9f9858148ba9fc5bf636dd38f4ae5db13f3583f0` + 5 uncommitted file(s), source `49755cf71dceb0df2073feae5cff17d564f85c026176a47c3f7762b8d09d8e68`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Database functions** — added `public.audit_coach_label_on_insert`; removed —. Notify: `REDUNDANCY_LEAD`, `DATABASE_MIGRATIONS`, `EXIT_DATABASE`, `INFRA_SECURITY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+- **Triggers** — added `public.reels: reels_audit_coach_label`; removed —. Notify: `REDUNDANCY_LEAD`, `DATABASE_MIGRATIONS`, `EXIT_DATABASE`, `INFRA_SECURITY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+- **Source/configuration content fingerprints** — added `apps/mobile/src/backend/db/schema.sql 152ed5f7f51cb67b3c21a3181ca3a4ff3c4dabcfd57356e35278e7225947c4c6`, `packages/shared-types/admin/supportTopology.json e123e31ab22b04b15f417c977a157dbd2cd69048245ab74150397de6d35b4569`, `scripts/replay/coach-level-replay.mjs fc45b64c1b61762d04320d5d8e124e7e3400235a52f6d5ae5041b3b36daed4e3`, `supabase/migrations/20261017090000_coach_level_label.sql 50dbc40d5ab1dacba35b303cbcd52e6bf77b46cbd896ad3bf628235f7886bbfa`, `supabase/migrations/README.md aac1ab1a3de71a7e0dd3a563d38552e7615ec6519ea2db8d2fe8e71a73b9c083`; removed `apps/mobile/src/backend/db/schema.sql ec4b0fbe6834a868a1a96603988f1191169baec2255144c2715619b7bc26ac7f`, `packages/shared-types/admin/supportTopology.json ac2bb3a7110c904ac3b6f1f1608be464b2cc5b47f4e05ba24b04735a78659a7c`, `supabase/migrations/20261017090000_coach_level_label.sql 201e3c667ba0b3080ba60bf828160034a5bd4ddd86ddab2db98a14583a8a08c4`, `supabase/migrations/README.md 639e6a7b79be0664336750dc386fae6323d1b3e308ddbc820429386811483411`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-22 · plan `6cdb7c8b8436` → `363314bc533d` · announced by Codex METRO-01 source repair
 
 App at announcement: commit `89a4c7846233f4c9c1aa46ff73d5e7408b12ddae` + 5 uncommitted file(s), source `363314bc533d200f0537cfde254f00f8d4f5bef7cf887d25e87f54d14edb8801`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

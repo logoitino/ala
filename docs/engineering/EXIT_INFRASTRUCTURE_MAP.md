@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `363314bc533d` |
-| Last announced plan | `363314bc533d` — up to date |
+| Exit plan version (what the app uses on Supabase) | `49755cf71dce` |
+| Last announced plan | `49755cf71dce` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
 | Latest migration | `20261022152000_no_cut_gifts_optional_tips.sql` (56 files) |
-| Canonical schema hash | `ec4b0fbe6834a868a1a96603988f1191169baec2255144c2715619b7bc26ac7f` (`schema.sql`) |
-| Complete source/configuration content hash | `363314bc533d200f0537cfde254f00f8d4f5bef7cf887d25e87f54d14edb8801` across 1299 files |
+| Canonical schema hash | `152ed5f7f51cb67b3c21a3181ca3a4ff3c4dabcfd57356e35278e7225947c4c6` (`schema.sql`) |
+| Complete source/configuration content hash | `49755cf71dceb0df2073feae5cff17d564f85c026176a47c3f7762b8d09d8e68` across 1300 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -144,9 +144,9 @@ Counts come from static statements in `schema.sql` and the source; the live data
 | Application schemas | 1 | `fan_zone_private` |
 | Tables | 125 | covered by backup, restore list and parity automatically |
 | Views | 3 | `public.profiles_public`, `public.reel_photos_feed`, `public.reels_feed` |
-| Database functions | 613 | covered by parity (body, settings, owner, execute rights) |
+| Database functions | 614 | covered by parity (body, settings, owner, execute rights) |
 | Row level security policies | 100 declared by name | policies created in DO blocks (for example per-table "Closed accounts") are not visible here; parity counts the live set, and extra or missing policies block cutover |
-| Triggers | 68 | covered by parity |
+| Triggers | 69 | covered by parity |
 | App policies/triggers on Supabase's own tables | 34 | `policy realtime.messages: Fans receive game score changes`, `policy realtime.messages: Fans receive game_events broadcast`, `policy realtime.messages: Operators send game_events broadcast`, `policy storage.objects: Beyond approved and inspection media`, `policy storage.objects: Beyond private delete guard`, `policy storage.objects: Beyond private insert guard`, `policy storage.objects: Beyond private read guard`, `policy storage.objects: Beyond private update guard`, `policy storage.objects: Beyond removed cleanup`, `policy storage.objects: Beyond reserved owner upload`, `policy storage.objects: Closed accounts`, `policy storage.objects: Delete claimed failed photo story objects`, `policy storage.objects: Owner delete avatars`, `policy storage.objects: Owner lists own public media`, `policy storage.objects: Public read avatars`, `policy storage.objects: Public read game highlights`, `policy storage.objects: Public read reels bucket`, `policy storage.objects: Public update avatars`, `policy storage.objects: Public update reels bucket`, `policy storage.objects: Public upload avatars`, `policy storage.objects: Public upload game highlights`, `policy storage.objects: Public upload reels bucket`, `policy storage.objects: Read entitled vault reel`, `policy storage.objects: Upload own vault reel`, `policy storage.objects: fan_zone_insert`, `policy storage.objects: fan_zone_insert_boundary`, `policy storage.objects: fan_zone_no_delete`, `policy storage.objects: fan_zone_no_read`, `policy storage.objects: fan_zone_no_update`, `trigger auth.users: on_auth_user_created`, `trigger auth.users: zz_notification_auth_activation`, `trigger storage.objects: beyond_storage_guard`, `trigger storage.objects: fan_zone_storage_guard`, `trigger storage.objects: guard_photo_story_storage_write` |
 | Extensions | 1 | `pgcrypto` |
 | Realtime publication tables | 4 | `public.app_runtime_config`, `public.cheer_polls`, `public.game_events`, `public.games` |
