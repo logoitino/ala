@@ -110,6 +110,8 @@ Deno.serve(async (req) => {
           });
           if (error || data !== flags.stripe_connect_id) throw new Error('Connect account save was not confirmed.');
         },
+        // Server-only (is_trusted_server); the core calls it only with Stripe's own answer for the saved account.
+        recordKyc: async (accountId, evidence) => adminDb().rpc('record_stripe_kyc', { account_id: accountId, ...evidence }),
         stripe: () => new Stripe(stripeSecret, { httpClient: Stripe.createFetchHttpClient() }),
       }),
     );

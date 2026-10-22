@@ -1,6 +1,12 @@
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-22 — Payee checks record Stripe's answer
+
+- Bank setup now records Stripe's own identity and tax-ID result for a linked account, so payee
+  verification can complete on the server. Nothing is recorded until Stripe has answered, and a
+  repeated answer adds no history (migration `20261022140000`, not applied). Payouts stay blocked.
+
 ## 2026-10-22 — Security holes closed on staging and development
 
 - Ask guests to sign in before they cheer in a poll; each account counts once and can switch sides.

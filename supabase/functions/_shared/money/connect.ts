@@ -7,6 +7,8 @@
  *
  * The destination is derived by service-only SQL from the live actor and optional athlete UUID; never a request account id.
  * Creating a payee account is a money-moving step, so adapters confirm the live session with `getUser` first.
+ * VERIFY-02: once a stored account is saved, Stripe's own identity / TIN answer (v1 account view) is recorded through
+ * `record_stripe_kyc`; nothing is recorded until Stripe has answered.
  * Payouts stay blocked regardless (`payout.ts`). Wave 0 is Stripe test mode.
  */
 
@@ -60,6 +62,20 @@ export type ConnectAccountLike = {
   } | null;
 };
 
+/** The v1 account fields that carry Stripe's identity result; Accounts v2 exposes none (VERIFY-02). */
+export type ConnectKycAccountLike = {
+  individual?: { verification?: { status?: string | null } | null; id_number_provided?: boolean | null } | null;
+  requirements?: {
+    currently_due?: string[] | null;
+    past_due?: string[] | null;
+    pending_verification?: string[] | null;
+    errors?: Array<{ code?: string | null }> | null;
+  } | null;
+};
+
+/** Arguments for `record_stripe_kyc`, all taken from Stripe's answer. */
+export type KycEvidence = { identity_verified: boolean; tin_verified: boolean; transfers_active: boolean; details_due: boolean };
+
 type LinkUseCase = {
   configurations: Array<'recipient'>;
   return_url: string;
@@ -106,7 +122,10 @@ export type ConnectAccountLinkParams = {
 
 /** The Stripe calls Connect set-up needs; the runtime's Stripe SDK instance satisfies it. */
 export type ConnectStripeClient = {
-  accounts: { createLoginLink(accountId: string): Promise<{ url: string }> };
+  accounts: {
+    createLoginLink(accountId: string): Promise<{ url: string }>;
+    retrieve(accountId: string): Promise<ConnectKycAccountLike>;
+  };
   v2: {
     core: {
       accounts: {
@@ -149,12 +168,37 @@ export function flagsFromAccount(
 }
 
 /**
+ * @purpose Stripe's identity / TIN answer for `record_stripe_kyc`, or null while Stripe has not answered.
+ * @param account The v1 view of the payee account.
+ * @param transfersActive The provider capability already derived for the saved binding.
+ * @returns Null without a verification status, so an unknown never supersedes a recorded check. TIN counts only when
+ *   Stripe verified the person with the full number on file and reports no open tax-id problem.
+ */
+export function kycEvidence(account: ConnectKycAccountLike, transfersActive: boolean): KycEvidence | null {
+  const status = account.individual?.verification?.status;
+  if (!status) return null;
+  const requirements = account.requirements;
+  const due = [...(requirements?.currently_due ?? []), ...(requirements?.past_due ?? [])];
+  const idNumberOpen = [...due, ...(requirements?.pending_verification ?? [])].includes('individual.id_number');
+  // no-ssn-check: matches Stripe error-code names (verification_failed_tax_id_match, …), never a number.
+  const tinError = (requirements?.errors ?? []).some((entry) => /tax_id|id_number/.test(entry.code ?? ''));
+  const identity = status === 'verified';
+  return {
+    identity_verified: identity,
+    tin_verified: identity && account.individual?.id_number_provided === true && !idNumberOpen && !tinError,
+    transfers_active: transfersActive,
+    details_due: due.length > 0,
+  };
+}
+
+/**
  * @purpose Create or resume the server-derived payee's Express account and mint the right link for the mode.
  * @param stripe Stripe client (secret key on the server only).
  * @param input Session user id / email, the stored account id (never a client id), return URLs and mode.
  * @returns `{ url, accountId, stripe_onboarding_complete, payouts_enabled }`; `url` is null for `status`.
  * @sideEffects Stripe `v2.core.accounts` retrieve or create; optional caller-scoped persistence callback
- *   before Express login link or v2 Account Link. The server request wrapper always supplies persistence.
+ *   before Express login link or v2 Account Link. The server request wrapper always supplies persistence and,
+ *   for a stored account, records Stripe's KYC answer (best effort; payouts stay gated without it).
  */
 export async function runStripeConnectForUser(
   stripe: ConnectStripeClient,
@@ -168,6 +212,7 @@ export async function runStripeConnectForUser(
     playerId?: string;
     payeeProfileId?: string;
     persistAccount?: (payload: StripeConnectPayload) => Promise<void>;
+    recordKyc?: (accountId: string, evidence: KycEvidence) => Promise<unknown>;
   },
 ): Promise<StripeConnectPayload> {
   const account = input.storedAccountId
@@ -198,6 +243,14 @@ export async function runStripeConnectForUser(
 
   // A link request may fail independently. Save the binding first so the next attempt resumes it.
   await input.persistAccount?.(payload);
+
+  // A new account has no answer yet. A failed read or record leaves the payout gate closed; the next request retries.
+  if (input.storedAccountId && input.recordKyc) {
+    try {
+      const evidence = kycEvidence(await stripe.accounts.retrieve(account.id), flags.payouts_enabled);
+      if (evidence) await input.recordKyc(account.id, evidence);
+    } catch { /* best effort, see above */ }
+  }
 
   if (input.mode === 'status') return payload;
 
@@ -244,6 +297,7 @@ export async function runCreateStripeAccount(input: {
     expectedAccountId: string | null,
     playerId: string | null,
   ) => Promise<unknown>;
+  recordKyc: (accountId: string, evidence: KycEvidence) => Promise<unknown>;
   stripe: () => ConnectStripeClient;
 }): Promise<CoreResult> {
   if (!input.body || typeof input.body !== 'object' || Array.isArray(input.body)) {
@@ -301,6 +355,7 @@ export async function runCreateStripeAccount(input: {
           }, expectedAccountId, playerId);
         } catch { throw new ConnectSaveError(); }
       },
+      recordKyc: input.recordKyc,
     });
     return { status: 200, body: { ...payload, ...(playerId ? { playerId } : {}) } };
   } catch (error) {

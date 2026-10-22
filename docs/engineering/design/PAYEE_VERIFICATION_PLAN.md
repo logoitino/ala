@@ -155,6 +155,20 @@ KYC wiring remains open until CONNECT/Privacy/Finance validate an authoritative 
 source and Backend designs snapshot preservation/deduplication. Stripe Identity remains disputes
 only under the original owner decision; no new legal/processor conclusion is made here.
 
+**Wired 2026-10-22 (brief item 3).** Evidence source: the v1 Accounts endpoint reads the same
+Accounts v2 account (checked read-only against the test-mode account; it returns `individual` and
+v1 `requirements`). `connect.ts` `kycEvidence` maps it: no `individual.verification.status` → record
+nothing; identity = status `verified`; TIN = identity and `id_number_provided` (the full number) with
+no open `individual.id_number` requirement and no tax-id/id-number error code; `details_due` =
+currently/past due non-empty; bank = the saved capability flag. The core records only for a stored
+account, after the binding save, best effort (a failed read or record leaves the gate closed and the
+next request retries; the link is never blocked). `20261022140000` makes an identical answer a no-op
+and serializes calls per account. Open: Stripe collects only the last four SSN digits for small
+volumes (`eventually_due` lists `individual.ssn_last_4`), so most payees stay `pending` (identity
+true, TIN false) until Stripe asks for the full number. Whether to request the full number up front
+is a CONNECT/TAX/owner decision, not defaulted here. The `account.updated` webhook path is not built;
+status refresh happens when the app asks for status.
+
 ### Actual local verification and limits
 
 The dual-runtime `apps/mobile/src/backend/api/moneyHandlers.test.ts` exercises actual core and

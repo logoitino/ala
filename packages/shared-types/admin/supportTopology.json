@@ -14535,7 +14535,9 @@
       "name": "record_stripe_kyc",
       "owner": "CUSTODIAL",
       "callers": [
-        "sql:check constraint"
+        "apps/mobile/src/backend/api/createStripeAccount.ts",
+        "sql:check constraint",
+        "supabase/functions/create-stripe-account/index.ts"
       ],
       "manual": null,
       "writes": [

@@ -66,6 +66,7 @@ check: `docs/STATE.md` §0.
 
 | File | What | Applied? |
 | --- | --- | --- |
+| `20261022140000_record_stripe_kyc_dedupe.sql` | `record_stripe_kyc` returns the current record unchanged when Stripe's answer is identical (status polls no longer append history) and locks per account so concurrent polls cannot both insert a current record; a different answer still supersedes. Called by `create-stripe-account` with Stripe's own v1 verification answer (VERIFY-02). Replay `stripe-kyc-replay.mjs` 8/8. | Not applied. |
 | `20261022130000_vote_and_hype_limits.sql` | One cheer vote per signed-in account per poll (server-stored side; client `previous_side` ignored) and one player hype per account/player/kind/UTC day; both RPCs signed-in only. New `cheer_poll_votes`, `player_hype_votes` (RLS on, no client grants). Replay `vote-limits-replay.mjs` 13/13. | **Applied on staging and development 2026-10-22.** |
 | `20261022120000_drop_public_update_profiles.sql` | Drops the open `Public Update Profiles` (UPDATE using true) on development; owners keep `Users update own profile`. Replay `profile-update-replay.mjs` 5/5. | **Applied on development and staging (no-op) 2026-10-22.** |
 | `20261022110000_remove_anon_write_branch.sql` | Removes the `auth.role() = 'anon'` branch from 12 admin/operator policies and drops development's five open legacy write policies (games, game_events, sponsorships). Replay `anon-branch-replay.mjs` 13/13. | **Applied on staging and development 2026-10-22.** |

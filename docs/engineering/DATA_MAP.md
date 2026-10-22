@@ -1798,7 +1798,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `record_ledger_entry` | `CONTROLLER` | `@/lib/bookkeeping.ts` | `ledger_manual_entries`, `ledger_manual_lines` | `ledger_accounts` |
 | `record_notification_payment_context` | `COMMERCE` | By hand: Service-only immutable server quote context, actor/purpose/athlete/currency/integer allocation bound; notification authority hard false. | `notification_payment_contexts` | `notification_payment_contexts`, `players` |
 | `record_reel_view` | `HIGHLIGHTS` | `@/lib/leaderboards.ts` | `reel_views`, `reels` | `profiles`, `reels` |
-| `record_stripe_kyc` | `CUSTODIAL` | `sql:check constraint` | `custodial_accounts`, `payee_verifications`, `profiles` | `players` |
+| `record_stripe_kyc` | `CUSTODIAL` | `apps/mobile/src/backend/api/createStripeAccount.ts`, `sql:check constraint`, `supabase/functions/create-stripe-account/index.ts` | `custodial_accounts`, `payee_verifications`, `profiles` | `players` |
 | `record_support_review` | `INCIDENT_TRIAGE` | By hand: Admin review action with independent protected confirmation. | `support_reviews` | `support_signals` |
 | `record_support_signal` | `TELEMETRY` | By hand: Authenticated bounded client observation RPC; UI service calls it. | — | — |
 | `record_trusted_support_signal` | `THREAT_DETECTION` | By hand: Service-role capture only; verified auth handler captures failures. | — | — |

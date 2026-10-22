@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `fc0cb39dfec7` |
-| Last announced plan | `fc0cb39dfec7` — up to date |
+| Exit plan version (what the app uses on Supabase) | `ec67cd6b3966` |
+| Last announced plan | `ec67cd6b3966` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
-| Latest migration | `20261022130000_vote_and_hype_limits.sql` (54 files) |
-| Canonical schema hash | `19868732deaea2a53299f9a52abe17295ff3742ed6690d96f766bd787e22667f` (`schema.sql`) |
-| Complete source/configuration content hash | `fc0cb39dfec78606f550b69c29b8468577d16ba28687c8113657e159785192a9` across 1284 files |
+| Latest migration | `20261022140000_record_stripe_kyc_dedupe.sql` (55 files) |
+| Canonical schema hash | `fb5a382360d34ff47d985dce752c54800acf947850d80abf5bffda28075cc13f` (`schema.sql`) |
+| Complete source/configuration content hash | `ec67cd6b39660c72c4d8aac7ca79910a87e1472aa9188cb44dd5457c511dc389` across 1284 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -151,7 +151,7 @@ Counts come from static statements in `schema.sql` and the source; the live data
 | Extensions | 1 | `pgcrypto` |
 | Realtime publication tables | 4 | `public.app_runtime_config`, `public.cheer_polls`, `public.game_events`, `public.games` |
 | Storage buckets | 6 | `avatars`, `beyond_game`, `fan_zone`, `game_highlights`, `reel_vault`, `reels` |
-| Migration files | 54 | latest `20261022130000_vote_and_hype_limits.sql` |
+| Migration files | 55 | latest `20261022140000_record_stripe_kyc_dedupe.sql` |
 | Edge Functions | 3 | `create-payment-intent` (self-host allowlist), `create-stripe-account` (self-host allowlist), `stripe-webhook` (excluded: Must not be deployed until P1-05 retires the client tips insert (STATE §0, §6 item 3).) |
 | Expo API routes | 6 | `create-payment-intent`, `create-payout`, `create-stripe-account`, `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload` |
 | Auth methods called | 17 | `exchangeCodeForSession` (PKCE code exchange after a redirect), `getSession` (Read the local session), `getUser` (Validate the current session with the server), `mfa.challenge` (TOTP challenge), `mfa.enroll` (TOTP factor enrollment), `mfa.getAuthenticatorAssuranceLevel` (Read aal1 / aal2), `mfa.listFactors` (List MFA factors), `mfa.unenroll` (TOTP removal), `mfa.verify` (TOTP verification), `onAuthStateChange` (Session change events), `setSession` (Restore a session from tokens), `signInWithIdToken` (Native Apple / Google ID token), `signInWithOAuth` (OAuth redirect (Google)), `signInWithOtp` (Email link / one-time code), `signInWithPassword` (Email and password sign-in), `signOut` (Sign out), `signUp` (Email sign-up) |
@@ -163,7 +163,7 @@ Counts come from static statements in `schema.sql` and the source; the live data
 
 ### SDK callsite coverage
 
-AST callsites: 1103; literal targets: 478; explicit owner-review candidates: 89.
+AST callsites: 1105; literal targets: 480; explicit owner-review candidates: 91.
 The complete machine inventory (`node scripts/exit-map.mjs --json`) records each detected callsite path, line, column,
 operation and literal target. Dynamic arguments and unresolved client origins require owner review. Syntax inspection
 does not prove runtime/provider coverage; overloads, dynamic SQL and deployed drift require live catalog parity.
@@ -192,6 +192,7 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `apps/mobile/src/backend/api/createPayout.ts:51:37` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/backend/api/createStripeAccount.ts:94:41` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/backend/api/createStripeAccount.ts:102:41` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/backend/api/createStripeAccount.ts:110:51` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/backend/api/fanZoneMedia.ts:81:42` | `storage.from` | literal; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/backend/api/fanZoneMedia.ts:81:42` | `storage.upload` | not-applicable; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/backend/api/fanZoneMedia.ts:83:35` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
@@ -259,6 +260,7 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `supabase/functions/_shared/notifications/worker.ts:182:26` | `database.rpc` | dynamic; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `supabase/functions/create-stripe-account/index.ts:98:41` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `supabase/functions/create-stripe-account/index.ts:106:41` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `supabase/functions/create-stripe-account/index.ts:114:51` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 
 ## 8. How the data moves
 

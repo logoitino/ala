@@ -83,7 +83,7 @@ function mockMakeClient() {
 const mockStripe = {
   paymentIntents: { create: jest.fn() },
   transfers: { create: jest.fn() },
-  accounts: { createLoginLink: jest.fn() },
+  accounts: { createLoginLink: jest.fn(), retrieve: jest.fn() },
   v2: { core: { accounts: { retrieve: jest.fn(), create: jest.fn() }, accountLinks: { create: jest.fn() } } },
 };
 const mockStripeCtorCalls: unknown[][] = [];
@@ -235,6 +235,7 @@ beforeEach(() => {
   mockStripe.v2.core.accounts.create.mockResolvedValue(account());
   mockStripe.v2.core.accountLinks.create.mockResolvedValue({ url: 'https://connect.stripe.test/link' });
   mockStripe.accounts.createLoginLink.mockResolvedValue({ url: 'https://connect.stripe.test/login' });
+  mockStripe.accounts.retrieve.mockResolvedValue({ individual: null, requirements: null });
 });
 
 afterEach(() => {
@@ -790,6 +791,63 @@ describe.each([
     expect((await handler()(request({ mode: 'status' }))).status).toBe(200);
     expect(mockState.rpc.mock.calls.map(([name]) => name)).toEqual(['stripe_connect_context', 'save_stripe_connect_account']);
     expect(mockState.queries).toEqual([]);
+  });
+
+  /** v1 view of the account carrying Stripe's own verification answer (VERIFY-02). */
+  const kycAccount = (status: string, idNumber: boolean, requirements: Record<string, unknown> = {}) => ({
+    individual: { verification: { status }, id_number_provided: idNumber },
+    requirements: { currently_due: [], past_due: [], pending_verification: [], errors: [], ...requirements },
+  });
+
+  test("records Stripe's verified identity and TIN after the binding is saved, then still links", async () => {
+    mockState.profile = { id: 'p1', stripe_connect_id: 'acct_1' };
+    mockStripe.v2.core.accounts.retrieve.mockResolvedValue(account({ applied: true, transfers: 'active' }));
+    mockStripe.accounts.retrieve.mockResolvedValue(kycAccount('verified', true));
+    expect((await read(await handler()(request({ mode: 'dashboard', returnUrl: ret })))).body.url).toBe('https://connect.stripe.test/login');
+    expect(mockStripe.accounts.retrieve).toHaveBeenCalledWith('acct_1');
+    expect(mockState.rpc.mock.calls.map(([name]) => name)).toEqual(['stripe_connect_context', 'save_stripe_connect_account', 'record_stripe_kyc']);
+    expect(mockState.rpc).toHaveBeenLastCalledWith('record_stripe_kyc', {
+      account_id: 'acct_1', identity_verified: true, tin_verified: true, transfers_active: true, details_due: false,
+    });
+  });
+
+  test.each([
+    ['only the last four digits were collected', kycAccount('verified', false), true, false],
+    ['Stripe reports a tax-id mismatch', kycAccount('verified', true, { errors: [{ code: 'verification_failed_tax_id_match' }] }), true, false],
+    ['the full number is still pending review', kycAccount('verified', true, { pending_verification: ['individual.id_number'] }), true, false],
+    ['identity is pending with details due', kycAccount('pending', true, { currently_due: ['external_account'] }), false, true],
+  ])('TIN is not claimed when %s', async (_label, v1, identity, due) => {
+    mockState.profile = { id: 'p1', stripe_connect_id: 'acct_1' };
+    mockStripe.accounts.retrieve.mockResolvedValue(v1);
+    expect((await handler()(request({ mode: 'status' }))).status).toBe(200);
+    expect(mockState.rpc).toHaveBeenLastCalledWith('record_stripe_kyc', {
+      account_id: 'acct_1', identity_verified: identity, tin_verified: false, transfers_active: false, details_due: due,
+    });
+  });
+
+  test('a new account records nothing and never reads the v1 account', async () => {
+    mockState.profile = { id: 'p1', stripe_connect_id: null, legal_terms_accepted_at: '2026-09-01' };
+    expect((await handler()(request({ returnUrl: ret }))).status).toBe(200);
+    expect(mockStripe.accounts.retrieve).not.toHaveBeenCalled();
+    expect(mockState.rpc.mock.calls.map(([name]) => name)).not.toContain('record_stripe_kyc');
+  });
+
+  test.each([
+    ['the v1 read fails', () => mockStripe.accounts.retrieve.mockRejectedValue(new Error('rate limited'))],
+    ['the record call fails', () => {
+      mockStripe.accounts.retrieve.mockResolvedValue(kycAccount('verified', true));
+      mockState.rpc.mockImplementation(async (fn: string, args: Record<string, unknown>) => {
+        if (fn === 'record_stripe_kyc') throw new Error('db down');
+        return mockConnectRpc(fn, args);
+      });
+    }],
+  ])('bank setup still succeeds when %s (payouts stay gated)', async (_label, arrange) => {
+    mockState.profile = { id: 'p1', stripe_connect_id: 'acct_1' };
+    arrange();
+    expect(await read(await handler()(request({ returnUrl: ret })))).toEqual({
+      status: 200,
+      body: { url: 'https://connect.stripe.test/link', accountId: 'acct_1', stripe_onboarding_complete: false, payouts_enabled: false },
+    });
   });
 
   test('a Stripe failure reports fixed safe copy', async () => {
