@@ -9,6 +9,12 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-22 — Refresh Claude entry point
+
+- Keep STATE/AGENTS imports and add current conventions, gift-release/team, counsel and IP
+  reading paths. Require verified remote evidence before reporting GitHub publication.
+
+
 ## 2026-10-22 — Whole-team gift release documentation (COORD-02)
 
 - Reconcile115 role definitions/17 departments and current dispatch duties with Gift/Donation/Tip
