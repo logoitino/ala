@@ -115,9 +115,11 @@ export function SoftWallModal() {
             ? 'Sign in to join The Crew.'
             : intent?.kind === 'wishlist'
               ? 'Sign in to give toward the gear they need.'
-              : intent?.kind === 'signin'
-                ? Platform.OS === 'ios' ? 'Apple, Google, or email.' : 'Google or email.'
-                : 'Sign in to give toward their season.';
+              : intent?.kind === 'exclusive'
+                ? 'Sign in with one tap to unlock exclusive Vault clips.'
+                : intent?.kind === 'signin'
+                  ? Platform.OS === 'ios' ? 'Apple, Google, or email.' : 'Google or email.'
+                  : 'Sign in to give toward their season.';
   const title = mode === 'create' ? 'Create an account' : 'Sign in';
 
   // Sign in is deliberately not age-gated; Create account and magic link are. See

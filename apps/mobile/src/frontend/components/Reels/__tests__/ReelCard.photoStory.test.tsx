@@ -47,6 +47,7 @@ jest.mock('@/context/AppRuntimeContext', () => ({
   useAppRuntime: () => ({ live: { catalog: { exclusiveDollars: 5, exclusiveAura: 10 }, buttons: { suggest: false }, layouts: {} } }),
 }));
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'u1' }, profile: null, isAthlete: false }) }));
+jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: jest.fn() }) }));
 jest.mock('@/context/CelebrationContext', () => ({ useOptionalCelebration: () => null }));
 jest.mock('@/hooks/useAthleteSubscription', () => ({ useAthleteSubscription: () => ({ subscribed: null, grant: jest.fn() }) }));
 jest.mock('@/hooks/useTipCheckout', () => ({ useTipCheckout: () => ({ startCheckout: jest.fn(), busy: false }) }));

@@ -198,7 +198,7 @@ export default function MyHubTab() {
 
   const subscribe = () => {
     requireAuth({
-      kind: 'signin',
+      kind: 'exclusive',
       athleteName: athlete.name,
       athleteId: athlete.id,
       resume: () => {

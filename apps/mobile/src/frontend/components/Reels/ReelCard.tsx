@@ -44,6 +44,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import {
   flashUnlockChipLabel,
   isClipVaultOnly,
@@ -121,6 +122,7 @@ function ReelCardImpl({
   const insets = useSafeAreaInsets();
   const { live } = useAppRuntime();
   const { user, profile, isAthlete } = useAuth();
+  const { requireAuth } = useSoftWall();
   const celebration = useOptionalCelebration();
   const tabFocused = useIsFocused();
   const isFocused = (playbackActive ?? tabFocused) && active;
@@ -461,15 +463,24 @@ function ReelCardImpl({
       onOpenProfile?.();
       return;
     }
-    void startCheckout({
-      player,
-      tipAmount: live.catalog.exclusiveDollars,
-      coverFees: false,
-      auraPoints: live.catalog.exclusiveAura,
-      skipBacker: true,
-      onPaid: grant,
+    // Soft-Wall first: a stashed resume may close over a pre-login startCheckout; live session
+    // resolution in useTipCheckout / useAthleteSubscription.grant still writes fan_id + the pass.
+    requireAuth({
+      kind: 'exclusive',
+      athleteName: player.name,
+      athleteId: player.id,
+      resume: () => {
+        void startCheckout({
+          player,
+          tipAmount: live.catalog.exclusiveDollars,
+          coverFees: false,
+          auraPoints: live.catalog.exclusiveAura,
+          skipBacker: true,
+          onPaid: grant,
+        });
+      },
     });
-  }, [grant, live.catalog.exclusiveAura, live.catalog.exclusiveDollars, onOpenProfile, player, startCheckout, surface, unlocking]);
+  }, [grant, live.catalog.exclusiveAura, live.catalog.exclusiveDollars, onOpenProfile, player, requireAuth, startCheckout, surface, unlocking]);
 
   const onShare = useCallback(async () => {
     const url = formatReelDeepLink(clip.id, clip.playerId ?? player?.id ?? null);

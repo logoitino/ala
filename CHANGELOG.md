@@ -1,4 +1,10 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-10-23 — Soft-Wall Vault unlock and resume session
+
+- Guest Vault unlock on Highlights opens Soft-Wall (`soft_wall.exclusive`) then resumes PaymentSheet.
+- Checkout and exclusive `grant` read the live Auth session so Soft-Wall resume still writes
+  `tips.fan_id`, payer Aura and the `subscriptions` row. Coverage lists the Vault Soft Wall.
+
 ## 2026-10-22 — Gift-language copy phase
 
 Individual athlete/family support uses Gift/Give; program donations and optional platform tips

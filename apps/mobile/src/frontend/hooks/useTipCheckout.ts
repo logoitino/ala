@@ -74,6 +74,20 @@ async function bumpMaloDroppedCount() {
   await AsyncStorage.setItem(MALO_DROPPED_KEY, String(next));
 }
 
+/**
+ * @purpose Live Auth user id at call time (Soft-Wall resume may invoke a pre-login `startCheckout` closure).
+ * @param fallback React-auth id when `getSession` has not hydrated yet.
+ * @returns Session user id when present, otherwise `fallback`.
+ * @sideEffects `supabase.auth.getSession` when Supabase is configured.
+ */
+async function resolveFanId(fallback: string | null): Promise<string | null> {
+  if (isSupabaseConfigured) {
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user.id) return data.session.user.id;
+  }
+  return fallback;
+}
+
 function applyAuraAward(
   targetId: string,
   award: { player_aura_points: number | null; profile_aura_points: number | null; aura_points: number },
@@ -88,7 +102,7 @@ function applyAuraAward(
 /**
  * @purpose Native Stripe PaymentSheet for gifts, exclusive purchase, Drip, or booster sponsorships. Gifts retain Aura for the giver and the athlete.
  * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may give to a tagged athlete.
- * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a gift (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`, `cover_fee_cents`, `stripe_payment_intent_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
+ * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a gift (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`, `cover_fee_cents`, `stripe_payment_intent_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`. Fan id is resolved from the live session so Soft-Wall resume still writes `tips.fan_id` and payer Aura.
  */
 export function useTipCheckout() {
   const { user, refreshProfile } = useAuth();
@@ -102,6 +116,11 @@ export function useTipCheckout() {
   enabledRef.current = live.buttons?.MONETIZATION_TIPS_ENABLED === true;
   const feeAmount = live.catalog.maloFeeDollars;
   const exclusiveAuraToast = exclusiveUnlockToast(live.catalog.exclusiveAura);
+  // Soft-Wall stashes `resume` before sign-in; read the live id, not a closed-over null.
+  const userIdRef = useRef<string | null>(user?.id ?? null);
+  userIdRef.current = user?.id ?? null;
+  const refreshProfileRef = useRef(refreshProfile);
+  refreshProfileRef.current = refreshProfile;
 
   const startCheckout = useCallback(
     async ({
@@ -202,7 +221,7 @@ export function useTipCheckout() {
         paymentSucceeded = true;
         await onPaid?.();
 
-        const tipperId = user?.id ?? null;
+        const tipperId = await resolveFanId(userIdRef.current);
         const recipientId = !skipBacker && player?.id ? player.id : null;
 
         // A compliance freeze (or any other insert-denied response) on the `tips` ledger row means
@@ -269,7 +288,7 @@ export function useTipCheckout() {
             const athleteAward = await addUserAura(recipientId, pointsToAdd);
             applyAuraAward(recipientId, athleteAward);
           }
-          await refreshProfile();
+          await refreshProfileRef.current();
         }
 
         try {
@@ -298,7 +317,7 @@ export function useTipCheckout() {
         setBusy(false);
       }
     },
-    [busy, celebration, exclusiveAuraToast, feeAmount, initPaymentSheet, presentPaymentSheet, refreshProfile, user?.id],
+    [busy, celebration, exclusiveAuraToast, feeAmount, initPaymentSheet, presentPaymentSheet],
   );
 
   return { startCheckout, busy };

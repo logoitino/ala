@@ -214,7 +214,7 @@ export default function UserAthleteProfileScreen() {
   const unlockExclusive = () => {
     if (!player) return;
     requireAuth({
-      kind: 'signin',
+      kind: 'exclusive',
       athleteName: player.name,
       athleteId: player.id,
       resume: () => {

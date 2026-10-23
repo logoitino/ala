@@ -1,7 +1,7 @@
 /**
- * Browse-first soft wall. A guest can watch a shared Highlight and two more swipes. Upload, Donate,
- * Join Crew, and a gear goal need an account. `requireAuth(intent)` runs the action at once when
- * signed in; otherwise it opens `SoftWallModal`, remembers the intent, and resumes it after sign-in.
+ * Browse-first soft wall. A guest can watch a shared Highlight and two more swipes. Upload, Give,
+ * Join Crew, gear goals, and Vault unlock need an account. `requireAuth(intent)` runs the action at
+ * once when signed in; otherwise it opens `SoftWallModal`, remembers the intent, and resumes it after sign-in.
  */
 
 import {
@@ -18,7 +18,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { telemetry } from '@/services/TelemetryManager';
 
-export type SoftWallKind = 'malo' | 'crew' | 'wishlist' | 'signin' | 'upload' | 'browse';
+export type SoftWallKind = 'malo' | 'crew' | 'wishlist' | 'exclusive' | 'signin' | 'upload' | 'browse';
 
 export type SoftWallIntent = {
   kind: SoftWallKind;
@@ -42,7 +42,7 @@ type SoftWallContextValue = {
 const SoftWallContext = createContext<SoftWallContextValue | null>(null);
 
 /**
- * @purpose Browse-first soft wall: a few Highlights are free; Upload / Donate / Crew / gear goals require auth then resume.
+ * @purpose Browse-first soft wall: a few Highlights are free; Upload / Give / Crew / gear goals / Vault require auth then resume.
  * @sideEffects Stashes intent until SoftWallModal completes Apple / Google / Magic Link; telemetry `soft_wall.*`.
  */
 export function SoftWallProvider({ children }: { children: ReactNode }) {
