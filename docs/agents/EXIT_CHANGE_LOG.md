@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `5cc435a1b72d` → `eaeb11fc8b20` · announced by cloud-agent: pin setup refusal fixture to 0755 under umask 077
+
+App at announcement: commit `cd42912aefcb571b442c2e953ff704ba76a8e03f` + 1 uncommitted file(s), source `eaeb11fc8b20aabf90f180a461f8f8c999b4ba96662569098a8f764b02158d4d`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `infrastructure/exit/tests/setup.test.mjs 25304a630985b445b5bddfcac69f7fc449a9d844b174256d9c6e146fdc4f6166`; removed `infrastructure/exit/tests/setup.test.mjs a79631c90c89883591c1be2e6d698a63a406e130d50f8e6e615d4502e37ee660`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-23 · plan `bf78a263650e` → `5cc435a1b72d` · announced by cloud-agent: exclude expo-env from exit inventory for CI
 
 App at announcement: commit `e99ac254812e833a7ed7dc4f4f8f5abf1a0ec5a3` + 1 uncommitted file(s), source `5cc435a1b72ddc2358611b1131193711a074134b35ecff4b8ded8df5355066d2`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
