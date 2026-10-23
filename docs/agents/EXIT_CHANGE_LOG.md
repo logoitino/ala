@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `52c793b873a3` → `5ca7ffc4ae64` · announced by cloud-agent exit-docs CI: drop expo-env from inventory; fix security report path assertion
+
+App at announcement: commit `f8c4a93de8896a3b5ffe84d6f1c7896cf3b3068e` + 2 uncommitted file(s), source `5ca7ffc4ae64f1d2f8b870a06d933d3e44365481b7a6dc88e5f4f82131034322`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `infrastructure/security/tests/report.test.mjs 9ef8f7468dabcd00ccdab6c135a2a44347e7392aba0ff3548402eddbf27ef7a8`, `scripts/exit-inventory.mjs 44e3d395c4d2105caf2eb649f4f7ec8fea42c7614febfb2dab41d634eab24709`; removed `apps/mobile/expo-env.d.ts 6fc02634da46d3edc5a88eec9173ba6bf709726be3cba83c73ebd8e859d5c147`, `infrastructure/security/tests/report.test.mjs d7d9536095dee70b58c6968672dab50824f983227accd5233b06f438a907711b`, `scripts/exit-inventory.mjs b4c6448a67826c949e2f5723715faab0772a7be1b3b7a14ab8839c0bbc6cb975`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-23 · plan `e38342972b62` → `52c793b873a3` · announced by EXIT_SYNC refresh after IQ archive on cursor/exit-docs-home-9a86
 
 App at announcement: commit `49782e3608d4f35f9e9bc738ffd447cc57cef8d9` + 2 uncommitted file(s), source `52c793b873a3bf43166d41c267f1ce2d91b067e91d97cc5242224aeb3584d9fe`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

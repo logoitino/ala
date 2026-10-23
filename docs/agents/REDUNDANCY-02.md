@@ -90,3 +90,17 @@ preflight, STATE §4 line, final `pnpm check`. Claude's claim on `exit-map.mjs` 
 **Gaps:** §4 still holds more than ~15 dated headings; older workstream history was left in place. Link check does not prove exit-map freshness, a hosted drill, or release approval. Hosted restore and cutover remain unclaimed. The 2026-10-23 exit-map notice is still not a review.
 
 **Next owner:** `CTO` integrates this receipt. Named reviewers on the 2026-10-23 notice record their own results. `REDUNDANCY_LEAD` keeps hosted drill/cutover with the owner.
+
+## EXIT_SYNC / INFRA_SECURITY receipt — inventory CI parity (2026-10-23)
+
+**Task:** CI `security:infra report is stale` on the exit reading-home branch while the same commit checked clean locally. **Executor:** this Cursor session (EXIT_SYNC inventory fix + security test path; not a hosted acceptance).
+
+**Cause:** `apps/mobile/expo-env.d.ts` is gitignored and created by local Expo; it was hashed into the exit inventory. GitHub Actions install+typecheck never writes that file, so the committed Infrastructure Security report binding did not match CI. The security CLI fixture still expected the pre-move report path under `docs/engineering/`.
+
+**Fix:** `scripts/exit-inventory.mjs` ignores `expo-env.d.ts` and `coverage/`, and sorts inventory paths with binary order. `infrastructure/security/tests/report.test.mjs` expects `docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md`. Regenerated map/report; announced plan `52c793b873a3` → `5ca7ffc4ae64`.
+
+**Check (2026-10-23, America/Denver):** `pnpm security:infra:check` ok; `pnpm exit:map:check` ok (plan `5ca7ffc4ae64`); `pnpm security:infra:test` 22/22; setup tests under `umask 077` 12/12. Operational acceptance not established.
+
+**Gaps:** other open PR heads that refreshed the report while `expo-env.d.ts` was present still need the same inventory exclusion (or a regenerate after this fix). Hosted restore/cutover unclaimed.
+
+**Next owner:** `CTO` / PR merge; named reviewers on the new notice.

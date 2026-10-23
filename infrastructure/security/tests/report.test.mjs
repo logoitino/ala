@@ -194,7 +194,7 @@ test('actual report CLI preserves read-only JSON, stale checks, draft failure ma
   await put('infrastructure/security/controls.json', controls);
   const draft = run('--write');
   assert.equal(draft.status, 1);
-  assert.match(draft.stderr, /^security:infra wrote docs\/engineering\/INFRASTRUCTURE_SECURITY_REPORT\.md with problems: missing-guard:client-boundary\s*$/);
+  assert.match(draft.stderr, /^security:infra wrote docs\/engineering\/exit\/INFRASTRUCTURE_SECURITY_REPORT\.md with problems: missing-guard:client-boundary\s*$/);
   assert.match(await fs.readFile(output, 'utf8'), /\| `client-boundary` \| `pnpm security:client-keys` \| needs-attention \|/);
   const failedCheck = run('--check');
   assert.equal(failedCheck.status, 1);

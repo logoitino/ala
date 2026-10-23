@@ -6,10 +6,15 @@ import ts from 'typescript';
 
 const ROOTS = ['apps', 'packages', 'supabase', 'scripts', 'infrastructure', 'patches', '.github'];
 const FILES = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'tsconfig.json', 'app.json', '.npmrc', '.dockerignore', 'docs/engineering/exit/exit-map.json'];
-const IGNORE = new Set(['node_modules', '.git', '.next', '.expo', '.smoke', '.tmp', '.temp', '.superpowers', 'dist', 'out', 'web-build', 'ios', 'android', '__pycache__', '.terraform', 'upstream', '.DS_Store']);
+const IGNORE = new Set(['node_modules', '.git', '.next', '.expo', '.smoke', '.tmp', '.temp', '.superpowers', 'dist', 'out', 'web-build', 'ios', 'android', 'coverage', '__pycache__', '.terraform', 'upstream', '.DS_Store']);
+// Local Expo/tooling files that appear after `expo start` but never in CI install+typecheck; hashing them
+// made security:infra / exit:map stale on GitHub while the same commit passed on a developer machine.
+const IGNORE_FILES = new Set(['expo-env.d.ts']);
 const EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.cjs', '.mjs', '.json', '.sql', '.py', '.tf', '.yml', '.yaml', '.toml', '.sh', '.patch', '.css', '.scss', '.html', '.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif', '.wasm', '.ttf', '.otf', '.woff', '.woff2', '.md', '.service', '.timer', '.npmrc']);
 const ADAPTER_METHODS = new Set(['publicUrl', 'upload', 'sign', 'list', 'remove']);
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+/** Binary path order so content hashes match across locales (localeCompare is not stable for CI). */
+const byPath = (a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
 const reviewers = kind => kind.startsWith('auth.') ? ['EXIT_SERVICES', 'AUTH', 'SESSION_SECURITY']
   : kind.startsWith('storage.') ? ['EXIT_SERVICES', 'STORAGE', 'RECOVERY']
   : kind.startsWith('realtime.') ? ['EXIT_SERVICES', 'REALTIME']
@@ -18,7 +23,9 @@ const reviewers = kind => kind.startsWith('auth.') ? ['EXIT_SERVICES', 'AUTH', '
 
 function safeScope(relative) {
   const parts = relative.split('/');
-  return !parts.some((part, index) => IGNORE.has(part) || part.startsWith('.env')
+  const basename = parts[parts.length - 1] ?? '';
+  return !IGNORE_FILES.has(basename)
+    && !parts.some((part, index) => IGNORE.has(part) || part.startsWith('.env')
     || /^(?:credentials?|secrets?|runtime-cache|customer-data|backups?|exports?|logs?|cache)(?:[._-]|$)/i.test(part)
       && !(parts[0] === 'infrastructure' && parts[1] === 'backup' && (index === 1 || index === 2 && part === 'backup.py')))
     && !/\.(?:env|local|secret|credentials|tfstate|tfplan|age|pem|key|p8|p12|jks|sqlite|db|dump|log)(?:\.|$)/i.test(relative)
@@ -232,8 +239,8 @@ export function collectExitInventory(root) {
       && !relative.includes('/__tests__/') && !/\.test\.[^.]+$/.test(relative)) callsites.push(...sdkCallsites(bytes.toString('utf8'), relative));
   }
   for (const relative of [...ROOTS, ...FILES]) walk(relative);
-  sourceFiles.sort((a, b) => a.path.localeCompare(b.path));
-  callsites.sort((a, b) => a.path.localeCompare(b.path) || a.line - b.line || a.column - b.column || a.kind.localeCompare(b.kind));
+  sourceFiles.sort(byPath);
+  callsites.sort((a, b) => byPath(a, b) || a.line - b.line || a.column - b.column || (a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : 0));
   const inventory = staticInventory(sourceFiles, sourceText, callsites);
   const contentHash = sha(JSON.stringify(sourceFiles));
   const unresolvedCalls = callsites.filter(site => site.reviewRequired);
