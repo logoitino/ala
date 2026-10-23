@@ -20,6 +20,7 @@ import { addUserAura, emitPlayerAura, emitProfileAura } from '@/lib/aura';
 import { paymentIntentIdFromSecret, resolveTipOrigin, type TipEntry, type TipOrigin } from '@/lib/finance';
 import { createPaymentIntent, incrementBackerCount } from '@/lib/payments';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { resolveSessionUserId } from '@/lib/sessionToken';
 import { NATIVE_STRIPE_UNAVAILABLE_MESSAGE, useStripe } from '@/lib/stripe';
 import { supportSignals } from '@/services/SupportSignalManager';
 import { telemetry } from '@/services/TelemetryManager';
@@ -72,20 +73,6 @@ export async function readMaloDroppedCount(): Promise<number> {
 async function bumpMaloDroppedCount() {
   const next = (await readMaloDroppedCount()) + 1;
   await AsyncStorage.setItem(MALO_DROPPED_KEY, String(next));
-}
-
-/**
- * @purpose Live Auth user id at call time (Soft-Wall resume may invoke a pre-login `startCheckout` closure).
- * @param fallback React-auth id when `getSession` has not hydrated yet.
- * @returns Session user id when present, otherwise `fallback`.
- * @sideEffects `supabase.auth.getSession` when Supabase is configured.
- */
-async function resolveFanId(fallback: string | null): Promise<string | null> {
-  if (isSupabaseConfigured) {
-    const { data } = await supabase.auth.getSession();
-    if (data.session?.user.id) return data.session.user.id;
-  }
-  return fallback;
 }
 
 function applyAuraAward(
@@ -221,7 +208,7 @@ export function useTipCheckout() {
         paymentSucceeded = true;
         await onPaid?.();
 
-        const tipperId = await resolveFanId(userIdRef.current);
+        const tipperId = await resolveSessionUserId(userIdRef.current);
         const recipientId = !skipBacker && player?.id ? player.id : null;
 
         // A compliance freeze (or any other insert-denied response) on the `tips` ledger row means

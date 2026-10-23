@@ -327,9 +327,10 @@ Guest Vault unlock on Highlights went straight to PaymentSheet; Soft-Wall resume
 Subscribe could still close over a pre-login `user?.id`, so `tips.fan_id`, payer Aura and the
 `subscriptions` insert were skipped. Changed: `ReelCard.unlockVault` (and Profile / athlete-sheet
 Subscribe) use Soft-Wall `kind: 'exclusive'`; `useTipCheckout` and `useAthleteSubscription.grant`
-resolve the fan via `getSession` + a user-id ref at call time. Coverage / shared Soft-Wall gates
-list Vault. PaymentIntent JWT auth unchanged. Not verified: Expo Go / preview device smoke after
-sign-in resume. Gift counsel / hosted SQL remain COORD-02.
+resolve the fan via `lib/sessionToken.resolveSessionUserId` + a user-id ref at call time (keeps
+`app:data-boundaries`). Coverage / shared Soft-Wall gates list Vault. IP counsel packet refreshed
+for source currency. PaymentIntent JWT auth unchanged. Not verified: Expo Go / preview device smoke
+after sign-in resume. Gift counsel / hosted SQL remain COORD-02.
 
 ### 2026-10-23 — Exit inventory ignores Expo local stubs for CI parity
 

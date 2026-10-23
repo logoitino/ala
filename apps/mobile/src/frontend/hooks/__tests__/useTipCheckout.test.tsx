@@ -19,13 +19,8 @@ jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: 
 jest.mock('@/context/CelebrationContext', () => ({ useOptionalCelebration: () => null }));
 jest.mock('@/lib/stripe', () => ({ useStripe: () => ({ initPaymentSheet: async () => ({}), presentPaymentSheet: mockPresent }) }));
 jest.mock('@/lib/payments', () => ({ createPaymentIntent: (...args: unknown[]) => mockIntent(...args), incrementBackerCount: (...args: unknown[]) => mockIncrement(...args) }));
-jest.mock('@/lib/supabase', () => ({
-  isSupabaseConfigured: true,
-  supabase: {
-    from: () => ({ insert: mockInsert }),
-    auth: { getSession: async () => ({ data: { session: { user: { id: 'fan' } } } }) },
-  },
-}));
+jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: { from: () => ({ insert: mockInsert }) } }));
+jest.mock('@/lib/sessionToken', () => ({ resolveSessionUserId: async (fallback: string | null) => fallback ?? 'fan' }));
 jest.mock('@/lib/aura', () => ({ addUserAura: async () => ({ aura_points: 0 }), emitPlayerAura: jest.fn(), emitProfileAura: jest.fn() }));
 jest.mock('@/lib/walletPay', () => ({ walletPayOptions: () => ({}) }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackCheckoutLatency: jest.fn(), trackIssue: jest.fn() } }));

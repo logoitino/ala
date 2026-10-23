@@ -9,25 +9,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 
 import { useAuth } from '@/context/AuthContext';
+import { resolveSessionUserId } from '@/lib/sessionToken';
 import { fetchActiveSubscription, insertSubscription, isPlayerUuid } from '@/lib/subscriptions';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 function storageKey(playerId: string, userId?: string | null) {
   return userId ? `tapuai.exclusiveSub.${userId}.${playerId}` : `tapuai.exclusiveSub.guest.${playerId}`;
-}
-
-/**
- * @purpose Live Auth user id at call time (Soft-Wall resume may invoke a pre-login `grant` closure).
- * @param fallback React-auth id when `getSession` has not hydrated yet.
- * @returns Session user id when present, otherwise `fallback`.
- * @sideEffects `supabase.auth.getSession` when Supabase is configured.
- */
-async function resolveSubscriberId(fallback: string | null): Promise<string | null> {
-  if (isSupabaseConfigured) {
-    const { data } = await supabase.auth.getSession();
-    if (data.session?.user.id) return data.session.user.id;
-  }
-  return fallback;
 }
 
 /**
@@ -96,7 +83,7 @@ export function useAthleteSubscription(playerId: string | undefined) {
   const grant = useCallback(async () => {
     if (!playerId) return;
 
-    const subscriberId = await resolveSubscriberId(userIdRef.current);
+    const subscriberId = await resolveSessionUserId(userIdRef.current);
 
     // No server-side check is possible here (guest, Supabase not configured, or a non-UUID
     // placeholder id) — nothing to gate on, so unlock locally as before.
