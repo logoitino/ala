@@ -3,7 +3,7 @@
  *
  *   node scripts/replay/trivia-play-together-replay.mjs /tmp/books01-pg/pkg/package/dist
  *
- * Builds the whole canonical schema (including QUIZ-03) on PGlite with the Supabase stubs from schema-replay.mjs,
+ * Builds the whole canonical schema (including QUIZ-03) on PGlite with the Supabase stubs from supabase-stubs.mjs,
  * then calls every RPC as a real signed-in actor. A few checks swap the internal week-end helper as the database
  * owner to simulate the UTC week boundary, and backdate item deadlines; both are restored before the next check.
  * @sideEffects Disposable in-memory database only; no hosted calls.
@@ -13,16 +13,14 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
+import { SUPABASE_STUBS } from './supabase-stubs.mjs';
 
 const dist = process.argv[2] || '/tmp/books01-pg/pkg/package/dist';
 const { PGlite } = await import(pathToFileURL(path.resolve(dist, 'index.js')).href);
 const { pgcrypto } = await import(pathToFileURL(path.resolve(dist, 'contrib/pgcrypto.js')).href);
 const db = new PGlite({ extensions: { pgcrypto } });
-const stubs = fs.existsSync('scripts/replay/supabase-stubs.mjs')
-  ? (await import(pathToFileURL(path.resolve('scripts/replay/supabase-stubs.mjs')).href)).SUPABASE_STUBS
-  : fs.readFileSync('scripts/replay/schema-replay.mjs', 'utf8').match(/const SUPABASE_STUBS = String.raw`([\s\S]*?)`;/)?.[1];
-assert.ok(stubs, 'Supabase stubs not found');
-await db.exec(stubs);
+assert.ok(SUPABASE_STUBS, 'Supabase stubs not found');
+await db.exec(SUPABASE_STUBS);
 await db.exec(fs.readFileSync('apps/mobile/src/backend/db/schema.sql', 'utf8'));
 
 const adults = ['admin', 'fan', 'ana', 'ben', 'cal', 'dee', 'eve', 'gus', 'fred', 'lim', 'tries', 'joiner', 'erase', 'gone', 'heir', 'solo', 'x1', 'y1', 'z1',

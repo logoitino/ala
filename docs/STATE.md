@@ -321,6 +321,10 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-10-23 — Replay stub import on exit-docs-home
+
+Cherry-picked quiz replay `SUPABASE_STUBS` import fix so CI `timed-trivia-replay` bootstrap matches `supabase-stubs.mjs`. Exit map re-announced on this branch.
+
 ### 2026-10-23 — Exit reading home under `docs/engineering/exit/`
 
 - Reading documents for Redundancy & Exit now live in one section, [docs/engineering/exit/README.md](engineering/exit/README.md). [docs/README.md](README.md) points at that index as the exit section. Charter, generated map, security report, runbooks, and plans are under that folder; change notices stay in [EXIT_CHANGE_LOG](agents/EXIT_CHANGE_LOG.md).
