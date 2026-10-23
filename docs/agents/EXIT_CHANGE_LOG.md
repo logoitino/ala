@@ -10,6 +10,16 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `e9e50cf56b87` → `90677cd760b6` · announced by EXIT_SYNC (cursor/exit-setup-umask-9a86)
+
+App at announcement: commit `5e64aab301afc199158e312bf2383dae26a4eda0` + 1 uncommitted file(s), source `90677cd760b6e0d7d2d3cb9e676d36c8e830381e662ddb1b0e6cf8552c334502`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `infrastructure/exit/tests/setup.test.mjs 25304a630985b445b5bddfcac69f7fc449a9d844b174256d9c6e146fdc4f6166`; removed `infrastructure/exit/tests/setup.test.mjs a79631c90c89883591c1be2e6d698a63a406e130d50f8e6e615d4502e37ee660`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
+reviewed by EXIT_SYNC 2026-10-23: ok — fingerprint is only `infrastructure/exit/tests/setup.test.mjs`. `createSetup` still rejects an existing destination in `absent()` before any chmod; new trees stay mode 0700/0600. Workflow umask 077 is unchanged. Follow-up: `RECOVERY_SECURITY` has not recorded an independent review of this notice.
+
 ## 2026-10-22 · plan `49755cf71dce` → `e9e50cf56b87` · announced by Claude Code workstream 4 (account tags: blocked-tag fix 20261022150000 + staging catch-up replay; not applied)
 
 App at announcement: commit `f4f0be19ebe5383af6d1389bda4ba2c9608e8434` + 5 uncommitted file(s), source `e9e50cf56b8730ae892c4b34993fd1693aebb816248927f152461fba17e10110`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
