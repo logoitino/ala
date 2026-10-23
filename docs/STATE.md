@@ -321,6 +321,10 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-10-23 — QUIZ replay archives IQ mix for CI
+
+Quiz replays archive seeded approved IQ rows before personal starts (fixture only). Product seed unchanged.
+
 ### 2026-10-23 — Replay stub import (CI-REPLAY-01)
 
 Quiz replays import `SUPABASE_STUBS` from `supabase-stubs.mjs` (CI `timed-trivia-replay` bootstrap). Exit plan re-announced on this branch. No schema change.

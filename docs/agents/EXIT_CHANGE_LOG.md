@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `bfe0524be471` → `323516068907` · announced by POLLS IQ archive on cursor/ci-trunk-schema-exit-9a86
+
+App at announcement: commit `1c289c57b9619e7515bb0cc2cc2cbeca9c13ea90` + 3 uncommitted file(s), source `323516068907ff49961e74390e62e673469c513a9f7432678a17fd307f3178eb`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `scripts/replay/fresh-questions-replay.mjs 07292ecc2d02b9bdf1bc0346f3dee3c11d9b5e59d231aa3ed0d2e61ce7f63bcf`, `scripts/replay/life-playbook-replay.mjs 1aafe1267f00dcebcdcc19cf35e2aea161b61d23259f525e658e14c04e2cdf4d`, `scripts/replay/trivia-play-together-replay.mjs c5610785a1b5864f49be33408f7d84e4041c509e3b8a438f71bb8e0881b03a07`; removed `scripts/replay/fresh-questions-replay.mjs aa112df53d4f0e0f20386da37f85376263a64045a64eb3c389e9680e43f01dec`, `scripts/replay/life-playbook-replay.mjs a3592f9e23fb13fdc275caf95c435a9d43b3cfb5512e0ef7cd06cff541e10f99`, `scripts/replay/trivia-play-together-replay.mjs 2974ee8fef294e6c970dc9d6a3fa1624e88c322588a306cf3d919d2077a19bf9`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-23 · plan `6c8d38b4366a` → `bfe0524be471` · announced by EXIT_SYNC replay stub import on cursor/ci-trunk-schema-exit-9a86
 
 App at announcement: commit `ed24bc028a9fe32079e989eda2680c7344199514` + 5 uncommitted file(s), source `bfe0524be471817de14cc34a1e75f01dcadac3da60470ffa2e0f17ca35a86b5d`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
