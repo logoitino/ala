@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `c6e500f391ab` → `eaeb11fc8b20` · announced by cloud-agent: quiz stub import on exit-setup-umask
+
+App at announcement: commit `addad2c6a495265b4098b5d0d71885222e841569` + 5 uncommitted file(s), source `eaeb11fc8b20aabf90f180a461f8f8c999b4ba96662569098a8f764b02158d4d`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `scripts/replay/fresh-questions-replay.mjs 07292ecc2d02b9bdf1bc0346f3dee3c11d9b5e59d231aa3ed0d2e61ce7f63bcf`, `scripts/replay/life-playbook-replay.mjs 1aafe1267f00dcebcdcc19cf35e2aea161b61d23259f525e658e14c04e2cdf4d`, `scripts/replay/sport-quiz-replay.mjs 855694eabf9ddc57ef7b55a3e361d82c3133d136f9f1639225a05224a119a50b`, `scripts/replay/timed-trivia-replay.mjs 1a7169113b6050c69e9b8254fca2909d068ee78f3169d2c118932d37235ef967`, `scripts/replay/trivia-play-together-replay.mjs c5610785a1b5864f49be33408f7d84e4041c509e3b8a438f71bb8e0881b03a07`; removed `scripts/replay/fresh-questions-replay.mjs 37faa4cd4d5b7231722890f178dace217e0acce8f70d33051c68e085f0c6a6c7`, `scripts/replay/life-playbook-replay.mjs 6480138737f0357e40431b2f288d6c451e998c8fce01737d1d0ad58f0bb32dc9`, `scripts/replay/sport-quiz-replay.mjs dc7a44bcda7b0e4bcc81f31b6ba070c03c4f055135fd736f2d38eabad89de739`, `scripts/replay/timed-trivia-replay.mjs aa3dc6ea34e5a52e8c25b8248cb48b7bf69ee8fc2ef6a2ef37f08659545d0af2`, `scripts/replay/trivia-play-together-replay.mjs 6218f9e5596af81fd2493a7d36028166053c6cd90454f67dad28a44c45a69e80`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-23 · plan `528bfe22494b` → `c6e500f391ab` · announced by cloud-agent: schema re-apply on exit-setup-umask for CI
 
 App at announcement: commit `6be4fb9d7003da4ab2519c488c1134cdd36118ee` + 2 uncommitted file(s), source `c6e500f391abc4f7b176d658d4d139a0d55a4672e3c43ee12b4b0f08cfd70d52`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

@@ -16,16 +16,14 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
+import { SUPABASE_STUBS } from './supabase-stubs.mjs';
 
 const dist = process.argv[2] || '/tmp/books01-pg/pkg/package/dist';
 const { PGlite } = await import(pathToFileURL(path.resolve(dist, 'index.js')).href);
 const { pgcrypto } = await import(pathToFileURL(path.resolve(dist, 'contrib/pgcrypto.js')).href);
 const db = new PGlite({ extensions: { pgcrypto } });
-const stubs = fs.existsSync('scripts/replay/supabase-stubs.mjs')
-  ? (await import(pathToFileURL(path.resolve('scripts/replay/supabase-stubs.mjs')).href)).SUPABASE_STUBS
-  : fs.readFileSync('scripts/replay/schema-replay.mjs', 'utf8').match(/const SUPABASE_STUBS = String.raw`([\s\S]*?)`;/)?.[1];
-assert.ok(stubs, 'Supabase stubs not found');
-await db.exec(stubs);
+assert.ok(SUPABASE_STUBS, 'Supabase stubs not found');
+await db.exec(SUPABASE_STUBS);
 await db.exec(fs.readFileSync('apps/mobile/src/backend/db/schema.sql', 'utf8'));
 
 // Actors ----------------------------------------------------------------------------------------------------------------
@@ -114,6 +112,10 @@ const audience = async (k, level, isPrivate = true) => {
 const factQuestion = async factId => (await one('select question_id from public.quiz_athlete_facts where id=$1', [factId])).question_id;
 
 for (const k of players) await prefs(k);
+// Seeded IQ mix stays approved in product schema; archive it here so personal sport rounds stay fixture-only.
+const iqSeed = (await db.query("select id from public.sport_quiz_questions where sport = 'IQ' and topic_category = 'general' and status = 'approved'")).rows;
+assert.equal(iqSeed.length, 6);
+for (const row of iqSeed) await question(row.id, 'archive', { reason: 'QUIZ-05 replay isolates sport fixtures from the IQ mix seed.' });
 for (let i = 0; i < 30; i++) await approved('Basketball');
 
 // Advance a personal round to `target` (1-based), answering every item before it; returns the active question there.
