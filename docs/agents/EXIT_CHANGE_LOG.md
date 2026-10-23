@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `bf78a263650e` → `5cc435a1b72d` · announced by cloud-agent: exclude expo-env from exit inventory for CI
+
+App at announcement: commit `e99ac254812e833a7ed7dc4f4f8f5abf1a0ec5a3` + 1 uncommitted file(s), source `5cc435a1b72ddc2358611b1131193711a074134b35ecff4b8ded8df5355066d2`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `scripts/exit-inventory.mjs d7e2d68a671c7962be53be5da92ae4efd96e99314b5a0c7390f1032d27be0a21`; removed `apps/mobile/expo-env.d.ts 6fc02634da46d3edc5a88eec9173ba6bf709726be3cba83c73ebd8e859d5c147`, `scripts/exit-inventory.mjs 4e994c6cf5ffe4839b2ccf4d524f931187afe311d868f44b69fde6f042f33549`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-23 · plan `bf78a263650e` → `bf78a263650e` · announced by EXIT_SYNC refresh after IQ archive on cursor/schema-reapply-idempotent-9a86
 
 App at announcement: commit `86e718b2cbe4d4470164ab00ff4f48e49c0fd3c6`, source `bf78a263650e9b4a20eb4baeb325b21a35f5b605cd05581bda54b8cdce9ddd4d`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
