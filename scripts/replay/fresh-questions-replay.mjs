@@ -112,6 +112,10 @@ const audience = async (k, level, isPrivate = true) => {
 const factQuestion = async factId => (await one('select question_id from public.quiz_athlete_facts where id=$1', [factId])).question_id;
 
 for (const k of players) await prefs(k);
+// Seeded IQ mix stays approved in product schema; archive it here so personal sport rounds stay fixture-only.
+const iqSeed = (await db.query("select id from public.sport_quiz_questions where sport = 'IQ' and topic_category = 'general' and status = 'approved'")).rows;
+assert.equal(iqSeed.length, 6);
+for (const row of iqSeed) await question(row.id, 'archive', { reason: 'QUIZ-05 replay isolates sport fixtures from the IQ mix seed.' });
 for (let i = 0; i < 30; i++) await approved('Basketball');
 
 // Advance a personal round to `target` (1-based), answering every item before it; returns the active question there.
