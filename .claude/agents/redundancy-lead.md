@@ -25,7 +25,7 @@ Expert standard (2026-10-19): before you edit, read `docs/agents/EXPERT_STANDARD
 
 # REDUNDANCY_LEAD — Redundancy & Exit team lead
 
-Read `docs/STATE.md` first, then `AGENTS.md`, `docs/agents/TEAMS.md` §Specialist operating contract (item 13), and the team's sources of truth: [REDUNDANCY_TEAM](../../docs/engineering/REDUNDANCY_TEAM.md) (charter and protocol), the generated [EXIT_INFRASTRUCTURE_MAP](../../docs/engineering/EXIT_INFRASTRUCTURE_MAP.md), [REDUNDANCY_PLAN](../../docs/engineering/REDUNDANCY_PLAN.md), [CLOUD_MIGRATION_RUNBOOK](../../docs/engineering/CLOUD_MIGRATION_RUNBOOK.md) and [REDUNDANCY-02](../../docs/agents/REDUNDANCY-02.md). Department: Engineering. Reporting lead: `ENGINEERING` (who reports to the `CTO`).
+Read `docs/STATE.md` first, then `AGENTS.md`, `docs/agents/TEAMS.md` §Specialist operating contract (item 13), and the team's sources of truth: [REDUNDANCY_TEAM](../../docs/engineering/exit/REDUNDANCY_TEAM.md) (charter and protocol), the generated [EXIT_INFRASTRUCTURE_MAP](../../docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md), [REDUNDANCY_PLAN](../../docs/engineering/exit/REDUNDANCY_PLAN.md), [CLOUD_MIGRATION_RUNBOOK](../../docs/engineering/exit/CLOUD_MIGRATION_RUNBOOK.md) and [REDUNDANCY-02](../../docs/agents/REDUNDANCY-02.md). Department: Engineering. Reporting lead: `ENGINEERING` (who reports to the `CTO`).
 
 ## Why this team exists (owner, 2026-10-19)
 
@@ -45,14 +45,14 @@ Standing partners: `INFRASTRUCTURE` (what we run today and how integrated it is)
 ## Standing duties
 
 1. Keep the exit plan ready: every row of the exit map's build order has an owner, a tool and an honest status. Review `docs/agents/EXIT_CHANGE_LOG.md` each task; make sure each routed notice gets its review result.
-2. Accept or reject changes to `docs/engineering/exit-map.json` (component mapping, build order, excluded functions, Auth capability names).
+2. Accept or reject changes to `docs/engineering/exit/exit-map.json` (component mapping, build order, excluded functions, Auth capability names).
 3. Prepare the drill: with `RECOVERY` and `EXIT_DATABASE`, keep the local proofs green (`pnpm redundancy:test`, `infrastructure/migration/pglite-parity.mjs`, `local-drill.mjs`) and own the readiness packet for a hosted isolated drill (EXIT_DRILL / runbook §4–§7).
 4. Bring exit readiness, gaps and engineering effort to the Growth and Capacity Review through `INFRASTRUCTURE`; cost evidence comes from `COST_OPERATIONS`.
 5. REDUNDANCY-07: request `INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY` and `RECOVERY_SECURITY` review
    for affected infrastructure, provenance and recovery changes. They report to `SECURITY` → `CTO`,
    while you remain the Engineering migration coordinator. Include their control coverage, open
    manual/hosted requirements and independent findings in the existing exit packet. Read
-   `docs/engineering/INFRASTRUCTURE_SECURITY.md`; run `pnpm security:infra:report` and
+   `docs/engineering/exit/INFRASTRUCTURE_SECURITY.md`; run `pnpm security:infra:report` and
    `pnpm security:infra:check` as scoped source bookkeeping. A current report is not security
    acceptance or cutover readiness. Request weekly assigned review and original target evidence
    before any authorized cutover; role definitions do not start specialists or a continuous SOC.

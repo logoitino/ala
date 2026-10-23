@@ -20,8 +20,8 @@ this session; no repository role was dispatched). **Status:** local setup comple
 | A redundant team working on the different database | Five new registry agents (Engineering): `REDUNDANCY_LEAD` → `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD`; roster 107 → 112. Partners keep their reporting lines |
 | The one that updates the rest of the team | `EXIT_SYNC`: owns the generator, baseline, Stop-hook guard and [EXIT_CHANGE_LOG](EXIT_CHANGE_LOG.md); routed notices per area |
 | App changes automatically update the plan / backup version | `scripts/exit-map.mjs` regenerates the map and plan version from the code; Stop hook (`scripts/exit-map-guard.sh`) in every Claude session; `pnpm exit:map:check` in `pnpm check` and CI fails on stale map, coverage gaps or unannounced changes; the recovery source capsule now carries the map, `exit-map.json` and baseline |
-| Full infrastructure map to build everything on a cloud base | Generated [EXIT_INFRASTRUCTURE_MAP](../engineering/EXIT_INFRASTRUCTURE_MAP.md): 12 components × exit A/B × AWS/Azure, owners, detected inventory, 11-step build order |
-| Full documents of the infrastructure, teams and agents | [REDUNDANCY_TEAM](../engineering/REDUNDANCY_TEAM.md) charter (documents, responsibilities, change protocol diagram, cadence); TEAMS contract item 13, hierarchy, expert standards, department plans, AGENTS.md, queue |
+| Full infrastructure map to build everything on a cloud base | Generated [EXIT_INFRASTRUCTURE_MAP](../engineering/exit/EXIT_INFRASTRUCTURE_MAP.md): 12 components × exit A/B × AWS/Azure, owners, detected inventory, 11-step build order |
+| Full documents of the infrastructure, teams and agents | [REDUNDANCY_TEAM](../engineering/exit/REDUNDANCY_TEAM.md) charter (documents, responsibilities, change protocol diagram, cadence); TEAMS contract item 13, hierarchy, expert standards, department plans, AGENTS.md, queue |
 
 ## Status and file claims
 
@@ -58,7 +58,21 @@ the app must work the same and pull the same data; plan cache, load balancer and
 | **App finding:** guests cannot read `public.rallies` — policy calls `rally_manager_role()`, which anon may not execute after function-access hardening (42501). Development has that hardening since 2026-10-17. Not fixed (SQL is owner-applied); route to RALLY / RLS_SECURITY | Reproduced on canonical schema in PGlite |
 
 **Concurrency stop (22:38 MDT):** Codex session (REDUNDANCY-03, `EXIT_READY_IMPLEMENTATION_PLAN.md`) began editing `scripts/exit-map.mjs`
-and `docs/engineering/exit-map.json` and added `scripts/exit-inventory.mjs` (imports `typescript`) while this session was working. Per TEAMS
+and `docs/engineering/exit/exit-map.json` and added `scripts/exit-inventory.mjs` (imports `typescript`) while this session was working. Per TEAMS
 contract item 10 this session stopped editing those files and asked the owner how to coordinate. Not yet done by this session: GO-path gate
 test (blocked by the new import in a node_modules-free copy), runbook §8 step 0 (preflight), charter / agent-duty wording for status and
 preflight, STATE §4 line, final `pnpm check`. Claude's claim on `exit-map.mjs` / `exit-map.json` is released to the owner's decision.
+
+## Hierarchy sync receipt — exit reading home (2026-10-23)
+
+**Task:** CTO hierarchy sync for the move of Redundancy & Exit reading documents into `docs/engineering/exit/` (plans under `docs/engineering/exit/plans/`). **Executor:** VP_OPERATIONS, this Cursor session (coordination only; no new role; no claim that EXIT_* or Security specialists ran or approved a release).
+
+**Reporting checked, unchanged:** `ENGINEERING` → `REDUNDANCY_LEAD` → `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD`. `INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY`, and `RECOVERY_SECURITY` still report to `SECURITY` (with `RLS_SECURITY`, `SESSION_SECURITY`, `THREAT_DETECTION`). Registry leads match `TEAM_HIERARCHY` and `TEAMS`. Model pins unchanged.
+
+**Files:** reading-home links corrected in `TEAMS.md` (alignment stamp; contract item 13 already pointed at `exit/README`), `TEAM_HIERARCHY.md`, `BACKUP_OPERATIONS.md`, `ENVIRONMENTS_AND_HOSTING.md`, `PORTABILITY.md`, `PORTABLE_INTEGRATIONS.md`, `design/MEDIA_SERVICE_PLAN.md`, and the exit runbooks/charter/plan. Generators `scripts/exit-map.mjs` and `infrastructure/security/report.mjs` now emit links from `docs/engineering/exit/`. Regenerated `EXIT_INFRASTRUCTURE_MAP.md` and `INFRASTRUCTURE_SECURITY_REPORT.md`. Announced content-fingerprint plan `e9e50cf56b87` → `40003df5cd08` in `EXIT_CHANGE_LOG.md` (notice only; named reviewers have not recorded results). `WORK_QUEUE.md`, `EXPERT_STANDARDS.md`, and registry reporting lines needed no lead or path correction. No `docs/engineering/EXIT_*` or `docs/engineering/REDUNDANCY_TEAM.md` paths remain outside the new home.
+
+**Check (2026-10-23):** `pnpm agents:check` — ok, 115 agents; files, ownership paths, reporting graph, and team docs agree. `node scripts/exit-map.mjs --check` — ok, plan `40003df5cd08`. `node infrastructure/security/report.mjs --check` — ok; operational acceptance not established.
+
+**Gaps:** hosted restore and cutover remain unclaimed. The 2026-10-23 exit-map notice is not a review. No provider account, hosted drill, or cutover is authorized by this receipt.
+
+**Next owner:** named reviewers on the 2026-10-23 notice record their own results; `REDUNDANCY_LEAD` keeps hosted drill/cutover with the owner. `CTO` integrates this receipt.

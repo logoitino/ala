@@ -1,15 +1,15 @@
 # Exit drill runbook (E3): prove we can leave managed Supabase
 
 **Owner:** `INFRASTRUCTURE` keeps this runbook ready. The drill itself is run by `BACKEND`, `RELIABILITY` and
-`COST_OPERATIONS` ([ENVIRONMENTS_AND_HOSTING](ENVIRONMENTS_AND_HOSTING.md) E3). Owner decision 2026-10-14: stay on
-managed Supabase, with self-hosted Supabase as the rehearsed exit ([PORTABILITY](PORTABILITY.md) exit A).
+`COST_OPERATIONS` ([ENVIRONMENTS_AND_HOSTING](../ENVIRONMENTS_AND_HOSTING.md) E3). Owner decision 2026-10-14: stay on
+managed Supabase, with self-hosted Supabase as the rehearsed exit ([PORTABILITY](../PORTABILITY.md) exit A).
 **Status: ready to rehearse locally (step 0). The full drill waits for the E1 baseline.** A machine with Docker and an
 approved temporary cloud VM are also needed. Synthetic data only, ever.
 
 ## Why
 
 The exit is only real once it has been done. The drill measures how long a move takes, which steps break, and what is
-missing from the repo. Each run updates this page and the [infrastructure register](INFRASTRUCTURE_REGISTER.md).
+missing from the repo. Each run updates this page and the [infrastructure register](../INFRASTRUCTURE_REGISTER.md).
 
 ## Step 0 — local rehearsal (works today, no cloud)
 
@@ -24,7 +24,7 @@ Record the date, executor, results and gaps in §5.
 ## Step 1–6 — full drill (after E1; quarterly)
 
 The [cloud migration runbook](CLOUD_MIGRATION_RUNBOOK.md) and
-[infrastructure folder](../../infrastructure/README.md) now provide executable preparation for
+[infrastructure folder](../../../infrastructure/README.md) now provide executable preparation for
 these steps. Their local synthetic tests do not replace this drill; the operator must supply a
 reviewed upstream commit/checksum/image inventory and compatible isolated PostgreSQL target.
 

@@ -1,7 +1,7 @@
 <!-- Exact source releases and independent readiness evidence keep the existing app portable without a second implementation. -->
 # Current exit release
 
-Start with [EXIT_READY_RUNBOOK](../../docs/engineering/EXIT_READY_RUNBOOK.md).
+Start with [EXIT_READY_RUNBOOK](../../docs/engineering/exit/EXIT_READY_RUNBOOK.md).
 The source release carries the same app, SQL, migrations, Edge adapters and infrastructure
 code used by this checkout. Running self-hosted Supabase preserves its interfaces. Moving
 to a different Auth/API implementation is a separate exit B project.

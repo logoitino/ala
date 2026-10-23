@@ -13,7 +13,7 @@ Current managed Supabase remains the primary. The recommended exit preserves the
 
 | Executor | Claimed files / responsibility | Claimed | Status |
 | --- | --- | --- | --- |
-| Codex documentation session `/root/redundancy_documentation` | This tracker; `docs/engineering/REDUNDANCY_PLAN.md`, `docs/engineering/design/REDUNDANCY_IMPLEMENTATION_PLAN.md`, `docs/engineering/CLOUD_MIGRATION_RUNBOOK.md` | 2026-10-19 | Documentation complete locally; claims released to root for integration |
+| Codex documentation session `/root/redundancy_documentation` | This tracker; `docs/engineering/exit/REDUNDANCY_PLAN.md`, `docs/engineering/exit/plans/REDUNDANCY_IMPLEMENTATION_PLAN.md`, `docs/engineering/exit/CLOUD_MIGRATION_RUNBOOK.md` | 2026-10-19 | Documentation complete locally; claims released to root for integration |
 | Codex root session | Backup / verify / restore tools and integration; shared README, STATE, CHANGELOG, governance and infrastructure indexes | 2026-10-19 | Local code/docs integration complete; claims released after checks |
 | Codex cloud infrastructure session | Container deployment, pinned upstream Supabase bootstrap, AWS and Azure templates | 2026-10-19 | Local implementation and checks complete; claims released |
 | Codex independent review `/root/recovery_review` | Read-only QA/Security/Data review of backup, restore, source policy, deployment and documentation | 2026-10-19 | Five concrete findings delivered, fixed and covered by local regression checks; review complete |

@@ -20,7 +20,7 @@ and refuse paths inside the checkout.
 
 | Step | Command | Result |
 | --- | --- | --- |
-| Freeze writes (cutover only) | [CLOUD_MIGRATION_RUNBOOK](../../docs/engineering/CLOUD_MIGRATION_RUNBOOK.md) | Quiesced backup evidence |
+| Freeze writes (cutover only) | [CLOUD_MIGRATION_RUNBOOK](../../docs/engineering/exit/CLOUD_MIGRATION_RUNBOOK.md) | Quiesced backup evidence |
 | Fingerprint the source **at the backup moment** | `python3 infrastructure/migration/parity.py fingerprint --env-file /etc/tapuai/source-readonly.env --out /var/lib/tapuai/restore-drills/source.json` | One read-only snapshot |
 | Back up, decrypt, verify | `backup.py`, `verify.py` (see [backup/README](../backup/README.md)) | Private stage with `database.toc` |
 | Propose the complete compatible exit list | `python3 infrastructure/migration/toc_review.py --toc STAGE/database.toc --out /var/lib/tapuai/restore-drills/reviewed.list --report /var/lib/tapuai/restore-drills/review.md --include-all-auth-data --source-fingerprint /var/lib/tapuai/restore-drills/source.json --target-fingerprint /var/lib/tapuai/restore-drills/target-bare.json` | Explicit full Auth opt-in; exit 0 = no undecided entries; 2 = entries need a person; 1 = refused |
@@ -91,7 +91,7 @@ Beyond and Fan Zone guards reject historical uploads/owner changes once applicat
 sequence is a fresh isolated compatible Supabase stack, optional reviewed Auth-owner preload, Storage bytes,
 reviewed owner reconciliation, then application database restoration. No live guard is disabled.
 
-Use the detailed commands in [CLOUD_MIGRATION_RUNBOOK section 6](../../docs/engineering/CLOUD_MIGRATION_RUNBOOK.md)
+Use the detailed commands in [CLOUD_MIGRATION_RUNBOOK section 6](../../docs/engineering/exit/CLOUD_MIGRATION_RUNBOOK.md)
 and [backup/README](../backup/README.md). Exact interfaces are:
 
 ```sh
@@ -200,6 +200,6 @@ The target in both proofs is PostgreSQL with Supabase stubs, not the pinned Supa
 to show the restore against the actual GoTrue/Storage/Realtime versions, Auth sign-in with restored users, and the
 timed end-to-end RTO. `pg_dump` must be at least the source server's major version.
 
-Full-app release and warm-target acceptance are coordinated by [EXIT_READY_RUNBOOK](../../docs/engineering/EXIT_READY_RUNBOOK.md)
+Full-app release and warm-target acceptance are coordinated by [EXIT_READY_RUNBOOK](../../docs/engineering/exit/EXIT_READY_RUNBOOK.md)
 and the [exit toolkit](../exit/README.md). The ownership plan has local generation/mock coverage; execution against
 the actual compatible Supabase target and functional Storage/Auth acceptance remain unproved.

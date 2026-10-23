@@ -2,7 +2,7 @@
 /**
  * Exit infrastructure map (REDUNDANCY-02). Keeps the redundant-database / move-off-Supabase plan in step with the app.
  *
- *   node scripts/exit-map.mjs                 regenerate docs/engineering/EXIT_INFRASTRUCTURE_MAP.md
+ *   node scripts/exit-map.mjs                 regenerate docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md
  *   node scripts/exit-map.mjs --check         CI / pnpm check: fail if the map is stale, a rule is broken, or app
  *                                             changes since the acknowledged baseline have not been announced
  *   node scripts/exit-map.mjs --pending       exit 3 when unacknowledged changes exist (used by the Stop hook)
@@ -16,7 +16,7 @@
  * It reads what the app actually uses — schema.sql (schemas, tables, views, functions, policies, triggers, the app's
  * attachments on Supabase tables, extensions, realtime tables, buckets), migrations, Edge Functions, API routes, Auth
  * methods, Realtime client use and public environment names — and joins it with the hand-kept mapping in
- * docs/engineering/exit-map.json (component → AWS / Azure for exit A and B, owners, build order). The full safe source/configuration content hash
+ * docs/engineering/exit/exit-map.json (component → AWS / Azure for exit A and B, owners, build order). The full safe source/configuration content hash
  * is the plan version; SDK sites expose literal and unresolved targets. Output is deterministic (no dates) so it only changes when the app does.
  *
  * Rules (fail in --check): every owner is a registry call; every mapped repo path exists; every Edge Function is in the
@@ -38,10 +38,12 @@ const args = process.argv.slice(2);
 const MODES = ['--check', '--pending', '--acknowledge', '--status', '--preflight', '--record-readiness'];
 const mode = (MODES.find((m) => args.includes(m)) ?? '--write').slice(2);
 const option = (name) => { const i = args.indexOf(name); return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : ''; };
-const OUT = 'docs/engineering/EXIT_INFRASTRUCTURE_MAP.md';
-const BASELINE = 'docs/engineering/exit-map.baseline.json';
+const OUT = 'docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md';
+const BASELINE = 'docs/engineering/exit/exit-map.baseline.json';
 const LOG = 'docs/agents/EXIT_CHANGE_LOG.md';
-const READINESS = 'docs/engineering/exit-readiness.json';
+const READINESS = 'docs/engineering/exit/exit-readiness.json';
+/** Markdown link from the generated map (one folder deeper than docs/engineering/). */
+const mapLink = (repoPath) => path.posix.relative(path.posix.dirname(OUT), repoPath);
 const writeMap = value => writeExitMap(root, OUT, value);
 const problems = [];
 const uniq = (items) => [...new Set(items)].sort();
@@ -51,7 +53,7 @@ const machine = collectExitInventory(root);
 const { inventory, planVersion, contentHash } = machine;
 if (args.includes('--json')) { console.log(JSON.stringify(machine)); process.exit(0); }
 // Validate source/mapping ancestry before parsing any hand-maintained mapping configuration.
-const config = JSON.parse(read('docs/engineering/exit-map.json'));
+const config = JSON.parse(read('docs/engineering/exit/exit-map.json'));
 const registry = JSON.parse(read('.claude/agents/registry.json')).agents;
 const calls = new Set(registry.map((a) => a.call));
 const { schemas, tables, views, functions, policies, triggers, attachments, extensions, realtimeTables, buckets,
@@ -71,7 +73,7 @@ function appSourceHash() { return { hash: contentHash, files: machine.sourceFile
 function gitState() {
   try {
     const git = argv => execFileSync('git', argv, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-    const relevant = ['apps', 'packages', 'supabase', 'scripts', 'infrastructure', 'patches', '.github', 'package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.npmrc', '.dockerignore', 'docs/engineering/exit-map.json'];
+    const relevant = ['apps', 'packages', 'supabase', 'scripts', 'infrastructure', 'patches', '.github', 'package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.npmrc', '.dockerignore', 'docs/engineering/exit/exit-map.json'];
     const status = git(['status', '--porcelain', '--untracked-files=all', '--', ...relevant]);
     return { commit: git(['rev-parse', 'HEAD']), branch: git(['branch', '--show-current']), dirty: status ? status.split('\n').length : 0 };
   } catch { return { commit: null, branch: null, dirty: 0 }; }
@@ -146,14 +148,14 @@ const team = ['REDUNDANCY_LEAD', 'EXIT_SYNC', 'EXIT_DATABASE', 'EXIT_SERVICES', 
 const partners = uniq(config.components.flatMap((c) => [c.owner, ...(c.with ?? [])]).filter((c) => !team.includes(c)));
 const agentRow = (call) => {
   const a = registry.find((x) => x.call === call);
-  return a ? `| \`${call}\` | ${a.department} | \`${a.lead}\` | ${a.tasks[0].replace(/\|/g, '\\|')} | [${path.basename(a.file)}](../../${a.file}) |` : `| \`${call}\` | — | — | not registered | — |`;
+  return a ? `| \`${call}\` | ${a.department} | \`${a.lead}\` | ${a.tasks[0].replace(/\|/g, '\\|')} | [${path.basename(a.file)}](${mapLink(a.file)}) |` : `| \`${call}\` | — | — | not registered | — |`;
 };
 const list = (items, max = 400) => (items.length ? items.slice(0, max).map((x) => `\`${x}\``).join(', ') + (items.length > max ? ` … (+${items.length - max})` : '') : '—');
 const esc = (s) => String(s).replace(/\|/g, '\\|');
 
 let readiness = exists(READINESS) ? JSON.parse(read(READINESS)) : null;
 const render = () => [
-  '<!-- GENERATED by scripts/exit-map.mjs from the code and docs/engineering/exit-map.json. Do not edit by hand. -->',
+  '<!-- GENERATED by scripts/exit-map.mjs from the code and docs/engineering/exit/exit-map.json. Do not edit by hand. -->',
   '# Exit infrastructure map — moving off Supabase to AWS or Azure',
   '',
   'The build map for the redundant database plan: everything the app uses on Supabase today, what replaces it on AWS or Azure',
@@ -184,7 +186,7 @@ const render = () => [
   '',
   ...(baseline ? (pending.length ? [
     `${pending.length} area(s) changed since plan \`${baseline.planVersion}\`. \`EXIT_SYNC\` announces them with`,
-    '`pnpm exit:map --acknowledge --by "<session>"`, which appends a routed notice to [EXIT_CHANGE_LOG](../agents/EXIT_CHANGE_LOG.md).',
+    `\`pnpm exit:map --acknowledge --by "<session>"\`, which appends a routed notice to [EXIT_CHANGE_LOG](${mapLink(LOG)}).`,
     '',
     '| Area | Added | Removed | Notify |',
     '| --- | --- | --- | --- |',

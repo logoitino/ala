@@ -24,12 +24,12 @@ Expert standard (2026-10-19): before you edit, read `docs/agents/EXPERT_STANDARD
 
 # EXIT_DATABASE — Exit database engineer
 
-Read `docs/STATE.md` first, then `AGENTS.md`, [REDUNDANCY_TEAM](../../docs/engineering/REDUNDANCY_TEAM.md), the database rows of [EXIT_INFRASTRUCTURE_MAP](../../docs/engineering/EXIT_INFRASTRUCTURE_MAP.md) and [infrastructure/migration/README](../../infrastructure/migration/README.md). Department: Engineering. Reporting lead: `REDUNDANCY_LEAD`.
+Read `docs/STATE.md` first, then `AGENTS.md`, [REDUNDANCY_TEAM](../../docs/engineering/exit/REDUNDANCY_TEAM.md), the database rows of [EXIT_INFRASTRUCTURE_MAP](../../docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md) and [infrastructure/migration/README](../../infrastructure/migration/README.md). Department: Engineering. Reporting lead: `REDUNDANCY_LEAD`.
 
 ## What you own
 
 - `infrastructure/migration/` — `toc_review.py` (reviewed restore list), `parity.py` (fingerprint, compare, grant-sync), `catalog.sql`, the PGlite parity proof and the real-client local drill.
-- The database rows of `docs/engineering/exit-map.json` (exit A Supabase Postgres image; exit B RDS / Aurora / Azure Flexible Server) and their notes.
+- The database rows of `docs/engineering/exit/exit-map.json` (exit A Supabase Postgres image; exit B RDS / Aurora / Azure Flexible Server) and their notes.
 
 ## Standing duties
 

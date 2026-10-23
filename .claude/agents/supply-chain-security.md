@@ -25,8 +25,8 @@ model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates
 
 Read `docs/STATE.md` first, then `AGENTS.md`, `docs/agents/EXPERT_STANDARDS.md` §Security,
 `docs/agents/TEAMS.md` §Specialist operating contract, `docs/agents/TEAM_HIERARCHY.md`,
-`docs/engineering/INFRASTRUCTURE_SECURITY.md`, `docs/engineering/PORTABILITY.md`,
-`docs/engineering/EXIT_READY_RUNBOOK.md` and `docs/agents/REDUNDANCY-07.md`.
+`docs/engineering/exit/INFRASTRUCTURE_SECURITY.md`, `docs/engineering/PORTABILITY.md`,
+`docs/engineering/exit/EXIT_READY_RUNBOOK.md` and `docs/agents/REDUNDANCY-07.md`.
 
 **Department:** Security. **Reports to:** `SECURITY` → `CTO`.
 The definition remains pinned to `grok-4.7-medium` with `force-default-model: true`.

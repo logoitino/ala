@@ -67,7 +67,7 @@ current backup source. Without a config, backup and
 prepared evidence report not configured. Exit `0` means accepted preparation observations, `2` means NO-GO
 missing/stale/incomplete observations, and `3` means invalid private health config. The report always retains
 `readyToCutOver: false`; it neither fetches remote data nor proves restore/cutover acceptance. See
-[EXIT_READY_RUNBOOK](EXIT_READY_RUNBOOK.md) for source and final readiness steps.
+[EXIT_READY_RUNBOOK](exit/EXIT_READY_RUNBOOK.md) for source and final readiness steps.
 
 **Observed setup (2026-10-20):** the private folder
 `/Users/seiuliian/Downloads/ala-sports-backup-setup-20261020` was created and template integrity passed.
@@ -197,7 +197,7 @@ python3 infrastructure/backup/fetch.py \
 
 Fetch downloads the ciphertext and sidecar into private temporary staging, verifies the age envelope/name/checksum and equality to the protected original digest, then publishes a new private destination with a fetch receipt. Failure does not publish a successful final destination. A completed fetch proves checked ciphertext retrieval for that object; decryption and restore remain unperformed.
 
-Use the independently held age identity with `verify.py` against the fetched archive, then follow the reviewed TOC/isolated target/Storage/finance/access workflow in [CLOUD_MIGRATION_RUNBOOK](CLOUD_MIGRATION_RUNBOOK.md). Keep fetched ciphertext and decrypted private stages separately identified. Repeat for every required cloud and record duration, result, gaps and cleanup.
+Use the independently held age identity with `verify.py` against the fetched archive, then follow the reviewed TOC/isolated target/Storage/finance/access workflow in [CLOUD_MIGRATION_RUNBOOK](exit/CLOUD_MIGRATION_RUNBOOK.md). Keep fetched ciphertext and decrypted private stages separately identified. Repeat for every required cloud and record duration, result, gaps and cleanup.
 
 ## 7. Required operational evidence
 

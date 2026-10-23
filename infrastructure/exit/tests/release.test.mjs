@@ -15,7 +15,7 @@ async function fixture(action) {
     'pnpm-lock.yaml': 'lockfileVersion: 9\n',
     'apps/mobile/src/backend/db/schema.sql': 'create table public.synthetic_copy(id uuid);\ncreate function public.synthetic_fn() returns int language sql as $$ select 1 $$;\n',
     'apps/mobile/src/frontend/lib/example.ts': "import {supabase} from './supabase';\nexport const read = () => supabase.from('synthetic_copy').select('*');\n",
-    'docs/engineering/exit-map.json': '{"version":1,"components":[]}',
+    'docs/engineering/exit/exit-map.json': '{"version":1,"components":[]}',
     'infrastructure/backup/backup.py': '"""Synthetic source fixture, no external operations."""\n',
     'infrastructure/backup/secrets.json': '{"synthetic_secret":"must-not-export"}',
   })) {

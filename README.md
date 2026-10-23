@@ -95,7 +95,7 @@ source headers, the agent registry and client credential markers). Single pieces
 | Know what is happening right now | [docs/STATE.md](docs/STATE.md) |
 | Understand the product direction | [docs/product/ROADMAP.md](docs/product/ROADMAP.md) |
 | See every document | [docs/README.md](docs/README.md) |
-| Back up Supabase and prepare AWS/Azure recovery | [infrastructure/README.md](infrastructure/README.md) · [redundancy plan](docs/engineering/REDUNDANCY_PLAN.md) · [migration runbook](docs/engineering/CLOUD_MIGRATION_RUNBOOK.md) |
+| Back up Supabase and prepare AWS/Azure recovery | [infrastructure/README.md](infrastructure/README.md) · [redundancy plan](docs/engineering/exit/REDUNDANCY_PLAN.md) · [migration runbook](docs/engineering/exit/CLOUD_MIGRATION_RUNBOOK.md) |
 
 ## License
 

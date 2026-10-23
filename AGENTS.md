@@ -188,12 +188,14 @@ public candidates; current poll counters do not implement this voting capability
 
 ### Redundancy & Exit: keep the move-off-Supabase plan current (REDUNDANCY-02)
 
-`REDUNDANCY_LEAD` (Engineering → `ENGINEERING`) leads `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES` and `EXIT_CLOUD`. Read
-[REDUNDANCY_TEAM](docs/engineering/REDUNDANCY_TEAM.md). Every app change updates the exit plan automatically:
-`scripts/exit-map.mjs` regenerates `docs/engineering/EXIT_INFRASTRUCTURE_MAP.md` (Stop hook in Claude sessions; `pnpm exit:map:check`
+`REDUNDANCY_LEAD` (Engineering → `ENGINEERING`) leads `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES` and `EXIT_CLOUD`.
+**Reading home (one folder):** [docs/engineering/exit/](docs/engineering/exit/README.md) — charter, generated map,
+security report, migration runbooks and plans. Runnable code stays under `infrastructure/`. Read
+[REDUNDANCY_TEAM](docs/engineering/exit/REDUNDANCY_TEAM.md). Every app change updates the exit plan automatically:
+`scripts/exit-map.mjs` regenerates `docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md` (Stop hook in Claude sessions; `pnpm exit:map:check`
 in `pnpm check` and CI). When the plan changed, announce it in the same change with `pnpm exit:map --acknowledge --by "<session>"`;
 the routed notice in `docs/agents/EXIT_CHANGE_LOG.md` tells the team who must review. A new Edge Function needs the self-host
-allowlist (`infrastructure/supabase/configure.py`) or an excluded reason in `docs/engineering/exit-map.json`; a new Auth method needs
+allowlist (`infrastructure/supabase/configure.py`) or an excluded reason in `docs/engineering/exit/exit-map.json`; a new Auth method needs
 an `authCapabilities` entry. Restores onto a Supabase stack need `parity.py grant-sync` and a parity PASS (runbook §6).
 
 Current source maintenance (REDUNDANCY-04): `pnpm exit:sync start` runs the scoped local
@@ -212,8 +214,8 @@ its source/privacy/ownership tests aligned when the app or exit tooling changes.
 `INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY` and `RECOVERY_SECURITY` join the existing
 `RLS_SECURITY`, `SESSION_SECURITY` and `THREAT_DETECTION` team under `SECURITY` -> `CTO`.
 Engineering implementation/reporting stays with `REDUNDANCY_LEAD` / `INFRASTRUCTURE` and the
-existing component owner. Read [INFRASTRUCTURE_SECURITY](docs/engineering/INFRASTRUCTURE_SECURITY.md)
-and the generated [source report](docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md).
+existing component owner. Read [INFRASTRUCTURE_SECURITY](docs/engineering/exit/INFRASTRUCTURE_SECURITY.md)
+and the generated [source report](docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md).
 `infrastructure/security/` owns reviewed coverage, local report/routing and adversarial tests.
 
 `pnpm security:infra` regenerates awareness; `security:infra:report` prints read-only JSON;

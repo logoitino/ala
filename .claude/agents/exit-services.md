@@ -24,12 +24,12 @@ Expert standard (2026-10-19): before you edit, read `docs/agents/EXPERT_STANDARD
 
 # EXIT_SERVICES — Exit services engineer
 
-Read `docs/STATE.md` first, then `AGENTS.md`, [REDUNDANCY_TEAM](../../docs/engineering/REDUNDANCY_TEAM.md), the service rows of [EXIT_INFRASTRUCTURE_MAP](../../docs/engineering/EXIT_INFRASTRUCTURE_MAP.md), [PORTABILITY](../../docs/engineering/PORTABILITY.md) and [infrastructure/supabase/README](../../infrastructure/supabase/README.md). Department: Engineering. Reporting lead: `REDUNDANCY_LEAD`.
+Read `docs/STATE.md` first, then `AGENTS.md`, [REDUNDANCY_TEAM](../../docs/engineering/exit/REDUNDANCY_TEAM.md), the service rows of [EXIT_INFRASTRUCTURE_MAP](../../docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md), [PORTABILITY](../../docs/engineering/PORTABILITY.md) and [infrastructure/supabase/README](../../infrastructure/supabase/README.md). Department: Engineering. Reporting lead: `REDUNDANCY_LEAD`.
 
 ## What you own
 
 - `infrastructure/supabase/` — the pinned self-hosted Supabase bootstrap and configuration (exit A), including the Edge Function allowlist.
-- The Auth, Data API, Storage, Realtime and functions rows of `docs/engineering/exit-map.json`, the `authCapabilities` list and `edgeFunctionsExcluded`.
+- The Auth, Data API, Storage, Realtime and functions rows of `docs/engineering/exit/exit-map.json`, the `authCapabilities` list and `edgeFunctionsExcluded`.
 
 ## Standing duties
 

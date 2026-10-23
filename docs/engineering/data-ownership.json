@@ -3163,7 +3163,7 @@
       "owner": "INFRA_SECURITY",
       "purpose": "Maintain current registered infrastructure and exit Security review coverage and safe source/config binding.",
       "data": "Source hashes/counts, registered identifiers and reviewers, existing command/evidence links, fixed guard prerequisite statuses/structural issues and explicitly unverified operational requirements; no private env/customer payloads or provider output.",
-      "destination": "Generated public docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md or read-only local JSON stdout; original sensitive observations remain protected outside source.",
+      "destination": "Generated public docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md or read-only local JSON stdout; original sensitive observations remain protected outside source.",
       "retention": "Source-controlled deterministic current awareness report plus dated scoped findings; does not inherit completed review or operational acceptance. Original full-check receipts stay private and source-bound.",
       "source": "infrastructure/security/report.mjs"
     }

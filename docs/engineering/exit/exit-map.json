@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "REDUNDANCY-02 hand-kept half of the exit infrastructure map. scripts/exit-map.mjs joins it with what the code actually uses and writes docs/engineering/EXIT_INFRASTRUCTURE_MAP.md. Owners must be registry calls. Prices are deliberately absent: they are unverified until COST_OPERATIONS supplies dated quotes.",
+  "about": "REDUNDANCY-02 hand-kept half of the exit infrastructure map. scripts/exit-map.mjs joins it with what the code actually uses and writes docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md. Owners must be registry calls. Prices are deliberately absent: they are unverified until COST_OPERATIONS supplies dated quotes.",
   "exits": {
     "A": "Self-hosted Supabase on owned cloud servers (AWS EC2 or Azure VM). Same service interfaces; the app changes only its URL and keys. Recommended exit (PORTABILITY, HOSTING_DECISION_BRIEF).",
     "B": "Cloud-native services (managed PostgreSQL plus provider Auth, object storage, messaging and functions). New adapters behind lib/; a separate project, used only if exit A is ruled out."

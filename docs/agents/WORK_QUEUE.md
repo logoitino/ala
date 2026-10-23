@@ -154,7 +154,7 @@ agent scheduler is established. Current claims and actual checks are in [COORD-0
 
 ## REDUNDANCY-01 — Supabase backup and AWS/Azure migration preparation (2026-10-19)
 
-Owner confirmed backup of Supabase and continued the build. Local all-destination jobs, guarded retry, capture-time health checks and protected-checksum cloud retrieval now accompany backup/restore, source capsule, container and per-cloud Terraform work is recorded in [REDUNDANCY-01](REDUNDANCY-01.md); operator sequence is [CLOUD_MIGRATION_RUNBOOK](../engineering/CLOUD_MIGRATION_RUNBOOK.md). Operational runner setup is [BACKUP_OPERATIONS](../engineering/BACKUP_OPERATIONS.md). Next: INFRASTRUCTURE / RECOVERY prepare the private runner/identities and run an approved isolated backup-and-restore drill after source migration inventory, service versions and upstream pins are verified. DATABASE_MIGRATIONS / RLS_SECURITY review Auth/Storage schemas, TOC and access; QA / RELEASE measure client move and RPO/RTO; Finance reconciles provider events before cutover. No new role, scheduler, cloud purchase or production change follows from the local kit.
+Owner confirmed backup of Supabase and continued the build. Local all-destination jobs, guarded retry, capture-time health checks and protected-checksum cloud retrieval now accompany backup/restore, source capsule, container and per-cloud Terraform work is recorded in [REDUNDANCY-01](REDUNDANCY-01.md); operator sequence is [CLOUD_MIGRATION_RUNBOOK](../engineering/exit/CLOUD_MIGRATION_RUNBOOK.md). Operational runner setup is [BACKUP_OPERATIONS](../engineering/BACKUP_OPERATIONS.md). Next: INFRASTRUCTURE / RECOVERY prepare the private runner/identities and run an approved isolated backup-and-restore drill after source migration inventory, service versions and upstream pins are verified. DATABASE_MIGRATIONS / RLS_SECURITY review Auth/Storage schemas, TOC and access; QA / RELEASE measure client move and RPO/RTO; Finance reconciles provider events before cutover. No new role, scheduler, cloud purchase or production change follows from the local kit.
 
 Last updated: 2026-10-21. Entry point: [STATE.md](../STATE.md). Owners and executable
 instructions: [TEAMS.md](TEAMS.md), [TEAM_HIERARCHY.md](TEAM_HIERARCHY.md), and the agent registry.
@@ -165,7 +165,7 @@ The owner (`FACILITATOR`) still decides applying SQL, merging, live money, price
 
 ## REDUNDANCY-02 — Redundancy & Exit team, self-updating exit plan (owner 2026-10-19)
 
-Standing team `REDUNDANCY_LEAD` → `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD` ([charter](../engineering/REDUNDANCY_TEAM.md), [record](REDUNDANCY-02.md)).
+Standing team `REDUNDANCY_LEAD` → `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD` ([charter](../engineering/exit/REDUNDANCY_TEAM.md), [record](REDUNDANCY-02.md)).
 
 | Work | Owner | Next concrete check |
 | --- | --- | --- |

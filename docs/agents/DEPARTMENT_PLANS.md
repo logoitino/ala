@@ -499,7 +499,7 @@ and custody evidence. All report to SECURITY → CTO. Existing SQL/session/incid
 and RECOVERY/EXIT_* implementation remain unchanged; REDUNDANCY_LEAD integrates one Engineering
 exit packet with INFRASTRUCTURE technical context.
 
-Use [INFRASTRUCTURE_SECURITY](../engineering/INFRASTRUCTURE_SECURITY.md) and the exact source
+Use [INFRASTRUCTURE_SECURITY](../engineering/exit/INFRASTRUCTURE_SECURITY.md) and the exact source
 report (`pnpm security:infra:report`, `pnpm security:infra:check`, `pnpm security:infra:test`).
 Current structural coverage is local bookkeeping with securityStatus=not-established,
 operationalAcceptance=false and readyToCutOver=false; it does not certify live network/IAM,

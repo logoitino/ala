@@ -4,7 +4,7 @@
 **Owner request/date:** 2026-10-20: involve Security, add roles/agents, secure infrastructure and keep reporting in sync.
 **Lead/executor:** Codex `/root`; actual scoped Security, VP_OPERATIONS and DOCUMENTATION functions dispatched to outside Codex sessions. Repository role model pins remain unchanged.
 **Status:** implemented locally and scoped reviews complete; original final external receipts govern full-project/source verification.
-**Plan:** [INFRASTRUCTURE_SECURITY_IMPLEMENTATION_PLAN](../engineering/design/INFRASTRUCTURE_SECURITY_IMPLEMENTATION_PLAN.md).
+**Plan:** [INFRASTRUCTURE_SECURITY_IMPLEMENTATION_PLAN](../engineering/exit/plans/INFRASTRUCTURE_SECURITY_IMPLEMENTATION_PLAN.md).
 
 The existing SECURITY/RLS_SECURITY/SESSION_SECURITY/THREAT_DETECTION roles cover portions of the exit kit. This task adds INFRA_SECURITY, SUPPLY_CHAIN_SECURITY and RECOVERY_SECURITY under SECURITY -> CTO, joined to Engineering's current infrastructure/exit workflow. New roles do not create continuous agents or grant provider access.
 
@@ -22,7 +22,7 @@ No hosted controls, provider availability, penetration test, delivered incident 
 - `/root/recovery_review` performed independent scoped Security source review across deployment/recovery/portability boundaries. It validated and repaired conditional High Compose source-versus-effective credential/Auth settings and conditional Medium normalized IPv4 wildcard/IPv6 checks. Root independently inspected those code and regression changes and added explicit missing-core-field coverage.
 - Root repaired a third conditional Medium source policy gap: nested npm/netrc/yarn credential files could enter Docker source contexts. Final deny rules follow all allowlists; explicit reviewed pnpm settings remain the Docker input. Source-policy tests are not an actual Docker context/image inspection.
 - Actual Security17 regressions pass:12 report/source-refresh/routing/privacy/currentness tests, three IPv4 source/reference tests and two Docker credential-context source-policy tests. Supabase17 mocked deployment regressions pass; actual Terraform/Docker tools and upstream interoperability remain untested. Full integrated results are read from the original final receipt.
-- The independent Security reviewer accepted report/control/routing plus source refresh and actual exit notice integration:10registered services,24exit components,nine source-linked guards that this report does not execute,13operational requirements all unverified. Current structure is never an operational acceptance flag. Dated source findings are [INFRASTRUCTURE_SECURITY_FINDINGS](../engineering/INFRASTRUCTURE_SECURITY_FINDINGS.md); immutable CI/action/provider/host inputs remain an open source trust/reproducibility gap.
+- The independent Security reviewer accepted report/control/routing plus source refresh and actual exit notice integration:10registered services,24exit components,nine source-linked guards that this report does not execute,13operational requirements all unverified. Current structure is never an operational acceptance flag. Dated source findings are [INFRASTRUCTURE_SECURITY_FINDINGS](../engineering/exit/INFRASTRUCTURE_SECURITY_FINDINGS.md); immutable CI/action/provider/host inputs remain an open source trust/reproducibility gap.
 - `/root/redundancy_documentation` performed actual guide/charter reconciliation with role executor review, corrected command/count details and froze owned documents; final local documentation link review passed286destinations and whitespace checks. Root performed the assigned Data/Infrastructure control-point review of the sanitized public source report export, registered its owner/privacy/retention/purpose, and regenerated Data/Infrastructure records:114tables/views562functions39unimported0rulefailures. Detection catalog24declared sensors/21partial-gap passes; client-key/comment guards and current115-role check pass.
 
 ## Final integrated verification and automatic source maintenance
@@ -98,7 +98,7 @@ this does not establish execution of a registry-pinned Grok role. No new role or
 
 | UTC time | Executor | Claim / scope |
 | --- | --- | --- |
-| 2026-10-20 17:04:10 | `/root/redundancy_documentation` | Active: `docs/engineering/INFRASTRUCTURE_SECURITY.md` and this append-only continuation; preserve all earlier task receipts and concurrent edits. |
+| 2026-10-20 17:04:10 | `/root/redundancy_documentation` | Active: `docs/engineering/exit/INFRASTRUCTURE_SECURITY.md` and this append-only continuation; preserve all earlier task receipts and concurrent edits. |
 
 Read AGENTS, the TEAMS specialist/concurrent-session contract and relevant expert standards before editing.
 The inspected checkout HEAD was `2f26caaf1c23412c7fbafd7401e2d260d298696e` with concurrent uncommitted work;

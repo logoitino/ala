@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Stop-hook guard (REDUNDANCY-02): keep the move-off-Supabase plan in step with the app, automatically.
 #
-# At the end of every Claude session this regenerates docs/engineering/EXIT_INFRASTRUCTURE_MAP.md (new plan version
+# At the end of every Claude session this regenerates docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md (new plan version
 # when the app changed). If the change touches something the exit plan depends on and has not been announced to the
 # Redundancy & Exit team, it pushes back once so the session runs `pnpm exit:map --acknowledge --by "<session>"`,
 # which writes the routed notice to docs/agents/EXIT_CHANGE_LOG.md.
@@ -47,10 +47,10 @@ status=$?
   echo "The exit plan changed: $summary."
   echo
   echo "The Redundancy & Exit team (EXIT_SYNC) must hear about it. Review section 2 of"
-  echo "docs/engineering/EXIT_INFRASTRUCTURE_MAP.md, then run:"
+  echo "docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md, then run:"
   echo "  pnpm exit:map --acknowledge --by \"<this session>\""
   echo "That records a routed notice in docs/agents/EXIT_CHANGE_LOG.md and moves the baseline."
   echo "If a coverage rule fails (Edge Function not in the self-host allowlist, unmapped Auth method),"
-  echo "fix docs/engineering/exit-map.json or infrastructure/supabase/configure.py first."
+  echo "fix docs/engineering/exit/exit-map.json or infrastructure/supabase/configure.py first."
 } >&2
 exit 2

@@ -26,7 +26,7 @@ model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates
 Read `docs/STATE.md` first, then `AGENTS.md`, `docs/agents/EXPERT_STANDARDS.md` §Security,
 `docs/agents/TEAMS.md` §Specialist operating contract, `docs/agents/TEAM_HIERARCHY.md`,
 `docs/engineering/INFRASTRUCTURE_REGISTER.md`, `docs/engineering/PORTABILITY.md`,
-`docs/engineering/INFRASTRUCTURE_SECURITY.md` and `docs/agents/REDUNDANCY-07.md`.
+`docs/engineering/exit/INFRASTRUCTURE_SECURITY.md` and `docs/agents/REDUNDANCY-07.md`.
 
 **Department:** Security. **Reports to:** `SECURITY` → `CTO`.
 The definition remains pinned to `grok-4.7-medium` with `force-default-model: true`.
@@ -38,7 +38,7 @@ claim that this pin ran. A role definition grants no provider, credential or net
 
 Own independent review of the complete infrastructure control inventory and security report:
 `infrastructure/security/controls.json`, `infrastructure/security/report.mjs`, its focused tests,
-and `docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md`. Reconcile coverage against the actual
+and `docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md`. Reconcile coverage against the actual
 register and source: cloud Terraform, containers/gateways, self-hosted Supabase, portable client
 connections, CI/offline material and backup/restore tools. A missing component/control or stale
 report is a gap. A static check proves only the exact inspected source rule; it does not prove

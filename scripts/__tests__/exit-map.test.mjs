@@ -25,7 +25,7 @@ async function fixture(fn) {
   try {
     await put('package.json', '{"name":"fixture"}');
     await put('pnpm-lock.yaml', 'lockfileVersion: 9\n');
-    await put('docs/engineering/exit-map.json', '{"components":[]}');
+    await put('docs/engineering/exit/exit-map.json', '{"components":[]}');
     await put('apps/mobile/src/backend/db/schema.sql', 'create function public.answer() returns int language sql as $$select 1$$;\ncreate table public.items (id int default 1);');
     await put('supabase/migrations/20261019000000_fixture.sql', 'select 1;');
     await put('supabase/functions/checkout/index.ts', 'export const amount = 1;');
@@ -45,7 +45,7 @@ test('unchanged names still invalidate the plan after schema, migration, endpoin
     ['supabase/functions/checkout/index.ts', 'export const amount = 2;'],
     ['apps/mobile/app/api/checkout+api.ts', 'export const amount = 2;'],
     ['infrastructure/backup/job.py', 'VERSION = 2\n'],
-    ['docs/engineering/exit-map.json', '{"components":[{"id":"azure"}]}'],
+    ['docs/engineering/exit/exit-map.json', '{"components":[{"id":"azure"}]}'],
     ['pnpm-lock.yaml', 'lockfileVersion: 9\nsettings: changed\n'],
   ];
   let previous = initial.sourceHash;
@@ -234,7 +234,7 @@ export function otherWrapper() { const invoke = unrelatedFunction(); return invo
 
 // Test the exact automatic writer without modifying the working repo's generated document.
 test('map output refuses final/ancestor links and identical regeneration does not change mtime', async () => fixture(async (root, put) => {
-  const output = 'docs/engineering/EXIT_INFRASTRUCTURE_MAP.md';
+  const output = 'docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md';
   await put(output, '# Original\n');
   const before = await fs.stat(path.join(root, output));
   assert.equal(writeExitMap(root, output, '# Original\n'), false);

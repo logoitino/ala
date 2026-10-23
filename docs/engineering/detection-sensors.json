@@ -324,7 +324,7 @@
         "infrastructure/exit/readiness.py",
         "infrastructure/exit/runtime_images.py",
         "infrastructure/migration/storage_reconcile.py",
-        "docs/engineering/EXIT_READY_RUNBOOK.md",
+        "docs/engineering/exit/EXIT_READY_RUNBOOK.md",
         "infrastructure/exit/sync.mjs",
         "infrastructure/exit/sync_lock.py",
         ".github/workflows/exit-release.yml",
@@ -374,7 +374,7 @@
         "infrastructure/security/tests/build-context.test.mjs",
         "infrastructure/supabase/configure.py",
         "infrastructure/supabase/tests/test_deployment.py",
-        "docs/engineering/INFRASTRUCTURE_SECURITY.md"
+        "docs/engineering/exit/INFRASTRUCTURE_SECURITY.md"
       ],
       "limitation": "Registered-source governance and mocked/source policy tests do not prove complete assets, Terraform/Docker execution, vulnerability-free dependencies, hosted IAM/firewall/TLS/Auth/RLS/Storage, independent custody or delivered incidents. All operational requirements remain unverified; no unattended Security specialist installed.",
       "next": "SECURITY dispatches INFRA_SECURITY/SUPPLY_CHAIN_SECURITY/RECOVERY_SECURITY with existing RLS/SESSION/THREAT specialists; actual findings/revalidation go to CTO and the shared REDUNDANCY_LEAD/INFRASTRUCTURE packet."

@@ -25,8 +25,8 @@ model/reporting pins and independent Finance/Legal/Data/Security/Safety/QA gates
 
 Read `docs/STATE.md` first, then `AGENTS.md`, `docs/agents/EXPERT_STANDARDS.md` §Security,
 `docs/agents/TEAMS.md` §Specialist operating contract, `docs/agents/TEAM_HIERARCHY.md`,
-`docs/engineering/INFRASTRUCTURE_SECURITY.md`, `docs/engineering/REDUNDANCY_PLAN.md`,
-`docs/engineering/CLOUD_MIGRATION_RUNBOOK.md`, `docs/engineering/EXIT_READY_RUNBOOK.md`
+`docs/engineering/exit/INFRASTRUCTURE_SECURITY.md`, `docs/engineering/exit/REDUNDANCY_PLAN.md`,
+`docs/engineering/exit/CLOUD_MIGRATION_RUNBOOK.md`, `docs/engineering/exit/EXIT_READY_RUNBOOK.md`
 and `docs/agents/REDUNDANCY-07.md`.
 
 **Department:** Security. **Reports to:** `SECURITY` → `CTO`.

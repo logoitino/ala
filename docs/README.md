@@ -30,11 +30,8 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 | [Gift/tip rollout](engineering/GIFT_TIP_ROLLOUT.md) | Prerequisite chain, coordinated checkout rollout, zero-cut containment and unverified provider/native gates. |
 | [Gift rollout preflight](engineering/evidence/GIFT_ROLLOUT_PREFLIGHT.md) | Source bindings and actual bounded local/hosted read-only observations. |
 | [PORTABLE_INTEGRATIONS](engineering/PORTABLE_INTEGRATIONS.md) | Shared app connection contract, matching target profiles and local installed-SDK compatibility tests. |
-| [Infrastructure Security](engineering/INFRASTRUCTURE_SECURITY.md) | Security roles, current registered-source coverage and independent operational review workflow. |
-| [Infrastructure Security report](engineering/INFRASTRUCTURE_SECURITY_REPORT.md) | Generated safe source binding, Security reviewers and unverified operational requirements. |
-| [Infrastructure Security findings](engineering/INFRASTRUCTURE_SECURITY_FINDINGS.md) | Dated scoped source observations, local repairs and remaining review boundaries. |
+| [**Exit reading home**](engineering/exit/README.md) | **One folder** for Redundancy & Exit: charter, generated map/security report, migration runbooks, plans. Runnable code stays under `infrastructure/`. |
 | [Portable connection plan](engineering/design/PORTABLE_CONNECTION_IMPLEMENTATION_PLAN.md) | REDUNDANCY-06 executable local portability plan and scoped specialist assignments. |
-| [Infrastructure Security plan](engineering/design/INFRASTRUCTURE_SECURITY_IMPLEMENTATION_PLAN.md) | REDUNDANCY-07 role/report/routing and local security repair assignments. |
 | [REDUNDANCY-06](agents/REDUNDANCY-06.md) | Actual local portability/client/profile/test execution and final verification custody. |
 | [REDUNDANCY-07](agents/REDUNDANCY-07.md) | Actual Security/VP/Documentation execution, source fixes and final verification custody. |
 
@@ -71,19 +68,10 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 | [design/PHOTO_STORIES_DESIGN.md](engineering/design/PHOTO_STORIES_DESIGN.md) | Photo stories in Highlights: data model, RPC, screens, privacy rules and build ownership. |
 | [design/PROFILE_PRIVACY_DESIGN.md](engineering/design/PROFILE_PRIVACY_DESIGN.md) | Profile privacy (PRIV-01): public / private accounts, per-item audiences, friends, blocking, hide from search, tag approval. |
 | [ADMIN_MFA.md](engineering/ADMIN_MFA.md) | SCALE-01 admin two-step sign-in (TOTP, `aal2`) for the portal and Expo `/admin`: switches (default off), how the owner turns it on, what it does not cover. |
-| [EXIT_DRILL.md](engineering/EXIT_DRILL.md) | Exit drill runbook (E3): local rehearsal today, full self-hosted Supabase drill after E1; record of runs. |
 | [INFRASTRUCTURE_REGISTER.md](engineering/INFRASTRUCTURE_REGISTER.md) | Generated list of what Tapua'i runs on and how deeply the app is integrated (INFRA-01); owner `INFRASTRUCTURE`; source `infrastructure.json`. |
 | [PORTABILITY.md](engineering/PORTABILITY.md) | Staying free to move hosts (PORT-01): what is portable, the Supabase ties, the two exits, the boundary guard and next steps. |
-| [REDUNDANCY_TEAM.md](engineering/REDUNDANCY_TEAM.md) | Redundancy & Exit team charter (REDUNDANCY-02): documents, agents, change protocol and cadence that keep the move-off-Supabase plan current with every app change. |
-| [EXIT_INFRASTRUCTURE_MAP.md](engineering/EXIT_INFRASTRUCTURE_MAP.md) | Generated build map for moving off Supabase: each component → AWS / Azure (exit A self-hosted, exit B cloud-native), owners, detected inventory, build order, plan version and unannounced changes; source `exit-map.json`. |
-| [EXIT_CHANGE_LOG.md](agents/EXIT_CHANGE_LOG.md) | Routed notices of app changes the exit plan depends on, with each agent's review result (`EXIT_SYNC`). |
-| [EXIT_READY_RUNBOOK.md](engineering/EXIT_READY_RUNBOOK.md) | Exact current source/image preparation, complete acceptance evidence and an unproven180-minute warm cutover target. |
-| [MIGRATION_FAILURES_AND_CONTROLS.md](engineering/MIGRATION_FAILURES_AND_CONTROLS.md) | Local migration failures, implemented controls, historical reference limits and outstanding hosted drills. |
-| [Exit implementation plan](engineering/design/EXIT_READY_IMPLEMENTATION_PLAN.md) | Owned REDUNDANCY-03 source/runtime/Storage/readiness implementation and acceptance. |
-| [REDUNDANCY_PLAN.md](engineering/REDUNDANCY_PLAN.md) | Full Supabase backup scope, independent recovery copies, proposed schedule and AWS/Azure exit architecture. |
+| [Exit reading home](engineering/exit/README.md) | Charter, generated exit map + security report, migration/cutover runbooks, implementation plans; change notices stay in [EXIT_CHANGE_LOG](agents/EXIT_CHANGE_LOG.md). |
 | [BACKUP_OPERATIONS.md](engineering/BACKUP_OPERATIONS.md) | Private backup job configuration, complete offsite upload accounting, freshness checks, guarded retries and independent-copy retrieval. |
-| [CLOUD_MIGRATION_RUNBOOK.md](engineering/CLOUD_MIGRATION_RUNBOOK.md) | Backup, decrypt, reviewed restore, own-server deployment, cutover and rollback commands. |
-| [Redundancy implementation checklist](engineering/design/REDUNDANCY_IMPLEMENTATION_PLAN.md) | Local tooling and separate operational acceptance work, with recorded verification gaps. |
 | [Infrastructure operator entry point](../infrastructure/README.md) | Executable backup tools, application containers, upstream Supabase setup and AWS/Azure Terraform folders. |
 | [design/PAYEE_VERIFICATION_PLAN.md](engineering/design/PAYEE_VERIFICATION_PLAN.md) | Verifying people who receive donations (VERIFY-02): SSN to Stripe only, guardian proof (Stripe + school), two-admin payout override. |
 | [design/MINOR_ACCOUNTS_DESIGN.md](engineering/design/MINOR_ACCOUNTS_DESIGN.md) | Minor accounts (MINOR-01): birth month and year, teen defaults, guardian link and signed consent, supervision, under-16 approvals, under-13 closure. |

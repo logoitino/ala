@@ -56,8 +56,8 @@ a paid plan or automatic migration. Actual setup: [GROWTH-01](../agents/GROWTH-0
 
 ## 2. The hosting options
 
-**2026-10-19 preparation:** [REDUNDANCY_PLAN.md](REDUNDANCY_PLAN.md) and
-[CLOUD_MIGRATION_RUNBOOK.md](CLOUD_MIGRATION_RUNBOOK.md) describe the owner's confirmed Supabase
+**2026-10-19 preparation:** [REDUNDANCY_PLAN.md](exit/REDUNDANCY_PLAN.md) and
+[CLOUD_MIGRATION_RUNBOOK.md](exit/CLOUD_MIGRATION_RUNBOOK.md) describe the owner's confirmed Supabase
 backup requirement and the new local AWS/Azure deployment folders. Current managed hosting stays
 as recorded above; this change creates tooling/templates, not a production project or a cloud VM.
 

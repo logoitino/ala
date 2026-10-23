@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import ts from 'typescript';
 
 const ROOTS = ['apps', 'packages', 'supabase', 'scripts', 'infrastructure', 'patches', '.github'];
-const FILES = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'tsconfig.json', 'app.json', '.npmrc', '.dockerignore', 'docs/engineering/exit-map.json'];
+const FILES = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'tsconfig.json', 'app.json', '.npmrc', '.dockerignore', 'docs/engineering/exit/exit-map.json'];
 const IGNORE = new Set(['node_modules', '.git', '.next', '.expo', '.smoke', '.tmp', '.temp', '.superpowers', 'dist', 'out', 'web-build', 'ios', 'android', '__pycache__', '.terraform', 'upstream', '.DS_Store']);
 const EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.cjs', '.mjs', '.json', '.sql', '.py', '.tf', '.yml', '.yaml', '.toml', '.sh', '.patch', '.css', '.scss', '.html', '.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif', '.wasm', '.ttf', '.otf', '.woff', '.woff2', '.md', '.service', '.timer', '.npmrc']);
 const ADAPTER_METHODS = new Set(['publicUrl', 'upload', 'sign', 'list', 'remove']);
@@ -26,7 +26,7 @@ function safeScope(relative) {
 }
 
 function area(file) {
-  if (file === 'docs/engineering/exit-map.json') return 'mapping';
+  if (file === 'docs/engineering/exit/exit-map.json') return 'mapping';
   if (file.includes('/db/') || file.startsWith('supabase/migrations/')) return 'database';
   if (file.startsWith('supabase/functions/')) return 'services';
   if (file.startsWith('infrastructure/')) return 'toolkit';

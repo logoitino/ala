@@ -1,7 +1,7 @@
 <!-- INFRASTRUCTURE / RECOVERY architecture: distinguish executable local preparation from a proven hosted recovery service. -->
 # Supabase redundancy and owned-server plan
 
-**Task:** [REDUNDANCY-01](../agents/REDUNDANCY-01.md). **Prepared:** 2026-10-19. **Owners:** INFRASTRUCTURE, RECOVERY and DATABASE_MIGRATIONS, reporting to ENGINEERING. **Status:** local backup/deployment implementation; no cloud provisioning, hosted backup or database cutover has run.
+**Task:** [REDUNDANCY-01](../../agents/REDUNDANCY-01.md). **Prepared:** 2026-10-19. **Owners:** INFRASTRUCTURE, RECOVERY and DATABASE_MIGRATIONS, reporting to ENGINEERING. **Status:** local backup/deployment implementation; no cloud provisioning, hosted backup or database cutover has run.
 
 ## 1. The outcome
 
@@ -9,7 +9,7 @@ Keep managed Supabase as the current primary, retain encrypted independent recov
 
 The owner confirmed on 2026-10-19 that the requirement is a backup **of** Supabase: application data, Auth data, Storage metadata and file contents, versioned source, dependency locks and migration inventory. Another managed Supabase project is an optional recovery destination; it needs its own service-schema restore review and project configuration.
 
-This implements the existing exit A decision in [PORTABILITY](PORTABILITY.md). Current development and staging project differences remain in [ENVIRONMENTS_AND_HOSTING](ENVIRONMENTS_AND_HOSTING.md); production has not been created. This work does not make the current testing app a production service.
+This implements the existing exit A decision in [PORTABILITY](../PORTABILITY.md). Current development and staging project differences remain in [ENVIRONMENTS_AND_HOSTING](../ENVIRONMENTS_AND_HOSTING.md); production has not been created. This work does not make the current testing app a production service.
 
 ## 2. Deployment options
 
@@ -37,7 +37,7 @@ The initial owned-server design is **one VM**. It provides an executable deploym
 | Independent custody | Encrypted archive and adjacent checksum copied to at least two protected locations | Age private key must remain outside those archive stores; retain an independently trusted manifest/reference. A checksum is integrity evidence, not signer identity |
 | Stripe / Expo / Apple / Google / external video | Repository integration source and optional configuration inventory only | Provider accounts, money records, issued binaries, signing identities, EAS updates and provider-hosted media stay external; arrange separate access, retention and provider-specific exports |
 
-Auth records, Storage bytes, financial and minor/guardian records are sensitive. Keep plaintext staging private, encrypt before publishing an archive, exclude all archives and credentials from Git, and log only bounded outcome metadata. Register the backup export's owner and purpose under [DATA_GOVERNANCE](DATA_GOVERNANCE.md). Retention and regional copies need PRIVACY_ENGINEERING review; stale snapshots can reintroduce deletions and consent state.
+Auth records, Storage bytes, financial and minor/guardian records are sensitive. Keep plaintext staging private, encrypt before publishing an archive, exclude all archives and credentials from Git, and log only bounded outcome metadata. Register the backup export's owner and purpose under [DATA_GOVERNANCE](../DATA_GOVERNANCE.md). Retention and regional copies need PRIVACY_ENGINEERING review; stale snapshots can reintroduce deletions and consent state.
 
 ## 4. Proposed recovery targets
 
@@ -52,7 +52,7 @@ These are **unmeasured proposals**, subject to the first complete timed drill an
 | Drill cadence | Monthly archive/decrypt/integrity; quarterly isolated full restore | Record actual duration, source/target versions, object counts, Auth/RLS checks and remediation owner |
 | Copies | Working recovery copy plus an independent encrypted copy in another cloud/account | Read and decrypt a sampled archive from each copy; independence includes admin credentials and encryption-key custody |
 
-A six-hour dump schedule is not point-in-time recovery. Supabase PITR, or a later self-hosted WAL archive plus tested base-backup restore, is a separate mechanism. No six-hour RPO claim is valid until the unified capture/all-destination job and timer are installed and observed. The local status command checks original capture age (default seven hours), incomplete/failed accounting and overdue runs (default two hours). Local command-success records are not proof of remote integrity; retrieval/decryption/restore and installed alert delivery remain separate. See [BACKUP_OPERATIONS](BACKUP_OPERATIONS.md).
+A six-hour dump schedule is not point-in-time recovery. Supabase PITR, or a later self-hosted WAL archive plus tested base-backup restore, is a separate mechanism. No six-hour RPO claim is valid until the unified capture/all-destination job and timer are installed and observed. The local status command checks original capture age (default seven hours), incomplete/failed accounting and overdue runs (default two hours). Local command-success records are not proof of remote integrity; retrieval/decryption/restore and installed alert delivery remain separate. See [BACKUP_OPERATIONS](../BACKUP_OPERATIONS.md).
 
 ## 5. Database and file consistency
 
@@ -80,11 +80,10 @@ infrastructure/
   terraform/aws/                     AWS VM/network/disk/backup-store templates
   terraform/azure/                   Azure equivalents
 
-docs/engineering/REDUNDANCY_PLAN.md   This architecture and limits
-docs/engineering/design/
-  REDUNDANCY_IMPLEMENTATION_PLAN.md   Ordered implementation and acceptance
-docs/engineering/
-  CLOUD_MIGRATION_RUNBOOK.md          Commands, rehearsal and cutover procedure
+docs/engineering/exit/REDUNDANCY_PLAN.md          This architecture and limits
+docs/engineering/exit/CLOUD_MIGRATION_RUNBOOK.md  Commands, rehearsal and cutover procedure
+docs/engineering/exit/plans/
+  REDUNDANCY_IMPLEMENTATION_PLAN.md               Ordered implementation and acceptance
 ```
 
 Private runtime material belongs outside the checkout: `/etc/tapuai/` for operator config/keys, `/var/lib/tapuai/backups/` for encrypted archives, `/var/lib/tapuai/restore-drills/` for private decrypted rehearsal stages, and `/opt/tapuai/supabase/` for downloaded pinned upstream deployment files. Terraform state is private and remote before shared operation; never put credentials into `.tfvars` or checked-in Compose files.
@@ -102,7 +101,7 @@ Backup verification confirms archive integrity and source inclusion. Target rest
 - Financial snapshot-gap reconciliation and one authoritative payment/writer path. Existing testing/webhook/payout gates remain in force.
 - Measured recovery time, independent QA approval, operational ownership and owner-authorized production window.
 
-The exact operator workflow is [CLOUD_MIGRATION_RUNBOOK](CLOUD_MIGRATION_RUNBOOK.md); the synthetic cloud drill remains aligned with [EXIT_DRILL](EXIT_DRILL.md). The original [RECOVERY_RUNBOOK](RECOVERY_RUNBOOK.md) retains source rollback and live-ledger safeguards.
+The exact operator workflow is [CLOUD_MIGRATION_RUNBOOK](CLOUD_MIGRATION_RUNBOOK.md); the synthetic cloud drill remains aligned with [EXIT_DRILL](EXIT_DRILL.md). The original [RECOVERY_RUNBOOK](../RECOVERY_RUNBOOK.md) retains source rollback and live-ledger safeguards.
 
 The latest owner request is implemented in [EXIT_READY_RUNBOOK](EXIT_READY_RUNBOOK.md): exact
 expanded source copies, content-sensitive changes, immutable runtime archives, original

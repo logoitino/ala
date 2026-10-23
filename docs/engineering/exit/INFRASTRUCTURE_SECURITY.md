@@ -1,7 +1,7 @@
 <!-- REDUNDANCY-07: scoped source coverage and independent Security review; local checks do not certify operational security. -->
 # Infrastructure security — roles, source report and review
 
-**Task:** [REDUNDANCY-07](../agents/REDUNDANCY-07.md). `SECURITY` owns independent review; Engineering
+**Task:** [REDUNDANCY-07](../../agents/REDUNDANCY-07.md). `SECURITY` owns independent review; Engineering
 component owners implement the assigned corrections.
 
 **Scope:** current registered services and exit components, including app/backend connections, SQL/access,
@@ -9,9 +9,9 @@ runtime/container/cloud templates, CI/dependencies and recovery tools. The repor
 review responsibilities current. Deployed configuration, provider accounts and unregistered resources need
 separate observation; repository coverage is not a complete live asset census or proof that a system is secure.
 
-Read [INFRASTRUCTURE_REGISTER](INFRASTRUCTURE_REGISTER.md),
+Read [INFRASTRUCTURE_REGISTER](../INFRASTRUCTURE_REGISTER.md),
 [EXIT_INFRASTRUCTURE_MAP](EXIT_INFRASTRUCTURE_MAP.md) and [REDUNDANCY_TEAM](REDUNDANCY_TEAM.md) together.
-The existing [ENGINEERING_SUPPORT](ENGINEERING_SUPPORT.md) process holds investigation/repair work;
+The existing [ENGINEERING_SUPPORT](../ENGINEERING_SUPPORT.md) process holds investigation/repair work;
 [EXIT_READY_RUNBOOK](EXIT_READY_RUNBOOK.md) holds original recovery and cutover evidence.
 
 ## 1. Security ownership
@@ -55,8 +55,8 @@ pnpm security:infra:report
 | `security:infra:report` | Produce read-only local JSON observations without installing or changing provider configuration. |
 
 Read the generated [INFRASTRUCTURE_SECURITY_REPORT](INFRASTRUCTURE_SECURITY_REPORT.md).
-[controls.json](../../infrastructure/security/controls.json) declares the control mappings;
-[report.mjs](../../infrastructure/security/report.mjs) derives the report. The `security:infra:report` alias
+[controls.json](../../../infrastructure/security/controls.json) declares the control mappings;
+[report.mjs](../../../infrastructure/security/report.mjs) derives the report. The `security:infra:report` alias
 already supplies `--json`; do not append another flag.
 Services name `INFRASTRUCTURE` as their Engineering coordinator; exit components name their declared
 implementation owner. Both require mapped Security reviewers and

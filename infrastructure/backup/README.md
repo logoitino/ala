@@ -207,7 +207,7 @@ and backend metadata. It refuses unknown MIME/size, missing declared owner value
 owner columns/FKs and present app guards. Review the target/database assertion and each Auth-FK requirement.
 The generator never executes SQL. Applying accepted SQL is a separate attended operator action using the
 isolated target's protected PostgreSQL environment and session `tapuai.restore_target` assertion; see
-[CLOUD_MIGRATION_RUNBOOK section 6](../../docs/engineering/CLOUD_MIGRATION_RUNBOOK.md).
+[CLOUD_MIGRATION_RUNBOOK section 6](../../docs/engineering/exit/CLOUD_MIGRATION_RUNBOOK.md).
 
 After that accepted ownership application, continue with the actual preload receipt filename:
 
@@ -271,6 +271,6 @@ capture/upload lag. Local/cloud retention and private plaintext cleanup remain o
 Record snapshot window, source/target service versions, schema/row/RLS/Auth/MFA checks, object hashes,
 remote retrieval, elapsed time, financial reconciliation, next owner and cleanup in
 [REDUNDANCY-01](../../docs/agents/REDUNDANCY-01.md). Current RPO/RTO are unmeasured. See the
-[migration runbook](../../docs/engineering/CLOUD_MIGRATION_RUNBOOK.md) for final cutover/rollback.
-Use [EXIT_READY_RUNBOOK](../../docs/engineering/EXIT_READY_RUNBOOK.md) and the [exit toolkit](../exit/README.md)
+[migration runbook](../../docs/engineering/exit/CLOUD_MIGRATION_RUNBOOK.md) for final cutover/rollback.
+Use [EXIT_READY_RUNBOOK](../../docs/engineering/exit/EXIT_READY_RUNBOOK.md) and the [exit toolkit](../exit/README.md)
 for a release-bound warm-target readiness packet; a backup receipt alone does not establish the three-hour target.

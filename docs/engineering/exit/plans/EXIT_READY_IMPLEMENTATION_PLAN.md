@@ -63,4 +63,4 @@
 - [x] Run the complete `pnpm check`, focused CLI tests and an actual current-source release capture/verify; final receipts pending below.
 - [x] Leave actual Supabase/container/cloud/Auth/Storage/provider rehearsal and180-minute readiness explicitly pending until observed.
 
-Execution/review receipts and pending hosted gates: [REDUNDANCY-03](../../agents/REDUNDANCY-03.md).
+Execution/review receipts and pending hosted gates: [REDUNDANCY-03](../../../agents/REDUNDANCY-03.md).

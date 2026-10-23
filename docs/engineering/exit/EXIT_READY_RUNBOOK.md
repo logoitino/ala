@@ -24,7 +24,7 @@ encrypted configuration custody and service tests are required too.
 
 ### Prepare the shared connection settings
 
-[PORTABLE_INTEGRATIONS](PORTABLE_INTEGRATIONS.md) describes the shared resolver and matching target
+[PORTABLE_INTEGRATIONS](../PORTABLE_INTEGRATIONS.md) describes the shared resolver and matching target
 profiles for the same app. Use `pnpm portability:profile --config-file PRIVATE --output-dir NEW` with reviewed
 private external JSON; no privileged key belongs in the public profile. `pnpm portability:test` exercises the
 installed SDK against synthetic loopback REST/RPC/Auth/Storage/Functions fixtures. Fixture results do not
@@ -88,7 +88,7 @@ exports, encrypted backups and unrelated artifacts are not pruned.
 The managed detached source watcher was observed running with initial PID `29080`, started at
 `2026-10-20T05:29:15.995Z` (2026-10-19 in America/Denver), runtime `detached-process`, interval 30 seconds
 and `loginAutoStart: false`. Later actual source-sweep/runtime evidence belongs in
-[REDUNDANCY-04](../agents/REDUNDANCY-04.md). Use:
+[REDUNDANCY-04](../../agents/REDUNDANCY-04.md). Use:
 
 ```sh
 pnpm exit:sync start --state-dir "$TAPUAI_EXIT_STATE" --target-id local-source --keep 3 --interval-ms 30000
@@ -127,7 +127,7 @@ Installation manages the owned `com.tapuai.exit-source` LaunchAgent under `~/Lib
 Uninstall uses the exact original settings and leaves retained snapshots; review/uninstall before changing
 configuration. State is bound to its repository root/target, and kernel locking/owned deletion journaling
 protect capture and retention. This LaunchAgent interface remains prepared; its installation was unsuccessful
-as recorded below. Keep actual runtime/current-source evidence in [REDUNDANCY-04](../agents/REDUNDANCY-04.md).
+as recorded below. Keep actual runtime/current-source evidence in [REDUNDANCY-04](../../agents/REDUNDANCY-04.md).
 Source-cache status never establishes cloud availability or a three-hour switch.
 
 **Actual OS limit (2026-10-19):** writing the normal LaunchAgents plist failed with `EPERM` through both this
@@ -162,11 +162,11 @@ closed, and raw watcher operation neither prevents sleep nor guarantees asleep-t
    Auth methods need capability entries; new Edge Functions need the allowlist or a reason
    for exclusion. `stripe-webhook` stays excluded until one financial credit path is approved.
 2. Run `pnpm exit:map --acknowledge --by "executor/session"` after source changes settle.
-   Retain actual partner review results in [EXIT_CHANGE_LOG](../agents/EXIT_CHANGE_LOG.md).
+   Retain actual partner review results in [EXIT_CHANGE_LOG](../../agents/EXIT_CHANGE_LOG.md).
    CI/`pnpm check` reject stale maps and unannounced content changes, including function-body
    changes with unchanged names. A routed local notice is not evidence a team ran a drill.
 3. Use the watcher for automatic local source upkeep, then export a new verified source release using the commands in
-   [infrastructure/exit/README](../../infrastructure/exit/README.md). Full check runs with
+   [infrastructure/exit/README](../../../infrastructure/exit/README.md). Full check runs with
    `--verify-code`. Prepared source-only CI runs on all branch pushes, all PR targets, manual dispatch and a
    daily default-branch sweep, retaining source artifacts for 30 days. It captures raw source before the full
    check; a failed check may still retain that raw artifact with failed job/status evidence. Inspect its actual
@@ -226,7 +226,7 @@ Setup creates mode-700 folders/mode-600 templates, empty backup/status folders, 
 recipients list and a password-file example. Credentials, actual password file, private decryption identity,
 cloud destinations and readiness evidence remain unconfigured. It refuses an existing output directory;
 it starts no backup, watcher or provider operation. The original setup manifest verifies template integrity
-and remains marked incomplete. Complete private inputs using [BACKUP_OPERATIONS](BACKUP_OPERATIONS.md).
+and remains marked incomplete. Complete private inputs using [BACKUP_OPERATIONS](../BACKUP_OPERATIONS.md).
 
 Health without a config reports default source/tool observations plus backup/prepared evidence not configured.
 Configured health separately checks exact current source, code verification, map validity, exact owned watcher
@@ -274,7 +274,7 @@ verification awaits the settled-source receipt. This observation is not cloud or
   Historic approved/expired Beyond and Fan Zone objects require **bytes before application
   guards**, reviewed Storage owner reconciliation, then database guard restoration. If owner
   FKs require Auth UUIDs, preload only the independently reviewed Auth TOC selection first.
-  Follow the exact guarded sequence in [migration/README](../../infrastructure/migration/README.md)
+  Follow the exact guarded sequence in [migration/README](../../../infrastructure/migration/README.md)
   and [CLOUD_MIGRATION_RUNBOOK](CLOUD_MIGRATION_RUNBOOK.md).
 - Capture source and target catalog/actor-access evidence; restore source revocations with
   reviewed `parity.py grant-sync` SQL. A prior synthetic restore reopened2,059 privileges.
@@ -307,7 +307,7 @@ Every gate is a private `GATE.json` with exactly:
 ```
 
 This incomplete illustration cannot pass. Include all original reports and the exact detail
-fields in [readiness.py](../../infrastructure/exit/readiness.py), not free-text pass notes.
+fields in [readiness.py](../../../infrastructure/exit/readiness.py), not free-text pass notes.
 
 | Gate | Required observed acceptance |
 | --- | --- |
@@ -366,4 +366,4 @@ preserved only under the explicit checked plan and independently accepted parity
 controls and historical references with their retrieval limits. Cloud selection/provisioning,
 actual independently retained data, service-version compatibility, installed-client release,
 alert delivery and full timed rehearsal remain assigned work before claiming readiness.
-Local executor/review/check evidence is recorded in [REDUNDANCY-03](../agents/REDUNDANCY-03.md).
+Local executor/review/check evidence is recorded in [REDUNDANCY-03](../../agents/REDUNDANCY-03.md).
