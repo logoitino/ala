@@ -10,6 +10,22 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `23b5b54b20e3` → `23b5b54b20e3` · announced by EXIT_SYNC cursor session (security report after replay stub import)
+
+App at announcement: commit `5e64aab301afc199158e312bf2383dae26a4eda0` + 5 uncommitted file(s), source `23b5b54b20e3d7803cf2e74197d1a50859ca8f49cc6d499bab9a980b68c054f0`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- Baseline created; no prior plan to compare.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
+## 2026-10-23 · plan `e9e50cf56b87` → `23b5b54b20e3` · announced by BACKEND cursor session (replay stub import CI-REPLAY-01)
+
+App at announcement: commit `5e64aab301afc199158e312bf2383dae26a4eda0` + 5 uncommitted file(s), source `23b5b54b20e3d7803cf2e74197d1a50859ca8f49cc6d499bab9a980b68c054f0`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `scripts/replay/fresh-questions-replay.mjs aa112df53d4f0e0f20386da37f85376263a64045a64eb3c389e9680e43f01dec`, `scripts/replay/life-playbook-replay.mjs a3592f9e23fb13fdc275caf95c435a9d43b3cfb5512e0ef7cd06cff541e10f99`, `scripts/replay/sport-quiz-replay.mjs 855694eabf9ddc57ef7b55a3e361d82c3133d136f9f1639225a05224a119a50b`, `scripts/replay/timed-trivia-replay.mjs 1a7169113b6050c69e9b8254fca2909d068ee78f3169d2c118932d37235ef967`, `scripts/replay/trivia-play-together-replay.mjs 2974ee8fef294e6c970dc9d6a3fa1624e88c322588a306cf3d919d2077a19bf9`; removed `scripts/replay/fresh-questions-replay.mjs 37faa4cd4d5b7231722890f178dace217e0acce8f70d33051c68e085f0c6a6c7`, `scripts/replay/life-playbook-replay.mjs 6480138737f0357e40431b2f288d6c451e998c8fce01737d1d0ad58f0bb32dc9`, `scripts/replay/sport-quiz-replay.mjs dc7a44bcda7b0e4bcc81f31b6ba070c03c4f055135fd736f2d38eabad89de739`, `scripts/replay/timed-trivia-replay.mjs aa3dc6ea34e5a52e8c25b8248cb48b7bf69ee8fc2ef6a2ef37f08659545d0af2`, `scripts/replay/trivia-play-together-replay.mjs 6218f9e5596af81fd2493a7d36028166053c6cd90454f67dad28a44c45a69e80`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-22 · plan `49755cf71dce` → `e9e50cf56b87` · announced by Claude Code workstream 4 (account tags: blocked-tag fix 20261022150000 + staging catch-up replay; not applied)
 
 App at announcement: commit `f4f0be19ebe5383af6d1389bda4ba2c9608e8434` + 5 uncommitted file(s), source `e9e50cf56b8730ae892c4b34993fd1693aebb816248927f152461fba17e10110`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
