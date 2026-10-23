@@ -106,3 +106,7 @@ custody and reviewed cloud destinations; configure/rehearse the backup timer, ac
 retrieval/decrypt/isolated restore; prepare accepted target/images/Auth/Storage/Realtime/finance/
 client-switch/rollback/alert evidence and measure a complete warm2–3hour rehearsal.
 This private template turn activates no live jobs/providers or cloud resources.
+
+### 2026-10-23 · EXIT_SYNC source-release umask fixture
+
+Receipt: `infrastructure/exit/tests/setup.test.mjs` pins the empty existing destination to mode 0755 with `chmod` after `mkdir`. Under umask 077, `mkdir` mode 0755 is masked to 0700, so the refusal assertion saw 448 instead of 493 before `createSetup` ran. `createSetup` still rejects through `absent()` and does not chmod an existing destination. Workflow `umask 077` in `.github/workflows/exit-release.yml` stays. This receipt is a local test fix, not backup activation, hosted readiness, or a review of the 61 open exit notices.

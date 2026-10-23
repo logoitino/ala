@@ -1,5 +1,5 @@
 {
- "planVersion": "ceb9fc795ecf",
+ "planVersion": "6c8d38b4366a",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -2474,7 +2474,7 @@
    "infrastructure/exit/sync.mjs 06d9f9d111287df97ae0c94910752943e91344218edbb2c3966a2c6d77252d79",
    "infrastructure/exit/tests/health-source.test.mjs e5db5c7ecb820b82754db817ea3f6a5cc296a77ddb0ed854e234485c86788b91",
    "infrastructure/exit/tests/release.test.mjs 56e4651f4e61df99b8b5a4e74acd59bce7cdd015e8d15f1b336836b091c78149",
-   "infrastructure/exit/tests/setup.test.mjs a79631c90c89883591c1be2e6d698a63a406e130d50f8e6e615d4502e37ee660",
+   "infrastructure/exit/tests/setup.test.mjs 25304a630985b445b5bddfcac69f7fc449a9d844b174256d9c6e146fdc4f6166",
    "infrastructure/exit/tests/sync.test.mjs 2eac608b14178895e2bfbd1b5510067e5e35a90cb67917249ad6f10653b3886d",
    "infrastructure/exit/tests/test_health.py 3cf4abb205eaacfd5b1d169e79008c958e9f86b0af8dace9fe2866f4439036d5",
    "infrastructure/exit/tests/test_readiness.py 1f8d7cc0d5b744a369721b805f6ae6fceec3c4ba086d4ee23f8d1f0ed14aedec",

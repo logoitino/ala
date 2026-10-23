@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `ceb9fc795ecf` → `6c8d38b4366a` · announced by EXIT_SYNC+DATABASE_MIGRATIONS/cursor-agent
+
+App at announcement: commit `cb3c7025ba38858bbeb6fec9ec77bef8c33f4fdb` + 1 uncommitted file(s), source `6c8d38b4366a5b966f45cba7d8d773d9b72113be810d153b8f1597179612712e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `infrastructure/exit/tests/setup.test.mjs 25304a630985b445b5bddfcac69f7fc449a9d844b174256d9c6e146fdc4f6166`; removed `infrastructure/exit/tests/setup.test.mjs a79631c90c89883591c1be2e6d698a63a406e130d50f8e6e615d4502e37ee660`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-23 · plan `e9e50cf56b87` → `ceb9fc795ecf` · announced by BACKEND schema re-apply (DATABASE_MIGRATIONS)
 
 App at announcement: commit `5e64aab301afc199158e312bf2383dae26a4eda0` + 2 uncommitted file(s), source `ceb9fc795ecf7a1a98eea9abce7fe093cff412015f1b0b231b063743244d3e3e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
