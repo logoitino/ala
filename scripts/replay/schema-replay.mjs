@@ -35,7 +35,13 @@ catch (e) {
   process.exit(1);
 }
 try { await db.exec(schema); record('schema.sql re-applies over itself (idempotent)', true); }
-catch (e) { record('schema.sql re-applies over itself (idempotent)', false, e.message); }
+catch (e) {
+  // PGlite often leaves where/query empty on a multi-statement exec; print them when the driver has them.
+  const where = typeof e.where === 'string' && e.where.trim() ? e.where.split('\n')[0] : '';
+  const query = typeof e.query === 'string' ? e.query.replace(/\s+/g, ' ').trim().slice(0, 240) : '';
+  const detail = [e.message, where && `where: ${where}`, query && `query: ${query}`].filter(Boolean).join(' — ');
+  record('schema.sql re-applies over itself (idempotent)', false, detail);
+}
 
 const list = (r) => r.map((x) => Object.values(x)[0]).join(', ');
 const none = async (name, sql) => { const r = await rows(sql); record(name, r.length === 0, list(r)); };

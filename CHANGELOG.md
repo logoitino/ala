@@ -9,6 +9,10 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-10-23 — Canonical schema re-applies
+
+- The demo `athlete_career_stats` seed in `schema.sql` skips an existing Football row instead of `ON CONFLICT (player_id)`, so a second apply still succeeds after the composite `(player_id, sport)` primary key. No hosted migration.
+
 ## 2026-10-22 — Metro disconnected-request repair (METRO-01)
 
 - Version SDK58 Router Server's narrow pre-shell cancellation fix; retain real errors,

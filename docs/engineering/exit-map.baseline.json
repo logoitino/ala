@@ -1,5 +1,5 @@
 {
- "planVersion": "528bfe22494b",
+ "planVersion": "c6e500f391ab",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1672,7 +1672,7 @@
    "apps/mobile/src/backend/db/connectAccountContext.replay.mjs 1757aec7830468eec917d207518f95d3880a9055730dc7810cb6ee8ee0ee3bfa",
    "apps/mobile/src/backend/db/failedPhotoStoryCleanup.replay.py edb77e6bcdfdeb58af63e4c52eb8636e4f3ad835e05ee637e6aa6396e8ed4dd7",
    "apps/mobile/src/backend/db/notifications.replay.mjs 9f04f4a1e24e6360331e3183c56026fe6dd492e22ab75faee971fe5714ca4dcc",
-   "apps/mobile/src/backend/db/schema.sql 077c50dceaacd7305241404a3f397bbdcca5f285ab6641b2c4469c766d2974e3",
+   "apps/mobile/src/backend/db/schema.sql 9d964b7fe04c65af50aa75eebe6f5e84a2e387c405ed08ff58ac759e5f3771a6",
    "apps/mobile/src/backend/services/__fixtures__/fanZoneMp4Fixture.ts 337d454a4a404dbaa1c9abc3dfdcf7dec05462c34d7361149ff170ea1026550a",
    "apps/mobile/src/backend/services/__tests__/fanZoneMp4.test.ts d966212a5b0f134315f3b6ffdc6af7fd8503adc33d49d24f97fab449e1587ec5",
    "apps/mobile/src/backend/services/fanZoneMedia.ts 73df19ed56e9f0b5e2eb11a5a66310cf7e86d91e41e7105a5d5bcc35dfc8ad39",
@@ -2614,7 +2614,7 @@
    "scripts/replay/orphan-tables-replay.mjs e7630c01bddf317b72830e7c488b4d367e009c94fb5bd9a6d716e628686467c5",
    "scripts/replay/profile-update-replay.mjs 07eaa8046babe50c1de00e3cea18d11ec6f4ff900405054fd5ee1acefaf28e4c",
    "scripts/replay/public-bucket-listing-replay.mjs 700203e3df9005869c0341945dfe27818332cab4b37dbf1ccef000dbfba95ce6",
-   "scripts/replay/schema-replay.mjs ed4cab6939730dd4e5c5c7928d10ee3a01480a8fbcf07cadc7178ac467be6135",
+   "scripts/replay/schema-replay.mjs 73573177682fa8514579d3c7229cfc647bfca6793b6ac6f234560b905b671797",
    "scripts/replay/sport-quiz-replay.mjs dc7a44bcda7b0e4bcc81f31b6ba070c03c4f055135fd736f2d38eabad89de739",
    "scripts/replay/stripe-kyc-replay.mjs 07ae141319c2554b702cd6c0b01514d15ef7f36817263fde75858126def1dc64",
    "scripts/replay/supabase-stubs.mjs a077c5a3968d532412e2ef8babb2beaa107dd40f3262f2755e9be0c2eadf3163",

@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `528bfe22494b` → `c6e500f391ab` · announced by cloud-agent: schema re-apply on exit-setup-umask for CI
+
+App at announcement: commit `6be4fb9d7003da4ab2519c488c1134cdd36118ee` + 2 uncommitted file(s), source `c6e500f391abc4f7b176d658d4d139a0d55a4672e3c43ee12b4b0f08cfd70d52`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/backend/db/schema.sql 9d964b7fe04c65af50aa75eebe6f5e84a2e387c405ed08ff58ac759e5f3771a6`, `scripts/replay/schema-replay.mjs 73573177682fa8514579d3c7229cfc647bfca6793b6ac6f234560b905b671797`; removed `apps/mobile/src/backend/db/schema.sql 077c50dceaacd7305241404a3f397bbdcca5f285ab6641b2c4469c766d2974e3`, `scripts/replay/schema-replay.mjs ed4cab6939730dd4e5c5c7928d10ee3a01480a8fbcf07cadc7178ac467be6135`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-23 · plan `90677cd760b6` → `528bfe22494b` · announced by cloud-agent: exclude expo-env from exit inventory for CI
 
 App at announcement: commit `5b734cbdc8304081eba0012026bc9e0a8922dada` + 1 uncommitted file(s), source `528bfe22494b2a62f6c3bd980328f2e648a0e30072c16c6a3f85f21b31e86f52`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
