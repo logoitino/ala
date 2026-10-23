@@ -1,5 +1,5 @@
 {
- "planVersion": "6c8d38b4366a",
+ "planVersion": "bfe0524be471",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -2608,21 +2608,21 @@
    "scripts/replay/coach-level-replay.mjs fc45b64c1b61762d04320d5d8e124e7e3400235a52f6d5ae5041b3b36daed4e3",
    "scripts/replay/data01-closures-replay.mjs f6d039874351b963897af7e86c5abe289ed81576b9c4a0d04a3a7e55e396362e",
    "scripts/replay/fan-zone-replay.mjs c541b5966f060fd0b19a673373bd9d028fa1ca58ba52c9fcee6ae8c44463656b",
-   "scripts/replay/fresh-questions-replay.mjs 37faa4cd4d5b7231722890f178dace217e0acce8f70d33051c68e085f0c6a6c7",
+   "scripts/replay/fresh-questions-replay.mjs aa112df53d4f0e0f20386da37f85376263a64045a64eb3c389e9680e43f01dec",
    "scripts/replay/game-venues-replay.mjs 3735287d4c4d4fb6547179890300ccd341e91a43b89e9e519b0b82ffa16769bb",
-   "scripts/replay/life-playbook-replay.mjs 6480138737f0357e40431b2f288d6c451e998c8fce01737d1d0ad58f0bb32dc9",
+   "scripts/replay/life-playbook-replay.mjs a3592f9e23fb13fdc275caf95c435a9d43b3cfb5512e0ef7cd06cff541e10f99",
    "scripts/replay/notification-payment-replay.mjs 7051bdae6bf4b18d269098ef7e2ab8e54ab7061c8ce379f4293b50972af607ef",
    "scripts/replay/orphan-tables-replay.mjs e7630c01bddf317b72830e7c488b4d367e009c94fb5bd9a6d716e628686467c5",
    "scripts/replay/profile-update-replay.mjs 07eaa8046babe50c1de00e3cea18d11ec6f4ff900405054fd5ee1acefaf28e4c",
    "scripts/replay/public-bucket-listing-replay.mjs 700203e3df9005869c0341945dfe27818332cab4b37dbf1ccef000dbfba95ce6",
    "scripts/replay/schema-replay.mjs 73573177682fa8514579d3c7229cfc647bfca6793b6ac6f234560b905b671797",
-   "scripts/replay/sport-quiz-replay.mjs dc7a44bcda7b0e4bcc81f31b6ba070c03c4f055135fd736f2d38eabad89de739",
+   "scripts/replay/sport-quiz-replay.mjs 855694eabf9ddc57ef7b55a3e361d82c3133d136f9f1639225a05224a119a50b",
    "scripts/replay/stripe-kyc-replay.mjs 07ae141319c2554b702cd6c0b01514d15ef7f36817263fde75858126def1dc64",
    "scripts/replay/supabase-stubs.mjs a077c5a3968d532412e2ef8babb2beaa107dd40f3262f2755e9be0c2eadf3163",
    "scripts/replay/support-replay.mjs 777a5c9934ad033bd86cfc04ff19e8d6132bc5a0294018415f9c1e10b3c80e6b",
-   "scripts/replay/timed-trivia-replay.mjs aa3dc6ea34e5a52e8c25b8248cb48b7bf69ee8fc2ef6a2ef37f08659545d0af2",
+   "scripts/replay/timed-trivia-replay.mjs 1a7169113b6050c69e9b8254fca2909d068ee78f3169d2c118932d37235ef967",
    "scripts/replay/tip-model-replay.mjs b9be977d3d187e3cd60af0dbf05903f6a34759e6b85a9ea13598d3387bca02cd",
-   "scripts/replay/trivia-play-together-replay.mjs 6218f9e5596af81fd2493a7d36028166053c6cd90454f67dad28a44c45a69e80",
+   "scripts/replay/trivia-play-together-replay.mjs 2974ee8fef294e6c970dc9d6a3fa1624e88c322588a306cf3d919d2077a19bf9",
    "scripts/replay/vote-limits-replay.mjs b674c94df9401c85ca9c6d39ad34a7c4690145c0889b5c056ea5b06e85df30b5",
    "scripts/replay/workout-challenges-replay.mjs 97b88b168dbb57dd6547d59b9ec81c1a26357fbf88e61ff6108fdb49d9e017fa",
    "scripts/split-schema-batches.mjs e131af7617168b2bec1b94a5098ff735666c51330a48489cc73357addd0d940a",
