@@ -106,6 +106,10 @@ const page = (key, group) => rpc(key, 'public.quiz_group_page($1)', [group]);
 const chapterOf = async qid => (await one('select chapter from public.sport_quiz_questions where id=$1', [qid])).chapter;
 
 for (const k of players) await prefs(k);
+// Seeded IQ mix stays approved in product schema; archive it here so personal sport rounds stay fixture-only.
+const iqSeed = (await db.query("select id from public.sport_quiz_questions where sport = 'IQ' and topic_category = 'general' and status = 'approved'")).rows;
+assert.equal(iqSeed.length, 6);
+for (const row of iqSeed) await question('admin', row.id, 'archive', { reason: 'QUIZ-04 replay isolates sport fixtures from the IQ mix seed.' });
 // Trivia pool for personal and group rounds.
 const sportQ = async (sport) => { const q = await question('admin', null, 'create', { family_action: 'new', topic_category: 'sport', sport, prompt: `Which reviewed ${sport} fact is number ${++n}?`,
   options: ['First choice', 'Second choice', 'Third choice', 'Fourth choice'], correct_option: 1, explanation: `The second choice is the reviewed ${sport} fact.`,

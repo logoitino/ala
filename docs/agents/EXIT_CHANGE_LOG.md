@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `23b5b54b20e3` → `5e25319547c9` · announced by POLLS cursor session (QUIZ replay IQ archive + CI unblock)
+
+App at announcement: commit `a46094ea6ccb36917f10b557b74decbac1e593a4` + 5 uncommitted file(s), source `5e25319547c9b11c8c9a22c2f743495f84af7ed39ba35a3cf94b374cdf0b6d03`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/backend/db/schema.sql 9d964b7fe04c65af50aa75eebe6f5e84a2e387c405ed08ff58ac759e5f3771a6`, `infrastructure/exit/tests/setup.test.mjs 25304a630985b445b5bddfcac69f7fc449a9d844b174256d9c6e146fdc4f6166`, `scripts/replay/fresh-questions-replay.mjs 07292ecc2d02b9bdf1bc0346f3dee3c11d9b5e59d231aa3ed0d2e61ce7f63bcf`, `scripts/replay/life-playbook-replay.mjs 1aafe1267f00dcebcdcc19cf35e2aea161b61d23259f525e658e14c04e2cdf4d`, `scripts/replay/trivia-play-together-replay.mjs c5610785a1b5864f49be33408f7d84e4041c509e3b8a438f71bb8e0881b03a07`; removed `apps/mobile/src/backend/db/schema.sql 077c50dceaacd7305241404a3f397bbdcca5f285ab6641b2c4469c766d2974e3`, `infrastructure/exit/tests/setup.test.mjs a79631c90c89883591c1be2e6d698a63a406e130d50f8e6e615d4502e37ee660`, `scripts/replay/fresh-questions-replay.mjs aa112df53d4f0e0f20386da37f85376263a64045a64eb3c389e9680e43f01dec`, `scripts/replay/life-playbook-replay.mjs a3592f9e23fb13fdc275caf95c435a9d43b3cfb5512e0ef7cd06cff541e10f99`, `scripts/replay/trivia-play-together-replay.mjs 2974ee8fef294e6c970dc9d6a3fa1624e88c322588a306cf3d919d2077a19bf9`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-23 · plan `23b5b54b20e3` → `23b5b54b20e3` · announced by EXIT_SYNC cursor session (security report after replay stub import)
 
 App at announcement: commit `5e64aab301afc199158e312bf2383dae26a4eda0` + 5 uncommitted file(s), source `23b5b54b20e3d7803cf2e74197d1a50859ca8f49cc6d499bab9a980b68c054f0`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

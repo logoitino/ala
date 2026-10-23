@@ -99,6 +99,14 @@ const withWeekEnd = async (expr, work) => {
 
 // Bank: Basketball 8, Football 6, Rugby 4 (group theme), Cricket 1, one true/false, science 2.
 await settings(true); await play(5, true, false);
+// Seeded IQ mix (sport='IQ', topic general) stays approved in product schema; this fixture archives those
+// rows so personal sport rounds stay Basketball/Football-only and First/Second-choice assertions stay stable.
+const iqSeed = (await db.query("select id from public.sport_quiz_questions where sport = 'IQ' and topic_category = 'general' and status = 'approved'")).rows;
+assert.equal(iqSeed.length, 6);
+for (const row of iqSeed) {
+  await question(row.id, 'archive', { reason: 'QUIZ-03 replay isolates sport fixtures from the IQ mix seed.' });
+}
+assert.equal((await one("select count(*)::int n from public.sport_quiz_questions where sport = 'IQ' and status = 'approved'")).n, 0);
 for (let i = 0; i < 8; i++) await approved('Basketball');
 for (let i = 0; i < 6; i++) await approved('Football');
 for (let i = 0; i < 4; i++) await approved('Rugby');
