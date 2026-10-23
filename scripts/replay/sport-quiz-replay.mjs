@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
+import { SUPABASE_STUBS } from './supabase-stubs.mjs';
 
 const dist = process.argv[2] || '/tmp/books01-pg/pkg/package/dist';
 const schemaPath = process.argv[3] || 'apps/mobile/src/backend/db/schema.sql';
@@ -15,9 +16,8 @@ const migrationPath = 'supabase/migrations/20261014140000_sport_pop_quiz.sql';
 const { PGlite } = await import(pathToFileURL(path.join(dist, 'index.js')).href);
 const { pgcrypto } = await import(pathToFileURL(path.join(dist, 'contrib/pgcrypto.js')).href);
 const db = new PGlite({ extensions: { pgcrypto } });
-const bootstrap = fs.readFileSync('scripts/replay/schema-replay.mjs', 'utf8').match(/const SUPABASE_STUBS = String.raw`([\s\S]*?)`;/)?.[1];
-assert.ok(bootstrap, 'existing Supabase bootstrap is available');
-await db.exec(bootstrap);
+assert.ok(SUPABASE_STUBS, 'existing Supabase bootstrap is available');
+await db.exec(SUPABASE_STUBS);
 // This receipt deliberately exercises the historical untimed contract, before its replacement.
 const historicalSchema = fs.readFileSync(schemaPath, 'utf8').split('\n-- QUIZ-02:')[0];
 await db.exec(historicalSchema);
