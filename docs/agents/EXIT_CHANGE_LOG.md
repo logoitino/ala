@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `323516068907` → `323516068907` · announced by EXIT_SYNC refresh after IQ archive on cursor/ci-trunk-schema-exit-9a86
+
+App at announcement: commit `02485e9294d48cd4b0d874c266810941e3ccae6c`, source `323516068907ff49961e74390e62e673469c513a9f7432678a17fd307f3178eb`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- Baseline created; no prior plan to compare.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-23 · plan `bfe0524be471` → `323516068907` · announced by POLLS IQ archive on cursor/ci-trunk-schema-exit-9a86
 
 App at announcement: commit `1c289c57b9619e7515bb0cc2cc2cbeca9c13ea90` + 3 uncommitted file(s), source `323516068907ff49961e74390e62e673469c513a9f7432678a17fd307f3178eb`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
