@@ -76,3 +76,17 @@ preflight, STATE §4 line, final `pnpm check`. Claude's claim on `exit-map.mjs` 
 **Gaps:** hosted restore and cutover remain unclaimed. The 2026-10-23 exit-map notice is not a review. No provider account, hosted drill, or cutover is authorized by this receipt.
 
 **Next owner:** named reviewers on the 2026-10-23 notice record their own results; `REDUNDANCY_LEAD` keeps hosted drill/cutover with the owner. `CTO` integrates this receipt.
+
+## Documentation execution receipt — exit reading home (2026-10-23)
+
+**Task:** DOCUMENTATION acceptance for the exit reading-home consolidation on `cursor/exit-docs-home-9a86` (VP_OPERATIONS commit `8465db6`). **Executor:** DOCUMENTATION, this Cursor session (`grok-4.7-medium`). This receipt records documentation synchronization only. It does not claim that EXIT_* or Security specialists ran, and it does not claim a hosted restore, drill, or cutover.
+
+**Confirmed:** `docs/README.md` points at `docs/engineering/exit/README.md` as the one exit section (engineering index, two rows, same target). `AGENTS.md`, `docs/agents/TEAMS.md` (contract item 13), and `docs/agents/TEAM_HIERARCHY.md` name that reading home. Generators `scripts/exit-map.mjs` and `infrastructure/security/report.mjs` write `docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md` and `docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md`. Runnable `infrastructure/*` trees stayed put, as the reading-home README states.
+
+**Files this pass:** `docs/STATE.md` (Last updated header set to 2026-10-23; new §4 heading, newest first) and `docs/agents/REDUNDANCY-02.md` (this receipt). README, hierarchy, TEAMS, and AGENTS were already updated in `8465db6` and were checked, not rewritten.
+
+**Check (2026-10-23):** `pnpm docs:links` — exit 0. `docs:links ok (326 active Markdown files; local file destinations only)`.
+
+**Gaps:** §4 still holds more than ~15 dated headings; older workstream history was left in place. Link check does not prove exit-map freshness, a hosted drill, or release approval. Hosted restore and cutover remain unclaimed. The 2026-10-23 exit-map notice is still not a review.
+
+**Next owner:** `CTO` integrates this receipt. Named reviewers on the 2026-10-23 notice record their own results. `REDUNDANCY_LEAD` keeps hosted drill/cutover with the owner.
