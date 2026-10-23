@@ -4456,10 +4456,18 @@ set
   forty_yard = case when coalesce(forty_yard, '') = '' then '4.58s' else forty_yard end,
   vertical_jump = case when coalesce(vertical_jump, '') = '' then '34 in' else vertical_jump end;
 
+-- Demo career lines. Skip a Football row that is already stored instead of
+-- ON CONFLICT (player_id): this file later replaces that single-column primary key
+-- with (player_id, sport), so a second apply has no player_id-only unique constraint.
 insert into public.athlete_career_stats (player_id, sport, games_played, scoring_value, volume_value, mvp_badges)
 select p.id, 'Football', 11, 186, 2140, 2
 from public.players p
-on conflict (player_id) do nothing;
+where not exists (
+  select 1
+  from public.athlete_career_stats existing
+  where existing.player_id = p.id
+    and existing.sport = 'Football'
+);
 
 insert into public.athlete_game_logs (player_id, played_on, opponent_school, stat_line, scoring_value, volume_value)
 select p.id, d.played_on, d.opponent_school, d.stat_line, d.scoring_value, d.volume_value

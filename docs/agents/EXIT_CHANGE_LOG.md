@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `e38342972b62` → `52c793b873a3` · announced by EXIT_SYNC refresh after IQ archive on cursor/exit-docs-home-9a86
+
+App at announcement: commit `49782e3608d4f35f9e9bc738ffd447cc57cef8d9` + 2 uncommitted file(s), source `52c793b873a3bf43166d41c267f1ce2d91b067e91d97cc5242224aeb3584d9fe`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/backend/db/schema.sql 9d964b7fe04c65af50aa75eebe6f5e84a2e387c405ed08ff58ac759e5f3771a6`, `infrastructure/exit/tests/setup.test.mjs 25304a630985b445b5bddfcac69f7fc449a9d844b174256d9c6e146fdc4f6166`; removed `apps/mobile/src/backend/db/schema.sql 077c50dceaacd7305241404a3f397bbdcca5f285ab6641b2c4469c766d2974e3`, `infrastructure/exit/tests/setup.test.mjs a79631c90c89883591c1be2e6d698a63a406e130d50f8e6e615d4502e37ee660`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-23 · plan `a13b5fce1c6e` → `e38342972b62` · announced by POLLS IQ archive on cursor/exit-docs-home-9a86
 
 App at announcement: commit `8f2e9fd816c059d4e1b14a39d119ee2d3c11c8d2` + 3 uncommitted file(s), source `e38342972b62c9698f1e1499106afd6566b35d92d87004ea2e9b7a53917db290`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
