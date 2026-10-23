@@ -1443,7 +1443,10 @@ capsule preserves schema/migration hashes; code restoration never executes old S
 
 `node scripts/replay/schema-replay.mjs <pglite dist>` builds the whole `schema.sql` on an empty Postgres 18.6
 (PGlite, outside the repo) with stubs for Supabase's `auth` / `storage` / `realtime` schemas and roles, applies it
-twice, and checks rules that must hold everywhere: row level security on every public table, a pinned
+twice, and checks rules that must hold everywhere. The demo `athlete_career_stats` seed matches an existing Football
+row by player instead of `ON CONFLICT (player_id)`, because the athlete-sports section replaces that primary key with
+`(player_id, sport)` before a second apply. A failed re-apply prints `e.where` and a query snippet when the driver
+supplies them. Rules checked: row level security on every public table, a pinned
 `search_path` on every security definer function, no `admin_*` function executable by `anon`, and that a request
 with no JWT claims is never treated as an admin, plus who may call each hardened function (tried as a guest, a
 signed-in fan, an admin and a claimless request) and that a real donation still reaches the books. It found the gaps fixed by

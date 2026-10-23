@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-23 · plan `e9e50cf56b87` → `ceb9fc795ecf` · announced by BACKEND schema re-apply (DATABASE_MIGRATIONS)
+
+App at announcement: commit `5e64aab301afc199158e312bf2383dae26a4eda0` + 2 uncommitted file(s), source `ceb9fc795ecf7a1a98eea9abce7fe093cff412015f1b0b231b063743244d3e3e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/backend/db/schema.sql 9d964b7fe04c65af50aa75eebe6f5e84a2e387c405ed08ff58ac759e5f3771a6`, `scripts/replay/schema-replay.mjs 73573177682fa8514579d3c7229cfc647bfca6793b6ac6f234560b905b671797`; removed `apps/mobile/src/backend/db/schema.sql 077c50dceaacd7305241404a3f397bbdcca5f285ab6641b2c4469c766d2974e3`, `scripts/replay/schema-replay.mjs ed4cab6939730dd4e5c5c7928d10ee3a01480a8fbcf07cadc7178ac467be6135`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-22 · plan `49755cf71dce` → `e9e50cf56b87` · announced by Claude Code workstream 4 (account tags: blocked-tag fix 20261022150000 + staging catch-up replay; not applied)
 
 App at announcement: commit `f4f0be19ebe5383af6d1389bda4ba2c9608e8434` + 5 uncommitted file(s), source `e9e50cf56b8730ae892c4b34993fd1693aebb816248927f152461fba17e10110`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
