@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `5ca7ffc4ae64` |
-| Last announced plan | `5ca7ffc4ae64` — up to date |
+| Exit plan version (what the app uses on Supabase) | `b31a60b4a97c` |
+| Last announced plan | `b31a60b4a97c` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
 | Latest migration | `20261022152000_no_cut_gifts_optional_tips.sql` (57 files) |
 | Canonical schema hash | `9d964b7fe04c65af50aa75eebe6f5e84a2e387c405ed08ff58ac759e5f3771a6` (`schema.sql`) |
-| Complete source/configuration content hash | `5ca7ffc4ae64f1d2f8b870a06d933d3e44365481b7a6dc88e5f4f82131034322` across 1301 files |
+| Complete source/configuration content hash | `b31a60b4a97c3be077be4e0d1124c8c8bb1e4f4bc9e84e932003111d34b2e292` across 1301 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -163,7 +163,7 @@ Counts come from static statements in `schema.sql` and the source; the live data
 
 ### SDK callsite coverage
 
-AST callsites: 1105; literal targets: 480; explicit owner-review candidates: 95.
+AST callsites: 1106; literal targets: 480; explicit owner-review candidates: 95.
 The complete machine inventory (`node scripts/exit-map.mjs --json`) records each detected callsite path, line, column,
 operation and literal target. Dynamic arguments and unresolved client origins require owner review. Syntax inspection
 does not prove runtime/provider coverage; overloads, dynamic SQL and deployed drift require live catalog parity.
