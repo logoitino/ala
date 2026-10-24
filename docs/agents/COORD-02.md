@@ -110,3 +110,22 @@ released to the next owners below; that release is not production or counsel acc
 
 Current next owners remain the rows above. Counsel approval, actual Stripe fees/net settlement,
 targeted SQL/Edge rollout, physical-device/store and IP filing acceptance remain unverified.
+
+## 6. Parallel Soft-Wall / EAS checkpoint (2026-10-24) — does not close gift release
+
+Outside-session cloud agent on `cursor/soft-wall-resume-polish-9a86` (PR #12) synced the
+115-role / 17-department hierarchy gates to the Soft-Wall resume + EAS preview tip without
+changing role pins, reporting chains or COORD-02 gift duties:
+
+| Gate | Result |
+| --- | --- |
+| `pnpm agents:check` | 115 roles OK |
+| `pnpm docs:links` / `feature-admin:check` / `ip:check` / `exit:map:check` / `security:infra:check` / `infra:register:check` | PASS |
+| Exit plan | `4fc54275bb8d` announced (`EXIT_CHANGE_LOG`, announcer `cloud-agent soft-wall-eas-checkpoint`) |
+| Prior green EAS preview | Android `42e81674`, iOS `d4a153a0` (Stripe 0.83, arm ABIs, Gradle workers=2, `$StripeDisableSPM`) |
+| UX on tip after those builds | Birth-year partial digits; Profile hamburger in hero + scrolling categorized sheet |
+
+**Departments notified for review against current tip (not acceptance):** AUTH, PROFILE, ONBOARDING,
+MINOR_SAFETY, RELEASE, OPERATIONS, DESIGN, QA / DEVICE_QA, REDUNDANCY_LEAD / EXIT_SYNC,
+INFRASTRUCTURE, SECURITY partners, DOCUMENTATION, VP_OPERATIONS. Gift counsel, hosted tip
+rollout, Connect settlement and store submission remain with the rows in §2.

@@ -1,4 +1,15 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-10-24 — Soft-Wall EAS preview + Profile/age UX checkpoint
+
+- EAS Soft-Wall preview path: Stripe RN 0.83 (no tapandpay), arm-only Android ABIs, Gradle
+  `workers.max=2`, iOS `$StripeDisableSPM` plugin; prior finished builds Android `42e81674` /
+  iOS `d4a153a0`.
+- Birth-year field keeps partial digits while typing; Profile hamburger sits on the hero
+  identity row; settings sheet scrolls with Account / Play & shop / Money & staff /
+  Support & legal groups.
+- Hierarchy sync for the tip: 115 agents, docs/links, feature-admin, IP, exit plan
+  `4fc54275bb8d`, infra and Security source report gates. COORD-02 gift release remains open.
+
 ## 2026-10-23 — Soft-Wall Vault unlock and resume session
 
 - Guest Vault unlock on Highlights opens Soft-Wall (`soft_wall.exclusive`) then resumes PaymentSheet.

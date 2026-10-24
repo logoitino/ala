@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-24 · plan `4fc54275bb8d` → `4fc54275bb8d` · announced by cloud-agent soft-wall-eas-checkpoint
+
+App at announcement: commit `dbe851b885f5946f2e3e9d51edca2cf4d4c84259`, source `4fc54275bb8dbdc114e18349c94cd716621683590469249b0d28bb3ff7140aeb`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- Baseline created; no prior plan to compare.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-24 · plan `14d8eeba2d32` → `4fc54275bb8d` · announced by cloud-agent profile-age-ux
 
 App at announcement: commit `d4d70de01471be1025d82921752f91134772d2cf` + 7 uncommitted file(s), source `4fc54275bb8dbdc114e18349c94cd716621683590469249b0d28bb3ff7140aeb`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
