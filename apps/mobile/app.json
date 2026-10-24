@@ -90,6 +90,9 @@
         {
           "android": {
             "enableMinifyInReleaseBuilds": false
+          },
+          "ios": {
+            "useFrameworks": "dynamic"
           }
         }
       ]
