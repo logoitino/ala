@@ -100,7 +100,8 @@
           }
         }
       ],
-      "./plugins/withStripeDisableSPM.js"
+      "./plugins/withStripeDisableSPM.js",
+      "./plugins/withGradleLowMemory.js"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,5 +1,5 @@
 {
- "planVersion": "7d3a65e40e8a",
+ "planVersion": "14d8eeba2d32",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1545,7 +1545,7 @@
    "apps/admin-portal/package.json 3f19f62e557398519cabdcbe5f29466c741e0bf5c0a468addecb0c53c979c2b3",
    "apps/admin-portal/postcss.config.mjs 9ca55411b62b2c9cc5631a3e6c631d80c8b8171c7b9ea1e19f83400f4100e910",
    "apps/admin-portal/tsconfig.json c075077c839ff974b13fdc03ad82cb0a229c799f0cefe27e03350d38b5cae3ac",
-   "apps/mobile/app.json bb4067afa9a31a397638b88f0d880e5ec2eac50d61420f9ad679b02fa6f3a4a5",
+   "apps/mobile/app.json 70fd01b5338c003f8f5334ac7907c46b6a6c0db031c1af8164f153d0035d30f6",
    "apps/mobile/app/(admin)/_layout.tsx 3472e0f7dbb5420ad53120b225580d0333bcdf462fbdea69d06be8d2aa81e041",
    "apps/mobile/app/(admin)/admin/_layout.tsx 2dcf8de58ace4a7c8143d7579d68fd47682f8bb29d882aad75fd517c9043af35",
    "apps/mobile/app/(admin)/admin/analytics.tsx bf5c86bea65457e4cafb5088ba27607089cf079caca9d4b1842bed28703cb8ab",
@@ -1656,6 +1656,7 @@
    "apps/mobile/jest.setup.js f20ef602e8841f99e1aa9d025e5c2012221edce851b520a0bc4170ebc0586dcc",
    "apps/mobile/metro.config.js 9aae58cae64cb372180722789b945c189e8978311fe15d0c2925b7668ae6e0e9",
    "apps/mobile/package.json 6650182b648802b995c9c8280b2f5d602ae97972993e51acb2af04369e52d5f0",
+   "apps/mobile/plugins/withGradleLowMemory.js 83fcbfea49957d1bcb81a3255ed23b29f4b6abfd3aeb8e8bc2b760b1b87e6a1e",
    "apps/mobile/plugins/withStripeDisableSPM.js 8dc1f6cc6d92028f650a6bec12314ea75dff7b1a1651d4392215c7feaaf9747b",
    "apps/mobile/public/canvaskit.wasm eb68c7a7f602d8cb89915352c4471a2d26edfd72000f78202cb1fe32ce1f9dc4",
    "apps/mobile/src/backend/api/__tests__/fanZoneMedia.test.ts 94103ca8f1e47ef59bca7dbbbcc7c62b7db5ae6c1cddd8d8d611c3bd66d8feb6",

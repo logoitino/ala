@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-24 · plan `7d3a65e40e8a` → `14d8eeba2d32` · announced by cloud-agent soft-wall GradleLowMemory
+
+App at announcement: commit `9000b6faecde1ededc785f268252a40f10f168b7` + 2 uncommitted file(s), source `14d8eeba2d327566771d6377895f3a666bb8a76660690008921e7fd7f7ebc93e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app.json 70fd01b5338c003f8f5334ac7907c46b6a6c0db031c1af8164f153d0035d30f6`, `apps/mobile/plugins/withGradleLowMemory.js 83fcbfea49957d1bcb81a3255ed23b29f4b6abfd3aeb8e8bc2b760b1b87e6a1e`; removed `apps/mobile/app.json bb4067afa9a31a397638b88f0d880e5ec2eac50d61420f9ad679b02fa6f3a4a5`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-24 · plan `cbc44e7a022d` → `7d3a65e40e8a` · announced by cloud-agent soft-wall EAS ABI/StripeDisableSPM
 
 App at announcement: commit `2fc569610bb0e5e994b6537842062813fa75e745`, source `7d3a65e40e8ad8b144f812500b7b811a9c9bc706be81df215c1d61db565c47ec`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
