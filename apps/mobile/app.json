@@ -99,7 +99,8 @@
             "useFrameworks": "dynamic"
           }
         }
-      ]
+      ],
+      "./plugins/withStripeDisableSPM.js"
     ],
     "experiments": {
       "typedRoutes": true
