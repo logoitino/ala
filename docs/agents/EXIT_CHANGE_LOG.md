@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-24 · plan `6a70a34dc4b4` → `49c45af83cf0` · announced by eas-sdk58-native-fix
+
+App at announcement: commit `d7fef13e831a4fd4422ece3b94c1fe14ba7b7371` + 4 uncommitted file(s), source `49c45af83cf0bb97edf127dfb8157adf6aebc84edd6f1a2ee6cbe5ed882ec437`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app.json 522b3d2d4ead64b0530a96153550b6284b98469da14ade16da39e2373a610bbf`, `apps/mobile/eas.json cbfa023f9be8684cb909a2dd76820cbc9199d5ce0cd38474d9f9bb21b794b54f`, `apps/mobile/package.json 5586e08f1b3d9517549e21f3cea9431156856fb221af287d1319ad3dc32052a8`, `pnpm-lock.yaml 19e5a5b3bda9364fc2d3bf2f2348933378c408dc1d9574585ad9cdcbe9f86c53`; removed `apps/mobile/app.json 82a0b5215fc8eda8921bede3a1974d6b248a19545d28525c88fc7b58b6891fd2`, `apps/mobile/eas.json aea7efc39c00e648d52fdeedc35569824fa6a8e8458b873cf2bcd1dc489b8b9c`, `apps/mobile/package.json ab688f53a244e8b2a7f2661b8c6cb7b660f06cdbf1b59582ecba37fc54464e88`, `pnpm-lock.yaml 673ea75682af43bb4732bc3af7f38b0ed24af5093c26d1234f2448082b1e0300`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-24 · plan `a4d80073230b` → `6a70a34dc4b4` · announced by soft-wall-coverage-polish
 
 App at announcement: commit `a46556f973dea58dca1325e5783b9873e25e0bbd` + 7 uncommitted file(s), source `6a70a34dc4b4e7e4b3dcd47a303273377cfa216ee791078ed608093688bab138`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

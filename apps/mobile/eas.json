@@ -7,6 +7,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "node": "24.11.0",
       "env": {
         "APP_ENV": "development",
         "EXPO_PUBLIC_APP_ENV": "development"
@@ -15,16 +16,28 @@
     "preview": {
       "distribution": "internal",
       "channel": "preview",
+      "node": "24.11.0",
+      "ios": {
+        "image": "sdk-58",
+        "simulator": false
+      },
+      "android": {
+        "image": "sdk-58"
+      },
       "env": {
         "APP_ENV": "preview",
         "EXPO_PUBLIC_APP_ENV": "preview"
-      },
-      "ios": {
-        "simulator": false
       }
     },
     "production": {
       "channel": "production",
+      "node": "24.11.0",
+      "ios": {
+        "image": "sdk-58"
+      },
+      "android": {
+        "image": "sdk-58"
+      },
       "env": {
         "APP_ENV": "production",
         "EXPO_PUBLIC_APP_ENV": "production"
