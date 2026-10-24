@@ -85,5 +85,12 @@
       "/node_modules/",
       "/.expo/"
     ]
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "@stripe/stripe-react-native"
+      ]
+    }
   }
 }
