@@ -25,6 +25,7 @@ import { CardShine } from '@/components/Effects/CardShine';
 import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import {
   catalogSponsorTiers,
   formatSponsorDollars,
@@ -66,7 +67,7 @@ function fireLight() {
  * @param onClose Dismiss (locked while PaymentSheet is open).
  * @param onSponsored Persist `sponsorships` after a successful one-time charge.
  * @returns Bottom sheet with Silver / Gold / Platinum cards, logo, and Complete Sponsorship checkout.
- * @sideEffects ImagePicker, Storage logo upload, `useTipCheckout` PaymentSheet, `add_user_aura` (payer), Light `impactAsync` on tier change, Success notification from checkout.
+ * @sideEffects Soft-Wall for guests before Complete Sponsorship; ImagePicker, Storage logo upload, `useTipCheckout` PaymentSheet, `add_user_aura` (payer), Light `impactAsync` on tier change, Success notification from checkout.
  */
 export function SponsorshipModal({
   visible,
@@ -76,6 +77,7 @@ export function SponsorshipModal({
 }: SponsorshipModalProps) {
   const frame = useSheetFrame();
   const { live } = useAppRuntime();
+  const { requireAuth } = useSoftWall();
   const { startCheckout, busy } = useTipCheckout();
   const tiers = catalogSponsorTiers(live.catalog.sponsorTiers);
   const [tierId, setTierId] = useState<SponsorshipTierId>('silver');
@@ -145,21 +147,26 @@ export function SponsorshipModal({
       return;
     }
 
-    void startCheckout({
-      tipAmount: tier.dollars,
-      coverFees: false,
-      skipBacker: true,
-      auraPoints: tier.auraPoints,
-      successToast: `${tier.name} locked 🏆 +${tier.auraPoints.toLocaleString()} Aura`,
-      onPaid: async () => {
-        const storedLogo = logoUrl.trim() ? await uploadSponsorLogo(logoUrl.trim()) : '';
-        await onSponsored({
-          businessName: name,
-          logoUrl: storedLogo,
-          schoolTeam: school,
-          tier: tier.id,
+    requireAuth({
+      kind: 'signin',
+      resume: () => {
+        void startCheckout({
+          tipAmount: tier.dollars,
+          coverFees: false,
+          skipBacker: true,
+          auraPoints: tier.auraPoints,
+          successToast: `${tier.name} locked 🏆 +${tier.auraPoints.toLocaleString()} Aura`,
+          onPaid: async () => {
+            const storedLogo = logoUrl.trim() ? await uploadSponsorLogo(logoUrl.trim()) : '';
+            await onSponsored({
+              businessName: name,
+              logoUrl: storedLogo,
+              schoolTeam: school,
+              tier: tier.id,
+            });
+            onClose();
+          },
         });
-        onClose();
       },
     });
   };

@@ -55,6 +55,8 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
   const pendingResume = useRef<(() => void) | null>(null);
   const armedForSession = useRef(false);
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Cold start: stash the tap while AuthContext is still restoring so Give / Vault is not a no-op. */
+  const pendingWhileLoading = useRef<SoftWallIntent | null>(null);
 
   const clearResumeTimer = useCallback(() => {
     if (resumeTimer.current != null) {
@@ -67,12 +69,17 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
     clearResumeTimer();
     setIntent(null);
     pendingResume.current = null;
+    pendingWhileLoading.current = null;
     armedForSession.current = false;
   }, [clearResumeTimer]);
 
   const requireAuth = useCallback(
     (next: SoftWallIntent) => {
-      if (loading) return;
+      if (loading) {
+        pendingWhileLoading.current = next;
+        return;
+      }
+      pendingWhileLoading.current = null;
       if (!isGuest && session) {
         // AgeConfirmModal covers required and optional birth prompts — arm resume, do not reopen Soft-Wall.
         if (!needsAgeConfirmation && birthPrompt == null) {
@@ -93,6 +100,15 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
     },
     [birthPrompt, clearResumeTimer, isGuest, loading, needsAgeConfirmation, session],
   );
+
+  // Replay the stashed tap once AuthContext finishes restoring (guest → Soft-Wall, signed-in → resume).
+  useEffect(() => {
+    if (loading) return;
+    const stashed = pendingWhileLoading.current;
+    if (!stashed) return;
+    pendingWhileLoading.current = null;
+    requireAuth(stashed);
+  }, [loading, requireAuth]);
 
   // Close the sign-in sheet the instant a session exists, same as before — a brand-new fan
   // shouldn't be stuck staring at the Apple/Google/Magic-Link form while COPPA confirmation

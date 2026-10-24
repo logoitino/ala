@@ -79,12 +79,17 @@ describe('soft wall', () => {
     expect(wall.visible).toBe(false);
   });
 
-  it('does nothing while auth is still loading', async () => {
-    await mount({ ...guest, loading: true });
+  it('stashes a tap while auth is loading, then opens Soft-Wall once restore finishes', async () => {
+    const auth = await mount({ ...guest, loading: true });
     const resume = jest.fn();
-    await act(async () => wall.requireAuth({ kind: 'malo', resume }));
+    await act(async () => wall.requireAuth({ kind: 'malo', athleteId: 'p1', resume }));
     expect(resume).not.toHaveBeenCalled();
     expect(wall.visible).toBe(false);
+
+    await auth.becomes(guest);
+    expect(wall.visible).toBe(true);
+    expect(wall.intent?.kind).toBe('malo');
+    expect(resume).not.toHaveBeenCalled();
   });
 
   it("holds a guest's gift behind sign-in, then closes the sheet and runs it exactly once after dismiss", async () => {

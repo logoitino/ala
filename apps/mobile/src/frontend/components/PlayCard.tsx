@@ -18,6 +18,7 @@ import Animated, {
 
 import { TipCheckout } from '@/components/TipCheckout';
 import { SheetRise } from '@/components/UI/SheetRise';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { maloAthleteCta } from '@/data/malo';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -143,9 +144,10 @@ function LiveReaction({
  * @param onBacked Fires after a donation on this athlete.
  * @param onOpenAthlete Opens `/user/[id]` when the athlete name is tapped.
  * @returns Collapsed play row, or the same card opened downward.
- * @sideEffects One `bumpPlayerHype` per kind the first time it is selected. Later taps only select and clear. Donation uses `TipCheckout` after Donate.
+ * @sideEffects One `bumpPlayerHype` per kind the first time it is selected. Later taps only select and clear. Give opens Soft-Wall for guests, then `TipCheckout`.
  */
 export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
+  const { requireAuth } = useSoftWall();
   const player = resolveEventPlayer(event);
   const [votes, setVotes] = useState<PlayReactionVotes>(() => playVoteStore.get(event.id) ?? emptyPlayVotes());
   const [open, setOpen] = useState(false);
@@ -263,7 +265,14 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
               accessibilityRole="button"
               accessibilityLabel={maloAthleteCta(player.name)}
               haptic="medium"
-              onPress={() => setDonateOpen(true)}
+              onPress={() =>
+                requireAuth({
+                  kind: 'malo',
+                  athleteName: player.name,
+                  athleteId: player.id,
+                  resume: () => setDonateOpen(true),
+                })
+              }
               style={styles.donate}
             >
               <Text style={styles.donateLabel}>{maloAthleteCta(player.name)}</Text>
