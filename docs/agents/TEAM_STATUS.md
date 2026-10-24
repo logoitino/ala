@@ -32,10 +32,10 @@ the mixed “Refund donation” label and booster placement (currently a Purchas
 charity). Finance, Data/Privacy, Security, Minor Safety and independent QA retain their gates.
 
 **Updated:** 2026-10-24. **Current assignment:** COORD-02 gift-release team reconciliation
-(unchanged). **Parallel checkpoint:** Soft-Wall resume polish + EAS preview on
-`cursor/soft-wall-resume-polish-9a86` — hierarchy/docs/exit/IP/infra gates synced; prior
-Android/iOS preview green; Profile/age UX committed for resubmit. Does not close gift
-counsel, hosted tip rollout, or device Soft-Wall smoke. See [COORD-02](COORD-02.md) §6.
+(unchanged). **Parallel checkpoint:** Soft-Wall resume polish + EAS on
+`cursor/soft-wall-resume-polish-9a86` (`43d3146`) — hierarchy/docs/exit/IP/infra gates synced;
+iOS preview `09de0497` queued; Android Free quota exhausted until 2026-11-01. Does not close
+gift counsel, hosted tip rollout, or device Soft-Wall smoke. See [COORD-02](COORD-02.md) §6.
 
 ### Current gift duty for every existing role
 

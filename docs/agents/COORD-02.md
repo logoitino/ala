@@ -124,8 +124,10 @@ changing role pins, reporting chains or COORD-02 gift duties:
 | Exit plan | `4fc54275bb8d` announced (`EXIT_CHANGE_LOG`, announcer `cloud-agent soft-wall-eas-checkpoint`) |
 | Prior green EAS preview | Android `42e81674`, iOS `d4a153a0` (Stripe 0.83, arm ABIs, Gradle workers=2, `$StripeDisableSPM`) |
 | UX on tip after those builds | Birth-year partial digits; Profile hamburger in hero + scrolling categorized sheet |
+| Resubmit from hierarchy tip `43d3146` | iOS queued `09de0497`; Android blocked — Expo Free Android quota exhausted until 2026-11-01 (no paid upgrade without owner) |
 
 **Departments notified for review against current tip (not acceptance):** AUTH, PROFILE, ONBOARDING,
 MINOR_SAFETY, RELEASE, OPERATIONS, DESIGN, QA / DEVICE_QA, REDUNDANCY_LEAD / EXIT_SYNC,
-INFRASTRUCTURE, SECURITY partners, DOCUMENTATION, VP_OPERATIONS. Gift counsel, hosted tip
-rollout, Connect settlement and store submission remain with the rows in §2.
+INFRASTRUCTURE, SECURITY partners, DOCUMENTATION, VP_OPERATIONS, COST_OPERATIONS (Expo Free
+quota). Gift counsel, hosted tip rollout, Connect settlement and store submission remain with
+the rows in §2.
