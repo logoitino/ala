@@ -161,7 +161,8 @@ export function SoftWallModal() {
     try {
       await work();
       if (kind === 'magic') {
-        setMessage('Check your email for the magic link. We will pick up right where you left off.');
+        // Resume stays armed only while this sheet stays open; "Keep browsing" clears it.
+        setMessage('Check your email for the magic link. Keep this open, or unlock again after you sign in.');
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not sign in.');

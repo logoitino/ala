@@ -57,8 +57,12 @@ type StartCheckoutArgs = {
   successToast?: string;
   onBacked?: (nextCount: number) => void;
   onTipped?: (amountCents: number) => void;
-  /** Fires immediately after PaymentSheet succeeds so exclusive tiles can unlock before RPCs. */
-  onPaid?: () => void | Promise<void>;
+  /**
+   * Fires immediately after PaymentSheet succeeds so exclusive tiles can unlock before RPCs.
+   * Return `false` when a follow-up write failed (e.g. exclusive pass insert) so Soft-Wall Vault
+   * does not celebrate an unlock the fan did not receive.
+   */
+  onPaid?: () => void | boolean | Promise<void | boolean>;
 };
 
 /**
@@ -206,7 +210,8 @@ export function useTipCheckout() {
         }
 
         paymentSucceeded = true;
-        await onPaid?.();
+        const paidFollowUp = await onPaid?.();
+        const followUpOk = paidFollowUp !== false;
 
         const tipperId = await resolveSessionUserId(userIdRef.current);
         const recipientId = !skipBacker && player?.id ? player.id : null;
@@ -287,7 +292,8 @@ export function useTipCheckout() {
         if (successToast) {
           celebration?.celebrateAura(pointsToAdd, successToast);
         } else if (skipBacker) {
-          celebration?.celebrateAura(pointsToAdd, exclusiveAuraToast);
+          // Exclusive Vault: only toast unlock when `onPaid`/`grant` recorded the pass.
+          if (followUpOk) celebration?.celebrateAura(pointsToAdd, exclusiveAuraToast);
         } else {
           celebration?.celebrate({ playerName, backerCount: nextCount, auraPointsEarned: pointsToAdd });
         }

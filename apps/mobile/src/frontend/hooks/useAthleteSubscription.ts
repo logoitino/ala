@@ -80,8 +80,12 @@ export function useAthleteSubscription(playerId: string | undefined) {
    * AsyncStorage write only once that insert has succeeded (or a guest/unconfigured/non-UUID path
    * where no server check is possible); user-visible Alert on a genuine rejection.
    */
-  const grant = useCallback(async () => {
-    if (!playerId) return;
+  /**
+   * @returns `true` when the pass is recorded (or unlocked locally without a server check);
+   * `false` when the insert was refused so Soft-Wall exclusive checkout can skip the unlock toast.
+   */
+  const grant = useCallback(async (): Promise<boolean> => {
+    if (!playerId) return false;
 
     const subscriberId = await resolveSessionUserId(userIdRef.current);
 
@@ -90,7 +94,7 @@ export function useAthleteSubscription(playerId: string | undefined) {
     if (!subscriberId || !isSupabaseConfigured || !isPlayerUuid(playerId)) {
       setSubscribed(true);
       await AsyncStorage.setItem(storageKey(playerId, subscriberId), '1');
-      return;
+      return true;
     }
 
     const { ok } = await insertSubscription(subscriberId, playerId);
@@ -103,13 +107,13 @@ export function useAthleteSubscription(playerId: string | undefined) {
         'Subscription not recorded',
         'This athlete cannot currently accept exclusive subscriptions. Contact support if this seems wrong.',
       );
-      return;
+      return false;
     }
 
     // Saved, or already subscribed (`23505` duplicate key) — both count as success.
     setSubscribed(true);
     await AsyncStorage.setItem(storageKey(playerId, subscriberId), '1');
+    return true;
   }, [playerId]);
-
   return { subscribed, grant, loading, refresh };
 }
