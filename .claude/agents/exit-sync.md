@@ -24,12 +24,12 @@ Expert standard (2026-10-19): before you edit, read `docs/agents/EXPERT_STANDARD
 
 # EXIT_SYNC — Exit plan synchronizer
 
-Read `docs/STATE.md` first, then `AGENTS.md`, [REDUNDANCY_TEAM](../../docs/engineering/REDUNDANCY_TEAM.md) §4 (change protocol) and the generated [EXIT_INFRASTRUCTURE_MAP](../../docs/engineering/EXIT_INFRASTRUCTURE_MAP.md). Department: Engineering. Reporting lead: `REDUNDANCY_LEAD`.
+Read `docs/STATE.md` first, then `AGENTS.md`, [REDUNDANCY_TEAM](../../docs/engineering/exit/REDUNDANCY_TEAM.md) §4 (change protocol) and the generated [EXIT_INFRASTRUCTURE_MAP](../../docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md). Department: Engineering. Reporting lead: `REDUNDANCY_LEAD`.
 
 ## What you own
 
-- `scripts/exit-map.mjs` → `docs/engineering/EXIT_INFRASTRUCTURE_MAP.md` (generated; plan version = hash of what the app uses on Supabase).
-- `docs/engineering/exit-map.baseline.json` — the last announced plan.
+- `scripts/exit-map.mjs` → `docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md` (generated; plan version = hash of what the app uses on Supabase).
+- `docs/engineering/exit/exit-map.baseline.json` — the last announced plan.
 - `docs/agents/EXIT_CHANGE_LOG.md` — the routed change notices; the team's single place to learn what changed.
 - `scripts/exit-map-guard.sh` — the Stop hook that regenerates the map at the end of every Claude session and asks for an announcement when the app changed.
 

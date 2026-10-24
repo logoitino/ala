@@ -7,9 +7,9 @@ No providers contacted; operationalAcceptance=false; readyToCutOver=false.
 
 ## Source binding
 
-- Safe source SHA256: `e9e50cf56b8730ae892c4b34993fd1693aebb816248927f152461fba17e10110` (1302 files).
-- Security metadata SHA256: `6f761ddf0aacfee9af807e1adf25c78c2c3449abc31b34aff20816221e0b2f42` (12 files).
-- Combined binding: `3c9b7dc9b3e567fc0068cb48c0b4a6282534627eb61e77f6e2b9e5c48a0a3158`.
+- Safe source SHA256: `5ca7ffc4ae64f1d2f8b870a06d933d3e44365481b7a6dc88e5f4f82131034322` (1301 files).
+- Security metadata SHA256: `fde140e5156e9441ff0d94fe14ddf5fd06e79f585427b20be7abc1ec30ded53f` (12 files).
+- Combined binding: `e1372d8ef741087673a634126cff9c79aa63c37f38437d1a4a8dd1c45e148c6a`.
 - Unresolved SDK syntax candidates: 95; their owners still need semantic review.
 
 Scope is registered services/components and governed safe source, not unknown shadow systems or live cloud observations.
@@ -67,15 +67,15 @@ Missing prerequisites are **needs-attention**. This report never executes guards
 
 | Guard | Command | Status | Source evidence |
 | --- | --- | --- | --- |
-| `client-boundary` | `pnpm security:client-keys` | source-linked | [check-client-keys.mjs](../../scripts/check-client-keys.mjs), [backendConnection.ts](../../packages/shared-types/backendConnection.ts) |
-| `no-ssn` | `pnpm security:no-ssn` | source-linked | [check-no-ssn.mjs](../../scripts/check-no-ssn.mjs) |
-| `restore-contracts` | `pnpm redundancy:test` | source-linked | [test_operations.py](../../infrastructure/backup/tests/test_operations.py), [parity.py](../../infrastructure/migration/parity.py), [configure.py](../../infrastructure/supabase/configure.py) |
-| `source-custody` | `pnpm exit:test` | source-linked | [release.mjs](../../infrastructure/exit/release.mjs), [setup.mjs](../../infrastructure/exit/setup.mjs), [runtime_images.py](../../infrastructure/exit/runtime_images.py) |
-| `connection-contracts` | `pnpm portability:test` | source-linked | [profile.mjs](../../infrastructure/portability/profile.mjs), [protocol.mjs](../../infrastructure/portability/protocol.mjs) |
-| `source-recovery` | `pnpm recovery:test` | source-linked | [recovery-capsule.mjs](../../scripts/recovery-capsule.mjs) |
-| `infra-inventory` | `pnpm infra:register:check` | source-linked | [infra-register.mjs](../../scripts/infra-register.mjs) |
-| `data-governance` | `pnpm data:map:check` | source-linked | [data-map.mjs](../../scripts/data-map.mjs) |
-| `role-routing` | `pnpm agents:check` | source-linked | [check-agents.mjs](../../scripts/check-agents.mjs), [routing.mjs](../../infrastructure/security/routing.mjs) |
+| `client-boundary` | `pnpm security:client-keys` | source-linked | [check-client-keys.mjs](../../../scripts/check-client-keys.mjs), [backendConnection.ts](../../../packages/shared-types/backendConnection.ts) |
+| `no-ssn` | `pnpm security:no-ssn` | source-linked | [check-no-ssn.mjs](../../../scripts/check-no-ssn.mjs) |
+| `restore-contracts` | `pnpm redundancy:test` | source-linked | [test_operations.py](../../../infrastructure/backup/tests/test_operations.py), [parity.py](../../../infrastructure/migration/parity.py), [configure.py](../../../infrastructure/supabase/configure.py) |
+| `source-custody` | `pnpm exit:test` | source-linked | [release.mjs](../../../infrastructure/exit/release.mjs), [setup.mjs](../../../infrastructure/exit/setup.mjs), [runtime_images.py](../../../infrastructure/exit/runtime_images.py) |
+| `connection-contracts` | `pnpm portability:test` | source-linked | [profile.mjs](../../../infrastructure/portability/profile.mjs), [protocol.mjs](../../../infrastructure/portability/protocol.mjs) |
+| `source-recovery` | `pnpm recovery:test` | source-linked | [recovery-capsule.mjs](../../../scripts/recovery-capsule.mjs) |
+| `infra-inventory` | `pnpm infra:register:check` | source-linked | [infra-register.mjs](../../../scripts/infra-register.mjs) |
+| `data-governance` | `pnpm data:map:check` | source-linked | [data-map.mjs](../../../scripts/data-map.mjs) |
+| `role-routing` | `pnpm agents:check` | source-linked | [check-agents.mjs](../../../scripts/check-agents.mjs), [routing.mjs](../../../infrastructure/security/routing.mjs) |
 
 ## Required actual operational reviews
 

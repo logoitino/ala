@@ -89,7 +89,7 @@ Self-hosted Supabase uses the same API with changed compatible configuration. A 
 API needs a `MediaStorageAdapter` implementation plus equivalent server authorization, SQL/catalog
 cleanup behavior and private delivery. No S3/Azure adapter or hosted target is claimed to exist.
 This local code does not prove a 2–3 hour migration; the timed drill remains a separate requirement
-in [PORTABILITY](../PORTABILITY.md) and [CLOUD_MIGRATION_RUNBOOK](../CLOUD_MIGRATION_RUNBOOK.md).
+in [PORTABILITY](../PORTABILITY.md) and [CLOUD_MIGRATION_RUNBOOK](../exit/CLOUD_MIGRATION_RUNBOOK.md).
 
 ## 5. Verification and handoff
 

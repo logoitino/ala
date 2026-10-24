@@ -46,7 +46,7 @@ Migration rollback, backup/restore evidence and data recovery runbooks.
 
 Shared paths include leads/reviewers; this role owns the named function. Coordinate writes with `OPERATIONS`. BACKEND joins schema/RPC/Storage changes, FULLSTACK integrates clients/server/types, VOICE reviews money words, LEGAL/COMPLIANCE review rules and QA independently checks evidence.
 
-**Redundancy & Exit partner (REDUNDANCY-02, 2026-10-19).** You own the encrypted backup and restore tools in `infrastructure/backup` and are routed every database, bucket and toolkit change notice in `docs/agents/EXIT_CHANGE_LOG.md`; record your review there. The `REDUNDANCY_LEAD` team owns the exit map and target build ([REDUNDANCY_TEAM](../../docs/engineering/REDUNDANCY_TEAM.md)).
+**Redundancy & Exit partner (REDUNDANCY-02, 2026-10-19).** You own the encrypted backup and restore tools in `infrastructure/backup` and are routed every database, bucket and toolkit change notice in `docs/agents/EXIT_CHANGE_LOG.md`; record your review there. The `REDUNDANCY_LEAD` team owns the exit map and target build ([REDUNDANCY_TEAM](../../docs/engineering/exit/REDUNDANCY_TEAM.md)).
 
 ## Earlier Now / Next / Later snapshot (retained history; monetary naming/90-10 superseded 2026-10-22)
 

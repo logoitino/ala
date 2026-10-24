@@ -191,7 +191,7 @@
       ],
       "plan": "Local source sweeps30s after installation; proposed6h database backup schedule inactive; no measured RPO/RTO or paid enrollment",
       "decision": "Owner2026-10-19 requests automatically current app exit copies; local source cache authorized, hosted/database/Storage operations remain separately gated",
-      "source": "docs/engineering/REDUNDANCY_PLAN.md"
+      "source": "docs/engineering/exit/REDUNDANCY_PLAN.md"
     },
     {
       "id": "self-hosted-exit",
@@ -203,7 +203,7 @@
       ],
       "plan": "Provider/region/spend undecided; one VM is not HA",
       "decision": "Exit A preparation per PORTABILITY; version/checksum/image review and isolated rehearsal required before execution",
-      "source": "docs/engineering/EXIT_READY_RUNBOOK.md"
+      "source": "docs/engineering/exit/EXIT_READY_RUNBOOK.md"
     },
     {
       "id": "game-directions",

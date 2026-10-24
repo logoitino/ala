@@ -11,7 +11,9 @@ import { collectExitInventory } from '../../scripts/exit-inventory.mjs';
 import { writeExitMap } from '../../scripts/exit-map-output.mjs';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-const OUTPUT = 'docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md';
+const OUTPUT = 'docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md';
+/** Markdown link from the generated report (one folder deeper than docs/engineering/). */
+const reportLink = (repoPath) => path.posix.relative(path.posix.dirname(OUTPUT), repoPath.split('\\').join('/'));
 const ID = /^[a-z][a-z0-9-]{0,63}$/;
 const SECURITY = [
   'SECURITY', 'INFRA_SECURITY', 'SUPPLY_CHAIN_SECURITY', 'RECOVERY_SECURITY',
@@ -212,7 +214,7 @@ function securityMetadata(root, roles) {
       files.push(file);
     }
   }
-  for (const file of ['docs/engineering/INFRASTRUCTURE_SECURITY.md', 'docs/engineering/INFRASTRUCTURE_SECURITY_FINDINGS.md']) {
+  for (const file of ['docs/engineering/exit/INFRASTRUCTURE_SECURITY.md', 'docs/engineering/exit/INFRASTRUCTURE_SECURITY_FINDINGS.md']) {
     if (fs.existsSync(path.join(root, file))) files.push(file);
   }
   return unique(files).map(file => ({ path: file, sha256: sha(bytesAt(root, file)) }));
@@ -225,7 +227,7 @@ export function inspectSecurity(root = ROOT) {
   const controls = readControls(root);
   const roles = readRoles(root, issues);
   const services = jsonAt(root, 'docs/engineering/infrastructure.json').services;
-  const components = jsonAt(root, 'docs/engineering/exit-map.json').components;
+  const components = jsonAt(root, 'docs/engineering/exit/exit-map.json').components;
   const pkg = jsonAt(root, 'package.json');
   if (!dictionary(pkg.scripts) || typeof pkg.scripts.check !== 'string') throw new Error('invalid-quality-check-contract');
   const commands = pkg.scripts.check.split(/\s*&&\s*/);
@@ -268,7 +270,7 @@ export function renderSecurityReport(report) {
   const rows = items => items.map(item =>
     `| \`${item.id}\` | \`${item.engineeringOwner ?? 'unassigned'}\` | ${reviewers(item.reviewers)} |`).join('\n');
   const guards = report.localGuards.map(guard => {
-    const evidence = guard.evidence.map(file => `[${path.posix.basename(file.path)}](../../${file.path})`).join(', ') || 'missing';
+    const evidence = guard.evidence.map(file => `[${path.posix.basename(file.path)}](${reportLink(file.path)})`).join(', ') || 'missing';
     return `| \`${guard.id}\` | \`${guard.command}\` | ${guard.status} | ${evidence} |`;
   }).join('\n');
   const operations = report.operations.map(operation =>

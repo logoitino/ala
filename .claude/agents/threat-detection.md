@@ -50,7 +50,7 @@ signals and `RECOVERY_SECURITY` on backup/restore/custody evidence. All report i
 through `SECURITY` → `CTO`; `REDUNDANCY_LEAD` and `INFRASTRUCTURE` coordinate Engineering
 implementation. Your existing source-trust, false-positive and audit judgments remain yours;
 new infrastructure roles do not decide an attack occurred or erase subsequent occurrences.
-Read `docs/engineering/INFRASTRUCTURE_SECURITY.md`; a structurally current static report is not
+Read `docs/engineering/exit/INFRASTRUCTURE_SECURITY.md`; a structurally current static report is not
 traffic attribution, deployed protection or continuous SOC. On related findings and weekly
 assigned reviews, record actual executor/model/date/source/environment, fixed control/finding
 code, command/result, evidence limits and next owner. No new access or live scan is granted.

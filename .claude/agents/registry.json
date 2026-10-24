@@ -870,10 +870,10 @@
       "department": "Engineering",
       "lead": "ENGINEERING",
       "owns": [
-        "docs/engineering/REDUNDANCY_TEAM.md",
-        "docs/engineering/REDUNDANCY_PLAN.md",
-        "docs/engineering/design/REDUNDANCY_IMPLEMENTATION_PLAN.md",
-        "docs/engineering/exit-map.json",
+        "docs/engineering/exit/REDUNDANCY_TEAM.md",
+        "docs/engineering/exit/REDUNDANCY_PLAN.md",
+        "docs/engineering/exit/plans/REDUNDANCY_IMPLEMENTATION_PLAN.md",
+        "docs/engineering/exit/exit-map.json",
         "docs/agents/REDUNDANCY-02.md"
       ],
       "tasks": [
@@ -893,7 +893,7 @@
       "owns": [
         "scripts/exit-map.mjs",
         "scripts/exit-map-guard.sh",
-        "docs/engineering/EXIT_INFRASTRUCTURE_MAP.md",
+        "docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md",
         "docs/agents/EXIT_CHANGE_LOG.md"
       ],
       "tasks": [
@@ -1667,8 +1667,8 @@
         "infrastructure/supabase",
         "infrastructure/security",
         "docs/engineering/INFRASTRUCTURE_REGISTER.md",
-        "docs/engineering/INFRASTRUCTURE_SECURITY.md",
-        "docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md"
+        "docs/engineering/exit/INFRASTRUCTURE_SECURITY.md",
+        "docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md"
       ],
       "tasks": [
         "Review network exposure, least-privilege IAM, TLS/upstream routing and host hardening; own complete governed-infrastructure security control/report coverage without equating source checks with deployed acceptance.",
@@ -1691,7 +1691,7 @@
         "infrastructure/exit/runtime_images.py",
         "scripts/recovery-capsule.mjs",
         "infrastructure/security",
-        "docs/engineering/INFRASTRUCTURE_SECURITY.md"
+        "docs/engineering/exit/INFRASTRUCTURE_SECURITY.md"
       ],
       "tasks": [
         "Review locked dependencies/build scripts, pinned upstream/image provenance, least-privilege CI trust, source-only artifact boundaries and offline installation material.",
@@ -1711,8 +1711,8 @@
         "infrastructure/exit",
         "scripts/recovery-capsule.mjs",
         "infrastructure/security",
-        "docs/engineering/INFRASTRUCTURE_SECURITY.md",
-        "docs/engineering/EXIT_READY_RUNBOOK.md"
+        "docs/engineering/exit/INFRASTRUCTURE_SECURITY.md",
+        "docs/engineering/exit/EXIT_READY_RUNBOOK.md"
       ],
       "tasks": [
         "Review private backup/retrieval/restore isolation and integrity, target/config/archive binding, original snapshot age, key rotation and independently held custody evidence.",

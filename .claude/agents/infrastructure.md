@@ -63,7 +63,7 @@ Shared paths include leads and reviewers; this role owns the awareness function.
 | Cost, quotas, invoices, vendor quotes | `COST_OPERATIONS` (Finance acceptance through `FINANCE_DATA` / `FPA` / `CFO`) |
 | Load, limits, failures, backup and restore | `RELIABILITY`, `RECOVERY`, `OPERATIONS` |
 | Database, migrations, Storage | `BACKEND`, `DATABASE_MIGRATIONS`, `STORAGE` |
-| Moving off Supabase (exit map, target database, replacement services, AWS / Azure build) | `REDUNDANCY_LEAD`, `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD` ([REDUNDANCY_TEAM](../../docs/engineering/REDUNDANCY_TEAM.md)) |
+| Moving off Supabase (exit map, target database, replacement services, AWS / Azure build) | `REDUNDANCY_LEAD`, `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD` ([REDUNDANCY_TEAM](../../docs/engineering/exit/REDUNDANCY_TEAM.md)) |
 | Live updates, video delivery | `REALTIME`, `PLAYBACK`, `UPLOAD` |
 | Payments and server runtime | `COMMERCE`, `CONNECT`, `API` |
 | Builds, CI, releases | `CI`, `RELEASE` |
@@ -80,7 +80,7 @@ Shared paths include leads and reviewers; this role owns the awareness function.
 ## Execute and report
 
 REDUNDANCY-07: reconcile the actual infrastructure register with the complete security control
-inventory/report (`docs/engineering/INFRASTRUCTURE_SECURITY.md`). Request affected specialist
+inventory/report (`docs/engineering/exit/INFRASTRUCTURE_SECURITY.md`). Request affected specialist
 review on each relevant change, before an authorized deployment/cutover and for a weekly assigned
 packet. Keep `REDUNDANCY_LEAD` as the Engineering migration coordinator and SECURITY as the
 independent security lead. `pnpm security:infra:report` and `pnpm security:infra:check` are local

@@ -94,7 +94,10 @@ test('real job loader rejects empty destinations, real database validator reject
 }));
 
 test('refuses even empty existing output, files and final symlinks without adopting or changing them', () => fixture(async ({ options, base, outputDir }) => {
+  // mkdir's mode is masked by the process umask. Source-release CI uses 077, which turns 0755 into 0700
+  // before createSetup runs. Pin 0755 so the refusal is proven not to tighten or replace that destination.
   await fs.mkdir(outputDir, { mode:0o755 });
+  await fs.chmod(outputDir, 0o755);
   await assert.rejects(createSetup(options), /already exists/);
   assert.deepEqual(await fs.readdir(outputDir), []); assert.equal((await fs.stat(outputDir)).mode & 0o777, 0o755);
   await fs.rmdir(outputDir); await fs.writeFile(outputDir, 'existing-owned-by-someone-else');

@@ -67,7 +67,7 @@ through `REDUNDANCY_LEAD` and `INFRASTRUCTURE`; they retain their existing Engin
 and the single migration packet. No second lead or arbitrary access grant is introduced.
 
 Require complete governed-source/control coverage and independent scoped evidence in
-`infrastructure/security/controls.json` and `docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md`.
+`infrastructure/security/controls.json` and `docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md`.
 `pnpm security:infra:report` is read-only; `pnpm security:infra:check` checks source/report currency;
 `pnpm security:infra:test` exercises local report behavior. A structurally current report keeps
 securityStatus=not-established, operationalAcceptance=false and readyToCutOver=false; missing

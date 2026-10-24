@@ -17,7 +17,7 @@ async function fixture(fn) {
   // A real check command exercises verification; fixtures never require pnpm dependencies.
   await put('package.json',JSON.stringify({name:'fixture',scripts:{check:'node -e "process.exit(0)"'}}));
   await put('pnpm-lock.yaml','lockfileVersion: 9\n');
-  await put('docs/engineering/exit-map.json','{"components":[]}');
+  await put('docs/engineering/exit/exit-map.json','{"components":[]}');
   await put('apps/mobile/src/backend/db/schema.sql','create table public.items (id int default 1);');
   await put('apps/mobile/src/frontend/lib/fixture.ts','export const amount=1;');
   await put('docs/STATE.md','# Source state\n');
@@ -44,7 +44,7 @@ test('schema/default/migration/function/API/config/lock/assets additions edits a
     ['supabase/migrations/20261019120000_copy.sql','select 2;'],
     ['supabase/functions/copy/index.ts','export const answer=2;'],
     ['apps/mobile/app/api/copy+api.ts','export const answer=2;'],
-    ['docs/engineering/exit-map.json','{"components":[{"id":"owned"}]}'],
+    ['docs/engineering/exit/exit-map.json','{"components":[{"id":"owned"}]}'],
     ['pnpm-lock.yaml','lockfileVersion: 9\nsettings: changed\n'],
     ['apps/mobile/assets/copy.svg','<svg></svg>'],
   ]) {
@@ -145,8 +145,8 @@ test('source mutations during full verification fail without promoting a mixed s
 
 test('copies the working tree without modifying staged content, baseline, notices or readiness', () => fixture(async ({root,stateDir,options,put}) => {
   execFileSync('git',['init','-q'],{cwd:root});
-  await put('docs/engineering/exit-map.baseline.json','{"original":true}');
-  await put('docs/agents/EXIT_CHANGE_LOG.md','# Original notice\n'); await put('docs/engineering/exit-readiness.json','{"original":true}');
+  await put('docs/engineering/exit/exit-map.baseline.json','{"original":true}');
+  await put('docs/agents/EXIT_CHANGE_LOG.md','# Original notice\n'); await put('docs/engineering/exit/exit-readiness.json','{"original":true}');
   execFileSync('git',['add','.'],{cwd:root});
   const staged=execFileSync('git',['show',':apps/mobile/src/frontend/lib/fixture.ts'],{cwd:root,encoding:'utf8'});
   await put('apps/mobile/src/frontend/lib/fixture.ts','export const amount=9;');
@@ -154,8 +154,8 @@ test('copies the working tree without modifying staged content, baseline, notice
   assert.equal(await fs.readFile(path.join(stateDir,pointer.releasePath,'application/apps/mobile/src/frontend/lib/fixture.ts'),'utf8'),'export const amount=9;');
   assert.equal(execFileSync('git',['show',':apps/mobile/src/frontend/lib/fixture.ts'],{cwd:root,encoding:'utf8'}),staged);
   assert.equal(await fs.readFile(path.join(root,'docs/agents/EXIT_CHANGE_LOG.md'),'utf8'),'# Original notice\n');
-  assert.deepEqual(await json(path.join(root,'docs/engineering/exit-map.baseline.json')),{original:true});
-  assert.deepEqual(await json(path.join(root,'docs/engineering/exit-readiness.json')),{original:true});
+  assert.deepEqual(await json(path.join(root,'docs/engineering/exit/exit-map.baseline.json')),{original:true});
+  assert.deepEqual(await json(path.join(root,'docs/engineering/exit/exit-readiness.json')),{original:true});
 }));
 
 test('an explicit full check upgrades raw source; failed checks retain raw copy and truthful failed status', () => fixture(async ({root,stateDir,options,put}) => {
@@ -211,10 +211,10 @@ test('changed retention policy is applied on reuse and malformed status never re
 }));
 
 test('a generated map with semantic problems is retained as raw source while write/privacy errors fail', () => fixture(async ({root,stateDir,options,put}) => {
-  await put('scripts/exit-map.mjs', `/** Synthetic completed-map validation failure. */\nimport fs from 'node:fs'; fs.writeFileSync('docs/engineering/EXIT_INFRASTRUCTURE_MAP.md','# Current draft with errors\\n'); console.error('exit:map wrote docs/engineering/EXIT_INFRASTRUCTURE_MAP.md with problems: missing capability'); process.exit(1);`);
+  await put('scripts/exit-map.mjs', `/** Synthetic completed-map validation failure. */\nimport fs from 'node:fs'; fs.writeFileSync('docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md','# Current draft with errors\\n'); console.error('exit:map wrote docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md with problems: missing capability'); process.exit(1);`);
   const raw=await syncSource(root,options); assert.equal(raw.mapValidation.outcome,'failed'); assert.equal(raw.codeVerification,'not-run');
   const pointer=await latest(stateDir);
-  assert.match(await fs.readFile(path.join(stateDir,pointer.releasePath,'application/docs/engineering/EXIT_INFRASTRUCTURE_MAP.md'),'utf8'),/Current draft/);
+  assert.match(await fs.readFile(path.join(stateDir,pointer.releasePath,'application/docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md'),'utf8'),/Current draft/);
   await put('scripts/exit-map.mjs', `/** Synthetic source/privacy failure. */\nconsole.error('Source symlink is forbidden'); process.exit(1);`);
   await assert.rejects(syncSource(root,options)); assert.deepEqual(await latest(stateDir),pointer); assert.equal((await syncStatus(root,options)).sourceCurrent,false);
 }));

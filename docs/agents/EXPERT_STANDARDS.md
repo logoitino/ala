@@ -127,7 +127,7 @@ Every claim names its evidence — a passing `pnpm exit:map:check`, parity PASS,
 without COST_OPERATIONS' dated quote, never skip `grant-sync` after a restore onto a Supabase stack, and never deploy
 `stripe-webhook` before P1-05. Exit A (self-hosted Supabase) keeps service interfaces; exit B (cloud-native) is a redesign of
 Auth, Storage and Realtime adapters and must preserve RLS through equivalent roles and JWT claims. Charter:
-[REDUNDANCY_TEAM](../engineering/REDUNDANCY_TEAM.md).
+[REDUNDANCY_TEAM](../engineering/exit/REDUNDANCY_TEAM.md).
 
 ## Design
 

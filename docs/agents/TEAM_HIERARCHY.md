@@ -81,7 +81,7 @@ definitions, registry and four team/standards documents for VP_OPERATIONS respon
 Original check/review results, unresolved gaps and next owners are in [REDUNDANCY-07](REDUNDANCY-07.md).
 This does not claim the pinned Grok model ran, a second lead was created, live access was granted
 or a continuous security worker/SOC exists. Historical COORD-01 counts/receipts remain dated below.
-Guide: [INFRASTRUCTURE_SECURITY](../engineering/INFRASTRUCTURE_SECURITY.md).
+Guide: [INFRASTRUCTURE_SECURITY](../engineering/exit/INFRASTRUCTURE_SECURITY.md).
 
 ## Earlier main-checkout handoff — COORD-01 (2026-10-16 UTC)
 
@@ -94,7 +94,7 @@ Guide: [INFRASTRUCTURE_SECURITY](../engineering/INFRASTRUCTURE_SECURITY.md).
 
 **Purpose:** See who owns each critical function, where it escalates and which callable agent definition to open. **Plans:** [DEPARTMENT_PLANS.md](DEPARTMENT_PLANS.md). **Expert bar and models:** [EXPERT_STANDARDS.md](EXPERT_STANDARDS.md). **Detail:** [TEAMS.md](TEAMS.md). **Execution:** [WORK_QUEUE.md](WORK_QUEUE.md), when present. **Current product and hosted state:** [STATE.md](../STATE.md).
 
-Last aligned: 2026-10-22 (COORD-02 gift-release duties; 115 roles, existing reporting lines/model pins preserved; REDUNDANCY-07 routing retained). Registry: `.claude/agents/registry.json`.
+Last aligned: 2026-10-23 (exit reading home `docs/engineering/exit/`; reporting unchanged: `ENGINEERING` → `REDUNDANCY_LEAD` → `EXIT_SYNC` / `EXIT_DATABASE` / `EXIT_SERVICES` / `EXIT_CLOUD`; `INFRA_SECURITY` / `SUPPLY_CHAIN_SECURITY` / `RECOVERY_SECURITY` → `SECURITY`). Prior alignment 2026-10-22 (COORD-02 gift-release duties; 115 roles, model pins preserved; REDUNDANCY-07 routing retained). Registry: `.claude/agents/registry.json`.
 
 Actual documentation/team-coordination executors, claims, dated checks and close-out are in
 [COORD-01](COORD-01.md). DOCUMENTATION runs on assigned feature/fix handoffs; VP_OPERATIONS
@@ -107,8 +107,11 @@ no unattended scheduler is configured.
 `EXIT_SYNC` (keeps the exit plan and backup version current with every app change and announces changes to the team),
 `EXIT_DATABASE` (the different database), `EXIT_SERVICES` (Auth / Storage / Realtime / functions replacements) and
 `EXIT_CLOUD` (AWS / Azure build). `INFRASTRUCTURE`, `RECOVERY`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` and the service owners
-are standing partners with unchanged reporting. Charter: [REDUNDANCY_TEAM](../engineering/REDUNDANCY_TEAM.md); generated
-map: [EXIT_INFRASTRUCTURE_MAP](../engineering/EXIT_INFRASTRUCTURE_MAP.md); record: [REDUNDANCY-02](REDUNDANCY-02.md).
+are standing partners with unchanged reporting. **Reading home (one folder):** [docs/engineering/exit/](../engineering/exit/README.md)
+(charter, generated map, security report, migration runbooks, plans). Change notices stay in
+[EXIT_CHANGE_LOG](EXIT_CHANGE_LOG.md). Runnable code stays under `infrastructure/{exit,migration,security,…}/`.
+Charter: [REDUNDANCY_TEAM](../engineering/exit/REDUNDANCY_TEAM.md); generated
+map: [EXIT_INFRASTRUCTURE_MAP](../engineering/exit/EXIT_INFRASTRUCTURE_MAP.md); record: [REDUNDANCY-02](REDUNDANCY-02.md).
 
 **ADM-02:** `ENGINEERING` → `ADMIN` integrates the main Expo admin, using the owner-selected
 `:3033` report design and retaining every editing desk. `PORTAL` owns mobile

@@ -1,7 +1,7 @@
 <!-- RECOVERY / INFRASTRUCTURE operator runbook: commands are prepared procedures, not executed hosted evidence. -->
 # Backup, restore and AWS / Azure migration runbook
 
-**Prepared:** 2026-10-19. **Status:** local tools/templates; no hosted commands below have been executed by this documentation task. **Architecture:** [REDUNDANCY_PLAN](REDUNDANCY_PLAN.md). **Checklist:** [implementation plan](design/REDUNDANCY_IMPLEMENTATION_PLAN.md). **Evidence:** [REDUNDANCY-01](../agents/REDUNDANCY-01.md). **Full-app warm-target packet:** [EXIT_READY_RUNBOOK](EXIT_READY_RUNBOOK.md) and [exit toolkit](../../infrastructure/exit/README.md).
+**Prepared:** 2026-10-19. **Status:** local tools/templates; no hosted commands below have been executed by this documentation task. **Architecture:** [REDUNDANCY_PLAN](REDUNDANCY_PLAN.md). **Checklist:** [implementation plan](plans/REDUNDANCY_IMPLEMENTATION_PLAN.md). **Evidence:** [REDUNDANCY-01](../../agents/REDUNDANCY-01.md). **Full-app warm-target packet:** [EXIT_READY_RUNBOOK](EXIT_READY_RUNBOOK.md) and [exit toolkit](../../../infrastructure/exit/README.md).
 
 ## 1. Before the first archive
 
@@ -63,7 +63,7 @@ python3 infrastructure/backup/backup.py \
 
 The tool requires and retains the operator reference. It cannot freeze clients, APIs, SQL sessions, Storage jobs, payment providers or webhooks. An incomplete freeze is a stop item for cutover.
 
-While the freeze holds, also fingerprint the source for the later parity check (read-only, one snapshot; run as a role with BYPASSRLS such as Supabase `postgres`). See [infrastructure/migration](../../infrastructure/migration/README.md).
+While the freeze holds, also fingerprint the source for the later parity check (read-only, one snapshot; run as a role with BYPASSRLS such as Supabase `postgres`). See [infrastructure/migration](../../../infrastructure/migration/README.md).
 
 ```sh
 python3 infrastructure/migration/parity.py fingerprint \
@@ -74,7 +74,7 @@ python3 infrastructure/migration/parity.py fingerprint \
 ### One capture and all independent publications
 
 For recurring operation, use the unified job and private reviewed config instead of coordinating
-capture/upload commands manually. [BACKUP_OPERATIONS](BACKUP_OPERATIONS.md) owns installation,
+capture/upload commands manually. [BACKUP_OPERATIONS](../BACKUP_OPERATIONS.md) owns installation,
 cloud identity, retries, monitoring and independent retrieval.
 
 ```sh
@@ -123,7 +123,7 @@ python3 infrastructure/backup/fetch.py \
 ```
 
 Azure retrieval uses the corresponding `--provider azure --account-name ... --container ...` settings
-in [BACKUP_OPERATIONS](BACKUP_OPERATIONS.md). Fetch checks ciphertext/sidecar against the original hash;
+in [BACKUP_OPERATIONS](../BACKUP_OPERATIONS.md). Fetch checks ciphertext/sidecar against the original hash;
 it does not decrypt or restore. Use the fetched archive and its adjacent `.sha256` sidecar below,
 with a new private decryption destination:
 

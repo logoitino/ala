@@ -1,15 +1,15 @@
 <!-- REDUNDANCY-02 charter: the standing team that keeps the move-off-Supabase plan current with every app change. -->
 # Redundancy & Exit team — charter and change protocol
 
-**Task:** [REDUNDANCY-02](../agents/REDUNDANCY-02.md). **Set up:** 2026-10-19 (owner request). **Lead:** `REDUNDANCY_LEAD`, reporting to
+**Task:** [REDUNDANCY-02](../../agents/REDUNDANCY-02.md). **Set up:** 2026-10-19 (owner request). **Lead:** `REDUNDANCY_LEAD`, reporting to
 `ENGINEERING` → `CTO` → owner. **Status:** team, documents and automatic change tracking are in place locally; no cloud account,
 provisioning, hosted restore or cutover has happened. The local detached source watcher was observed running
 for the current login; LaunchAgent login-start installation failed, so automatic restart/login persistence is
-not active. [REDUNDANCY-04](../agents/REDUNDANCY-04.md) records the observed runtime scope.
+not active. [REDUNDANCY-04](../../agents/REDUNDANCY-04.md) records the observed runtime scope.
 
 ## 1. Purpose
 
-Tapua'i runs on managed Supabase and plans to stay there (owner decision 2026-10-14, [PORTABILITY](PORTABILITY.md)). This team
+Tapua'i runs on managed Supabase and plans to stay there (owner decision 2026-10-14, [PORTABILITY](../PORTABILITY.md)). This team
 makes sure that leaving stays possible at any time: if Supabase must be replaced by a different database on AWS or Azure,
 there is a current backup, a current map of everything to rebuild, a team that knows each part, and a record of every app
 change since the plan was last checked.
@@ -19,18 +19,23 @@ automatically, and the team is told what changed.**
 
 ## 2. The documents
 
+**Reading home:** this folder ([README](README.md)). Task receipts and the routed change log stay under
+`docs/agents/` (`REDUNDANCY-01`–`07`, [EXIT_CHANGE_LOG](../../agents/EXIT_CHANGE_LOG.md)). Runnable
+trees stay under `infrastructure/` (exit / migration / security / backup / supabase / terraform /
+containers). Generators write the map and security report **here** so every app change shows in one place.
+
 | Document | What it holds | Kept current by |
 | --- | --- | --- |
 | [EXIT_INFRASTRUCTURE_MAP](EXIT_INFRASTRUCTURE_MAP.md) | **Generated.** Every Supabase capability the app uses today → its AWS / Azure replacement for exit A (self-hosted Supabase) and exit B (cloud-native), owners, build order, detected inventory, plan version, unannounced changes | `scripts/exit-map.mjs` (Stop hook, `pnpm check`, CI) |
 | [exit-map.json](exit-map.json) | Hand-kept half of the map: component mapping, Auth capability names, excluded Edge Functions, build order | `REDUNDANCY_LEAD` accepts; component owners edit |
-| [EXIT_CHANGE_LOG](../agents/EXIT_CHANGE_LOG.md) | Dated, routed notices of app changes the exit plan depends on, with each agent's review result | `EXIT_SYNC` (tool-written), reviewers append |
+| [EXIT_CHANGE_LOG](../../agents/EXIT_CHANGE_LOG.md) | Dated, routed notices of app changes the exit plan depends on, with each agent's review result | `EXIT_SYNC` (tool-written), reviewers append |
 | [REDUNDANCY_PLAN](REDUNDANCY_PLAN.md) | Architecture, recovery targets (proposed RPO/RTO), consistency and limits | `REDUNDANCY_LEAD` with `RECOVERY` |
 | [CLOUD_MIGRATION_RUNBOOK](CLOUD_MIGRATION_RUNBOOK.md) | Operator commands: backup, verify, restore list, restore, grant-sync, parity, acceptance, cutover | `RECOVERY`, `EXIT_DATABASE` |
-| [BACKUP_OPERATIONS](BACKUP_OPERATIONS.md) | Scheduled encrypted backups, independent copies, monitoring | `RECOVERY` |
+| [BACKUP_OPERATIONS](../BACKUP_OPERATIONS.md) | Scheduled encrypted backups, independent copies, monitoring | `RECOVERY` |
 | [EXIT_READY_RUNBOOK](EXIT_READY_RUNBOOK.md) | Exact current source/image preparation and original evidence for an unproven180-minute warm cutover | `EXIT_SYNC`, `RECOVERY`, component owners |
 | [MIGRATION_FAILURES_AND_CONTROLS](MIGRATION_FAILURES_AND_CONTROLS.md) | Local failures, controls and historical reference limits | `RECOVERY`, `DOCUMENTATION` |
-| [infrastructure/](../../infrastructure/README.md) | Backup, migration, self-hosted Supabase, containers, AWS / Azure Terraform | owners in §3 |
-| [INFRASTRUCTURE_REGISTER](INFRASTRUCTURE_REGISTER.md) | What we run **today** and how deeply the app is integrated | `INFRASTRUCTURE` |
+| [infrastructure/](../../../infrastructure/README.md) | Backup, migration, self-hosted Supabase, containers, AWS / Azure Terraform | owners in §3 |
+| [INFRASTRUCTURE_REGISTER](../INFRASTRUCTURE_REGISTER.md) | What we run **today** and how deeply the app is integrated | `INFRASTRUCTURE` |
 | [INFRASTRUCTURE_SECURITY](INFRASTRUCTURE_SECURITY.md) | Security role ownership, source coverage/report checks and independent finding/revalidation protocol | `SECURITY` with Security specialists and Engineering component owners |
 
 ## 3. Team and responsibilities
@@ -110,7 +115,7 @@ mapped repo path exists.
   A semantic map validation failure may preserve a current raw draft with failed map-validation metadata;
   explicit full checks and readiness still reject it. Hard capture/privacy/path failures retain old evidence.
   Exact sync/watch/install/uninstall commands and prepared-versus-observed installation evidence are in
-  [EXIT_READY_RUNBOOK](EXIT_READY_RUNBOOK.md) and [REDUNDANCY-04](../agents/REDUNDANCY-04.md).
+  [EXIT_READY_RUNBOOK](EXIT_READY_RUNBOOK.md) and [REDUNDANCY-04](../../agents/REDUNDANCY-04.md).
   Normal persistent installation encountered OS `EPERM` writing LaunchAgents in this session.
   The additional `--session-only` private-plist bootstrap failed with launchctl error 5 (`EIO`); no LaunchAgent
   was loaded. The managed detached `exit:sync start` fallback was observed running (initial PID `29080`,

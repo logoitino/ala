@@ -1,7 +1,7 @@
 <!-- ENGINEERING implementation checklist: proposed operational checkpoints require actual local and hosted receipts. -->
 # Redundancy implementation plan — REDUNDANCY-01
 
-**Prepared:** 2026-10-19. **Architecture:** [REDUNDANCY_PLAN](../REDUNDANCY_PLAN.md). **Execution record:** [REDUNDANCY-01](../../agents/REDUNDANCY-01.md). **Operator workflow:** [CLOUD_MIGRATION_RUNBOOK](../CLOUD_MIGRATION_RUNBOOK.md).
+**Prepared:** 2026-10-19. **Architecture:** [REDUNDANCY_PLAN](../REDUNDANCY_PLAN.md). **Execution record:** [REDUNDANCY-01](../../../agents/REDUNDANCY-01.md). **Operator workflow:** [CLOUD_MIGRATION_RUNBOOK](../CLOUD_MIGRATION_RUNBOOK.md).
 
 ## 1. Baseline and alternatives
 
@@ -98,4 +98,4 @@ test receipts before marking the following accepted; hosted installation/identit
 
 Do not label the system “full recovery ready” until the actual project backup has completed, two protected copies can be restored, compatible target services work, restore permissions are reviewed and RPO/RTO is measured. The later migration packet must include final write-freeze and provider-event reconciliation, DNS/client releases, old-install/session/offline handling, support staffing, monitoring, rollback point and owner approval.
 
-**Adopt / revise / stop record:** the initial architecture is prepared for local implementation. Adopted operational readiness, cloud/provider selection and production migration decisions remain pending measured rehearsal and domain review. Known gaps are explicit in [REDUNDANCY-01](../../agents/REDUNDANCY-01.md).
+**Adopt / revise / stop record:** the initial architecture is prepared for local implementation. Adopted operational readiness, cloud/provider selection and production migration decisions remain pending measured rehearsal and domain review. Known gaps are explicit in [REDUNDANCY-01](../../../agents/REDUNDANCY-01.md).

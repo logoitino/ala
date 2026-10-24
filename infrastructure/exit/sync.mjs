@@ -104,7 +104,7 @@ export async function refreshMap(root = ROOT) {
     // The real map writer has completed a current draft before reporting semantic mapping problems.
     // Retain that draft as unverified source; privacy failures, crashes and write errors still stop capture.
     const report = String(error.stderr ?? '');
-    if (error.status === 1 && report.startsWith('exit:map wrote docs/engineering/EXIT_INFRASTRUCTURE_MAP.md with problems:')) validation = { outcome:'failed', problems:report.trim() };
+    if (error.status === 1 && report.startsWith('exit:map wrote docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md with problems:')) validation = { outcome:'failed', problems:report.trim() };
     else throw error;
   }
   const security = path.join(root, 'infrastructure/security/report.mjs');
@@ -115,7 +115,7 @@ export async function refreshMap(root = ROOT) {
     execFileSync(process.execPath, [security, '--write'], { cwd:root, encoding:'utf8', stdio:['ignore','pipe','pipe'], timeout:120_000 });
   } catch (error) {
     const report = String(error.stderr ?? '');
-    if (error.status === 1 && report.startsWith('security:infra wrote docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md with problems:')) return { outcome:'failed', problems:[validation.problems,report.trim()].filter(Boolean).join('\n') };
+    if (error.status === 1 && report.startsWith('security:infra wrote docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md with problems:')) return { outcome:'failed', problems:[validation.problems,report.trim()].filter(Boolean).join('\n') };
     throw error;
   }
   return validation;

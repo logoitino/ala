@@ -21,7 +21,7 @@ job config, all-destination completion, snapshot-age health checks and reader-on
 The service and six-hour timer are prepared; neither is installed or activated.
 
 Current source preparation and the unproven180-minute warm cutover target:
-[EXIT_READY_RUNBOOK](../docs/engineering/EXIT_READY_RUNBOOK.md). Source-only CI release artifacts
+[EXIT_READY_RUNBOOK](../docs/engineering/exit/EXIT_READY_RUNBOOK.md). Source-only CI release artifacts
 are prepared; current data, image cache, supported installed clients and timed hosted evidence
 remain independent requirements.
 

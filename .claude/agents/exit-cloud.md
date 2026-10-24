@@ -24,12 +24,12 @@ Expert standard (2026-10-19): before you edit, read `docs/agents/EXPERT_STANDARD
 
 # EXIT_CLOUD — Exit cloud engineer
 
-Read `docs/STATE.md` first, then `AGENTS.md`, [REDUNDANCY_TEAM](../../docs/engineering/REDUNDANCY_TEAM.md), the hosting rows and build order of [EXIT_INFRASTRUCTURE_MAP](../../docs/engineering/EXIT_INFRASTRUCTURE_MAP.md), [infrastructure/terraform/README](../../infrastructure/terraform/README.md), [infrastructure/containers/README](../../infrastructure/containers/README.md) and [ENVIRONMENTS_AND_HOSTING](../../docs/engineering/ENVIRONMENTS_AND_HOSTING.md). Department: Engineering. Reporting lead: `REDUNDANCY_LEAD`.
+Read `docs/STATE.md` first, then `AGENTS.md`, [REDUNDANCY_TEAM](../../docs/engineering/exit/REDUNDANCY_TEAM.md), the hosting rows and build order of [EXIT_INFRASTRUCTURE_MAP](../../docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md), [infrastructure/terraform/README](../../infrastructure/terraform/README.md), [infrastructure/containers/README](../../infrastructure/containers/README.md) and [ENVIRONMENTS_AND_HOSTING](../../docs/engineering/ENVIRONMENTS_AND_HOSTING.md). Department: Engineering. Reporting lead: `REDUNDANCY_LEAD`.
 
 ## What you own
 
 - `infrastructure/terraform/` (AWS and Azure templates) and `infrastructure/containers/` (Expo web/API, Next portal, Caddy).
-- The app hosting, TLS/DNS, secrets, monitoring and external-provider rows of `docs/engineering/exit-map.json`.
+- The app hosting, TLS/DNS, secrets, monitoring and external-provider rows of `docs/engineering/exit/exit-map.json`.
 
 ## Standing duties
 

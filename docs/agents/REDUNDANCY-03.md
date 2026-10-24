@@ -100,7 +100,7 @@ Storage/Realtime: restored sign-in/MFA/REST/RPC/Edge/files/private access. RELEA
 owned stable origin deployed to supported installed clients and session/media/offline tests.
 Finance/QA: one writer, provider reconciliation and complete timed rehearsal/rollback.
 
-Read [EXIT_READY_RUNBOOK](../engineering/EXIT_READY_RUNBOOK.md) for commands, required original
+Read [EXIT_READY_RUNBOOK](../engineering/exit/EXIT_READY_RUNBOOK.md) for commands, required original
 evidence and180-minute planning budgets. Owner decisions remain required for provider/spend,
 live-data rehearsal, deployed-client release and cutover. No new live resource or data movement
 was performed by these sessions.

@@ -32,7 +32,7 @@ Report currentness is derived from safe source content plus exact reviewed local
 
 Changes are additive and reversible by reverting only this task's paths/patches and command integrations after review; preserve other ongoing app work and prior private source/backup artifacts. Do not relax previous source, identity, restore or payment gates to make this report pass. No commit, push, cloud operation, live SQL, provider messaging or external credentials are required for this work.
 
-Final integrated execution and task completion are governed by the original external receipt referenced in [REDUNDANCY-07](../../agents/REDUNDANCY-07.md); this planned gate does not predeclare its result.
+Final integrated execution and task completion are governed by the original external receipt referenced in [REDUNDANCY-07](../../../agents/REDUNDANCY-07.md); this planned gate does not predeclare its result.
 
 ## Focused readability and correctness continuation (2026-10-20)
 
@@ -59,4 +59,4 @@ relocated to synthetic inputs using the real inventory/writer. Existing privacy,
 routing, atomic output and unaccepted source-refresh tests pass. Stop/revise if any private input
 is exposed, unaffected guard becomes invalid, public contract drifts or full source verification
 fails. Independent Security and DOCUMENTATION execution, adoption decision and new complete gate
-are recorded in [REDUNDANCY-07](../../agents/REDUNDANCY-07.md); original final evidence stays external.
+are recorded in [REDUNDANCY-07](../../../agents/REDUNDANCY-07.md); original final evidence stays external.

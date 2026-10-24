@@ -6,7 +6,7 @@ and local SDK protocol checks prepare our current app for another compatible bac
 receipts belong in the task record; no live service, database restore or traffic change follows from this guide.
 
 Start with [PORTABILITY](PORTABILITY.md) for the architecture decision and
-[EXIT_READY_RUNBOOK](EXIT_READY_RUNBOOK.md) for the complete recovery and cutover procedure.
+[EXIT_READY_RUNBOOK](exit/EXIT_READY_RUNBOOK.md) for the complete recovery and cutover procedure.
 
 ## 1. One app and one connection contract
 
@@ -122,7 +122,7 @@ or traffic switch is introduced by this resolver.
 The existing `exit:release` and automatic source cache carry the resolver, client integrations, profile/protocol
 tools, tests and documentation with each accepted source update. There is one app implementation.
 An ordinary raw watcher capture retains actual code-verification status; it cannot inherit an earlier passing
-check. Follow [EXIT_READY_RUNBOOK](EXIT_READY_RUNBOOK.md) for verified releases and health observations.
+check. Follow [EXIT_READY_RUNBOOK](exit/EXIT_READY_RUNBOOK.md) for verified releases and health observations.
 
 Source includes the lockfile and build inputs, not installed dependencies or container images. For an offline
 installation, pre-stage the matching pnpm dependency cache/build tools and reviewed app/service image archives

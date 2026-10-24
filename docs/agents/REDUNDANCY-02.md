@@ -20,8 +20,8 @@ this session; no repository role was dispatched). **Status:** local setup comple
 | A redundant team working on the different database | Five new registry agents (Engineering): `REDUNDANCY_LEAD` → `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD`; roster 107 → 112. Partners keep their reporting lines |
 | The one that updates the rest of the team | `EXIT_SYNC`: owns the generator, baseline, Stop-hook guard and [EXIT_CHANGE_LOG](EXIT_CHANGE_LOG.md); routed notices per area |
 | App changes automatically update the plan / backup version | `scripts/exit-map.mjs` regenerates the map and plan version from the code; Stop hook (`scripts/exit-map-guard.sh`) in every Claude session; `pnpm exit:map:check` in `pnpm check` and CI fails on stale map, coverage gaps or unannounced changes; the recovery source capsule now carries the map, `exit-map.json` and baseline |
-| Full infrastructure map to build everything on a cloud base | Generated [EXIT_INFRASTRUCTURE_MAP](../engineering/EXIT_INFRASTRUCTURE_MAP.md): 12 components × exit A/B × AWS/Azure, owners, detected inventory, 11-step build order |
-| Full documents of the infrastructure, teams and agents | [REDUNDANCY_TEAM](../engineering/REDUNDANCY_TEAM.md) charter (documents, responsibilities, change protocol diagram, cadence); TEAMS contract item 13, hierarchy, expert standards, department plans, AGENTS.md, queue |
+| Full infrastructure map to build everything on a cloud base | Generated [EXIT_INFRASTRUCTURE_MAP](../engineering/exit/EXIT_INFRASTRUCTURE_MAP.md): 12 components × exit A/B × AWS/Azure, owners, detected inventory, 11-step build order |
+| Full documents of the infrastructure, teams and agents | [REDUNDANCY_TEAM](../engineering/exit/REDUNDANCY_TEAM.md) charter (documents, responsibilities, change protocol diagram, cadence); TEAMS contract item 13, hierarchy, expert standards, department plans, AGENTS.md, queue |
 
 ## Status and file claims
 
@@ -58,7 +58,49 @@ the app must work the same and pull the same data; plan cache, load balancer and
 | **App finding:** guests cannot read `public.rallies` — policy calls `rally_manager_role()`, which anon may not execute after function-access hardening (42501). Development has that hardening since 2026-10-17. Not fixed (SQL is owner-applied); route to RALLY / RLS_SECURITY | Reproduced on canonical schema in PGlite |
 
 **Concurrency stop (22:38 MDT):** Codex session (REDUNDANCY-03, `EXIT_READY_IMPLEMENTATION_PLAN.md`) began editing `scripts/exit-map.mjs`
-and `docs/engineering/exit-map.json` and added `scripts/exit-inventory.mjs` (imports `typescript`) while this session was working. Per TEAMS
+and `docs/engineering/exit/exit-map.json` and added `scripts/exit-inventory.mjs` (imports `typescript`) while this session was working. Per TEAMS
 contract item 10 this session stopped editing those files and asked the owner how to coordinate. Not yet done by this session: GO-path gate
 test (blocked by the new import in a node_modules-free copy), runbook §8 step 0 (preflight), charter / agent-duty wording for status and
 preflight, STATE §4 line, final `pnpm check`. Claude's claim on `exit-map.mjs` / `exit-map.json` is released to the owner's decision.
+
+## Hierarchy sync receipt — exit reading home (2026-10-23)
+
+**Task:** CTO hierarchy sync for the move of Redundancy & Exit reading documents into `docs/engineering/exit/` (plans under `docs/engineering/exit/plans/`). **Executor:** VP_OPERATIONS, this Cursor session (coordination only; no new role; no claim that EXIT_* or Security specialists ran or approved a release).
+
+**Reporting checked, unchanged:** `ENGINEERING` → `REDUNDANCY_LEAD` → `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_CLOUD`. `INFRA_SECURITY`, `SUPPLY_CHAIN_SECURITY`, and `RECOVERY_SECURITY` still report to `SECURITY` (with `RLS_SECURITY`, `SESSION_SECURITY`, `THREAT_DETECTION`). Registry leads match `TEAM_HIERARCHY` and `TEAMS`. Model pins unchanged.
+
+**Files:** reading-home links corrected in `TEAMS.md` (alignment stamp; contract item 13 already pointed at `exit/README`), `TEAM_HIERARCHY.md`, `BACKUP_OPERATIONS.md`, `ENVIRONMENTS_AND_HOSTING.md`, `PORTABILITY.md`, `PORTABLE_INTEGRATIONS.md`, `design/MEDIA_SERVICE_PLAN.md`, and the exit runbooks/charter/plan. Generators `scripts/exit-map.mjs` and `infrastructure/security/report.mjs` now emit links from `docs/engineering/exit/`. Regenerated `EXIT_INFRASTRUCTURE_MAP.md` and `INFRASTRUCTURE_SECURITY_REPORT.md`. Announced content-fingerprint plan `e9e50cf56b87` → `40003df5cd08` in `EXIT_CHANGE_LOG.md` (notice only; named reviewers have not recorded results). `WORK_QUEUE.md`, `EXPERT_STANDARDS.md`, and registry reporting lines needed no lead or path correction. No `docs/engineering/EXIT_*` or `docs/engineering/REDUNDANCY_TEAM.md` paths remain outside the new home.
+
+**Check (2026-10-23):** `pnpm agents:check` — ok, 115 agents; files, ownership paths, reporting graph, and team docs agree. `node scripts/exit-map.mjs --check` — ok, plan `40003df5cd08`. `node infrastructure/security/report.mjs --check` — ok; operational acceptance not established.
+
+**Gaps:** hosted restore and cutover remain unclaimed. The 2026-10-23 exit-map notice is not a review. No provider account, hosted drill, or cutover is authorized by this receipt.
+
+**Next owner:** named reviewers on the 2026-10-23 notice record their own results; `REDUNDANCY_LEAD` keeps hosted drill/cutover with the owner. `CTO` integrates this receipt.
+
+## Documentation execution receipt — exit reading home (2026-10-23)
+
+**Task:** DOCUMENTATION acceptance for the exit reading-home consolidation on `cursor/exit-docs-home-9a86` (VP_OPERATIONS commit `8465db6`). **Executor:** DOCUMENTATION, this Cursor session (`grok-4.7-medium`). This receipt records documentation synchronization only. It does not claim that EXIT_* or Security specialists ran, and it does not claim a hosted restore, drill, or cutover.
+
+**Confirmed:** `docs/README.md` points at `docs/engineering/exit/README.md` as the one exit section (engineering index, two rows, same target). `AGENTS.md`, `docs/agents/TEAMS.md` (contract item 13), and `docs/agents/TEAM_HIERARCHY.md` name that reading home. Generators `scripts/exit-map.mjs` and `infrastructure/security/report.mjs` write `docs/engineering/exit/EXIT_INFRASTRUCTURE_MAP.md` and `docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md`. Runnable `infrastructure/*` trees stayed put, as the reading-home README states.
+
+**Files this pass:** `docs/STATE.md` (Last updated header set to 2026-10-23; new §4 heading, newest first) and `docs/agents/REDUNDANCY-02.md` (this receipt). README, hierarchy, TEAMS, and AGENTS were already updated in `8465db6` and were checked, not rewritten.
+
+**Check (2026-10-23):** `pnpm docs:links` — exit 0. `docs:links ok (326 active Markdown files; local file destinations only)`.
+
+**Gaps:** §4 still holds more than ~15 dated headings; older workstream history was left in place. Link check does not prove exit-map freshness, a hosted drill, or release approval. Hosted restore and cutover remain unclaimed. The 2026-10-23 exit-map notice is still not a review.
+
+**Next owner:** `CTO` integrates this receipt. Named reviewers on the 2026-10-23 notice record their own results. `REDUNDANCY_LEAD` keeps hosted drill/cutover with the owner.
+
+## EXIT_SYNC / INFRA_SECURITY receipt — inventory CI parity (2026-10-23)
+
+**Task:** CI `security:infra report is stale` on the exit reading-home branch while the same commit checked clean locally. **Executor:** this Cursor session (EXIT_SYNC inventory fix + security test path; not a hosted acceptance).
+
+**Cause:** `apps/mobile/expo-env.d.ts` is gitignored and created by local Expo; it was hashed into the exit inventory. GitHub Actions install+typecheck never writes that file, so the committed Infrastructure Security report binding did not match CI. The security CLI fixture still expected the pre-move report path under `docs/engineering/`.
+
+**Fix:** `scripts/exit-inventory.mjs` ignores `expo-env.d.ts` and `coverage/`, and sorts inventory paths with binary order. `infrastructure/security/tests/report.test.mjs` expects `docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md`. Regenerated map/report; announced plan `52c793b873a3` → `5ca7ffc4ae64`.
+
+**Check (2026-10-23, America/Denver):** `pnpm security:infra:check` ok; `pnpm exit:map:check` ok (plan `5ca7ffc4ae64`); `pnpm security:infra:test` 22/22; setup tests under `umask 077` 12/12. Operational acceptance not established.
+
+**Gaps:** other open PR heads that refreshed the report while `expo-env.d.ts` was present still need the same inventory exclusion (or a regenerate after this fix). Hosted restore/cutover unclaimed.
+
+**Next owner:** `CTO` / PR merge; named reviewers on the new notice.

@@ -21,7 +21,7 @@ async function fixture(run) {
     await put('.claude/agents/registry.json',registry);
     for(const role of registry.agents)await put(role.file,'<!-- Synthetic role source. -->\n');
     await put('docs/engineering/infrastructure.json',config);
-    await put('docs/engineering/exit-map.json',mapping);
+    await put('docs/engineering/exit/exit-map.json',mapping);
     await put('infrastructure/security/controls.json',controls);
     await put('package.json',{scripts:{...Object.fromEntries(Object.values(GUARDS).map(command=>[command,'node scripts/fixture.mjs'])),'security:infra:test':'node --test infrastructure/security/tests/*.test.mjs','security:infra:check':'node infrastructure/security/report.mjs --check',check:[...Object.values(GUARDS),'security:infra:test','security:infra:check'].map(s=>`pnpm ${s}`).join(' && ')}});
     for(const guard of controls.guards)await put(guard.evidence[0],'// Synthetic bounded source guard.\n');
@@ -42,7 +42,7 @@ test('complete local governance stays explicitly unaccepted operationally',()=>f
 
 test('new service and exit component require explicit Security partners',()=>fixture(async({root,put,config,mapping})=>{
   config.services.push({id:'new-provider'});mapping.components.push({id:'new-edge',owner:'EXIT_CLOUD',with:[]});
-  await put('docs/engineering/infrastructure.json',config);await put('docs/engineering/exit-map.json',mapping);
+  await put('docs/engineering/infrastructure.json',config);await put('docs/engineering/exit/exit-map.json',mapping);
   const report=inspectSecurity(root);
   assert.equal(report.structuralStatus,'needs-attention');
   assert.ok(report.issues.includes('uncovered-service:new-provider'));assert.ok(report.issues.includes('uncovered-component:new-edge'));
@@ -50,7 +50,7 @@ test('new service and exit component require explicit Security partners',()=>fix
 
 test('Security reporting or counterpart removal cannot remain current',()=>fixture(async({root,put,registry,mapping})=>{
   registry.agents.find(a=>a.call==='RECOVERY_SECURITY').lead='EXIT_CLOUD';mapping.components[0].with=[];
-  await put('.claude/agents/registry.json',registry);await put('docs/engineering/exit-map.json',mapping);
+  await put('.claude/agents/registry.json',registry);await put('docs/engineering/exit/exit-map.json',mapping);
   const report=inspectSecurity(root);
   assert.ok(report.issues.includes('invalid-security-role:RECOVERY_SECURITY'));assert.ok(report.issues.includes('component-reviewer-not-routed:network:INFRA_SECURITY'));
 }));
@@ -102,7 +102,7 @@ for (const missing of ['configuration', 'command', 'full-check inclusion', 'evid
     assert.equal(renderSecurityReport(inspectSecurity(root)), markdown);
     await updateSecurityReport(root);
     assert.equal((await updateSecurityReport(root, { check: true })).current, true);
-    assert.equal(await fs.readFile(path.join(root, 'docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md'), 'utf8'), markdown);
+    assert.equal(await fs.readFile(path.join(root, 'docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md'), 'utf8'), markdown);
   }));
 }
 
@@ -134,7 +134,7 @@ test('evidence links and private/traversal paths are refused',()=>fixture(async(
 
 test('automatic report refresh is atomic/no-op and never records reviewer acceptance',()=>fixture(async({root})=>{
   const first=await updateSecurityReport(root);assert.equal(first.changed,true);
-  const target=path.join(root,'docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md');const before=await fs.stat(target);
+  const target=path.join(root,'docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md');const before=await fs.stat(target);
   const next=await updateSecurityReport(root);assert.equal(next.changed,false);assert.equal((await fs.stat(target)).mtimeMs,before.mtimeMs);
   assert.equal(next.report.operationalAcceptance,false);
   await fs.unlink(target);await fs.symlink(path.join(root,'package.json'),target);await assert.rejects(updateSecurityReport(root),/symlink/i);
@@ -157,7 +157,7 @@ test('source refresh invokes Security bookkeeping and preserves unaccepted revie
 
 test('source refresh exposes coverage gaps and rejects hard Security writer failures',()=>fixture(async({root,put})=>{
   await put('scripts/exit-map.mjs','// Synthetic exit writer.\n');
-  await put('infrastructure/security/report.mjs',`// Synthetic semantic failure.\nconsole.error('security:infra wrote docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md with problems: uncovered-service:fixture');process.exit(1);`);
+  await put('infrastructure/security/report.mjs',`// Synthetic semantic failure.\nconsole.error('security:infra wrote docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md with problems: uncovered-service:fixture');process.exit(1);`);
   assert.equal((await refreshMap(root)).outcome,'failed');
   await put('infrastructure/security/report.mjs',`// Synthetic hard refusal.\nconsole.error('security:infra refused invalid, unsafe or changed local inputs');process.exit(2);`);
   await assert.rejects(refreshMap(root));
@@ -177,7 +177,7 @@ test('actual report CLI preserves read-only JSON, stale checks, draft failure ma
     assert.ifError(result.error);
     return result;
   };
-  const output = path.join(root, 'docs/engineering/INFRASTRUCTURE_SECURITY_REPORT.md');
+  const output = path.join(root, 'docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md');
 
   const json = run('--json');
   assert.equal(json.status, 0);
@@ -194,7 +194,7 @@ test('actual report CLI preserves read-only JSON, stale checks, draft failure ma
   await put('infrastructure/security/controls.json', controls);
   const draft = run('--write');
   assert.equal(draft.status, 1);
-  assert.match(draft.stderr, /^security:infra wrote docs\/engineering\/INFRASTRUCTURE_SECURITY_REPORT\.md with problems: missing-guard:client-boundary\s*$/);
+  assert.match(draft.stderr, /^security:infra wrote docs\/engineering\/exit\/INFRASTRUCTURE_SECURITY_REPORT\.md with problems: missing-guard:client-boundary\s*$/);
   assert.match(await fs.readFile(output, 'utf8'), /\| `client-boundary` \| `pnpm security:client-keys` \| needs-attention \|/);
   const failedCheck = run('--check');
   assert.equal(failedCheck.status, 1);
