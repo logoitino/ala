@@ -151,7 +151,7 @@ type AthleteProfileViewProps = {
 /**
  * @purpose One athlete sheet for the Profile tab and `/user/[id]`: hero, Crew, compact Donate/Share and direct Highlights / Stats / Goals / Vault / Manage sections.
  * @param onBack Public sheet back control (stack header is hidden so chrome matches the hub).
- * @param headerRight Own-hub account menu.
+ * @param headerRight Own-hub account menu, rendered on the compact hero identity row (not a separate nav bar).
  * @param onDropMalo Donate — hidden on your own claimed row. One-time Exclusive stays on the Vault tab and a locked Highlight.
  * @sideEffects Child grids / vault / Q&A / `useCrew`; wishlist lights Flip-card glow when opened; `ShareQrModal`; own-hub `ProfileAvatarPicker`.
  */
@@ -402,22 +402,18 @@ export function AthleteProfileView({
 
   return (
     <View style={styles.root}>
-      {onBack || headerRight ? (
+      {onBack ? (
         <View style={styles.navRow}>
-          {onBack ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Back"
-              haptic="selection"
-              onPress={onBack}
-              style={styles.navBtn}
-            >
-              <Ionicons name="chevron-back" size={22} color={FOCAL.violetInk} />
-            </Pressable>
-          ) : (
-            <View style={styles.navHit} />
-          )}
-          {headerRight ?? <View style={styles.navHit} />}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            haptic="selection"
+            onPress={onBack}
+            style={styles.navBtn}
+          >
+            <Ionicons name="chevron-back" size={22} color={FOCAL.violetInk} />
+          </Pressable>
+          <View style={styles.navHit} />
         </View>
       ) : null}
       {leading}
@@ -441,6 +437,7 @@ export function AthleteProfileView({
         canEditAvatar={editAvatar}
         onAvatarUploaded={onAvatarUploaded}
         schoolBadge={schoolVisible ? schoolBadge : null}
+        headerAction={headerRight}
         footer={
           <ProfileStatRow
             player={player}

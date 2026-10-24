@@ -6,7 +6,7 @@
  */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useEffect, useState } from 'react';
-import { Modal, StyleSheet, Text } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
@@ -113,53 +113,62 @@ export function AgeConfirmModal() {
         ]}
       >
         <BlurView intensity={48} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
-        <Animated.View style={[styles.card, frame.card, cardStyle]}>
-          <MenuBackdrop accent="jade" />
-          <Text style={styles.kicker}>Tapua&apos;i</Text>
-          <Text style={styles.title}>{asksBirth ? 'One quick question' : 'Quick confirmation'}</Text>
-          {asksBirth ? (
-            <>
-              <Text style={styles.body}>
-                {birthPrompt === 'required'
-                  ? 'Add your birth month and year to finish setting up your account.'
-                  : 'Add your birth month and year so your account gets the right safety settings.'}
-              </Text>
-              <BirthMonthField value={birth} onChange={setBirth} disabled={busy} />
-              {error ? <Text style={styles.error}>{error === AGE_GATE_REFUSAL ? AGE_GATE_REFUSAL : error}</Text> : null}
-              <AnimatedButton
-                accessibilityLabel="Save birth month and year"
-                disabled={Boolean(birthProblem) || busy}
-                haptic="medium"
-                onPress={() => void onSaveBirth()}
-                contentStyle={[styles.cta, (Boolean(birthProblem) || busy) && styles.ctaOff]}
-              >
-                <Text style={styles.ctaLabel}>Continue</Text>
-              </AnimatedButton>
-              {birthPrompt === 'optional' ? (
-                <AnimatedButton accessibilityLabel="Not now" haptic="selection" onPress={dismissBirthPrompt} contentStyle={styles.later}>
-                  <Text style={styles.laterLabel}>Not now</Text>
-                </AnimatedButton>
-              ) : null}
-            </>
-          ) : (
-            <>
-              <Text style={styles.body}>
-                Before you continue, we need to confirm your age. Tapua&apos;i is not for kids under 13.
-              </Text>
-              <LegalAckToggle checked={checked} onCheckedChange={setChecked} label={AGE_GATE_LABEL} />
-              {error ? <Text style={styles.error}>{error}</Text> : null}
-              <AnimatedButton
-                accessibilityLabel="Confirm and continue"
-                disabled={!checked || busy}
-                haptic="medium"
-                onPress={() => void onConfirm()}
-                contentStyle={[styles.cta, (!checked || busy) && styles.ctaOff]}
-              >
-                <Text style={styles.ctaLabel}>Confirm & Continue</Text>
-              </AnimatedButton>
-            </>
-          )}
-        </Animated.View>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboard}>
+          <Animated.View style={[styles.card, frame.card, cardStyle]}>
+            <MenuBackdrop accent="jade" />
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+              contentContainerStyle={styles.cardScroll}
+            >
+              <Text style={styles.kicker}>Tapua&apos;i</Text>
+              <Text style={styles.title}>{asksBirth ? 'One quick question' : 'Quick confirmation'}</Text>
+              {asksBirth ? (
+                <>
+                  <Text style={styles.body}>
+                    {birthPrompt === 'required'
+                      ? 'Add your birth month and year to finish setting up your account.'
+                      : 'Add your birth month and year so your account gets the right safety settings.'}
+                  </Text>
+                  <BirthMonthField value={birth} onChange={setBirth} disabled={busy} />
+                  {error ? <Text style={styles.error}>{error === AGE_GATE_REFUSAL ? AGE_GATE_REFUSAL : error}</Text> : null}
+                  <AnimatedButton
+                    accessibilityLabel="Save birth month and year"
+                    disabled={Boolean(birthProblem) || busy}
+                    haptic="medium"
+                    onPress={() => void onSaveBirth()}
+                    contentStyle={[styles.cta, (Boolean(birthProblem) || busy) && styles.ctaOff]}
+                  >
+                    <Text style={styles.ctaLabel}>Continue</Text>
+                  </AnimatedButton>
+                  {birthPrompt === 'optional' ? (
+                    <AnimatedButton accessibilityLabel="Not now" haptic="selection" onPress={dismissBirthPrompt} contentStyle={styles.later}>
+                      <Text style={styles.laterLabel}>Not now</Text>
+                    </AnimatedButton>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <Text style={styles.body}>
+                    Before you continue, we need to confirm your age. Tapua&apos;i is not for kids under 13.
+                  </Text>
+                  <LegalAckToggle checked={checked} onCheckedChange={setChecked} label={AGE_GATE_LABEL} />
+                  {error ? <Text style={styles.error}>{error}</Text> : null}
+                  <AnimatedButton
+                    accessibilityLabel="Confirm and continue"
+                    disabled={!checked || busy}
+                    haptic="medium"
+                    onPress={() => void onConfirm()}
+                    contentStyle={[styles.cta, (!checked || busy) && styles.ctaOff]}
+                  >
+                    <Text style={styles.ctaLabel}>Confirm & Continue</Text>
+                  </AnimatedButton>
+                </>
+              )}
+            </ScrollView>
+          </Animated.View>
+        </KeyboardAvoidingView>
       </Animated.View>
     </Modal>
   );
@@ -171,11 +180,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15,20,22,0.72)',
     justifyContent: 'center',
   },
+  keyboard: {
+    width: '100%',
+    maxHeight: '100%',
+    justifyContent: 'center',
+  },
   card: {
     backgroundColor: colors.surface,
-    gap: 14,
     borderWidth: 1,
     borderColor: colors.border,
+    maxHeight: '100%',
+  },
+  cardScroll: {
+    gap: 14,
   },
   kicker: {
     fontSize: 12,

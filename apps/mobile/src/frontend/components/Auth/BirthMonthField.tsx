@@ -3,6 +3,7 @@
  * one-time age card and Profile → Privacy. Neutral on purpose: nothing hints at the age that would work, the year starts
  * blank, and the value never goes to telemetry.
  */
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -12,8 +13,25 @@ import { FOCAL } from '@/theme/motion';
 
 export type BirthDraft = { year: number | null; month: number | null };
 
-/** @purpose The month grid and year box; reports the draft on every change. */
+/**
+ * @purpose The month grid and year box; reports a complete year only when all four digits are entered.
+ * @remarks Partial year digits stay visible in local state — mapping incomplete input to `year: null` must not wipe the TextInput.
+ * @param value Parent draft (month + complete year only).
+ * @param onChange Called on every month tap and year digit change.
+ */
 export function BirthMonthField({ value, onChange, disabled }: { value: BirthDraft; onChange: (next: BirthDraft) => void; disabled?: boolean }) {
+  // Keep typed digits while year is still incomplete; parent only stores a finished YYYY.
+  const [yearText, setYearText] = useState(value.year != null ? String(value.year) : '');
+
+  useEffect(() => {
+    if (value.year != null) {
+      setYearText(String(value.year));
+      return;
+    }
+    // Full reset after save (`{ year: null, month: null }`) — clear the box without fighting mid-typing.
+    if (value.month == null) setYearText('');
+  }, [value.month, value.year]);
+
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>Birth month and year</Text>
@@ -45,9 +63,10 @@ export function BirthMonthField({ value, onChange, disabled }: { value: BirthDra
         placeholder="Year (YYYY)"
         placeholderTextColor={colors.textMuted}
         style={styles.year}
-        value={value.year ? String(value.year) : ''}
+        value={yearText}
         onChangeText={(text) => {
           const digits = text.replace(/\D/g, '').slice(0, 4);
+          setYearText(digits);
           onChange({ ...value, year: digits.length === 4 ? Number(digits) : null });
         }}
       />

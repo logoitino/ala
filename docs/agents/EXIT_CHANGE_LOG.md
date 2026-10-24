@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-24 · plan `14d8eeba2d32` → `4fc54275bb8d` · announced by cloud-agent profile-age-ux
+
+App at announcement: commit `d4d70de01471be1025d82921752f91134772d2cf` + 7 uncommitted file(s), source `4fc54275bb8dbdc114e18349c94cd716621683590469249b0d28bb3ff7140aeb`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app/(tabs)/profile.tsx fc17644d532c2e56432d3f2023dcce32e63f2e6eff1550b52235af6a8eccdacd`, `apps/mobile/src/frontend/components/Auth/AgeConfirmModal.tsx 6fc6283ad1e5522ce9800d05030c2d43e620a515f121511326888de91fb2e685`, `apps/mobile/src/frontend/components/Auth/BirthMonthField.tsx 3dfe4e4091e7b9ec7b8f960828aca5574b8e2d3492e6784658857900d8ac8349`, `apps/mobile/src/frontend/components/Auth/__tests__/BirthMonthField.test.tsx c53c650302d2a04a6dd01bd473f84f81a7e3e37348d6f866efd6fca9e2928a11`, `apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx 819cb7f0202d3436a42b747f2375f53c30fda07d1626e4dbc3dc9c6287ec174a`, `apps/mobile/src/frontend/components/Profile/ProfileHeroAvatar.tsx 02ca85e70617dc38a101ec59770727c5e75963dd2b50afc906b8b2e2edd3e600`, `apps/mobile/src/frontend/components/Profile/ProfileMenuSheet.tsx 6c35cd1d1e42ab670d70b47179023539e3fd8fb1e02506a3b8133f2d2a005228`; removed `apps/mobile/app/(tabs)/profile.tsx 286fce2adac296f703977be27817160c56cb4b8ae1e81ac257a7bded51fe2887`, `apps/mobile/src/frontend/components/Auth/AgeConfirmModal.tsx b459c875a09a647a0a9f7ef150fa293a3a4a4122133efb5fe6ccf440af5dfd4e`, `apps/mobile/src/frontend/components/Auth/BirthMonthField.tsx 3285359edfcf6feb0abca8f5e5c373010667f3de952f82170136f1db19c88b21`, `apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx be27d386e981eca58fceb6c986c37b16a35d8fea7e7ca2f707c6ba509dbf7909`, `apps/mobile/src/frontend/components/Profile/ProfileHeroAvatar.tsx e7bf730a1e265d5efe9a5d43ee3cbddf2dd88d45e0f6ef34b72c5d737b689bd6`, `apps/mobile/src/frontend/components/Profile/ProfileMenuSheet.tsx 23038af52be2a28c31214eb3f6a6a878b782ae0159f2b6ce5cda18a51365d1eb`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-24 · plan `7d3a65e40e8a` → `14d8eeba2d32` · announced by cloud-agent soft-wall GradleLowMemory
 
 App at announcement: commit `9000b6faecde1ededc785f268252a40f10f168b7` + 2 uncommitted file(s), source `14d8eeba2d327566771d6377895f3a666bb8a76660690008921e7fd7f7ebc93e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
