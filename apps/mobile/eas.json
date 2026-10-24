@@ -22,11 +22,13 @@
         "simulator": false
       },
       "android": {
-        "image": "sdk-58"
+        "image": "sdk-58",
+        "buildType": "apk"
       },
       "env": {
         "APP_ENV": "preview",
-        "EXPO_PUBLIC_APP_ENV": "preview"
+        "EXPO_PUBLIC_APP_ENV": "preview",
+        "ORG_GRADLE_PROJECT_reactNativeArchitectures": "armeabi-v7a,arm64-v8a"
       }
     },
     "production": {
