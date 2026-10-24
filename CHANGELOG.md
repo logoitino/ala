@@ -9,8 +9,9 @@
   Support & legal groups.
 - Hierarchy sync for the tip: 115 agents, docs/links, feature-admin, IP, exit plan
   `4fc54275bb8d`, infra and Security source report gates. COORD-02 gift release remains open.
-- Resubmit from `43d3146`: iOS preview `09de0497` queued; Android blocked by Expo Free
-  monthly Android quota until 2026-11-01 (no paid plan without owner).
+- Resubmit from `43d3146`: iOS preview `09de0497` **FINISHED**
+  (IPA https://expo.dev/artifacts/eas/CIVa_sDSWSyxS2kDSntQY-j_el6g9n781S9cSOjSRGc.ipa);
+  Android blocked by Expo Free monthly Android quota until 2026-11-01 (no paid plan without owner).
 
 ## 2026-10-23 — Soft-Wall Vault unlock and resume session
 
