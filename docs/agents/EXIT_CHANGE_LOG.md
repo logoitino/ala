@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-24 · plan `cbc44e7a022d` → `7d3a65e40e8a` · announced by cloud-agent soft-wall EAS ABI/StripeDisableSPM
+
+App at announcement: commit `2fc569610bb0e5e994b6537842062813fa75e745`, source `7d3a65e40e8ad8b144f812500b7b811a9c9bc706be81df215c1d61db565c47ec`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app.json bb4067afa9a31a397638b88f0d880e5ec2eac50d61420f9ad679b02fa6f3a4a5`, `apps/mobile/eas.json 96d436ee7f024834c7335e9e9021035a7b48a615f0fda4ec87281c109648577f`, `apps/mobile/package.json 6650182b648802b995c9c8280b2f5d602ae97972993e51acb2af04369e52d5f0`, `apps/mobile/plugins/withStripeDisableSPM.js 8dc1f6cc6d92028f650a6bec12314ea75dff7b1a1651d4392215c7feaaf9747b`; removed `apps/mobile/app.json 522b3d2d4ead64b0530a96153550b6284b98469da14ade16da39e2373a610bbf`, `apps/mobile/eas.json cbfa023f9be8684cb909a2dd76820cbc9199d5ce0cd38474d9f9bb21b794b54f`, `apps/mobile/package.json eb57b8e35e017b191dceffedce0f53d9ffd7db170610fdb1882f31424cd710c1`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-24 · plan `49c45af83cf0` → `cbc44e7a022d` · announced by eas-stripe-tapandpay-fix
 
 App at announcement: commit `b8df7dd2d9a6557f185979804b91a8ef1758e5a5` + 2 uncommitted file(s), source `cbc44e7a022d5ec7757da065ea227277c685580dbe17402b1f6f5777e24de35a`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
