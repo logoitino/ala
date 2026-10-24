@@ -40,7 +40,7 @@ owner-reported or unverified. Portability and exits: [PORTABILITY.md](PORTABILIT
 | AWS/Azure self-hosted Supabase deployment | — | — | — | — |
 | Apple Maps / Google Maps (directions links) | — | — | — | — |
 
-Local libraries (no outside service): 50. App configuration variables: `NODE_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `ANALYTICS_TEST_RESOLVER`.
+Local libraries (no outside service): 52. App configuration variables: `NODE_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `ANALYTICS_TEST_RESOLVER`.
 
 ## How deeply we are integrated with Supabase
 
