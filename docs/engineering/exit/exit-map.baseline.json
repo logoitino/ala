@@ -1,5 +1,5 @@
 {
- "planVersion": "49c45af83cf0",
+ "planVersion": "cbc44e7a022d",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1655,7 +1655,7 @@
    "apps/mobile/eas.json cbfa023f9be8684cb909a2dd76820cbc9199d5ce0cd38474d9f9bb21b794b54f",
    "apps/mobile/jest.setup.js f20ef602e8841f99e1aa9d025e5c2012221edce851b520a0bc4170ebc0586dcc",
    "apps/mobile/metro.config.js 9aae58cae64cb372180722789b945c189e8978311fe15d0c2925b7668ae6e0e9",
-   "apps/mobile/package.json 5586e08f1b3d9517549e21f3cea9431156856fb221af287d1319ad3dc32052a8",
+   "apps/mobile/package.json eb57b8e35e017b191dceffedce0f53d9ffd7db170610fdb1882f31424cd710c1",
    "apps/mobile/public/canvaskit.wasm eb68c7a7f602d8cb89915352c4471a2d26edfd72000f78202cb1fe32ce1f9dc4",
    "apps/mobile/src/backend/api/__tests__/fanZoneMedia.test.ts 94103ca8f1e47ef59bca7dbbbcc7c62b7db5ae6c1cddd8d8d611c3bd66d8feb6",
    "apps/mobile/src/backend/api/accessToken.test.ts d06bb80b02cbd78ca93895a58e6bb083f1588b1dec1a29c3bf73048666c8ff6c",
@@ -2563,7 +2563,7 @@
    "patches/@expo__router-server@58.0.14.patch b038a61630b068ba93e0f0819b0355e86502410033f4ba99666c80d91c6d28f8",
    "patches/expo-video@58.0.11.patch 4eb49a84e89ddc7476025a47315dbc5a46e3df8b8882ab48027ec0423905f171",
    "patches/expo@58.0.14.patch ebb5bf534a9dabf276e39ead040727097971ede1ba297dbde15b7b7afe5758b2",
-   "pnpm-lock.yaml 19e5a5b3bda9364fc2d3bf2f2348933378c408dc1d9574585ad9cdcbe9f86c53",
+   "pnpm-lock.yaml 7da65e03cbca0e3f8a07bc0a6357d8061bf9439a8a54fe4a032cf2ea1e897007",
    "pnpm-workspace.yaml 60ce4d1dbf137701a4683d171391c51662700c2f3e32a7caab8b2efc22540e65",
    "scripts/__tests__/check-feature-admin.test.mjs 02e7f06f1309c8812200e58c12a43ba60b8514acfc8badbde462678f7cee807c",
    "scripts/__tests__/detection.test.mjs 1353e4b50f2e79b16c8936b9031f5b0576e58242b6c0cfb2dddbab22ebffe427",

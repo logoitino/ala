@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-24 · plan `49c45af83cf0` → `cbc44e7a022d` · announced by eas-stripe-tapandpay-fix
+
+App at announcement: commit `b8df7dd2d9a6557f185979804b91a8ef1758e5a5` + 2 uncommitted file(s), source `cbc44e7a022d5ec7757da065ea227277c685580dbe17402b1f6f5777e24de35a`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/package.json eb57b8e35e017b191dceffedce0f53d9ffd7db170610fdb1882f31424cd710c1`, `pnpm-lock.yaml 7da65e03cbca0e3f8a07bc0a6357d8061bf9439a8a54fe4a032cf2ea1e897007`; removed `apps/mobile/package.json 5586e08f1b3d9517549e21f3cea9431156856fb221af287d1319ad3dc32052a8`, `pnpm-lock.yaml 19e5a5b3bda9364fc2d3bf2f2348933378c408dc1d9574585ad9cdcbe9f86c53`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-24 · plan `6a70a34dc4b4` → `49c45af83cf0` · announced by eas-sdk58-native-fix
 
 App at announcement: commit `d7fef13e831a4fd4422ece3b94c1fe14ba7b7371` + 4 uncommitted file(s), source `49c45af83cf0bb97edf127dfb8157adf6aebc84edd6f1a2ee6cbe5ed882ec437`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
