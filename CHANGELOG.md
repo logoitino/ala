@@ -1,4 +1,11 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-10-27 — ARCHITECTURE_SYNC build-layers map
+
+- Add `ARCHITECTURE_SYNC` (116 roles): L0–L9 stack map in `build-layers.json` /
+  `BUILD_LAYERS.md`, routed notices in `ARCHITECTURE_CHANGE_LOG.md`.
+- Owner change prompts break into per-role team/docs/code tasks; `pnpm layers:sync` /
+  `layers:check` in full check. Currency is change-driven (like EXIT_SYNC), not an idle worker.
+
 ## 2026-10-23 — Soft-Wall Vault unlock and resume session
 
 - Guest Vault unlock on Highlights opens Soft-Wall (`soft_wall.exclusive`) then resumes PaymentSheet.

@@ -257,6 +257,7 @@ Lead: `SUPPORT`, reporting to `ENGINEERING`; specialists INCIDENT_TRIAGE, TELEME
 | `HIGHLIGHTS` | `grok-4.7-medium` | Engineering |
 | `INCIDENT_TRIAGE` | `grok-4.7-medium` | Engineering support |
 | `INFRASTRUCTURE` | `grok-4.7-medium` | Engineering |
+| `ARCHITECTURE_SYNC` | `grok-4.7-medium` | Engineering |
 | `INFRA_SECURITY` | `grok-4.7-medium` | Security |
 | `REDUNDANCY_LEAD` | `grok-4.7-medium` | Engineering |
 | `EXIT_SYNC` | `grok-4.7-medium` | Engineering |

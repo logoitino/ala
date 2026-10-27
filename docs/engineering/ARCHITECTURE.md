@@ -8,7 +8,7 @@ Default-OFF published extras and unconditional zero gift cut are separate. [Sour
 records history, bounds, roles and hosted/provider/retention gaps; no new table or credit writer.
 
 
-Current state and hand-off: [STATE.md](../STATE.md) (read first). System overview for the pnpm monorepo. Schema detail: [SCHEMA.md](SCHEMA.md). Product numbers: [PRODUCT_FACTS.md](../product/PRODUCT_FACTS.md). Engineer map: [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md). Who owns each tab: [TEAMS.md](../agents/TEAMS.md).
+Current state and hand-off: [STATE.md](../STATE.md) (read first). System overview for the pnpm monorepo. Schema detail: [SCHEMA.md](SCHEMA.md). Product numbers: [PRODUCT_FACTS.md](../product/PRODUCT_FACTS.md). Engineer map: [SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md). Layered stack + role seats: [BUILD_LAYERS.md](BUILD_LAYERS.md) (owner `ARCHITECTURE_SYNC`; change log [ARCHITECTURE_CHANGE_LOG](../agents/ARCHITECTURE_CHANGE_LOG.md)). Who owns each tab: [TEAMS.md](../agents/TEAMS.md).
 
 ## Monorepo map
 
