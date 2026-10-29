@@ -1,0 +1,22 @@
+---
+description: Always include Jev on complex product and code decisions
+alwaysApply: true
+---
+
+# Jev on complex decisions
+
+Owner (2026-10-28): for **more complex** product, UX, naming, layout, or implementation
+forks, **include Jev** (TypeSafe scorer in `jev/`) before coding so decisions and the
+resulting code stay faster and leaner.
+
+1. Read `docs/engineering/JEV.md`.
+2. Brief Jev with labeled options and constraints — no secrets, no customer data, no full
+   dumps of money/payout/auth/legal modules.
+3. Prefer `~/bin/jev-ask spec.json` when that route exists; otherwise the repo `jev/` SDK
+   with `TYPESAFE_API_KEY` in `jev/.env`.
+4. Record choice + confidence (and token counts when known) in STATE §4 or the task tracker.
+5. Historical simplify bar: keep current unless confidence is high (~0.90+). If Jev is
+   unreachable, say so and proceed — never invent a score.
+
+Skip for trivial edits and pure doc/CI sync. Jev is not counsel, spend approval, or a
+registry agent.

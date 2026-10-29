@@ -1,4 +1,10 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-10-28 — Jev on complex decisions (standing)
+
+- Owner rule: include Jev (TypeSafe) before coding non-trivial forks so decisions and diffs
+  stay faster and leaner. Protocol: `docs/engineering/JEV.md`; AGENTS + TEAMS §1a;
+  `.cursor/rules/jev.mdc`. Record scores or unreachable misses; never invent a Jev result.
+
 ## 2026-10-27 — ARCHITECTURE_SYNC build-layers map
 
 - Add `ARCHITECTURE_SYNC` (116 roles): L0–L9 stack map in `build-layers.json` /
