@@ -204,7 +204,7 @@ export default async function ReportsPage() {
         <div className="mb-8">
           <Panel title="Could not load reports" kicker="RPC">
             <p role="alert" className="rounded-xl border border-[var(--ember)]/30 bg-[var(--ember-soft)] px-4 py-3 text-sm font-semibold text-[var(--ember)]">
-              {error}. Needs <code>get_admin_reports</code> (run <code>supabase/admin_reports.sql</code> + <code>supabase/usage_reports.sql</code>).
+              {error}. Needs <code>get_admin_reports</code> (run <code>supabase/legacy/admin_reports.sql</code> + <code>supabase/legacy/usage_reports.sql</code>).
             </p>
           </Panel>
         </div>

@@ -69,7 +69,7 @@ export type Leaderboards = {
 
 export type LeaderboardsResult =
   | { status: 'ok'; boards: Leaderboards }
-  /** `get_leaderboards` is not deployed on this project yet (supabase/leaderboards.sql not applied). */
+  /** `get_leaderboards` is not deployed on this project yet (supabase/legacy/leaderboards.sql not applied). */
   | { status: 'unavailable' };
 
 /**

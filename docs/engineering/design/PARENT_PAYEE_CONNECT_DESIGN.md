@@ -142,7 +142,7 @@ The owner set these rules for money held for a minor athlete:
 5. **A bank account in the athlete's name is strongly encouraged.** The guardian oversees
    everything until the handover age.
 
-**What is built (records only — no money moves).** `supabase/custodial_money.sql`, mirrored in
+**What is built (records only — no money moves).** `supabase/legacy/custodial_money.sql`, mirrored in
 `schema.sql`, documented in `SCHEMA.md`: `custodial_accounts`, `athlete_birthdates`,
 `custodial_withdrawals` and the RPCs that enforce rules 1–4 on the server. The athlete side
 requires `verification_status = 'verified'` because `profiles.player_id` is still client-writable

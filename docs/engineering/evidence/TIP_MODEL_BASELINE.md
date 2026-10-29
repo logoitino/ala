@@ -22,8 +22,8 @@ There is **no application_fee_amount, transfer_data or destination transfer** in
 
 ### Install/replay copies of the same authorities
 
-- `supabase/company_revenue.sql`: bps129, splitter154–156, hardcoded catch-up242–246, source trigger361, report462–467.
-- `supabase/tip_origin.sql`: redefines catch-up120, hardcoded gift143–147, source trigger262. It may overwrite the earlier catch-up implementation during an old setup replay.
+- `supabase/legacy/company_revenue.sql`: bps129, splitter154–156, hardcoded catch-up242–246, source trigger361, report462–467.
+- `supabase/legacy/tip_origin.sql`: redefines catch-up120, hardcoded gift143–147, source trigger262. It may overwrite the earlier catch-up implementation during an old setup replay.
 - `supabase/migrations/20260929180000_rally_goals_thanks_platform_tip.sql`: bps60 and report134–139; introduces separate optional-tip trigger.
 - `supabase/migrations/20261012210000_bookkeeping_ledger.sql`: LAST bps461 and report535–540; introduces fee-cover row trigger.
 - `supabase/migrations/20261013231000_family_share_in_received.sql`: family fallback reads recorded payout or current bps.

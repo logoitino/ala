@@ -28,7 +28,7 @@ Paths below are relative to `apps/mobile/src/frontend/` unless they start with `
 | **Gifts received** | RPC `get_received_malo`, `useReceivedMalo`, `Profile/ReceivedMaloPanel` | Gift amounts recorded for the athlete/family; actual settlement remains unverified. |
 | **Say thanks** | table `donation_thanks`, `lib/donationThanks.ts`, `useDonationThanks`, `Thanks/ThanksPicker` | Athlete thanks a gift sender with a preset message (no free text). |
 | **Rally** | table `rallies`, `lib/rallies.ts`, `useRally`, `Rally/RallyCard`, `Rally/CreateRallySheet` | A named goal for a real sports cost (cleats, travel, camp). |
-| **Family account / custodial account** | table `custodial_accounts` (`supabase/custodial_money.sql`), `lib/custodial.ts`, `useCustodial`, `components/Custodial/` | Intended guardian arrangement for one minor athlete. Current entries record family liability; actual custody, handover age/transfer and payout rail remain unresolved. |
+| **Family account / custodial account** | table `custodial_accounts` (`supabase/legacy/custodial_money.sql`), `lib/custodial.ts`, `useCustodial`, `components/Custodial/` | Intended guardian arrangement for one minor athlete. Current entries record family liability; actual custody, handover age/transfer and payout rail remain unresolved. |
 | **Held gifts** | `lib/payoutGate.ts`, held-notice copy in the gift sheet | Gifts to an athlete who is not verified yet. Payouts wait. |
 | **Payout setup / Stripe Connect** | `profiles.stripe_connect_id`, `payouts_enabled`; Edge Function `create-stripe-account`; `useStripeConnect` | Linked Stripe Express setup/readiness account. Payouts stay blocked; actual family transfer/settlement is unverified. |
 

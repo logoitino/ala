@@ -46,8 +46,8 @@ applied historical migrations or replay the whole canonical schema against an ex
 
 | Source dependency | Why it matters / ordering |
 | --- | --- |
-| Existing canonical core; `supabase/admin_dashboard.sql`, `supabase/app_runtime.sql` | `profiles`, `players`, `tips`, `current_user_role`, `app_runtime_config`, protected publish/role paths. Confirm hosted definitions and RLS, rather than assuming a similarly named migration matches. |
-| `supabase/company_revenue.sql`, `supabase/tip_origin.sql` | Revenue source/cents columns, unique `(source,source_id)`, source triggers and origin/entry labels. Their old standalone definitions must not overwrite the new gift catch-up after cutover. |
+| Existing canonical core; `supabase/legacy/admin_dashboard.sql`, `supabase/legacy/app_runtime.sql` | `profiles`, `players`, `tips`, `current_user_role`, `app_runtime_config`, protected publish/role paths. Confirm hosted definitions and RLS, rather than assuming a similarly named migration matches. |
+| `supabase/legacy/company_revenue.sql`, `supabase/legacy/tip_origin.sql` | Revenue source/cents columns, unique `(source,source_id)`, source triggers and origin/entry labels. Their old standalone definitions must not overwrite the new gift catch-up after cutover. |
 | `20260929180000_rally_goals_thanks_platform_tip.sql` | `tips.platform_tip_cents`, separate tip trigger, Rally/custodial/source dependencies. Its historical 10% definition is superseded only after the new override. |
 | `20261012210000_bookkeeping_ledger.sql` | `tips.cover_fee_cents`, payment reference uniqueness, separate fee trigger, ledger period locks/closes and report dependencies. Apply its own reviewed prerequisites first. |
 | `20261013210000_function_access_hardening.sql` | Restricted revenue writers, trusted role checks, caps/admin controls. Security must verify effective grants, including PUBLIC inheritance. |

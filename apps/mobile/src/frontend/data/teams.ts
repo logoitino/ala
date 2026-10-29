@@ -54,7 +54,7 @@ export function formatTeamTitle(team: Pick<SchoolTeam, 'name' | 'mascot'>): stri
   return `${team.name} · ${mascot}`;
 }
 
-/** Demo catalog used when Supabase is offline; ids match `supabase/schools_and_teams.sql`. */
+/** Demo catalog used when Supabase is offline; ids match `supabase/legacy/schools_and_teams.sql`. */
 export const DEMO_TEAMS: SchoolTeam[] = [
   {
     id: 'a1000000-0000-4000-8000-000000000001',

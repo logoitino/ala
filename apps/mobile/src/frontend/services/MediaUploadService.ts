@@ -183,7 +183,7 @@ export async function compressHighlight(uri: string, onProgress?: CompressProgre
 
 function storageUploadErrorMessage(bucket: string, message: string): string {
   return message.includes('Bucket not found')
-    ? `Storage bucket ${bucket} is missing. Run supabase/media_upload.sql in the SQL editor.`
+    ? `Storage bucket ${bucket} is missing. Run supabase/legacy/media_upload.sql in the SQL editor.`
     : message;
 }
 
@@ -298,11 +298,11 @@ export async function insertReelRow(baseRow: ReelInsertRow, actor?: { expectedUs
   if (insertError) {
     throw new Error(
       insertError.message.includes('Could not find the table')
-        ? 'The reels table is missing. Run supabase/reels.sql in the SQL editor.'
+        ? 'The reels table is missing. Run supabase/legacy/reels.sql in the SQL editor.'
         : insertError.message.includes('is_exclusive')
-          ? 'The reels.is_exclusive column is missing. Run supabase/subscriptions.sql in the SQL editor.'
+          ? 'The reels.is_exclusive column is missing. Run supabase/legacy/subscriptions.sql in the SQL editor.'
           : insertError.message.includes('category')
-            ? 'The reels.category column is missing. Run supabase/reel_category.sql in the SQL editor.'
+            ? 'The reels.category column is missing. Run supabase/legacy/reel_category.sql in the SQL editor.'
             : insertError.message || 'Could not save that Highlight.',
     );
   }
@@ -692,7 +692,7 @@ async function uploadAvatarWithStorage(storage: MediaStorageAdapter, uri: string
   if (error) {
     throw new Error(
       error.message.includes('avatar_url')
-        ? 'profiles.avatar_url is missing. Run supabase/media_upload.sql in the SQL editor.'
+        ? 'profiles.avatar_url is missing. Run supabase/legacy/media_upload.sql in the SQL editor.'
         : error.message,
     );
   }

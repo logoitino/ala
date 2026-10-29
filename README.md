@@ -24,7 +24,7 @@ replaces the GoFundMe link families pass around today. Built as a **pnpm monorep
 | [`supabase/`](supabase) | Database SQL, timestamped [`migrations/`](supabase/migrations), and Edge Functions (Stripe checkout, Connect, webhook). |
 | [`scripts/`](scripts) | Repo checks (`pnpm check`) and the generator for product-facts docs. |
 | [`infrastructure/`](infrastructure/README.md) | Supabase backup/restore tools, app containers, and separate AWS/Azure deployment templates. |
-| [`docs/`](docs) | All documentation. Start at the [docs index](docs/README.md). |
+| [`docs/`](docs) | All documentation. Outside engineer: [REVIEWER_START_HERE.md](docs/REVIEWER_START_HERE.md). Index: [docs/README.md](docs/README.md). |
 | [`archive/`](archive) | Old code kept for reference only. Not built or deployed. |
 | `.claude/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md` | Instructions for AI coding assistants. Humans can skip these. |
 
@@ -80,8 +80,9 @@ source headers, the agent registry and client credential markers). Single pieces
    [docs/STATE.md](docs/STATE.md) §4 in the same PR (CI checks this).
 4. Database changes are new files in `supabase/migrations/`, never edits to applied ones
    ([migrations README](supabase/migrations/README.md)).
-5. On-screen money words follow [docs/product/VOICE.md](docs/product/VOICE.md): **Donate /
-   donation**. The code still says `tips` and `malo`; the [glossary](docs/GLOSSARY.md) maps them.
+5. On-screen money words follow [docs/product/VOICE.md](docs/product/VOICE.md): athlete/family
+   **Gift / Give**; program **Donation**; optional **Tip Tapua'i**. The code still says `tips`
+   and `malo`; the [glossary](docs/GLOSSARY.md) maps them.
 6. Stage files by path. Never `git add -A`.
 
 ## Where to read next
