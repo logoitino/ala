@@ -21,10 +21,11 @@ Companions: [ROADMAP.md](ROADMAP.md) (what we are building toward it) ·
 
 ## The mission, in one breath
 
-Make donations and highlights easy for families, so they can promote their kid and help them get
-recruited. Give kids the chance to share good workouts with their fans (Train Like Me) and to serve
-like their favourite player (Serve Like Me). Open an avenue for people to donate toward a young
-athlete's sports costs and career growth — and make sure every athlete says thank you.
+Make gifts and highlights easy for families of **high school and college** athletes, so they can
+promote their student-athlete and help them get recruited. Give athletes the chance to share good
+workouts with their fans (Train Like Me) and to serve like their favourite player (Serve Like Me).
+Open an avenue for people to give toward sports costs and career growth — and make sure every
+athlete says thank you.
 
 ## The message
 

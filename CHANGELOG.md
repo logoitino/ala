@@ -1,4 +1,10 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-10-28 — HS + college framing
+
+- Class-year pills include `'29` / `'30`; RoleSwitcher uses `ATHLETE_CLASS_YEARS` as fallback.
+- Mission, Welcome, STORY, PUBLIC and store drafts name high school and college athletes.
+- Jev unreachable in cloud (miss recorded in STATE); owner-approved scope applied.
+
 ## 2026-10-28 — Jev on complex decisions (standing)
 
 - Owner rule: include Jev (TypeSafe) before coding non-trivial forks so decisions and diffs

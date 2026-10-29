@@ -66,8 +66,8 @@ export function WelcomeOverlay() {
           <Text style={styles.brand}>Tapua&apos;i</Text>
           <Text style={styles.title}>Give to the athletes you cheer for.</Text>
           <Text style={styles.body}>
-            {DONATION_MISSION} Watch their highlights, cheer your school, and give in a few taps — so our kids feel
-            believed in.
+            {DONATION_MISSION} Watch their highlights, cheer your school, and give in a few taps — so student-athletes
+            feel believed in.
           </Text>
           {/* Owner-approved message (BRAND-01): plain text under the mission so it never competes with the title. */}
           <View style={styles.tagline}>

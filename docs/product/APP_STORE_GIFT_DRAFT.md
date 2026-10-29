@@ -14,14 +14,15 @@ is separate from the frozen testing consent. Listing text below is conditional o
 
 **Subtitle:** Give. Elevate. Celebrate.
 
-**Promotional text:** Watch Highlights, cheer your school and support an athlete's season
-with an optional personal gift. Celebrate their story.
+**Promotional text:** Watch Highlights, cheer high school and college athletes, and support
+a season with an optional personal gift. Celebrate their story.
 
 **Description excerpt:**
 
 Watch Game Day, Train Like Me and Serve Like Me Highlights. Cheer your community and send
-an optional personal gift to an individual athlete's family for sports costs such as gear,
-fees and travel. Gifts to individual athletes are personal gifts and are not tax-deductible.
+an optional personal gift to a high school or college athlete's family for sports costs such
+as gear, fees and travel. Gifts to individual athletes are personal gifts and are not
+tax-deductible.
 
 Giving is separate from subscriptions and digital purchases. It does not buy a performance,
 ranking, recruiting opportunity or access to digital content. Optional tips support Tapua'i.
