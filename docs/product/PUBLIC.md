@@ -9,11 +9,11 @@
 
 **Donate. Elevate. Celebrate.** *Support their journey. Elevate their opportunities. Celebrate their story.*
 
-**Donate to the athletes you cheer for.** Tapua'i helps families cover their young athlete's sports costs — fees, gear, travel — with donations from their community. Watch highlights, cheer your school, and donate to an athlete in a few taps. Donations go to the athlete's family account and are not tax-deductible.
+**Give to the athletes you cheer for.** Tapua'i helps families cover high school and college athletes' sports costs — fees, gear, travel — with personal gifts from their community. Watch highlights, cheer your school, and give to an athlete in a few taps. Gifts go to the athlete's family account and are not tax-deductible.
 
 This page is for parents, athletes, boosters, and schools. It is product copy, not a contract.
 
-**Why we exist.** Talent is everywhere; money isn't. Too many young athletes stop because of a camp fee, a pair of cleats or a trip to where the coaches are, and the NIL money that does exist finds the star, not the rest of the roster. Tapua'i lets a whole community rally behind every athlete, so money is never the reason they stop. More in [STORY.md](STORY.md).
+**Why we exist.** Talent is everywhere; money isn't. Too many high school and college athletes stop because of a camp fee, a pair of cleats or a trip to where the coaches are, and the NIL money that does exist finds the star, not the rest of the roster. Tapua'i lets a whole community rally behind every athlete, so money is never the reason they stop. More in [STORY.md](STORY.md).
 
 ---
 
@@ -28,7 +28,7 @@ This page is for parents, athletes, boosters, and schools. It is product copy, n
 The bar at the bottom is Reel · Local · Upload · Drip · Profile.
 
 <!-- product-facts:start -->
-**Live numbers (from code):** Gifts $5 / $10 / $25 or custom. Exclusive $4.99. Boosters Silver $50 / Gold $150 / Platinum $500. Aura 10 points per gifted dollar, 7 tiers (Slate Silver → Celestial Prism). Double-tap 1 Aura (Serve Like Me ×2). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. Athlete roster: Football / Basketball / Rugby / Volleyball / Soccer / Baseball / Softball / Wrestling / Track & Field / Lacrosse / Ice Hockey / Tennis, class '26 / '27 / '28, High School or NCAA. Profile tabs: Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar: Home / Spotlight. Stripe is in test mode. The operator PIN is a prototype.
+**Live numbers (from code):** Gifts $5 / $10 / $25 or custom. Exclusive $4.99. Boosters Silver $50 / Gold $150 / Platinum $500. Aura 10 points per gifted dollar, 7 tiers (Slate Silver → Celestial Prism). Double-tap 1 Aura (Serve Like Me ×2). Crew The Crew ⚡ / Your Squad 🛡️. Flash Unlock 2h. Athlete roster: Football / Basketball / Rugby / Volleyball / Soccer / Baseball / Softball / Wrestling / Track & Field / Lacrosse / Ice Hockey / Tennis, class '26 / '27 / '28 / '29 / '30, High School or NCAA. Profile tabs: Highlights ⚡ / Stats 📊 / Vault 🔒. Fan bar: Home / Spotlight. Stripe is in test mode. The operator PIN is a prototype.
 <!-- product-facts:end -->
 
 ---
