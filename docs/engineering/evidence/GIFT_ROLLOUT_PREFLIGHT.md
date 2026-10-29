@@ -74,10 +74,10 @@ any review acceptance or deployment; source changes invalidate affected evidence
 
 | Inventory path | Exact SHA-256 |
 | --- | --- |
-| `supabase/admin_dashboard.sql` | `5cccb1caf09de52bb298f1b2fd953632637d42f1782bc395b37aa6181e889d08` |
-| `supabase/app_runtime.sql` | `ba5091571a2fd096cdeeeba30ea0d0c436afae5035c7819b12318a3130ada605` |
-| `supabase/company_revenue.sql` | `3ce1a237a99f028114b1ea68fe388c2a6ea2116c663d2ce2b1249537dea2c510` |
-| `supabase/tip_origin.sql` | `bf47c711f058386ec588ede95fd1f09115f75483973358a98690cf9396252f8a` |
+| `supabase/legacy/admin_dashboard.sql` | `5cccb1caf09de52bb298f1b2fd953632637d42f1782bc395b37aa6181e889d08` |
+| `supabase/legacy/app_runtime.sql` | `ba5091571a2fd096cdeeeba30ea0d0c436afae5035c7819b12318a3130ada605` |
+| `supabase/legacy/company_revenue.sql` | `3ce1a237a99f028114b1ea68fe388c2a6ea2116c663d2ce2b1249537dea2c510` |
+| `supabase/legacy/tip_origin.sql` | `bf47c711f058386ec588ede95fd1f09115f75483973358a98690cf9396252f8a` |
 | `supabase/migrations/20260929180000_rally_goals_thanks_platform_tip.sql` | `62e1d520a1f22ff4763a8a8ea630271126cd2f50843133e0a393406ae7274e23` |
 | `supabase/migrations/20261012210000_bookkeeping_ledger.sql` | `d338b79e84a5c93da05403fa7c4dcd41e445d44f7f9543ef5372875d1ec65038` |
 | `supabase/migrations/20261013210000_function_access_hardening.sql` | `8e40f4fe775e1c67c75254bc1dcc959b8362bbb06fbd759d51175fed425ff81c` |

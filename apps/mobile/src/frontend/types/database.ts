@@ -62,7 +62,7 @@ export type Profile = {
   team?: SchoolTeam | null;
   /** Claimed `players.id` for That's me auto-confirm. */
   player_id?: string | null;
-  /** Public Storage URL from the `avatars` bucket. Incremental: `supabase/media_upload.sql`. */
+  /** Public Storage URL from the `avatars` bucket. Incremental: `supabase/legacy/media_upload.sql`. */
   avatar_url?: string | null;
   /** COPPA gate: self-attested "13 years of age or older" checkbox. Null = not yet confirmed
    * (pre-existing accounts included) — never used to retroactively block an existing session. */
@@ -137,7 +137,7 @@ export type Player = {
   flex_count?: number;
   seki_count?: number;
   team?: string | null;
-  /** Combine / measurables for Stats 📊. Incremental: `supabase/athlete_stats.sql`. */
+  /** Combine / measurables for Stats 📊. Incremental: `supabase/legacy/athlete_stats.sql`. */
   weight?: string | null;
   forty_yard?: string | null;
   vertical_jump?: string | null;
@@ -1391,7 +1391,7 @@ export type Database = {
         Args: { period_kind?: string };
         Returns: SpotlightStandings;
       };
-      /** 2026-09-29 custodial money rules (`supabase/custodial_money.sql`). Client: `lib/custodial.ts`. */
+      /** 2026-09-29 custodial money rules (`supabase/legacy/custodial_money.sql`). Client: `lib/custodial.ts`. */
       get_custodial_summary: {
         Args: { target_player_id: string };
         Returns: Record<string, unknown> | null;

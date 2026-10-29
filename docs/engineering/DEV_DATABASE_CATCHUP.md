@@ -66,10 +66,10 @@ surviving guest mp4 the same day; the missing originals remain 14-byte placehold
 
 | # | File | Record line |
 | --- | --- | --- |
-| 1 | `supabase/clear_reel_hype.sql` | (standalone file, no record line) |
-| 2 | `supabase/custodial_money.sql` | (standalone file, no record line) |
-| 3 | `supabase/leaderboards.sql` | (standalone file, no record line) |
-| 4 | `supabase/tip_origin.sql` | (standalone file, no record line) |
+| 1 | `supabase/legacy/clear_reel_hype.sql` | (standalone file, no record line) |
+| 2 | `supabase/legacy/custodial_money.sql` | (standalone file, no record line) |
+| 3 | `supabase/legacy/leaderboards.sql` | (standalone file, no record line) |
+| 4 | `supabase/legacy/tip_origin.sql` | (standalone file, no record line) |
 | 5 | `supabase/migrations/20260929120000_athlete_verification_ladder.sql` | `insert into supabase_migrations.schema_migrations (version, name) values ('20260929120000', 'athlete_verification_ladder') on conflict do nothing;` |
 | 6 | `supabase/migrations/20260929130000_payout_gate_without_school.sql` | `insert into supabase_migrations.schema_migrations (version, name) values ('20260929130000', 'payout_gate_without_school') on conflict do nothing;` |
 | 7 | `supabase/migrations/20260929140000_school_badge.sql` | `insert into supabase_migrations.schema_migrations (version, name) values ('20260929140000', 'school_badge') on conflict do nothing;` |

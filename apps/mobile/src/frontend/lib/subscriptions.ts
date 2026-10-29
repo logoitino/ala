@@ -54,7 +54,7 @@ export async function insertSubscriberRequest(
     return {
       row: null,
       error: error.message.includes('Could not find the table')
-        ? 'The subscriber_requests table is missing. Run supabase/subscriber_requests.sql in the SQL editor.'
+        ? 'The subscriber_requests table is missing. Run supabase/legacy/subscriber_requests.sql in the SQL editor.'
         : error.message,
     };
   }

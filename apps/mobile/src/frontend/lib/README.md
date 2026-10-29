@@ -2,12 +2,22 @@
 
 Typed product and data-access helpers used by hooks and components.
 
-- Keep files camelCase and organize by domain (`rallies.ts`, `operator.ts`, `donationThanks.ts`).
-- Supabase, Stripe, Storage, and other vendor calls terminate here or in `services/`.
-- Routes under `app/` compose UI and navigation; they do not add new `.from()` or `.rpc()` calls.
-- Normalize database rows into stable app types here so UI code does not depend on PostgREST shapes.
-- Network/RPC helpers require the project JSDoc header with inputs, outputs, and side effects.
-- Preserve useful “feature unavailable” fallbacks for migrations that have not reached every project.
+## What belongs here
 
-Run `pnpm app:data-boundaries` when moving route queries here, and reduce
-`scripts/app-data-boundary-baseline.json` in the same change.
+- CamelCase domain files (`rallies.ts`, `minors.ts`, `donationThanks.ts`).
+- Supabase / Stripe / Storage calls (or `services/` for process-wide clients).
+- Row → app-type normalization; “migration not applied” fallbacks via `dbErrors.ts`.
+- JSDoc on network/RPC helpers.
+
+## What does not
+
+- React components or hooks.
+- Server secrets (`sk_`, service role).
+- Imports of `@backend/` from frontend `lib/` (layering: frontend never imports backend).
+
+## The rule people break
+
+Calling Supabase from an Expo route under `app/`. Routes compose UI only; move `.from()` /
+`.rpc()` here and shrink `scripts/app-data-boundary-baseline.json` in the same PR.
+
+Run `pnpm app:data-boundaries` after moves.

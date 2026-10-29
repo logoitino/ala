@@ -97,7 +97,7 @@ export function useAthleteSubscription(playerId: string | undefined) {
 
     if (!ok) {
       // A genuine rejection (frozen athlete via RLS, network failure, etc.) — do NOT unlock
-      // locally. Table may also be missing until `supabase/subscriptions.sql` is applied, in
+      // locally. Table may also be missing until `supabase/legacy/subscriptions.sql` is applied, in
       // which case this same generic message applies.
       Alert.alert(
         'Subscription not recorded',

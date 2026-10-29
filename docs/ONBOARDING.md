@@ -135,9 +135,9 @@ Browse-first guests can open Highlights, cards, and Locker Room without an accou
 
 1. Authentication → Providers: configure **Email**, **Apple**, and **Google** for the intended environment. A read-only development Auth settings request returned HTTP 200 around **2026-10-21 03:00 UTC**: Google disabled, Email enabled, signup not disabled. Google OAuth credentials have not been supplied; the setup below is prepared, not performed. The October 10 observation of Google disabled on development/staging is historical; staging was not rechecked now. Store Google credentials only in Supabase's provider settings.
 2. Authentication → URL Configuration: allow the **app return URI**, `alasports://auth/callback`, and each exact web/Expo development return used by `authRedirectUri()`. The current local browser setup below uses `http://localhost:8086/auth/callback`. These app returns are distinct from the Google Cloud provider callback. The native scheme was owner-added on 2026-10-10. Test the actual generated URI for each build/host; the app rejects credentials returned to a different origin, scheme or path.
-3. Run fan profile bootstrap SQL once: `supabase/auth_fan_profile.sql` (also inlined at the end of `apps/mobile/src/backend/db/schema.sql`).
+3. Run fan profile bootstrap SQL once: `supabase/legacy/auth_fan_profile.sql` (also inlined at the end of `apps/mobile/src/backend/db/schema.sql`).
 4. Native Apple Sign In needs a build with the `expo-apple-authentication` plugin (`apps/mobile/app.json`). **Share & Fund ⚡** QR save uses `expo-media-library` (Camera Roll / save-photos permission in `app.json`).
-5. **Demo Fan (QA):** The account sheet shows **Use test account** with `demo@tapuai.app` / `TapuaiDemoFan1!` (overridable via `EXPO_PUBLIC_DEMO_FAN_EMAIL` / `EXPO_PUBLIC_DEMO_FAN_PASSWORD`) until `EXPO_PUBLIC_APP_ENV=production`. Enable Email provider (password). Disable **Confirm email** for first-tap create, or run `supabase/demo_fan_account.sql`.
+5. **Demo Fan (QA):** The account sheet shows **Use test account** with `demo@tapuai.app` / `TapuaiDemoFan1!` (overridable via `EXPO_PUBLIC_DEMO_FAN_EMAIL` / `EXPO_PUBLIC_DEMO_FAN_PASSWORD`) until `EXPO_PUBLIC_APP_ENV=production`. Enable Email provider (password). Disable **Confirm email** for first-tap create, or run `supabase/legacy/demo_fan_account.sql`.
 
 Client entry points: `apps/mobile/src/frontend/lib/auth.ts`, `AuthContext`, `SoftWallContext`, route `apps/mobile/app/auth/callback.tsx`.
 
@@ -408,7 +408,7 @@ a physical device. Build a development client with `pnpm mobile:ios` or
 `pnpm mobile:android` (requires the native toolchain). Device acceptance still includes
 sign-in callbacks, keyboard/layout and a Stripe test payment; web export is a separate check.
 
-After changing media buckets, run `supabase/media_upload.sql` so Storage `reels` + `avatars` and `profiles.avatar_url` exist.
+After changing media buckets, run `supabase/legacy/media_upload.sql` so Storage `reels` + `avatars` and `profiles.avatar_url` exist.
 
 ---
 

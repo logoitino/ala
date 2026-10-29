@@ -181,7 +181,7 @@ export default async function MoneyPage() {
       {revenue.error ? (
         <p role="status" className="mb-6 rounded-xl border border-[var(--ember)]/30 bg-[var(--ember-soft)] px-4 py-3 text-sm text-[var(--ember)]">
           <span className="font-extrabold">Could not read the ledger. </span>
-          {revenue.error}. Needs <code>get_company_revenue_summary</code> (<code>supabase/company_revenue.sql</code>).
+          {revenue.error}. Needs <code>get_company_revenue_summary</code> (<code>supabase/legacy/company_revenue.sql</code>).
         </p>
       ) : null}
 

@@ -19,10 +19,10 @@ production database is only safe once the schema can be rebuilt from migrations.
 
 | Phase | Goal | Detailed steps | Status |
 | --- | --- | --- | --- |
-| **R1. Tidy and make it readable** | An outsider can clone, run, find things and review a PR. No behaviour change. | Step 0, Step 4, repo/docs layout below | **Mostly done 2026-10-07** — merge/push and private docs pending |
-| **R2. Rebuildable database** | The schema is rebuilt from `supabase/migrations/` alone; types and `schema.sql` are generated. | Step 1, Step 2 | Incremental migrations exist; clean rebuild not verified and baseline not dumped |
+| **R1. Tidy and make it readable** | An outsider can clone, run, find things and review a PR. No behaviour change. | Step 0, Step 4, repo/docs layout below | **Mostly done 2026-10-07**; reviewer front door added 2026-10-28 (`REVIEWER_START_HERE.md`, one-page STATE §0). Merge/push and private docs still owner-gated |
+| **R2. Rebuildable database** | The schema is rebuilt from `supabase/migrations/` alone; types and `schema.sql` are generated. | Step 1, Step 2 | **Partial 2026-10-28:** `config.toml`, fake `seed.sql`, and 52 loose files → `supabase/legacy/` (inventory recorded). Clean rebuild / baseline dump / CI apply-from-zero still open |
 | **R3. Production environment** | Dev, staging and production are separate projects, builds and keys; changes flow dev → staging → prod through CI. | "R3" section below | Not started; gated on R2 and the Wave 1 owner decisions |
-| **R4. Easier to change** | One backend, enforced style, smaller files, real test coverage, monitoring. | Step 3, "R4" section below | Not started (route data debt already falling: 17 → 12 calls) |
+| **R4. Easier to change** | One backend, enforced style, smaller files, real test coverage, monitoring. | Step 3, "R4" section below | **Partial:** R4-03 large-file splits landed 2026-10-21 (no file over ~900 lines). Route data debt and one-backend retirement still open |
 
 ### Current verification and next actions (2026-10-07)
 
@@ -69,10 +69,13 @@ production database is only safe once the schema can be rebuilt from migrations.
 
 ### R2 checklist — rebuildable database
 
-- [ ] `supabase/config.toml` and a `seed.sql` with fake athletes, games and clips (never real people);
-      move the Demo Fan account and demo PIN into seed data.
+- [x] `supabase/config.toml` and a `seed.sql` with **fake** athletes/schools only (2026-10-28).
+      Demo Fan passworded account is **not** auto-seeded (shared password must not land in every
+      local DB); `legacy/demo_fan_account.sql` remains reference-only. **Owner:** whether to add a
+      local-only passwordless seed path later.
 - [ ] Baseline migration dumped from staging (Step 1.1), compared with `schema.sql` (Step 1.2).
-- [ ] The 52 loose `supabase/*.sql` files moved to `supabase/legacy/` with a README (Step 1.4).
+- [x] The 52 loose `supabase/*.sql` files moved to `supabase/legacy/` with a README (Step 1.4) —
+      inventory 2026-10-28: all covered by `schema.sql` and/or `migrations/` (nothing deleted).
 - [ ] `schema.sql` and `types/database.ts` generated, with CI checks that the committed copies match (Step 2).
 - [ ] CI applies every migration to a throwaway Postgres from zero (Step 1.5).
 - [ ] No more SQL Editor pastes: migrations apply with `supabase db push` from CI.
@@ -116,8 +119,10 @@ below remain open.
       moves to `supabase/` when it becomes generated.
 - [ ] ESLint + Prettier enforced in CI (needs registry access; set up from CI or a machine where
       npm works — not the owner's Mac).
-- [ ] Split the 900+ line files (Step 3), one PR each, no behaviour change.
-- [ ] Route data-boundary debt to zero (6 files / 12 calls left).
+- [x] Split the 900+ line files (Step 3 / R4-03, 2026-10-21): AdminChrome, admin libs, operator
+      game route, AthleteProfileView, Home, analytics, ReelCard, Local — behaviour-free; no source
+      file over ~900 lines remained at that checkpoint. Further splits only if files grow again.
+- [ ] Route data-boundary debt to zero (track `scripts/app-data-boundary-baseline.json`; may only shrink).
 - [ ] Screen tests for donate, upload and sign-in; first admin-portal tests; an end-to-end smoke
       test on a device build.
 - [ ] Rename code names toward product words only where it is cheap (new code uses product words;

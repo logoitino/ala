@@ -621,7 +621,7 @@ function bpsPercent(bps: number): string {
 /**
  * `merch_vault` comes back with null basis points because it mixes two rates. Checked 2026-10-12 against
  * `company_revenue_bps`, `record_company_revenue` and `sync_company_revenue_logs` in
- * apps/mobile/src/backend/db/schema.sql and supabase/company_revenue.sql: vault = 2000 bps to Tapua'i,
+ * apps/mobile/src/backend/db/schema.sql and supabase/legacy/company_revenue.sql: vault = 2000 bps to Tapua'i,
  * the rest to the athlete (payee_kind 'athlete'); merch (Drip) = 10000 bps, payout 0. The Vault 80% is
  * "recorded for the athlete", never "family account": `get_custodial_summary` sums only `tips`, so Vault
  * money is not credited to the custodial family account (VOICE re-review 2026-10-12).
