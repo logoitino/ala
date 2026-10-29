@@ -6,6 +6,11 @@
 > an hour (blocked npm registry, Metro flags, untappable simulator), and the list of things that
 > are *knowingly* broken so you do not re-diagnose them.
 >
+> **Complex decisions: include Jev.** Owner 2026-10-28 — on non-trivial product/UX/implementation
+> forks, call Jev (TypeSafe scorer) so picks and code stay faster and leaner. Protocol:
+> [docs/engineering/JEV.md](docs/engineering/JEV.md). Do not send secrets or customer data.
+> If Jev is unreachable, record the miss and continue; never invent a score.
+>
 > **When you finish, update it.** Any change under `apps/`, `packages/` or `supabase/` must add a
 > line to `docs/STATE.md` §4 and bump its `Last updated` header, in the same turn as the code.
 > CI enforces this on pull requests.
