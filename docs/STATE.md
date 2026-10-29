@@ -173,7 +173,7 @@ for `components/`, `hooks/`, `lib/`, `supabase/` state what belongs / does not /
 Root README How-we-work #5 aligned to VOICE (Gift/Give vs Donation vs Tip). CODE_ORGANIZATION_PLAN
 R1/R2/R4 checkboxes updated with 2026-10-28 evidence. **Did not:** apply SQL, repair hosted
 migration history, merge to main, change product copy beyond README #5, or rename identifiers.
-**`pnpm check` receipt (this branch, 2026-10-28 America/Denver / 2026-10-29 UTC):**
+**`pnpm check` receipt (HEAD `d96ac99`, branch `cursor/reviewer-readiness-9a86`, 2026-10-28 America/Denver / 2026-10-29 UTC):**
 exit **0**. Mobile Jest **266 suites passed**. Gates observed green in the same run include
 `docs:check`, `docs:links`, `copy:check`, `agents:check` (115), `security:infra:check`,
 `exit:map:check` (plan `f26c339b0395`), plus the rest of the root `pnpm check` chain
