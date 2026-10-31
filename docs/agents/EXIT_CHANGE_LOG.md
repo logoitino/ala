@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-31 · plan `4fc54275bb8d` → `5d8c3d191c7c` · announced by cloud-agent architecture-sync-main land
+
+App at announcement: commit `91a625354eb52b5525a6b35fe9698168b397d54a`, source `5d8c3d191c7cd2f1981912ea5505f3f58daf3e480118cf8d937afc6cc750c040`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `package.json 5bd8b95532ba1b9641917ed8e6f12ea22f04aa07a9b8bd85faf3e818639f5c0b`, `scripts/build-layers.mjs 6fbe70103143fef161535a1d833cab0866a10794017436bda110434ef9b02d4f`; removed `package.json 531bcb9e771a4e62dfcd831a0f1f1788ff89c5557f8bd1cf936d4341f926e81d`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-24 · plan `4fc54275bb8d` → `4fc54275bb8d` · announced by cloud-agent soft-wall-eas-checkpoint
 
 App at announcement: commit `dbe851b885f5946f2e3e9d51edca2cf4d4c84259`, source `4fc54275bb8dbdc114e18349c94cd716621683590469249b0d28bb3ff7140aeb`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
