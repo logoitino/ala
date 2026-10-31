@@ -125,6 +125,11 @@ execution or a continuous delivery service.
 
 ## APP-TEST-01 — Current app testing priorities — 2026-10-21 UTC
 
+**2026-10-31 stack note:** Soft-Wall, ARCHITECTURE_SYNC, Jev, HS+college, and reviewer readiness
+are on `main`. This queue remains the next engineering priority (lanes **A → B → C** before D–F).
+Webhook tip crediting stays off. Owner still owns Google OAuth enablement, SQL/Edge apply, and
+device smoke; engineering keeps guides/fixtures/CI green. STATE §0 carries the live handoff.
+
 Owner asked to check the roadmap and update the whole team. This is the current app execution
 order; dated task sections below retain their own evidence. [Roadmap](../product/ROADMAP.md),
 [TEAM_STATUS](TEAM_STATUS.md) and [department plans](DEPARTMENT_PLANS.md) carry the same handoff.

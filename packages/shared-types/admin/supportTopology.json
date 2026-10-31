@@ -74,6 +74,12 @@
       ]
     },
     {
+      "id": "ARCHITECTURE_SYNC",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "paths": []
+    },
+    {
       "id": "ATHLETE_STATS",
       "department": "Engineering",
       "lead": "PROFILE",

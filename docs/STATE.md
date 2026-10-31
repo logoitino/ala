@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-10-31 · Reviewer readiness (one-page §0, SQL → `supabase/legacy/`, REVIEWER_START_HERE) + HS+college framing (`'26`–`'30`) on main tip. Jev protocol, ARCHITECTURE_SYNC, Soft-Wall #12 also on main. Device Soft-Wall smoke and gift counsel/hosted gates remain open.
+**Last updated:** 2026-10-31 · Soft-Wall → ARCHITECTURE_SYNC → Jev → HS+college → reviewer readiness all on `main` (`a470e40`). Next engineering priority: **APP-TEST-01 lanes A–C** (Google, test bank, short Highlights). Webhook tip crediting stays **off**. Regenerated `supportTopology` + `BUILD_LAYERS` so Quality Checks pass. Device Soft-Wall smoke and gift counsel/hosted gates remain open.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -11,29 +11,40 @@ Older §0 running log (not deleted): [engineering/STATE_LOG_ARCHIVE.md](engineer
 
 ---
 
-## 0. Pick up here (2026-10-28)
+## 0. Pick up here (2026-10-31)
 
 **Wave 0 — internal test.** Stripe test mode. No live money. Outside engineers start at
 [REVIEWER_START_HERE.md](REVIEWER_START_HERE.md). Folder law: [AGENTS.md](../AGENTS.md).
 Historical §0 running log: [STATE_LOG_ARCHIVE.md](engineering/STATE_LOG_ARCHIVE.md).
 
 ### What is true right now
-- **Product:** Expo fan app + Expo `/admin` (writes) + Next portal (read-only). Soft-Wall browse-first auth (polish #12 + Vault resume on main). Gift/Give for athletes; Donation for programs; Tip Tapua'i optional ([VOICE](product/VOICE.md)). Identifiers stay `tips` / `malo*` / `reels` ([GLOSSARY](GLOSSARY.md)).
-- **Money path:** PaymentSheet → client still inserts `tips` after success. Shared core: `supabase/functions/_shared/money/` served by Expo `app/api/*+api.ts` **and** Edge Functions. **Do not** enable webhook crediting while the client insert remains (double-credit). Payouts return **503**.
+- **Product:** Expo fan app + Expo `/admin` (writes) + Next portal (read-only). Soft-Wall browse-first auth (polish #12 + Vault resume on main). Gift/Give for athletes; Donation for programs; Tip Tapua'i optional ([VOICE](product/VOICE.md)). Identifiers stay `tips` / `malo*` / `reels` ([GLOSSARY](GLOSSARY.md)). HS + college framing (`'26`–`'30`).
+- **Money path:** PaymentSheet → client still inserts `tips` after success. Shared core: `supabase/functions/_shared/money/` served by Expo `app/api/*+api.ts` **and** Edge Functions. **Do not** enable webhook tip crediting while the client insert remains (double-credit). Payouts return **503**.
 - **Gift release:** Local no-cut source + COORD-02 packet. Hosted tip migration / counsel / store / settlement gates **open**.
-- **Readiness:** R1 mostly done locally; R2 inventory in progress this PR (`supabase/legacy/`, `config.toml`, fake `seed.sql`); R3/R4 not production-ready. Plan: [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md).
-- **Spend (Wave 0):** Apple Developer $99/yr (enrolled). Supabase / Expo / Stripe test = **$0**. Preview builds and `4242` test gifts are **$0** unless Expo free quota runs out or a free Supabase project pauses (Pro ~$25/mo). Do not pull Wave 1 spend.
+- **Readiness:** Soft-Wall + ARCHITECTURE_SYNC + Jev + HS/college + reviewer readiness on `main`. R2 SQL layout (`supabase/legacy/`, `config.toml`, fake `seed.sql`) landed. R3/R4 not production-ready. Plan: [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md).
+- **Spend (Wave 0):** Apple Developer $99/yr (enrolled). Supabase / Expo / Stripe test = **$0**. Preview builds and `4242` test gifts are **$0** unless Expo free quota runs out or a free Supabase project pauses (Pro ~$25/mo). Android Free monthly quota blocked until Sun Nov 01 2026. Do not pull Wave 1 spend. Exit-source Actions artifact quota (~106) needs owner prune (token cannot DELETE).
+
+### Next priority — APP-TEST-01 lanes A–C
+Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc) · receipts: [COORD-01](agents/COORD-01.md#app-test-01-execution--2026-10-21-utc) · script: [TESTER_SCRIPT](engineering/TESTER_SCRIPT.md).
+
+| Lane | Ready locally | Blocked on owner / provider |
+| --- | --- | --- |
+| **A. Google account** | Guide in [ONBOARDING](ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21); callback repair landed | Google Cloud OAuth + enable Supabase Google on development; then AUTH/QA record signup/return/cancel/resume |
+| **B. Stripe test bank** | Adult/guardian Connect UI + guarded Terms local; Connect SQL written | Reviewed SQL/Edge apply; service-role for local bank fallback; KYC evidence still unwired; payouts stay 503 |
+| **C. Short Highlights** | Duration/size guards + synthetic fixtures | Hosted Storage/cleanup SQL as needed; real pick/upload/playback on web/iOS/Android |
+
+Lanes D–F (public-beta blockers, Legal-first telemetry, feel/a11y) stay sequenced after A–C. No new features ahead of this.
 
 ### Next (engineering) vs owner/counsel only
 | Engineering may | Owner / counsel only (hard stop) |
 | --- | --- |
-| Docs, folder law, CI green, review PRs | Apply SQL / repair hosted migration history |
-| Local `pnpm check`, preview builds ($0) | Merge to `main`, branch protection, live keys |
-| Staging device smoke with test accounts | Counsel Terms / guardian / Aura / store claims |
-| | Live money, minors-facing consent to real families |
+| Docs, folder law, CI green, APP-TEST prep | Apply SQL / repair hosted migration history |
+| Local `pnpm check`, preview builds ($0) | Google OAuth credentials; branch protection; live keys |
+| Staging device smoke with test accounts / `4242` | Counsel Terms / guardian / Aura / store claims |
+| | Enable webhook tip crediting; live money; minors-facing consent to real families |
 
 ### Staging smoke (test only)
-Project `ala-sports-staging`. Preview EAS builds; test card `4242…`. Account sheet includes `demo@tapuai.app` until production env. Google still off — use email. Script: [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) · [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md). Confirm which project the build points at.
+Project `ala-sports-staging`. Preview EAS builds; test card `4242…`. Account sheet includes `demo@tapuai.app` until production env. Google still off — use email until lane A. Script: [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) · [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md). Confirm which project the build points at.
 
 ### Prove green before editing
 `pnpm check` (Node 24). Merge gates vs reports: [REVIEWER_START_HERE.md](REVIEWER_START_HERE.md).
@@ -159,6 +170,16 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-10-31 — Stack on main + APP-TEST A–C next; CI gate regen
+
+Merged Soft-Wall #12 → ARCHITECTURE_SYNC #17 → Jev #18 → HS+college #19 → reviewer #20 onto
+`main` (tip `a470e40`). Closed superseded #14/#15/#16. #13 had landed only on the Soft-Wall
+head branch; #17 carried ARCHITECTURE_SYNC onto `main`. Regenerated
+`packages/shared-types/admin/supportTopology.json` (adds `ARCHITECTURE_SYNC`) and
+`BUILD_LAYERS.md` so `data:map:check` / `layers:check` match tip. STATE §0 now points at
+APP-TEST-01 lanes A–C; webhook tip crediting stays off; artifact DELETE remains owner-token
+(403 for this agent). Portable Exit may still fail upload on free Actions quota.
+
 ### 2026-10-31 — Reviewer readiness (no behavior change)
 
 Outside-engineer front door: [REVIEWER_START_HERE.md](REVIEWER_START_HERE.md). STATE §0
@@ -225,51 +246,8 @@ iOS `preview` **FINISHED** `09de0497` on `43d3146`: https://expo.dev/accounts/lo
 Android `preview` refused by Expo Free plan (“used its Android builds this month”; resets
 Sun Nov 01 2026). Last finished Android remains `42e81674` on `1d4a2ad` (pre–Profile/age UX).
 Owner must approve any paid Expo plan before another Android build this month. Gift-release
-COORD-02 rows and device Soft-Wall smoke stay open.
-
-### 2026-10-24 — Profile menu + birth-year entry repairs
-
-Age confirm / Soft-Wall `BirthMonthField` kept only a finished YYYY on the parent, so typing `2`/`201` cleared the TextInput every keystroke; local `yearText` now holds partial digits. Own Profile hamburger no longer uses a solo top nav row — it sits on the compact hero identity row (top-right). `ProfileMenuSheet` scrolls with a max height and groups rows under Account, Play & shop, Money & staff, Support & legal. Device smoke still open.
-
-### 2026-10-24 — EAS Soft-Wall preview builds finished
-
-Android preview APK **FINISHED** `42e81674` on `1d4a2ad` (Stripe 0.83, arm-only ABIs, Gradle `workers.max=2`): https://expo.dev/accounts/logoitino/projects/ala-sports/builds/42e81674-f6a6-4c1b-8066-d601ad6fcc3a — artifact https://expo.dev/artifacts/eas/ut1wxROz1OvyZEk_mHYpL4H2Q3Yu7nYJD_mr4HIPLA0.apk. iOS preview IPA **FINISHED** `d4a153a0` on `2fc5696` (`$StripeDisableSPM`): https://expo.dev/accounts/logoitino/projects/ala-sports/builds/d4a153a0-1b08-4ea5-9356-71385533024e — artifact https://expo.dev/artifacts/eas/BE_2ZWzDDJqOvs2Ozc8s0zFfyXCjsmC_vS69-7V6VPw.ipa. Ad hoc iOS still limited to registered iPad. Device Soft-Wall smoke still open.
-
-### 2026-10-24 — EAS Android: cap Gradle workers after hung preview
-
-Preview Android `0cc7317b` (tip `$StripeDisableSPM` + arm ABIs) stayed `IN_PROGRESS` with last log at `:react-native-screens:bundleLibRuntimeToDirRelease` for ~30m; canceled. Added `apps/mobile/plugins/withGradleLowMemory.js` writing `org.gradle.parallel=false` and `org.gradle.workers.max=2` into prebuild `gradle.properties`. No paid `resourceClass: large`. Rebuild `42e81674` finished (see entry above).
-
-### 2026-10-24 — EAS iOS: `$StripeDisableSPM` after Expo strips frameworks
-
-iOS `b8d6f731` (and earlier `0c9a881e`) still failed Install pods after `ios.useFrameworks: dynamic`: Expo prebuild disables USE_FRAMEWORKS for ~94 pods, so `stripe-react-native` stayed a static library while SPM mode requires dynamic. Added local config plugin `apps/mobile/plugins/withStripeDisableSPM.js` that prepends `$StripeDisableSPM = true` to the generated Podfile (CocoaPods fallback for stripe-ios; deprecated by Stripe but required with Expo’s static force). Keep `useFrameworks: dynamic` as the preferred path when Expo stops stripping Stripe.
-
-### 2026-10-24 — EAS Android: cut x86 ABIs after Gradle daemon OOM
-
-Stripe `0.83` cleared `play-services-tapandpay` on build `5faa7297`, then the Gradle daemon disappeared while compiling Skia/Reanimated for x86/x86_64 (plus parallel Kotlin). Preview `expo-build-properties` `buildArchs` and `ORG_GRADLE_PROJECT_reactNativeArchitectures` limited to `armeabi-v7a`/`arm64-v8a`; preview Android `buildType` is APK. No paid `resourceClass: large`.
-
-### 2026-10-24 — EAS iOS: Stripe 0.83 SPM needs dynamic frameworks
-
-iOS preview `0c9a881e` failed at Install pods: `@stripe/stripe-react-native@0.83.0` resolves Stripe iOS via SPM and requires `use_frameworks! :linkage => :dynamic`. First attempt: `expo-build-properties` `ios.useFrameworks: "dynamic"`. Superseded for Expo static-force by `$StripeDisableSPM` entry above.
-
-### 2026-10-24 — EAS: keep Stripe 0.83; live Android past tapandpay
-
-Owner-pasted Android log matches the pre-`0.83` failure (`play-services-tapandpay` + doctor package/metro warnings). Live rebuild `5faa7297` on commit `d8dba27` / Stripe `0.83.0` has no tapandpay error and is in `RUN_GRADLEW` CMake compile. Added `expo.install.exclude` for `@stripe/stripe-react-native` so SDK “expected” `0.81.0` cannot regress the fix. Doctor still warns on intentional `disableHierarchicalLookup` (pnpm monorepo) and patched `expo@58.0.14` pin — non-blocking on EAS.
-
-### 2026-10-24 — EAS Android: Stripe tapandpay / AGP 9 lint
-
-Not a subscription failure: EAS accepted uploads; Android `Run gradlew` failed resolving `com.google.android.gms:play-services-tapandpay:18.8.0` required by `stripe-android-issuing-push-provisioning` (Stripe issue #2084; AGP 9 release lint resolves `compileOnly`). Fixed by bumping `@stripe/stripe-react-native` `0.81.0` → `0.83.0` (excludes that private artifact). Cloud Agent logged in with `EXPO_TOKEN` (robot Developer). Rebuilt Android `8a0a0e9d` confirmed the error; iOS Install pods still fails separately (build artifacts expire quickly for this token). Earlier nitro-modules / R8-off / `sdk-58` image pins remain.
-
-### 2026-10-24 — EAS preview: nitro-modules + SDK 58 build pins
-
-Android `Run gradlew` and iOS `Install pods` failed on preview builds after Soft-Wall. Added direct `react-native-nitro-modules@0.37.1`; `expo-build-properties` sets `android.enableMinifyInReleaseBuilds=false`; `eas.json` pins `sdk-58` images and Node `24.11.0`. Packages claimed in infrastructure register. Superseded for Android root cause by the Stripe tapandpay entry above.
-
-### 2026-10-23 — Soft-Wall gates Local Give, Drip Buy, Sponsorship
-
-Guest Local play Give (`PlayCard`), Drip `ProductSheet` Buy, Local sponsorship checkout, and legacy guest `/player/[id]` opened PaymentSheet without Soft-Wall. Each now uses `requireAuth` (`malo` / `signin`) and resumes after sign-in. Cold-start taps while `AuthContext.loading` are stashed and replayed when restore finishes (was a silent no-op). Tests: SoftWallContext loading stash; `useTipCheckout` skips exclusive toast when `onPaid` returns false. Device smoke still open.
-
-### 2026-10-23 — Soft-Wall resume polish (sheet dismiss + exclusive grant)
-
-Resume after Soft-Wall waits ~220ms past sheet dismiss and holds while `AgeConfirmModal` would show (`birthPrompt` / required age). Exclusive `grant` returns false on a refused pass insert so Vault checkout does not celebrate unlock; magic-link copy no longer promises a resume after “Keep browsing”. Tests: SoftWallContext timers + `sessionToken`. Device smoke still open.
+COORD-02 rows and device Soft-Wall smoke stay open. Day-of EAS rebuild detail (Stripe 0.83,
+`$StripeDisableSPM`, arm-only ABIs, Gradle workers, Profile/age UX) lives in CHANGELOG.
 
 ### 2026-10-23 — Soft-Wall Vault gate + live session on resume
 
