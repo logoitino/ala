@@ -1,4 +1,10 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-10-31 — Main stack land + CI gate regen; APP-TEST A–C next
+
+- Soft-Wall #12, ARCHITECTURE_SYNC #17, Jev #18, HS+college #19, reviewer #20 on `main`.
+- Regenerate `supportTopology.json` (`ARCHITECTURE_SYNC`) and `BUILD_LAYERS.md` for tip gates.
+- STATE §0 / WORK_QUEUE: APP-TEST-01 lanes A–C are the next priority; webhook tip crediting stays off.
+
 ## 2026-10-28 — Reviewer readiness (docs / SQL layout only)
 
 - `docs/REVIEWER_START_HERE.md` for outside engineers; STATE §0 one page; prior §0 log →
