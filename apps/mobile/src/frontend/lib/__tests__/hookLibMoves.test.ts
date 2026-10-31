@@ -107,7 +107,7 @@ describe('exclusive passes and subscriber requests', () => {
     mockFrom.mockResolvedValueOnce({ data: null, error: { message: 'Could not find the table public.subscriber_requests' } });
     await expect(insertSubscriberRequest('u1', ATHLETE, 'Hi')).resolves.toEqual({
       row: null,
-      error: 'The subscriber_requests table is missing. Run supabase/subscriber_requests.sql in the SQL editor.',
+      error: 'The subscriber_requests table is missing. Run supabase/legacy/subscriber_requests.sql in the SQL editor.',
     });
   });
 });

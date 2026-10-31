@@ -1,4 +1,12 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-10-28 — Reviewer readiness (docs / SQL layout only)
+
+- `docs/REVIEWER_START_HERE.md` for outside engineers; STATE §0 one page; prior §0 log →
+  `docs/engineering/STATE_LOG_ARCHIVE.md`.
+- 52 loose `supabase/*.sql` → `supabase/legacy/` (reference); `config.toml` + fake `seed.sql`.
+- AGENTS component folder listing deduped; folder READMEs + README VOICE #5; R1/R2/R4 checklist
+  evidence in CODE_ORGANIZATION_PLAN. No app behavior change.
+
 ## 2026-10-28 — HS + college framing
 
 - Class-year pills include `'29` / `'30`; RoleSwitcher uses `ATHLETE_CLASS_YEARS` as fallback.
@@ -1202,13 +1210,13 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 - A guardian's custodial account holds only that one athlete's money. Parent HQ lists only athletes linked to the signed-in guardian, and each gets a card: date of birth (entered once), "Is the payout bank account in the athlete's name?" (strongly encouraged), and **ask the athlete to approve a withdrawal**.
 - The athlete sees a card at the top of Activity: who holds their Mālo, until when, and every pending request with **Approve / Decline**. No withdrawal proceeds without the athlete.
 - At 18 (or the state's age, admin-set 18–21) control passes to the athlete automatically; the guardian can no longer ask, and the athlete's own withdrawals are approved at once.
-- Schema: `custodial_accounts`, `athlete_birthdates`, `custodial_withdrawals` plus seven RPCs (`supabase/custodial_money.sql`). **Records only — no money moves; payouts still return 503.** Not applied to the live DB.
+- Schema: `custodial_accounts`, `athlete_birthdates`, `custodial_withdrawals` plus seven RPCs (`supabase/legacy/custodial_money.sql`). **Records only — no money moves; payouts still return 503.** Not applied to the live DB.
 - Removed the misleading Parent HQ "Set up Stripe custodial payout" button, which sent a hardcoded $25 payout request.
 
 ### M1 leaderboards
 
 - Spotlight **Boards**: most-hyped players, most-viewed players, most-viewed Highlights, school standings and top fans for the Spotlight week. Hype and views only — never money. Behind `layouts.leaderboards`.
-- Highlights now count views: one per signed-in viewer per clip per day, after 2 seconds on screen; the uploader and the tagged athlete don't count. Schema: `reels.view_count`, `reel_views`, `record_reel_view`, `get_leaderboards` (`supabase/leaderboards.sql`). Not applied to the live DB.
+- Highlights now count views: one per signed-in viewer per clip per day, after 2 seconds on screen; the uploader and the tagged athlete don't count. Schema: `reels.view_count`, `reel_views`, `record_reel_view`, `get_leaderboards` (`supabase/legacy/leaderboards.sql`). Not applied to the live DB.
 
 ### Apple Pay and Google Pay
 
@@ -1265,7 +1273,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Money desks and athlete profiles read the gift channel
 
-- Next `/money` charts Mālo by surface (Highlight, QR link, Wishlist, Profile, Live feed), by arrival (in the app or a QR gift link), and by the last 14 days, then lists each gift with athlete, fan, item or clip, and amount. Overview names the top surface. Expo `/admin/money` shows the same surface bars. An athlete's own profile and Athlete HQ list gifts they received. Apply `supabase/tip_origin.sql`, then `supabase/malo_ledger.sql` (`get_admin_malo_breakdown`, `get_received_malo`).
+- Next `/money` charts Mālo by surface (Highlight, QR link, Wishlist, Profile, Live feed), by arrival (in the app or a QR gift link), and by the last 14 days, then lists each gift with athlete, fan, item or clip, and amount. Overview names the top surface. Expo `/admin/money` shows the same surface bars. An athlete's own profile and Athlete HQ list gifts they received. Apply `supabase/legacy/tip_origin.sql`, then `supabase/legacy/malo_ledger.sql` (`get_admin_malo_breakdown`, `get_received_malo`).
 
 ### Terms name the Mālo record
 
@@ -1273,7 +1281,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Mālo rows name where the gift started
 
-- Each `tips` row records `origin` (Highlight, QR link, Wishlist, Profile, Live feed), `entry` (`in_app` or `qr_link`), and, for a locker Chip In, `wishlist_item_id` plus the item title. One row is the ledger. `chip_in_wishlist_item` still only moves the item total. Company-revenue labels keep `source=malo` and add the channel, including a re-run of `supabase/company_revenue.sql`. Apply `supabase/tip_origin.sql` on the live database.
+- Each `tips` row records `origin` (Highlight, QR link, Wishlist, Profile, Live feed), `entry` (`in_app` or `qr_link`), and, for a locker Chip In, `wishlist_item_id` plus the item title. One row is the ledger. `chip_in_wishlist_item` still only moves the item total. Company-revenue labels keep `source=malo` and add the channel, including a re-run of `supabase/legacy/company_revenue.sql`. Apply `supabase/legacy/tip_origin.sql` on the live database.
 
 ### Local plays open downward
 
@@ -1282,7 +1290,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 ### Toasts swipe away, and hype chips toggle
 
 - Aura notices, live-score banners, and play callouts dismiss on a swipe left, right, or up.
-- A second tap on Seki, Aura, or Flex takes that reaction back. `clear_reel_hype` deletes the fan's vote and steps the Highlight counter down. Apply `supabase/clear_reel_hype.sql` on the live database for the count to stick.
+- A second tap on Seki, Aura, or Flex takes that reaction back. `clear_reel_hype` deletes the fan's vote and steps the Highlight counter down. Apply `supabase/legacy/clear_reel_hype.sql` on the live database for the count to stick.
 
 ### Popup cards share one frame
 
@@ -1296,7 +1304,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Backer-count grant
 
-- `supabase/increment_backer.sql` granted `increment_backer_count` to `anon` and `authenticated`, which undoes the canonical grant in `schema.sql` (`authenticated` only). The incremental now revokes `anon` and keeps the Mālo-freeze check from the canonical function.
+- `supabase/legacy/increment_backer.sql` granted `increment_backer_count` to `anon` and `authenticated`, which undoes the canonical grant in `schema.sql` (`authenticated` only). The incremental now revokes `anon` and keeps the Mālo-freeze check from the canonical function.
 
 ### Spotlight publish grant
 
@@ -1368,7 +1376,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 - Next Features (`pnpm admin`) now toggles the **same flag catalog** as Expo `/admin/features` + Look · Profile (`APP_RUNTIME_FLAG_GROUPS` in shared-types): fan bar, hype, boards, Profile chrome. Draft merge keeps Look copy / catalogs when you flip one switch. **Publish to app** / **Discard draft** hit `patch_app_runtime_draft` + `publish_app_runtime` — Expo fans pick up `published` over Realtime.
 - Profile desk can draft chrome (Flip card, Crew, tabs, Actions on top, Open on Stats) instead of read-only badges. **Actions on top** actually moves Mālo / Subscribe in `AthleteProfileView`.
-- People list shows Claimed roster + Varsity status from live `is_verified_athlete` / `verification_status` (hosted DBs that never got `profiles.is_verified`). Expo `/admin/people` list + Verify/Approve use the same fallback. Incremental: `supabase/profiles_verified_compat.sql`. Coverage: match roster taps open `/user/[id]`.
+- People list shows Claimed roster + Varsity status from live `is_verified_athlete` / `verification_status` (hosted DBs that never got `profiles.is_verified`). Expo `/admin/people` list + Verify/Approve use the same fallback. Incremental: `supabase/legacy/profiles_verified_compat.sql`. Coverage: match roster taps open `/user/[id]`.
 
 ### Profile tab matches a tapped athlete
 
@@ -1379,7 +1387,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 - Camera Roll Highlights go through `HighlightPickerModal` (`expo-image-picker` videos, 45s cap, trim UI). Longer clips alert **Highlight clips must be 45 seconds or less to showcase your best plays!**
 - `MediaUploadService` compresses with `react-native-compressor` (1080p vertical, ~2.5 Mbps) under **Optimizing highlight quality...**, uploads `reels/{user_id}/{timestamp}.mp4` to Storage `reels` (fallback `game_highlights`), then inserts `public.reels`. Expo Go skips native compress and still publishes.
-- Own Profile hero `ProfileAvatarPicker` 1:1 crop → `avatars` bucket → `profiles.avatar_url`. Incremental: `supabase/media_upload.sql`.
+- Own Profile hero `ProfileAvatarPicker` 1:1 crop → `avatars` bucket → `profiles.avatar_url`. Incremental: `supabase/legacy/media_upload.sql`.
 
 ### Spotlight Watch no longer 400s athlete sheet
 
@@ -1396,12 +1404,12 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 - Claiming athlete + school stays easy (`RoleSwitcherModal` **Claim athlete profile**). `add_user_role('athlete')` no longer sets `is_verified`.
 - **Claim School Verification ⚡** (`VerifyAthleteModal`): team code (`WSTLK-RUG-2026`) or coach/parent request. `profiles.verification_status` = `unverified` \| `pending` \| `verified`.
 - Viewers see neon jade **⚡ VERIFIED VARSITY** (`VarsityBadge`) on the hero name and 3D trading card; otherwise SCHOOL CLAIMED / Not verified yet or ⏳ VARSITY PENDING. Highlights stay public while waiting.
-- Player of the Week / Spotlight auto-elect requires Varsity (`athlete_is_varsity_verified`). Incremental: `supabase/athlete_verification.sql`.
+- Player of the Week / Spotlight auto-elect requires Varsity (`athlete_is_varsity_verified`). Incremental: `supabase/legacy/athlete_verification.sql`.
 
 ### Legal Terms & NIL Compliance sheet
 
 - Profile Settings → **Terms of Service & NIL Compliance 📜** (`LegalModal`): ToS/Privacy summary, High School NIL disclaimer (Mālo independent of performance; no school-trademark license), Minor Safety & Parental Authorization.
-- Mandatory `LegalAckToggle` on **Apply for Athlete Verification** and **Connect Bank Account**. Stamps `profiles.legal_terms_accepted_at` (`supabase/legal_terms_ack.sql`). Connect onboarding returns 403 without it.
+- Mandatory `LegalAckToggle` on **Apply for Athlete Verification** and **Connect Bank Account**. Stamps `profiles.legal_terms_accepted_at` (`supabase/legacy/legal_terms_ack.sql`). Connect onboarding returns 403 without it.
 
 ## 2026-09-15
 
@@ -1476,14 +1484,14 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 - The operator console (`/operator/[gameId]`) and sideline scorer now build their score pad, period chips, clock, callouts, and player-tag macros from the match's playbook (`games.sport`). Untimed sports hide the clock entirely; unknown sports inherit `GENERIC_SPORT_CONFIG` instead of football.
 - Fan surfaces follow the same rows: the athlete **Stats 📊** pane renders the playbook's combine tiles and career labels (Kills / Digs, Tries / Tackles, Goals / Assists…), and live play toasts resolve their emoji from that sport's callouts.
 - `/admin/games` gains a sport picker that swaps its period chips and clock field to match; `/admin/athletes` shows position pills for the selected sport instead of football-only QB…K. Athlete onboarding offers every active sport.
-- New `public.sport_configs` + `get_sport_configs` / `upsert_sport_config` / `delete_sport_config`, plus `games.sport`. Incremental: `supabase/sport_configs.sql`. Expo Go without the table falls back to `SPORT_CONFIG_SEEDS`.
+- New `public.sport_configs` + `get_sport_configs` / `upsert_sport_config` / `delete_sport_config`, plus `games.sport`. Incremental: `supabase/legacy/sport_configs.sql`. Expo Go without the table falls back to `SPORT_CONFIG_SEEDS`.
 - Coverage tracks the score buttons, period chips, callouts, and Stats rows against the Sports desk.
 
 ### Locker Room Wishlist — crowd-funded gear
 
 - Athlete **Stats 📊** tab gains **👟 Locker Room Wishlist**: a horizontal rack of gear cards with item photo, title, money line, and a spring-animated Neon Jade funding bar. **🎁 Gift Item Directly** opens the retailer link in `expo-web-browser`; **⚡ Chip In $5** opens the Mālo sheet and credits whatever the fan pays toward the goal.
 - Crossing 100% fires full-screen confetti + a **Gear Unlocked!** notification, stamps a glowing **EQUIPPED ⚡** badge on the card, and pays the athlete a one-time **+500 Aura** (`chip_in_wishlist_item` → `add_user_aura`, guarded by `aura_awarded`).
-- New `public.wishlist_items` + `get_wishlist_items` / `chip_in_wishlist_item`. Incremental: `supabase/locker_room_wishlist.sql`. Expo Go without the table falls back to `WISHLIST_DEMO_ITEMS`.
+- New `public.wishlist_items` + `get_wishlist_items` / `chip_in_wishlist_item`. Incremental: `supabase/legacy/locker_room_wishlist.sql`. Expo Go without the table falls back to `WISHLIST_DEMO_ITEMS`.
 - Managed from admin: `layouts.wishlist` pauses the whole rack (Features), and Coverage tracks `wishlist` / `wishlist_gift` / `wishlist_chip_in` taps against the Drip and Money desks.
 
 ### Admin portal — business nav, trail, Coverage
@@ -1495,7 +1503,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 ### Usage reports + live scoreboard tap
 
 - `/admin/reports` **Usage** desk: time on tabs, deepest scroll, features fans tap (Seki / Mālo / polls / Drip), hottest control issues (failed checkout, Report, upload, open bugs). Still one Expo `/admin` — no second admin app.
-- Fan surfaces write `tab_dwell` / `surface_scroll` / `feature_tap` / `ui_issue` into `telemetry_logs` via `useSurfaceUsage`. Home live scoreboard taps through to the Local game. Incremental: `supabase/usage_reports.sql` (adds `duration_ms` / `channel` / `step` on remotes that still used `metric_value`, then `get_admin_reports` usage keys).
+- Fan surfaces write `tab_dwell` / `surface_scroll` / `feature_tap` / `ui_issue` into `telemetry_logs` via `useSurfaceUsage`. Home live scoreboard taps through to the Local game. Incremental: `supabase/legacy/usage_reports.sql` (adds `duration_ms` / `channel` / `step` on remotes that still used `metric_value`, then `get_admin_reports` usage keys).
 
 ### Admin control plane — Marketing / Owner / Engineer
 
@@ -1503,17 +1511,17 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 - Fans send app-level suggestions from Profile **Send a suggestion** and Highlights ⋯ **Suggest an improvement** (`submit_app_feedback`). That is not clip Report (`report_reel`). `/admin/feedback` triages `new → reviewing → planned → shipping → shipped | declined` and can pin a `runtime_path`.
 - Look gains a **Copy** tab (`app_runtime_config.copy`: Home / Local / Spotlight / Drip kickers, ledes, empty lines, optional Home campaign banner). Still draft until **Publish to app**.
 - `/admin/lab` edits the runtime **draft JSON** (unknown keys / invalid hex rejected), applies a triaged suggestion onto the draft, and uses the same Publish path. No in-app TypeScript, `eval`, or git.
-- Overview always shows Gross / net / payouts, Reports health fail-warn count, and new feedback. Incremental: `supabase/app_feedback.sql`.
+- Overview always shows Gross / net / payouts, Reports health fail-warn count, and new feedback. Incremental: `supabase/legacy/app_feedback.sql`.
 
 ### Admin Money — financial control plane
 
-- `/admin/money` is the revenue desk (Expo Router, not `app/finance/page.tsx`): Gross Platform Volume, Company Net Revenue, Athlete & Operator Payouts, plus a split table for Mālo (10/90), district boosters (15/85), and merch + Vault. Totals come from `get_company_revenue_summary`; the log list reads `company_revenue_logs`. Incremental: `supabase/company_revenue.sql`. Fan Mālo copy is still 100% to custodial until counsel updates `MALO_DISCLAIMER`.
+- `/admin/money` is the revenue desk (Expo Router, not `app/finance/page.tsx`): Gross Platform Volume, Company Net Revenue, Athlete & Operator Payouts, plus a split table for Mālo (10/90), district boosters (15/85), and merch + Vault. Totals come from `get_company_revenue_summary`; the log list reads `company_revenue_logs`. Incremental: `supabase/legacy/company_revenue.sql`. Fan Mālo copy is still 100% to custodial until counsel updates `MALO_DISCLAIMER`.
 
 ### Auto Spotlight + tag verification
 
 - Player of the Week / Month / Year is elected from **confirmed** Game Play hype (Seki + Aura + Flex). The award is the tagged athlete; the hottest clip is the tape; a fan uploader gets **Clip by**, not the crown.
 - Fan tags start `pending`. The athlete, their parent, a school operator, or admin taps **That's them** / **Not them**. Computer vision is out of scope — we verify the confirmer, not the pixels.
-- `/admin/spotlight` shows the live race, pending tags, Crown from hype, and a locked manual override. Incremental: `supabase/spotlight_auto.sql`.
+- `/admin/spotlight` shows the live race, pending tags, Crown from hype, and a locked manual override. Incremental: `supabase/legacy/spotlight_auto.sql`.
 
 ## 2026-09-13
 
@@ -1525,7 +1533,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 ### Admin Features + Publish to app + Reports
 
 - Fan-bar tabs, Upload +, Seki / Aura / Flex / Mālo / More, Subscribe / Crew / Vault / Flash Unlock, Local boards, search, Spotlight modal, and role HQs are flags on `app_runtime_config`. Toggles stay **draft** until **Publish to app** (sidebar gold button). School names, player stats, captions, Drip prices, scores, and verify stay **instant**.
-- `/admin` nav is grouped: Ship / Content / Catalog / People & money / Insights. New desks: **Features** (`/admin/features`) and **Reports** (`/admin/reports` — usage windows, Mālo, leaders, reliability). Incremental: `supabase/app_runtime.sql` + `supabase/admin_reports.sql` (`patch_app_runtime_draft`, `publish_app_runtime`, `get_admin_reports`).
+- `/admin` nav is grouped: Ship / Content / Catalog / People & money / Insights. New desks: **Features** (`/admin/features`) and **Reports** (`/admin/reports` — usage windows, Mālo, leaders, reliability). Incremental: `supabase/legacy/app_runtime.sql` + `supabase/legacy/admin_reports.sql` (`patch_app_runtime_draft`, `publish_app_runtime`, `get_admin_reports`).
 
 ### Admin Studio / Publish / QA
 
@@ -1538,17 +1546,17 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Admin portal (production control plane)
 
-- `/admin` is the **admin portal** that writes the same tables the fan app reads. Nested routes + Obsidian sidebar: Overview, Spotlight, Moderation, Athletes, Schools, Live games, Highlights, People, Drip, Boosters, Money, Polls. Non-admins still see **Access Restricted**. Incremental: `supabase/admin_portal.sql` (`shop_products`, admin writes on `schools_and_teams` / `cheer_polls` / `games` INSERT / `sponsorships`, `upsert_cheer_poll`). Drip tab loads `shop_products` (`useDripCatalog`) with `DRIP_ITEMS` fallback. Local School Polls prefer published `cheer_polls` labels.
+- `/admin` is the **admin portal** that writes the same tables the fan app reads. Nested routes + Obsidian sidebar: Overview, Spotlight, Moderation, Athletes, Schools, Live games, Highlights, People, Drip, Boosters, Money, Polls. Non-admins still see **Access Restricted**. Incremental: `supabase/legacy/admin_portal.sql` (`shop_products`, admin writes on `schools_and_teams` / `cheer_polls` / `games` INSERT / `sponsorships`, `upsert_cheer_poll`). Drip tab loads `shop_products` (`useDripCatalog`) with `DRIP_ITEMS` fallback. Local School Polls prefer published `cheer_polls` labels.
 
 ### Web Admin Dashboard
 
-- `/admin` is the Obsidian / Neon Jade **Web Admin Dashboard** (Expo Router, not Next.js). Non-admins see **Access Restricted**. Admins get Spotlight Manager (publish Player of the Week), Moderation & Reports (Dismiss / Remove Content on flagged Highlights), and Platform Telemetry (Highlights count, Seki+Aura+Flex, Mālo ledger). `profiles.is_admin` plus Studio unlock. Incremental: `supabase/admin_dashboard.sql` (`publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`, `reels.is_removed`).
+- `/admin` is the Obsidian / Neon Jade **Web Admin Dashboard** (Expo Router, not Next.js). Non-admins see **Access Restricted**. Admins get Spotlight Manager (publish Player of the Week), Moderation & Reports (Dismiss / Remove Content on flagged Highlights), and Platform Telemetry (Highlights count, Seki+Aura+Flex, Mālo ledger). `profiles.is_admin` plus Studio unlock. Incremental: `supabase/legacy/admin_dashboard.sql` (`publish_spotlight_award`, `moderate_flagged_reel`, `get_admin_platform_metrics`, `reels.is_removed`).
 
 ### Home feed + one hype / Mālo state
 
 - Fan bar first tab is **Home**. Highlights ⚡ still lives on Profile. Top chrome is search + **Home / All / Seki**. Home ranks Crew you follow, your school, Serve Like Me, Flash Unlock, energy, and freshness. Search looks up clip titles and athlete profiles (`search_local_entities` + the live feed) in the same dark jade sheet as Local Explore.
 - Name + Seki / Aura / Flex / Mālo / ⋯ sit on the clip, just above the fan bar. The video fills the scene from the status area to the nav. iOS Live Text / frame analysis is off (`allowsVideoFrameAnalysis={false}`) so the blue gear does not sit on the clip.
-- One Seki, one Aura, and one Flex per fan per clip (`reel_hype_votes` + local `tapuai.reelVotes.*`). Double-tap Aura is that one Aura. After a Mālo, the button fills jade and reads **Mālo'd**. Incremental: `supabase/reel_hype_votes.sql`.
+- One Seki, one Aura, and one Flex per fan per clip (`reel_hype_votes` + local `tapuai.reelVotes.*`). Double-tap Aura is that one Aura. After a Mālo, the button fills jade and reads **Mālo'd**. Incremental: `supabase/legacy/reel_hype_votes.sql`.
 
 ### Highlights chrome + fan bar
 
@@ -1558,28 +1566,28 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 ### Crew / Squad + Vault Flash Unlock
 
 - Profile counters are **The Crew ⚡** (followers) and **Your Squad 🛡️** (following). Visitors tap **Join Crew ⚡** (Neon Jade). Mutual follows show a glowing **Teammates 🤝** badge. Persistence: `crew_follows` + `get_crew_graph` / `toggle_crew_follow`.
-- Athletes long-press a Vault clip and tap **🔓 Flash Unlock (2 Hours)**. `set_reel_flash_unlock` writes `reels.flash_unlock_until` and queues a `crew_push_queue` row for every Crew member. Highlights ⚡ shows **⚡ FLASH UNLOCK • Locks in 1h 45m** and plays the clip without Subscribe for that window. Incremental: `supabase/crew_and_flash_unlock.sql`.
+- Athletes long-press a Vault clip and tap **🔓 Flash Unlock (2 Hours)**. `set_reel_flash_unlock` writes `reels.flash_unlock_until` and queues a `crew_push_queue` row for every Crew member. Highlights ⚡ shows **⚡ FLASH UNLOCK • Locks in 1h 45m** and plays the clip without Subscribe for that window. Incremental: `supabase/legacy/crew_and_flash_unlock.sql`.
 
 ### Serve Like Me / Train Like Me
 
-- Upload pills tag a Highlight as **⚡ Game Play**, **💪 Train Like Me**, or **🤝 Serve Like Me (2x Aura Boost)**. Serve shows a Neon Jade **Community Impact Boost ⚡** chip. Persists `reels.category` (`game_play` / `train_like_me` / `serve_like_me`). Incremental: `supabase/reel_category.sql`.
+- Upload pills tag a Highlight as **⚡ Game Play**, **💪 Train Like Me**, or **🤝 Serve Like Me (2x Aura Boost)**. Serve shows a Neon Jade **Community Impact Boost ⚡** chip. Persists `reels.category` (`game_play` / `train_like_me` / `serve_like_me`). Incremental: `supabase/legacy/reel_category.sql`.
 - Feed cards float **🤝 SERVE LIKE ME • 2x AURA** or **💪 TRAIN LIKE ME** top-left. Double-tapping Serve Like Me grants 2 Aura (vs 1) and a jade particle burst. OfflineQueue flushes the same point count.
 
 ### Player of the Week spotlight
 
-- Highlights launch queries `get_active_spotlight_award(viewer_user_id)` and, if the current week/month award is unviewed, opens `SpotlightModal` over the feed: looped winning Highlight, Neon Jade badge, 7-tier Aura portrait, **Support & Tip Athlete ⚡** (Mālo sheet) and **Watch Full Highlight 🎥**. **Dismiss (seen)** stores AsyncStorage `tapuai.spotlightSeen.{awardId}` so it pops once per period. Incremental: `supabase/spotlight_awards.sql`.
+- Highlights launch queries `get_active_spotlight_award(viewer_user_id)` and, if the current week/month award is unviewed, opens `SpotlightModal` over the feed: looped winning Highlight, Neon Jade badge, 7-tier Aura portrait, **Support & Tip Athlete ⚡** (Mālo sheet) and **Watch Full Highlight 🎥**. **Dismiss (seen)** stores AsyncStorage `tapuai.spotlightSeen.{awardId}` so it pops once per period. Incremental: `supabase/legacy/spotlight_awards.sql`.
 - Spotlight video never calls `pause()` on unmount (expo-video already released the native player; that crash blocked every CTA). Support / Watch wait for the modal fade, then open Mālo or scroll the Highlights ⚡ feed.
 - **Spotlight** fan-bar tab (`/spotlight`) lists current and recent Player of the Week/Month cards so a dismissed launch popup is still reachable. Tap a card to replay the modal (Close does not re-arm the popup).
 
 ### Athlete Vault lock
 
-- Athletes **Lock Vault 🔒** so fans must subscribe ($4.99/mo) to watch Vault Highlights ⚡, or **Open Vault 🌐** for a public preview. Default is locked (`players.vault_locked`). Clip placement (Highlights vs Vault) is still long-press. Incremental: `supabase/player_vault_lock.sql`. RPC `set_player_vault_locked`.
+- Athletes **Lock Vault 🔒** so fans must subscribe ($4.99/mo) to watch Vault Highlights ⚡, or **Open Vault 🌐** for a public preview. Default is locked (`players.vault_locked`). Clip placement (Highlights vs Vault) is still long-press. Incremental: `supabase/legacy/player_vault_lock.sql`. RPC `set_player_vault_locked`.
 
 ### Unified athlete profile + Highlights ⚡
 
 - User-facing **Reel / Reels** copy is **Highlight / Highlights ⚡** (fan bar, publish, receipts, trading card). Persistence stays `reels`.
 - `AthleteProfileView` is the shared sheet for own Profile and `/user/[id]` (name taps). Tabs: **Highlights ⚡**, **Stats 📊**, **Vault 🔒**. Legacy `/athlete/[id]` redirects. Fan bar stays mounted.
-- Stats engine: combine measurables on `players` plus `athlete_career_stats` / `athlete_game_logs`. Trading-card back face shows Games / scoring / volume. Incremental: `supabase/athlete_stats.sql`.
+- Stats engine: combine measurables on `players` plus `athlete_career_stats` / `athlete_game_logs`. Trading-card back face shows Games / scoring / volume. Incremental: `supabase/legacy/athlete_stats.sql`.
 
 ### Local match stays in the fan bar
 
@@ -1587,12 +1595,12 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Universal team search (HS + NCAA)
 
-- Athlete onboarding in `RoleSwitcherModal` uses one `schools_and_teams` autocomplete (`ILIKE %query%`) with `[ High School • UT ]` / `[ NCAA D1 • Big 12 ]` badges. HS and college share sport, roster number, position, and class year. Saves `profiles.school_id` + `athlete_division`. Aura trading card shows team name, mascot, and division on both faces. Incremental: `supabase/schools_and_teams.sql`. `docs:check` now fails if SCHEMA omits a `schema.sql` table or RPC.
+- Athlete onboarding in `RoleSwitcherModal` uses one `schools_and_teams` autocomplete (`ILIKE %query%`) with `[ High School • UT ]` / `[ NCAA D1 • Big 12 ]` badges. HS and college share sport, roster number, position, and class year. Saves `profiles.school_id` + `athlete_division`. Aura trading card shows team name, mascot, and division on both faces. Incremental: `supabase/legacy/schools_and_teams.sql`. `docs:check` now fails if SCHEMA omits a `schema.sql` table or RPC.
 
 ### Fan-first Open Vault
 
 - Reels default to the free public feed (`reels.is_vault_only` / `is_exclusive` false). Vault clips on `ReelCard` show a semi-transparent **Subscriber Vault 🔒** badge and **Unlock Vault ($4.99/mo)** PaymentSheet; subscribers and public clips play full-resolution with no overlay.
-- Athlete Management Profile grid (`AthleteReelManager`) long-presses a thumbnail to **Move to Subscriber Vault 🔒** / **Move to Free Public Feed 🌐**. Medium haptic, optimistic chip, `toggle_reel_vault_status` RPC. Incremental: `supabase/toggle_reel_vault_status.sql`.
+- Athlete Management Profile grid (`AthleteReelManager`) long-presses a thumbnail to **Move to Subscriber Vault 🔒** / **Move to Free Public Feed 🌐**. Medium haptic, optimistic chip, `toggle_reel_vault_status` RPC. Incremental: `supabase/legacy/toggle_reel_vault_status.sql`.
 
 ### Front-of-house docs sync
 
@@ -1613,7 +1621,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 ### Phase B production readiness
 
 - `OfflineQueue` (`src/frontend/services/OfflineQueue.ts`) persists Aura taps, cheer votes, bookmarks, and reports in AsyncStorage while `NetInfo.isConnected === false`, then flushes `increment_reel_hype` / `add_user_aura` / `cast_cheer_vote` / `saved_reels` / `report_reel` on reconnect. Root layout starts the singleton at boot.
-- Reel rail **Report / Hide Highlight 🚩** opens `ReportContentModal`. Confirm appends the fan onto `reels.reported_by`, sets `is_flagged`, hides the clip on this account (`tapuai.hiddenReels` + toast). Incremental SQL: `supabase/report_reel.sql`.
+- Reel rail **Report / Hide Highlight 🚩** opens `ReportContentModal`. Confirm appends the fan onto `reels.reported_by`, sets `is_flagged`, hides the clip on this account (`tapuai.hiddenReels` + toast). Incremental SQL: `supabase/legacy/report_reel.sql`.
 - Stripe Express Account Links are minted only server-side. `useStripeConnect` / `PayoutSetupCard` call Edge Function `create-stripe-account` with `Authorization: Bearer` session JWT. The handler binds the Express account to `auth.uid()` (ignores client `accountId` / `profileId`) and writes `stripe_connect_id` / `stripe_onboarding_complete` / `payouts_enabled`. Metro `POST /api/create-stripe-account` is a JWT-gated local fallback only.
 
 ### Profile trading card + Account Settings audit
@@ -1631,7 +1639,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 - Persistent search bar on Local (`🔍` + `TextInput` + `✕`) sits above hub pills. Light `impactAsync` on focus and throttled typing.
 - Queries longer than 1 character slide up `SearchResultsOverlay` with All / Athletes / Schools / Boosters chips, AsyncStorage recents, and live `search_local_entities` hits (`useLocalSearch`, table SELECT fallback).
-- Athlete rows open `/athlete/[id]`. Booster rows switch to School Polls and jade-highlight the sponsor rail. School rows filter rivalry polls for that high school. Incremental SQL: `supabase/search_local_entities.sql`.
+- Athlete rows open `/athlete/[id]`. Booster rows switch to School Polls and jade-highlight the sponsor rail. School rows filter rivalry polls for that high school. Incremental SQL: `supabase/legacy/search_local_entities.sql`.
 
 ### Local Discovery button audit
 
@@ -1643,7 +1651,7 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 - `Gesture.Exclusive(doubleTap, singleTap)` keeps single-tap mute off the double-tap Aura ⚡ burst (`maxDistance` / `maxDeltaY` so paging still wins). Double-tap fires Medium `impactAsync`, optimistic `aura_count`, background `increment_reel_hype`, and `add_user_aura(+1)` for the signed-in fan.
 - Seki / Aura / Flex chips stay on `AnimatedPressable` (0.88 → 1.15 → 1.0) and increment local counters immediately.
-- **Mālo ⚡** opens `MaloTipModal` (blurred backdrop). **Share** uses Expo `Share.share` with `alasports://athlete/{id}?reel=`. **Save** syncs `public.saved_reels` via `useSavedReel`. Incremental SQL: `supabase/saved_reels.sql`.
+- **Mālo ⚡** opens `MaloTipModal` (blurred backdrop). **Share** uses Expo `Share.share` with `alasports://athlete/{id}?reel=`. **Save** syncs `public.saved_reels` via `useSavedReel`. Incremental SQL: `supabase/legacy/saved_reels.sql`.
 - `SwipeableBannerWrapper` pan activates only on swipe-up so vertical Reel scroll is not captured; ✕ / swipe-up still set `isDismissed` with Light haptics.
 
 ### Reel Realtime channel collision
@@ -1656,20 +1664,20 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Client telemetry (video + sockets)
 
-- `TelemetryManager` (`src/frontend/services/TelemetryManager.ts`) batches events in memory and flushes to `public.telemetry_logs` every 10s or at 15 items. `ReelCard` logs time-to-first-frame and mid-reel stalls. `useLiveGame` logs Realtime `CHANNEL_ERROR` / `CLOSED` reconnect attempts. `useTipCheckout` logs PaymentSheet step latency. Incremental SQL: `supabase/telemetry_logs.sql`.
+- `TelemetryManager` (`src/frontend/services/TelemetryManager.ts`) batches events in memory and flushes to `public.telemetry_logs` every 10s or at 15 items. `ReelCard` logs time-to-first-frame and mid-reel stalls. `useLiveGame` logs Realtime `CHANNEL_ERROR` / `CLOSED` reconnect attempts. `useTipCheckout` logs PaymentSheet step latency. Incremental SQL: `supabase/legacy/telemetry_logs.sql`.
 
 ### Local booster sponsorship tiers
 
-- School Polls shows a **Local Team Boosters & Sponsors 🏆** rail (Obsidian cards + Silver / Gold ⚡ / Platinum 💎 badges). **+ Become a Team Sponsor** fires Light `impactAsync` and opens `SponsorshipModal`. First month is Stripe PaymentSheet via `useTipCheckout` (`skipBacker`); success inserts `public.sponsorships` and grants 500 / 2,000 / 10,000 Aura. Incremental SQL: `supabase/sponsorships.sql`.
+- School Polls shows a **Local Team Boosters & Sponsors 🏆** rail (Obsidian cards + Silver / Gold ⚡ / Platinum 💎 badges). **+ Become a Team Sponsor** fires Light `impactAsync` and opens `SponsorshipModal`. First month is Stripe PaymentSheet via `useTipCheckout` (`skipBacker`); success inserts `public.sponsorships` and grants 500 / 2,000 / 10,000 Aura. Incremental SQL: `supabase/legacy/sponsorships.sql`.
 
 ### Fan Tip History & Receipts
 
 - Profile **Account Settings** adds **Tip History & Receipts 🧾** (Light `impactAsync` → `/receipts`). The screen is a hidden fan tab so the bar stays. Header metrics: Total Tipped, Athletes Supported, Total Aura Earned. Cards (`ReceiptCard`) use Polynesian Obsidian, `$10.00 Mālo ⚡`, Neon Jade `+100 Aura`, and **View Reel** → `/athlete/[id]`.
-- `public.tips` now stores `fan_id`, `reel_id`, and `aura_points`. `useTipCheckout` inserts a ledger row on successful Mālo. RPC `get_fan_tip_history(fan_user_id)` joins `players` for name + school. Incremental SQL: `supabase/get_fan_tip_history.sql` (creates `public.tips` if this project never ran full `schema.sql`).
+- `public.tips` now stores `fan_id`, `reel_id`, and `aura_points`. `useTipCheckout` inserts a ledger row on successful Mālo. RPC `get_fan_tip_history(fan_user_id)` joins `players` for name + school. Incremental SQL: `supabase/legacy/get_fan_tip_history.sql` (creates `public.tips` if this project never ran full `schema.sql`).
 
 ### Account Capability switcher
 
-- Profile **Account Settings** shows an Account Capability row (`[ Fan ⚡ ]` or `[ Fan ⚡ | Athlete 🏆 ]`). The sheet (`RoleSwitcherModal`) explains Fan vs Athlete. Fan-only accounts get **Apply for Athlete Verification 🏆**, which calls `add_user_role` and unlocks payouts / Vault immediately. Dual accounts get a Fan View / Athlete Management toggle (`profiles.active_role`) with Medium `impactAsync`. Incremental SQL: `supabase/add_user_role.sql`.
+- Profile **Account Settings** shows an Account Capability row (`[ Fan ⚡ ]` or `[ Fan ⚡ | Athlete 🏆 ]`). The sheet (`RoleSwitcherModal`) explains Fan vs Athlete. Fan-only accounts get **Apply for Athlete Verification 🏆**, which calls `add_user_role` and unlocks payouts / Vault immediately. Dual accounts get a Fan View / Athlete Management toggle (`profiles.active_role`) with Medium `impactAsync`. Incremental SQL: `supabase/legacy/add_user_role.sql`.
 
 ### Fan bar on athlete profiles
 
@@ -1684,13 +1692,13 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 - Athlete Profile **Account Settings** (`PayoutSetupCard`) when `roles` includes `athlete`. Incomplete: **Set Up Payouts ⚡** + Neon Jade **Connect Bank Account**. Complete: **Payouts Active ✅** + **Manage Bank Account / View Express Dashboard**.
 - `useStripeConnect.createStripeExpressAccount()` calls `POST /api/create-stripe-account` (Stripe Accounts **v2** Express + Account Link or login link), then `WebBrowser.openAuthSessionAsync`. Return syncs `stripe_onboarding_complete` and `payouts_enabled` onto `profiles` (and local cache). Button fires Medium `impactAsync` and shows a spinner while the link is generated.
-- Incremental SQL: `supabase/stripe_connect.sql`. Deep-link return: `/stripe-connect` (`alasports://stripe-connect`).
+- Incremental SQL: `supabase/legacy/stripe_connect.sql`. Deep-link return: `/stripe-connect` (`alasports://stripe-connect`).
 
 ### Dual Fan / Athlete
 
 - `AuthContext` exposes `roles` (e.g. `['fan', 'athlete']`), `isAthlete`, `canReceiveTips`, and `isVerified`. Athletes keep Fan capability and stay on the fan hub when the Dev switcher selects Athlete (`ROLE_HOME.athlete = '/'`).
 - Profile `AuraTradingCard` renders **[ Fan ⚡ ]** and **[ Athlete 🏆 ]** side-by-side when both are active. The flip back-face shows Total Tips Dropped + Poll Votes (Fan) and Season Points + Reels Uploaded (Athlete).
-- Mālo via `useTipCheckout` is open to any authenticated user, including verified athletes. Success calls `add_user_aura` for the tipper and the reel athlete (skip the second call when the ids match). Drip / exclusive still grant only the payer. Incremental SQL: `supabase/profile_roles.sql`.
+- Mālo via `useTipCheckout` is open to any authenticated user, including verified athletes. Success calls `add_user_aura` for the tipper and the reel athlete (skip the second call when the ids match). Drip / exclusive still grant only the payer. Incremental SQL: `supabase/legacy/profile_roles.sql`.
 
 ### Documentation
 
@@ -1701,11 +1709,11 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 
 ### Cheer polls
 
-- `cast_cheer_vote` now takes optional `home_name` / `away_name` (re-run `supabase/cheer_polls.sql`; `DROP FUNCTION` of the 3-arg form first). Insert-on-miss starts at 0–0 with those labels. Featured `westlake-lone-peak` seed stays 124 / 98. Votes write `cheer_polls`, not `games`.
+- `cast_cheer_vote` now takes optional `home_name` / `away_name` (re-run `supabase/legacy/cheer_polls.sql`; `DROP FUNCTION` of the 3-arg form first). Insert-on-miss starts at 0–0 with those labels. Featured `westlake-lone-peak` seed stays 124 / 98. Votes write `cheer_polls`, not `games`.
 
 ### Aura palette
 
-- Tier 1 **Slate Silver** `#94A3B8` → Tier 2 **Island Cyan** `#00E5FF` → Tier 3 **Neon Jade** `#00E676` → Tier 4 **Electric Violet** `#B388FF` → Tier 5 **Crimson Ember** `#FF1744` → Tier 6 **Polished Gold** `#FFD700` → Tier 7 **Celestial Prism** `#00E676` / `#00E5FF`. Point bands unchanged. Re-run `supabase/add_user_aura.sql` (includes `DROP FUNCTION`) so `get_aura_tier` matches.
+- Tier 1 **Slate Silver** `#94A3B8` → Tier 2 **Island Cyan** `#00E5FF` → Tier 3 **Neon Jade** `#00E676` → Tier 4 **Electric Violet** `#B388FF` → Tier 5 **Crimson Ember** `#FF1744` → Tier 6 **Polished Gold** `#FFD700` → Tier 7 **Celestial Prism** `#00E676` / `#00E5FF`. Point bands unchanged. Re-run `supabase/legacy/add_user_aura.sql` (includes `DROP FUNCTION`) so `get_aura_tier` matches.
 
 ### Fan hub (Phase 1)
 
@@ -1723,13 +1731,13 @@ All notable product and schema shifts for Tapua'i (`ala-sports`). Keep this file
 - Scorekeeper: Home/Away **+1 / +3 / +6** spring the digits and call `update_game_score`. **Start / Pause Clock** toggles `is_clock_running` and ticks once per second.
 - Callouts **⚡ Big Play / 🏆 Touchdown / 🤙 Big Hit / 🛑 Turnover** Broadcast on `game_events_${gameId}` with `{ type, timestamp, team }` (`Haptics.notificationAsync` on the operator). Focused `ReelCard` springs **⚡ BIG PLAY: Westlake Thunder!** for 3s (`useGameEventBroadcast`). Optional `game_events` INSERT still feeds `/game/[id]` history.
 - Fan live overlay: `useLiveGame` subscribes to `games` / `game_events` Realtime; `Reels/LiveMatchBanner` shows home vs away, live score with `withSpring` on increments, quarter + pulse. `Operator/LiveScoreHeader` re-exports the banner.
-- Incremental SQL: `supabase/games_operator.sql` (re-run to add `claimed_by`, `is_clock_running`, and the RPC).
+- Incremental SQL: `supabase/legacy/games_operator.sql` (re-run to add `claimed_by`, `is_clock_running`, and the RPC).
 - PIN + GPS check-in, game console (clock/score/events), scorer screen. Demo-open RLS remains.
 
 ### Monetization (Phase 3)
 
 - Mālo presets `$5` / `$10` / `$25` / Custom; Aura `tipAmount * 10`.
-- Athlete exclusive paywall: `$4.99/mo` Stripe PaymentSheet on `/athlete/[id]`; locked tiles blur with **Subscriber Exclusive 🔒**; success inserts `subscriptions` (`subscriber_id`, `athlete_id`), grants **+100 Aura**, success haptics, unlock toast, and unblurs immediately. `supabase/subscriptions.sql` reshapes stub tables and renames `user_id` → `subscriber_id`.
+- Athlete exclusive paywall: `$4.99/mo` Stripe PaymentSheet on `/athlete/[id]`; locked tiles blur with **Subscriber Exclusive 🔒**; success inserts `subscriptions` (`subscriber_id`, `athlete_id`), grants **+100 Aura**, success haptics, unlock toast, and unblurs immediately. `supabase/legacy/subscriptions.sql` reshapes stub tables and renames `user_id` → `subscriber_id`.
 - Upload Seki Play: **Subscriber Exclusive 🔒** toggle persists `reels.is_exclusive`; athlete 3×3 grid refreshes from `UploadSheetContext` and shows the lock badge for non-subscribers.
 - Subscriber Vault on `/athlete/[id]`: **All Highlights / Vault 🔒** pills; Vault filters `is_exclusive` clips; non-subscribers see the $4.99/mo callout; subscribers get Direct Request Q&A (`subscriber_requests`) and a Neon Jade crest on their Profile avatar and Q&A rows.
 - RPC `add_user_aura` + `get_aura_tier`; 7-tier Aura card borders.
@@ -1952,7 +1960,7 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   clip) in every `ReelCard` feed: `VIEW_PLAY_MS` / `viewThresholdMs` (`lib/leaderboards.ts`),
   `useReelViewTracker(reelId, signedIn, playing, thresholdMs)` accumulates play time across pauses;
   Home no longer calls it. Migration `20260929160000_reel_views_and_filmer_credit.sql` (not applied;
-  needs `supabase/leaderboards.sql`): `reels_feed` + `view_count` / `uploader_name` (null when the
+  needs `supabase/legacy/leaderboards.sql`): `reels_feed` + `view_count` / `uploader_name` (null when the
   athlete posted it) / `uploader_avatar_url`; `athlete_highlight_views`; `filmer_stats` (no client
   caller yet — for a filmer profile / Top Filmers board if the owner picks that). Client: new top
   feed tier in `lib/reels.ts` (falls back to the tag tier), `HighlightClip.viewCount` / `filmedBy`,
@@ -2018,11 +2026,11 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   `components/Verification/AthleteVerificationCard` (Activity, above the money card) and
   `SchoolConfirmRow`, route `app/school-confirm.tsx` (`alasports://school-confirm?t=…`), tip sheet
   "held" notice, `lib/teams.ts` → `claim_athlete`, `adminCatalog.setVerificationStatus` →
-  `admin_decide_verification` (no more name stamping). `supabase/athlete_verification.sql` and
+  `admin_decide_verification` (no more name stamping). `supabase/legacy/athlete_verification.sql` and
   `spotlight_auto.sql` marked superseded — do not re-run them after the migration. Tests: 3 new
   suites (110 total pass), tsc clean, `docs:check` ok.
 - **2026-09-29** — Custodial money rules (owner decision; `PARENT_PAYEE_CONNECT_DESIGN.md` §7).
-  New `supabase/custodial_money.sql` (also appended to `schema.sql`): `custodial_accounts` (one per
+  New `supabase/legacy/custodial_money.sql` (also appended to `schema.sql`): `custodial_accounts` (one per
   athlete, so a guardian's account holds only that athlete's money; `bank_in_athlete_name`;
   `handover_age` 18–21), `athlete_birthdates` (guardian enters once at setup; admin corrects),
   `custodial_withdrawals`, and RPCs `guardian_setup_custodial`, `request_custodial_withdrawal`,
@@ -2037,7 +2045,7 @@ Keep ~15. Older entries live in `CHANGELOG.md`.
   Stripe custodial payout" button (a hardcoded $25 `requestPayout`) is gone. **Records only — no
   money moves;** payouts stay 503. Cards hide themselves until the SQL is applied. Tests:
   `custodial.test.ts`, `Custodial/__tests__/AthleteMoneyCard.test.tsx`. Copy needs LEGAL review.
-- **2026-09-29** — M1 leaderboards (Release Wave 0). `supabase/leaderboards.sql` (appended to
+- **2026-09-29** — M1 leaderboards (Release Wave 0). `supabase/legacy/leaderboards.sql` (appended to
   `schema.sql`): `reels.view_count`, `reel_views` daily throttle, `record_reel_view`,
   `get_leaderboards` (hype / views / Highlights / schools / fans — no money fields). Client:
   `lib/leaderboards.ts`, `useLeaderboards`, `useReelViewTracker` (Home, 2 s on screen, signed-in

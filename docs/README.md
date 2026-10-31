@@ -18,10 +18,12 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 
 | Document | What it answers |
 | --- | --- |
+| [REVIEWER_START_HERE.md](REVIEWER_START_HERE.md) | **Outside engineer:** repo map, read order, `pnpm check` gates vs reports, money/minors locations, staging, scope freeze, who decides. |
 | [../README.md](../README.md) | What this is, the repo map, how to run it, how we work. |
 | [ONBOARDING.md](ONBOARDING.md) | Full setup (env, auth providers, simulator), your first day, where things are. |
 | [GLOSSARY.md](GLOSSARY.md) | Code names vs. product words (`tips` = personal gifts, `reels` = Highlights, …). |
-| [STATE.md](STATE.md) | Where the project is **right now**: recent changes, known breakage, open decisions, next steps. The living log; update it with every code change. |
+| [STATE.md](STATE.md) | Where the project is **right now** (one-page §0). Known broken §5 · owner decisions §6. |
+| [STATE log archive](engineering/STATE_LOG_ARCHIVE.md) | Historical STATE §0 running log (not deleted). |
 
 ## engineering/ — how the system is built
 

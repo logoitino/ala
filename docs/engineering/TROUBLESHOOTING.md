@@ -108,7 +108,7 @@ Then confirm rows exist (`select id, name from public.players limit 5`).
 
 **Cause:** Missing `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` in `apps/mobile/.env.local`, `games` not seeded, or `is_active = false`.
 
-**Fix:** Restart Expo after `.env.local` edits. Seed from `schema.sql` or `supabase/games.sql`. Realtime: add `public.games` to `supabase_realtime`.
+**Fix:** Restart Expo after `.env.local` edits. Seed from `schema.sql` or `supabase/legacy/games.sql`. Realtime: add `public.games` to `supabase_realtime`.
 
 ---
 
@@ -165,7 +165,7 @@ the player patch repairs the object. Evidence: [PLAY-01](../agents/PLAY-01.md).
 
 **Cause:** Missing Storage bucket `reels` (or fallback `game_highlights`), or upload without a tagged player / caption. Tagging a game is optional (no longer required).
 
-**Fix:** Run the canonical `apps/mobile/src/backend/db/schema.sql` (2026-09 — it now creates the `reels` / `game_highlights` / `avatars` buckets and their policies itself; `supabase/reels.sql` / `supabase/media_upload.sql` are still safe to run afterward on an already-hosted project, just no longer required on a fresh one). Confirm buckets `reels` and `game_highlights` are public and policies allow SELECT + INSERT on `storage.objects`. Profile photos need bucket `avatars` and `profiles.avatar_url`.
+**Fix:** Run the canonical `apps/mobile/src/backend/db/schema.sql` (2026-09 — it now creates the `reels` / `game_highlights` / `avatars` buckets and their policies itself; `supabase/legacy/reels.sql` / `supabase/legacy/media_upload.sql` are still safe to run afterward on an already-hosted project, just no longer required on a fresh one). Confirm buckets `reels` and `game_highlights` are public and policies allow SELECT + INSERT on `storage.objects`. Profile photos need bucket `avatars` and `profiles.avatar_url`.
 
 ---
 
@@ -181,7 +181,7 @@ the player patch repairs the object. Evidence: [PLAY-01](../agents/PLAY-01.md).
 
 **Cause:** Missing `STRIPE_SECRET_KEY`; `profiles.stripe_onboarding_complete` column not applied; web popup blocked (`ERR_WEB_BROWSER_BLOCKED`); Express onboarding left unfinished (`details_submitted` is still false).
 
-**Fix:** Re-run `supabase/stripe_connect.sql`. Restart Metro after env changes. Use Expo Go so `openAuthSessionAsync` can return to `alasports://stripe-connect`. Complete the Stripe Express form; dismiss still re-fetches account status.
+**Fix:** Re-run `supabase/legacy/stripe_connect.sql`. Restart Metro after env changes. Use Expo Go so `openAuthSessionAsync` can return to `alasports://stripe-connect`. Complete the Stripe Express form; dismiss still re-fetches account status.
 
 ---
 
@@ -189,7 +189,7 @@ the player patch repairs the object. Evidence: [PLAY-01](../agents/PLAY-01.md).
 
 **Cause:** Guest session (no `user.id` → RPC skipped); `add_user_aura` not applied; covering the $0.50 fee does not add Aura.
 
-**Fix:** Run `supabase/add_user_aura.sql`. Sign in. Leaderboard reads `profiles.aura_points` — incremental SQL does not create `profiles` (use canonical `schema.sql`). Empty `profiles` falls back to dev personas in the UI.
+**Fix:** Run `supabase/legacy/add_user_aura.sql`. Sign in. Leaderboard reads `profiles.aura_points` — incremental SQL does not create `profiles` (use canonical `schema.sql`). Empty `profiles` falls back to dev personas in the UI.
 
 ---
 
@@ -205,7 +205,7 @@ the player patch repairs the object. Evidence: [PLAY-01](../agents/PLAY-01.md).
 
 **Cause:** Table is SELECT-only. Votes must go through `cast_cheer_vote`. Missing execute grant or Realtime publication.
 
-**Fix:** Run `supabase/cheer_polls.sql`. Add `cheer_polls` to `supabase_realtime`.
+**Fix:** Run `supabase/legacy/cheer_polls.sql`. Add `cheer_polls` to `supabase_realtime`.
 
 ---
 
