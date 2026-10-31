@@ -1,4 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-10-31 — Recovery capsule allows ARCHITECTURE_SYNC build-layers JSON
+
+- Allowlist `docs/engineering/build-layers.json` and `build-layers.baseline.json` in
+  `scripts/recovery-capsule.mjs` so Portable Exit packaging accepts the new map files.
+
 ## 2026-10-31 — Main stack land + CI gate regen; APP-TEST A–C next
 
 - Soft-Wall #12, ARCHITECTURE_SYNC #17, Jev #18, HS+college #19, reviewer #20 on `main`.

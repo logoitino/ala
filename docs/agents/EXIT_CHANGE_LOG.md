@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-10-31 · plan `1c13a518ce43` → `b70717f17acd` · announced by cloud-agent build-layers recovery allowlist
+
+App at announcement: commit `a50d172a7ff249d5e6d9c43aae265bcb9ad1730c` + 1 uncommitted file(s), source `b70717f17acda17c9900a87de0337bdb525d724891f3e9d4895afda87b7deaea`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `packages/shared-types/admin/supportTopology.json fa7240ab488f580b28d05eb19d6bd237e36ae6b714c6364302f3e9136d2c368c`, `scripts/recovery-capsule.mjs 97d2e5713297aba56b358223203c62d2160f8a0e7b2bdec78f9008c2ba84b9b7`; removed `packages/shared-types/admin/supportTopology.json a2c11b8c7d578d00b9fdd89fbdabe080cf9e1fe3a22ce68587335aa886ab3470`, `scripts/recovery-capsule.mjs 9cb50b727d92e528609c66069aeda305ce42cada0d2261e9e59aaeb6dc8b95d6`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-31 · plan `5d8c3d191c7c` → `1c13a518ce43` · announced by cloud-agent reviewer-readiness land
 
 App at announcement: commit `0e74a23fbd2c07edb5486c6d3afbf3161c2b4c06`, source `1c13a518ce43434d0cead4d2a8d915b79a816ce69a7bcc45aa1aa67b9ecbc94b`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
