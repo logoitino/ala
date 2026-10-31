@@ -159,15 +159,6 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
-### 2026-10-31 — HS + college framing (class years '29/'30)
-
-Owner scope: product is for high school **and** college athletes. Default catalog
-`ATHLETE_CLASS_YEARS` is `'26`–`'30` (RoleSwitcher falls back to the same array). Mission /
-Welcome / STORY / PUBLIC / store drafts name both levels; `pnpm docs:sync` refreshes
-PRODUCT_FACTS. **Jev miss:** cloud agent had no `jev/.env` / `~/bin/jev-ask` / TypeSafe SDK —
-recorded and continued with owner-approved scope (no invented score). Gift counsel / hosted
-gates unchanged.
-
 ### 2026-10-31 — Reviewer readiness (no behavior change)
 
 Outside-engineer front door: [REVIEWER_START_HERE.md](REVIEWER_START_HERE.md). STATE §0
@@ -195,6 +186,18 @@ Earlier 2026-10-22 push runs on `main` concluded **failure** (photo-stories stat
 Claude entry, gift language, IP packet) — not re-run here; this PR must pass its own CI.
 Scheduled Portable Exit Source Release on `main` is a separate pipeline (recent failures
 2026-10-27/28) and is not the merge quality gate.
+
+Local gates after rebase onto Soft-Wall + ARCHITECTURE_SYNC + Jev + HS/college: `agents:check` (116), `layers:check`, `exit:map:check` (plan `1c13a518ce43`), `security:infra:check`. Portable Exit artifact upload may still fail on free quota (not a code gate). Webhook tip crediting stays **off**.
+
+### 2026-10-31 — HS + college framing (class years '29/'30)
+
+Owner scope: product is for high school **and** college athletes. Default catalog
+`ATHLETE_CLASS_YEARS` is `'26`–`'30` (RoleSwitcher falls back to the same array). Mission /
+Welcome / STORY / PUBLIC / store drafts name both levels; `pnpm docs:sync` refreshes
+PRODUCT_FACTS. **Jev miss:** cloud agent had no `jev/.env` / `~/bin/jev-ask` / TypeSafe SDK —
+recorded and continued with owner-approved scope (no invented score). Gift counsel / hosted
+gates unchanged.
+
 ### 2026-10-31 — Jev required on complex decisions
 
 Owner standing protocol: agents include Jev (TypeSafe scorer, `jev/`) on non-trivial
