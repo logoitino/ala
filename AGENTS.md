@@ -186,6 +186,19 @@ eligibility/rights/safety and enforce published correction rules. Playbook §12 
 weekly entry/review/vote/recap journey. Keep private acknowledgment distinct from consented
 public candidates; current poll counters do not implement this voting capability.
 
+### Build layers: one agent keeps the stack map current (ARCHITECTURE_SYNC)
+
+`ARCHITECTURE_SYNC` (Engineering → `ENGINEERING`) owns the L0–L9 Tapua'i build-layers map:
+[BUILD_LAYERS.md](docs/engineering/BUILD_LAYERS.md) generated from
+[build-layers.json](docs/engineering/build-layers.json). When you prompt a stack/architecture
+change (`CALL: ARCHITECTURE_SYNC`), that **one agent** updates the map and breaks the work into
+routed tasks in [ARCHITECTURE_CHANGE_LOG.md](docs/agents/ARCHITECTURE_CHANGE_LOG.md) so every
+named role updates its teams, documents and owned code; `DOCUMENTATION` and `VP_OPERATIONS`
+reconcile shared docs and roster drift. `pnpm layers:check` (in `pnpm check` / CI) fails on a
+stale or unannounced map. Announce with `pnpm layers:sync --acknowledge --by "<session>"` or
+`--dispatch --change "<prompt>"`. This is change-driven currency like `EXIT_SYNC`, not a paid
+idle background worker. Role definitions do not prove continuous execution.
+
 ### Redundancy & Exit: keep the move-off-Supabase plan current (REDUNDANCY-02)
 
 `REDUNDANCY_LEAD` (Engineering → `ENGINEERING`) leads `EXIT_SYNC`, `EXIT_DATABASE`, `EXIT_SERVICES` and `EXIT_CLOUD`.

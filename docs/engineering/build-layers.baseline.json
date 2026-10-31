@@ -1,0 +1,46 @@
+{
+  "planVersion": "b69b3fb59565",
+  "contentHash": "b69b3fb5956540bf0d126693947af69d84b01f3c1f5942a038ef20d0924611ea",
+  "signals": {
+    "edgeFunctions": [
+      "create-payment-intent",
+      "create-stripe-account",
+      "stripe-webhook"
+    ],
+    "apiRoutes": [
+      "create-payment-intent",
+      "create-payout",
+      "create-stripe-account",
+      "fan-zone-media",
+      "fan-zone-remove",
+      "fan-zone-upload"
+    ],
+    "buckets": [
+      "avatars",
+      "beyond_game",
+      "fan_zone",
+      "game_highlights",
+      "reel_vault",
+      "reels"
+    ],
+    "realtimeTables": [
+      "app_runtime_config",
+      "cheer_polls",
+      "game_events",
+      "games"
+    ],
+    "latestMigration": "20261022152000_no_cut_gifts_optional_tips.sql",
+    "migrationsCount": 57,
+    "easProfiles": [
+      "development",
+      "preview",
+      "production"
+    ],
+    "workflows": [
+      "ci-checks.yml",
+      "exit-release.yml"
+    ],
+    "agentCount": 116
+  },
+  "at": "2026-10-27T22:08:57.893Z"
+}

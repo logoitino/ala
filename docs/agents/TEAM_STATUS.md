@@ -3,11 +3,13 @@
 
 ## Current gift-release handoff — COORD-02 (2026-10-22)
 
-[COORD-02](COORD-02.md) is the current whole-team reading path. All **115 callable role
-definitions across 17 department labels** and their descriptive registry handoffs carry
-role-specific duties. Actual work is performed by the named outside-session Codex executors;
-definitions do not establish 115 specialist runs, message delivery, staffing or approvals.
-Existing role names, paths, reporting leads, owned surfaces and pinned models remain.
+[COORD-02](COORD-02.md) is the current whole-team reading path. The registry now has **116
+callable role definitions across 17 department labels** (added `ARCHITECTURE_SYNC` 2026-10-27
+for L0–L9 build-layers currency). Descriptive registry handoffs carry role-specific duties.
+Actual work is performed by named outside-session executors; definitions do not establish
+116 specialist runs, message delivery, staffing or approvals. Existing role names, paths,
+reporting leads, owned surfaces and pinned models remain except where this status records a
+new call.
 
 The owner's money map is **Gift / Give / Send a gift** for individuals, **Donation / Donate to
 the program** for programs, **Tip Tapua'i (optional)** for platform support and **Cover the
@@ -51,6 +53,7 @@ and owned paths remain; this is not actual delivery or acceptance by those speci
 | [`ADMIN`](../../.claude/agents/admin.md) | Engineering | `ENGINEERING` | Preserve Expo writes and Next read-only oversight; verify the literal-true tip switch, default off, availability and repair controls before publishing any configuration. |
 | [`ANALYST`](../../.claude/agents/analyst.md) | Engineering | `ADMIN` | Separate gifts, program donations, platform tips and digital purchases in report meaning; retain raw identifiers and distinguish gross test records from settled income. |
 | [`API`](../../.claude/agents/api.md) | Engineering | `ENGINEERING` | Preserve the shared Node/Edge money core and protected session boundary; no-cut source or a returned client secret proves neither provider settlement nor authorization to pay out. |
+| [`ARCHITECTURE_SYNC`](../../.claude/agents/architecture-sync.md) | Engineering | `ENGINEERING` | Keep build-layer map and routed architecture notices current when gift/money paths move layers; do not invent hosted settlement or specialist delivery from a notice. |
 | [`ATHLETE_STATS`](../../.claude/agents/athlete-stats.md) | Engineering | `PROFILE` | Keep gifts independent of sport statistics, ranking and recruiting outcomes; preserve athlete privacy and current sport identity. |
 | [`ATHLETE_VERIFICATION`](../../.claude/agents/athlete-verification.md) | Trust and Safety | `TRUST_SAFETY` | Keep school, Stripe identity/TIN and payee relationship evidence distinct; no-cut gifts do not remove verification or held-payment gates. |
 | [`AURA`](../../.claude/agents/aura.md) | Engineering | `ENGINEERING` | Preserve 10 Aura per dollar as noncash reputation; flag gift-linked digital-border eligibility for counsel/store review before release, with no digital access promised for giving. |
@@ -210,6 +213,7 @@ The following table lists each current registered call exactly once. Lane letter
 | [`ADMIN`](../../.claude/agents/admin.md) | Engineering | `ENGINEERING` | B/C/D | Prepare existing People/verification and media-review desks for synthetic cases; keep Expo as the write control plane and Next read-only. |
 | [`ANALYST`](../../.claude/agents/analyst.md) | Engineering | `ADMIN` | E | Check metric window, population and denominator provenance in existing read-only reports; per-user funnels remain unavailable before the approved ID work. |
 | [`API`](../../.claude/agents/api.md) | Engineering | `ENGINEERING` | B/D | Review JWT, exact guardian player target, status transport and error contracts before the approved development Edge rehearsal. |
+| [`ARCHITECTURE_SYNC`](../../.claude/agents/architecture-sync.md) | Engineering | `ENGINEERING` | Standby | Keep L0–L9 build-layers currency on standby; when an app-testing change moves a layer, route through ENGINEERING for map update and per-role notices. |
 | [`ATHLETE_STATS`](../../.claude/agents/athlete-stats.md) | Engineering | `PROFILE` | F | Check own/public bio and sport stats visibility on the athlete-story journey; unknown or empty stats must not become verification claims. |
 | [`AURA`](../../.claude/agents/aura.md) | Engineering | `ENGINEERING` | F | Check existing tier and reward display alongside athlete stories; posting, Stripe setup and private acknowledgments must not imply cash eligibility. |
 | [`AUTH`](../../.claude/agents/auth.md) | Engineering | `ENGINEERING` | A | Own fresh/returning Google account and cancel/error callback evidence after operator configuration; preserve resumed actions and account separation. |

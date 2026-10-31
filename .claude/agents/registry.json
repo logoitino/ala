@@ -860,7 +860,29 @@
         "Review every infrastructure diff (pnpm infra:register:check) and notify affected teams even when they did not ask",
         "PORT-01's shared money core, media references and local type/token follow-through are source-complete; maintain the actual register, unapplied beyond_game bucket and provider exits without implying hosting activation or prices.",
         "Reconcile the infrastructure inventory with complete security control/report coverage and request INFRA_SECURITY, SUPPLY_CHAIN_SECURITY and RECOVERY_SECURITY review through SECURITY without changing Engineering reporting.",
-        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep current money core, Stripe/Storage/Auth dependencies and exit evidence mapped; zero-cut source changes no hosting decision or verified provider capacity. This is a duty update, not execution, delivery or approval."
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep current money core, Stripe/Storage/Auth dependencies and exit evidence mapped; zero-cut source changes no hosting decision or verified provider capacity. This is a duty update, not execution, delivery or approval.",
+        "When hosting/service inventory moves a build layer, pair with ARCHITECTURE_SYNC so BUILD_LAYERS and routed layer tasks stay current."
+      ],
+      "model": "grok-4.7-medium"
+    },
+    {
+      "call": "ARCHITECTURE_SYNC",
+      "file": ".claude/agents/architecture-sync.md",
+      "department": "Engineering",
+      "lead": "ENGINEERING",
+      "owns": [
+        "docs/engineering/build-layers.json",
+        "docs/engineering/BUILD_LAYERS.md",
+        "docs/engineering/build-layers.baseline.json",
+        "scripts/build-layers.mjs",
+        "docs/agents/ARCHITECTURE_CHANGE_LOG.md"
+      ],
+      "tasks": [
+        "Own the L0–L9 Tapua'i build-layers map (build-layers.json → BUILD_LAYERS.md) and keep it current with every stack/architecture change",
+        "When the owner prompts a change, break it into routed tasks for every responsible role via pnpm layers:sync --dispatch / --acknowledge and ARCHITECTURE_CHANGE_LOG",
+        "Require named roles to update their teams, documents and owned code in the same turn; pair DOCUMENTATION and VP_OPERATIONS for shared docs and roster reconciliation",
+        "Enforce currency with pnpm layers:check in pnpm check/CI; an announcement is a notice, not specialist execution or release approval",
+        "Gift-release handoff (2026-10-22, docs/agents/COORD-02.md): Keep build-layer map and routed architecture notices current when gift/money paths move layers; do not invent hosted settlement or specialist delivery from a notice. This is a duty update, not execution, delivery or approval."
       ],
       "model": "grok-4.7-medium"
     },
