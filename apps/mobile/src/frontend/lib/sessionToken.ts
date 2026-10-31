@@ -1,3 +1,8 @@
+/**
+ * Session JWT and live user-id helpers for JWT-gated routes and Soft-Wall resume closures.
+ * Hooks must call these instead of `supabase.auth.getSession` so vendor boundary stays in `lib/`.
+ */
+
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 /**
@@ -16,4 +21,18 @@ export async function requireAccessToken(signInMessage: string): Promise<string>
     throw new Error(signInMessage);
   }
   return token;
+}
+
+/**
+ * @purpose Live Auth user id at call time (Soft-Wall resume may invoke a pre-login checkout / grant closure).
+ * @param fallback React-auth id when `getSession` has not hydrated yet.
+ * @returns Session user id when present, otherwise `fallback`.
+ * @sideEffects `supabase.auth.getSession` when Supabase is configured.
+ */
+export async function resolveSessionUserId(fallback: string | null): Promise<string | null> {
+  if (isSupabaseConfigured) {
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user.id) return data.session.user.id;
+  }
+  return fallback;
 }

@@ -113,7 +113,7 @@ export type TapuaiRpcMap = {
 };
 
 /** Soft-Wall auth gate kinds (browse-first guests; signed-in fans skip the wall). */
-export type SoftWallKind = 'malo' | 'crew' | 'wishlist';
+export type SoftWallKind = 'malo' | 'crew' | 'wishlist' | 'exclusive';
 
 export type SoftWallGate = {
   id: SoftWallKind;
@@ -131,7 +131,7 @@ export type SoftWallGate = {
 
 /**
  * @purpose Shared Soft-Wall oversight map for Expo Coverage + Next admin portal.
- * Guests browse Highlights / cards / wishlist view; these three actions require auth then resume.
+ * Guests browse Highlights / cards / wishlist view; these actions require auth then resume.
  */
 export const SOFT_WALL_GATES: SoftWallGate[] = [
   {
@@ -160,6 +160,15 @@ export const SOFT_WALL_GATES: SoftWallGate[] = [
     adminDesk: '/admin/wishlist',
     flagPath: 'layouts.wishlist',
     telemetry: 'soft_wall.wishlist',
+  },
+  {
+    id: 'exclusive',
+    label: 'Vault Soft Wall',
+    hint: 'Vault unlock / Subscribe — Apple, Google, or Magic Link, then PaymentSheet resumes',
+    fanSurface: 'Highlights Vault · Profile Subscribe · athlete sheet',
+    adminDesk: '/admin/features',
+    flagPath: 'buttons.subscribe',
+    telemetry: 'soft_wall.exclusive',
   },
 ];
 

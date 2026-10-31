@@ -10,7 +10,7 @@
     "@react-native-community/netinfo": "12.0.1",
     "@react-native-picker/picker": "2.11.4",
     "@shopify/react-native-skia": "2.14.0",
-    "@stripe/stripe-react-native": "0.81.0",
+    "@stripe/stripe-react-native": "0.83.0",
     "@supabase/supabase-js": "^2.116.0",
     "@tapuai/shared-types": "workspace:*",
     "babel-preset-expo": "~58.0.17",
@@ -18,6 +18,7 @@
     "expo-apple-authentication": "^58.0.2",
     "expo-auth-session": "^58.0.13",
     "expo-blur": "~58.0.4",
+    "expo-build-properties": "~58.0.11",
     "expo-checkbox": "~58.0.2",
     "expo-clipboard": "~58.0.3",
     "expo-constants": "~58.0.12",
@@ -42,6 +43,7 @@
     "react-native-compressor": "^2.0.3",
     "react-native-confetti-cannon": "^1.5.2",
     "react-native-gesture-handler": "~3.3.0",
+    "react-native-nitro-modules": "0.37.1",
     "react-native-qrcode-svg": "^6.3.24",
     "react-native-reanimated": "4.7.1",
     "react-native-safe-area-context": "~5.10.1",
@@ -83,5 +85,12 @@
       "/node_modules/",
       "/.expo/"
     ]
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "@stripe/stripe-react-native"
+      ]
+    }
   }
 }

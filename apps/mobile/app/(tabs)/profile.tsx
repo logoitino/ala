@@ -14,7 +14,7 @@ import { FilmerCard } from '@/components/Filmers/FilmerCard';
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
 import { EditProfileModal } from '@/components/Profile/EditProfileModal';
 import { PayoutSetupCard } from '@/components/Profile/PayoutSetupCard';
-import { ProfileMenuSheet } from '@/components/Profile/ProfileMenuSheet';
+import { ProfileMenuSheet, type ProfileMenuItem } from '@/components/Profile/ProfileMenuSheet';
 import { RoleSwitcherModal } from '@/components/Profile/RoleSwitcherModal';
 import { CLAIM_VERIFY_CTA, VerifyAthleteModal } from '@/components/Profile/VerifyAthleteModal';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -198,7 +198,7 @@ export default function MyHubTab() {
 
   const subscribe = () => {
     requireAuth({
-      kind: 'signin',
+      kind: 'exclusive',
       athleteName: athlete.name,
       athleteId: athlete.id,
       resume: () => {
@@ -247,16 +247,11 @@ export default function MyHubTab() {
   };
 
   const menuItems = useMemo(() => {
-    const items: {
-      id: string;
-      label: string;
-      hint?: string;
-      danger?: boolean;
-      onPress: () => void;
-    }[] = [];
+    const items: ProfileMenuItem[] = [];
     if (isGuest) {
       items.push({
         id: 'signin',
+        section: 'account',
         label: 'Sign in',
         hint: 'Email + password · Demo Fan · Apple · Google',
         onPress: () =>
@@ -268,6 +263,7 @@ export default function MyHubTab() {
     } else {
       items.push({
         id: 'signout',
+        section: 'account',
         label: 'Sign out',
         hint: profile?.full_name?.trim() || profile?.username || 'Return to guest browse',
         danger: true,
@@ -277,11 +273,18 @@ export default function MyHubTab() {
       });
     }
     if (live.tabs.drip) {
-      items.push({ id: 'drip', label: 'Drip', hint: 'Browse team gear', onPress: () => router.push('/drip' as Href) });
+      items.push({
+        id: 'drip',
+        section: 'activity',
+        label: 'Drip',
+        hint: 'Browse team gear',
+        onPress: () => router.push('/drip' as Href),
+      });
     }
     if (isAdmin) {
       items.push({
         id: 'admin',
+        section: 'money',
         label: 'Admin portal',
         hint: 'Publish, moderate, and preview production',
         onPress: () => router.push('/admin' as Href),
@@ -290,30 +293,35 @@ export default function MyHubTab() {
     if (!isGuest) {
       items.push({
         id: 'sport-quiz',
+        section: 'activity',
         label: 'Sport Quiz & private history',
         hint: 'Optional weekly learning · your private badges and corrections',
         onPress: () => router.push('/sport-quiz' as Href),
       });
       items.push({
         id: 'fan-zone',
+        section: 'activity',
         label: 'Fan Zone',
         hint: 'Optional fan activities · campaign access and private review checked on the page',
         onPress: () => router.push('/fan-zone' as Href),
       });
       items.push({
         id: 'edit-profile',
+        section: 'account',
         label: 'Edit Profile',
         hint: 'Bio, social links, and what other users can see',
         onPress: () => setEditProfileOpen(true),
       });
       items.push({
         id: 'challenges',
+        section: 'activity',
         label: 'Workout challenges',
         hint: 'Mute invites, private badges, and your data',
         onPress: () => setChallengesOpen(true),
       });
       items.push({
         id: 'notifications',
+        section: 'account',
         label: 'Notifications',
         hint: 'Email choices and your Activity inbox',
         onPress: () => {
@@ -324,12 +332,14 @@ export default function MyHubTab() {
     }
     items.push({
       id: 'capability',
+      section: 'account',
       label: 'Account Capability',
       hint: formatCapabilityLine(roles),
       onPress: () => setRoleSheetOpen(true),
     });
     items.push({
       id: 'legal',
+      section: 'support',
       label: LEGAL_MENU_LABEL,
       hint: 'ToS, high-school NIL, minor safety',
       onPress: () => {
@@ -340,6 +350,7 @@ export default function MyHubTab() {
     if (!isGuest) {
       items.push({
         id: 'verify',
+        section: 'support',
         label: CLAIM_VERIFY_CTA,
         hint:
           resolveVerificationStatus(profile) === 'verified'
@@ -356,6 +367,7 @@ export default function MyHubTab() {
     if (live.buttons.suggest) {
       items.push({
         id: 'suggest',
+        section: 'support',
         label: 'Send a suggestion',
         hint: 'Improve Tapua\'i — goes to admin Feedback',
         onPress: () => {
@@ -367,6 +379,7 @@ export default function MyHubTab() {
     if (live.layouts.receipts) {
       items.push({
         id: 'receipts',
+        section: 'money',
         label: 'Gift History & Receipts',
         hint: live.copy.receiptsKicker,
         onPress: openReceipts,

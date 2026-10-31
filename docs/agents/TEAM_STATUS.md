@@ -31,7 +31,12 @@ digital-border eligibility and processor/store claims. Owner classification rema
 the mixed “Refund donation” label and booster placement (currently a Purchase, not proof of
 charity). Finance, Data/Privacy, Security, Minor Safety and independent QA retain their gates.
 
-**Updated:** 2026-10-22. **Current assignment:** COORD-02 gift-release team reconciliation.
+**Updated:** 2026-10-24. **Current assignment:** COORD-02 gift-release team reconciliation
+(unchanged). **Parallel checkpoint:** Soft-Wall resume polish + EAS on
+`cursor/soft-wall-resume-polish-9a86` — hierarchy/docs/exit/IP/infra gates synced; iOS preview
+`09de0497` FINISHED (Profile/age UX tip `43d3146`); Android Free quota exhausted until
+2026-11-01. Does not close gift counsel, hosted tip rollout, or device Soft-Wall smoke.
+See [COORD-02](COORD-02.md) §6.
 
 ### Current gift duty for every existing role
 

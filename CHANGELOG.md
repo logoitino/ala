@@ -1,4 +1,24 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-10-24 — Soft-Wall EAS preview + Profile/age UX checkpoint
+
+- EAS Soft-Wall preview path: Stripe RN 0.83 (no tapandpay), arm-only Android ABIs, Gradle
+  `workers.max=2`, iOS `$StripeDisableSPM` plugin; prior finished builds Android `42e81674` /
+  iOS `d4a153a0`.
+- Birth-year field keeps partial digits while typing; Profile hamburger sits on the hero
+  identity row; settings sheet scrolls with Account / Play & shop / Money & staff /
+  Support & legal groups.
+- Hierarchy sync for the tip: 115 agents, docs/links, feature-admin, IP, exit plan
+  `4fc54275bb8d`, infra and Security source report gates. COORD-02 gift release remains open.
+- Resubmit from `43d3146`: iOS preview `09de0497` **FINISHED**
+  (IPA https://expo.dev/artifacts/eas/CIVa_sDSWSyxS2kDSntQY-j_el6g9n781S9cSOjSRGc.ipa);
+  Android blocked by Expo Free monthly Android quota until 2026-11-01 (no paid plan without owner).
+
+## 2026-10-23 — Soft-Wall Vault unlock and resume session
+
+- Guest Vault unlock on Highlights opens Soft-Wall (`soft_wall.exclusive`) then resumes PaymentSheet.
+- Checkout and exclusive `grant` read the live Auth session so Soft-Wall resume still writes
+  `tips.fan_id`, payer Aura and the `subscriptions` row. Coverage lists the Vault Soft Wall.
+
 ## 2026-10-22 — Gift-language copy phase
 
 Individual athlete/family support uses Gift/Give; program donations and optional platform tips

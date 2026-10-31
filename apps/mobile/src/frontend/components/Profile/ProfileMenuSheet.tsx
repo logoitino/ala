@@ -1,11 +1,13 @@
 /**
  * Account settings sheet opened from the Profile hamburger (sign in / out, role, receipts, legal). Nested sheets
  * open only after this one has fully dismissed, to avoid overlapping native modals (see STATE.md, 2026-09-29).
+ * Rows are grouped into short categories and the list scrolls inside the sheet so long menus stay reachable.
  */
 
-import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { Modal, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -17,11 +19,15 @@ import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 
+export type ProfileMenuSectionId = 'account' | 'activity' | 'money' | 'support';
+
 export type ProfileMenuItem = {
   id: string;
   label: string;
   hint?: string;
   danger?: boolean;
+  /** Which heading this row sits under. Defaults to Account when omitted. */
+  section?: ProfileMenuSectionId;
   onPress: () => void;
 };
 
@@ -32,9 +38,16 @@ type ProfileMenuSheetProps = {
   footer?: ReactNode;
 };
 
+const SECTION_META: { id: ProfileMenuSectionId; title: string }[] = [
+  { id: 'account', title: 'Account' },
+  { id: 'activity', title: 'Play & shop' },
+  { id: 'money', title: 'Money & staff' },
+  { id: 'support', title: 'Support & legal' },
+];
+
 /**
- * @purpose Hamburger Account Settings sheet — keeps Profile scroll clean (Sign in/out, Capability, Receipts…).
- * @param items Menu rows. Nested modals (Sign in, Role, Legal) open only after this sheet's native Modal has dismissed.
+ * @purpose Hamburger Account Settings sheet — categorized, scrollable rows so Profile stays clean.
+ * @param items Menu rows with optional `section`. Nested modals open only after this sheet's native Modal has dismissed.
  * @returns Blur bottom sheet matching RoleSwitcher / SoftWall chrome.
  */
 const SHEET_TRAVEL = 420;
@@ -43,12 +56,24 @@ const DISMISS_FALLBACK_MS = Platform.OS === 'ios' ? 650 : 280;
 
 export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMenuSheetProps) {
   const frame = useSheetFrame();
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const [mounted, setMounted] = useState(false);
   const translateY = useSharedValue(SHEET_TRAVEL);
   const backdropOpacity = useSharedValue(0);
   const afterRef = useRef<(() => void) | undefined>(undefined);
   const closingToken = useRef<number | null>(null);
   const gen = useRef(0);
+
+  const sections = useMemo(() => {
+    return SECTION_META.map((meta) => ({
+      ...meta,
+      items: items.filter((item) => (item.section ?? 'account') === meta.id),
+    })).filter((section) => section.items.length > 0);
+  }, [items]);
+
+  // Reserve chrome (handle, titles, close, safe area) so the row list is what scrolls.
+  const listMaxHeight = Math.max(180, Math.min(windowHeight * 0.52, windowHeight - insets.top - insets.bottom - 210));
 
   useEffect(() => {
     if (!visible) return;
@@ -101,39 +126,51 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
           </Animated.View>
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-        <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
-          <MenuBackdrop accent="violet" />
-          <SheetHandle onDismiss={() => dismiss()} />
-          <Text style={styles.kicker}>Account</Text>
-          <Text style={styles.title}>Settings</Text>
-          <View style={styles.list}>
-            {items.map((item) => (
-              <AnimatedButton
-                key={item.id}
-                accessibilityLabel={item.label}
-                haptic="selection"
-                onPress={() => {
-                  // iOS only presents one Modal. Opening SoftWall (or Role / Legal) in the same
-                  // turn this sheet unmounts drops the second presentation: React still has
-                  // `visible` true, but the native sheet never stays on screen. `after` runs from
-                  // `onDismiss` (or the platform fallback) once this Modal is actually gone.
-                  dismiss(() => item.onPress());
-                }}
-                contentStyle={styles.row}
-              >
-                <View style={styles.copy}>
-                  <Text style={[styles.label, item.danger && styles.danger]}>{item.label}</Text>
-                  {item.hint ? <Text style={styles.hint}>{item.hint}</Text> : null}
+          <Animated.View style={[styles.sheet, frame.card, { maxHeight: windowHeight - insets.top - 16 }, sheetStyle]}>
+            <MenuBackdrop accent="violet" />
+            <SheetHandle onDismiss={() => dismiss()} />
+            <Text style={styles.kicker}>Account</Text>
+            <Text style={styles.title}>Settings</Text>
+            <ScrollView
+              style={{ maxHeight: listMaxHeight }}
+              contentContainerStyle={styles.list}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
+              bounces
+            >
+              {sections.map((section) => (
+                <View key={section.id} style={styles.section}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                  {section.items.map((item) => (
+                    <AnimatedButton
+                      key={item.id}
+                      accessibilityLabel={item.label}
+                      haptic="selection"
+                      onPress={() => {
+                        // iOS only presents one Modal. Opening SoftWall (or Role / Legal) in the same
+                        // turn this sheet unmounts drops the second presentation: React still has
+                        // `visible` true, but the native sheet never stays on screen. `after` runs from
+                        // `onDismiss` (or the platform fallback) once this Modal is actually gone.
+                        dismiss(() => item.onPress());
+                      }}
+                      contentStyle={styles.row}
+                    >
+                      <View style={styles.copy}>
+                        <Text style={[styles.label, item.danger && styles.danger]}>{item.label}</Text>
+                        {item.hint ? <Text style={styles.hint}>{item.hint}</Text> : null}
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                    </AnimatedButton>
+                  ))}
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </AnimatedButton>
-            ))}
-          </View>
-          {footer}
-          <Pressable accessibilityRole="button" onPress={() => dismiss()} style={styles.close}>
-            <Text style={styles.closeLabel}>Close</Text>
-          </Pressable>
-        </Animated.View>
+              ))}
+              {footer}
+            </ScrollView>
+            <Pressable accessibilityRole="button" onPress={() => dismiss()} style={styles.close}>
+              <Text style={styles.closeLabel}>Close</Text>
+            </Pressable>
+          </Animated.View>
         </View>
       </View>
     </Modal>
@@ -167,7 +204,19 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   list: {
+    gap: 14,
+    paddingBottom: 4,
+  },
+  section: {
     gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: FOCAL.violetInk,
+    marginTop: 2,
   },
   row: {
     minHeight: 54,

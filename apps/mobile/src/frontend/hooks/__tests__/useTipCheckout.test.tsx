@@ -16,10 +16,14 @@ let mockTipsEnabled: unknown = false;
 let mockFeeDollars = 1;
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'fan' }, refreshProfile: jest.fn() }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: { buttons: { MONETIZATION_TIPS_ENABLED: mockTipsEnabled }, catalog: { maloFeeDollars: mockFeeDollars, exclusiveAura: 100 } } }) }));
-jest.mock('@/context/CelebrationContext', () => ({ useOptionalCelebration: () => null }));
+const mockCelebrateAura = jest.fn();
+jest.mock('@/context/CelebrationContext', () => ({
+  useOptionalCelebration: () => ({ celebrateAura: mockCelebrateAura, celebrate: jest.fn() }),
+}));
 jest.mock('@/lib/stripe', () => ({ useStripe: () => ({ initPaymentSheet: async () => ({}), presentPaymentSheet: mockPresent }) }));
 jest.mock('@/lib/payments', () => ({ createPaymentIntent: (...args: unknown[]) => mockIntent(...args), incrementBackerCount: (...args: unknown[]) => mockIncrement(...args) }));
 jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: { from: () => ({ insert: mockInsert }) } }));
+jest.mock('@/lib/sessionToken', () => ({ resolveSessionUserId: async (fallback: string | null) => fallback ?? 'fan' }));
 jest.mock('@/lib/aura', () => ({ addUserAura: async () => ({ aura_points: 0 }), emitPlayerAura: jest.fn(), emitProfileAura: jest.fn() }));
 jest.mock('@/lib/walletPay', () => ({ walletPayOptions: () => ({}) }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackCheckoutLatency: jest.fn(), trackIssue: jest.fn() } }));
@@ -93,6 +97,16 @@ describe('checkout payment settlement', () => {
     expect(mockIntent).toHaveBeenCalledWith(500, player.id, 0, undefined);
     expect(mockInsert).not.toHaveBeenCalled();
     expect(onPaid).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips the exclusive unlock toast when onPaid reports the pass was refused', async () => {
+    const onPaid = jest.fn(async () => false);
+    const { result } = await renderHook(() => useTipCheckout());
+    await act(async () =>
+      result.current.startCheckout({ player, tipAmount: 5, skipBacker: true, onPaid }),
+    );
+    expect(onPaid).toHaveBeenCalledTimes(1);
+    expect(mockCelebrateAura).not.toHaveBeenCalled();
   });
   it('does not discard the real payment reference when a base gift needs ledger repair', async () => {
     mockIntent.mockResolvedValue('pi_3QabcDEF12345678_secret_x');

@@ -1,7 +1,7 @@
 /**
  * Public athlete detail for guests (no sign-in): loads one player by id and shows the donor badge, hype counts
- * and basic details through `lib/roster`. Shows a readable error when Supabase is not configured.
- * @sideEffects Player lookup through roster and hype hydration through lib/hype.
+ * and basic details through `lib/roster`. Give opens Soft-Wall then TipCheckout (same gate as `/user/[id]`).
+ * @sideEffects Player lookup through roster and hype hydration through lib/hype; Soft-Wall for Give.
  */
 
 import { useLocalSearchParams } from 'expo-router';
@@ -19,7 +19,9 @@ import { FanBackerBadge } from '@/components/Profile/FanBackerBadge';
 import { HypeBoard } from '@/components/Profile/HypeBoard';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TipCheckout } from '@/components/TipCheckout';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { cardShadow, colors, radii } from '@/constants/theme';
+import { maloAthleteCta } from '@/data/malo';
 import { displayValue, type PlayReactionId, type Player } from '@/data/players';
 import { bumpPlayerHype, hydratePlayerHype, hypeFromPlayer } from '@/lib/hype';
 import { fetchGuestPlayer } from '@/lib/roster';
@@ -27,10 +29,12 @@ import { fetchGuestPlayer } from '@/lib/roster';
 export default function PlayerProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const playerId = Array.isArray(id) ? id[0] : id;
+  const { requireAuth } = useSoftWall();
 
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [giveOpen, setGiveOpen] = useState(false);
 
   const fetchPlayer = useCallback(async () => {
     if (!playerId) {
@@ -122,14 +126,32 @@ export default function PlayerProfileScreen() {
           <DetailRow label="School" value={displayValue(player.school_name)} isLast />
         </View>
 
-        <TipCheckout
-          player={player}
-          origin="profile"
-          entry="in_app"
-          onBacked={(nextCount) =>
-            setPlayer((current) => (current ? { ...current, backer_count: nextCount } : current))
-          }
-        />
+        {!giveOpen ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={maloAthleteCta(player.name)}
+            onPress={() =>
+              requireAuth({
+                kind: 'malo',
+                athleteName: player.name,
+                athleteId: player.id,
+                resume: () => setGiveOpen(true),
+              })
+            }
+            style={({ pressed }) => [styles.giveButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.giveLabel}>{maloAthleteCta(player.name)}</Text>
+          </Pressable>
+        ) : (
+          <TipCheckout
+            player={player}
+            origin="profile"
+            entry="in_app"
+            onBacked={(nextCount) =>
+              setPlayer((current) => (current ? { ...current, backer_count: nextCount } : current))
+            }
+          />
+        )}
 
         <Text style={styles.disclaimer}>
           Independent Fan Support • Unaffiliated with UHSAA or official school athletic departments.
@@ -191,6 +213,18 @@ const styles = StyleSheet.create({
   retryLabel: {
     color: colors.onAccent,
     fontWeight: '700',
+  },
+  giveButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: radii.md,
+    backgroundColor: colors.deepGreen,
+    alignItems: 'center',
+  },
+  giveLabel: {
+    color: colors.onAccent,
+    fontWeight: '800',
+    fontSize: 16,
   },
   pressed: {
     opacity: 0.85,

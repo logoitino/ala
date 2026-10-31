@@ -20,6 +20,7 @@ import { addUserAura, emitPlayerAura, emitProfileAura } from '@/lib/aura';
 import { paymentIntentIdFromSecret, resolveTipOrigin, type TipEntry, type TipOrigin } from '@/lib/finance';
 import { createPaymentIntent, incrementBackerCount } from '@/lib/payments';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { resolveSessionUserId } from '@/lib/sessionToken';
 import { NATIVE_STRIPE_UNAVAILABLE_MESSAGE, useStripe } from '@/lib/stripe';
 import { supportSignals } from '@/services/SupportSignalManager';
 import { telemetry } from '@/services/TelemetryManager';
@@ -56,8 +57,12 @@ type StartCheckoutArgs = {
   successToast?: string;
   onBacked?: (nextCount: number) => void;
   onTipped?: (amountCents: number) => void;
-  /** Fires immediately after PaymentSheet succeeds so exclusive tiles can unlock before RPCs. */
-  onPaid?: () => void | Promise<void>;
+  /**
+   * Fires immediately after PaymentSheet succeeds so exclusive tiles can unlock before RPCs.
+   * Return `false` when a follow-up write failed (e.g. exclusive pass insert) so Soft-Wall Vault
+   * does not celebrate an unlock the fan did not receive.
+   */
+  onPaid?: () => void | boolean | Promise<void | boolean>;
 };
 
 /**
@@ -88,7 +93,7 @@ function applyAuraAward(
 /**
  * @purpose Native Stripe PaymentSheet for gifts, exclusive purchase, Drip, or booster sponsorships. Gifts retain Aura for the giver and the athlete.
  * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may give to a tagged athlete.
- * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a gift (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`, `cover_fee_cents`, `stripe_payment_intent_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`.
+ * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a gift (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`, `cover_fee_cents`, `stripe_payment_intent_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`. Fan id is resolved from the live session so Soft-Wall resume still writes `tips.fan_id` and payer Aura.
  */
 export function useTipCheckout() {
   const { user, refreshProfile } = useAuth();
@@ -102,6 +107,11 @@ export function useTipCheckout() {
   enabledRef.current = live.buttons?.MONETIZATION_TIPS_ENABLED === true;
   const feeAmount = live.catalog.maloFeeDollars;
   const exclusiveAuraToast = exclusiveUnlockToast(live.catalog.exclusiveAura);
+  // Soft-Wall stashes `resume` before sign-in; read the live id, not a closed-over null.
+  const userIdRef = useRef<string | null>(user?.id ?? null);
+  userIdRef.current = user?.id ?? null;
+  const refreshProfileRef = useRef(refreshProfile);
+  refreshProfileRef.current = refreshProfile;
 
   const startCheckout = useCallback(
     async ({
@@ -200,9 +210,10 @@ export function useTipCheckout() {
         }
 
         paymentSucceeded = true;
-        await onPaid?.();
+        const paidFollowUp = await onPaid?.();
+        const followUpOk = paidFollowUp !== false;
 
-        const tipperId = user?.id ?? null;
+        const tipperId = await resolveSessionUserId(userIdRef.current);
         const recipientId = !skipBacker && player?.id ? player.id : null;
 
         // A compliance freeze (or any other insert-denied response) on the `tips` ledger row means
@@ -269,7 +280,7 @@ export function useTipCheckout() {
             const athleteAward = await addUserAura(recipientId, pointsToAdd);
             applyAuraAward(recipientId, athleteAward);
           }
-          await refreshProfile();
+          await refreshProfileRef.current();
         }
 
         try {
@@ -281,7 +292,8 @@ export function useTipCheckout() {
         if (successToast) {
           celebration?.celebrateAura(pointsToAdd, successToast);
         } else if (skipBacker) {
-          celebration?.celebrateAura(pointsToAdd, exclusiveAuraToast);
+          // Exclusive Vault: only toast unlock when `onPaid`/`grant` recorded the pass.
+          if (followUpOk) celebration?.celebrateAura(pointsToAdd, exclusiveAuraToast);
         } else {
           celebration?.celebrate({ playerName, backerCount: nextCount, auraPointsEarned: pointsToAdd });
         }
@@ -298,7 +310,7 @@ export function useTipCheckout() {
         setBusy(false);
       }
     },
-    [busy, celebration, exclusiveAuraToast, feeAmount, initPaymentSheet, presentPaymentSheet, refreshProfile, user?.id],
+    [busy, celebration, exclusiveAuraToast, feeAmount, initPaymentSheet, presentPaymentSheet],
   );
 
   return { startCheckout, busy };

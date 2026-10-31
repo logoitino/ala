@@ -28,8 +28,10 @@ import {
   type DripSize,
 } from '@/data/shop';
 import { useAuth } from '@/context/AuthContext';
+import { useSoftWall } from '@/context/SoftWallContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { recordDripOrder } from '@/lib/finance';
+import { resolveSessionUserId } from '@/lib/sessionToken';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 
@@ -51,11 +53,12 @@ type ProductSheetProps = {
  * @param item Selected catalog row, or `null` to hide.
  * @param onClose Dismiss after a successful pay or backdrop tap (locked while PaymentSheet is open).
  * @returns Modal bottom sheet over an `expo-blur` backdrop.
- * @sideEffects `useTipCheckout` PaymentSheet, `shop_orders` INSERT, `add_user_aura` (order dollars × 10, payer only), success haptic, Aura toast, Light haptic on size / qty.
+ * @sideEffects Soft-Wall for guests before Buy; `useTipCheckout` PaymentSheet, `shop_orders` INSERT, `add_user_aura` (order dollars × 10, buyer only), success haptic, Aura toast, Light haptic on size / qty.
  */
 export function ProductSheet({ item, onClose }: ProductSheetProps) {
   const frame = useSheetFrame();
   const { user } = useAuth();
+  const { requireAuth } = useSoftWall();
   const { startCheckout, busy } = useTipCheckout();
   const [open, setOpen] = useState(false);
   const [size, setSize] = useState<DripSize>('M');
@@ -177,21 +180,29 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
 
   const buy = () => {
     if (!item || busy) return;
-    telemetry.trackFeature('drip_buy', 'drip');
-    void startCheckout({
-      tipAmount: totalCents / 100,
-      coverFees: false,
-      skipBacker: true,
-      auraPoints: aura,
-      successToast: `Drip secured ⚡ +${aura} Aura Points earned!`,
-      onPaid: async () => {
-        await recordDripOrder({
-          productId: item.id,
-          amountCents: totalCents,
-          qty,
-          buyerId: user?.id,
+    // Guests hit createPaymentIntent as 401 without Soft-Wall; stash Buy and resume after sign-in.
+    requireAuth({
+      kind: 'signin',
+      resume: () => {
+        telemetry.trackFeature('drip_buy', 'drip');
+        void startCheckout({
+          tipAmount: totalCents / 100,
+          coverFees: false,
+          skipBacker: true,
+          auraPoints: aura,
+          successToast: `Drip secured ⚡ +${aura} Aura Points earned!`,
+          onPaid: async () => {
+            // Soft-Wall resume can close over a pre-login `user`; read the live session id.
+            const buyerId = await resolveSessionUserId(user?.id ?? null);
+            await recordDripOrder({
+              productId: item.id,
+              amountCents: totalCents,
+              qty,
+              buyerId: buyerId ?? undefined,
+            });
+            dismiss(true);
+          },
         });
-        dismiss(true);
       },
     });
   };

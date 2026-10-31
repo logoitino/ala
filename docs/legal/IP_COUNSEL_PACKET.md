@@ -11,9 +11,9 @@ This packet contains source fingerprints and supplied investigation notes. It is
 
 ## 1. Current source and open work
 
-- Inventory SHA-256: `41dc6cfeae7afbe2b8efd3295f7b10cd5a4de218a90a9c7988eb0160517e7f28`
+- Inventory SHA-256: `dbd48eda96393ed0f1a3c566401c93d10acd9d7a5af11e4e911e59c9d1117388`
 - Register SHA-256: `86a11d86b776757dd362bc03cdfc5c8e88d1c7a862e65db85ba00dd7c6073a71`
-- Safe source/manifest files monitored: 1112. Git-tracked and non-ignored untracked source; excluded files require separate human review.
+- Safe source/manifest files monitored: 1116. Git-tracked and non-ignored untracked source; excluded files require separate human review.
 - Investigation candidates: 3; missing engineering reviews: 3; stale engineering reviews: 0.
 - Rights categories awaiting counsel review: 7.
 - Supplied filing receipts: 0. Receipt entries require independent verification; no legal status is inferred.
@@ -23,7 +23,7 @@ A changed inventory requires Documentation/feature-owner review for new capabili
 
 | Monitored area | Files |
 | --- | --- |
-| apps/ | 948 |
+| apps/ | 952 |
 | packages/ | 34 |
 | supabase/ | 127 |
 
@@ -166,7 +166,7 @@ Names/versions are source observations, not a license audit. Transitive dependen
 | Manifest | SHA-256 | Direct dependency observations |
 | --- | --- | --- |
 | [apps/admin-portal/package.json](../../apps/admin-portal/package.json) | `3f19f62e557398519cabdcbe5f29466c741e0bf5c0a468addecb0c53c979c2b3` | @supabase/ssr (^0.12.7); @supabase/supabase-js (^2.116.0); @tailwindcss/postcss (^4.1.12); @tapuai/shared-types (workspace:\*); @types/node (^22.15.29); @types/react (^19.2.2); @types/react-dom (^19.2.2); next (^15.5.2); react (^19.2.3); react-dom (^19.2.3); tailwindcss (^4.1.12); typescript (~6.0.3) |
-| [apps/mobile/package.json](../../apps/mobile/package.json) | `ab688f53a244e8b2a7f2661b8c6cb7b660f06cdbf1b59582ecba37fc54464e88` | @expo/dom-webview (^58.0.2); @expo/metro-runtime (~58.0.14); @expo/vector-icons (^15.0.2); @react-native-async-storage/async-storage (2.2.0); @react-native-community/netinfo (12.0.1); @react-native-picker/picker (2.11.4); @react-native/jest-preset (0.88.0); @react-native/metro-config (0.88.0); @shopify/react-native-skia (2.14.0); @stripe/stripe-react-native (0.81.0); @supabase/supabase-js (^2.116.0); @tapuai/shared-types (workspace:\*); @testing-library/react-native (^14.0.1); @types/jest (^30.0.0); @types/react (~19.3.0); babel-preset-expo (~58.0.17); expo (~58.0.14); expo-apple-authentication (^58.0.2); expo-auth-session (^58.0.13); expo-blur (~58.0.4); expo-checkbox (~58.0.2); expo-clipboard (~58.0.3); expo-constants (~58.0.12); expo-crypto (^58.0.7); expo-file-system (~58.0.9); expo-font (~58.0.8); expo-haptics (~58.0.7); expo-image-picker (~58.0.10); expo-linking (~58.0.13); expo-location (~58.0.17); expo-media-library (~58.0.10); expo-router (~58.0.23); expo-sqlite (~58.0.13); expo-status-bar (~58.0.3); expo-updates (~58.0.17); expo-video (~58.0.11); expo-web-browser (~58.0.6); jest (^30.5.2); jest-expo (~58.0.11); react (19.3.0); react-dom (19.3.0); react-native (0.88.0); react-native-canvas (^0.1.40); react-native-compressor (^2.0.3); react-native-confetti-cannon (^1.5.2); react-native-gesture-handler (~3.3.0); react-native-qrcode-svg (^6.3.24); react-native-reanimated (4.7.1); react-native-safe-area-context (~5.10.1); react-native-screens (~4.30.0); react-native-svg (15.16.0); react-native-url-polyfill (^4.0.0); react-native-web (^0.21.4); react-native-webview (14.0.1); react-native-worklets (0.13.0); stripe (^22.6.2); typescript (~6.0.3) |
+| [apps/mobile/package.json](../../apps/mobile/package.json) | `6650182b648802b995c9c8280b2f5d602ae97972993e51acb2af04369e52d5f0` | @expo/dom-webview (^58.0.2); @expo/metro-runtime (~58.0.14); @expo/vector-icons (^15.0.2); @react-native-async-storage/async-storage (2.2.0); @react-native-community/netinfo (12.0.1); @react-native-picker/picker (2.11.4); @react-native/jest-preset (0.88.0); @react-native/metro-config (0.88.0); @shopify/react-native-skia (2.14.0); @stripe/stripe-react-native (0.83.0); @supabase/supabase-js (^2.116.0); @tapuai/shared-types (workspace:\*); @testing-library/react-native (^14.0.1); @types/jest (^30.0.0); @types/react (~19.3.0); babel-preset-expo (~58.0.17); expo (~58.0.14); expo-apple-authentication (^58.0.2); expo-auth-session (^58.0.13); expo-blur (~58.0.4); expo-build-properties (~58.0.11); expo-checkbox (~58.0.2); expo-clipboard (~58.0.3); expo-constants (~58.0.12); expo-crypto (^58.0.7); expo-file-system (~58.0.9); expo-font (~58.0.8); expo-haptics (~58.0.7); expo-image-picker (~58.0.10); expo-linking (~58.0.13); expo-location (~58.0.17); expo-media-library (~58.0.10); expo-router (~58.0.23); expo-sqlite (~58.0.13); expo-status-bar (~58.0.3); expo-updates (~58.0.17); expo-video (~58.0.11); expo-web-browser (~58.0.6); jest (^30.5.2); jest-expo (~58.0.11); react (19.3.0); react-dom (19.3.0); react-native (0.88.0); react-native-canvas (^0.1.40); react-native-compressor (^2.0.3); react-native-confetti-cannon (^1.5.2); react-native-gesture-handler (~3.3.0); react-native-nitro-modules (0.37.1); react-native-qrcode-svg (^6.3.24); react-native-reanimated (4.7.1); react-native-safe-area-context (~5.10.1); react-native-screens (~4.30.0); react-native-svg (15.16.0); react-native-url-polyfill (^4.0.0); react-native-web (^0.21.4); react-native-webview (14.0.1); react-native-worklets (0.13.0); stripe (^22.6.2); typescript (~6.0.3) |
 | [package.json](../../package.json) | `531bcb9e771a4e62dfcd831a0f1f1788ff89c5557f8bd1cf936d4341f926e81d` | None declared |
 | [packages/shared-types/package.json](../../packages/shared-types/package.json) | `92ece91b4e72e2cb2b2270f786b84e6c3d6866e5df0e146b4086cbe107dce89d` | typescript (~6.0.3) |
 

@@ -48,6 +48,8 @@ type ProfileHeroAvatarProps = {
   onAvatarUploaded?: (url: string) => void;
   /** Server-confirmed crest (`useSchoolBadge`). Never build this from editable profile fields. */
   schoolBadge?: SchoolBadge | null;
+  /** Own-hub account menu (or similar) parked on the compact identity row, top-right. */
+  headerAction?: ReactNode;
 };
 
 function initialsFromName(name: string): string {
@@ -70,6 +72,7 @@ function initialsFromName(name: string): string {
  * @param sport / position / classYear Known athlete metadata; absent fields have no placeholder claims.
  * @param schoolBadge School-confirmed only: school-colour band behind the photo, and the crest pinned
  *   on the ring edge (outside the photo, so a logo pasted into a picture can't sit where it sits).
+ * @param headerAction Optional control beside the name (own Profile hamburger).
  * @sideEffects `ProfileAvatarPicker` camera roll + Storage `avatars` when editable.
  */
 export function ProfileHeroAvatar({
@@ -93,6 +96,7 @@ export function ProfileHeroAvatar({
   canEditAvatar = false,
   onAvatarUploaded,
   schoolBadge: suppliedSchoolBadge = null,
+  headerAction,
 }: ProfileHeroAvatarProps) {
   // A community sheet may carry a favorite roster row; its school proof belongs to that athlete.
   const schoolBadge = athlete ? suppliedSchoolBadge : null;
@@ -140,6 +144,7 @@ export function ProfileHeroAvatar({
               </Text>
             ) : school ? <Text style={[styles.school, styles.compactSchool]}>{school}</Text> : null}
           </View>
+          {headerAction ? <View style={styles.compactHeaderAction}>{headerAction}</View> : null}
         </View>
         {details.length > 0 ? (
           <View style={styles.compactDetails}>
@@ -291,6 +296,8 @@ const styles = StyleSheet.create({
   compactSchoolBand: { position: 'absolute', top: 8, left: 0, right: 0, height: 52, borderRadius: radii.sm, overflow: 'hidden' },
   compactSchoolCrest: { position: 'absolute', right: -8, bottom: 2 },
   compactIdentity: { flexGrow: 1, flexShrink: 1, flexBasis: 120, minWidth: 0, gap: 3 },
+  // Own-hub menu sits on the identity row so Profile does not spend a whole nav bar on the hamburger.
+  compactHeaderAction: { alignSelf: 'flex-start', marginLeft: 'auto' },
   compactLeft: { textAlign: 'left', letterSpacing: 0.9 },
   compactName: { marginTop: 0, fontSize: 22, lineHeight: 27, letterSpacing: -0.4, textAlign: 'left' },
   compactSchool: { fontSize: 12, textAlign: 'left' },
