@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-10-31 · Soft-Wall → ARCHITECTURE_SYNC → Jev → HS+college → reviewer readiness all on `main` (`a470e40`). Next engineering priority: **APP-TEST-01 lanes A–C** (Google, test bank, short Highlights). Webhook tip crediting stays **off**. Regenerated `supportTopology` + `BUILD_LAYERS` so Quality Checks pass. Device Soft-Wall smoke and gift counsel/hosted gates remain open.
+**Last updated:** 2026-10-31 · Recovery capsule allowlists `build-layers.json` / `.baseline.json` so Portable Exit can package ARCHITECTURE_SYNC source (plan `b70717f17acd`). Stack on `main`; APP-TEST-01 A–C next; webhook tip crediting stays **off**. Device Soft-Wall smoke and gift counsel/hosted gates remain open.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -169,6 +169,14 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-10-31 — Recovery capsule allows build-layers JSON
+
+`scripts/recovery-capsule.mjs` JSON_SOURCE now includes
+`docs/engineering/build-layers.json` and `build-layers.baseline.json` (same class as
+`exit-map.baseline.json`). Portable Exit on tip `a50d172` failed packaging with
+“Unreviewed source/data format” for the baseline. Exit plan `b70717f17acd` announced;
+`pnpm recovery:test` 14/14 (+1 skip). Artifact upload quota may still fail separately.
 
 ### 2026-10-31 — Stack on main + APP-TEST A–C next; CI gate regen
 

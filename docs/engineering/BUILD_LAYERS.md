@@ -3,7 +3,7 @@
 
 **Owner:** `ARCHITECTURE_SYNC` (reports to `ENGINEERING`). **Plan version:** `b69b3fb59565`.
 **Agents in registry:** 116. **Latest migration:** `20261022152000_no_cut_gifts_optional_tips.sql`.
-**Git tip at generation:** `a470e40` on `cursor/app-test-prep-9a86`.
+**Git tip at generation:** `75d89e7` on `cursor/exit-source-build-layers-9a86`.
 
 Living map of how the app is built (L0–L9) and which callable roles sit on each layer.
 When the owner prompts a stack/architecture change, `ARCHITECTURE_SYNC` updates this map,
