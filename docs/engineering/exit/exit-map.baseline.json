@@ -1,5 +1,5 @@
 {
- "planVersion": "4fc54275bb8d",
+ "planVersion": "5d8c3d191c7c",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -2526,7 +2526,7 @@
    "infrastructure/terraform/azure/variables.tf 222c6760976e2fd315e888f093c432278b7950a30e16a6d29d727267d5c10901",
    "infrastructure/terraform/azure/versions.tf c08663049560d0230464c562c62a6a73687b9441bf5b349961288e92ed6936f0",
    "infrastructure/terraform/cloud-init.yml 679b43051113e498f07384c18cec354edc0476668ddca0d7acc9d12582d96f33",
-   "package.json 531bcb9e771a4e62dfcd831a0f1f1788ff89c5557f8bd1cf936d4341f926e81d",
+   "package.json 5bd8b95532ba1b9641917ed8e6f12ea22f04aa07a9b8bd85faf3e818639f5c0b",
    "packages/shared-types/admin/adminMfa.ts 6b67c8581ca0a2324c111cd56e4d31d2771d5f4ee2d9610e630efad342302ac9",
    "packages/shared-types/admin/analytics.ts eea060b3e447b6572ea1c6d31594542c720ba48c1bd508b7513500ab164e8898",
    "packages/shared-types/admin/analyticsCatalog.ts 01fdfb40b2c6ced520078e7a53f875c52f14e090b1a20c8ebca7866d02f5dd0f",
@@ -2579,6 +2579,7 @@
    "scripts/__tests__/recovery-capsule.test.mjs 180d57a66dd8b63ce916bac41b754c1796356790845580da9f6b2b84ed55f15d",
    "scripts/__tests__/sql-functions.test.mjs 740a6c466f00b779ad9db32bdfb6b40202aab779edb9d49b61878331958ee2c9",
    "scripts/app-data-boundary-baseline.json ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+   "scripts/build-layers.mjs 6fbe70103143fef161535a1d833cab0866a10794017436bda110434ef9b02d4f",
    "scripts/check-agents.mjs b75d5fc3b54c6892fb8996c17cf2499c0fa3c8d300d5dde95af9fbe305f4e316",
    "scripts/check-app-data-boundaries.mjs ffc64f60a2d94c936b98e887f3792d6a5068e0930d48ddd7916404cdf6ce53a7",
    "scripts/check-client-keys.mjs 1a38349c1b4c007f89476a989f95d0782f005cc100b55604b5ae78e5cac119da",

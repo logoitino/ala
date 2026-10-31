@@ -1,0 +1,285 @@
+{
+  "_comment": "Hand-kept Tapua'i build layers (L0–L9). ARCHITECTURE_SYNC owns this file; scripts/build-layers.mjs regenerates BUILD_LAYERS.md and routes change tasks. Status: live | partial | candidate | exit. Roles must be registry calls. Definitions are not running workers.",
+  "version": 1,
+  "owner": "ARCHITECTURE_SYNC",
+  "lead": "ENGINEERING",
+  "alwaysNotify": [
+    "DOCUMENTATION",
+    "VP_OPERATIONS",
+    "ENGINEERING",
+    "INFRASTRUCTURE",
+    "CTO"
+  ],
+  "docTargets": [
+    "docs/engineering/BUILD_LAYERS.md",
+    "docs/engineering/SYSTEM_OVERVIEW.md",
+    "docs/engineering/ARCHITECTURE.md",
+    "docs/STATE.md",
+    "CHANGELOG.md"
+  ],
+  "layers": [
+    {
+      "id": "L0",
+      "name": "Client — devices and surfaces",
+      "status": "live",
+      "summary": "Expo fan app, Expo /admin writes, Next read-only portal, Soft-Wall and role HQs.",
+      "pieces": [
+        "Expo Router SDK 58 iOS / Android / web preview",
+        "Fan bar Highlights · Activity · Upload · Spotlight · Profile",
+        "Soft-Wall guests; parent / booster / sponsor / athlete HQs",
+        "Operator console; Expo /admin; Next admin-portal",
+        "expo-video; Skia Aura; OfflineQueue; MediaUploadService"
+      ],
+      "roles": [
+        "HIGHLIGHTS",
+        "PLAYBACK",
+        "UPLOAD",
+        "PHOTO_STORIES",
+        "ACTIVITY",
+        "LOCAL",
+        "OPERATOR",
+        "PROFILE",
+        "SPOTLIGHT",
+        "AUTH",
+        "ONBOARDING",
+        "AURA",
+        "MOTION",
+        "DESIGN",
+        "ACCESSIBILITY",
+        "MOBILE_PERFORMANCE",
+        "ADMIN",
+        "PORTAL",
+        "ROLE_HQ",
+        "DEVICE_QA",
+        "VISUAL_QA"
+      ],
+      "signals": ["easProfiles", "agentCount"]
+    },
+    {
+      "id": "L1",
+      "name": "Build, distribute and edge delivery",
+      "status": "partial",
+      "summary": "EAS builds/OTA and Supabase project domain; no global app CDN/LB in Wave 0.",
+      "pieces": [
+        "EAS development · preview · production",
+        "OTA u.expo.dev",
+        "GitHub Actions CI",
+        "Supabase project domain; public Storage CDN",
+        "Exit plan CDN / WAF / LB (not provisioned)"
+      ],
+      "roles": [
+        "RELEASE",
+        "CI",
+        "SUPPLY_CHAIN_SECURITY",
+        "INFRASTRUCTURE",
+        "EXIT_CLOUD",
+        "INFRA_SECURITY",
+        "COST_OPERATIONS"
+      ],
+      "signals": ["easProfiles", "workflows"]
+    },
+    {
+      "id": "L2",
+      "name": "Application and feature domain",
+      "status": "live",
+      "summary": "Product loops: Highlights, Give, Local, identity, Soft-Wall, desks, shared-types.",
+      "pieces": [
+        "Watch and react (reels, hype, Beyond)",
+        "Give (TipSheet → PaymentSheet; Rally / Wishlist / gift links)",
+        "Identity (Soft-Wall, profiles, Crew, Vault, Aura, verification)",
+        "Game day (scores, polls, rosters)",
+        "Drip / Exclusive separate from gifts",
+        "packages/shared-types"
+      ],
+      "roles": [
+        "FULLSTACK",
+        "HIGHLIGHTS",
+        "LOCAL",
+        "PROFILE",
+        "COMMERCE",
+        "CHECKOUT",
+        "PRODUCT",
+        "RESEARCH",
+        "VOICE",
+        "BRAND",
+        "PARTNERSHIPS",
+        "SHARED_CONTRACTS"
+      ],
+      "signals": ["agentCount"]
+    },
+    {
+      "id": "L3",
+      "name": "API and money execution",
+      "status": "live",
+      "summary": "JWT Node/Edge money adapters and Stripe test PaymentSheet / Connect.",
+      "pieces": [
+        "Expo API routes create-payment-intent / create-payout / create-stripe-account / fan-zone-*",
+        "Edge Functions create-payment-intent / create-stripe-account / stripe-webhook",
+        "Shared money core supabase/functions/_shared/money/",
+        "Client tips writer; webhook credit authority false; payouts blocked"
+      ],
+      "roles": [
+        "API",
+        "COMMERCE",
+        "CHECKOUT",
+        "CONNECT",
+        "LEDGER",
+        "RECONCILIATION",
+        "SESSION_SECURITY",
+        "TREASURY",
+        "REFUNDS",
+        "BILLING",
+        "CONTROLLER",
+        "BOOKKEEPER"
+      ],
+      "signals": ["edgeFunctions", "apiRoutes"]
+    },
+    {
+      "id": "L4",
+      "name": "Realtime and offline stream",
+      "status": "partial",
+      "summary": "Supabase Realtime and OfflineQueue — not Kafka/Flink.",
+      "pieces": [
+        "Realtime postgres_changes and Broadcast",
+        "Published: games, game_events, cheer_polls, app_runtime_config",
+        "OfflineQueue AsyncStorage flush",
+        "TelemetryManager → telemetry_logs"
+      ],
+      "roles": [
+        "REALTIME",
+        "LOCAL",
+        "OPERATOR",
+        "POLLS",
+        "OFFLINE",
+        "TELEMETRY",
+        "SUPPORT",
+        "RELIABILITY",
+        "THREAT_DETECTION"
+      ],
+      "signals": ["realtimeTables"]
+    },
+    {
+      "id": "L5",
+      "name": "Trust, identity and policy",
+      "status": "live",
+      "summary": "Auth, RLS, Soft-Wall, minors/guardians, moderation, runtime flags.",
+      "pieces": [
+        "Supabase Auth (email / magic link / Apple)",
+        "Roles guest · fan · athlete · parent · operator · booster · sponsor · admin",
+        "RLS and security-definer RPCs",
+        "Moderation; verification ladder; app_runtime_config Publish"
+      ],
+      "roles": [
+        "AUTH",
+        "SESSION_SECURITY",
+        "RLS_SECURITY",
+        "RUNTIME_CONFIG",
+        "TRUST_SAFETY",
+        "MINOR_SAFETY",
+        "MODERATION",
+        "ATHLETE_VERIFICATION",
+        "LEGAL",
+        "COMPLIANCE",
+        "PRIVACY_ENGINEERING",
+        "CONTENT_RIGHTS",
+        "CUSTODIAL",
+        "SCHOOL_PARTNERS"
+      ],
+      "signals": ["agentCount"]
+    },
+    {
+      "id": "L6",
+      "name": "Data plane — Postgres, RPCs, Storage",
+      "status": "live",
+      "summary": "Managed Supabase Free system of record (dev + staging; no production project yet).",
+      "pieces": [
+        "PostgreSQL + PostgREST + RLS",
+        "Core tables profiles / reels / tips / games / rallies / spotlight_*",
+        "Buckets reels, avatars, game_highlights, reel_vault, beyond_game, fan_zone",
+        "lib/media media seam; DATA_MAP ownership"
+      ],
+      "roles": [
+        "BACKEND",
+        "DATABASE_MIGRATIONS",
+        "STORAGE",
+        "DATA_GOVERNANCE",
+        "DATA_LINEAGE",
+        "RLS_SECURITY",
+        "VAULT",
+        "UPLOAD",
+        "FINANCE_DATA",
+        "CODE_HYGIENE"
+      ],
+      "signals": ["buckets", "latestMigration"]
+    },
+    {
+      "id": "L7",
+      "name": "Rules and moderation (not ML recs)",
+      "status": "candidate",
+      "summary": "Deterministic Aura/Spotlight/polls and staff moderation — no feature-extraction or scoring models.",
+      "pieces": [
+        "Aura tier math and leaderboards",
+        "Spotlight election rules",
+        "Cheer polls / Fan Zone ballots",
+        "Staff moderation desks",
+        "Curated trivia banks"
+      ],
+      "roles": [
+        "AURA",
+        "LEADERBOARDS",
+        "SPOTLIGHT",
+        "POLLS",
+        "MODERATION",
+        "ANALYST",
+        "GROWTH_ANALYTICS",
+        "TRUST_SAFETY",
+        "QA"
+      ],
+      "signals": []
+    },
+    {
+      "id": "L8",
+      "name": "Video host (candidate)",
+      "status": "candidate",
+      "summary": "Today Storage + expo-video; Mux provisional experiment; Bunny/CF compared; none purchased.",
+      "pieces": [
+        "Compress → Storage → signed/public URL → expo-video",
+        "Candidate: Mux / Bunny / Cloudflare Stream",
+        "Long videos off until cost measured"
+      ],
+      "roles": [
+        "PLAYBACK",
+        "UPLOAD",
+        "STORAGE",
+        "MOBILE_PERFORMANCE",
+        "INFRASTRUCTURE",
+        "COST_OPERATIONS",
+        "GROWTH_ANALYTICS"
+      ],
+      "signals": ["buckets"]
+    },
+    {
+      "id": "L9",
+      "name": "Redundancy and exit (drill)",
+      "status": "exit",
+      "summary": "Move-off-Supabase readiness maps and tools — not a second live stack.",
+      "pieces": [
+        "Exit A self-hosted Supabase on AWS/Azure",
+        "Exit B managed Postgres + replaced services",
+        "Backup / parity / grant-sync under infrastructure/"
+      ],
+      "roles": [
+        "REDUNDANCY_LEAD",
+        "EXIT_SYNC",
+        "EXIT_DATABASE",
+        "EXIT_SERVICES",
+        "EXIT_CLOUD",
+        "RECOVERY",
+        "RECOVERY_SECURITY",
+        "INFRA_SECURITY",
+        "SUPPLY_CHAIN_SECURITY"
+      ],
+      "signals": ["edgeFunctions"]
+    }
+  ]
+}

@@ -42,6 +42,7 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 | [UX-07](agents/UX-07.md) | Actual presentation exemption, source reviews, implementation and local UI verification receipts. |
 | [ARCHITECTURE.md](engineering/ARCHITECTURE.md) | How the apps, Supabase, Stripe and Edge Functions fit together. |
 | [SYSTEM_OVERVIEW.md](engineering/SYSTEM_OVERVIEW.md) | Executive summary, tech stack, directory map, feature tracker. |
+| [BUILD_LAYERS.md](engineering/BUILD_LAYERS.md) | Generated L0–L9 stack map + role seats; owner `ARCHITECTURE_SYNC`; source `build-layers.json`; change log [ARCHITECTURE_CHANGE_LOG](agents/ARCHITECTURE_CHANGE_LOG.md). |
 | [CONVENTIONS.md](engineering/CONVENTIONS.md) | Folder rules, file naming, where code goes, the comment standard (§5). |
 | [INNOVATION_AND_HANDOFF.md](engineering/INNOVATION_AND_HANDOFF.md) | Test new solutions, retain decisions and evidence, and prepare understandable engineering/legal/investor handoffs. |
 | [IP documentation implementation plan](engineering/design/IP_DOCUMENTATION_IMPLEMENTATION_PLAN.md) | Source-bound packet, safe update triggers and verification steps. |

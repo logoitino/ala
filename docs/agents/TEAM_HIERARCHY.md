@@ -94,7 +94,7 @@ Guide: [INFRASTRUCTURE_SECURITY](../engineering/exit/INFRASTRUCTURE_SECURITY.md)
 
 **Purpose:** See who owns each critical function, where it escalates and which callable agent definition to open. **Plans:** [DEPARTMENT_PLANS.md](DEPARTMENT_PLANS.md). **Expert bar and models:** [EXPERT_STANDARDS.md](EXPERT_STANDARDS.md). **Detail:** [TEAMS.md](TEAMS.md). **Execution:** [WORK_QUEUE.md](WORK_QUEUE.md), when present. **Current product and hosted state:** [STATE.md](../STATE.md).
 
-Last aligned: 2026-10-23 (exit reading home `docs/engineering/exit/`; reporting unchanged: `ENGINEERING` → `REDUNDANCY_LEAD` → `EXIT_SYNC` / `EXIT_DATABASE` / `EXIT_SERVICES` / `EXIT_CLOUD`; `INFRA_SECURITY` / `SUPPLY_CHAIN_SECURITY` / `RECOVERY_SECURITY` → `SECURITY`). Prior alignment 2026-10-22 (COORD-02 gift-release duties; 115 roles, model pins preserved; REDUNDANCY-07 routing retained). Registry: `.claude/agents/registry.json`.
+Last aligned: 2026-10-27 (`ARCHITECTURE_SYNC` owns L0–L9 `BUILD_LAYERS` + routed change tasks; 116 roles; reporting: `ENGINEERING` → `ARCHITECTURE_SYNC`; exit reporting unchanged: `ENGINEERING` → `REDUNDANCY_LEAD` → `EXIT_SYNC` / `EXIT_DATABASE` / `EXIT_SERVICES` / `EXIT_CLOUD`; `INFRA_SECURITY` / `SUPPLY_CHAIN_SECURITY` / `RECOVERY_SECURITY` → `SECURITY`). Prior alignment 2026-10-23 (exit reading home). Registry: `.claude/agents/registry.json`.
 
 Actual documentation/team-coordination executors, claims, dated checks and close-out are in
 [COORD-01](COORD-01.md). DOCUMENTATION runs on assigned feature/fix handoffs; VP_OPERATIONS
@@ -218,6 +218,7 @@ FACILITATOR — owner decisions (prices, counsel, SQL apply, merge, live money)
     │   │   └── UPLOAD (Engineering)
     │   │       └── ACCOUNT_TAGS (Engineering)
     │   ├── INFRASTRUCTURE (Engineering) — scalability team's dev member
+    │   ├── ARCHITECTURE_SYNC (Engineering) — L0–L9 build layers; routes owner change prompts to every role
     │   ├── REDUNDANCY_LEAD (Engineering) — Redundancy & Exit team: move off Supabase to AWS / Azure
     │   │   ├── EXIT_SYNC (Engineering) — keeps the exit plan current; announces changes to the team
     │   │   ├── EXIT_DATABASE (Engineering) — the different database
@@ -469,6 +470,7 @@ Every agent is listed in the team it reports to. Specialists sit under their lea
 | `FULLSTACK` | Engineering | `ENGINEERING` | [fullstack.md](../../.claude/agents/fullstack.md) |
 | `HIGHLIGHTS` | Engineering | `ENGINEERING` | [highlights.md](../../.claude/agents/highlights.md) |
 | `INFRASTRUCTURE` | Engineering | `ENGINEERING` | [infrastructure.md](../../.claude/agents/infrastructure.md) |
+| `ARCHITECTURE_SYNC` | Engineering | `ENGINEERING` | [architecture-sync.md](../../.claude/agents/architecture-sync.md) |
 | `REDUNDANCY_LEAD` | Engineering | `ENGINEERING` | [redundancy-lead.md](../../.claude/agents/redundancy-lead.md) |
 | `EXIT_SYNC` | Engineering | `REDUNDANCY_LEAD` | [exit-sync.md](../../.claude/agents/exit-sync.md) |
 | `EXIT_DATABASE` | Engineering | `REDUNDANCY_LEAD` | [exit-database.md](../../.claude/agents/exit-database.md) |
