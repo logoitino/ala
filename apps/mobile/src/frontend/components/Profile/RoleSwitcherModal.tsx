@@ -34,6 +34,7 @@ import { useCelebration } from '@/context/CelebrationContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
 import {
+  ATHLETE_CLASS_YEARS,
   ATHLETE_SPORTS,
   classYearLabel,
   formatTeamBadge,
@@ -69,7 +70,8 @@ function fireMediumHaptic() {
 export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) {
   const frame = useSheetFrame();
   const { live } = useAppRuntime();
-  const classYears = live.catalog.classYears.length > 0 ? live.catalog.classYears : ['26', '27', '28'];
+  const classYears =
+    live.catalog.classYears.length > 0 ? live.catalog.classYears : [...ATHLETE_CLASS_YEARS];
   const { activeRole, isAthlete, profile, completeAthleteOnboarding, setActiveRole } = useAuth();
   const { configs } = useSportConfigs();
   const sportOptions = (activeSportNames(configs).length > 0 ? activeSportNames(configs) : [...ATHLETE_SPORTS]).map(

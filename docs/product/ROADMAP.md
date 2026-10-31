@@ -89,7 +89,7 @@ corresponding receipts exist, this milestone is **locally prepared, walkthroughs
 
 Tapua'i is where a community rallies behind a young athlete so **money is never the reason they stop** — and where support reaches **every athlete, not just the star** the NIL money already finds. Full narrative, marketing lines and guardrails: [STORY.md](STORY.md).
 
-**The mission in the owner's words (2026-09-29):** make donations and highlights easy for families, so they can promote their kid and help them get recruited; give kids the chance to share good workouts with fans (Train Like Me) and to serve like their favourite player (Serve Like Me); and do it all by opening an avenue for people to donate to a young athlete's sports costs and career growth. Athletes say thank you for every donation. Every feature below should serve that sentence.
+**The mission in the owner's words (updated for HS + college):** make gifts and highlights easy for families of high school and college athletes, so they can promote their student-athlete and help them get recruited; give athletes the chance to share good workouts with fans (Train Like Me) and to serve like their favourite player (Serve Like Me); and do it all by opening an avenue for people to give toward sports costs and career growth. Athletes say thank you for every gift. Every feature below should serve that sentence. (2026-09-29 donation wording is superseded history — see [VOICE](VOICE.md).)
 
 It has to feel like three products at once, and look easy and flashy doing it:
 

@@ -100,9 +100,10 @@ on purpose: store pages are hard to update and the live amounts come from app co
 
 ### Keywords — App Store (≤ 100 characters, comma-separated, no spaces after commas)
 
-`donation,youth,highlights,athlete,high school,team,school spirit,family,game day,volunteer,rally`
+`gift,highlights,athlete,high school,college,team,school spirit,family,game day,rally`
 
-(96 characters. Leaves out words already in the name and subtitle, which Apple indexes anyway.)
+(88 characters. Leaves out words already in the name and subtitle, which Apple indexes anyway.
+Historical draft — current gift listing: [APP_STORE_GIFT_DRAFT.md](APP_STORE_GIFT_DRAFT.md).)
 
 ### Category
 

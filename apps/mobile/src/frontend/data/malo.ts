@@ -13,9 +13,9 @@ import type { HighlightClip } from '@/data/highlights';
 /** Button label for giving money. */
 export const DONATE_LABEL = 'Give';
 
-/** One-line mission, shown on first open and on the gift sheet. */
+/** One-line mission, shown on first open and on the gift sheet. HS and college both. */
 export const DONATION_MISSION =
-  "Tapua'i helps families cover their young athlete's sports costs — fees, gear, travel — with personal gifts from their community.";
+  "Tapua'i helps families cover high school and college athletes' sports costs — fees, gear, travel — with personal gifts from their community.";
 
 /**
  * Brand message (owner-approved 2026-10-07, BRAND-01). Shown on the welcome overlay, at the top of the

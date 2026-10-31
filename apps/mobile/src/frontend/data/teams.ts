@@ -24,7 +24,8 @@ export type SchoolTeam = {
 export const ATHLETE_SPORTS = ['Football', 'Basketball', 'Rugby', 'Volleyball', 'Soccer', 'Baseball', 'Softball', 'Wrestling', 'Track & Field', 'Lacrosse', 'Ice Hockey', 'Tennis'] as const;
 export type AthleteSport = (typeof ATHLETE_SPORTS)[number];
 
-export const ATHLETE_CLASS_YEARS = ['26', '27', '28'] as const;
+/** HS seniors through college underclassmen — keep both levels on the claim pills. */
+export const ATHLETE_CLASS_YEARS = ['26', '27', '28', '29', '30'] as const;
 export type AthleteClassYear = (typeof ATHLETE_CLASS_YEARS)[number];
 
 /** UI chip: `26` → `'26`. */
