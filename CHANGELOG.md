@@ -1,4 +1,8 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-03 — Refresh security:infra / exit map after retention-test tip
+
+- Tip CI stale after `exit-workflow` assertion change; regenerate report and announce exit plan.
+
 ## 2026-11-03 — Exit workflow test matches 7-day artifact retention
 
 - Update `scripts/__tests__/exit-workflow.test.mjs` after exit-source `retention-days` 30→7.

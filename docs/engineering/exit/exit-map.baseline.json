@@ -1,5 +1,5 @@
 {
- "planVersion": "4d75be061d1a",
+ "planVersion": "34f1231ce0f4",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -2572,7 +2572,7 @@
    "scripts/__tests__/check-feature-admin.test.mjs 02e7f06f1309c8812200e58c12a43ba60b8514acfc8badbde462678f7cee807c",
    "scripts/__tests__/detection.test.mjs 1353e4b50f2e79b16c8936b9031f5b0576e58242b6c0cfb2dddbab22ebffe427",
    "scripts/__tests__/exit-map.test.mjs 3ea0d970080b3b7812670fa6733f811de993c03da04b7e6ce0ab85856cf3f702",
-   "scripts/__tests__/exit-workflow.test.mjs 4311c3ff8cd9896e2b2a9914edbcaa562b998769825c48d1c78b304199a9dc76",
+   "scripts/__tests__/exit-workflow.test.mjs 5753d74d071514078f799ef65ebe19f95d5549071bd4a87d1a952ee9a19c9734",
    "scripts/__tests__/ip-docs.test.mjs 7cb5a1f5f4a3fdec4110736165113ca06f5fba06fff59cec84061eff2935b586",
    "scripts/__tests__/media-storage-lineage.test.mjs d465c55ed585f4159c235b4237c6f4b3188fb096cdfcce8985e1c90fef7edd8c",
    "scripts/__tests__/media-test-assets.test.mjs 6269cda1929abe1479ccc417326a75a93011ce24b3d4cdd4c100b3e4357d719b",
