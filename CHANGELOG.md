@@ -1,4 +1,8 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-03 — Exit workflow test matches 7-day artifact retention
+
+- Update `scripts/__tests__/exit-workflow.test.mjs` after exit-source `retention-days` 30→7.
+
 ## 2026-11-03 — Claim prune-exit-artifacts.yml in infrastructure register
 
 - Tip CI failed `infra:register:check` after the prune workflow landed; claim it under
