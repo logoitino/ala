@@ -1,4 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-03 — Claim prune-exit-artifacts.yml in infrastructure register
+
+- Tip CI failed `infra:register:check` after the prune workflow landed; claim it under
+  `github-actions` in `docs/engineering/infrastructure.json`.
+
 ## 2026-11-03 — Owner leftovers 1–5: prune workflow + Android EAS handoff
 
 - Add `Prune Exit Source Artifacts` workflow; shorten exit-source artifact retention to 7 days.

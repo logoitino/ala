@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-03 · Owner leftovers 1–5: prune workflow + 7-day exit artifact retention; Android EAS preview `03e28f4e` queued; counsel/SQL/R1-02/R1-03 + staging smoke need owner dashboards ([OWNER_ACTIONS_1_5.md](engineering/OWNER_ACTIONS_1_5.md)). Agent artifact DELETE / branch-protection API still 403. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-03 · Claim `prune-exit-artifacts.yml` in `infrastructure.json` so `infra:register:check` passes on tip `82bdb88`. Owner leftovers 1–5 handoff unchanged ([OWNER_ACTIONS_1_5.md](engineering/OWNER_ACTIONS_1_5.md)). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -169,6 +169,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-03 — Claim prune-exit-artifacts workflow in infra register
+
+`pnpm infra:register:check` failed on `82bdb88`: CI workflow `prune-exit-artifacts.yml`
+was unclaimed. Added to `docs/engineering/infrastructure.json` → `github-actions.workflows`
+(with seven-day retention note) and regenerated `INFRASTRUCTURE_REGISTER.md`.
 
 ### 2026-11-03 — Owner leftovers 1–5 prep (prune workflow, Android EAS, handoff)
 

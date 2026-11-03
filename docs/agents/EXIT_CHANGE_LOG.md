@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-03 · plan `4d75be061d1a` → `4d75be061d1a` · announced by cloud-agent claim prune-exit-artifacts workflow
+
+App at announcement: commit `82bdb880de2c88a6cfdbaef3bb65b545eaf68813`, source `4d75be061d1acc54199067065ec9ce86addf191ad6dee43d4a8b3543e6e33b4c`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- Baseline created; no prior plan to compare.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-03 · plan `b70717f17acd` → `4d75be061d1a` · announced by cloud-agent owner-leftovers-1-5
 
 App at announcement: commit `4e96e060da2e7a288f8288a564045e8e87359115` + 2 uncommitted file(s), source `4d75be061d1acc54199067065ec9ce86addf191ad6dee43d4a8b3543e6e33b4c`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

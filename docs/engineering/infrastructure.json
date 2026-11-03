@@ -133,7 +133,7 @@
     {
       "id": "github-actions",
       "name": "GitHub (repository, Actions CI)",
-      "role": "Source, full CI gates and all-branch/PR/manual/daily-default source-only exit tar artifacts with run/commit/hash provenance and thirty-day retention; cloud deployment gates remain separate",
+      "role": "Source, full CI gates and all-branch/PR/manual/daily-default source-only exit tar artifacts with run/commit/hash provenance and seven-day retention; owner-triggered prune-exit-artifacts workflow; cloud deployment gates remain separate",
       "status": "in use (CI); repository plan and deploy environments undecided",
       "environments": [
         "CI"
@@ -142,7 +142,8 @@
       "decision": "Existing CI in use; current exit workflow prepared locally, no remote run claimed",
       "workflows": [
         "ci-checks.yml",
-        "exit-release.yml"
+        "exit-release.yml",
+        "prune-exit-artifacts.yml"
       ],
       "source": "docs/engineering/ENVIRONMENTS_AND_HOSTING.md"
     },
