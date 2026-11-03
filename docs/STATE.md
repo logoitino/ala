@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-03 · Drop volatile git tip from `BUILD_LAYERS` so Exit `layers:check` stays green across merges; QC now runs `layers:check`. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-03 · Announce exit plan `f13c2b1a644c` + refresh `security:infra` after layers/CI tip (#27). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -181,6 +181,12 @@ plan.
 `scripts/__tests__/exit-workflow.test.mjs` still asserted `retention-days: 30` after
 OWNER_ACTIONS shortened exit-source uploads to 7 days; tip `2c0ee19` Quality Checks
 failed `pnpm exit:test`. Assertion updated; 9/9 workflow tests pass locally.
+
+### 2026-11-03 — Exit map + security:infra after layers CI tip
+
+#27 first push failed QC (`security:infra` stale) and Exit (`exit:map` unannounced) after
+`ci-checks.yml` / `BUILD_LAYERS` moved. Regenerated report; announced plan `f13c2b1a644c`.
+`layers:check` itself passed on that Exit run (git-tip fix worked).
 
 ### 2026-11-03 — BUILD_LAYERS git tip broke Portable Exit verify-code
 

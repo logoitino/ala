@@ -1,4 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-03 — Exit map + security:infra after layers CI tip
+
+- Announce exit plan `f13c2b1a644c` and refresh infrastructure Security report after #27’s
+  `ci-checks.yml` / `BUILD_LAYERS` change.
+
 ## 2026-11-03 — BUILD_LAYERS currency without volatile git tip
 
 - Stop embedding commit/branch in generated `BUILD_LAYERS.md` (broke Portable Exit `layers:check`

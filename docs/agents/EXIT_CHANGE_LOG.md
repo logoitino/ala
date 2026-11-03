@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-03 · plan `34f1231ce0f4` → `f13c2b1a644c` · announced by cursor/layers-exit-stale-9a86
+
+App at announcement: commit `0ad523e9e3bf7cb8761594bb904d18c3278b4e9b`, source `f13c2b1a644c0c458bef14732d8959933a38859bab616b85f81f60d1fffb3b40`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `.github/workflows/ci-checks.yml 5144543053d1deb28b6983d9c48ae13cce51658a5a9316de331a2b6a4f1ffcab`, `scripts/build-layers.mjs a7a90bc16f1e8e27a2980f04cb68c1151a622d7d84174496d5994cc200292a48`; removed `.github/workflows/ci-checks.yml a5d987bbdaacf4d28bf42796cc0402bd3c62d9902c5433d3a1d76fecbe7eb979`, `scripts/build-layers.mjs 6fbe70103143fef161535a1d833cab0866a10794017436bda110434ef9b02d4f`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-03 · plan `4d75be061d1a` → `34f1231ce0f4` · announced by cloud-agent refresh security-infra after retention test
 
 App at announcement: commit `6c5661f4dad9855a16680356a7ca675a7f4cc980`, source `34f1231ce0f4e7bc3c9a681c0bcadc72963ea33b4a29bc5015fa5699cad0fc3e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
