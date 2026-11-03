@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-03 · Align `exit-workflow` test with seven-day exit-source artifact retention (`retention-days: 7`). Tip QC failed `pnpm exit:test` after leftovers #23. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-03 · Refresh `security:infra` report + exit map after retention-test tip (`6c5661f`); CI was stale. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -169,6 +169,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-03 — Refresh security:infra after retention-test land
+
+Tip `6c5661f` Quality Checks failed `security:infra:check` (stale report) and would fail
+`exit:map:check` for the test/script fingerprint drift. Regenerated report + announced exit
+plan.
 
 ### 2026-11-03 — Exit workflow test expects retention-days 7
 

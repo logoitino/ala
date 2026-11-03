@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-03 · plan `4d75be061d1a` → `34f1231ce0f4` · announced by cloud-agent refresh security-infra after retention test
+
+App at announcement: commit `6c5661f4dad9855a16680356a7ca675a7f4cc980`, source `34f1231ce0f4e7bc3c9a681c0bcadc72963ea33b4a29bc5015fa5699cad0fc3e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `scripts/__tests__/exit-workflow.test.mjs 5753d74d071514078f799ef65ebe19f95d5549071bd4a87d1a952ee9a19c9734`; removed `scripts/__tests__/exit-workflow.test.mjs 4311c3ff8cd9896e2b2a9914edbcaa562b998769825c48d1c78b304199a9dc76`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-03 · plan `4d75be061d1a` → `4d75be061d1a` · announced by cloud-agent claim prune-exit-artifacts workflow
 
 App at announcement: commit `82bdb880de2c88a6cfdbaef3bb65b545eaf68813`, source `4d75be061d1acc54199067065ec9ce86addf191ad6dee43d4a8b3543e6e33b4c`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
