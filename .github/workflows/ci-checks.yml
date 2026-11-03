@@ -142,6 +142,10 @@ jobs:
       - name: Infrastructure register is current (INFRASTRUCTURE reviews every change)
         run: pnpm infra:register:check
 
+      # Plan + inventory currency only (no git tip). Same gate Portable Exit runs inside pnpm check.
+      - name: Build layers map is current (ARCHITECTURE_SYNC)
+        run: pnpm layers:check
+
       - name: Exact exit source release, readiness and offline runtime regression checks
         run: pnpm exit:test
 

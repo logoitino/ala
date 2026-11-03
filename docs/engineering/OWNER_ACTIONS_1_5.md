@@ -6,6 +6,16 @@ staging `.env.local` or Supabase access token in this environment). This page is
 checklist. Prices: prune / protection / counsel review routing are not Wave 0 product spend;
 Android preview and `4242` gifts are **$0** on free Expo/Stripe test quotas.
 
+**Agent progress (2026-11-03 America/Denver):**
+
+| # | Item | Status |
+| --- | --- | --- |
+| 1 | Prune exit-source artifacts | Workflow on `main`; ~30 artifacts left. **Owner must Run workflow** (agent `workflow_dispatch` / DELETE → 403). |
+| 2 | Staging smoke | Still blocked here (no `apps/mobile/.env.local`). Owner runs [TESTER_SCRIPT](TESTER_SCRIPT.md). |
+| 3 | Android EAS preview | Build `03e28f4e` **IN_PROGRESS** (Free quota, **$0**). Watch Expo dashboard. |
+| 4 | Counsel + SQL apply | Packet ready; **owner engages counsel** and applies SQL. Agent will not invent conclusions or `db push`. |
+| 5 | R1-02 / R1-03 | Protection GET/PUT → 403. Owner sets branch protection; private legal/company move when destination named. |
+
 ## 1. Prune exit-source Actions artifacts
 
 **Why:** Portable Exit CI fails with `Artifact storage quota has been hit` (~108 artifacts).
@@ -47,9 +57,10 @@ cd apps/mobile
 npx eas-cli@latest build --platform android --profile preview --non-interactive
 ```
 
-Last finished Android was `42e81674` (pre–Profile/age UX). iOS preview `09de0497` already
-FINISHED. If Expo Free Android quota is exhausted again, stop — do not buy a paid plan without
-an explicit owner spend decision (Wave 0 budget).
+Agent resubmitted after Free quota reset: `03e28f4e` (IN_PROGRESS as of 2026-11-03). Prior
+finished Android was `42e81674` (pre–Profile/age UX). iOS preview `09de0497` already FINISHED.
+If Expo Free Android quota is exhausted again, stop — do not buy a paid plan without an
+explicit owner spend decision (Wave 0 budget).
 
 ## 4. Counsel packet + SQL apply
 

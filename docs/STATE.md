@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-03 · Refresh `security:infra` report + exit map after retention-test tip (`6c5661f`); CI was stale. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-03 · Drop volatile git tip from `BUILD_LAYERS` so Exit `layers:check` stays green across merges; QC now runs `layers:check`. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -22,7 +22,7 @@ Historical §0 running log: [STATE_LOG_ARCHIVE.md](engineering/STATE_LOG_ARCHIVE
 - **Money path:** PaymentSheet → client still inserts `tips` after success. Shared core: `supabase/functions/_shared/money/` served by Expo `app/api/*+api.ts` **and** Edge Functions. **Do not** enable webhook tip crediting while the client insert remains (double-credit). Payouts return **503**.
 - **Gift release:** Local no-cut source + COORD-02 packet. Hosted tip migration / counsel / store / settlement gates **open**.
 - **Readiness:** Soft-Wall + ARCHITECTURE_SYNC + Jev + HS/college + reviewer readiness on `main`. R2 SQL layout (`supabase/legacy/`, `config.toml`, fake `seed.sql`) landed. R3/R4 not production-ready. Plan: [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md).
-- **Spend (Wave 0):** Apple Developer $99/yr (enrolled). Supabase / Expo / Stripe test = **$0**. Preview builds and `4242` test gifts are **$0** unless Expo free quota runs out or a free Supabase project pauses (Pro ~$25/mo). Android Free monthly quota window after 2026-11-01 is open again (preview `03e28f4e` queued 2026-11-03). Do not pull Wave 1 spend. Exit-source Actions artifact quota (~108) — run **Prune Exit Source Artifacts** workflow (owner) or dashboard delete; agent DELETE stays 403.
+- **Spend (Wave 0):** Apple Developer $99/yr (enrolled). Supabase / Expo / Stripe test = **$0**. Preview builds and `4242` test gifts are **$0** unless Expo free quota runs out or a free Supabase project pauses (Pro ~$25/mo). Android preview `03e28f4e` **IN_PROGRESS** (2026-11-03, $0 Free quota). Do not pull Wave 1 spend. Exit-source Actions artifacts ~30 remaining — still run **Prune Exit Source Artifacts** (owner; keep 3); agent DELETE / `workflow_dispatch` stay 403.
 
 ### Next priority — APP-TEST-01 lanes A–C
 Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc) · receipts: [COORD-01](agents/COORD-01.md#app-test-01-execution--2026-10-21-utc) · script: [TESTER_SCRIPT](engineering/TESTER_SCRIPT.md).
@@ -181,6 +181,15 @@ plan.
 `scripts/__tests__/exit-workflow.test.mjs` still asserted `retention-days: 30` after
 OWNER_ACTIONS shortened exit-source uploads to 7 days; tip `2c0ee19` Quality Checks
 failed `pnpm exit:test`. Assertion updated; 9/9 workflow tests pass locally.
+
+### 2026-11-03 — BUILD_LAYERS git tip broke Portable Exit verify-code
+
+`pnpm layers:check` compared full markdown including **Git tip at generation**. Every merge
+rewrote HEAD, so Portable Exit’s full `pnpm check` failed (`BUILD_LAYERS.md is stale`) while
+QC stayed green (it never ran `layers:check`). Removed the tip line from generation; tip stays
+in `ARCHITECTURE_CHANGE_LOG` announcements. Added `pnpm layers:check` to
+`.github/workflows/ci-checks.yml`. Owner leftovers 1–5: Android `03e28f4e` IN_PROGRESS; prune
+still owner (403); staging smoke still needs `.env.local`; counsel/SQL/R1 still owner.
 
 ### 2026-11-03 — Claim prune-exit-artifacts workflow in infra register
 

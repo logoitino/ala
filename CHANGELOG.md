@@ -1,4 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-03 — BUILD_LAYERS currency without volatile git tip
+
+- Stop embedding commit/branch in generated `BUILD_LAYERS.md` (broke Portable Exit `layers:check`
+  after every merge). Run `pnpm layers:check` in Team Quality Checks.
+
 ## 2026-11-03 — Refresh security:infra / exit map after retention-test tip
 
 - Tip CI stale after `exit-workflow` assertion change; regenerate report and announce exit plan.
