@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-03 · Claim `prune-exit-artifacts.yml` in `infrastructure.json` so `infra:register:check` passes on tip `82bdb88`. Owner leftovers 1–5 handoff unchanged ([OWNER_ACTIONS_1_5.md](engineering/OWNER_ACTIONS_1_5.md)). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-03 · Align `exit-workflow` test with seven-day exit-source artifact retention (`retention-days: 7`). Tip QC failed `pnpm exit:test` after leftovers #23. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -169,6 +169,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-03 — Exit workflow test expects retention-days 7
+
+`scripts/__tests__/exit-workflow.test.mjs` still asserted `retention-days: 30` after
+OWNER_ACTIONS shortened exit-source uploads to 7 days; tip `2c0ee19` Quality Checks
+failed `pnpm exit:test`. Assertion updated; 9/9 workflow tests pass locally.
 
 ### 2026-11-03 — Claim prune-exit-artifacts workflow in infra register
 
