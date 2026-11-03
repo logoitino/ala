@@ -12,7 +12,7 @@ Android preview and `4242` gifts are **$0** on free Expo/Stripe test quotas.
 | --- | --- | --- |
 | 1 | Prune exit-source artifacts | Workflow on `main`; ~30 artifacts left. **Owner must Run workflow** (agent `workflow_dispatch` / DELETE → 403). |
 | 2 | Staging smoke | Still blocked here (no `apps/mobile/.env.local`). Owner runs [TESTER_SCRIPT](TESTER_SCRIPT.md). |
-| 3 | Android EAS preview | Build `03e28f4e` **IN_PROGRESS** (Free quota, **$0**). Watch Expo dashboard. |
+| 3 | Android EAS preview | Build `03e28f4e` **FINISHED** (~3:59 PM America/Denver, **$0** Free). APK: https://expo.dev/artifacts/eas/gHK7JkOq4LnlNN_lcUmMBZxmY6-CqFpszt8cTbxATzA.apk |
 | 4 | Counsel + SQL apply | Packet ready; **owner engages counsel** and applies SQL. Agent will not invent conclusions or `db push`. |
 | 5 | R1-02 / R1-03 | Protection GET/PUT → 403. Owner sets branch protection; private legal/company move when destination named. |
 
@@ -57,10 +57,12 @@ cd apps/mobile
 npx eas-cli@latest build --platform android --profile preview --non-interactive
 ```
 
-Agent resubmitted after Free quota reset: `03e28f4e` (IN_PROGRESS as of 2026-11-03). Prior
-finished Android was `42e81674` (pre–Profile/age UX). iOS preview `09de0497` already FINISHED.
-If Expo Free Android quota is exhausted again, stop — do not buy a paid plan without an
-explicit owner spend decision (Wave 0 budget).
+Agent resubmitted after Free quota reset: `03e28f4e` **FINISHED** (~3:59 PM America/Denver,
+**$0** Free). APK:
+https://expo.dev/artifacts/eas/gHK7JkOq4LnlNN_lcUmMBZxmY6-CqFpszt8cTbxATzA.apk
+Prior finished Android was `42e81674` (pre–Profile/age UX). iOS preview `09de0497` already
+FINISHED. If Expo Free Android quota is exhausted again, stop — do not buy a paid plan without
+an explicit owner spend decision (Wave 0 budget).
 
 ## 4. Counsel packet + SQL apply
 

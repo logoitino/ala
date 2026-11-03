@@ -1,4 +1,8 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-03 — Android preview `03e28f4e` finished ($0 Free)
+
+- EAS Android preview APK ready; record in STATE / OWNER_ACTIONS_1_5.
+
 ## 2026-11-03 — Exit map + security:infra after layers CI tip
 
 - Announce exit plan `f13c2b1a644c` and refresh infrastructure Security report after #27’s
