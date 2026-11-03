@@ -1,6 +1,6 @@
 {
-  "planVersion": "b69b3fb59565",
-  "contentHash": "b69b3fb5956540bf0d126693947af69d84b01f3c1f5942a038ef20d0924611ea",
+  "planVersion": "6012398c89ff",
+  "contentHash": "6012398c89ffc4eeaf5e24d3e92bd48c7401e29b90e7e701b6549050a31f0cb7",
   "signals": {
     "edgeFunctions": [
       "create-payment-intent",
@@ -38,9 +38,10 @@
     ],
     "workflows": [
       "ci-checks.yml",
-      "exit-release.yml"
+      "exit-release.yml",
+      "prune-exit-artifacts.yml"
     ],
     "agentCount": 116
   },
-  "at": "2026-10-27T22:08:57.893Z"
+  "at": "2026-11-03T22:12:32.727Z"
 }

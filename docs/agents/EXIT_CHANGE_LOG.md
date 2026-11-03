@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-03 · plan `b70717f17acd` → `4d75be061d1a` · announced by cloud-agent owner-leftovers-1-5
+
+App at announcement: commit `4e96e060da2e7a288f8288a564045e8e87359115` + 2 uncommitted file(s), source `4d75be061d1acc54199067065ec9ce86addf191ad6dee43d4a8b3543e6e33b4c`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `.github/workflows/exit-release.yml a85a25d5c45292aa6879ed49f74fda6cc6cf8830bab9e204b1baa0928e00db8b`, `.github/workflows/prune-exit-artifacts.yml 145993cb178e5a200c2ef620da3d7dbc39e548ec8e23ddb482e062faad05a397`; removed `.github/workflows/exit-release.yml 20e129c275cb8915908d9554c5477f9ca8625f2c39a07aa5c3bb5335b94dc70a`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-10-31 · plan `1c13a518ce43` → `b70717f17acd` · announced by cloud-agent build-layers recovery allowlist
 
 App at announcement: commit `a50d172a7ff249d5e6d9c43aae265bcb9ad1730c` + 1 uncommitted file(s), source `b70717f17acda17c9900a87de0337bdb525d724891f3e9d4895afda87b7deaea`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

@@ -155,7 +155,8 @@ jobs:
           path: |
             ${{ runner.temp }}/tapuai-exit-source-bundle.tar.gz
             ${{ runner.temp }}/tapuai-exit-source-bundle.tar.gz.sha256
-          retention-days: 30
+          # Keep short: free Actions artifact quota fills quickly with daily exit-source ZIPs.
+          retention-days: 7
           include-hidden-files: true
           if-no-files-found: error
       # Uploading unverified source is useful; a failed full check must still make the workflow fail.

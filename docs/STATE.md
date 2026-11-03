@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-10-31 · Recovery capsule allowlists `build-layers.json` / `.baseline.json` so Portable Exit can package ARCHITECTURE_SYNC source (plan `b70717f17acd`). Stack on `main`; APP-TEST-01 A–C next; webhook tip crediting stays **off**. Device Soft-Wall smoke and gift counsel/hosted gates remain open.
+**Last updated:** 2026-11-03 · Owner leftovers 1–5: prune workflow + 7-day exit artifact retention; Android EAS preview `03e28f4e` queued; counsel/SQL/R1-02/R1-03 + staging smoke need owner dashboards ([OWNER_ACTIONS_1_5.md](engineering/OWNER_ACTIONS_1_5.md)). Agent artifact DELETE / branch-protection API still 403. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -22,7 +22,7 @@ Historical §0 running log: [STATE_LOG_ARCHIVE.md](engineering/STATE_LOG_ARCHIVE
 - **Money path:** PaymentSheet → client still inserts `tips` after success. Shared core: `supabase/functions/_shared/money/` served by Expo `app/api/*+api.ts` **and** Edge Functions. **Do not** enable webhook tip crediting while the client insert remains (double-credit). Payouts return **503**.
 - **Gift release:** Local no-cut source + COORD-02 packet. Hosted tip migration / counsel / store / settlement gates **open**.
 - **Readiness:** Soft-Wall + ARCHITECTURE_SYNC + Jev + HS/college + reviewer readiness on `main`. R2 SQL layout (`supabase/legacy/`, `config.toml`, fake `seed.sql`) landed. R3/R4 not production-ready. Plan: [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md).
-- **Spend (Wave 0):** Apple Developer $99/yr (enrolled). Supabase / Expo / Stripe test = **$0**. Preview builds and `4242` test gifts are **$0** unless Expo free quota runs out or a free Supabase project pauses (Pro ~$25/mo). Android Free monthly quota blocked until Sun Nov 01 2026. Do not pull Wave 1 spend. Exit-source Actions artifact quota (~106) needs owner prune (token cannot DELETE).
+- **Spend (Wave 0):** Apple Developer $99/yr (enrolled). Supabase / Expo / Stripe test = **$0**. Preview builds and `4242` test gifts are **$0** unless Expo free quota runs out or a free Supabase project pauses (Pro ~$25/mo). Android Free monthly quota window after 2026-11-01 is open again (preview `03e28f4e` queued 2026-11-03). Do not pull Wave 1 spend. Exit-source Actions artifact quota (~108) — run **Prune Exit Source Artifacts** workflow (owner) or dashboard delete; agent DELETE stays 403.
 
 ### Next priority — APP-TEST-01 lanes A–C
 Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc) · receipts: [COORD-01](agents/COORD-01.md#app-test-01-execution--2026-10-21-utc) · script: [TESTER_SCRIPT](engineering/TESTER_SCRIPT.md).
@@ -169,6 +169,16 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-03 — Owner leftovers 1–5 prep (prune workflow, Android EAS, handoff)
+
+Agent cannot finish owner-gated steps alone. Shipped: `.github/workflows/prune-exit-artifacts.yml`
+(`workflow_dispatch`, `actions: write`, keep newest N); exit-source artifact **retention-days 7**
+(was 30); [OWNER_ACTIONS_1_5.md](engineering/OWNER_ACTIONS_1_5.md) for prune / staging smoke /
+Android EAS / counsel+SQL / R1-02·R1-03. Android preview build submitted
+`03e28f4e-aa8e-4552-8b58-25ab80372686` (IN_QUEUE). Staging smoke blocked here (no mobile
+`.env.local`). Counsel packet unchanged — owner engages counsel; SQL apply still owner-only.
+Branch protection GET/PUT → 403 for this token. Webhook tip crediting stays off.
 
 ### 2026-10-31 — Recovery capsule allows build-layers JSON
 
