@@ -61,8 +61,12 @@ production database is only safe once the schema can be rebuilt from migrations.
       (Step 4, done 2026-09-29 – 2026-10-02).
 - [ ] **Owner:** merge the branch into `main`, push, and turn on branch protection for `main`
       (pull request + passing CI required). Needs GitHub access and owner approval.
+      Exact steps: [OWNER_ACTIONS_1_5.md](OWNER_ACTIONS_1_5.md) §5 (R1-02). Soft-Wall → reviewer stack
+      already on `main` (2026-10-31); protection rule itself remains owner-admin.
 - [ ] **Owner:** before giving anyone outside the company repo access, move `docs/legal/` and
       `docs/company/` to a private location (private repo or shared drive) and leave a pointer.
+      Steps: [OWNER_ACTIONS_1_5.md](OWNER_ACTIONS_1_5.md) §5 (R1-03). Repo is already `private`;
+      this is the extra step before outside-company access.
 - [ ] Confirm whether the root `app.json` (`{"expo": {}}`, added 2026-10-01) is still needed; the real
       config is `apps/mobile/app.json`. An empty `apps/mobile/apps/` folder is left in place (owner:
       do not delete); git ignores it.

@@ -1,4 +1,10 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-03 — Owner leftovers 1–5: prune workflow + Android EAS handoff
+
+- Add `Prune Exit Source Artifacts` workflow; shorten exit-source artifact retention to 7 days.
+- Owner checklist: [docs/engineering/OWNER_ACTIONS_1_5.md](docs/engineering/OWNER_ACTIONS_1_5.md).
+- Android EAS preview `03e28f4e` submitted after Free quota reset window.
+
 ## 2026-10-31 — Recovery capsule allows ARCHITECTURE_SYNC build-layers JSON
 
 - Allowlist `docs/engineering/build-layers.json` and `build-layers.baseline.json` in

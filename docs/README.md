@@ -55,6 +55,7 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 | [Timed trivia plan](engineering/design/TIMED_TRIVIA_IMPLEMENTATION_PLAN.md) | Approved 30/90-second server/admin/player work and local verification. |
 | [QUIZ-02](agents/QUIZ-02.md) | New timed trivia enrollment and actual readiness; QUIZ-01 remains historical. |
 | [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md) | The engineering readiness plan: readiness phases R1–R4, from dev-only to a separate production environment. |
+| [OWNER_ACTIONS_1_5.md](engineering/OWNER_ACTIONS_1_5.md) | Wave 0 leftovers the owner must run: artifact prune, staging smoke, Android EAS, counsel/SQL, R1-02/R1-03. |
 | [ENVIRONMENTS_AND_HOSTING.md](engineering/ENVIRONMENTS_AND_HOSTING.md) | Laptop, development, staging, and production; the scalability ladder (no cache server we run; video host not selected); stay on Supabase or move to AWS / Azure; phases E0–E3. |
 | [HOSTING_DECISION_BRIEF.md](engineering/HOSTING_DECISION_BRIEF.md) | Prior engineering recommendations plus the owner's $50/month follow-up (§10): phased costs, Supabase/AWS/Azure/own-server options, video workload, operating effort and a prepared Claude review. Prices unverified. |
 | [GROWTH_CAPACITY_REVIEW.md](engineering/GROWTH_CAPACITY_REVIEW.md) | One accountable growth/capacity team, accepted measurement sources, per-service review triggers and CTO/owner decisions. |

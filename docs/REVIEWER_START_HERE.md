@@ -3,6 +3,9 @@
 
 One page for an outside engineer reviewing Tapua'i. **Wave 0 / Stripe test mode.** This doc does not approve merge, SQL apply, counsel, or live money.
 
+Owner Wave 0 leftovers (artifact prune, staging smoke, Android EAS, counsel/SQL, branch
+protection / private legal): [engineering/OWNER_ACTIONS_1_5.md](engineering/OWNER_ACTIONS_1_5.md).
+
 ## Repo map
 
 | Path | Role |
