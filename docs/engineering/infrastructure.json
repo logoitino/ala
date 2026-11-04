@@ -133,7 +133,7 @@
     {
       "id": "github-actions",
       "name": "GitHub (repository, Actions CI)",
-      "role": "Source, full CI gates and all-branch/PR/manual/daily-default source-only exit tar artifacts with run/commit/hash provenance and seven-day retention; owner-triggered prune-exit-artifacts workflow; cloud deployment gates remain separate",
+      "role": "Source, full CI gates and all-branch/PR/manual/daily-default source-only exit tar artifacts with run/commit/hash provenance and seven-day retention; prune-exit-artifacts workflow (weekly schedule keep-3 plus owner workflow_dispatch); cloud deployment gates remain separate",
       "status": "in use (CI); repository plan and deploy environments undecided",
       "environments": [
         "CI"

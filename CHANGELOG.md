@@ -1,4 +1,27 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-04 — Portable Exit upload best-effort under Actions quota
+
+- `exit-release.yml` upload `continue-on-error`; verify-code remains the workflow fail gate.
+- Workflow test asserts the soft upload.
+
+## 2026-11-04 — Weekly schedule for Prune Exit Source Artifacts
+
+- Cron Sundays 06:17 UTC keep-3 plus existing owner `workflow_dispatch`; infra register role text.
+
+## 2026-11-03 — Android preview `03e28f4e` finished ($0 Free)
+
+- EAS Android preview APK ready; record in STATE / OWNER_ACTIONS_1_5.
+
+## 2026-11-03 — Exit map + security:infra after layers CI tip
+
+- Announce exit plan `f13c2b1a644c` and refresh infrastructure Security report after #27’s
+  `ci-checks.yml` / `BUILD_LAYERS` change.
+
+## 2026-11-03 — BUILD_LAYERS currency without volatile git tip
+
+- Stop embedding commit/branch in generated `BUILD_LAYERS.md` (broke Portable Exit `layers:check`
+  after every merge). Run `pnpm layers:check` in Team Quality Checks.
+
 ## 2026-11-03 — Refresh security:infra / exit map after retention-test tip
 
 - Tip CI stale after `exit-workflow` assertion change; regenerate report and announce exit plan.
