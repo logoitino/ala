@@ -10,7 +10,7 @@ Android preview and `4242` gifts are **$0** on free Expo/Stripe test quotas.
 
 | # | Item | Status |
 | --- | --- | --- |
-| 1 | Prune exit-source artifacts | Workflow on `main` + **weekly Sunday schedule** (keep 3). ~30 left. Immediate prune still needs owner **Run workflow** (agent dispatch/DELETE → 403). |
+| 1 | Prune exit-source artifacts | Workflow on `main` + **weekly Sunday schedule** (keep 3). ~30 left — quota still blocks **upload** (verify-code now soft). Immediate prune needs owner **Run workflow** (agent 403). |
 | 2 | Staging smoke | Still blocked here (no `apps/mobile/.env.local`). Owner runs [TESTER_SCRIPT](TESTER_SCRIPT.md). |
 | 3 | Android EAS preview | Build `03e28f4e` **FINISHED** (~3:59 PM America/Denver, **$0** Free). APK: https://expo.dev/artifacts/eas/gHK7JkOq4LnlNN_lcUmMBZxmY6-CqFpszt8cTbxATzA.apk |
 | 4 | Counsel + SQL apply | Packet ready; **owner engages counsel** and applies SQL. Agent will not invent conclusions or `db push`. |

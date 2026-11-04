@@ -45,6 +45,7 @@ test('raw current source precedes optional full checks and quality failure remai
   assert.match(step('provenance'), /if: always\(\) && steps\.capture\.outcome == 'success'/);
   const upload = steps.find(source => source.includes('actions/upload-artifact@v4'));
   assert.match(upload, /if: always\(\) && steps\.capture\.outcome == 'success' && steps\.provenance\.outcome == 'success' && steps\.transport\.outcome == 'success'/);
+  assert.match(upload, /continue-on-error: true/); // quota must not fail the job when verify-code passed
   assert.match(upload, /github\.event_name.*github\.sha.*github\.run_id.*github\.run_attempt/);
   assert.match(upload, /retention-days: 7/);
   assert.match(upload, /tapuai-exit-source-bundle\.tar\.gz\n.*tapuai-exit-source-bundle\.tar\.gz\.sha256/);

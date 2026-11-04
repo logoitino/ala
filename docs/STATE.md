@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-04 · Weekly schedule on Prune Exit Source Artifacts (keep 3) so leftover #1 recovers quota without a click. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-04 · Portable Exit upload is best-effort under Actions quota; verify-code remains the fail gate. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -181,6 +181,13 @@ plan.
 `scripts/__tests__/exit-workflow.test.mjs` still asserted `retention-days: 30` after
 OWNER_ACTIONS shortened exit-source uploads to 7 days; tip `2c0ee19` Quality Checks
 failed `pnpm exit:test`. Assertion updated; 9/9 workflow tests pass locally.
+
+### 2026-11-04 — Exit artifact upload best-effort under quota
+
+Tip `161b56f` QC green; Portable Exit verify-code **passed**, then upload failed
+`Artifact storage quota has been hit` (~30 exit-source artifacts). Upload step is now
+`continue-on-error` with a warning; job red only if verify-code fails. Owner prune /
+weekly schedule still needed to recover retention copies.
 
 ### 2026-11-04 — Weekly prune schedule for exit-source artifacts
 

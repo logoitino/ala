@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-04 · plan `4f454935a8a7` → `130a2b37a3ab` · announced by cursor/layers-exit-stale-9a86
+
+App at announcement: commit `161b56fd65fb8e8db07fa05ca50138cf0e162b4e` + 2 uncommitted file(s), source `130a2b37a3ab4a2150bf7dee05f19281124ddfa57adbc8ff2f08e6dba5ee7207`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `.github/workflows/exit-release.yml 8548e36cdc3e436c0d7fac7f79f74ddbf65d4c0cf99c02792333dee74da3efd4`, `scripts/__tests__/exit-workflow.test.mjs 473fb82897e579f8d03b53d0856561278f6289c92b6728ecff15ded6b08bae03`; removed `.github/workflows/exit-release.yml a85a25d5c45292aa6879ed49f74fda6cc6cf8830bab9e204b1baa0928e00db8b`, `scripts/__tests__/exit-workflow.test.mjs 5753d74d071514078f799ef65ebe19f95d5549071bd4a87d1a952ee9a19c9734`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-04 · plan `f13c2b1a644c` → `4f454935a8a7` · announced by cursor/layers-exit-stale-9a86
 
 App at announcement: commit `d9595895b8d8b80c9a4049c341ef36db71f9121e` + 1 uncommitted file(s), source `4f454935a8a70e40c137b113c4e04dcc5c9041517f42cce021798720a7e399fb`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

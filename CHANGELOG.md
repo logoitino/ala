@@ -1,4 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-04 — Portable Exit upload best-effort under Actions quota
+
+- `exit-release.yml` upload `continue-on-error`; verify-code remains the workflow fail gate.
+- Workflow test asserts the soft upload.
+
 ## 2026-11-04 — Weekly schedule for Prune Exit Source Artifacts
 
 - Cron Sundays 06:17 UTC keep-3 plus existing owner `workflow_dispatch`; infra register role text.

@@ -147,8 +147,12 @@ jobs:
           await fs.writeFile(filename + '.sha256', hash.digest('hex') + '  ' + filename + '\n', { mode: 0o600, flag: 'wx' });
           NODE
       # No database exports, runtime environment, private keys, image layers or credential inputs enter this source artifact.
+      # Upload is best-effort: free Actions artifact quota must not paint the job red when verify-code passed.
+      # Owner prune / weekly prune-exit-artifacts recovers quota; continue-on-error keeps the gate honest.
       - name: Retain current source, plan and honest check outcome
+        id: upload
         if: always() && steps.capture.outcome == 'success' && steps.provenance.outcome == 'success' && steps.transport.outcome == 'success'
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: exit-source-${{ github.event_name }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -159,6 +163,12 @@ jobs:
           retention-days: 7
           include-hidden-files: true
           if-no-files-found: error
+      - name: Warn when exit-source artifact upload did not land
+        if: always() && steps.upload.outcome == 'failure'
+        run: |
+          echo "::warning::exit-source artifact upload failed (often GitHub Actions free storage quota)."
+          echo "Code verification is gated separately below. Run Actions → Prune Exit Source Artifacts (keep 3),"
+          echo "or wait for the weekly prune schedule after it lands on main."
       # Uploading unverified source is useful; a failed full check must still make the workflow fail.
       - name: Require successful code verification for CI success
         if: always()
