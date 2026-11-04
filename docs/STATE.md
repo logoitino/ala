@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-04 · Portable Exit upload is best-effort under Actions quota; verify-code remains the fail gate. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-04 · Owner priority: **app readiness (APP-TEST A–C)**; Exit plan on **backburner** (same-turn map updates only). #27 on `main`. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -11,18 +11,22 @@ Older §0 running log (not deleted): [engineering/STATE_LOG_ARCHIVE.md](engineer
 
 ---
 
-## 0. Pick up here (2026-10-31)
+## 0. Pick up here (2026-11-04)
 
 **Wave 0 — internal test.** Stripe test mode. No live money. Outside engineers start at
 [REVIEWER_START_HERE.md](REVIEWER_START_HERE.md). Folder law: [AGENTS.md](../AGENTS.md).
 Historical §0 running log: [STATE_LOG_ARCHIVE.md](engineering/STATE_LOG_ARCHIVE.md).
 
+### Owner priority (2026-11-04)
+1. **App first** — make the Expo app ready to test: [APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc) lanes **A → B → C**, staging smoke, Soft-Wall / gift / Highlight journeys. No new product features ahead of that.
+2. **Exit on the backburner** — Redundancy & Exit still gets **same-turn** `exit:map` / announce when app changes touch it (`pnpm check` keeps currency). Do **not** start exit drills, cloud targets, home-lab servers, or exit-led engineering sprints until APP-TEST A–C have real evidence. Portable Exit CI remains a gate, not the work queue.
+
 ### What is true right now
 - **Product:** Expo fan app + Expo `/admin` (writes) + Next portal (read-only). Soft-Wall browse-first auth (polish #12 + Vault resume on main). Gift/Give for athletes; Donation for programs; Tip Tapua'i optional ([VOICE](product/VOICE.md)). Identifiers stay `tips` / `malo*` / `reels` ([GLOSSARY](GLOSSARY.md)). HS + college framing (`'26`–`'30`).
 - **Money path:** PaymentSheet → client still inserts `tips` after success. Shared core: `supabase/functions/_shared/money/` served by Expo `app/api/*+api.ts` **and** Edge Functions. **Do not** enable webhook tip crediting while the client insert remains (double-credit). Payouts return **503**.
 - **Gift release:** Local no-cut source + COORD-02 packet. Hosted tip migration / counsel / store / settlement gates **open**.
-- **Readiness:** Soft-Wall + ARCHITECTURE_SYNC + Jev + HS/college + reviewer readiness on `main`. R2 SQL layout (`supabase/legacy/`, `config.toml`, fake `seed.sql`) landed. R3/R4 not production-ready. Plan: [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md).
-- **Spend (Wave 0):** Apple Developer $99/yr (enrolled). Supabase / Expo / Stripe test = **$0**. Preview builds and `4242` test gifts are **$0** unless Expo free quota runs out or a free Supabase project pauses (Pro ~$25/mo). Android preview `03e28f4e` **FINISHED** 2026-11-03 (~3:59 PM America/Denver) — APK [expo artifact](https://expo.dev/artifacts/eas/gHK7JkOq4LnlNN_lcUmMBZxmY6-CqFpszt8cTbxATzA.apk) ($0 Free). Do not pull Wave 1 spend. Exit-source Actions artifacts ~30 remaining — still run **Prune Exit Source Artifacts** (owner; keep 3); agent DELETE / `workflow_dispatch` stay 403.
+- **Readiness:** Soft-Wall + ARCHITECTURE_SYNC + Jev + HS/college + reviewer readiness + layers/Exit CI soft-upload (#27) on `main`. R2 SQL layout landed. R3/R4 not production-ready. Plan: [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md).
+- **Spend (Wave 0):** Apple Developer $99/yr (enrolled). Supabase / Expo / Stripe test = **$0**. Preview builds and `4242` test gifts are **$0** unless Expo free quota runs out or a free Supabase project pauses (Pro ~$25/mo). Android preview `03e28f4e` **FINISHED** — APK [expo artifact](https://expo.dev/artifacts/eas/gHK7JkOq4LnlNN_lcUmMBZxmY6-CqFpszt8cTbxATzA.apk) ($0 Free). Do not pull Wave 1 spend. Optional: owner **Prune Exit Source Artifacts** (keep 3) when quota warnings appear.
 
 ### Next priority — APP-TEST-01 lanes A–C
 Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc) · receipts: [COORD-01](agents/COORD-01.md#app-test-01-execution--2026-10-21-utc) · script: [TESTER_SCRIPT](engineering/TESTER_SCRIPT.md).
@@ -169,6 +173,14 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-04 — App first; Exit backburner; #27 on main
+
+Owner: focus engineering on APP-TEST A–C / staging smoke. Exit plan stays updated by same-turn
+gates only — not the active queue. Squash-merged [#27](https://github.com/logoitino/ala/pull/27)
+onto `main` (`6b3a95d`): layers tip fix, weekly prune schedule, Exit upload soft-fail under
+quota, Android `03e28f4e` recorded. No other open PRs. Stale squash leftover remote heads are
+safe to delete; they are not unmerged app work.
 
 ### 2026-11-03 — Refresh security:infra after retention-test land
 

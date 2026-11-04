@@ -1,4 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-04 — App readiness priority; Exit on backburner
+
+- STATE §0 / WORK_QUEUE: APP-TEST A–C is the active queue; Exit same-turn currency only.
+- #27 squash-merged to `main` (layers tip, weekly prune, Exit upload soft-fail).
+
 ## 2026-11-04 — Portable Exit upload best-effort under Actions quota
 
 - `exit-release.yml` upload `continue-on-error`; verify-code remains the workflow fail gate.
