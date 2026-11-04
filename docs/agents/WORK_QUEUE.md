@@ -125,10 +125,15 @@ execution or a continuous delivery service.
 
 ## APP-TEST-01 — Current app testing priorities — 2026-10-21 UTC
 
+**2026-11-04 owner priority:** App readiness is the active engineering queue (lanes **A → B → C**
+before D–F). Redundancy & Exit stays on the **backburner**: keep `exit:map` / announce current
+when code moves, but do not run exit drills, provision cloud restore targets, or prioritize
+Portable Exit work ahead of APP-TEST evidence. Webhook tip crediting stays off.
+
 **2026-10-31 stack note:** Soft-Wall, ARCHITECTURE_SYNC, Jev, HS+college, and reviewer readiness
-are on `main`. This queue remains the next engineering priority (lanes **A → B → C** before D–F).
-Webhook tip crediting stays off. Owner still owns Google OAuth enablement, SQL/Edge apply, and
-device smoke; engineering keeps guides/fixtures/CI green. STATE §0 carries the live handoff.
+are on `main` (layers/Exit CI soft-upload landed via #27). Owner still owns Google OAuth
+enablement, SQL/Edge apply, and device smoke; engineering keeps guides/fixtures/CI green.
+STATE §0 carries the live handoff.
 
 Owner asked to check the roadmap and update the whole team. This is the current app execution
 order; dated task sections below retain their own evidence. [Roadmap](../product/ROADMAP.md),
@@ -159,7 +164,10 @@ agent scheduler is established. Current claims and actual checks are in [COORD-0
 
 ## REDUNDANCY-01 — Supabase backup and AWS/Azure migration preparation (2026-10-19)
 
-Owner confirmed backup of Supabase and continued the build. Local all-destination jobs, guarded retry, capture-time health checks and protected-checksum cloud retrieval now accompany backup/restore, source capsule, container and per-cloud Terraform work is recorded in [REDUNDANCY-01](REDUNDANCY-01.md); operator sequence is [CLOUD_MIGRATION_RUNBOOK](../engineering/exit/CLOUD_MIGRATION_RUNBOOK.md). Operational runner setup is [BACKUP_OPERATIONS](../engineering/BACKUP_OPERATIONS.md). Next: INFRASTRUCTURE / RECOVERY prepare the private runner/identities and run an approved isolated backup-and-restore drill after source migration inventory, service versions and upstream pins are verified. DATABASE_MIGRATIONS / RLS_SECURITY review Auth/Storage schemas, TOC and access; QA / RELEASE measure client move and RPO/RTO; Finance reconciles provider events before cutover. No new role, scheduler, cloud purchase or production change follows from the local kit.
+**Backburner (owner 2026-11-04):** keep the exit map and local tools current with app changes;
+do not schedule drills or cloud targets while APP-TEST-01 is the active priority.
+
+Owner confirmed backup of Supabase and continued the build. Local all-destination jobs, guarded retry, capture-time health checks and protected-checksum cloud retrieval now accompany backup/restore, source capsule, container and per-cloud Terraform work is recorded in [REDUNDANCY-01](REDUNDANCY-01.md); operator sequence is [CLOUD_MIGRATION_RUNBOOK](../engineering/exit/CLOUD_MIGRATION_RUNBOOK.md). Operational runner setup is [BACKUP_OPERATIONS](../engineering/BACKUP_OPERATIONS.md). Later (when re-prioritized): INFRASTRUCTURE / RECOVERY prepare the private runner/identities and run an approved isolated backup-and-restore drill after source migration inventory, service versions and upstream pins are verified. DATABASE_MIGRATIONS / RLS_SECURITY review Auth/Storage schemas, TOC and access; QA / RELEASE measure client move and RPO/RTO; Finance reconciles provider events before cutover. No new role, scheduler, cloud purchase or production change follows from the local kit.
 
 Last updated: 2026-10-21. Entry point: [STATE.md](../STATE.md). Owners and executable
 instructions: [TEAMS.md](TEAMS.md), [TEAM_HIERARCHY.md](TEAM_HIERARCHY.md), and the agent registry.
