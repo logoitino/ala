@@ -7,9 +7,9 @@ No providers contacted; operationalAcceptance=false; readyToCutOver=false.
 
 ## Source binding
 
-- Safe source SHA256: `f13c2b1a644c0c458bef14732d8959933a38859bab616b85f81f60d1fffb3b40` (1310 files).
-- Security metadata SHA256: `ac3fd877055fcf4d4cca34f8e03d442ecfa167f928b169f74de6cde1bf3f2c5e` (12 files).
-- Combined binding: `456ce235408e8ab866b20eb98a08f44ca2bef30c1b5d725f19aa5d5e1dc6fe0d`.
+- Safe source SHA256: `4f454935a8a70e40c137b113c4e04dcc5c9041517f42cce021798720a7e399fb` (1310 files).
+- Security metadata SHA256: `19bc41530c0d6dcf439da94faac4d60b355162d43cd1f31150fc29da3a47edfc` (12 files).
+- Combined binding: `5e01f0bb7ba2e467e79d8f471a1a1b79b44dbd0ca0dd7c0ef7513f6423cac229`.
 - Unresolved SDK syntax candidates: 95; their owners still need semantic review.
 
 Scope is registered services/components and governed safe source, not unknown shadow systems or live cloud observations.

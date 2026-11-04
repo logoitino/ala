@@ -10,7 +10,7 @@ Android preview and `4242` gifts are **$0** on free Expo/Stripe test quotas.
 
 | # | Item | Status |
 | --- | --- | --- |
-| 1 | Prune exit-source artifacts | Workflow on `main`; ~30 artifacts left. **Owner must Run workflow** (agent `workflow_dispatch` / DELETE → 403). |
+| 1 | Prune exit-source artifacts | Workflow on `main` + **weekly Sunday schedule** (keep 3). ~30 left. Immediate prune still needs owner **Run workflow** (agent dispatch/DELETE → 403). |
 | 2 | Staging smoke | Still blocked here (no `apps/mobile/.env.local`). Owner runs [TESTER_SCRIPT](TESTER_SCRIPT.md). |
 | 3 | Android EAS preview | Build `03e28f4e` **FINISHED** (~3:59 PM America/Denver, **$0** Free). APK: https://expo.dev/artifacts/eas/gHK7JkOq4LnlNN_lcUmMBZxmY6-CqFpszt8cTbxATzA.apk |
 | 4 | Counsel + SQL apply | Packet ready; **owner engages counsel** and applies SQL. Agent will not invent conclusions or `db push`. |
@@ -22,9 +22,10 @@ Android preview and `4242` gifts are **$0** on free Expo/Stripe test quotas.
 
 **Do one of:**
 
-1. **Preferred — run the workflow** (after this PR lands on `main`):  
+1. **Immediate — run the workflow** (already on `main`; also scheduled Sundays 06:17 UTC keep 3):  
    GitHub → Actions → **Prune Exit Source Artifacts** → Run workflow → keep `3`.  
-   Needs `actions: write` on the default `GITHUB_TOKEN` (workflow already requests it).
+   Needs `actions: write` on the default `GITHUB_TOKEN` (workflow already requests it). Agent
+   tokens cannot `workflow_dispatch` this (403).
 2. **Dashboard:** Settings → Actions → Artifacts → delete old `exit-source-*` rows; keep newest 3.
 3. **CLI (owner PAT with `actions: write`):**
 

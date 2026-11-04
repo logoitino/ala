@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-03 · Android preview `03e28f4e` **FINISHED** ($0 Free); #27 tip QC + Portable Exit green. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-04 · Weekly schedule on Prune Exit Source Artifacts (keep 3) so leftover #1 recovers quota without a click. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -182,13 +182,20 @@ plan.
 OWNER_ACTIONS shortened exit-source uploads to 7 days; tip `2c0ee19` Quality Checks
 failed `pnpm exit:test`. Assertion updated; 9/9 workflow tests pass locally.
 
+### 2026-11-04 — Weekly prune schedule for exit-source artifacts
+
+`.github/workflows/prune-exit-artifacts.yml` now also runs Sundays 06:17 UTC (keep 3), so
+leftover #1 recovers Actions free quota without an owner click. Manual `workflow_dispatch`
+stays for an immediate prune (agent still 403). Claim text refreshed in
+`infrastructure.json`. Staging smoke / counsel+SQL / R1 still owner-gated.
+
 ### 2026-11-03 — Android preview `03e28f4e` FINISHED ($0)
 
 EAS Android preview finished (~3:59 PM America/Denver). Profile `preview`, SDK 58,
 commit `4e96e06`. APK:
 https://expo.dev/artifacts/eas/gHK7JkOq4LnlNN_lcUmMBZxmY6-CqFpszt8cTbxATzA.apk
-#27 tip `358ba7b` Team QC + Portable Exit both **success**. Owner leftovers still open:
-prune dispatch, staging smoke, counsel/SQL, R1-02/R1-03.
+#27 tip Team QC + Portable Exit both **success**. Owner leftovers still open:
+immediate prune (optional now that weekly runs), staging smoke, counsel/SQL, R1-02/R1-03.
 
 ### 2026-11-03 — Exit map + security:infra after layers CI tip
 

@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-04 · plan `f13c2b1a644c` → `4f454935a8a7` · announced by cursor/layers-exit-stale-9a86
+
+App at announcement: commit `d9595895b8d8b80c9a4049c341ef36db71f9121e` + 1 uncommitted file(s), source `4f454935a8a70e40c137b113c4e04dcc5c9041517f42cce021798720a7e399fb`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `.github/workflows/prune-exit-artifacts.yml 24a2849320ea854e10ea45911c0eb2c36b3df4131553d56fe343877142671b84`; removed `.github/workflows/prune-exit-artifacts.yml 145993cb178e5a200c2ef620da3d7dbc39e548ec8e23ddb482e062faad05a397`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-03 · plan `34f1231ce0f4` → `f13c2b1a644c` · announced by cursor/layers-exit-stale-9a86
 
 App at announcement: commit `0ad523e9e3bf7cb8761594bb904d18c3278b4e9b`, source `f13c2b1a644c0c458bef14732d8959933a38859bab616b85f81f60d1fffb3b40`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

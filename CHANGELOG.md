@@ -1,4 +1,8 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-04 — Weekly schedule for Prune Exit Source Artifacts
+
+- Cron Sundays 06:17 UTC keep-3 plus existing owner `workflow_dispatch`; infra register role text.
+
 ## 2026-11-03 — Android preview `03e28f4e` finished ($0 Free)
 
 - EAS Android preview APK ready; record in STATE / OWNER_ACTIONS_1_5.

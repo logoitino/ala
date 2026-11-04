@@ -1,5 +1,5 @@
 {
- "planVersion": "f13c2b1a644c",
+ "planVersion": "4f454935a8a7",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1465,7 +1465,7 @@
    ".github/pull_request_template.md 97bc1b0241b01bbcbc356d600a05eeebb4615967220ba7832456164c25826f82",
    ".github/workflows/ci-checks.yml 5144543053d1deb28b6983d9c48ae13cce51658a5a9316de331a2b6a4f1ffcab",
    ".github/workflows/exit-release.yml a85a25d5c45292aa6879ed49f74fda6cc6cf8830bab9e204b1baa0928e00db8b",
-   ".github/workflows/prune-exit-artifacts.yml 145993cb178e5a200c2ef620da3d7dbc39e548ec8e23ddb482e062faad05a397",
+   ".github/workflows/prune-exit-artifacts.yml 24a2849320ea854e10ea45911c0eb2c36b3df4131553d56fe343877142671b84",
    ".npmrc 1cf445caa9452da6f460c72e8777c9d5452caa4d02f0f6a17717bce818a0a3bc",
    "app.json b7c55adf9886178318b9a475422a1a361cb6a3211b82f774104c77e460a1ec88",
    "apps/admin-portal/app/(protected)/analytics/page.tsx 82e248d65403cc8a8b2de3930950a0f30ac0c0e4064e6629a21c74a15af81bff",
