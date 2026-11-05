@@ -82,8 +82,9 @@ are touched (§5).
 | Welcome, Athlete HQ, role dashboard panels | Done | phase 1 |
 | Sign-in, age card, gift sheet, fan headings, Activity | Done | phase 2 `4b2e5b6` |
 | Admin portal shell, Local live cards, Spotlight, Vault, receipts | Done | phase 3 `a1b2e3e`, merged `77b1b26` |
-| Highlights reel overlay (`ReelActionOverlay`) | Next | Restyle buttons to Kit `light`/`glass`; no logic changes. |
-| Profile hero, Aura trading card, Crew strip | Next | Map to night/holo card pattern. |
+| Highlights reel overlay (`ReelActionOverlay`) | Done | 48pt glass rail buttons, light Give button (neon after giving), pill athlete chip; logic untouched. |
+| Profile (`AthleteProfileView`, hero details, stat row, menu) | Done | Segmented section control, ink sport chips, neutral cards and nav; violet accent retired on Profile. |
+| Aura trading card, Crew strip | Next | Map to night/holo card pattern. |
 | Drip, Beyond, Fan Zone, Sport Quiz, Family Fun | Next | Adopt Kit buttons/chips and headings. |
 | Parent / Booster / Sponsor / Operator HQs | Next | Hero card + `DashboardPanel` + Kit actions. |
 | Expo `/admin` desks | Next | Kit actions and card panels; desk logic unchanged. |

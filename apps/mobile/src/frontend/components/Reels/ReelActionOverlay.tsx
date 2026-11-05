@@ -170,15 +170,14 @@ export function ReelActionOverlay({
           onPress={onTip}
           contentStyle={[
             styles.malo,
-            { backgroundColor: userTipped ? jade : ink, borderColor: jade },
-            userTipped ? null : { shadowColor: jade },
+            { backgroundColor: userTipped ? jade : colors.onVideo, borderColor: userTipped ? jade : colors.onVideo },
             (!canTip || tipping || !maloReady) && styles.disabled,
           ]}
         >
-          <Text style={[styles.maloLabel, { color: userTipped ? ink : jade }]}>
+          <Text style={[styles.maloLabel, { color: ink }]}>
             {userTipped ? 'Gift sent' : 'Give'}
           </Text>
-          <Text style={[styles.maloTotal, { color: userTipped ? ink : jade }]} numberOfLines={1}>
+          <Text style={[styles.maloTotal, { color: ink }]} numberOfLines={1}>
             {maloReady || userTipped ? formatTipDollars(hype.total_tips_cents) : 'Tag'}
           </Text>
         </AnimatedPressable>
@@ -506,13 +505,13 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     maxWidth: '100%',
     borderWidth: 2,
-    borderRadius: 12,
+    borderRadius: 999,
     minHeight: 44,
     justifyContent: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
     paddingVertical: 4,
     backgroundColor: colors.videoScrim,
     ...Platform.select({
@@ -633,13 +632,14 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
   },
+  // Glass rail buttons (2026-11 Lovable refresh): translucent light over the clip, neon when chosen.
   react: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.videoScrim,
-    borderWidth: 1.5,
-    borderColor: 'rgba(243,251,247,0.18)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(244,247,245,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(244,247,245,0.22)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -677,26 +677,26 @@ const styles = StyleSheet.create({
     color: FOCAL.ink,
   },
   malo: {
-    minWidth: 48,
-    minHeight: 48,
-    borderRadius: 24,
-    backgroundColor: FOCAL.videoBase,
+    minWidth: 52,
+    minHeight: 52,
+    borderRadius: 26,
+    backgroundColor: colors.onVideo,
     borderWidth: 2,
-    borderColor: FOCAL.neonJade,
+    borderColor: colors.onVideo,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 4,
     paddingHorizontal: 4,
   },
   maloLabel: {
-    color: FOCAL.neonJade,
-    fontSize: 12,
-    fontWeight: '800',
+    color: FOCAL.videoBase,
+    fontSize: 13,
+    fontWeight: '900',
   },
   maloTotal: {
-    color: FOCAL.neonJade,
+    ...SCOREBOARD_DIGITS,
+    color: FOCAL.videoBase,
     fontSize: 11,
-    fontWeight: '800',
   },
   maloTipped: {
     backgroundColor: FOCAL.neonJade,
@@ -706,12 +706,12 @@ const styles = StyleSheet.create({
     color: FOCAL.ink,
   },
   more: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.videoScrim,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(244,247,245,0.14)',
     borderWidth: 1,
-    borderColor: 'rgba(243,251,247,0.18)',
+    borderColor: 'rgba(244,247,245,0.22)',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,

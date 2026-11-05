@@ -109,7 +109,7 @@ export function ProfileStatRow({
           <ProfileCount
             value={crew.squad_count}
             label="Squad"
-            color={FOCAL.violetInk}
+            color={colors.text}
             accessibilityLabel={`${SQUAD_COUNTER_LABEL} ${crew.squad_count}`}
           />
           {join ? <View style={styles.joinCell}>{join}</View> : null}

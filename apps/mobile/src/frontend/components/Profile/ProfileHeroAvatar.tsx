@@ -150,7 +150,7 @@ export function ProfileHeroAvatar({
           <View style={styles.compactDetails}>
             {details.map((detail) => (
               <View key={detail.label} style={styles.compactDetail} accessible accessibilityLabel={`${detail.label}: ${detail.value}`}>
-                {detail.label === 'Sport' ? <SportIcon sport={detail.value} size={15} color={FOCAL.violetInk} /> : null}
+                {detail.label === 'Sport' ? <SportIcon sport={detail.value} size={15} color={colors.text} /> : null}
                 <Text style={styles.compactDetailValue}>{detail.label === 'Class' ? `Class ${detail.value}` : detail.value}</Text>
               </View>
             ))}
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   compactSchool: { fontSize: 12, textAlign: 'left' },
   compactDetails: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   compactDetail: { maxWidth: '100%', flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: FOCAL.mistViolet },
-  compactDetailValue: { color: FOCAL.violetInk, fontSize: 12, fontWeight: '800', flexShrink: 1 },
+  compactDetailValue: { color: colors.text, fontSize: 12, fontWeight: '800', flexShrink: 1 },
   compactAuraRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   compactAura: { flexGrow: 1, flexShrink: 1, flexBasis: 120, gap: 5 },
   compactAuraLabel: { textAlign: 'left', fontWeight: '900' },
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     textAlign: 'center',
-    color: FOCAL.violetInk,
+    color: colors.text,
   },
   details: {
     flexDirection: 'row',
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: FOCAL.violetInk,
+    color: colors.text,
     textAlign: 'center',
   },
   detailValue: {

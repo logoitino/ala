@@ -1,5 +1,5 @@
 {
- "planVersion": "ddbd3d1e737c",
+ "planVersion": "d0b8debed21c",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1619,7 +1619,7 @@
    "apps/mobile/app/(tabs)/local/_layout.tsx 5aceae7a0036a3d8525e9a567b035a146bbe217232bc5c14b23703499bd9592f",
    "apps/mobile/app/(tabs)/local/game/[id].tsx e0adfdd8c363e16fd6ad4b4e91dd9c2a11854e65bb24345441208b5625b7e9f6",
    "apps/mobile/app/(tabs)/local/index.tsx 338fa6fbfd5625991ffa46261825c0b3571b0fce29529ee36a217397e72d38e6",
-   "apps/mobile/app/(tabs)/profile.tsx fc17644d532c2e56432d3f2023dcce32e63f2e6eff1550b52235af6a8eccdacd",
+   "apps/mobile/app/(tabs)/profile.tsx c4894b9da9f56c6a62df2f1f51840abf35fcf298f055c513c4500bd6e00598a1",
    "apps/mobile/app/(tabs)/receipts.tsx efcf1c180449fc348cd33fa6cd5285ed13bd98f318b02bd81303c2ab996360a7",
    "apps/mobile/app/(tabs)/shop.tsx 064899d69c6c06d53a743168d6a1081ae2003e7837e46ddf40687b8240017464",
    "apps/mobile/app/(tabs)/spotlight.tsx e86165edc6986edbf1d2bd0567bc1416082d986982a61912708f107717dd2055",
@@ -1921,7 +1921,7 @@
    "apps/mobile/src/frontend/components/Operator/ScorerControls.tsx c53cce25e43bb3b394616afaa6014f3b17505e1a07f7f95886902bc7d0c3d208",
    "apps/mobile/src/frontend/components/PlayCard.tsx 4a2c5ecbdc4e0a43c8b52298b4ac5fae1c46ab8e4e0952451c46471b58bb5acd",
    "apps/mobile/src/frontend/components/Profile/AccountTagInbox.tsx 75e64f2ef17ae1b246783b91942e9b5b7cd045a175f508a1986eaa5172017cea",
-   "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx 819cb7f0202d3436a42b747f2375f53c30fda07d1626e4dbc3dc9c6287ec174a",
+   "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx 0fd12350bb940684519ec71eefd836744fc5cb461effeac761cf94ba12b7df87",
    "apps/mobile/src/frontend/components/Profile/AthleteReelManager.tsx 7f73764dc5db7c98bd8bc8577a38eea8a550562ca3d7a12eaa32027b7ed579eb",
    "apps/mobile/src/frontend/components/Profile/AthleteStatsTab.tsx 9143d58de68bcf9da509dffb60a9efaf27f25093729bd001ad93d58f28b2f816",
    "apps/mobile/src/frontend/components/Profile/AuraCardFlipModal.tsx f54910eca738e0a00d02351cd86a7c5d16945075fed83d2ef06c4f8ebe04122f",
@@ -1940,9 +1940,9 @@
    "apps/mobile/src/frontend/components/Profile/PrivacySettingsSheet.tsx ddc5ceecdf95ad0ffc7f39b7920acfa38055f6d911b3692f9639f4b52274bc98",
    "apps/mobile/src/frontend/components/Profile/ProfileAvatarPicker.tsx 17c6374821ba7506aec553f2ad219ed389c065499e166719f6e58c715a751d7d",
    "apps/mobile/src/frontend/components/Profile/ProfileFriendActions.tsx 7ed2d264740fef12006dfe8534daf1a2545cd951898ae7a4826ee8c4a06a6869",
-   "apps/mobile/src/frontend/components/Profile/ProfileHeroAvatar.tsx 02ca85e70617dc38a101ec59770727c5e75963dd2b50afc906b8b2e2edd3e600",
+   "apps/mobile/src/frontend/components/Profile/ProfileHeroAvatar.tsx 533e08a93aa0f7bcd00a485f53be04ca70a7d4b3b99284ddc316d066370f9aeb",
    "apps/mobile/src/frontend/components/Profile/ProfileMenuSheet.tsx 6c35cd1d1e42ab670d70b47179023539e3fd8fb1e02506a3b8133f2d2a005228",
-   "apps/mobile/src/frontend/components/Profile/ProfileStatRow.tsx 23f3e2a6387ea6354f1374ab0297531c8f918434c96d0766da7dd11cd8726789",
+   "apps/mobile/src/frontend/components/Profile/ProfileStatRow.tsx 1ec8ff836735cd17f01a8adf3a5eb289a2f35e353380cb083f928772372c173f",
    "apps/mobile/src/frontend/components/Profile/ReceiptCard.tsx 2331e999a0fe874f2dba74ec470659e7c85625a4c1bc513fa603f49e4d9a9ac4",
    "apps/mobile/src/frontend/components/Profile/ReceivedMaloPanel.tsx 689abc49a6e7770051d9f10338d5ea26bff8ede3f932b8537fcc7e19219d3cca",
    "apps/mobile/src/frontend/components/Profile/RoleSwitcherModal.tsx ad7f3e398ba706c07aa88e51e8eb44b18bcf312a12976cbd78609e43303049d3",
@@ -1993,7 +1993,7 @@
    "apps/mobile/src/frontend/components/Reels/PhotoStoryPicker.tsx d64dd50a1a80c303e16cc3be6cc997804c2bc95827c64d4f86c60262d0994b2a",
    "apps/mobile/src/frontend/components/Reels/PlayBroadcastBanner.tsx 5cc003f0bca0fd02b08d1e0aa737ea49c386faa8a65549c6eee1426025357db0",
    "apps/mobile/src/frontend/components/Reels/README.md caf9f229aa71e72b8eeb60476346c0016788deba5e4e3e606553dc29bb7b7b3a",
-   "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx 520740eccbcafb8d30a568da9c1b4859fa7bad75368f091e9d3310b6d1836d55",
+   "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx b34d9e10618345edce6c7384c643b708ee3a52b6de317e9fb4886f6135a52c98",
    "apps/mobile/src/frontend/components/Reels/ReelCard.tsx 347d9bf6151f22d2aae4ba54921580e780c4a7b419dcb46f7769a79c7124c0bd",
    "apps/mobile/src/frontend/components/Reels/ReelCardStyles.ts b3f0e1ce78333013d82be5adb90da934e9421a197ce28a92745dbb387176b962",
    "apps/mobile/src/frontend/components/Reels/ReelMoreSheet.tsx fe9c8dbfe3b7077a51e76cc7c253cc16f3a76b1c1a59587a79a9cda13cd0ee6c",

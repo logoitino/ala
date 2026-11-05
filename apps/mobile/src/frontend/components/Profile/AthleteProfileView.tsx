@@ -39,7 +39,7 @@ import { VaultLockCard } from '@/components/Profile/VaultLockCard';
 import { TaggedReelGrid } from '@/components/Profile/TaggedReelGrid';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii, space } from '@/constants/theme';
+import { cardShadow, colors, KIT, radii, space } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { isClipVaultOnly } from '@/data/exclusive';
@@ -389,7 +389,7 @@ export function AthleteProfileView({
         {fanSupport}
         <AnimatedButton accessibilityLabel={SHARE_FUND_CTA} haptic="selection"
           onPress={() => setShareOpen(true)} contentStyle={styles.shareHit}>
-          <Ionicons name="share-outline" size={16} color={FOCAL.violetInk} />
+          <Ionicons name="share-outline" size={16} color={colors.text} />
           <Text style={styles.shareLabel}>Share</Text>
         </AnimatedButton>
       </View>
@@ -411,7 +411,7 @@ export function AthleteProfileView({
             onPress={onBack}
             style={styles.navBtn}
           >
-            <Ionicons name="chevron-back" size={22} color={FOCAL.violetInk} />
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
           </Pressable>
           <View style={styles.navHit} />
         </View>
@@ -453,11 +453,11 @@ export function AthleteProfileView({
             accessibilityRole="tab" accessibilityLabel={sport ? `${sport} sport` : 'All sports'}
             accessibilityState={{ selected: (displaySport ?? null) === sport }} onPress={() => onDisplaySportChange(sport)}
             style={[styles.sportChip, (displaySport ?? null) === sport && styles.sportChipOn]}>
-            <SportIcon sport={sport} size={15} color={(displaySport ?? null) === sport ? colors.onAccent : FOCAL.violetInk} />
+            <SportIcon sport={sport} size={15} color={(displaySport ?? null) === sport ? colors.background : colors.text} />
             <Text style={(displaySport ?? null) === sport ? styles.sportLabelOn : styles.sportLabel}>{sport ?? 'All'}{sport === primary ? ' · Primary' : ''}</Text>
           </Pressable>)}
         </View>
-        {selectedEntry ? <View><View style={styles.sectionHeading}><SportIcon sport={selectedEntry.sport} size={16} color={FOCAL.violetInk} /><Text style={styles.sportLabel}>Viewing {selectedEntry.sport}</Text></View>
+        {selectedEntry ? <View><View style={styles.sectionHeading}><SportIcon sport={selectedEntry.sport} size={16} color={colors.text} /><Text style={styles.sportLabel}>Viewing {selectedEntry.sport}</Text></View>
           <Text style={styles.sectionHint}>{[schoolVisible ? selectedEntry.teamName : null, selectedEntry.position,
             selectedEntry.jersey ? `Jersey ${selectedEntry.jersey}` : null].filter(Boolean).join(' · ') || 'No sport details shared.'}</Text>
           {/* Participation details are self-recorded; the primary school crest above confirms only its existing school. */}
@@ -474,7 +474,7 @@ export function AthleteProfileView({
           contentStyle={[styles.sectionButton, tab === item.id && styles.sectionButtonOn]}>
           <Ionicons name={({ highlights: 'flash-outline', stats: 'stats-chart-outline', goals: 'gift-outline',
             vault: 'lock-closed-outline', team: 'people-outline', manage: 'settings-outline' } as const)[item.id]}
-            size={15} color={tab === item.id ? colors.onAccent : FOCAL.violetInk} />
+            size={15} color={tab === item.id ? colors.text : colors.textMuted} />
           <Text style={[styles.sectionLabel, tab === item.id && styles.sectionLabelOn]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9}>
             {item.id === 'highlights' ? 'Highlights' : item.id === 'stats' ? 'Stats' : item.id === 'vault' ? 'Vault' : item.label}
           </Text>
@@ -607,9 +607,9 @@ export function AthleteProfileView({
 
 const styles = StyleSheet.create({
   sportPicker: { gap: 6, paddingVertical: 4 }, sportChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  sportChip: { maxWidth: '100%', minHeight: 44, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: FOCAL.mistViolet, borderWidth: 1, borderColor: FOCAL.electricViolet, flexDirection: 'row', gap: 5, alignItems: 'center' },
-  sportChipOn: { backgroundColor: FOCAL.violetInk, borderColor: FOCAL.violetInk },
-  sportLabel: { color: FOCAL.violetInk, fontSize: 13, fontWeight: '700', flexShrink: 1 }, sportLabelOn: { color: colors.onAccent, fontSize: 13, fontWeight: '700', flexShrink: 1 },
+  sportChip: { maxWidth: '100%', minHeight: 44, paddingHorizontal: 14, paddingVertical: 6, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', gap: 6, alignItems: 'center' },
+  sportChipOn: { backgroundColor: colors.text, borderColor: colors.text },
+  sportLabel: { color: colors.text, fontSize: 14, fontWeight: '700', flexShrink: 1 }, sportLabelOn: { color: colors.background, fontSize: 13, fontWeight: '700', flexShrink: 1 },
   root: {
     gap: 8,
     overflow: 'visible',
@@ -625,11 +625,12 @@ const styles = StyleSheet.create({
   },
   story: {
     gap: space.sm,
-    padding: 12,
+    padding: 16,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: FOCAL.electricViolet,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
+    ...cardShadow,
   },
   storyBio: {
     fontSize: 14,
@@ -668,7 +669,7 @@ const styles = StyleSheet.create({
   socialChipLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: FOCAL.violetInk,
+    color: colors.primary,
   },
   navRow: {
     flexDirection: 'row',
@@ -686,32 +687,34 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: FOCAL.mistViolet,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: FOCAL.electricViolet,
+    borderColor: colors.border,
   },
   // One row for every section (icon over label) instead of wrapping Team onto its own line; still 44pt tall.
-  sectionNav: { flexDirection: 'row', gap: 4 },
+  // Segmented control (2026-11 Lovable refresh): muted track, the chosen section lifts onto a white pill.
+  sectionNav: { flexDirection: 'row', gap: 2, padding: 4, borderRadius: 14, backgroundColor: FOCAL.mistSlate },
   sectionItem: { flex: 1, minWidth: 0 },
-  sectionButton: { minHeight: 44, paddingHorizontal: 2, paddingVertical: 4, borderRadius: radii.md, flexDirection: 'column', gap: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistViolet },
-  sectionButtonOn: { backgroundColor: FOCAL.violetInk },
-  sectionLabel: { color: FOCAL.violetInk, fontSize: 11, fontWeight: '800', flexShrink: 1 },
-  sectionLabelOn: { color: colors.onAccent },
+  sectionButton: { minHeight: 44, paddingHorizontal: 2, paddingVertical: 4, borderRadius: radii.sm, flexDirection: 'column', gap: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
+  sectionButtonOn: { backgroundColor: colors.surface, ...cardShadow },
+  sectionLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '800', flexShrink: 1 },
+  sectionLabelOn: { color: colors.text },
   donateTagline: { fontSize: 12, lineHeight: 17, fontWeight: '700', color: colors.textMuted },
   quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'stretch' },
   actionRow: { flex: 1, flexDirection: 'row', gap: 8, minWidth: 180 },
   sectionHeading: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   sectionCopy: { flex: 1 },
-  sectionTitle: { fontSize: 17, fontWeight: '900', color: FOCAL.violetInk },
+  sectionTitle: { fontSize: 18, fontWeight: '900', color: colors.text, letterSpacing: -0.3 },
   sectionHint: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
   actionFlex: {
     flex: 1,
   },
   primaryAction: {
     flex: 1,
-    minHeight: 44,
-    borderRadius: radii.md,
-    backgroundColor: FOCAL.jadeInk,
+    minHeight: 48,
+    borderRadius: KIT.controlRadius,
+    backgroundColor: colors.primary,
+    ...KIT.shadowSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
@@ -729,18 +732,18 @@ const styles = StyleSheet.create({
   shareHit: {
     flexDirection: 'row',
     gap: 6,
-    minHeight: 44,
-    borderRadius: radii.md,
+    minHeight: 48,
+    borderRadius: KIT.controlRadius,
     borderWidth: 1,
-    borderColor: FOCAL.electricViolet,
-    backgroundColor: FOCAL.mistViolet,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   shareLabel: {
-    color: FOCAL.violetInk,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '800',
     textAlign: 'center',

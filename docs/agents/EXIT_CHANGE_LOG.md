@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-05 · plan `ddbd3d1e737c` → `d0b8debed21c` · announced by Claude (Lovable rollout: reel + Profile, 2026-11-04)
+
+App at announcement: commit `98863940dd81554acd3878374a1e55c289885e95` + 5 uncommitted file(s), source `d0b8debed21c8ddf88781b1f6daa87483b75e1267f249ec099588217389bc4ce`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app/(tabs)/profile.tsx c4894b9da9f56c6a62df2f1f51840abf35fcf298f055c513c4500bd6e00598a1`, `apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx 0fd12350bb940684519ec71eefd836744fc5cb461effeac761cf94ba12b7df87`, `apps/mobile/src/frontend/components/Profile/ProfileHeroAvatar.tsx 533e08a93aa0f7bcd00a485f53be04ca70a7d4b3b99284ddc316d066370f9aeb`, `apps/mobile/src/frontend/components/Profile/ProfileStatRow.tsx 1ec8ff836735cd17f01a8adf3a5eb289a2f35e353380cb083f928772372c173f`, `apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx b34d9e10618345edce6c7384c643b708ee3a52b6de317e9fb4886f6135a52c98`; removed `apps/mobile/app/(tabs)/profile.tsx fc17644d532c2e56432d3f2023dcce32e63f2e6eff1550b52235af6a8eccdacd`, `apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx 819cb7f0202d3436a42b747f2375f53c30fda07d1626e4dbc3dc9c6287ec174a`, `apps/mobile/src/frontend/components/Profile/ProfileHeroAvatar.tsx 02ca85e70617dc38a101ec59770727c5e75963dd2b50afc906b8b2e2edd3e600`, `apps/mobile/src/frontend/components/Profile/ProfileStatRow.tsx 23f3e2a6387ea6354f1374ab0297531c8f918434c96d0766da7dd11cd8726789`, `apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx 520740eccbcafb8d30a568da9c1b4859fa7bad75368f091e9d3310b6d1836d55`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-05 · plan `130a2b37a3ab` → `ddbd3d1e737c` · announced by Claude (Lovable UI/UX refresh, 2026-11-04)
 
 App at announcement: commit `77b1b269009dd2b4b9a653582593a549ce553cfe`, source `ddbd3d1e737cf582998e073f799f4f7c4a9ceb8879522681636f0ac4ac5a8231`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

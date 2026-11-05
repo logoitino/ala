@@ -42,7 +42,7 @@ import { readAthleteOnboarding } from '@/lib/teams';
 import { userProfileHref } from '@/lib/navigation';
 import { setPlayerVaultLocked } from '@/lib/vault';
 import { fetchRecentTips } from '@/lib/finance';
-import { FOCAL } from '@/theme/motion';
+import { colors } from '@/constants/theme';
 import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
 import { PrivacySettingsSheet } from '@/components/Profile/PrivacySettingsSheet';
 import { NotificationSettingsSheet } from '@/components/Profile/NotificationSettingsSheet';
@@ -466,7 +466,7 @@ export default function MyHubTab() {
               onPress={() => setMenuOpen(true)}
               style={styles.menuHit}
             >
-              <Ionicons name="menu-outline" size={22} color={FOCAL.violetInk} />
+              <Ionicons name="menu-outline" size={22} color={colors.text} />
             </Pressable>
           }
           onDropMalo={dropMalo}
@@ -549,9 +549,9 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: FOCAL.mistViolet,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: FOCAL.electricViolet,
+    borderColor: colors.border,
   },
   menuFooter: {
     marginTop: 4,

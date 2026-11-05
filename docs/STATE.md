@@ -175,6 +175,15 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-04 — Lovable rollout: Highlights rail and Profile
+
+Per [LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md) §5. `ReelActionOverlay`: 48pt glass
+rail buttons, light Give button (neon fill after giving), pill athlete chip — gift gating, labels and
+reactions unchanged. Profile (`AthleteProfileView`, `ProfileHeroAvatar`, `ProfileStatRow`, Profile tab
+menu): segmented section control on a muted track, ink sport chips, neutral Story card and nav, jade
+primary action; the UX-10 violet Profile accent is retired. Presentation only. Verified: mobile
+typecheck, unused/comments/copy/data-map; CI Jest on push. Not verified: devices/browser.
+
 ### 2026-11-04 — Lovable UI/UX becomes the whole-app standard (owner)
 
 Owner adopted the Lovable *Friday Night Lights* prototype as the design standard for the whole app:
