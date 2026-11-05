@@ -15,7 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
-import { colors, radii } from '@/constants/theme';
+import { colors, KIT, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { auraPointsForTip } from '@/data/players';
 import { SPRING_BOUNCE } from '@/theme/motion';
 
@@ -107,22 +107,21 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   button: {
-    minHeight: 64,
-    borderRadius: radii.md,
+    minHeight: 68,
+    borderRadius: KIT.controlRadius,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
     paddingVertical: 10,
-    borderWidth: 1.5,
+    borderWidth: 2,
   },
   copy: {
     alignItems: 'center',
     gap: 2,
   },
   label: {
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 0.2,
+    ...SCOREBOARD_DIGITS,
+    fontSize: 22,
     textAlign: 'center',
   },
   sublabel: {

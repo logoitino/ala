@@ -10,7 +10,7 @@ import { FeeCheckbox } from '@/components/FeeCheckbox';
 import { TipButton } from '@/components/TipButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { MenuStepIndicator } from '@/components/UI/MenuChrome';
-import { colors, MENU_METRICS, radii } from '@/constants/theme';
+import { colors, KIT, MENU_METRICS, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { COMPLIANCE_PAYMENT, GIFT_RECORD_NOTICE } from '@/data/legal';
 import { PLATFORM_TIP_HINT, PLATFORM_TIP_PERCENTS, PLATFORM_TIP_TITLE, TAGLINE_HEADLINE, donationBreakdownLine, donationSplitLine, donationWhereItGoes, platformTipCentsFor, platformTipChipLabel } from '@/data/malo';
 import { AURA_PER_DOLLAR, MALO_DISCLAIMER, auraPointsForTip, displayValue, type Player } from '@/data/players';
@@ -207,23 +207,23 @@ const styles = StyleSheet.create({
   section: { gap: 12, flexShrink: 1 }, compact: { marginTop: 4 }, embedded: { flex: 1, minHeight: 0 },
   body: { flexShrink: 1 }, embeddedBody: { flex: 1, minHeight: 0 }, bodyContent: { gap: 14, paddingBottom: 8 },
   title: { fontSize: 22, fontWeight: '800', color: colors.text, letterSpacing: -0.4 },
-  hero: { gap: 7, backgroundColor: colors.accentSoft, borderRadius: MENU_METRICS.cardRadius, padding: 16, borderWidth: 1, borderColor: colors.border },
+  hero: { gap: 6, backgroundColor: colors.background, borderRadius: MENU_METRICS.cardRadius, padding: 16 },
   tagline: { fontSize: 12, lineHeight: 17, fontWeight: '700', color: colors.textMuted, textAlign: 'center' },
   kicker: { fontSize: 11, letterSpacing: 1.1, fontWeight: '800', color: colors.deepGreen },
-  pageTitle: { fontSize: 20, fontWeight: '800', color: colors.text, letterSpacing: -0.4 },
+  pageTitle: { fontSize: 24, fontWeight: '900', color: colors.text, letterSpacing: -0.6 },
   split: { fontSize: 13, lineHeight: 19, fontWeight: '800', color: colors.text },
   copy: { fontSize: 13, lineHeight: 19, color: colors.textMuted, fontWeight: '600' },
   auraHint: { fontSize: 12, lineHeight: 18, fontWeight: '700', color: colors.primary },
-  total: { fontSize: 36, fontWeight: '900', color: colors.deepGreen, letterSpacing: -1 },
+  total: { ...SCOREBOARD_DIGITS, fontSize: 44, color: colors.text },
   tipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, customBlock: { gap: 8 },
   input: { minHeight: 48, borderRadius: MENU_METRICS.controlRadius, borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.surface, color: colors.text, fontSize: 20, fontWeight: '800', paddingHorizontal: 14 },
   tipBlock: { gap: 10, padding: 14, backgroundColor: colors.background, borderRadius: MENU_METRICS.cardRadius, borderWidth: 1, borderColor: colors.border },
   tipTitle: { fontSize: 14, fontWeight: '800', color: colors.text }, tipChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tipChip: { flexGrow: 1, minWidth: 60, minHeight: 44, borderRadius: radii.pill, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
-  tipChipOn: { borderColor: colors.deepGreen, backgroundColor: colors.accentSoft }, tipChipText: { fontSize: 13, fontWeight: '700', color: colors.textMuted }, tipChipTextOn: { color: colors.deepGreen },
+  tipChipOn: { borderColor: colors.text, backgroundColor: colors.text }, tipChipText: { fontSize: 14, fontWeight: '700', color: colors.text }, tipChipTextOn: { color: colors.background },
   breakdown: { fontSize: 13, lineHeight: 19, fontWeight: '700', color: colors.text }, disclaimer: { fontSize: 12, lineHeight: 18, fontWeight: '500', color: colors.textMuted },
-  testNotice: { backgroundColor: colors.goldSoft, padding: 12, borderRadius: MENU_METRICS.controlRadius },
+  testNotice: { backgroundColor: KIT.warnSoft, padding: 12, borderRadius: MENU_METRICS.controlRadius },
   footer: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 12, borderTopWidth: 1, borderColor: colors.border },
-  back: { minHeight: 48, justifyContent: 'center', paddingHorizontal: 16, borderRadius: radii.pill, backgroundColor: colors.background }, backText: { fontWeight: '800', color: colors.textMuted },
-  next: { flex: 1, minHeight: 50, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: radii.pill, backgroundColor: colors.deepGreen, paddingHorizontal: 14 }, nextText: { color: colors.onAccent, fontSize: 15, fontWeight: '800' }, disabled: { opacity: 0.45 },
+  back: { minHeight: 52, justifyContent: 'center', paddingHorizontal: 18, borderRadius: KIT.controlRadius, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, backText: { fontSize: 15, fontWeight: '800', color: colors.text },
+  next: { flex: 1, minHeight: 52, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: KIT.controlRadius, backgroundColor: colors.primary, paddingHorizontal: 14, ...KIT.shadowSoft }, nextText: { color: colors.onAccent, fontSize: 16, fontWeight: '800' }, disabled: { opacity: 0.45 },
 });

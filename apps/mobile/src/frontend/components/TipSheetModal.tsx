@@ -20,7 +20,7 @@ import Animated, {
 
 import { CardShine } from '@/components/Effects/CardShine';
 import { TipCheckout } from '@/components/TipCheckout';
-import { colors, radii, space } from '@/constants/theme';
+import { colors, KIT, radii, space } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { maloAthleteCta, maloAthleteSheetSubtitle } from '@/data/malo';
 import { GIFT_HELD_NOTICE } from '@/data/verification';
@@ -243,7 +243,8 @@ const styles = StyleSheet.create({
   },
   keyboardDock: { maxHeight: '100%' },
   sheet: {
-    backgroundColor: colors.surface, gap: 10,
+    backgroundColor: colors.surface, gap: 12,
+    borderTopLeftRadius: KIT.sheetRadius, borderTopRightRadius: KIT.sheetRadius,
   },
   header: {
     gap: 6,
@@ -259,10 +260,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   title: {
-    fontSize: 19,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '900',
     color: colors.text,
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
   successTitle: {
     color: colors.deepGreen,
@@ -270,8 +271,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: '600',
     color: colors.textMuted,
   },

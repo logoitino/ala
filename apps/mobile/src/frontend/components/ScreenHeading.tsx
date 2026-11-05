@@ -63,7 +63,7 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
 
 const styles = StyleSheet.create({
   fanWrap: { gap: 5, paddingTop: 4, paddingBottom: 4 },
-  fanTitle: { fontSize: 22, letterSpacing: -0.3 },
+  fanTitle: { fontSize: 30, lineHeight: 34, fontWeight: '900', letterSpacing: -0.8 },
   fanLede: { fontSize: 13, lineHeight: 19 },
   fanKickerBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, maxWidth: '100%' },
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
@@ -100,9 +100,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: '900',
     color: colors.text,
-    letterSpacing: -0.4,
+    letterSpacing: -0.8,
   },
   titleCompact: {
     fontSize: 26,

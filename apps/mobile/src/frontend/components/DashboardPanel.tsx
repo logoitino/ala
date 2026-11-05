@@ -1,13 +1,12 @@
 /**
- * Titled card used by the role dashboards (Athlete / Parent / Booster / Sponsor HQ): gold left edge, a title,
- * optional body text and children.
+ * Titled card used by the role dashboards (Athlete / Parent / Booster / Sponsor HQ): a plain surface card with a
+ * section title, optional body text and children (2026-11 refresh dropped the gold left edge so gold stays for awards).
  */
 
 import { type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { cardShadow, colors, radii } from '@/constants/theme';
-import { FOCAL } from '@/theme/motion';
 
 type DashboardPanelProps = {
   title: string;
@@ -31,16 +30,15 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    borderLeftWidth: 3,
-    borderLeftColor: FOCAL.electricGold,
-    padding: 16,
-    gap: 10,
+    padding: 18,
+    gap: 12,
     ...cardShadow,
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '800',
     color: colors.text,
+    letterSpacing: -0.3,
   },
   body: {
     fontSize: 14,

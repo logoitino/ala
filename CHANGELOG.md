@@ -114,6 +114,24 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-11-04 — Design refresh, phase 1 (Lovable reference)
+
+- Add a shared mobile action kit (`components/UI/Kit.tsx`: button variants, chips, badges, LIVE pill,
+  progress) and `KIT` tokens in `constants/theme.ts`, mapped from the Lovable "Friday Night Lights" prototype.
+- First-open welcome becomes a full-screen night hero; copy, BRAND-01 tagline and dismiss behaviour unchanged.
+- Athlete HQ leads with a scoreboard gift total from the recorded ledger, lists gifts as rows, and shows
+  badges as icon tiles (no progress until it is measured). Role dashboard panels drop the gold left edge.
+- Phase 2: sign-in sheet and age card get larger titles, 52pt controls, a lock reassurance strip and AA-safe
+  error ink; gift sheet uses scoreboard amount tiles, a 44pt scoreboard review total, ink-on-ink tip chips and
+  a solid Next action. Fan headings are larger; Activity rows use 44pt filled icons. Flows, copy and payment
+  guards unchanged.
+- Phase 3 (owner asked for the Lovable design, keeping all content): the Next admin portal moves from top tabs
+  to a dark left sidebar (top bar below `lg`) with every section, Product desk, Analytics, Departments and Sign out
+  carried over; Daylight canvas and card panels/stat cards. Live Local games render as dark scoreboard cards
+  with a solid LIVE pill; Spotlight's #1 row is a dark award card with gold rank and podium ranks 2–3; the
+  locked Vault is a dark card with a gold one-time unlock; receipts show scoreboard amounts.
+- Not yet run: mobile Jest suite and a Next build (run `pnpm check` on Node 24 and view the portal at 320px/1280px).
+
 ## 2026-10-22 — Metro disconnected-request repair (METRO-01)
 
 - Version SDK58 Router Server's narrow pre-shell cancellation fix; retain real errors,

@@ -150,6 +150,26 @@ export const MENU_METRICS = {
   touchTarget: 44,
 } as const;
 
+/**
+ * Design-refresh tokens (2026-11 Lovable pass): control radius, a softer lift shadow for primary actions, the
+ * warning pair used by "Check" statuses, and the obsidian hero stack. Components read these through `Kit`.
+ */
+export const KIT = {
+  controlRadius: 14,
+  cardRadius: 16,
+  sheetRadius: 24,
+  heroRadius: 24,
+  warnInk: '#7A5200',
+  warnSoft: '#FBF1DC',
+  obsidianRaised: '#1A2124',
+  onVideoLine: 'rgba(244,247,245,0.12)',
+  shadowSoft: Platform.select({
+    ios: { shadowColor: FOCAL.ink, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 12 },
+    android: { elevation: 3 },
+    default: { boxShadow: '0px 6px 16px rgba(20, 25, 27, 0.16)' },
+  }) as ViewStyle,
+} as const;
+
 export const SCREEN_BOTTOM_GAP = 52;
 
 /**

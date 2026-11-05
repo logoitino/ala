@@ -1,15 +1,16 @@
 /** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, type Href, useRouter } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
-import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { KitButton } from '@/components/UI/Kit';
 import { EmptyState } from '@/components/UI/EmptyState';
-import { colors, radii } from '@/constants/theme';
+import { colors, KIT, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { displayValue } from '@/data/players';
 import { usePendingPlayerTags } from '@/hooks/usePendingPlayerTags';
@@ -17,6 +18,13 @@ import { useReceivedMalo } from '@/hooks/useReceivedMalo';
 import { tipChannelLabel } from '@/lib/finance';
 import { updateOwnDisplayName } from '@/lib/auth';
 import { isSupabaseConfigured } from '@/lib/supabase';
+
+/** Training badge names stay as shipped; icons are decorative and progress is not shown until it is measured. */
+const BADGES: { label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { label: 'Film Room · Starter', icon: 'film-outline' },
+  { label: 'Community Favorite', icon: 'heart-outline' },
+  { label: 'Friday Night Lights', icon: 'flame-outline' },
+];
 
 /**
  * @purpose Athlete HQ: confirm pending tags, private Mālo ledger, and display name that writes `profiles.full_name`.
@@ -77,14 +85,19 @@ export default function AthleteHomeScreen() {
           onConfirm={(id) => void pending.resolve(id, 'confirm')}
           onReject={(id) => void pending.resolve(id, 'reject')}
         />
-        <DashboardPanel
-          title="Private gift record"
-          body={
-            profile?.player_id
-              ? `${athleteName} has received $${(total / 100).toFixed(2)} from fans.`
-              : 'No linked athlete profile yet. Unlock Athlete from Profile → Account Capability.'
-          }
-        >
+        {/* Gift total leads as a scoreboard card; the amount is the recorded ledger total, never an estimate. */}
+        <View style={styles.hero}>
+          <Text style={styles.heroKicker}>Private gift record</Text>
+          {profile?.player_id ? (
+            <>
+              <Text style={styles.heroTotal}>${(total / 100).toFixed(2)}</Text>
+              <Text style={styles.heroLede}>{athleteName} has received this from fans.</Text>
+            </>
+          ) : (
+            <Text style={styles.heroLede}>No linked athlete profile yet. Unlock Athlete from Profile → Account Capability.</Text>
+          )}
+        </View>
+        <DashboardPanel title="Gifts">
           {received.loading ? (
             <ActivityIndicator color={colors.deepGreen} />
           ) : received.rows.length === 0 ? (
@@ -99,16 +112,30 @@ export default function AthleteHomeScreen() {
             />
           ) : (
             received.rows.map((tip) => (
-              <Text key={tip.id} style={styles.row}>
-                {tip.fan_name} · ${((tip.amount_cents) / 100).toFixed(2)} · {tipChannelLabel(tip.origin, tip.entry, tip.source_label)} · {new Date(tip.created_at).toLocaleDateString()}
-              </Text>
+              <View key={tip.id} style={styles.giftRow}>
+                <View style={styles.giftIcon}>
+                  <Ionicons name="gift-outline" size={18} color={colors.primary} />
+                </View>
+                <View style={styles.giftText}>
+                  <Text style={styles.giftName}>{tip.fan_name}</Text>
+                  <Text style={styles.muted}>
+                    {tipChannelLabel(tip.origin, tip.entry, tip.source_label)} · {new Date(tip.created_at).toLocaleDateString()}
+                  </Text>
+                </View>
+                <Text style={styles.giftAmount}>${(tip.amount_cents / 100).toFixed(2)}</Text>
+              </View>
             ))
           )}
         </DashboardPanel>
         <DashboardPanel title="Training badges" body="Unlocked by live-game volume and fan support.">
-          <Text style={styles.badge}>Film Room · Starter</Text>
-          <Text style={styles.badge}>Community Favorite</Text>
-          <Text style={styles.badge}>Friday Night Lights</Text>
+          {BADGES.map((badge) => (
+            <View key={badge.label} style={styles.badgeRow}>
+              <View style={styles.badgeIcon}>
+                <Ionicons name={badge.icon} size={22} color={colors.gold} />
+              </View>
+              <Text style={styles.badge}>{badge.label}</Text>
+            </View>
+          ))}
         </DashboardPanel>
         <DashboardPanel title="Profile customization" body="Display name writes to your fan Profile. Roster (sport, team, class year) lives on Account Capability.">
           <TextInput
@@ -119,36 +146,34 @@ export default function AthleteHomeScreen() {
             }}
             placeholder="Display name / headline"
             placeholderTextColor={colors.textMuted}
+            accessibilityLabel="Display name / headline"
             style={styles.input}
           />
-          <AnimatedButton
+          <KitButton
+            label={saving ? 'Saving…' : 'Save name'}
             accessibilityLabel="Save display name"
             haptic="medium"
+            block
             disabled={saving}
             onPress={() => void saveHeadline()}
-            contentStyle={[styles.saveBtn, saving && styles.saveBtnOff]}
-          >
-            <Text style={styles.saveLabel}>{saving ? 'Saving…' : 'Save name'}</Text>
-          </AnimatedButton>
+          />
           {saveMsg ? <Text style={styles.muted}>{saveMsg}</Text> : null}
-          <AnimatedButton
-            accessibilityLabel="Edit roster on Profile"
-            haptic="light"
-            onPress={() => router.push('/profile' as Href)}
-            contentStyle={styles.secondaryBtn}
-          >
-            <Text style={styles.secondaryLabel}>Edit roster on Profile</Text>
-          </AnimatedButton>
-          {isAdmin ? (
-            <AnimatedButton
-              accessibilityLabel="Open Athletes desk"
-              haptic="light"
-              onPress={() => router.push('/admin/athletes' as Href)}
-              contentStyle={styles.secondaryBtn}
-            >
-              <Text style={styles.secondaryLabel}>Open Athletes desk</Text>
-            </AnimatedButton>
-          ) : null}
+          <View style={styles.actionRow}>
+            <KitButton
+              label="Edit roster on Profile"
+              variant="secondary"
+              style={styles.flex}
+              onPress={() => router.push('/profile' as Href)}
+            />
+            {isAdmin ? (
+              <KitButton
+                label="Open Athletes desk"
+                variant="ghost"
+                style={styles.flex}
+                onPress={() => router.push('/admin/athletes' as Href)}
+              />
+            ) : null}
+          </View>
         </DashboardPanel>
       </ScrollView>
     </ScreenShell>
@@ -158,61 +183,98 @@ export default function AthleteHomeScreen() {
 const styles = StyleSheet.create({
   content: {
     padding: 16,
-    gap: 14,
+    gap: 16,
+  },
+  hero: {
+    backgroundColor: colors.videoSurface,
+    borderRadius: KIT.heroRadius,
+    padding: 20,
+    gap: 6,
+  },
+  heroKicker: {
+    color: colors.onVideoMuted,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  heroTotal: {
+    ...SCOREBOARD_DIGITS,
+    color: colors.glow,
+    fontSize: 44,
+  },
+  heroLede: {
+    color: colors.onVideo,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: '600',
   },
   muted: {
     color: colors.textMuted,
     fontSize: 14,
   },
-  row: {
+  giftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 6,
+  },
+  giftIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  giftText: {
+    flex: 1,
+    gap: 2,
+  },
+  giftName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.text,
+  },
+  giftAmount: {
+    ...SCOREBOARD_DIGITS,
+    fontSize: 17,
+    color: colors.text,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  badgeIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    backgroundColor: colors.goldSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   badge: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.deepGreen,
+    color: colors.text,
   },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: KIT.controlRadius,
+    paddingHorizontal: 14,
+    minHeight: 48,
     fontSize: 16,
     color: colors.text,
     backgroundColor: colors.background,
   },
-  saveBtn: {
-    minHeight: 44,
-    borderRadius: radii.md,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
+  actionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  saveBtnOff: {
-    opacity: 0.55,
-  },
-  saveLabel: {
-    color: colors.onAccent,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  secondaryBtn: {
-    minHeight: 40,
-    borderRadius: radii.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-  secondaryLabel: {
-    color: colors.gold,
-    fontSize: 13,
-    fontWeight: '800',
+  flex: {
+    flexGrow: 1,
   },
 });

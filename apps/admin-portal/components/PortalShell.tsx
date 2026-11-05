@@ -1,20 +1,17 @@
 /**
- * Shell for every page of the read-only Next admin portal: brand, the six equal section tabs,
- * the Analytics and Departments utility links, sign out, the page title, and the shared open
- * primitives (StatCard, Panel, SectionHeading, Badge, BarRow, FlagStatusList). Exports and props
- * stay stable (Panel `level`, shell `presentation`/`heading`), because Trends, Revenue, Analytics,
- * and the product desks import them. The Product sub-nav starts with Overview (`/product`) so one
- * link is always active on every Product page.
- * Report format is the default on every page, by owner decision 2026-10-12 (ADM-01 owner
- * decision 0): the 1680px report width, underline tabs, open panels with dividers instead of
- * cards, and the bold page title. `presentation="standard"` (7xl width, pill tabs) stays only for
- * compatibility. Home supplies its own community hero through `heading={null}`.
- * Contrast (2026-10-12, from the globals.css values): the active underline tab and the active
- * Product link are --jade text and a 2px --jade underline on the white header, 5.97:1 (5.60:1
- * against --canvas), so both clear 4.5:1 for text and 3:1 for the indicator.
- * FlagStatusList wraps long flag names and hints rather than cutting them off (W3-PORTAL), and
- * every heading wrapper is `min-w-0` so long headings wrap inside grids.
- * Owner: PORTAL. The Analytics header link is shared with ANALYST.
+ * Shell for every page of the read-only Next admin portal: a dark left sidebar (2026-11-04 design refresh from the
+ * Lovable reference, replacing the 2026-10-12 top tabs by owner request) with the brand, the six sections, the
+ * Product desks nested under Product, the Analytics and Departments utility links and Sign out; then the page
+ * title and the shared primitives (StatCard, Panel, SectionHeading, Badge, BarRow, FlagStatusList). Exports and
+ * props stay stable (Panel `level`, shell `presentation`/`heading`), because Trends, Revenue, Analytics and the
+ * product desks import them. Every route, label, subtitle and aria-current rule from the top-tab shell carries
+ * over unchanged. Below `lg` the sidebar becomes a top bar whose nav scrolls sideways, so nothing hides behind a
+ * menu button and backward keyboard navigation never lands under a fixed header.
+ * Contrast: sidebar ink #D5DED9 on #0E1315 is 13.9:1; the active neon #2EE59D is 11.6:1, with a 3px neon bar as
+ * the non-text indicator. Main content keeps the light report tokens (jade 5.6:1 on canvas).
+ * FlagStatusList wraps long flag names and hints rather than cutting them off (W3-PORTAL), and every heading
+ * wrapper is `min-w-0` so long headings wrap inside grids.
+ * Owner: PORTAL. The Analytics link is shared with ANALYST.
  * MONEY-TIPS-01 status uses its false catalog default so older rows cannot appear to enable money controls.
  */
 import Link from 'next/link';
@@ -97,115 +94,116 @@ function Icon({ d }: { d: string }) {
   );
 }
 
-function tabClass(on: boolean) {
+/** Sidebar row: neon text plus a neon bar for the current page or section; muted ink otherwise. */
+function navClass(on: boolean) {
   return on
-    ? 'flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[var(--surface)] px-1.5 text-center text-sm font-extrabold text-[var(--jade)] shadow-[var(--shadow-card)] ring-1 ring-[var(--border)] sm:px-3'
-    : 'flex min-h-10 items-center justify-center gap-2 rounded-xl px-1.5 text-center text-sm font-bold text-[var(--ink-soft)] hover:bg-[var(--surface)]/70 hover:text-[var(--ink)] sm:px-3';
+    ? 'relative flex min-h-11 items-center gap-3 rounded-xl bg-[var(--sidebar-active)] px-3 text-sm font-extrabold text-[var(--sidebar-accent)] before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-[var(--sidebar-accent)]'
+    : 'flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-bold text-[var(--sidebar-ink)] hover:bg-[var(--sidebar-active)] hover:text-white';
 }
 
-function utilityClass(on: boolean) {
-  return on
-    ? 'inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-[var(--jade-soft)] px-3 text-sm font-extrabold text-[var(--jade)]'
-    : 'inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-bold text-[var(--ink-soft)] hover:bg-[var(--surface-muted)] hover:text-[var(--ink)]';
-}
-
-/** Product sub-nav follows the primary report tabs; aria-current and the jade underline name the active desk.
- * On a sub-desk the Product tab says aria-current="true" (current section) and only the desk link says "page". */
+/** Product desks sit indented under Product; the active desk says aria-current="page". */
 function subClass(on: boolean) {
   return on
-    ? 'inline-flex min-h-9 items-center justify-center border-b-2 border-[var(--jade)] px-4 text-sm font-extrabold text-[var(--jade)]'
-    : 'inline-flex min-h-9 items-center justify-center border-b-2 border-transparent px-4 text-sm font-bold text-[var(--ink-soft)] hover:border-[var(--border)] hover:text-[var(--ink)]';
+    ? 'flex min-h-10 items-center rounded-lg pl-10 pr-3 text-sm font-extrabold text-[var(--sidebar-accent)]'
+    : 'flex min-h-10 items-center rounded-lg pl-10 pr-3 text-sm font-semibold text-[var(--sidebar-ink-muted)] hover:text-white';
 }
 
+const UTILITY_LINKS: { href: PortalHref; label: string; icon: string }[] = [
+  { href: '/analytics', label: 'Analytics', icon: 'M4 20V10m6 10V4m6 16v-7m4 7H2' },
+  { href: '/manage', label: 'Departments', icon: 'M4 5h7v6H4zM13 5h7v4h-7zM13 11h7v8h-7zM4 13h7v6H4z' },
+];
+
 /**
- * @purpose Page frame for the admin portal. Six equal tabs default to Home's report
- *   underline; Product opens a
- *   second row: Overview plus its four desks. Analytics and Departments are utility links, not a seventh
- *   uneven tab. The header scrolls with the page so backward keyboard navigation cannot hide
- *   a focused control behind it, including when Product adds a second navigation row.
+ * @purpose Page frame for the admin portal: dark sidebar navigation (top bar below `lg`) and the light report
+ *   surface. Product opens its five desks (Overview first, so one link is always active on every Product page).
  * @param active The current route; drives the title, the subtitle, and every active state.
- * @param heading Replaces the standard kicker + h1 + subtitle block. Omit it for the standard
- *   title. Pass `null` when the page renders its own h1 (Home's community hero); the page must
- *   then supply exactly one h1 before any other heading.
- * @param presentation `'report'` (default, owner decision 2026-10-12): 1680px width, underline
- *   tabs, open report surface (`portal-report`). `'standard'`: the older 7xl width and pill tabs,
- *   kept for compatibility only.
+ * @param heading Replaces the standard kicker + h1 + subtitle block. Omit it for the standard title. Pass `null`
+ *   when the page renders its own h1 (Home's community hero); the page must then supply exactly one h1 before any
+ *   other heading.
+ * @param presentation `'report'` (default): 1440px content width and the open report surface (`portal-report`).
+ *   `'standard'`: the older 7xl width, kept for compatibility only.
  */
 export function PortalShell({ children, active, heading, presentation = 'report' }: {
   children: ReactNode;
   active: PortalHref;
   /** Replaces the standard title block; `null` means the page renders its own h1. */
   heading?: ReactNode;
-  /** `'report'` by default (owner decision 2026-10-12); `'standard'` is legacy. */
+  /** `'report'` by default; `'standard'` is legacy. */
   presentation?: 'standard' | 'report';
 }) {
   const productOpen = TABS[5].match.includes(active);
   const report = presentation === 'report';
 
   return (
-    <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)]">
+    <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)] lg:flex">
       <a
         href="#portal-main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-xl focus:bg-[var(--surface)] focus:px-4 focus:py-2 focus:text-sm focus:font-extrabold focus:text-[var(--jade)] focus:shadow-lg"
       >
         Skip to content
       </a>
-      <header className="border-b border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur">
-        <div className={`mx-auto flex w-full flex-wrap items-center gap-x-2 gap-y-3 px-4 py-3 sm:gap-x-4 sm:px-6 ${report ? 'max-w-[1680px] lg:px-10' : 'max-w-7xl'}`}>
-          <Link href="/" className="flex min-h-10 shrink-0 items-center gap-2.5 rounded-xl pr-1 sm:pr-2">
-            <span aria-hidden="true" className="grid size-9 place-items-center rounded-xl bg-[var(--jade)] text-base font-black text-white shadow-[var(--shadow-card)]">
+      <aside className="bg-[var(--sidebar-bg)] text-[var(--sidebar-ink)] lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:overflow-y-auto">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-5 lg:pt-6 lg:pb-5">
+          <Link href="/" className="flex min-h-10 items-center gap-2.5 rounded-xl pr-2">
+            <span aria-hidden="true" className="grid size-9 place-items-center rounded-xl bg-[var(--jade-bright)] text-base font-black text-white shadow-[0_0_0_1px_rgba(46,229,157,0.45),0_0_18px_rgba(46,229,157,0.35)]">
               T
             </span>
             <span className="leading-tight">
-              <span className="block text-sm font-extrabold tracking-tight text-[var(--ink)]">Tapua&apos;i</span>
-              <span className="block text-[11px] font-bold tracking-[0.12em] text-[var(--text-muted)] uppercase">Admin · read only</span>
+              <span className="block text-base font-extrabold tracking-tight text-white">Tapua&apos;i</span>
+              <span className="block text-[11px] font-bold tracking-[0.12em] text-[var(--sidebar-ink-muted)] uppercase">Admin · read only</span>
             </span>
           </Link>
-          <nav aria-label="Portal" className="order-3 w-full xl:order-none xl:w-auto xl:flex-1">
-            <ul className={`gap-1 xl:mx-auto xl:max-w-3xl ${report ? 'flex flex-wrap gap-x-2' : 'grid grid-cols-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-1 sm:grid-cols-6'}`}>
-              {TABS.map((tab) => {
-                const on = tab.match.includes(active);
-                return (
-                  <li key={tab.href} className={`min-w-0 ${report ? 'flex-1 basis-[6rem]' : ''}`}>
-                    <Link href={tab.href} className={report ? `flex min-h-10 items-center justify-center gap-2 border-b-2 px-1.5 text-sm font-bold sm:px-3 ${on ? 'border-[var(--jade)] text-[var(--jade)]' : 'border-transparent text-[var(--ink-soft)] hover:border-[var(--border)] hover:text-[var(--ink)]'}` : tabClass(on)} aria-current={on ? (tab.href === active ? 'page' : 'true') : undefined}>
-                      <span className="hidden 2xl:inline-flex">
-                        <Icon d={tab.icon} />
-                      </span>
-                      {/* No truncate: a tab name is one word and must read whole at 320px and 400% zoom. */}
-                      <span>{tab.label}</span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-          {/* Phones: brand and Sign out share the first row, Analytics and Departments get their own
-              row, then the tabs, so Sign out never wraps alone. From sm up it is one row again. */}
-          <div className="order-2 flex w-full min-w-0 flex-wrap items-center gap-1 sm:order-none sm:ml-auto sm:w-auto sm:justify-end">
-            <Link href="/analytics" className={utilityClass(active === '/analytics')} aria-current={active === '/analytics' ? 'page' : undefined}>
-              <span className="hidden sm:inline-flex">
-                <Icon d="M4 20V10m6 10V4m6 16v-7m4 7H2" />
-              </span>
-              Analytics
-            </Link>
-            <Link href="/manage" className={utilityClass(active === '/manage')} aria-current={active === '/manage' ? 'page' : undefined}>
-              <span className="hidden sm:inline-flex">
-                <Icon d="M4 5h7v6H4zM13 5h7v4h-7zM13 11h7v8h-7zM4 13h7v6H4z" />
-              </span>
-              Departments
-            </Link>
-          </div>
-          <div className="order-1 ml-auto flex shrink-0 items-center sm:order-none sm:-ml-2">
-            <span aria-hidden="true" className="mr-2 hidden h-6 w-px bg-[var(--border)] sm:block" />
-            <SignOutButton />
+          <div className="lg:hidden">
+            <SignOutButton tone="sidebar" />
           </div>
         </div>
+        <nav aria-label="Portal" className="overflow-x-auto px-2 pb-3 lg:flex-1 lg:overflow-visible lg:px-3 lg:pb-0">
+          <ul className="flex min-w-max gap-1 lg:min-w-0 lg:flex-col">
+            {TABS.map((tab) => {
+              const on = tab.match.includes(active);
+              const isProduct = tab.href === '/product';
+              return (
+                <li key={tab.href} className="lg:w-full">
+                  <Link href={tab.href} className={navClass(on)} aria-current={on ? (tab.href === active ? 'page' : 'true') : undefined}>
+                    <Icon d={tab.icon} />
+                    <span>{tab.label}</span>
+                  </Link>
+                  {isProduct && productOpen ? (
+                    <ul aria-label="Product" className="mt-1 hidden flex-col gap-0.5 lg:flex">
+                      {PRODUCT_LINKS.map((link) => (
+                        <li key={link.href}>
+                          <Link href={link.href} className={subClass(link.href === active)} aria-current={link.href === active ? 'page' : undefined}>
+                            {link.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              );
+            })}
+            <li aria-hidden="true" className="mx-2 w-px self-stretch bg-[var(--sidebar-line)] lg:mx-3 lg:my-3 lg:h-px lg:w-auto" />
+            {UTILITY_LINKS.map((link) => (
+              <li key={link.href} className="lg:w-full">
+                <Link href={link.href} className={navClass(active === link.href)} aria-current={active === link.href ? 'page' : undefined}>
+                  <Icon d={link.icon} />
+                  <span>{link.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        {/* Below lg the Product desks get their own scrolling row under the section nav. */}
         {productOpen ? (
-          <nav aria-label="Product" className="border-t border-[var(--border)] bg-[var(--surface)]">
-            <ul className={`mx-auto flex w-full flex-wrap gap-2 px-4 py-2.5 sm:px-6 ${report ? 'max-w-[1680px] lg:px-10' : 'max-w-7xl'}`}>
+          <nav aria-label="Product desks" className="overflow-x-auto border-t border-[var(--sidebar-line)] px-2 py-2 lg:hidden">
+            <ul className="flex min-w-max gap-1">
               {PRODUCT_LINKS.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className={subClass(link.href === active)} aria-current={link.href === active ? 'page' : undefined}>
+                  <Link
+                    href={link.href}
+                    className={`flex min-h-10 items-center rounded-lg px-3 text-sm ${link.href === active ? 'bg-[var(--sidebar-active)] font-extrabold text-[var(--sidebar-accent)]' : 'font-semibold text-[var(--sidebar-ink)]'}`}
+                    aria-current={link.href === active ? 'page' : undefined}
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -213,14 +211,17 @@ export function PortalShell({ children, active, heading, presentation = 'report'
             </ul>
           </nav>
         ) : null}
-      </header>
-      <main id="portal-main" tabIndex={-1} className={`mx-auto w-full flex-1 px-4 pt-6 pb-16 outline-none sm:px-6 sm:pt-8 ${report ? 'portal-report max-w-[1680px] lg:px-10' : 'max-w-7xl'}`}>
-        {heading !== undefined ? heading : <div className="portal-page-heading mb-8 border-b border-[var(--border)] pb-6">
+        <div className="hidden border-t border-[var(--sidebar-line)] p-4 lg:block">
+          <SignOutButton tone="sidebar" />
+        </div>
+      </aside>
+      <main id="portal-main" tabIndex={-1} className={`mx-auto w-full min-w-0 flex-1 px-4 pt-6 pb-16 outline-none sm:px-6 sm:pt-8 ${report ? 'portal-report max-w-[1440px] lg:px-10 lg:pt-10' : 'max-w-7xl'}`}>
+        {heading !== undefined ? heading : <div className="portal-page-heading mb-8">
           <p className="text-[11px] font-extrabold tracking-[0.18em] text-[var(--jade)] uppercase">
             {productOpen && active !== '/product' ? 'Product' : "Tapua'i admin"}
           </p>
           <h1 className="mt-2 text-3xl leading-tight font-black tracking-tight sm:text-4xl">{TITLES[active]}</h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--ink-soft)]">{SUBTITLES[active]}</p>
+          <p className="mt-2 max-w-3xl text-base leading-7 text-[var(--ink-soft)]">{SUBTITLES[active]}</p>
         </div>}
         {children}
       </main>
@@ -249,10 +250,10 @@ export function StatCard({
           : 'text-[var(--ink)]';
   return (
     <div
-      className="portal-stat min-w-0 border-b border-[var(--border)] pb-5"
+      className="portal-stat min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
     >
       <p className="text-[11px] font-extrabold tracking-wide text-[var(--text-muted)] uppercase">{label}</p>
-      <p className={`mt-2 text-2xl font-extrabold tracking-tight ${accent}`}>{value}</p>
+      <p className={`mt-2 text-3xl font-black tracking-tight tabular-nums ${accent}`}>{value}</p>
       <p className="mt-1 text-sm leading-5 text-[var(--ink-soft)]">{hint}</p>
     </div>
   );
@@ -279,7 +280,7 @@ export function Panel({
   const Heading = level === 3 ? 'h3' : 'h2';
   return (
     <section
-      className="portal-panel min-w-0 border-b border-[var(--border)] py-5"
+      className="portal-panel min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         {/* min-w-0 + break-words: a long heading wraps inside a grid track instead of widening it. */}
@@ -353,7 +354,7 @@ export function FlagStatusList({
               return (
                 <div
                   key={row.path}
-                  className="flex min-w-0 items-center justify-between gap-3 border-b border-[var(--border)] py-3"
+                  className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-bold break-words">{row.label}</p>

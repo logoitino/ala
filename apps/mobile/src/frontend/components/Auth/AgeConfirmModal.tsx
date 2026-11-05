@@ -6,7 +6,8 @@
  */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
@@ -14,7 +15,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { BirthMonthField, type BirthDraft } from '@/components/Auth/BirthMonthField';
 import { LegalAckToggle } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors } from '@/constants/theme';
+import { colors, KIT } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { AGE_GATE_REFUSAL, birthInputError, pauseAgeGate } from '@/lib/minors';
@@ -122,6 +123,9 @@ export function AgeConfirmModal() {
               bounces={false}
               contentContainerStyle={styles.cardScroll}
             >
+              <View style={styles.iconTile} accessible={false} importantForAccessibility="no-hide-descendants">
+                <Ionicons name={asksBirth ? 'calendar-outline' : 'shield-checkmark-outline'} size={26} color={colors.gold} />
+              </View>
               <Text style={styles.kicker}>Tapua&apos;i</Text>
               <Text style={styles.title}>{asksBirth ? 'One quick question' : 'Quick confirmation'}</Text>
               {asksBirth ? (
@@ -187,12 +191,21 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
+    borderRadius: KIT.sheetRadius,
     borderWidth: 1,
     borderColor: colors.border,
     maxHeight: '100%',
   },
   cardScroll: {
     gap: 14,
+  },
+  iconTile: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: colors.goldSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   kicker: {
     fontSize: 12,
@@ -202,10 +215,10 @@ const styles = StyleSheet.create({
     color: FOCAL.goldInk,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 26,
+    fontWeight: '900',
     color: colors.text,
-    letterSpacing: -0.4,
+    letterSpacing: -0.6,
   },
   body: {
     fontSize: 15,
@@ -221,10 +234,13 @@ const styles = StyleSheet.create({
   },
   cta: {
     marginTop: 4,
-    backgroundColor: FOCAL.jadeInk,
-    borderRadius: 14,
+    backgroundColor: colors.primary,
+    borderRadius: KIT.controlRadius,
+    minHeight: 52,
     paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...KIT.shadowSoft,
   },
   ctaOff: {
     opacity: 0.5,
@@ -236,6 +252,8 @@ const styles = StyleSheet.create({
   },
   later: {
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
     paddingVertical: 10,
   },
   laterLabel: {

@@ -2,8 +2,8 @@
  * Admin portal design tokens and global rules. Inks reuse the mobile Island Daylight palette
  * (`apps/mobile/src/frontend/theme/motion.ts` FOCAL), so do not add a second palette here.
  * Chart tokens (ADM-01a) feed `components/charts/*`. `--chart-bad` is only for stalls, errors,
- * and failures, never a neutral category. Report format (open panels, underline tabs, report
- * charts) is the default on every page by owner decision 2026-10-12; only the community hero keeps
+ * and failures, never a neutral category. Report format (report charts, now on card panels under a
+ * dark sidebar after the 2026-11-04 owner-requested refresh) is the default on every page; only the community hero keeps
  * its own layout, built with Tailwind on Home. The anchor reset sits in `@layer base` so utility
  * colours win on links (the Home CTA needs no override). Report wrapping uses
  * `overflow-wrap: break-word`, never `anywhere`, so numbers do not split mid-figure (2026-10-12).
@@ -12,10 +12,10 @@
 @import 'tailwindcss';
 
 :root {
-  --canvas: #f6f8f7;
+  --canvas: #f7f6f2; /* FOCAL.backgroundBase (Daylight), 2026-11 refresh */
   --surface: #ffffff;
   --surface-muted: #f0f4f2;
-  --border: #e4e9e6;
+  --border: #e3e1d9;
   --ink: #10161a;
   --ink-soft: #4a5560;
   /* Was #6b7680 (4.35:1 on canvas, fails 1.4.3). Now 5.50:1 canvas, 5.29:1 surface-muted. */
@@ -30,9 +30,13 @@
   --cyan-soft: #e3f6f8;
   --violet: #4c1d95; /* FOCAL.violetInk, 10.95:1 on white */
   --violet-soft: #f3edff;
-  --sidebar-bg: #0c1f16;
-  --sidebar-ink: #d9e8df;
-  --sidebar-active: #123d27;
+  --sidebar-bg: #0e1315; /* FOCAL.videoBase */
+  --sidebar-ink: #d5ded9;
+  --sidebar-ink-muted: #9eb0aa;
+  --sidebar-active: #1a2124;
+  --sidebar-accent: #2ee59d; /* FOCAL.neonJade, dark surfaces only */
+  --sidebar-line: rgba(244, 247, 245, 0.12);
+  --jade-bright: #138a63;
   /* Chart kit. Marks are >= 3:1 on surface and canvas (WCAG 1.4.11). Grid and track are decorative. */
   --chart-1: var(--jade);
   --chart-2: var(--cyan);
@@ -44,7 +48,7 @@
   --chart-track: var(--surface-muted);
   --chart-gap: var(--surface); /* 2px separator between stacked segments */
   --focus-ring: #00733c;
-  --shadow-card: 0 1px 2px rgba(16, 22, 26, 0.04), 0 1px 8px rgba(16, 22, 26, 0.03);
+  --shadow-card: 0 1px 2px rgba(20, 25, 27, 0.05), 0 8px 24px -12px rgba(20, 25, 27, 0.18);
 }
 
 * {

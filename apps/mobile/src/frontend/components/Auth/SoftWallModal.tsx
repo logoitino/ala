@@ -20,7 +20,8 @@ import { SheetHandle } from '@/components/UI/SheetHandle';
 import { BirthMonthField, type BirthDraft } from '@/components/Auth/BirthMonthField';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors } from '@/constants/theme';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { colors, KIT } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { COMPLIANCE_ACCOUNT } from '@/data/legal';
@@ -233,7 +234,10 @@ export function SoftWallModal() {
                   )}
                 </AnimatedButton>
                 <Text style={styles.demoHint}>Google works for new and existing accounts.</Text>
-                <Text style={styles.demoHint}>No bank details are needed to create your profile.</Text>
+                <View style={styles.reassure}>
+                  <Ionicons name="lock-closed-outline" size={16} color={colors.primary} />
+                  <Text style={styles.reassureLabel}>No bank details are needed to create your profile.</Text>
+                </View>
               </View>
 
               <View style={styles.orRow}>
@@ -405,75 +409,95 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
+    borderTopLeftRadius: KIT.sheetRadius,
+    borderTopRightRadius: KIT.sheetRadius,
   },
   sheetInner: {
-    gap: 8,
-    paddingBottom: 4,
+    gap: 12,
+    paddingBottom: 8,
   },
   group: {
-    gap: 6,
+    gap: 10,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 26,
+    fontWeight: '900',
     color: colors.text,
-    letterSpacing: -0.4,
+    letterSpacing: -0.6,
   },
   subtitle: {
-    fontSize: 14,
-    lineHeight: 19,
+    fontSize: 15,
+    lineHeight: 21,
     fontWeight: '600',
     color: colors.textMuted,
+    marginBottom: 4,
   },
   providerBtn: {
-    borderRadius: 12,
-    paddingVertical: 8,
+    borderRadius: KIT.controlRadius,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44,
+    minHeight: 52,
   },
-  appleBtn: { backgroundColor: '#0F1416' },
-  appleLabel: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  appleBtn: { backgroundColor: colors.night },
+  appleLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   demoBtn: { backgroundColor: FOCAL.goldInk },
-  demoLabel: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  demoLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   demoHint: {
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: '600',
     color: colors.textMuted,
     textAlign: 'center',
   },
+  reassure: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.accentSoft,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  reassureLabel: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
+    color: colors.primary,
+  },
   googleBtn: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  googleLabel: { color: colors.text, fontSize: 14, fontWeight: '800' },
-  magicBtn: { backgroundColor: FOCAL.jadeInk },
-  magicLabel: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  googleLabel: { color: colors.text, fontSize: 16, fontWeight: '800' },
+  magicBtn: { backgroundColor: colors.primary, ...KIT.shadowSoft },
+  magicLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   secondaryBtn: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: FOCAL.jadeInk,
+    backgroundColor: colors.accentSoft,
   },
-  secondaryLabel: { color: FOCAL.jadeInk, fontSize: 14, fontWeight: '800' },
-  orRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 2 },
+  secondaryLabel: { color: colors.primary, fontSize: 16, fontWeight: '800' },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 4 },
   orLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  orLabel: { color: colors.textMuted, fontWeight: '700', fontSize: 12 },
+  orLabel: { color: colors.textMuted, fontWeight: '700', fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase' },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    fontSize: 15,
+    borderRadius: KIT.controlRadius,
+    paddingHorizontal: 16,
+    minHeight: 50,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
     backgroundColor: colors.background,
   },
-  message: { color: FOCAL.jadeInk, fontWeight: '700', fontSize: 13, lineHeight: 18 },
-  error: { color: FOCAL.ember, fontWeight: '700', fontSize: 13, lineHeight: 18 },
+  message: { color: colors.primary, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  // emberInk, not the bright ember: error text must clear 4.5:1 on the white sheet.
+  error: { color: colors.danger, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   close: { alignItems: 'center', paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
-  closeLabel: { fontSize: 14, fontWeight: '700', color: colors.textMuted },
-  linkLabel: { fontSize: 14, fontWeight: '800', color: FOCAL.jadeInk },
-  disabled: { opacity: 0.55 },
+  closeLabel: { fontSize: 15, fontWeight: '700', color: colors.textMuted },
+  linkLabel: { fontSize: 15, fontWeight: '800', color: colors.primary },
+  disabled: { opacity: 0.45 },
 });
