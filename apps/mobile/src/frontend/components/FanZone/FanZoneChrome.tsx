@@ -1,8 +1,9 @@
 /** FUN-01 Daylight controls: explicit actions and accessible fields without automatic writes or payment chrome.
- * Play actions use the trivia palette so a phone-width Fan Zone reads as a game, not a form. */
+ * Play actions use the trivia palette so a phone-width Fan Zone reads as a game, not a form.
+ * 2026-11 Lovable refresh: night hero, light cards, ink selected path, jade play action. */
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { colors, radii } from '@/constants/theme';
+import { cardShadow, colors, KIT } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
 export function FanButton({ label, onPress, disabled = false, selected = false, play = false }: {
     label: string;
@@ -38,24 +39,25 @@ export const fanStyles = StyleSheet.create({
     page: { padding: 16, gap: 14, paddingBottom: 28 },
     stack: { gap: 8 },
     row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    hero: { gap: 4, padding: 16, borderRadius: 20, backgroundColor: FOCAL.electricGold, borderWidth: 3, borderColor: FOCAL.islandCyan },
-    heroKicker: { color: FOCAL.cyanInk, fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
-    heroCopy: { color: FOCAL.ink, fontSize: 15, fontWeight: '600', lineHeight: 21 },
-    playCard: { gap: 10, padding: 14, borderRadius: 18, borderWidth: 3, borderColor: FOCAL.electricViolet, backgroundColor: FOCAL.mistGold },
+    hero: { gap: 6, padding: 20, borderRadius: KIT.heroRadius, backgroundColor: colors.videoSurface },
+    heroKicker: { color: FOCAL.electricGold, fontSize: 12, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
+    heroTitle: { color: colors.onVideo, fontSize: 30, letterSpacing: -0.8 },
+    heroCopy: { color: colors.onVideoMuted, fontSize: 15, fontWeight: '600', lineHeight: 21 },
+    playCard: { gap: 10, padding: 16, borderRadius: KIT.cardRadius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, ...cardShadow },
     alias: { color: FOCAL.ink, fontSize: 20, fontWeight: '900' },
     copy: { color: colors.textMuted, fontSize: 16, lineHeight: 23 },
-    title: { color: colors.text, fontSize: 21, fontWeight: '700' },
+    title: { color: colors.text, fontSize: 22, fontWeight: '900', letterSpacing: -0.4 },
     notice: { color: colors.text, fontSize: 16, lineHeight: 23 },
 });
 const styles = StyleSheet.create({
-    button: { minHeight: 48, padding: 12, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' },
-    play: { minHeight: 52, backgroundColor: FOCAL.neonJade, borderColor: FOCAL.jadeInk },
-    selected: { backgroundColor: FOCAL.electricViolet, borderColor: FOCAL.violetInk },
-    buttonText: { color: colors.primary, fontSize: 16, fontWeight: '700', textAlign: 'center' },
-    playText: { color: FOCAL.ink },
-    selectedText: { color: '#FFFFFF' },
-    panel: { padding: 16, gap: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-    title: { color: colors.text, fontSize: 20, fontWeight: '800' },
+    button: { minHeight: 48, padding: 12, borderRadius: KIT.controlRadius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' },
+    play: { minHeight: 52, backgroundColor: colors.primary, borderColor: colors.primary, ...KIT.shadowSoft },
+    selected: { backgroundColor: colors.text, borderColor: colors.text },
+    buttonText: { color: colors.text, fontSize: 16, fontWeight: '800', textAlign: 'center' },
+    playText: { color: colors.onAccent },
+    selectedText: { color: colors.background },
+    panel: { padding: 16, gap: 12, borderRadius: KIT.cardRadius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, ...cardShadow },
+    title: { color: colors.text, fontSize: 18, fontWeight: '900', letterSpacing: -0.3 },
     copy: { color: colors.text, fontSize: 16, lineHeight: 23 },
-    field: { minHeight: 44, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, color: colors.text },
+    field: { minHeight: 48, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: KIT.controlRadius, color: colors.text, backgroundColor: colors.background },
 });

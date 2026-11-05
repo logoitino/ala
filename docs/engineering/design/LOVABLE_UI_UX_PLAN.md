@@ -84,10 +84,12 @@ are touched (§5).
 | Admin portal shell, Local live cards, Spotlight, Vault, receipts | Done | phase 3 `a1b2e3e`, merged `77b1b26` |
 | Highlights reel overlay (`ReelActionOverlay`) | Done | 48pt glass rail buttons, light Give button (neon after giving), pill athlete chip; logic untouched. |
 | Profile (`AthleteProfileView`, hero details, stat row, menu) | Done | Segmented section control, ink sport chips, neutral cards and nav; violet accent retired on Profile. |
-| Aura trading card, Crew strip | Next | Map to night/holo card pattern. |
-| Drip, Beyond, Fan Zone, Sport Quiz, Family Fun | Next | Adopt Kit buttons/chips and headings. |
-| Parent / Booster / Sponsor / Operator HQs | Next | Hero card + `DashboardPanel` + Kit actions. |
-| Expo `/admin` desks | Next | Kit actions and card panels; desk logic unchanged. |
+| Aura trading card, Crew strip | Done | Aura card kept (already the tiered collectible card); Join Crew is a jade tint action, not gold. |
+| Drip, Beyond, Fan Zone, Sport Quiz | Done | Drip white cards (ember retired); Beyond shared styles; Fan Zone night hero, light cards, ink selection; Quiz buttons 48pt with soft lift. |
+| Family Fun discovery, remaining Quiz/Beyond sub-screens | Next | Spot-fix any leftover per-screen colours. |
+| Parent / Booster / Sponsor / Operator HQs | Done | 52pt primary actions, ink chips, jade tint secondary, 14pt controls (panels via `DashboardPanel`). |
+| Expo `/admin` desks (shared `AdminControls`) | Done | Portal canvas/border tokens, card panels, 14pt-radius buttons and fields; desk logic unchanged. |
+| Individual `/admin` desk layouts | Next | Spot-fix desks with their own styles. |
 | Remaining modals in `MENU_STYLE_MAP` | Next | 24pt sheets, 52pt primaries. |
 
 Owner of the rollout: DESIGN with ACCESSIBILITY review; each change follows the presentation-only

@@ -280,17 +280,18 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 4,
   },
+  // Gold is for awards only (Lovable plan); Join Crew is a jade tint action.
   joinCrew: {
     minHeight: 44,
-    borderRadius: radii.md,
-    backgroundColor: FOCAL.electricGold,
+    borderRadius: 14,
+    backgroundColor: colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
   joinCrewLabel: {
-    color: FOCAL.ink,
-    fontSize: 12,
+    color: colors.primary,
+    fontSize: 13,
     fontWeight: '800',
   },
   inCrew: {

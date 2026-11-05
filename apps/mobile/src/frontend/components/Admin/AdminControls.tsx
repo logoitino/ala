@@ -371,8 +371,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   field: {
-    minHeight: 44,
-    borderRadius: radii.md,
+    minHeight: 48,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
@@ -420,11 +420,11 @@ const styles = StyleSheet.create({
   btn: {
     minHeight: 44,
     minWidth: 44,
-    paddingHorizontal: 12,
-    borderRadius: 999,
+    paddingHorizontal: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   },
   btnLabel: {
     color: colors.text,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
   },
   btnLabelPrimary: {
@@ -452,16 +452,20 @@ const styles = StyleSheet.create({
   btnLabelDanger: {
     color: colors.danger,
   },
+  // Card panels (2026-11 Lovable refresh), matching the portal's card panels.
   panel: {
-    borderTopWidth: 1,
+    borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: 20,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    padding: 18,
+    marginTop: 12,
     gap: 12,
   },
   panelTitle: {
     color: colors.text,
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   busy: {
     paddingVertical: 24,

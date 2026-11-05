@@ -13,7 +13,7 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { EmptyState } from '@/components/UI/EmptyState';
-import { colors, radii } from '@/constants/theme';
+import { colors, KIT } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { telemetry } from '@/services/TelemetryManager';
 import { createSponsorAd, fetchSponsorAds, setSponsorAdActive } from '@/lib/sponsorAds';
@@ -107,7 +107,7 @@ export default function SponsorHomeScreen() {
             onPress={() => void saveAd('rivalry-banner')}
             style={[styles.secondary, busy && { opacity: 0.5 }]}
           >
-            <Text style={styles.primaryLabel}>Publish rivalry banner</Text>
+            <Text style={styles.secondaryLabel}>Publish rivalry banner</Text>
           </Pressable>
         </DashboardPanel>
         <DashboardPanel title="Live placements">
@@ -152,27 +152,37 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: 12,
+    borderRadius: KIT.controlRadius,
+    paddingHorizontal: 14,
+    minHeight: 48,
     paddingVertical: 10,
     fontSize: 15,
     color: colors.text,
     backgroundColor: colors.background,
   },
   primary: {
-    backgroundColor: colors.deepGreen,
-    borderRadius: radii.md,
+    backgroundColor: colors.primary,
+    borderRadius: KIT.controlRadius,
+    minHeight: 52,
     paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...KIT.shadowSoft,
   },
   secondary: {
-    backgroundColor: colors.accent,
-    borderRadius: radii.md,
+    backgroundColor: colors.accentSoft,
+    borderRadius: KIT.controlRadius,
+    minHeight: 52,
     paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   primaryLabel: {
     color: colors.onAccent,
+    fontWeight: '800',
+  },
+  secondaryLabel: {
+    color: colors.primary,
     fontWeight: '800',
   },
   row: {
@@ -190,7 +200,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   link: {
-    color: colors.accent,
+    color: colors.primary,
     fontWeight: '800',
   },
 });

@@ -14,7 +14,7 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { EmptyState } from '@/components/UI/EmptyState';
-import { colors, radii } from '@/constants/theme';
+import { colors, KIT, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { telemetry } from '@/services/TelemetryManager';
 import { displayValue } from '@/data/players';
@@ -210,17 +210,20 @@ const styles = StyleSheet.create({
     minHeight: 120,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.md,
+    borderRadius: KIT.controlRadius,
     padding: 12,
     fontSize: 14,
     color: colors.text,
     backgroundColor: colors.background,
   },
   primary: {
-    backgroundColor: colors.deepGreen,
-    borderRadius: radii.md,
+    backgroundColor: colors.primary,
+    borderRadius: KIT.controlRadius,
+    minHeight: 52,
     paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...KIT.shadowSoft,
   },
   primaryLabel: {
     color: colors.onAccent,
@@ -252,7 +255,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   link: {
-    color: colors.accent,
+    color: colors.primary,
     fontWeight: '800',
   },
 });

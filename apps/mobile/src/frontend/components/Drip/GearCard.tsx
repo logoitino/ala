@@ -1,10 +1,10 @@
-/** Compact Drip rack card uses ember recognition while preserving catalog copy, price and earned Aura.
+/** Compact Drip rack card on a white surface (2026-11 Lovable refresh: ember stays for LIVE/danger only) preserving catalog copy, price and earned Aura.
  * The whole tile opens ProductSheet; checkout and purchase disclosures stay in that existing sheet. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
-import { cardShadow, colors, radii } from '@/constants/theme';
+import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import {
   DRIP_CATEGORY_LABELS,
   dripAuraForOrder,
@@ -25,7 +25,7 @@ type GearCardProps = {
 };
 
 /**
- * @purpose Drip marketplace tile on an ember-tinted mist with gold price + jade Aura badges and 0.96 press scale.
+ * @purpose Drip marketplace tile on a white card with a scoreboard price and jade Aura badge, 0.96 press scale.
  * @param item Catalog row from `DRIP_ITEMS`.
  * @param onPress Opens the product sheet.
  * @returns Apparel / card / merch pressable.
@@ -45,7 +45,7 @@ export function GearCard({ item, onPress }: GearCardProps) {
       <View style={styles.top}>
         <View style={styles.iconWrap}>
           <View pointerEvents="none" style={styles.iconGloss} />
-          <Ionicons name={ICONS[item.icon]} size={18} color={FOCAL.emberInk} />
+          <Ionicons name={ICONS[item.icon]} size={20} color={colors.text} />
         </View>
         <View style={styles.badges}>
           <View style={[styles.badge, styles.priceBadge]}>
@@ -65,12 +65,12 @@ export function GearCard({ item, onPress }: GearCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: FOCAL.mistEmber,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    borderWidth: 1.5,
-    borderColor: FOCAL.ember,
-    padding: 10,
-    gap: 5,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+    gap: 6,
     ...cardShadow,
   },
   top: {
@@ -80,10 +80,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: colors.surface,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: FOCAL.mistSlate,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -107,8 +107,8 @@ const styles = StyleSheet.create({
   },
   badge: {
     borderRadius: 999,
-    borderWidth: 1,
-    backgroundColor: colors.surface,
+    borderWidth: 0,
+    backgroundColor: FOCAL.mistSlate,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
@@ -117,13 +117,16 @@ const styles = StyleSheet.create({
   },
   auraBadge: {
     borderColor: FOCAL.jadeInk,
+    backgroundColor: colors.accentSoft,
   },
   badgeLabel: {
     fontSize: 12,
     fontWeight: '800',
   },
   priceLabel: {
-    color: FOCAL.goldInk,
+    ...SCOREBOARD_DIGITS,
+    fontSize: 13,
+    color: colors.text,
   },
   auraLabel: {
     color: FOCAL.jadeInk,

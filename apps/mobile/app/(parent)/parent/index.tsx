@@ -19,7 +19,7 @@ import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { EmptyState } from '@/components/UI/EmptyState';
-import { colors } from '@/constants/theme';
+import { colors, KIT } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { telemetry } from '@/services/TelemetryManager';
@@ -191,10 +191,11 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   share: {
-    minHeight: 44,
-    borderRadius: 14,
-    borderWidth: 1.5,
+    minHeight: 48,
+    borderRadius: KIT.controlRadius,
+    borderWidth: 0,
     borderColor: colors.deepGreen,
+    backgroundColor: colors.accentSoft,
     paddingHorizontal: 14,
     paddingVertical: 10,
     gap: 2,
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.text,
   },
   muted: {
@@ -227,18 +228,21 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 12,
+    backgroundColor: colors.surface,
+    minHeight: 40,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
     paddingVertical: 8,
   },
   chipOn: {
-    backgroundColor: colors.deepGreen,
-    borderColor: colors.deepGreen,
+    backgroundColor: colors.text,
+    borderColor: colors.text,
   },
   chipLabel: {
     fontWeight: '700',
     color: colors.text,
   },
   chipLabelOn: {
-    color: colors.onAccent,
+    color: colors.background,
   },
 });

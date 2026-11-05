@@ -6,7 +6,7 @@
  */
 import { Pressable, StyleSheet, Text } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { colors, radii } from '@/constants/theme';
+import { colors, KIT } from '@/constants/theme';
 import { SPRING_BOUNCE } from '@/theme/motion';
 import { useQuizFx } from './QuizFx';
 
@@ -33,13 +33,13 @@ export function QuizButton({ label, onPress, disabled = false, quiet = false, bi
 }
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  button: { minHeight: 44, padding: 12, borderRadius: radii.md, backgroundColor: colors.primary, justifyContent: 'center' },
-  quiet: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  button: { minHeight: 48, padding: 12, borderRadius: KIT.controlRadius, backgroundColor: colors.primary, justifyContent: 'center', ...KIT.shadowSoft },
+  quiet: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, shadowOpacity: 0, elevation: 0, boxShadow: 'none' },
   videoQuiet: { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(247,246,242,0.32)' },
   selected: { borderWidth: 2, borderColor: colors.primary, backgroundColor: colors.accentSoft },
   big: { minHeight: 72, alignItems: 'center' },
   fillBtn: { paddingHorizontal: 8, paddingVertical: 8 },
-  label: { color: colors.onAccent, fontSize: 16, fontWeight: '600' }, quietLabel: { color: colors.text }, videoQuietLabel: { color: '#F7F6F2' }, selectedLabel: { color: colors.text },
+  label: { color: colors.onAccent, fontSize: 16, fontWeight: '800', textAlign: 'center' }, quietLabel: { color: colors.text }, videoQuietLabel: { color: '#F7F6F2' }, selectedLabel: { color: colors.text },
   fillLabel: { textAlign: 'center', fontSize: 13, lineHeight: 16 },
   bigLabel: { fontSize: 22, fontWeight: '700' }, dim: { opacity: 0.55 },
 });

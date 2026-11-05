@@ -22,7 +22,7 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
-import { colors, radii } from '@/constants/theme';
+import { colors, KIT } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { telemetry } from '@/services/TelemetryManager';
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   game: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.md,
+    borderRadius: KIT.controlRadius,
     padding: 14,
     backgroundColor: colors.background,
     minHeight: 64,
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   padKey: {
     width: '31%',
     minHeight: 56,
-    borderRadius: radii.md,
+    borderRadius: KIT.controlRadius,
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   claim: {
     minHeight: 56,
-    borderRadius: radii.md,
+    borderRadius: KIT.controlRadius,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
   retry: {
     minHeight: 48,
     paddingHorizontal: 16,
-    borderRadius: radii.md,
+    borderRadius: KIT.controlRadius,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   },
   secondary: {
     minHeight: 52,
-    borderRadius: radii.md,
+    borderRadius: KIT.controlRadius,
     backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderColor: colors.primary,

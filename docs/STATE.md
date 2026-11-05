@@ -175,6 +175,15 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-04 — Lovable rollout: Drip, Beyond, Fan Zone, Quiz, role HQs, Expo admin
+
+Per [LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md) §5. Drip `GearCard` white card (ember
+retired), `BeyondGameStyles` titles/cards/buttons/ink chips, `FanZoneChrome` night hero + light cards +
+jade play, `QuizButton` 48pt, Parent/Booster/Sponsor/Operator HQ buttons and chips, Expo admin
+`AdminControls` card panels/buttons/fields with portal canvas/border tokens (jade unchanged), Join Crew
+jade tint. Presentation only. Verified: mobile typecheck, unused/comments/copy/data-map; CI Jest on push.
+Not verified: devices/browser.
+
 ### 2026-11-04 — Lovable rollout: Highlights rail and Profile
 
 Per [LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md) §5. `ReelActionOverlay`: 48pt glass
