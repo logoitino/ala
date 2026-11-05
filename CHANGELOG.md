@@ -1,7 +1,7 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
-## 2026-11-04 — Lovable brand EAS preview queued ($0 Free)
+## 2026-11-04 — Lovable brand EAS preview FINISHED ($0 Free)
 
-- Android `d77f53d4` and iOS `a4d637f8` from `main` `a38cb44` (preview profile).
+- Android APK `d77f53d4` and iOS IPA `a4d637f8` from `main` `a38cb44` (preview profile).
 
 ## 2026-11-04 — Lovable whole-app tab / sheet sweep
 

@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-04 · Lovable brand EAS preview **queued** (Android + iOS, $0 Free) from `main` `a38cb44`. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-04 · Lovable brand EAS preview **FINISHED** — Android APK + iOS IPA ($0 Free). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,11 +175,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
-### 2026-11-04 — Lovable brand EAS preview queued ($0 Free)
+### 2026-11-04 — Lovable brand EAS preview FINISHED ($0 Free)
 
-Submitted `preview` from `main` `a38cb44` (splash, BrandMark, jade tab sweep):
-- Android `d77f53d4-7e45-46b7-9691-04c686016e70` — https://expo.dev/accounts/logoitino/projects/ala-sports/builds/d77f53d4-7e45-46b7-9691-04c686016e70
-- iOS `a4d637f8-2c1a-4680-ab0a-b58008f6a96e` — https://expo.dev/accounts/logoitino/projects/ala-sports/builds/a4d637f8-2c1a-4680-ab0a-b58008f6a96e
+Both `preview` builds from `main` `a38cb44` finished (America/Denver):
+- Android `d77f53d4` (~10:16 PM) APK: https://expo.dev/artifacts/eas/_oR-Se0Sl5QVQTgdJT7wpgelz_7Zo-IOxhg1CXoqVvY.apk
+- iOS `a4d637f8` (~10:10 PM) IPA: https://expo.dev/artifacts/eas/3Dcpjp5RxrFQEVeHYee0WNqu_psWKJpW2Em7uelpXEs.ipa
+Build pages: Android https://expo.dev/accounts/logoitino/projects/ala-sports/builds/d77f53d4-7e45-46b7-9691-04c686016e70 · iOS https://expo.dev/accounts/logoitino/projects/ala-sports/builds/a4d637f8-2c1a-4680-ab0a-b58008f6a96e
 Ad hoc iOS still limited to the registered iPad.
 
 ### 2026-11-04 — Lovable whole-app tab / sheet sweep
