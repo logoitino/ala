@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-04 · Owner priority: **app readiness (APP-TEST A–C)**; Exit plan on **backburner** (same-turn map updates only). #27 on `main`. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-04 (Lovable UI/UX standard) · Owner priority: **app readiness (APP-TEST A–C)**; Exit plan on **backburner** (same-turn map updates only). #27 on `main`. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -88,8 +88,9 @@ Polynesian-inspired fan and athlete hub. pnpm monorepo:
 - `apps/mobile` — Expo Router SDK 58 app (Highlights ⚡ / Activity / Spotlight / Drip / Profile)
   plus the production Expo `/admin` control plane. **All admin writes happen here.**
 - `apps/admin-portal` — Next.js 15 oversight desk on `:3001`. **Deliberately read-only** —
-  six tabs (Home / Trends / Audience / Revenue / Health / Product) plus the Analytics and
-  Departments links; Product holds Features / Profile / Sign-in / People. Charts are inline SVG
+  six sections (Home / Trends / Audience / Revenue / Health / Product) plus the Analytics and
+  Departments links in a dark left sidebar (2026-11-04 Lovable refresh; top bar below `lg`);
+  Product holds Features / Profile / Sign-in / People. Charts are inline SVG
   from `components/charts/`. Read-only is a standing decision, not an unfinished state.
   Reconfirmed 2026-09-28.
 - `packages/shared-types` — `@tapuai/shared-types`.
@@ -173,6 +174,19 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-04 — Lovable UI/UX becomes the whole-app standard (owner)
+
+Owner adopted the Lovable *Friday Night Lights* prototype as the design standard for the whole app:
+[LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md) (tokens, `UI/Kit`, surface patterns,
+rollout table, what is not imported). Shipped on `main` (`77b1b26`, pushed): mobile action kit + `KIT`
+tokens; Welcome night hero; Athlete HQ gift hero; sign-in/age/gift sheets; larger fan headings; Activity
+icons; Local live scoreboard cards; Spotlight #1 award card; night Vault card; receipts; admin portal
+dark sidebar + card panels (replaces the 2026-10-12 top-tab report format). Presentation only: copy,
+routes, data and payment guards unchanged; age-card merge kept main's keyboard scrolling. Verified:
+both typechecks, comments/copy/unused/docs checks. **Not verified:** mobile Jest, Next build, devices,
+browser at 320/1280. Next rollout rows (reel overlay, Profile hero, Drip/Beyond/Quiz, role HQs, Expo
+admin desks) are listed in the plan.
 
 ### 2026-11-04 — App first; Exit backburner; #27 on main
 

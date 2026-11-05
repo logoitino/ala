@@ -130,6 +130,7 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
   carried over; Daylight canvas and card panels/stat cards. Live Local games render as dark scoreboard cards
   with a solid LIVE pill; Spotlight's #1 row is a dark award card with gold rank and podium ranks 2–3; the
   locked Vault is a dark card with a gold one-time unlock; receipts show scoreboard amounts.
+- Owner adopted the Lovable design as the whole-app standard: [LOVABLE_UI_UX_PLAN](docs/engineering/design/LOVABLE_UI_UX_PLAN.md).
 - Not yet run: mobile Jest suite and a Next build (run `pnpm check` on Node 24 and view the portal at 320px/1280px).
 
 ## 2026-10-22 — Metro disconnected-request repair (METRO-01)

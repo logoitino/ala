@@ -14,6 +14,7 @@ Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATU
 
 | API | Purpose |
 | --- | --- |
+| `UI/Kit.tsx` + `constants/theme.ts` → `KIT` | Whole-app action kit (owner 2026-11-04, [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md)): KitButton variants, KitChip, KitBadge, LivePill, KitProgress; control 14 / card 16 / sheet 24 radii |
 | `constants/theme.ts` → `MENU_METRICS` | Sheet 28px, card 20px, control 16px radius; 44px touch-target reference |
 | `UI/MenuChrome.tsx` → `MenuBackdrop({ accent? })` | Non-interactive single soft wash for popup sheets (no dot accents since 2026-10-15); hidden from assistive technology. Tab pages (`TabScreen`, `ScreenShell`) no longer draw it. |
 | `UI/MenuChrome.tsx` → `MenuStepIndicator({ labels, current })` | Named, non-clickable step chips; one-based current stage announced to assistive technology |

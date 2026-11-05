@@ -14,7 +14,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Database functions | 613 (253 used by hand, 63 trigger functions) |
 | Tables reached by at least one screen or server route | 125 of 128 |
 | Code files that read or write the database | 84 |
-| Exported symbols nothing imports | 43 (0 proposed for archive, 43 kept on purpose) |
+| Exported symbols nothing imports | 47 (0 proposed for archive, 47 kept on purpose) |
 | Operational data exports | 15 |
 | Rule failures | 0 |
 
@@ -1891,6 +1891,10 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | --- | --- | --- | --- |
 | `apps/mobile/src/backend/services/__fixtures__/fanZoneMp4Fixture.ts` | `sampleMp4` | keep | FUN-01 test MP4 bytes. The data map skips __tests__ imports; fanZoneMedia.test.ts builds private-upload cases from it. |
 | `apps/mobile/src/backend/services/payouts.ts` | `disburseAthleteFunds` | keep | Payout service alias held for the Wave 1 payout path (payouts are blocked by decision). |
+| `@/components/UI/Kit.tsx` | `KitChip` | keep | Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); screens adopt it in the next rollout rows. |
+| `@/components/UI/Kit.tsx` | `KitBadge` | keep | Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); screens adopt it in the next rollout rows. |
+| `@/components/UI/Kit.tsx` | `LivePill` | keep | Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); screens adopt it in the next rollout rows. |
+| `@/components/UI/Kit.tsx` | `KitProgress` | keep | Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); screens adopt it in the next rollout rows. |
 | `@/data/contentRights.ts` | `REPORTS_BEFORE_HIDE` | keep | Mirrors the SQL rule (three distinct reporters hide a clip) so copy and docs have one constant. |
 | `@/data/finance.ts` | `BOOSTER_OPERATOR_SHARE_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |
 | `@/data/finance.ts` | `VAULT_ATHLETE_SHARE_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |

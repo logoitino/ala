@@ -1901,6 +1901,34 @@
       "decision": "keep",
       "reason": "Owner requires existing identifiers preserved. This tested zero-cut percentage remains a compatibility/split reference; missing family allocations must stay unknown rather than deriving historical results from this current rate.",
       "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/UI/Kit.tsx",
+      "name": "KitBadge",
+      "decision": "keep",
+      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); screens adopt it in the next rollout rows.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/UI/Kit.tsx",
+      "name": "KitChip",
+      "decision": "keep",
+      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); screens adopt it in the next rollout rows.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/UI/Kit.tsx",
+      "name": "LivePill",
+      "decision": "keep",
+      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); screens adopt it in the next rollout rows.",
+      "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/UI/Kit.tsx",
+      "name": "KitProgress",
+      "decision": "keep",
+      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); screens adopt it in the next rollout rows.",
+      "status": "kept"
     }
   ],
   "archived": [
