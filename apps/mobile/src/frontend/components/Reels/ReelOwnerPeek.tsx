@@ -718,10 +718,10 @@ const styles = StyleSheet.create({
   posterFallback: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: FOCAL.mistViolet,
+    backgroundColor: FOCAL.mistJade,
   },
   posterInitials: {
-    color: FOCAL.violetInk,
+    color: colors.primary,
     fontSize: 10,
     fontWeight: '900',
   },

@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   },
   awayFill: {
     height: 6,
-    backgroundColor: FOCAL.islandCyan,
+    backgroundColor: colors.primaryMuted,
   },
   homePct: {
     ...SCOREBOARD_DIGITS,
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   },
   awayPct: {
     ...SCOREBOARD_DIGITS,
-    color: FOCAL.cyanInk,
+    color: colors.primary,
     fontSize: 14,
   },
   pctLeading: {
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.jadeInk,
   },
   teamDotAway: {
-    backgroundColor: FOCAL.cyanInk,
+    backgroundColor: colors.primary,
   },
   teamDotGloss: {
     position: 'absolute',
@@ -370,8 +370,8 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.mistJade,
   },
   awayBtn: {
-    borderColor: FOCAL.islandCyan,
-    backgroundColor: FOCAL.mistCyan,
+    borderColor: colors.border,
+    backgroundColor: FOCAL.mistJade,
   },
   homeChosen: {
     backgroundColor: colors.surface,
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   },
   awayChosen: {
     backgroundColor: colors.surface,
-    borderColor: FOCAL.cyanInk,
+    borderColor: colors.primary,
     borderWidth: 2.5,
   },
   teamDotChosen: {
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     color: FOCAL.jadeInk,
   },
   awayLabelOn: {
-    color: FOCAL.cyanInk,
+    color: colors.primary,
   },
   floatBadge: {
     position: 'absolute',

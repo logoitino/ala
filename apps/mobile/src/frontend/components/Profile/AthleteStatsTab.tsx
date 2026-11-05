@@ -52,7 +52,7 @@ export function AthleteStatsTab({ stats, loading = false, config }: AthleteStats
   return (
     <View style={styles.wrap}>
       <View style={styles.tableHead}>
-        <SportIcon sport={career.sport} color={FOCAL.violetInk} size={16} />
+        <SportIcon sport={career.sport} color={colors.primary} size={16} />
         <Text style={styles.kicker}>
           {career.sport || 'Sport not set'} · Career stats
         </Text>
@@ -61,7 +61,7 @@ export function AthleteStatsTab({ stats, loading = false, config }: AthleteStats
       {rows.length === 0 ? (
         <EmptyState
           compact
-          accent={FOCAL.violetInk}
+          accent={colors.primary}
           kicker="Career"
           title="No career stats published for this sport"
           lede="Career stats appear here once this athlete's sport is set and stats are published."
@@ -93,7 +93,7 @@ export function AthleteStatsTab({ stats, loading = false, config }: AthleteStats
       {logs.length === 0 ? (
         <EmptyState
           compact
-          accent={FOCAL.violetInk}
+          accent={colors.primary}
           kicker="Game log"
           title="No games logged yet"
           lede="Recent matches for this sport show here once game logs are published."
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   kicker: {
-    color: FOCAL.violetInk,
+    color: colors.primary,
     fontSize: 12,
     flexShrink: 1,
     fontWeight: '800',
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metricValue: {
-    color: FOCAL.violetInk,
+    color: colors.primary,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -162,9 +162,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  statTile: { flexGrow: 1, flexBasis: '44%', minWidth: 100, padding: 10, gap: 3, borderRadius: radii.md, backgroundColor: FOCAL.mistViolet, borderTopWidth: 3, borderTopColor: FOCAL.electricViolet },
-  statValue: { color: FOCAL.violetInk, fontSize: 24, fontWeight: '900' },
-  statLabel: { color: FOCAL.violetInk, fontSize: 12, fontWeight: '800' },
+  statTile: { flexGrow: 1, flexBasis: '44%', minWidth: 100, padding: 10, gap: 3, borderRadius: radii.md, backgroundColor: FOCAL.mistJade, borderTopWidth: 3, borderTopColor: colors.border },
+  statValue: { color: colors.primary, fontSize: 24, fontWeight: '900' },
+  statLabel: { color: colors.primary, fontSize: 12, fontWeight: '800' },
   tableHead: {
     flexDirection: 'row',
     alignItems: 'center',

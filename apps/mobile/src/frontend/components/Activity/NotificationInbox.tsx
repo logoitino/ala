@@ -40,7 +40,7 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
     </View>
     {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
     {notice ? <Text accessibilityLiveRegion="polite" style={styles.hint}>{notice}</Text> : null}
-    {loading ? <ActivityIndicator accessibilityLabel="Loading notifications" color={FOCAL.violetInk} /> : null}
+    {loading ? <ActivityIndicator accessibilityLabel="Loading notifications" color={colors.primary} /> : null}
     {!loading && !error && page?.items.length === 0 ? <View style={styles.empty}>
       <Text style={styles.itemTitle}>{archived ? 'No archived notifications' : 'No notifications yet'}</Text>
       <Text style={styles.hint}>{archived ? 'Notifications you archive will appear here.' : 'When connected sources send you an update, it will appear here.'}</Text>
@@ -91,17 +91,17 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: 12, gap: 8, ...cardShadow },
   heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   title: { color: colors.text, fontSize: 16, lineHeight: 22, fontWeight: '800' },
-  unread: { color: FOCAL.violetInk, fontSize: 13, lineHeight: 19, fontWeight: '700' },
+  unread: { color: colors.primary, fontSize: 13, lineHeight: 19, fontWeight: '700' },
   hint: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
   controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   action: { minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, paddingHorizontal: 12,
     paddingVertical: 10, alignItems: 'center', justifyContent: 'center', flexGrow: 1 },
-  actionLabel: { color: FOCAL.violetInk, fontSize: 13, lineHeight: 19, fontWeight: '700' },
-  selected: { borderColor: FOCAL.violetInk, backgroundColor: FOCAL.mistViolet },
+  actionLabel: { color: colors.primary, fontSize: 13, lineHeight: 19, fontWeight: '700' },
+  selected: { borderColor: colors.text, backgroundColor: FOCAL.mistJade },
   error: { color: colors.danger, fontSize: 13, lineHeight: 19 },
   empty: { paddingVertical: 8, gap: 8 },
   item: { borderTopWidth: 1, borderColor: colors.border, paddingTop: 8, gap: 8 },
-  unreadItem: { borderColor: FOCAL.violetInk },
+  unreadItem: { borderColor: colors.primary },
   itemTitle: { color: colors.text, fontSize: 14, lineHeight: 21, fontWeight: '800' },
   body: { color: colors.text, fontSize: 13, lineHeight: 19 },
   disabled: { opacity: 0.5 },

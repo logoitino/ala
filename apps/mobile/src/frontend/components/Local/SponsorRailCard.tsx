@@ -65,7 +65,7 @@ export function SponsorRailCard({
 const styles = StyleSheet.create({
   sponsorCard: {
     width: 144,
-    backgroundColor: FOCAL.mistCyan,
+    backgroundColor: FOCAL.mistJade,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,

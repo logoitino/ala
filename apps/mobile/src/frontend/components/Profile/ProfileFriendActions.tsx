@@ -121,8 +121,8 @@ export function ProfileFriendActions({ playerId }: { playerId: string }) {
 const styles = StyleSheet.create({
   wrap: { gap: 8, marginTop: 8 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  button: { minHeight: 44, maxWidth: '100%', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: FOCAL.mistViolet, justifyContent: 'center' },
-  buttonOn: { backgroundColor: FOCAL.violetInk, borderColor: FOCAL.violetInk },
+  button: { minHeight: 44, maxWidth: '100%', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: FOCAL.mistJade, justifyContent: 'center' },
+  buttonOn: { backgroundColor: colors.text, borderColor: colors.text },
   label: { fontSize: 13, fontWeight: '700', color: colors.text },
   labelOn: { color: colors.onAccent },
   private: { fontSize: 13, color: colors.textMuted },

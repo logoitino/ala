@@ -31,7 +31,7 @@ import {
   type Rally,
 } from '@/lib/rallies';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { SPRING_CARD } from '@/theme/motion';
 import { MoreText } from '@/components/UI/MoreText';
 
 type ClipChoice = { id: string; title: string };
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: FOCAL.electricViolet,
+    borderColor: colors.border,
   },
   headRow: {
     flexDirection: 'row',

@@ -175,6 +175,15 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-04 — Lovable rollout: per-screen accent sweep
+
+Per [LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md) §5/§5a. Violet/cyan accents removed
+from 18 chrome components (Privacy/Notification/EditProfile/Menu sheets, stats tab, cheer polls, inbox,
+friend requests/actions, guardian consent/supervision, Rally, Filmer card, owner peek, sponsor rail, live
+banner, hero details): accent → jade primary, selected → ink, tints → mist jade. Quiz gameplay, reaction,
+Aura/sponsor tier colours kept as documented exceptions. Presentation only. Verified: mobile typecheck,
+unused/comments/copy; CI Jest on push. Not verified: devices/browser.
+
 ### 2026-11-04 — Lovable rollout: Drip, Beyond, Fan Zone, Quiz, role HQs, Expo admin
 
 Per [LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md) §5. Drip `GearCard` white card (ember

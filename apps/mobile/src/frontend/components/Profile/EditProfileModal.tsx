@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1.1,
     textTransform: 'uppercase',
-    color: FOCAL.violetInk,
+    color: colors.primary,
   },
   title: {
     fontSize: 22,

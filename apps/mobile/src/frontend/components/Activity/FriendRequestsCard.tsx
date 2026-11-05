@@ -9,7 +9,6 @@ import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { fetchMyFriends, respondFriend, type FriendRow } from '@/lib/privacy';
-import { FOCAL } from '@/theme/motion';
 
 /** @purpose Incoming friend requests with Accept / Decline. */
 export function FriendRequestsCard() {
@@ -66,7 +65,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   name: { flex: 1, minWidth: 100, fontSize: 14, fontWeight: '700', color: colors.text },
   button: { minHeight: 44, minWidth: 44, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, justifyContent: 'center' },
-  buttonOn: { backgroundColor: FOCAL.violetInk, borderColor: FOCAL.violetInk },
+  buttonOn: { backgroundColor: colors.text, borderColor: colors.text },
   label: { fontSize: 13, fontWeight: '700', color: colors.text },
   labelOn: { color: colors.onAccent },
   message: { fontSize: 13, color: colors.text },

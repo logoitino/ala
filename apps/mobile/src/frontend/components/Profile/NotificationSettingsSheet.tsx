@@ -52,7 +52,7 @@ export function NotificationSettingsSheet({ visible, onClose }: { visible: boole
             <Text style={styles.hint}>These choices apply to new connected notification sources. Existing Crew alerts and workout invitations keep their own controls. Phone push notifications are coming later.</Text>
             {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
             {notice ? <Text accessibilityLiveRegion="polite" style={styles.notice}>{notice}</Text> : null}
-            {loading ? <ActivityIndicator accessibilityLabel="Loading notification settings" color={FOCAL.violetInk} /> : null}
+            {loading ? <ActivityIndicator accessibilityLabel="Loading notification settings" color={colors.primary} /> : null}
             {draft && availability ? <>
               <Text style={styles.section}>Your channels</Text>
               <Text style={styles.hint}>Pausing a channel preserves category choices and existing history. Re-enabling it applies to future updates. Category switches show your choices. Save choices to confirm changes.</Text>
@@ -122,13 +122,13 @@ const styles = StyleSheet.create({
   choiceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   choice: { minHeight: 44, flexGrow: 1, paddingHorizontal: 12, paddingVertical: 10, flexDirection: 'row', alignItems: 'center',
     gap: 12, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.background },
-  choiceOn: { borderColor: FOCAL.violetInk, backgroundColor: FOCAL.mistViolet },
+  choiceOn: { borderColor: colors.text, backgroundColor: FOCAL.mistJade },
   choiceLabel: { flex: 1, minWidth: 0, color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '700' },
   choiceValue: { color: colors.textMuted, fontSize: 13, lineHeight: 19, fontWeight: '700' },
   disabled: { opacity: 0.5 },
   action: { minHeight: 44, padding: 12, alignItems: 'center', justifyContent: 'center' },
-  actionLabel: { color: FOCAL.violetInk, fontSize: 14, lineHeight: 20, fontWeight: '700' },
-  save: { minHeight: 48, borderRadius: MENU_METRICS.controlRadius, padding: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.violetInk },
+  actionLabel: { color: colors.primary, fontSize: 14, lineHeight: 20, fontWeight: '700' },
+  save: { minHeight: 48, borderRadius: MENU_METRICS.controlRadius, padding: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
   saveLabel: { color: colors.onAccent, fontSize: 15, lineHeight: 21, fontWeight: '800' },
   close: { minHeight: 44, padding: 8, alignItems: 'center', justifyContent: 'center' },
 });

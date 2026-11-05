@@ -169,7 +169,7 @@ export function LiveMatchBanner({
         >
           <View style={styles.badge}>
             <View style={styles.metaRow}>
-              <SportIcon sport={game.sport} color={FOCAL.islandCyan} size={16} />
+              <SportIcon sport={game.sport} color={colors.glow} size={16} />
               <View style={styles.liveChip}>
                 <Animated.View style={[styles.pulse, !isLive && styles.pulseIdle, pulseStyle]} />
                 <Text style={[styles.liveLabel, !isLive && styles.idleLabel]}>{status.label}</Text>

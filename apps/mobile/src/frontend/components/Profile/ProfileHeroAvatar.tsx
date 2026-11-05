@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     gap: 8,
     borderTopWidth: 3,
-    borderTopColor: FOCAL.electricViolet,
+    borderTopColor: colors.border,
   },
   // The identity can take a second line at large text sizes instead of shrinking the athlete's name.
   compactIdentityRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   compactName: { marginTop: 0, fontSize: 22, lineHeight: 27, letterSpacing: -0.4, textAlign: 'left' },
   compactSchool: { fontSize: 12, textAlign: 'left' },
   compactDetails: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  compactDetail: { maxWidth: '100%', flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: FOCAL.mistViolet },
+  compactDetail: { maxWidth: '100%', flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: FOCAL.mistJade },
   compactDetailValue: { color: colors.text, fontSize: 12, fontWeight: '800', flexShrink: 1 },
   compactAuraRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   compactAura: { flexGrow: 1, flexShrink: 1, flexBasis: 120, gap: 5 },
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 4,
     borderRadius: 2,
-    backgroundColor: FOCAL.electricViolet,
+    backgroundColor: colors.border,
   },
   kicker: {
     fontSize: 11,
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 10,
     borderRadius: radii.sm,
-    backgroundColor: FOCAL.mistViolet,
+    backgroundColor: FOCAL.mistJade,
   },
   detailLabel: {
     fontSize: 10,

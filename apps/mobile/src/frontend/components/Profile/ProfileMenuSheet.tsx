@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: FOCAL.violetInk,
+    color: colors.primary,
     marginTop: 2,
   },
   row: {

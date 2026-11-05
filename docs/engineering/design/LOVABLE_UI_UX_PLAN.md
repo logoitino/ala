@@ -86,14 +86,23 @@ are touched (§5).
 | Profile (`AthleteProfileView`, hero details, stat row, menu) | Done | Segmented section control, ink sport chips, neutral cards and nav; violet accent retired on Profile. |
 | Aura trading card, Crew strip | Done | Aura card kept (already the tiered collectible card); Join Crew is a jade tint action, not gold. |
 | Drip, Beyond, Fan Zone, Sport Quiz | Done | Drip white cards (ember retired); Beyond shared styles; Fan Zone night hero, light cards, ink selection; Quiz buttons 48pt with soft lift. |
-| Family Fun discovery, remaining Quiz/Beyond sub-screens | Next | Spot-fix any leftover per-screen colours. |
+| Per-screen violet/cyan accents (settings sheets, stats, polls, inbox, friends, guardian forms, Rally, Filmer, owner peek, sponsor rail, live banner) | Done | Accents → jade primary, selected → ink, tints → mist jade. |
 | Parent / Booster / Sponsor / Operator HQs | Done | 52pt primary actions, ink chips, jade tint secondary, 14pt controls (panels via `DashboardPanel`). |
 | Expo `/admin` desks (shared `AdminControls`) | Done | Portal canvas/border tokens, card panels, 14pt-radius buttons and fields; desk logic unchanged. |
 | Individual `/admin` desk layouts | Next | Spot-fix desks with their own styles. |
-| Remaining modals in `MENU_STYLE_MAP` | Next | 24pt sheets, 52pt primaries. |
+| Remaining modals in `MENU_STYLE_MAP` | Done (shared frame) | `useSheetFrame` / `MENU_METRICS` already give every sheet its radius and frame; individual primaries move as their sheets are touched. |
 
 Owner of the rollout: DESIGN with ACCESSIBILITY review; each change follows the presentation-only
 exemption in FEATURE_ADMIN_WORKFLOW unless it adds a capability.
+
+## 5a. Intentional colour exceptions
+
+These keep their own colours because the colour carries meaning, not decoration:
+
+- **Sport Quiz gameplay** (`SportQuizRound`, `QuizFx`, `FunFactMoment`, `LearnSportCard`, trivia notice/preview): the owner-approved gold/violet game palette (QUIZ-04 fun presentation). Quiz *buttons* follow the plan.
+- **Reaction identities**: Seki (cyan) and Riding (gold) counts and hype story pills.
+- **Aura tiers, sponsor/booster tiers and hype effects** (`lib/aura.ts`, `data/sponsorships.ts`, `theme/hypeFx.ts`, glow borders).
+- **Accent plumbing** (`UI/MenuChrome`, `UI/EmptyState`, `theme/motion.ts`) keeps the palette definitions so the exceptions above still work.
 
 ## 6. What is not imported from the prototype
 

@@ -37,7 +37,6 @@ import {
   type GuardianMinorRow,
   type Supervision,
 } from '@/lib/minors';
-import { FOCAL } from '@/theme/motion';
 
 const message = (caught: unknown) => (caught instanceof Error ? caught.message : 'That did not work.');
 type PendingFunFact = GuardianFunFacts['facts'][number];
@@ -334,12 +333,12 @@ const styles = StyleSheet.create({
   request: { gap: 6 },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   chip: { minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, justifyContent: 'center' },
-  chipOn: { backgroundColor: FOCAL.violetInk, borderColor: FOCAL.violetInk },
+  chipOn: { backgroundColor: colors.text, borderColor: colors.text },
   chipLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
   chipLabelOn: { color: colors.onAccent },
   input: { minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, fontSize: 16, letterSpacing: 2, color: colors.text },
   grow: { flex: 1 },
-  action: { minHeight: 44, paddingHorizontal: 16, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.violetInk },
+  action: { minHeight: 44, paddingHorizontal: 16, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
   actionLabel: { fontSize: 14, fontWeight: '800', color: colors.onAccent },
   off: { opacity: 0.5 },
   note: { fontSize: 13, color: colors.text },

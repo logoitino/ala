@@ -46,7 +46,6 @@ import {
   type BlockedRow,
   type PrivacySettings,
 } from '@/lib/privacy';
-import { FOCAL } from '@/theme/motion';
 
 const AUDIENCES: Audience[] = ['everyone', 'friends', 'only_me'];
 
@@ -226,7 +225,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
           <Text style={styles.kicker}>Account</Text>
           <Text style={styles.title}>Privacy</Text>
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          {!draft && !error ? <ActivityIndicator color={FOCAL.violetInk} /> : null}
+          {!draft && !error ? <ActivityIndicator color={colors.primary} /> : null}
           {draft ? (
             <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
               {minor?.needsBirth ? (
@@ -441,18 +440,18 @@ const styles = StyleSheet.create({
   hint: { fontSize: 12, color: colors.textMuted, lineHeight: 17 },
   choiceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   choice: { minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignSelf: 'flex-start' },
-  choiceOn: { backgroundColor: FOCAL.violetInk, borderColor: FOCAL.violetInk },
+  choiceOn: { backgroundColor: colors.text, borderColor: colors.text },
   choiceOff: { opacity: 0.4 },
   choiceLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
   choiceLabelOn: { color: colors.onAccent },
   blockRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   grow: { flex: 1 },
   code: { fontSize: 26, fontWeight: '800', letterSpacing: 4, color: colors.text },
-  small: { minHeight: 40, paddingHorizontal: 16, borderRadius: 20, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start', backgroundColor: FOCAL.violetInk },
+  small: { minHeight: 40, paddingHorizontal: 16, borderRadius: 20, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start', backgroundColor: colors.primary },
   smallLabel: { fontSize: 14, fontWeight: '800', color: colors.onAccent },
   error: { fontSize: 13, color: colors.danger },
   notice: { fontSize: 13, color: colors.text },
-  save: { minHeight: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.violetInk },
+  save: { minHeight: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
   saveOff: { opacity: 0.5 },
   saveLabel: { fontSize: 15, fontWeight: '800', color: colors.onAccent },
 });
