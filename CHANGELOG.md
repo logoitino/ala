@@ -20,7 +20,12 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
   error ink; gift sheet uses scoreboard amount tiles, a 44pt scoreboard review total, ink-on-ink tip chips and
   a solid Next action. Fan headings are larger; Activity rows use 44pt filled icons. Flows, copy and payment
   guards unchanged.
-- Not yet run: mobile Jest suite (run `pnpm test` on Node 24). Admin portal layout unchanged pending owner call.
+- Phase 3 (owner asked for the Lovable design, keeping all content): the Next admin portal moves from top tabs
+  to a dark left sidebar (top bar below `lg`) with every section, Product desk, Analytics, Departments and Sign out
+  carried over; Daylight canvas and card panels/stat cards. Live Local games render as dark scoreboard cards
+  with a solid LIVE pill; Spotlight's #1 row is a dark award card with gold rank and podium ranks 2–3; the
+  locked Vault is a dark card with a gold one-time unlock; receipts show scoreboard amounts.
+- Not yet run: mobile Jest suite and a Next build (run `pnpm check` on Node 24 and view the portal at 320px/1280px).
 
 ## 2026-10-22 — Metro disconnected-request repair (METRO-01)
 

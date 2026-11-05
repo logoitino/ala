@@ -189,20 +189,20 @@ export function LeaderboardsBoard({ boards, loading, error, onRetry, onOpenAthle
                 contentStyle={[styles.row, index === 0 && styles.rowFirst]}
                 onPress={row.onPress}
               >
-                <View style={[styles.rank, index === 0 && styles.rankFirst]}>
-                  <Text style={[styles.rankText, index === 0 && styles.rankTextFirst]}>{index + 1}</Text>
+                <View style={[styles.rank, index === 0 && styles.rankFirst, index > 0 && index < 3 && styles.rankPodium]}>
+                  <Text style={[styles.rankText, index === 0 && styles.rankTextFirst, index > 0 && index < 3 && styles.rankTextPodium]}>{index + 1}</Text>
                 </View>
                 <View style={styles.copy}>
-                  <Text style={styles.title} numberOfLines={1}>
+                  <Text style={[styles.title, index === 0 && styles.titleFirst]} numberOfLines={1}>
                     {row.title}
                   </Text>
                   {row.subtitle ? (
-                    <Text style={styles.subtitle} numberOfLines={1}>
+                    <Text style={[styles.subtitle, index === 0 && styles.subtitleFirst]} numberOfLines={1}>
                       {row.subtitle}
                     </Text>
                   ) : null}
                 </View>
-                <Text style={styles.metric}>{row.metric}</Text>
+                <Text style={[styles.metric, index === 0 && styles.metricFirst]}>{row.metric}</Text>
               </AnimatedButton>
             </ScrollFxItem>
           ))}
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   tab: {
     minHeight: 44,
     justifyContent: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: radii.pill,
     borderWidth: 1,
@@ -244,16 +244,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   tabSelected: {
-    borderColor: FOCAL.electricGold,
-    backgroundColor: FOCAL.mistGold,
+    borderColor: colors.text,
+    backgroundColor: colors.text,
   },
   tabText: {
-    color: colors.textMuted,
-    fontSize: 13,
+    color: colors.text,
+    fontSize: 14,
     fontWeight: '700',
   },
   tabTextSelected: {
-    color: FOCAL.goldInk,
+    color: colors.background,
   },
   boot: {
     minHeight: 80,
@@ -280,22 +280,25 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: space.sm,
-    paddingVertical: 10,
+    gap: 12,
+    paddingHorizontal: space.md,
+    paddingVertical: 12,
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     ...cardShadow,
   },
+  // #1 gets the dark "athlete of the week" card; gold marks the award, never body text on light.
   rowFirst: {
-    borderColor: FOCAL.electricGold,
+    backgroundColor: colors.videoSurface,
+    borderColor: colors.videoSurface,
+    paddingVertical: 18,
   },
   rank: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: FOCAL.mistSlate,
@@ -311,6 +314,25 @@ const styles = StyleSheet.create({
   },
   rankTextFirst: {
     color: FOCAL.ink,
+    fontSize: 16,
+  },
+  rankPodium: {
+    backgroundColor: FOCAL.mistGold,
+  },
+  rankTextPodium: {
+    color: FOCAL.goldInk,
+  },
+  titleFirst: {
+    color: colors.onVideo,
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  subtitleFirst: {
+    color: colors.onVideoMuted,
+  },
+  metricFirst: {
+    color: FOCAL.electricGold,
+    fontSize: 18,
   },
   copy: {
     flex: 1,
@@ -318,8 +340,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '800',
   },
   subtitle: {
     color: colors.textMuted,
@@ -328,8 +350,7 @@ const styles = StyleSheet.create({
   },
   metric: {
     ...SCOREBOARD_DIGITS,
-    color: FOCAL.goldInk,
-    fontSize: 13,
-    fontWeight: '800',
+    color: colors.text,
+    fontSize: 15,
   },
 });

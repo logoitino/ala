@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
-import { colors, radii } from '@/constants/theme';
+import { colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { tipChannelLabel } from '@/lib/finance';
 import { SPRING_CARD } from '@/theme/motion';
 import type { FanTipReceipt } from '@/types/database';
@@ -175,14 +175,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   malo: {
+    ...SCOREBOARD_DIGITS,
     flex: 1,
     color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 20,
   },
   auraBadge: {
     backgroundColor: colors.accentSoft,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: colors.primary,
     borderRadius: 999,
     paddingHorizontal: 10,
@@ -194,11 +194,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   viewReel: {
-    minHeight: 40,
-    borderRadius: radii.md,
-    borderWidth: 1,
+    minHeight: 44,
+    borderRadius: 14,
+    borderWidth: 0,
     borderColor: colors.primary,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },

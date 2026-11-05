@@ -2,6 +2,7 @@
  * Compact Local discovery scoreboard: the entire card opens the game; a small arrow marks that action.
  * Neutral letter tiles identify teams without pretending to be approved school crests.
  * Booster logos display through `mediaUri` (legacy full URL or `sb:` reference, SCALE-02); no logo shows initials.
+ * Live games switch to the dark scoreboard card from the 2026-11 design refresh (ember LIVE pill, bright scores).
  * @sideEffects Light haptic through AnimatedPressable; parent owns match navigation.
  */
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -34,21 +35,21 @@ function teamInitials(name: string): string {
  * @purpose Keep a team's full identity beside its own score on narrow game cards.
  * @returns A wrapping name and school with a separate, tabular score column.
  */
-function TeamScoreRow({ name, school, side, score }: { name: string; school: string; side: string; score: string }) {
+function TeamScoreRow({ name, school, side, score, dark = false }: { name: string; school: string; side: string; score: string; dark?: boolean }) {
   const schoolName = school?.trim() ?? '';
   return (
     <View style={styles.teamRow}>
-      <View style={styles.monogram} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <Text style={styles.monogramLabel} maxFontSizeMultiplier={1.5}>{teamInitials(name)}</Text>
+      <View style={[styles.monogram, dark && styles.monogramDark]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <Text style={[styles.monogramLabel, dark && styles.onDark]} maxFontSizeMultiplier={1.5}>{teamInitials(name)}</Text>
       </View>
       <View style={styles.teamIdentity}>
-        <Text style={styles.side}>{side}</Text>
-        <Text style={styles.teamName}>{name}</Text>
+        <Text style={[styles.side, dark && styles.onDarkMuted]}>{side}</Text>
+        <Text style={[styles.teamName, dark && styles.onDark]}>{name}</Text>
         {schoolName && schoolName.toLowerCase() !== name.toLowerCase() ? (
-          <Text style={styles.school}>{schoolName}</Text>
+          <Text style={[styles.school, dark && styles.onDarkMuted]}>{schoolName}</Text>
         ) : null}
       </View>
-      <Text style={styles.score}>{score}</Text>
+      <Text style={[styles.score, dark && styles.onDark]}>{score}</Text>
     </View>
   );
 }
@@ -69,6 +70,7 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
   const homeScore = status.isScheduled ? '—' : gameScore(game.home_score);
   const awayScore = status.isScheduled ? '—' : gameScore(game.away_score);
   const sport = game.sport?.trim();
+  const live = status.isLive;
   // The card is one accessible button, so its label must include schools shown in its children.
   const accessibleScore = (name: string, school: string, score: string) => {
     const schoolName = school?.trim();
@@ -84,31 +86,32 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
       overshoot={false}
       scaleTo={0.97}
       onPress={onPress}
-      contentStyle={styles.card}
+      contentStyle={[styles.card, live && styles.cardLive]}
     >
       {/* UX-08: the game's surface, clipped in its own layer so the card keeps its iOS shadow. */}
       <View pointerEvents="none" style={styles.fieldLayer}>
-        <SportField sport={sport} opacity={0.08} />
+        <SportField sport={sport} opacity={live ? 0.05 : 0.08} />
       </View>
       <View style={styles.topRow}>
-        <View style={styles.sportBadge}><SportIcon sport={sport} size={16} color={TAB_ACCENTS.local.color} /><Text style={styles.sport}>{sport || 'Game day'}</Text></View>
-        <View style={[styles.statusTag, status.isLive && styles.statusLive]}>
-          <Text style={[styles.statusText, status.isLive && styles.statusLiveText]}>{status.label}</Text>
+        <View style={styles.sportBadge}><SportIcon sport={sport} size={16} color={live ? colors.onVideoMuted : TAB_ACCENTS.local.color} /><Text style={[styles.sport, live && styles.onDarkMuted]}>{sport || 'Game day'}</Text></View>
+        <View style={[styles.statusTag, live && styles.statusLive]}>
+          {live ? <View style={styles.liveDot} /> : null}
+          <Text style={[styles.statusText, live && styles.statusLiveText]}>{status.label}</Text>
         </View>
       </View>
-      {status.detail ? <Text style={styles.gameDetail}>{status.detail}</Text> : null}
+      {status.detail ? <Text style={[styles.gameDetail, live && styles.onDarkMuted]}>{status.detail}</Text> : null}
       <View style={styles.scoreboard}>
-        <TeamScoreRow name={home} school={game.home_school} side="Home" score={homeScore} />
-        <View style={styles.scoreDivider} />
-        <TeamScoreRow name={away} school={game.away_school} side="Away" score={awayScore} />
+        <TeamScoreRow name={home} school={game.home_school} side="Home" score={homeScore} dark={live} />
+        <View style={[styles.scoreDivider, live && styles.scoreDividerDark]} />
+        <TeamScoreRow name={away} school={game.away_school} side="Away" score={awayScore} dark={live} />
       </View>
       <View style={styles.venueRow}>
-        <Text style={styles.venue}>{game.venue?.trim() || 'Venue TBA'}</Text>
-        <Text style={styles.ctaArrow} accessibilityElementsHidden importantForAccessibility="no">↗</Text>
+        <Text style={[styles.venue, live && styles.onDarkMuted]}>{game.venue?.trim() || 'Venue TBA'}</Text>
+        <Text style={[styles.ctaArrow, live && styles.ctaArrowDark]} accessibilityElementsHidden importantForAccessibility="no">↗</Text>
       </View>
       {sponsors.length > 0 ? (
         <View style={styles.sponsorRow}>
-          <Text style={styles.sponsorCaption}>Boosted by</Text>
+          <Text style={[styles.sponsorCaption, live && styles.onDarkMuted]}>Boosted by</Text>
           {sponsors.slice(0, 4).map((sponsor) => {
             const logo = mediaUri(sponsor.logo_url);
             return (
@@ -130,16 +133,21 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: colors.border,
-    borderTopWidth: 3,
-    borderTopColor: TAB_ACCENTS.local.color,
     minHeight: 44,
-    padding: 12,
-    gap: 8,
+    padding: 16,
+    gap: 10,
     ...cardShadow,
   },
+  cardLive: { backgroundColor: colors.videoSurface, borderColor: colors.videoSurface },
+  onDark: { color: colors.onVideo },
+  onDarkMuted: { color: colors.onVideoMuted },
+  monogramDark: { backgroundColor: 'rgba(244,247,245,0.10)' },
+  scoreDividerDark: { backgroundColor: 'rgba(244,247,245,0.12)' },
+  ctaArrowDark: { color: colors.glow },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' },
   sportBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1, maxWidth: '100%' },
   topRow: {
     flexDirection: 'row',
@@ -157,14 +165,17 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   statusTag: {
-    borderRadius: radii.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: radii.pill,
     paddingHorizontal: 9,
     paddingVertical: 5,
     backgroundColor: FOCAL.mistSlate,
   },
-  statusLive: { backgroundColor: FOCAL.mistEmber },
+  statusLive: { backgroundColor: FOCAL.ember },
   statusText: { color: colors.textMuted, fontSize: 12, fontWeight: '800' },
-  statusLiveText: { color: FOCAL.emberInk },
+  statusLiveText: { color: '#FFFFFF', letterSpacing: 0.4 },
   gameDetail: {
     color: colors.textMuted,
     fontSize: 13,
@@ -187,8 +198,8 @@ const styles = StyleSheet.create({
   side: { color: colors.textMuted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
   teamName: { color: colors.text, fontSize: 14, fontWeight: '900', flexShrink: 1 },
   school: { color: colors.textMuted, fontSize: 12 },
-  score: { ...SCOREBOARD_DIGITS, color: colors.text, fontSize: 30, textAlign: 'right', marginLeft: 'auto', maxWidth: '100%' },
-  fieldLayer: { ...StyleSheet.absoluteFill, borderRadius: radii.lg, overflow: 'hidden' },
+  score: { ...SCOREBOARD_DIGITS, color: colors.text, fontSize: 34, textAlign: 'right', marginLeft: 'auto', maxWidth: '100%' },
+  fieldLayer: { ...StyleSheet.absoluteFill, borderRadius: radii.xl, overflow: 'hidden' },
   scoreDivider: { height: 1, backgroundColor: colors.border },
   venue: { color: colors.textMuted, fontSize: 12, flex: 1 },
   venueRow: {
