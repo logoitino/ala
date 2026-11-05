@@ -5,7 +5,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/constants/theme';
 import { impactPress } from '@/lib/haptics';
-import { TAB_ACCENTS } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 
 type HubId = 'matches' | 'polls' | 'boosters';
 const META = {
@@ -22,7 +22,7 @@ export function LocalHubMenu({ items, value, onChange }: { items: { id: HubId; l
         const selected = id === value;
         const meta = META[id];
         const name = label?.trim() || meta.label;
-        const color = selected ? TAB_ACCENTS.local.color : colors.textMuted;
+        const color = selected ? FOCAL.jadeInk : colors.textMuted;
         return (
           <Pressable key={id} accessibilityRole="tab" accessibilityLabel={name}
             accessibilityState={{ selected }} aria-selected={selected}
@@ -42,6 +42,6 @@ export function LocalHubMenu({ items, value, onChange }: { items: { id: HubId; l
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 6, paddingVertical: 4 },
   tab: { flex: 1, minWidth: 0, minHeight: 44, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 6, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  selected: { backgroundColor: TAB_ACCENTS.local.mist, borderColor: TAB_ACCENTS.local.color },
+  selected: { backgroundColor: FOCAL.mistJade, borderColor: FOCAL.jadeInk },
   label: { fontSize: 12, fontWeight: '800', flexShrink: 1, maxWidth: '100%', textAlign: 'center' },
 });

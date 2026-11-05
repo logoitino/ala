@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-04 · Lovable icon, fonts, welcome wall and nav bar on `main` (needs a new EAS build for the icon). Lovable EAS preview **FINISHED** — Android APK + iOS IPA ($0 Free). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-04 · Splash uses Lovable brand (Expo grid gone); BrandMark on Soft-Wall / age / admin; Local cyan→jade. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-04 — Splash + brand lockup finish (Lovable sample)
+
+- Replaced leftover Expo default `splash-icon.png` with the Lovable jade T + gold star on night `#0E1315`; wired `expo.splash` in `app.json`.
+- Soft-Wall and age card open with `BrandMark`; Expo admin header uses the real icon (no letter-T tile).
+- Local hub / game cards / Home Local jump use jade primary (cyan accent retired on those surfaces).
 
 ### 2026-11-04 — Lovable icon, fonts, welcome wall and nav bar
 

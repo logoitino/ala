@@ -14,7 +14,7 @@ import { gameScore, gameScoreboardStatus, gameTeamName } from '@/components/Loca
 import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { initialsForBusiness } from '@/data/sponsorships';
 import { mediaUri } from '@/lib/media';
-import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 import type { Game, Sponsorship } from '@/types/database';
 
 type GameCardProps = {
@@ -93,7 +93,7 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
         <SportField sport={sport} opacity={live ? 0.05 : 0.08} />
       </View>
       <View style={styles.topRow}>
-        <View style={styles.sportBadge}><SportIcon sport={sport} size={16} color={live ? colors.onVideoMuted : TAB_ACCENTS.local.color} /><Text style={[styles.sport, live && styles.onDarkMuted]}>{sport || 'Game day'}</Text></View>
+        <View style={styles.sportBadge}><SportIcon sport={sport} size={16} color={live ? colors.onVideoMuted : colors.primary} /><Text style={[styles.sport, live && styles.onDarkMuted]}>{sport || 'Game day'}</Text></View>
         <View style={[styles.statusTag, live && styles.statusLive]}>
           {live ? <View style={styles.liveDot} /> : null}
           <Text style={[styles.statusText, live && styles.statusLiveText]}>{status.label}</Text>
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sport: {
-    color: TAB_ACCENTS.local.color,
+    color: colors.primary,
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 1,

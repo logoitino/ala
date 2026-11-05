@@ -1,4 +1,8 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-04 — Splash + brand lockup finish (Lovable sample)
+
+- Expo splash replaced with Lovable brand; Soft-Wall / age / admin use BrandMark; Local cyan→jade.
+
 ## 2026-11-04 — Lovable EAS preview FINISHED ($0 Free)
 
 - Android APK `8e0237fb` and iOS IPA `bf9b8567` from `main` `248a5e6` (preview profile).

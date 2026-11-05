@@ -15,7 +15,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors } from '@/constants/theme';
 import type { HighlightFeedFilter } from '@/data/highlights';
 import type { AppRuntimeConfig } from '@/lib/runtime';
-import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 
 /**
  * @purpose Render the Home feed switch and Local jump from the route's state.
@@ -97,9 +97,9 @@ export function HomeFeedSwitch({
               router.push('/local');
             }}
           >
-            <Ionicons name="location" size={13} color={TAB_ACCENTS.local.glow} />
+            <Ionicons name="location" size={13} color={FOCAL.neonJade} />
             <Text style={[styles.feedPillLabel, styles.localPillLabel]}>Local</Text>
-            <Ionicons name="chevron-forward" size={12} color={TAB_ACCENTS.local.glow} />
+            <Ionicons name="chevron-forward" size={12} color={FOCAL.neonJade} />
           </AnimatedButton>
         </>
       ) : null}
@@ -166,10 +166,10 @@ const styles = StyleSheet.create({
     minWidth: 0,
     paddingHorizontal: 8,
     borderWidth: 1,
-    borderColor: `${TAB_ACCENTS.local.glow}55`,
+    borderColor: `${FOCAL.neonJade}55`,
   },
   localPillLabel: {
-    color: TAB_ACCENTS.local.glow,
+    color: FOCAL.neonJade,
   },
   feedPillLabel: {
     color: colors.onVideoMuted,

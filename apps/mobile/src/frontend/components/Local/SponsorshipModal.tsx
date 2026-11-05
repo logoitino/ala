@@ -35,7 +35,7 @@ import {
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import type { RecordSponsorshipInput } from '@/hooks/useSponsorships';
 import { uploadSponsorLogo } from '@/lib/sponsorships';
-import { SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
+import { SPRING_SHEET } from '@/theme/motion';
 import type { SponsorshipTierId } from '@/types/database';
 
 type SponsorshipModalProps = {
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   kicker: {
-    color: TAB_ACCENTS.local.color,
+    color: colors.primary,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.6,
