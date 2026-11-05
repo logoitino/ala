@@ -13,7 +13,7 @@ import { EmptyState } from '@/components/UI/EmptyState';
 import { cardShadow, colors, radii, space, SCOREBOARD_DIGITS } from '@/constants/theme';
 import type { Leaderboards } from '@/lib/leaderboards';
 import { boardShareMessage } from '@/lib/shareCard';
-import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 
 export type LeaderboardsTab = 'hype' | 'views' | 'highlights' | 'schools' | 'fans' | 'filmers';
 
@@ -125,7 +125,7 @@ export function LeaderboardsBoard({ boards, loading, error, onRetry, onOpenAthle
         lede={error}
         actionLabel="Retry"
         onAction={onRetry}
-        accent={TAB_ACCENTS.spotlight.color}
+        accent={FOCAL.goldInk}
       />
     );
   }

@@ -6,6 +6,7 @@ import { Stack, type Href, useRouter } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
+import { FOCAL } from '@/theme/motion';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
 import { KitButton } from '@/components/UI/Kit';
@@ -76,6 +77,7 @@ export default function AthleteHomeScreen() {
           kicker="Tapua'i athlete"
           title="Athlete HQ"
           lede="Your private gift record, badges, and fan tags that name you."
+          accent={FOCAL.jadeInk}
         />
         <TagConfirmList
           tags={pending.tags}

@@ -38,7 +38,7 @@ export function NotificationSettingsSheet({ visible, onClose }: { visible: boole
     <View style={styles.root}>
       <View style={frame.dock}>
         <View accessibilityViewIsModal style={[styles.sheet, frame.card, { maxHeight: height * 0.85 }]}>
-          <MenuBackdrop accent="violet" />
+          <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={onClose} />
           <Text style={styles.kicker}>Account</Text>
           <Text accessibilityRole="header" style={styles.title}>Notifications</Text>

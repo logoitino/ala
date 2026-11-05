@@ -59,7 +59,7 @@ function TeamScoreRow({ name, school, side, score, dark = false }: { name: strin
  * @param game Recorded games row; missing scores stay unreported.
  * @param onPress Opens the in-tab match feed and rosters.
  * @param sponsors Silver+ booster logos tagged to this matchup.
- * @returns A Daylight card using Local's cyan accent and a jade roster action.
+ * @returns A Daylight card using jade primary (night surface when live) and a jade roster action.
  * @sideEffects Light haptic via AnimatedPressable.
  */
 export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {

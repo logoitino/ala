@@ -177,7 +177,7 @@ export function AthleteReelManager({
           </Pressable>
           <View pointerEvents="box-none" style={frame.dock}>
           <View style={[styles.sheet, frame.card]}>
-          <MenuBackdrop accent="violet" />
+          <MenuBackdrop accent="jade" />
             <SheetHandle onDismiss={sheetBusy ? undefined : closeMenu} />
             <Text style={styles.kicker}>Content placement</Text>
             <Text style={styles.title} numberOfLines={2}>

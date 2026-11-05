@@ -33,7 +33,7 @@ const FLOAT_MS = 720;
 const FLOAT_RISE = -60;
 
 /**
- * @purpose Live community cheer poll (Westlake Thunder vs Lone Peak Knights). The share bar stays jade and cyan. A chosen side is a white button with that color as a border, so it does not blend into the bar. A tap springs the bar from 0% to the new share, fires Medium haptics, floats +1 Vote ⚡ from the press point (+60px), and persists via `cast_cheer_vote`.
+ * @purpose Live community cheer poll (Westlake Thunder vs Lone Peak Knights). The share bar uses jade primary (ember only for LIVE heat on the away share). A chosen side is a white button with that color as a border, so it does not blend into the bar. A tap springs the bar from 0% to the new share, fires Medium haptics, floats +1 Vote ⚡ from the press point (+60px), and persists via `cast_cheer_vote`.
  * @param slug `cheer_polls.slug` (featured rivalry is `westlake-lone-peak`).
  * @param homeLabel Home school display name.
  * @param awayLabel Away school display name.

@@ -11,6 +11,7 @@ import { Stack } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
+import { FOCAL } from '@/theme/motion';
 import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { EmptyState } from '@/components/UI/EmptyState';
@@ -128,6 +129,7 @@ export default function BoosterHomeScreen() {
           kicker="Tapua'i booster"
           title="Booster Tools"
           lede={live.copy.boosterLede}
+          accent={FOCAL.jadeInk}
         />
         <FamilyFunDiscovery />
         <DashboardPanel title="CSV bulk roster upload" body="Columns: name, jersey_number, position, school_name">

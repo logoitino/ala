@@ -224,13 +224,13 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
       <View pointerEvents="box-none" style={frame.dock}>
       <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
         <Pressable haptic="none" onPress={() => undefined}>
-          <MenuBackdrop accent="ember" />
+          <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={() => dismiss()} />
           {display ? (
             <Animated.View style={[styles.content, contentStyle]}>
               <View style={styles.iconWrap}>
                 <View pointerEvents="none" style={styles.iconGloss} />
-                <Ionicons name={ICONS[display.icon]} size={26} color={FOCAL.emberInk} />
+                <Ionicons name={ICONS[display.icon]} size={26} color={FOCAL.jadeInk} />
               </View>
               <Text style={styles.kicker}>{sizeHint}</Text>
               <Text style={styles.title}>{display.name}</Text>

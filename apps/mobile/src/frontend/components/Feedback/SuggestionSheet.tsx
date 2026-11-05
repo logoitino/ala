@@ -105,7 +105,7 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
-          <MenuBackdrop accent="gold" />
+          <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
           <View style={styles.handle} />
           <Text style={styles.kicker}>Improve Tapua'i</Text>

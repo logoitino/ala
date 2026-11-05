@@ -57,7 +57,7 @@ import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { localGameHref, userProfileHref } from '@/lib/navigation';
 import { DEFAULT_APP_RUNTIME } from '@/lib/runtime';
-import { TAB_ACCENTS } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 
 type LocalHubId = 'matches' | 'polls' | 'boosters';
 
@@ -256,7 +256,7 @@ export default function LocalTab() {
             kicker={live.copy.localKicker}
             title="Local"
             lede={live.copy.localLede}
-            accent={TAB_ACCENTS.local.color}
+            accent={FOCAL.jadeInk}
           />
           {live.layouts.localSearch ? (
           <View style={styles.searchWrap}>
@@ -298,7 +298,7 @@ export default function LocalTab() {
                 lede="Local matchups, polls and booster boards are unavailable right now."
                 adminHref="/admin/features"
                 adminLabel="Open Features"
-                accent={TAB_ACCENTS.local.color}
+                accent={FOCAL.jadeInk}
               />
             ) : null}
 
@@ -318,7 +318,7 @@ export default function LocalTab() {
 
               {loading ? (
                 <View style={styles.loadingBlock}>
-                  <ActivityIndicator color={TAB_ACCENTS.local.color} size="large" />
+                  <ActivityIndicator color={FOCAL.jadeInk} size="large" />
                   <Text style={styles.muted}>Loading live scores…</Text>
                   <MatchupSkeleton />
                   <MatchupSkeleton />
@@ -333,7 +333,7 @@ export default function LocalTab() {
                   onAction={() => void refresh()}
                   adminHref="/admin/games"
                   adminLabel="Open Live games"
-                  accent={TAB_ACCENTS.local.color}
+                  accent={FOCAL.jadeInk}
                 />
               ) : filteredGames.length === 0 ? (
                 <EmptyState
@@ -347,7 +347,7 @@ export default function LocalTab() {
                   }
                   adminHref="/admin/games"
                   adminLabel="Open Live games"
-                  accent={TAB_ACCENTS.local.color}
+                  accent={FOCAL.jadeInk}
                 />
               ) : (
                 <View style={styles.list}>
@@ -394,7 +394,7 @@ export default function LocalTab() {
                   }
                   adminHref="/admin/polls"
                   adminLabel="Open Polls"
-                  accent={TAB_ACCENTS.local.color}
+                  accent={FOCAL.jadeInk}
                 />
               ) : (
                 visiblePolls.map((poll, index) => (
@@ -502,9 +502,9 @@ const styles = StyleSheet.create({
     gap: 8,
     minHeight: 44,
     paddingHorizontal: 10,
-    backgroundColor: TAB_ACCENTS.local.mist,
+    backgroundColor: FOCAL.mistJade,
     borderWidth: 1.5,
-    borderColor: TAB_ACCENTS.local.color,
+    borderColor: FOCAL.jadeInk,
     borderRadius: radii.md,
   },
   searchGlyph: {
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginTop: 4,
     borderLeftWidth: 3,
-    borderLeftColor: TAB_ACCENTS.local.color,
+    borderLeftColor: FOCAL.jadeInk,
     paddingLeft: 10,
   },
   hubCopy: {
@@ -588,10 +588,10 @@ const styles = StyleSheet.create({
   ctaCard: {
     width: 144,
     minHeight: 124,
-    backgroundColor: TAB_ACCENTS.local.mist,
+    backgroundColor: FOCAL.mistJade,
     borderRadius: radii.lg,
     borderWidth: 1.5,
-    borderColor: TAB_ACCENTS.local.color,
+    borderColor: FOCAL.jadeInk,
     padding: 12,
     gap: 6,
     alignItems: 'flex-start',
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   ctaPlus: {
-    color: TAB_ACCENTS.local.color,
+    color: FOCAL.jadeInk,
     fontSize: 24,
     fontWeight: '800',
     lineHeight: 28,

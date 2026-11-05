@@ -19,6 +19,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { PINClaimModal } from '@/components/Operator/PINClaimModal';
 import { ScreenHeading } from '@/components/ScreenHeading';
+import { FOCAL } from '@/theme/motion';
 import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
@@ -122,6 +123,7 @@ export default function OperatorPortalScreen() {
           kicker="Tapua'i operator"
           title="Field Operator Portal"
           lede={live.copy.operatorLede}
+          accent={FOCAL.jadeInk}
         />
         <FamilyFunDiscovery />
         <TagConfirmList

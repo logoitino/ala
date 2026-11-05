@@ -20,7 +20,7 @@ export function ChallengeSettingsSheet({ visible, onClose }: { visible: boolean;
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.root}>
         <View style={styles.sheet}>
-          <MenuBackdrop accent="violet" />
+          <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={onClose} />
           <Text style={styles.kicker}>Account</Text>
           <Text style={styles.title}>Workout challenges</Text>

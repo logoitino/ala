@@ -20,7 +20,7 @@ type ScreenHeadingProps = {
   title: string;
   lede?: string;
   compact?: boolean;
-  /** Override the gold kicker / underline (e.g. Local cyan). Defaults to Look-desk gold. */
+  /** Override the gold kicker / underline (jade for most tabs; gold for awards). Defaults to Look-desk gold. */
   accent?: string;
 };
 
@@ -30,7 +30,7 @@ type ScreenHeadingProps = {
  * @param title Screen name.
  * @param lede Supporting sentence under the rule.
  * @param compact Tighter Profile / Drip / Local chrome.
- * @param accent Optional ink for kicker + underline when a tab wants its own hint (cyan / ember / violet).
+ * @param accent Optional ink for kicker + underline (jade primary, gold awards).
  */
 export function ScreenHeading({ kicker, title, lede, compact = false, accent }: ScreenHeadingProps) {
   const { live } = useAppRuntime();

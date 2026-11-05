@@ -183,7 +183,7 @@ export function SponsorshipModal({
           <BlurView intensity={48} tint="dark" pointerEvents="none" style={styles.blur} />
           <View pointerEvents="box-none" style={frame.dock}>
           <Pressable haptic="none" style={[styles.sheet, frame.card]} onPress={() => undefined}>
-          <MenuBackdrop accent="cyan" />
+          <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
             <Animated.View style={[styles.sheetInner, sheetEntrance]}>
             <View style={styles.handle} />

@@ -160,7 +160,7 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSave
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View pointerEvents="box-none" style={frame.dock}>
           <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
-          <MenuBackdrop accent="violet" />
+          <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
             <View style={styles.handle} />
             <Text style={styles.kicker}>Account</Text>

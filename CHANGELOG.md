@@ -1,4 +1,8 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-04 — Lovable whole-app tab / sheet sweep
+
+- Jade sheet washes and tab accents across fan + role surfaces; Spotlight gold awards kept; Beyond KitButton.
+
 ## 2026-11-04 — Splash + brand lockup finish (Lovable sample)
 
 - Expo splash replaced with Lovable brand; Soft-Wall / age / admin use BrandMark; Local cyan→jade.

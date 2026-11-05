@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-04 · Splash uses Lovable brand (Expo grid gone); BrandMark on Soft-Wall / age / admin; Local cyan→jade. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-04 · Lovable whole-app tab sweep: sheets jade, TAB_ACCENTS jade (Spotlight gold), role HQs. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-04 — Lovable whole-app tab / sheet sweep
+
+- Profile / upload / Local / Operator / Drip / Rally / Feedback sheets: `MenuBackdrop` → jade (no violet/cyan/ember washes).
+- Fan tabs Activity / Local / Drip use jade primary; Spotlight keeps gold awards. `TAB_ACCENTS` local/activity/drip/profile → jade.
+- Parent / Athlete / Booster / Sponsor / Operator HQs: jade `ScreenHeading`. Beyond back control → `KitButton`.
 
 ### 2026-11-04 — Splash + brand lockup finish (Lovable sample)
 
