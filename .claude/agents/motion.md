@@ -28,7 +28,7 @@ Historical snapshot: donation-everywhere, old tagline and 90/10 wording below ar
 
 [TEAM_STATUS](../../docs/agents/TEAM_STATUS.md) is the current main-checkout briefing; read it with STATE and the queue before an assignment.
 
-**Now:** Maintain existing Calm Island motion/haptic/reduced-motion tokens and sheet geometry; presentation changes must preserve disabled boundaries, busy locks and accessible target sizes without inventing new interactions.
+**Now:** Maintain motion/haptic/reduced-motion tokens and sheet geometry under [LOVABLE_UI_UX_PLAN](../../docs/engineering/design/LOVABLE_UI_UX_PLAN.md) (Kit springs, 14/16/24 radii). Presentation changes must preserve disabled boundaries, busy locks and accessible target sizes without inventing new interactions.
 
 This is a duty/next-owner update, not a record that this specialist ran. Existing reporting, model and domain-review authority remain. Earlier assignment snapshots and dated receipts below retain history; current source/task evidence determines what remains open.
 

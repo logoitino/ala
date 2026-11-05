@@ -7,6 +7,9 @@ One page for an outside engineer reviewing Tapua'i. **Wave 0 / Stripe test mode.
 ([STATE §0](STATE.md), [WORK_QUEUE](agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc)).
 Exit / Redundancy stays current via CI but is **not** the engineering focus.
 
+**Look:** whole-app UI/UX follows [LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md)
+(owner 2026-11-04; rollout complete). Teams/agents synced in TEAMS.md.
+
 Owner Wave 0 leftovers (artifact prune, staging smoke, counsel/SQL, branch protection / private
 legal): [engineering/OWNER_ACTIONS_1_5.md](engineering/OWNER_ACTIONS_1_5.md). Android preview
 `03e28f4e` already finished.

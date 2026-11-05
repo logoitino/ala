@@ -1,4 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-04 — Teams synced to Lovable UI/UX standard
+
+- TEAMS / Design / Portal / Accessibility / Admin / MENU_STYLE_MAP / SYSTEM_OVERVIEW updated to
+  [LOVABLE_UI_UX_PLAN](docs/engineering/design/LOVABLE_UI_UX_PLAN.md) after the Claude rollout on main.
+
 ## 2026-11-04 — App readiness priority; Exit on backburner
 
 - STATE §0 / WORK_QUEUE: APP-TEST A–C is the active queue; Exit same-turn currency only.

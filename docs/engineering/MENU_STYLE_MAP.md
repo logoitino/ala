@@ -1,7 +1,7 @@
 <!-- Current shared UI source coverage is separate from dated rendered/native acceptance. -->
 # Menu and page style coverage
 
-**Current source alignment:** 2026-10-21 America/Denver · Calm Island with UX-10 sporty fan accents/compact layouts; UX-06 retained; earlier UX-02/UX-03 evidence below remains dated history. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
+**Current source alignment:** 2026-11-04 · Whole-app [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md) (`UI/Kit`, Daylight + night moments, jade/gold/ember). UX-10 per-tab violet accents and the 2026-10-12 portal underline-tab chrome are superseded where they conflict; UX-06/Calm Island history retained below. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
 `ACCESSIBILITY`, `DEVICE_QA` review; `DOCUMENTATION` keeps this map current.
 
 This is a source inventory of shared presentation coverage. It is not a rendered-device audit.
@@ -147,15 +147,15 @@ Press stills are marked stale. No schema, privacy collection, fees, credit path 
 changes are implied by this visual pass.
 
 
-## Read-only admin portal — shared report format (2026-10-12)
+## Read-only admin portal — Lovable shell (2026-11-04; supersedes 2026-10-12 underline tabs)
 
-Home’s accepted format now supplies the frame, font hierarchy, navigation and open surfaces throughout the portal. Home keeps its distinct community support hero; every other desk retains its own title, content and controls.
+Owner Lovable standard: dark left sidebar (top bar below `lg`), Daylight canvas, card panels, jade/gold/ember tokens ([LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md)). Home keeps its distinct community support content; every other desk retains its own title, content and controls. The 2026-10-12 underline-tab report chrome is historical for presentation only.
 
 | Surfaces | Shared format |
 | --- | --- |
-| Home, Trends, Audience, Revenue, Health, Product, Analytics, Departments | `PortalShell`: shared report width, scrolling header, underline navigation and bold page titles. |
-| Product’s Features, Profile, Sign-in and People desks | Same shell, wrapping subnavigation and open `Panel` sections. |
-| Charts, KPI values, meters, ledgers and department status | Open dividers; full summaries, source disclosures, Data rows, missing-state words and legal ledger notes retained. Enlarged text may wrap labels and values. |
+| Home, Trends, Audience, Revenue, Health, Product, Analytics, Departments | `PortalShell`: dark sidebar nav, Daylight main canvas, bold titles, card panels. |
+| Product’s Features, Profile, Sign-in and People desks | Same shell, nested Product nav and open `Panel` sections. |
+| Charts, KPI values, meters, ledgers and department status | Open card panels; full summaries, source disclosures, Data rows, missing-state words and legal ledger notes retained. Enlarged text may wrap labels and values. |
 
 Local evidence and remaining browser-tool coverage limits: [COMMUNITY_DASHBOARD_QA.md](design/COMMUNITY_DASHBOARD_QA.md).
 

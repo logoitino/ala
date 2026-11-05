@@ -38,7 +38,7 @@ Tapua'i is a Polynesian-inspired **Fan & Athlete Hub** for high-school game day.
 
 **Mission:** make donations and highlights easy for families to promote their kid and hopefully get them recruited — kids encourage good workouts with fans and serve like their favorite player. Read `docs/STATE.md` first (§0 is the hand-off); money words follow `docs/product/VOICE.md`.
 
-UI money copy is **Donate / donation** ("Mālo!" only means thank you); persistence still uses `tips` / `useTipCheckout` / `malo*`. Shipping canvas is **Daylight** (`#F3FAF6` / jade ink `#00733C`). Standard Island scheme: Jade (Donate / Home) · Cyan (Local / Seki) · Gold (kickers / Spotlight / ranks) · Ember (LIVE / Drip heat) · Violet (Profile). Collectible cards use per-tier `mist*` washes; Highlights ⚡ video chrome stays Midnight Obsidian `#0F1416`. Fan-bar accents live in `TAB_ACCENTS` (`apps/mobile/src/frontend/theme/motion.ts`).
+UI money copy follows [VOICE](../product/VOICE.md) (Gift / Give; program Donation; Tip Tapua'i optional); persistence still uses `tips` / `useTipCheckout` / `malo*`. Whole-app presentation: [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md) (owner 2026-11-04) — Daylight canvas `#F7F6F2` / jade primary, night for video/live/#1/Vault/admin sidebar, `UI/Kit` controls. Gold = awards; ember = LIVE/danger. Intentional exceptions: Quiz gameplay palette, reaction and Aura/sponsor tier colours. Highlights ⚡ video chrome stays night/obsidian. Fan-bar accents live in `TAB_ACCENTS` (`apps/mobile/src/frontend/theme/motion.ts`).
 
 Roles: `guest`, `fan`, `athlete`, `parent`, `operator`, `booster`, `sponsor`, `admin`. Guests and fans share the five-item fan bar.
 
