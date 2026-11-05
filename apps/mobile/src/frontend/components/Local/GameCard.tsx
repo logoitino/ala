@@ -14,7 +14,7 @@ import { gameScore, gameScoreboardStatus, gameTeamName } from '@/components/Loca
 import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { initialsForBusiness } from '@/data/sponsorships';
 import { mediaUri } from '@/lib/media';
-import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 import type { Game, Sponsorship } from '@/types/database';
 
 type GameCardProps = {
@@ -59,7 +59,7 @@ function TeamScoreRow({ name, school, side, score, dark = false }: { name: strin
  * @param game Recorded games row; missing scores stay unreported.
  * @param onPress Opens the in-tab match feed and rosters.
  * @param sponsors Silver+ booster logos tagged to this matchup.
- * @returns A Daylight card using Local's cyan accent and a jade roster action.
+ * @returns A Daylight card using jade primary (night surface when live) and a jade roster action.
  * @sideEffects Light haptic via AnimatedPressable.
  */
 export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
@@ -93,7 +93,7 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
         <SportField sport={sport} opacity={live ? 0.05 : 0.08} />
       </View>
       <View style={styles.topRow}>
-        <View style={styles.sportBadge}><SportIcon sport={sport} size={16} color={live ? colors.onVideoMuted : TAB_ACCENTS.local.color} /><Text style={[styles.sport, live && styles.onDarkMuted]}>{sport || 'Game day'}</Text></View>
+        <View style={styles.sportBadge}><SportIcon sport={sport} size={16} color={live ? colors.onVideoMuted : colors.primary} /><Text style={[styles.sport, live && styles.onDarkMuted]}>{sport || 'Game day'}</Text></View>
         <View style={[styles.statusTag, live && styles.statusLive]}>
           {live ? <View style={styles.liveDot} /> : null}
           <Text style={[styles.statusText, live && styles.statusLiveText]}>{status.label}</Text>
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sport: {
-    color: TAB_ACCENTS.local.color,
+    color: colors.primary,
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 1,

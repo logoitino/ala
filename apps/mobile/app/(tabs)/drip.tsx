@@ -15,7 +15,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { DRIP_FILTERS, type DripFilter, type DripItem } from '@/data/shop';
 import { useDripCatalog } from '@/hooks/useDripCatalog';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
-import { TAB_ACCENTS } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 
 /**
  * @purpose Drip marketplace: category pills, GearCard 0.96 press, ProductSheet checkout. Cards zig-zag in from
@@ -75,8 +75,8 @@ export default function DripTab() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => void onRefresh()}
-            tintColor={TAB_ACCENTS.drip.color}
-            colors={[TAB_ACCENTS.drip.color]}
+            tintColor={FOCAL.jadeInk}
+            colors={[FOCAL.jadeInk]}
             progressBackgroundColor={colors.surface}
           />
         }
@@ -86,7 +86,7 @@ export default function DripTab() {
             kicker={live.copy.dripKicker}
             title="Drip"
             lede={live.copy.dripLede}
-            accent={TAB_ACCENTS.drip.color}
+            accent={FOCAL.jadeInk}
           />
         </ScrollFxParallax>
         <FilterPills
@@ -101,7 +101,7 @@ export default function DripTab() {
         />
         {loading && catalog.length === 0 ? (
           <View style={styles.loading} accessibilityLiveRegion="polite">
-            <ActivityIndicator color={TAB_ACCENTS.drip.color} />
+            <ActivityIndicator color={FOCAL.jadeInk} />
             <Text style={styles.loadingLabel}>Loading the rack…</Text>
           </View>
         ) : null}
@@ -113,7 +113,7 @@ export default function DripTab() {
             lede={error}
             actionLabel="Retry"
             onAction={() => void onRefresh()}
-            accent={TAB_ACCENTS.drip.color}
+            accent={FOCAL.jadeInk}
           />
         ) : !loading && items.length === 0 ? (
           <EmptyState
@@ -125,7 +125,7 @@ export default function DripTab() {
               : 'The rack is empty right now. Check back for available Drip.'}
             adminHref="/admin/drip"
             adminLabel="Open Drip desk"
-            accent={TAB_ACCENTS.drip.color}
+            accent={FOCAL.jadeInk}
           />
         ) : (
           items.map((item, index) => (

@@ -15,7 +15,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { useLocalSearch, useRecentLocalSearches } from '@/hooks/useLocalSearch';
 import type { LocalSearchHit, LocalSearchKind } from '@/types/database';
-import { SPRING_CARD, TAB_ACCENTS } from '@/theme/motion';
+import { SPRING_CARD } from '@/theme/motion';
 
 const KIND_PILLS: { id: LocalSearchKind; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   kicker: {
-    color: TAB_ACCENTS.local.color,
+    color: colors.primary,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.7,

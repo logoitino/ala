@@ -10,11 +10,22 @@ import { DISPLAY_TEXT } from '@/theme/fonts';
 const APP_ICON = require('../../../../assets/brand/tapuai-app-icon.png');
 
 /**
- * @purpose Icon + "Tapua'i" lockup for welcome, sheets and headers.
+ * @purpose Icon + "Tapua'i" lockup for welcome, sheets and headers. Pass `showWordmark={false}` when the
+ *   surrounding chrome already prints the name (admin header) so only the Lovable jade mark shows.
  * @param size Icon edge in points; the wordmark scales with it.
  * @param dark Light wordmark for night surfaces.
  */
-export function BrandMark({ size = 32, dark = false, style }: { size?: number; dark?: boolean; style?: StyleProp<ViewStyle> }) {
+export function BrandMark({
+  size = 32,
+  dark = false,
+  showWordmark = true,
+  style,
+}: {
+  size?: number;
+  dark?: boolean;
+  showWordmark?: boolean;
+  style?: StyleProp<ViewStyle>;
+}) {
   return (
     <View style={[styles.row, style]}>
       <Image
@@ -22,9 +33,11 @@ export function BrandMark({ size = 32, dark = false, style }: { size?: number; d
         accessible={false}
         style={[styles.icon, { width: size, height: size, borderRadius: Math.round(size * 0.22) }]}
       />
-      <Text style={[styles.word, { fontSize: Math.round(size * 0.75), color: dark ? colors.onVideo : colors.text }]}>
-        Tapua&apos;i
-      </Text>
+      {showWordmark ? (
+        <Text style={[styles.word, { fontSize: Math.round(size * 0.75), color: dark ? colors.onVideo : colors.text }]}>
+          Tapua&apos;i
+        </Text>
+      ) : null}
     </View>
   );
 }

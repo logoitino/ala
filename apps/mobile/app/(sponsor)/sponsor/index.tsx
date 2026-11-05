@@ -10,6 +10,7 @@ import { Stack } from 'expo-router';
 
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
+import { FOCAL } from '@/theme/motion';
 import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { EmptyState } from '@/components/UI/EmptyState';
@@ -86,6 +87,7 @@ export default function SponsorHomeScreen() {
           kicker="Tapua'i sponsor"
           title="Sponsor Studio"
           lede={live.copy.sponsorLede}
+          accent={FOCAL.jadeInk}
         />
         <FamilyFunDiscovery />
         <DashboardPanel title="Digital stadium ad manager">

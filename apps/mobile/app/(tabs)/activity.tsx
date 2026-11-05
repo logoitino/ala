@@ -1,4 +1,4 @@
-/** Compact violet Activity rows keep notifications, factual history and invitation actions separate. */
+/** Compact Activity rows keep notifications, factual history and invitation actions separate (Lovable jade primary). */
 import { useIsFocused, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react-native';
@@ -22,15 +22,13 @@ import { useSoftWall } from '@/context/SoftWallContext';
 import { useActivityFeed, type ActivityItem, type ActivityKind } from '@/hooks/useActivityFeed';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { userProfileHref } from '@/lib/navigation';
-import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 import { FriendRequestsCard } from '@/components/Activity/FriendRequestsCard';
 import { ChallengeInbox } from '@/components/Challenges/ChallengeInbox';
 
-const ACCENT = TAB_ACCENTS.activity;
-
 const KIND_META: Record<ActivityKind, { icon: keyof typeof Ionicons.glyphMap; tint: string; ink: string; mist: string }> = {
   malo_received: { icon: 'gift', tint: FOCAL.neonJade, ink: FOCAL.jadeInk, mist: FOCAL.mistJade },
-  malo_sent: { icon: 'heart', tint: FOCAL.ember, ink: FOCAL.emberInk, mist: FOCAL.mistEmber },
+  malo_sent: { icon: 'heart', tint: FOCAL.neonJade, ink: FOCAL.jadeInk, mist: FOCAL.mistJade },
   tag_pending: { icon: 'pricetag', tint: FOCAL.electricGold, ink: FOCAL.goldInk, mist: FOCAL.mistGold },
   thanks_received: { icon: 'happy', tint: FOCAL.neonJade, ink: FOCAL.jadeInk, mist: FOCAL.mistJade },
 };
@@ -78,7 +76,7 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
             <Text style={[styles.rowAmount, { color: meta.ink }]}>{formatUsd(item.amountCents)}</Text>
           ) : null}
         </View>
-        {item.actionable ? <Text style={[styles.rowCta, { color: ACCENT.color }]}>Needs your confirmation</Text> : null}
+        {item.actionable ? <Text style={[styles.rowCta, { color: FOCAL.jadeInk }]}>Needs your confirmation</Text> : null}
       </View>
     </Pressable>
   );
@@ -125,7 +123,7 @@ export default function ActivityTab() {
               kicker={live.copy.activityKicker}
               title="Activity"
               lede={live.copy.activityLede}
-              accent={ACCENT.color}
+              accent={FOCAL.jadeInk}
             />
           </ScrollFxParallax>
           <EmptyState
@@ -135,7 +133,7 @@ export default function ActivityTab() {
             lede="Gifts you receive, gifts you make, and highlights that tag you all land here."
             actionLabel="Sign in"
             onAction={() => requireAuth({ kind: 'signin', resume: () => undefined })}
-            accent={ACCENT.color}
+            accent={FOCAL.jadeInk}
           />
         </ScrollFxScrollView>
       </TabScreen>
@@ -151,8 +149,8 @@ export default function ActivityTab() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => void onRefresh()}
-            tintColor={ACCENT.color}
-            colors={[ACCENT.color]}
+            tintColor={FOCAL.jadeInk}
+            colors={[FOCAL.jadeInk]}
             progressBackgroundColor={colors.surface}
           />
         }
@@ -162,7 +160,7 @@ export default function ActivityTab() {
             kicker={live.copy.activityKicker}
             title="Activity"
             lede={live.copy.activityLede}
-            accent={ACCENT.color}
+            accent={FOCAL.jadeInk}
           />
         </ScrollFxParallax>
 
@@ -176,7 +174,7 @@ export default function ActivityTab() {
 
         {loading && items.length === 0 ? (
           <View style={styles.boot}>
-            <ActivityIndicator color={ACCENT.color} />
+            <ActivityIndicator color={FOCAL.jadeInk} />
           </View>
         ) : null}
 
@@ -188,7 +186,7 @@ export default function ActivityTab() {
             lede="Check your connection and try again."
             actionLabel="Retry"
             onAction={() => void onRefresh()}
-            accent={ACCENT.color}
+            accent={FOCAL.jadeInk}
           />
         ) : null}
 
@@ -198,7 +196,7 @@ export default function ActivityTab() {
             kicker="Activity"
             title="Nothing yet"
             lede="When a fan gives to you, an athlete thanks you, or a highlight tags you, it shows up here."
-            accent={ACCENT.color}
+            accent={FOCAL.jadeInk}
           />
         ) : null}
 
@@ -271,8 +269,8 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   rowActionable: {
-    borderColor: ACCENT.color,
-    backgroundColor: ACCENT.mist,
+    borderColor: FOCAL.jadeInk,
+    backgroundColor: FOCAL.mistJade,
   },
   rowPressed: {
     opacity: 0.85,

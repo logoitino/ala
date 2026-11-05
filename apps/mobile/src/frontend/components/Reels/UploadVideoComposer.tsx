@@ -130,7 +130,7 @@ export function UploadVideoComposer(p: Props) {
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={[styles.sheet, { paddingTop: insets.top + 8, paddingBottom: Math.max(insets.bottom, 16) }]}>
-        <MenuBackdrop accent="violet" />
+        <MenuBackdrop accent="jade" />
         <View style={styles.menu}>
         <View style={styles.header}>
           {p.step !== 'clip' || p.openSelect ? (

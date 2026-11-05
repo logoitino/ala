@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { AdminBtn } from '@/components/Admin/AdminControls';
 import { ADMIN_REPORT_COLORS } from '@/components/Admin/adminReportColors';
+import { BrandMark } from '@/components/UI/BrandMark';
 import { useAdminLens } from '@/context/AdminLensContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
@@ -139,7 +140,7 @@ export function AdminReportHeader() {
         <View style={styles.headerBrandRow}>
           <Link href="/admin" asChild>
             <Pressable accessibilityRole="link" accessibilityLabel="Admin home" style={StyleSheet.flatten(styles.headerBrandHit)}>
-              <View aria-hidden style={styles.headerBrandMark}><Text style={styles.headerBrandMarkText}>T</Text></View>
+              <BrandMark size={40} showWordmark={false} />
               <View><Text style={styles.headerBrand}>Tapua&apos;i</Text><Text style={styles.headerBrandSoft}>Main Admin</Text></View>
             </Pressable>
           </Link>
@@ -223,8 +224,6 @@ const styles = StyleSheet.create({
   headerContent: { width: '100%', maxWidth: 1680, alignSelf: 'center', paddingVertical: 12, gap: 8 },
   headerBrandRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
   headerBrandHit: { minHeight: 44, minWidth: 142, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headerBrandMark: { width: 40, height: 40, borderRadius: 10, backgroundColor: colors.jade, alignItems: 'center', justifyContent: 'center' },
-  headerBrandMarkText: { color: colors.surface, fontSize: 22, fontWeight: '800' },
   headerBrand: { color: colors.text, fontSize: 18, fontWeight: '800' },
   headerBrandSoft: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
   headerActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, flexShrink: 1 },

@@ -126,7 +126,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
         <Pressable haptic="none" accessibilityLabel="Dismiss PIN sheet" onPress={onClose} style={styles.backdrop} />
         <View pointerEvents="box-none" style={frame.dock}>
         <View style={[styles.sheet, frame.card]} accessibilityRole="summary" accessibilityLabel="Operator PIN keypad">
-          <MenuBackdrop accent="cyan" />
+          <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={claiming ? undefined : onClose} />
           <Text style={styles.kicker}>Operator PIN</Text>
           <Text style={styles.title}>Unlock control center</Text>

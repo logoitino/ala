@@ -15,11 +15,12 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { BirthMonthField, type BirthDraft } from '@/components/Auth/BirthMonthField';
 import { LegalAckToggle } from '@/components/Legal/LegalModal';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { BrandMark } from '@/components/UI/BrandMark';
 import { colors, KIT } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { AGE_GATE_REFUSAL, birthInputError, pauseAgeGate } from '@/lib/minors';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { SPRING_CARD } from '@/theme/motion';
 import { DISPLAY_TEXT } from '@/theme/fonts';
 
 const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
@@ -124,10 +125,10 @@ export function AgeConfirmModal() {
               bounces={false}
               contentContainerStyle={styles.cardScroll}
             >
+              <BrandMark size={28} />
               <View style={styles.iconTile} accessible={false} importantForAccessibility="no-hide-descendants">
                 <Ionicons name={asksBirth ? 'calendar-outline' : 'shield-checkmark-outline'} size={26} color={colors.gold} />
               </View>
-              <Text style={styles.kicker}>Tapua&apos;i</Text>
               <Text style={styles.title}>{asksBirth ? 'One quick question' : 'Quick confirmation'}</Text>
               {asksBirth ? (
                 <>
@@ -208,16 +209,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  kicker: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-    color: FOCAL.goldInk,
-  },
   title: {
     ...DISPLAY_TEXT,
-    fontSize: 26,
+    fontSize: 30,
     color: colors.text,
     letterSpacing: -0.6,
   },

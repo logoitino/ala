@@ -30,7 +30,7 @@ import { useSpotlightBoard } from '@/hooks/useSpotlightBoard';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { isAuraUuid } from '@/lib/aura';
 import { userProfileHref } from '@/lib/navigation';
-import { TAB_ACCENTS, FOCAL } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 import type { Player, SpotlightAward } from '@/types/database';
 
 /**
@@ -93,7 +93,7 @@ export default function SpotlightTab() {
             kicker={live.copy.spotlightKicker}
             title="Spotlight"
             lede={live.copy.spotlightLede}
-            accent={TAB_ACCENTS.spotlight.color}
+            accent={FOCAL.goldInk}
           />
         </ScrollFxParallax>
         {loading && awards.length === 0 ? (
@@ -117,7 +117,7 @@ export default function SpotlightTab() {
             lede="When an athlete is featured, their Spotlight and Highlight appear here."
             adminHref="/admin/spotlight"
             adminLabel="Open Spotlight desk"
-            accent={TAB_ACCENTS.spotlight.color}
+            accent={FOCAL.goldInk}
           />
         ) : null}
         {showBoards ? (

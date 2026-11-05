@@ -107,17 +107,18 @@ export const FOCAL = {
 const JADE_ACCENT = { color: FOCAL.jadeInk, mist: FOCAL.mistJade, glow: FOCAL.neonJade } as const;
 
 /**
- * @purpose Screen accents for the approved sporty fan theme. Dark inks sit on their mist fills;
- * bright glows belong on dark media. Jade remains Donate/Upload and gold remains awards.
+ * @purpose Fan-tab accents under the Lovable standard: one jade primary everywhere; gold only for
+ * Spotlight awards. Dark inks sit on mist fills; bright glows belong on dark media. Cyan / violet /
+ * ember stay in FOCAL for Seki, quiz, Aura tiers and LIVE — not as per-tab chrome.
  */
 export const TAB_ACCENTS = {
   index: JADE_ACCENT,
   beyond: JADE_ACCENT,
-  local: { color: FOCAL.cyanInk, mist: FOCAL.mistCyan, glow: FOCAL.islandCyan },
-  activity: { color: FOCAL.violetInk, mist: FOCAL.mistViolet, glow: FOCAL.electricViolet },
+  local: JADE_ACCENT,
+  activity: JADE_ACCENT,
   spotlight: { color: FOCAL.goldInk, mist: FOCAL.mistGold, glow: FOCAL.electricGold },
-  drip: { color: FOCAL.emberInk, mist: FOCAL.mistEmber, glow: FOCAL.ember },
-  profile: { color: FOCAL.violetInk, mist: FOCAL.mistViolet, glow: FOCAL.electricViolet },
+  drip: JADE_ACCENT,
+  profile: JADE_ACCENT,
 } as const;
 
 

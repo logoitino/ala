@@ -218,7 +218,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
       </Pressable>
       <View pointerEvents="box-none" style={frame.dock}>
       <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
-          <MenuBackdrop accent="violet" />
+          <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.handle} />

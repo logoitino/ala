@@ -1,14 +1,14 @@
 /** Beyond the Game route: existing discovery/composer permissions with readable Highlights return chrome.
  * Upload ＋ (?compose=1) opens the composer only through BeyondGameScreen readiness; no new bar destination. */
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { BeyondCategory } from '@tapuai/shared-types/beyondGame';
 
 import { TabScreen } from '@/components/TabScreen';
 import { RuntimePaused } from '@/components/RuntimePaused';
-import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { KitButton } from '@/components/UI/Kit';
 import { BeyondGameScreen } from '@/components/BeyondGame/BeyondGameScreen';
 import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { LegacyWorkoutList } from '@/components/BeyondGame/LegacyWorkoutList';
@@ -35,16 +35,16 @@ export default function BeyondTab() {
   return (
     <TabScreen>
       <View style={styles.bar}>
-        <AnimatedButton
+        <KitButton
+          label="Highlights"
+          variant="ghost"
+          size="sm"
           haptic="selection"
-          accessibilityRole="button"
           accessibilityLabel="Back to Highlights"
-          contentStyle={styles.back}
+          icon={<Ionicons name="chevron-back" size={18} color={colors.primary} />}
           onPress={back}
-        >
-          <Ionicons name="chevron-back" size={18} color={colors.primary} />
-          <Text style={styles.backLabel}>Highlights</Text>
-        </AnimatedButton>
+          style={styles.back}
+        />
       </View>
       {live.tabs.beyond ? (
         <>
@@ -71,18 +71,6 @@ const styles = StyleSheet.create({
   },
   back: {
     alignSelf: 'flex-start',
-    minHeight: 44,
-    paddingHorizontal: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  backLabel: {
-    color: colors.primary,
-    fontSize: 13,
-    lineHeight: 19,
-    fontWeight: '700',
-    flexShrink: 1,
   },
   fan: {
     paddingHorizontal: 12,

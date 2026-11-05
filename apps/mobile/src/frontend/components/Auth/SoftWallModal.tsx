@@ -19,6 +19,7 @@ import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { BirthMonthField, type BirthDraft } from '@/components/Auth/BirthMonthField';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
+import { BrandMark } from '@/components/UI/BrandMark';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors, KIT } from '@/constants/theme';
@@ -202,6 +203,7 @@ export function SoftWallModal() {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.sheetInner}
             >
+              <BrandMark size={28} />
               <Text style={styles.title}>{title}</Text>
               <Text style={styles.subtitle}>{body}</Text>
 
@@ -422,7 +424,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...DISPLAY_TEXT,
-    fontSize: 26,
+    fontSize: 30,
     color: colors.text,
     letterSpacing: -0.6,
   },

@@ -100,7 +100,7 @@ function MySportsDraft({ visible, profileId, snapshot, onClose, onSaved, onReloa
       : sportNames.length === 0 ? 'No active sports are available to add. Existing sport details stay here.' : null;
   return <Modal visible transparent animationType="slide" onRequestClose={back}>
     <View style={styles.root}><KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={frame.dock}>
-      <View style={[styles.sheet, frame.card]}><MenuBackdrop accent="violet" />
+      <View style={[styles.sheet, frame.card]}><MenuBackdrop accent="jade" />
         <View style={styles.heading}><Pressable accessibilityRole="button" accessibilityLabel="Back" disabled={saving} onPress={back} style={styles.button}><Text style={styles.link}>Back</Text></Pressable>
           <Text accessibilityRole="header" style={styles.title}>{schoolSport ? `${schoolSport} school / team` : adding ? 'Add a sport' : 'My sports'}</Text></View>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>

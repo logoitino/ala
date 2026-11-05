@@ -15,6 +15,7 @@ import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { RallyCard } from '@/components/Rally/RallyCard';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { ScreenHeading } from '@/components/ScreenHeading';
+import { FOCAL } from '@/theme/motion';
 import { FamilyFunDiscovery } from '@/components/FamilyFun/FamilyFunDiscovery';
 import { ScreenShell } from '@/components/ScreenShell';
 import { TagConfirmList } from '@/components/Spotlight/TagConfirmList';
@@ -88,6 +89,7 @@ export default function ParentHomeScreen() {
           kicker="Tapua'i parent"
           title="Parent Guardian"
           lede={live.copy.parentLede}
+          accent={FOCAL.jadeInk}
         />
         <FamilyFunDiscovery />
         <TagConfirmList
