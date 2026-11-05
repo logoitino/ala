@@ -9,6 +9,15 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
 <!-- Source security work and evidence limits remain explicit; original operational acceptance is separate. -->
 # Changelog
 
+## 2026-11-04 — Design refresh, phase 1 (Lovable reference)
+
+- Add a shared mobile action kit (`components/UI/Kit.tsx`: button variants, chips, badges, LIVE pill,
+  progress) and `KIT` tokens in `constants/theme.ts`, mapped from the Lovable "Friday Night Lights" prototype.
+- First-open welcome becomes a full-screen night hero; copy, BRAND-01 tagline and dismiss behaviour unchanged.
+- Athlete HQ leads with a scoreboard gift total from the recorded ledger, lists gifts as rows, and shows
+  badges as icon tiles (no progress until it is measured). Role dashboard panels drop the gold left edge.
+- Not yet run: mobile Jest suite (run `pnpm test` on Node 24). Admin portal layout unchanged pending owner call.
+
 ## 2026-10-22 — Metro disconnected-request repair (METRO-01)
 
 - Version SDK58 Router Server's narrow pre-shell cancellation fix; retain real errors,
