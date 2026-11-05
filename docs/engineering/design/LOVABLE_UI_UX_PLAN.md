@@ -76,6 +76,8 @@ are touched (§5).
 
 ## 5. Rollout status
 
+All rows below are done or checked as of 2026-11-04. New or changed screens follow §7.
+
 | Area | Status | Commit / note |
 | --- | --- | --- |
 | Tokens + `UI/Kit` | Done | phase 1 `a6234f1` |
@@ -89,7 +91,7 @@ are touched (§5).
 | Per-screen violet/cyan accents (settings sheets, stats, polls, inbox, friends, guardian forms, Rally, Filmer, owner peek, sponsor rail, live banner) | Done | Accents → jade primary, selected → ink, tints → mist jade. |
 | Parent / Booster / Sponsor / Operator HQs | Done | 52pt primary actions, ink chips, jade tint secondary, 14pt controls (panels via `DashboardPanel`). |
 | Expo `/admin` desks (shared `AdminControls`) | Done | Portal canvas/border tokens, card panels, 14pt-radius buttons and fields; desk logic unchanged. |
-| Individual `/admin` desk layouts | Next | Spot-fix desks with their own styles. |
+| Individual `/admin` desk layouts | Checked | Desks inherit `AdminControls`; only chip/avatar pills remain, which the plan allows. |
 | Remaining modals in `MENU_STYLE_MAP` | Done (shared frame) | `useSheetFrame` / `MENU_METRICS` already give every sheet its radius and frame; individual primaries move as their sheets are touched. |
 
 Owner of the rollout: DESIGN with ACCESSIBILITY review; each change follows the presentation-only
