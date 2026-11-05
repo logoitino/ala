@@ -1,4 +1,8 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-04 — Lovable EAS preview FINISHED ($0 Free)
+
+- Android APK `8e0237fb` and iOS IPA `bf9b8567` from `main` `248a5e6` (preview profile).
+
 ## 2026-11-04 — Teams synced to Lovable UI/UX standard
 
 - TEAMS / Design / Portal / Accessibility / Admin / MENU_STYLE_MAP / SYSTEM_OVERVIEW updated to
