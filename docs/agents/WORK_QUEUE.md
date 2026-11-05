@@ -130,6 +130,11 @@ before D–F). Redundancy & Exit stays on the **backburner**: keep `exit:map` / 
 when code moves, but do not run exit drills, provision cloud restore targets, or prioritize
 Portable Exit work ahead of APP-TEST evidence. Webhook tip crediting stays off.
 
+**Presentation (same day):** [LOVABLE_UI_UX_PLAN](../engineering/design/LOVABLE_UI_UX_PLAN.md) is
+the whole-app UI/UX standard (rollout complete on `main`). APP-TEST and device evidence use that
+look; Design/Accessibility/surface squads do not revert to UX-10 violet accents or the 2026-10-12
+portal underline-tab chrome.
+
 **2026-10-31 stack note:** Soft-Wall, ARCHITECTURE_SYNC, Jev, HS+college, and reviewer readiness
 are on `main` (layers/Exit CI soft-upload landed via #27). Owner still owns Google OAuth
 enablement, SQL/Edge apply, and device smoke; engineering keeps guides/fixtures/CI green.

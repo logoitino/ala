@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-04 (Lovable UI/UX standard) · Owner priority: **app readiness (APP-TEST A–C)**; Exit plan on **backburner** (same-turn map updates only). #27 on `main`. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-04 · Teams synced to Lovable UI/UX standard (TEAMS / Design / Portal / Accessibility / Admin). Owner priority: **app readiness (APP-TEST A–C)**; Exit **backburner**. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -22,7 +22,7 @@ Historical §0 running log: [STATE_LOG_ARCHIVE.md](engineering/STATE_LOG_ARCHIVE
 2. **Exit on the backburner** — Redundancy & Exit still gets **same-turn** `exit:map` / announce when app changes touch it (`pnpm check` keeps currency). Do **not** start exit drills, cloud targets, home-lab servers, or exit-led engineering sprints until APP-TEST A–C have real evidence. Portable Exit CI remains a gate, not the work queue.
 
 ### What is true right now
-- **Product:** Expo fan app + Expo `/admin` (writes) + Next portal (read-only). Soft-Wall browse-first auth (polish #12 + Vault resume on main). Gift/Give for athletes; Donation for programs; Tip Tapua'i optional ([VOICE](product/VOICE.md)). Identifiers stay `tips` / `malo*` / `reels` ([GLOSSARY](GLOSSARY.md)). HS + college framing (`'26`–`'30`).
+- **Product:** Expo fan app + Expo `/admin` (writes) + Next portal (read-only). Soft-Wall browse-first auth (polish #12 + Vault resume on main). Gift/Give for athletes; Donation for programs; Tip Tapua'i optional ([VOICE](product/VOICE.md)). Identifiers stay `tips` / `malo*` / `reels` ([GLOSSARY](GLOSSARY.md)). HS + college framing (`'26`–`'30`). **Look:** [LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md) whole-app standard (rollout complete on `main`).
 - **Money path:** PaymentSheet → client still inserts `tips` after success. Shared core: `supabase/functions/_shared/money/` served by Expo `app/api/*+api.ts` **and** Edge Functions. **Do not** enable webhook tip crediting while the client insert remains (double-credit). Payouts return **503**.
 - **Gift release:** Local no-cut source + COORD-02 packet. Hosted tip migration / counsel / store / settlement gates **open**.
 - **Readiness:** Soft-Wall + ARCHITECTURE_SYNC + Jev + HS/college + reviewer readiness + layers/Exit CI soft-upload (#27) on `main`. R2 SQL layout landed. R3/R4 not production-ready. Plan: [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md).
@@ -174,6 +174,14 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-04 — Teams synced to Lovable UI/UX (VP_OPERATIONS / DOCUMENTATION)
+
+After Claude’s Lovable rollout landed on `main`, reconciled department call sheet and specialist
+files: `TEAMS.md` Design row + squad + contract §15; `design` / `portal` / `accessibility` /
+`admin` agent Now duties; `MENU_STYLE_MAP`, `SYSTEM_OVERVIEW`, Kit `data-ownership` reasons,
+WORK_QUEUE presentation note. Rollout marked complete — no inventing Lovable sample features.
+Device/browser ACCESSIBILITY · VISUAL_QA · DEVICE_QA evidence still open.
 
 ### 2026-11-04 — Lovable rollout: per-screen accent sweep
 
