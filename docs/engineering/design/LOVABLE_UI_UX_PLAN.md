@@ -91,6 +91,10 @@ All rows below are done or checked as of 2026-11-04. New or changed screens foll
 | Per-screen violet/cyan accents (settings sheets, stats, polls, inbox, friends, guardian forms, Rally, Filmer, owner peek, sponsor rail, live banner) | Done | Accents → jade primary, selected → ink, tints → mist jade. |
 | Parent / Booster / Sponsor / Operator HQs | Done | 52pt primary actions, ink chips, jade tint secondary, 14pt controls (panels via `DashboardPanel`). |
 | Expo `/admin` desks (shared `AdminControls`) | Done | Portal canvas/border tokens, card panels, 14pt-radius buttons and fields; desk logic unchanged. |
+| App icon and logo | Done | Lovable app icon (jade, white T, gold star) as iOS/Android/web icon and adaptive icon; `UI/BrandMark` in the app; portal sidebar + favicon. Woven logo-mark kept in the owner's export only. New native build needed for the home-screen icon. |
+| Fonts | Done | Bricolage Grotesque (headings, scoreboard numbers) + Figtree (buttons, labels) from `theme/fonts.ts`, SIL OFL licences beside the files; embedded by the `expo-font` plugin and loaded at runtime for OTA/web; portal via `next/font/local`. Body text in long screens keeps the system face until those components are touched. |
+| Welcome page | Done | Drifting photo wall, brand mark, 40pt headline, Watch highlights + Sign in, guest note; BRAND-01 tagline and mission kept small. Photos are the owner's Lovable sample art in `assets/welcome/` (see §6). |
+| Fan nav bar | Done | Same floating shape and translucent backdrop; 22pt icons that fill when active, one jade active colour, Figtree labels, no tinted box. |
 | Individual `/admin` desk layouts | Checked | Desks inherit `AdminControls`; only chip/avatar pills remain, which the plan allows. |
 | Remaining modals in `MENU_STYLE_MAP` | Done (shared frame) | `useSheetFrame` / `MENU_METRICS` already give every sheet its radius and frame; individual primaries move as their sheets are touched. |
 
@@ -116,6 +120,7 @@ design, admin-first work and counsel review where noted:
 - Texting a parent/guardian to approve gifts (guardian consent is counsel-gated).
 - Vault "Unlock" opening the gift sheet (Vault uses the one-time Exclusive purchase).
 - Any Lovable sample names, schools, prices or numbers.
+- **Exception (owner 2026-11-04):** the four sample athlete photos are used on the welcome wall by owner request. They look AI-generated and some show a sportswear brand's marks, so replace them with consented real highlight stills before public launch (LEGAL/CONTENT_RIGHTS).
 
 ## 7. Checklist for every screen change
 

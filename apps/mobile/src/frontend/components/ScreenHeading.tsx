@@ -13,6 +13,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useViewerSport } from '@/hooks/useViewerSport';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 import { MoreText } from '@/components/UI/MoreText';
+import { DISPLAY_TEXT, figtree } from '@/theme/fonts';
 
 type ScreenHeadingProps = {
   kicker?: string;
@@ -63,7 +64,7 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
 
 const styles = StyleSheet.create({
   fanWrap: { gap: 5, paddingTop: 4, paddingBottom: 4 },
-  fanTitle: { fontSize: 30, lineHeight: 34, fontWeight: '900', letterSpacing: -0.8 },
+  fanTitle: { ...DISPLAY_TEXT, fontSize: 30, lineHeight: 34, letterSpacing: -0.8 },
   fanLede: { fontSize: 13, lineHeight: 19 },
   fanKickerBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, maxWidth: '100%' },
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
@@ -87,8 +88,8 @@ const styles = StyleSheet.create({
     paddingTop: 6,
   },
   kicker: {
+    ...figtree('800'),
     fontSize: 12,
-    fontWeight: '800',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: colors.gold,
@@ -99,8 +100,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   title: {
+    ...DISPLAY_TEXT,
     fontSize: 32,
-    fontWeight: '900',
     color: colors.text,
     letterSpacing: -0.8,
   },

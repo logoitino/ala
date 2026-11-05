@@ -61,6 +61,7 @@ body {
   background: var(--canvas);
   color: var(--ink);
   font-family:
+    var(--font-figtree),
     'Avenir Next',
     'Segoe UI',
     ui-sans-serif,
@@ -71,6 +72,12 @@ body {
 }
 
 @layer base {
+  /* Lovable standard: headings in Bricolage Grotesque (display face). */
+  h1,
+  h2 {
+    font-family: var(--font-bricolage), var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
   a {
     color: inherit;
     text-decoration: none;

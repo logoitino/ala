@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-04 · Lovable EAS preview **FINISHED** — Android APK + iOS IPA ($0 Free). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-04 · Lovable icon, fonts, welcome wall and nav bar on `main` (needs a new EAS build for the icon). Lovable EAS preview **FINISHED** — Android APK + iOS IPA ($0 Free). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,19 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-04 — Lovable icon, fonts, welcome wall and nav bar
+
+Owner: match the exported Lovable sample (`lovable/` zip). App icon/adaptive icon/favicon now the Lovable
+jade T + gold star (`assets/`, `assets/brand/`), `UI/BrandMark` lockup, portal sidebar/favicon (`app/icon.png`
+replaces `icon.svg`). Fonts: Bricolage Grotesque + Figtree (OFL, `assets/fonts/`, `theme/fonts.ts`), embedded
+via the `expo-font` plugin and loaded in `app/_layout.tsx`; applied to headings, `SCOREBOARD_DIGITS`, Kit,
+sheets, Beyond/Fan Zone/Quiz labels and the portal (`next/font/local`). Welcome: drifting photo wall + Sign in
+(`useOptionalSoftWall`). Fan dock keeps its shape/translucency with Lovable tab styling and one jade accent.
+Welcome photos are the owner's AI-looking sample art with visible brand marks — replace before public launch.
+**Needs a new EAS build** for the home-screen icon and embedded fonts (OTA still loads fonts at runtime).
+Verified: both typechecks, unused/comments/copy/data-map/keys/infra. Not verified: Next build with local fonts,
+devices/browser, Jest (CI on push).
 
 ### 2026-11-04 — Lovable EAS preview FINISHED ($0 Free)
 

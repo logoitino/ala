@@ -20,6 +20,7 @@ import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { AGE_GATE_REFUSAL, birthInputError, pauseAgeGate } from '@/lib/minors';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { DISPLAY_TEXT } from '@/theme/fonts';
 
 const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
 
@@ -215,8 +216,8 @@ const styles = StyleSheet.create({
     color: FOCAL.goldInk,
   },
   title: {
+    ...DISPLAY_TEXT,
     fontSize: 26,
-    fontWeight: '900',
     color: colors.text,
     letterSpacing: -0.6,
   },

@@ -10,6 +10,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, KIT, radii } from '@/constants/theme';
 import type { PressHaptic } from '@/lib/haptics';
 import { FOCAL } from '@/theme/motion';
+import { figtree } from '@/theme/fonts';
 
 export type KitButtonVariant = 'primary' | 'secondary' | 'tint' | 'ghost' | 'destructive' | 'gold' | 'glass' | 'light';
 export type KitButtonSize = 'sm' | 'md' | 'lg';
@@ -176,7 +177,7 @@ export function KitProgress({ value, dark = false }: { value: number; dark?: boo
 const styles = StyleSheet.create({
   block: { alignSelf: 'stretch' },
   button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  buttonLabel: { fontWeight: '800', letterSpacing: -0.1 },
+  buttonLabel: { ...figtree('700'), letterSpacing: -0.1 },
   disabled: { opacity: 0.4 },
   chip: {
     minHeight: 36,
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipLabel: { fontSize: 14, fontWeight: '700' },
+  chipLabel: { ...figtree('600'), fontSize: 14 },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: radii.pill,
   },
-  badgeLabel: { fontSize: 12, fontWeight: '800', letterSpacing: 0.3 },
+  badgeLabel: { ...figtree('700'), fontSize: 12, letterSpacing: 0.3 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' },
   liveLabel: { color: '#FFFFFF' },
   track: { height: 8, borderRadius: radii.pill, overflow: 'hidden' },

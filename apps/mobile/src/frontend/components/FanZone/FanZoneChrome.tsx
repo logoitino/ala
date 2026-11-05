@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { cardShadow, colors, KIT } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
+import { DISPLAY_TEXT } from '@/theme/fonts';
 export function FanButton({ label, onPress, disabled = false, selected = false, play = false }: {
     label: string;
     onPress: () => void;
@@ -41,7 +42,7 @@ export const fanStyles = StyleSheet.create({
     row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     hero: { gap: 6, padding: 20, borderRadius: KIT.heroRadius, backgroundColor: colors.videoSurface },
     heroKicker: { color: FOCAL.electricGold, fontSize: 12, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
-    heroTitle: { color: colors.onVideo, fontSize: 30, letterSpacing: -0.8 },
+    heroTitle: { ...DISPLAY_TEXT, color: colors.onVideo, fontSize: 30, letterSpacing: -0.8 },
     heroCopy: { color: colors.onVideoMuted, fontSize: 15, fontWeight: '600', lineHeight: 21 },
     playCard: { gap: 10, padding: 16, borderRadius: KIT.cardRadius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, ...cardShadow },
     alias: { color: FOCAL.ink, fontSize: 20, fontWeight: '900' },

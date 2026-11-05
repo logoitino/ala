@@ -145,11 +145,11 @@ export function PortalShell({ children, active, heading, presentation = 'report'
       <aside className="bg-[var(--sidebar-bg)] text-[var(--sidebar-ink)] lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:overflow-y-auto">
         <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-5 lg:pt-6 lg:pb-5">
           <Link href="/" className="flex min-h-10 items-center gap-2.5 rounded-xl pr-2">
-            <span aria-hidden="true" className="grid size-9 place-items-center rounded-xl bg-[var(--jade-bright)] text-base font-black text-white shadow-[0_0_0_1px_rgba(46,229,157,0.45),0_0_18px_rgba(46,229,157,0.35)]">
-              T
-            </span>
+            {/* Tapua'i app icon (static file in public/brand); decorative, the wordmark names the app. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/tapuai-app-icon.png" alt="" width={36} height={36} className="size-9 rounded-xl shadow-[0_0_18px_rgba(46,229,157,0.35)]" />
             <span className="leading-tight">
-              <span className="block text-base font-extrabold tracking-tight text-white">Tapua&apos;i</span>
+              <span className="block font-[family-name:var(--font-bricolage)] text-lg tracking-tight text-white">Tapua&apos;i</span>
               <span className="block text-[11px] font-bold tracking-[0.12em] text-[var(--sidebar-ink-muted)] uppercase">Admin · read only</span>
             </span>
           </Link>

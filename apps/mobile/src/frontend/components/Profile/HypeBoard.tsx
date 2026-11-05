@@ -133,7 +133,6 @@ const styles = StyleSheet.create({
     ...SCOREBOARD_DIGITS,
     color: colors.text,
     fontSize: 18,
-    fontWeight: '800',
   },
   label: {
     color: colors.textMuted,

@@ -28,6 +28,7 @@ import { displayValue, type Player } from '@/data/players';
 import type { TipEntry, TipOrigin } from '@/lib/finance';
 import { fetchPayoutAllowed } from '@/lib/payoutGate';
 import { FOCAL, SPRING_BOUNCE, SPRING_SHEET } from '@/theme/motion';
+import { DISPLAY_TEXT } from '@/theme/fonts';
 
 type TipSheetModalProps = {
   player: Player | null;
@@ -260,8 +261,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   title: {
+    ...DISPLAY_TEXT,
     fontSize: 22,
-    fontWeight: '900',
     color: colors.text,
     letterSpacing: -0.5,
   },

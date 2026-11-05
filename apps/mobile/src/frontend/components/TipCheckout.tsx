@@ -18,6 +18,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { useScreenMountTime } from '@/hooks/useScreenMountTime';
 import type { TipEntry, TipOrigin } from '@/lib/finance';
+import { DISPLAY_TEXT, figtree } from '@/theme/fonts';
 
 type TipCheckoutProps = {
   player: Player; compact?: boolean; hideHeader?: boolean;
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
   hero: { gap: 6, backgroundColor: colors.background, borderRadius: MENU_METRICS.cardRadius, padding: 16 },
   tagline: { fontSize: 12, lineHeight: 17, fontWeight: '700', color: colors.textMuted, textAlign: 'center' },
   kicker: { fontSize: 11, letterSpacing: 1.1, fontWeight: '800', color: colors.deepGreen },
-  pageTitle: { fontSize: 24, fontWeight: '900', color: colors.text, letterSpacing: -0.6 },
+  pageTitle: { ...DISPLAY_TEXT, fontSize: 24, color: colors.text, letterSpacing: -0.6 },
   split: { fontSize: 13, lineHeight: 19, fontWeight: '800', color: colors.text },
   copy: { fontSize: 13, lineHeight: 19, color: colors.textMuted, fontWeight: '600' },
   auraHint: { fontSize: 12, lineHeight: 18, fontWeight: '700', color: colors.primary },
@@ -225,5 +226,5 @@ const styles = StyleSheet.create({
   testNotice: { backgroundColor: KIT.warnSoft, padding: 12, borderRadius: MENU_METRICS.controlRadius },
   footer: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 12, borderTopWidth: 1, borderColor: colors.border },
   back: { minHeight: 52, justifyContent: 'center', paddingHorizontal: 18, borderRadius: KIT.controlRadius, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, backText: { fontSize: 15, fontWeight: '800', color: colors.text },
-  next: { flex: 1, minHeight: 52, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: KIT.controlRadius, backgroundColor: colors.primary, paddingHorizontal: 14, ...KIT.shadowSoft }, nextText: { color: colors.onAccent, fontSize: 16, fontWeight: '800' }, disabled: { opacity: 0.45 },
+  next: { flex: 1, minHeight: 52, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: KIT.controlRadius, backgroundColor: colors.primary, paddingHorizontal: 14, ...KIT.shadowSoft }, nextText: { ...figtree('700'), color: colors.onAccent, fontSize: 16 }, disabled: { opacity: 0.45 },
 });

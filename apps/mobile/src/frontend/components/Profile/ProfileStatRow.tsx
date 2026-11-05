@@ -207,7 +207,6 @@ const styles = StyleSheet.create({
     ...SCOREBOARD_DIGITS,
     fontSize: 17,
     lineHeight: 20,
-    fontWeight: '900',
   },
   statLabel: {
     color: colors.text,

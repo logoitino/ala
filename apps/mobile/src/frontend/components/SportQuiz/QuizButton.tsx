@@ -9,6 +9,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import { colors, KIT } from '@/constants/theme';
 import { SPRING_BOUNCE } from '@/theme/motion';
 import { useQuizFx } from './QuizFx';
+import { figtree } from '@/theme/fonts';
 
 /** @purpose A 44-point action with an explicit disabled state and readable Daylight colours. */
 export function QuizButton({ label, onPress, disabled = false, quiet = false, big = false, selected, hint, fill = false, onVideo = false }: {
@@ -39,7 +40,7 @@ const styles = StyleSheet.create({
   selected: { borderWidth: 2, borderColor: colors.primary, backgroundColor: colors.accentSoft },
   big: { minHeight: 72, alignItems: 'center' },
   fillBtn: { paddingHorizontal: 8, paddingVertical: 8 },
-  label: { color: colors.onAccent, fontSize: 16, fontWeight: '800', textAlign: 'center' }, quietLabel: { color: colors.text }, videoQuietLabel: { color: '#F7F6F2' }, selectedLabel: { color: colors.text },
+  label: { ...figtree('700'), color: colors.onAccent, fontSize: 16, textAlign: 'center' }, quietLabel: { color: colors.text }, videoQuietLabel: { color: '#F7F6F2' }, selectedLabel: { color: colors.text },
   fillLabel: { textAlign: 'center', fontSize: 13, lineHeight: 16 },
   bigLabel: { fontSize: 22, fontWeight: '700' }, dim: { opacity: 0.55 },
 });

@@ -670,7 +670,6 @@ const styles = StyleSheet.create({
     ...SCOREBOARD_DIGITS,
     color: colors.onVideo,
     fontSize: 12,
-    fontWeight: '800',
     marginTop: -2,
   },
   reactCountOn: {

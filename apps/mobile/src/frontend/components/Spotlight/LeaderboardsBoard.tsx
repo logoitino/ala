@@ -310,7 +310,6 @@ const styles = StyleSheet.create({
     ...SCOREBOARD_DIGITS,
     color: colors.textMuted,
     fontSize: 13,
-    fontWeight: '800',
   },
   rankTextFirst: {
     color: FOCAL.ink,

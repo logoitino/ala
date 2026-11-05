@@ -29,6 +29,7 @@ import { DEMO_FAN_EMAIL, DEMO_FAN_PASSWORD, demoFanSignInAvailable, signUpBirthP
 import { AGE_GATE_REFUSAL, isAgeGatePaused, pauseAgeGate } from '@/lib/minors';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { DISPLAY_TEXT, figtree } from '@/theme/fonts';
 
 const SHEET_TRAVEL = 480;
 
@@ -420,8 +421,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   title: {
+    ...DISPLAY_TEXT,
     fontSize: 26,
-    fontWeight: '900',
     color: colors.text,
     letterSpacing: -0.6,
   },
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   appleBtn: { backgroundColor: colors.night },
-  appleLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  appleLabel: { ...figtree('700'), color: '#FFFFFF', fontSize: 16 },
   demoBtn: { backgroundColor: FOCAL.goldInk },
   demoLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   demoHint: {
@@ -472,13 +473,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  googleLabel: { color: colors.text, fontSize: 16, fontWeight: '800' },
+  googleLabel: { ...figtree('700'), color: colors.text, fontSize: 16 },
   magicBtn: { backgroundColor: colors.primary, ...KIT.shadowSoft },
-  magicLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  magicLabel: { ...figtree('700'), color: '#FFFFFF', fontSize: 16 },
   secondaryBtn: {
     backgroundColor: colors.accentSoft,
   },
-  secondaryLabel: { color: colors.primary, fontSize: 16, fontWeight: '800' },
+  secondaryLabel: { ...figtree('700'), color: colors.primary, fontSize: 16 },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 4 },
   orLine: { flex: 1, height: 1, backgroundColor: colors.border },
   orLabel: { color: colors.textMuted, fontWeight: '700', fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase' },

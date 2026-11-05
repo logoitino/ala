@@ -7,6 +7,7 @@ import { type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { cardShadow, colors, radii } from '@/constants/theme';
+import { FONT } from '@/theme/fonts';
 
 type DashboardPanelProps = {
   title: string;
@@ -35,8 +36,9 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   title: {
+    fontFamily: FONT.displayBold,
+    fontWeight: 'normal',
     fontSize: 18,
-    fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.3,
   },

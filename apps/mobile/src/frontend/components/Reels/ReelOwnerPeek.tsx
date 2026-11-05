@@ -761,7 +761,6 @@ const styles = StyleSheet.create({
     ...SCOREBOARD_DIGITS,
     color: FOCAL.ink,
     fontSize: 18,
-    fontWeight: '900',
   },
   statValueCompact: {
     fontSize: 16,

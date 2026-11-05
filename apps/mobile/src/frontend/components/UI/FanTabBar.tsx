@@ -1,5 +1,7 @@
 /** Floating fan dock overlays full-height Highlights while every label/control stays opaque.
  * Report the complete wrap height so captions and normal fan screens clear safe foot and enlarged labels.
+ * 2026-11 Lovable standard: same floating shape and translucent backdrop; tabs read like the sample —
+ * larger icons that fill when active, jade active ink, Figtree labels, no tinted box behind the active tab.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef } from 'react';
@@ -16,6 +18,7 @@ import { useFanDockSoftened, useFanNavigation, useMeasureFanDock } from '@/conte
 import { useReduceTransparency } from '@/hooks/useReduceTransparency';
 import { useReduceMotion } from '@/hooks/useReduceMotion';
 import { impactPress } from '@/lib/haptics';
+import { figtree } from '@/theme/fonts';
 import { FOCAL, SPRING_BOUNCE, SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
 
 const TAB_META: Record<string, { label: string; accessibilityLabel?: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap }> =
@@ -33,7 +36,6 @@ type TabButtonProps = {
   icon: keyof typeof Ionicons.glyphMap;
   activeIcon: keyof typeof Ionicons.glyphMap;
   accentColor: string;
-  accentMist: string;
   onPress: () => void;
   onInteract: () => void;
 };
@@ -45,7 +47,7 @@ type TabButtonProps = {
  * even though the route list length can change under runtime feature flags.
  * @sideEffects Reanimated `withSequence`/`withSpring` icon bounce + `withTiming` mist fade on focus change.
  */
-function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accentColor, accentMist, onPress, onInteract }: TabButtonProps) {
+function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accentColor, onPress, onInteract }: TabButtonProps) {
   const reduceMotion = useReduceMotion();
   const iconScale = useSharedValue(1);
   const color = focused ? accentColor : colors.textMuted;
@@ -54,7 +56,7 @@ function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accen
     if (reduceMotion || !focused) {
       iconScale.value = 1;
     } else {
-      iconScale.value = withSequence(withSpring(1.22, SPRING_BOUNCE), withSpring(1, SPRING_BOUNCE));
+      iconScale.value = withSequence(withSpring(1.18, SPRING_BOUNCE), withSpring(1.08, SPRING_BOUNCE));
     }
   }, [focused, iconScale, reduceMotion]);
 
@@ -70,9 +72,8 @@ function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accen
       onPressIn={onInteract}
       onPress={() => { impactPress('selection'); onPress(); }}
     >
-      {focused ? <View pointerEvents="none" style={[styles.tabMist, { backgroundColor: accentMist }]} /> : null}
       <Animated.View style={iconStyle}>
-        <Ionicons name={focused ? activeIcon : icon} size={18} color={color} />
+        <Ionicons name={focused ? activeIcon : icon} size={22} color={color} />
       </Animated.View>
       <Text style={[styles.tabLabel, { color }]}>
         {label}
@@ -106,8 +107,8 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   const indicatorW = useSharedValue(0);
   const indicatorOp = useSharedValue(0);
   const focusedKey = state.routes[state.index]?.key ?? '';
-  const focusedName = state.routes[state.index]?.name ?? 'index';
-  const barAccent = TAB_ACCENTS[focusedName as keyof typeof TAB_ACCENTS] ?? TAB_ACCENTS.index;
+  // Lovable standard: one jade active colour on every tab (per-tab accents retired from the bar).
+  const barAccent = TAB_ACCENTS.index;
   useEffect(() => { restore(); }, [focusedKey, restore]);
   const backdropStyle = useAnimatedStyle(() => ({ opacity: reduceMotion ? backdropOpacity : withTiming(backdropOpacity, { duration: 160 }) }), [backdropOpacity, reduceMotion]);
 
@@ -175,8 +176,7 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
           accessibilityLabel={meta.accessibilityLabel}
           icon={meta.icon}
           activeIcon={meta.activeIcon}
-          accentColor={(TAB_ACCENTS[route.name as keyof typeof TAB_ACCENTS] ?? TAB_ACCENTS.index).color}
-          accentMist={(TAB_ACCENTS[route.name as keyof typeof TAB_ACCENTS] ?? TAB_ACCENTS.index).mist}
+          accentColor={TAB_ACCENTS.index.color}
           onInteract={restore}
           onPress={() => {
             restore();
@@ -220,7 +220,7 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
             onPressIn={restore}
             onPress={() => { restore(); impactPress('medium'); openUpload(); }}
           >
-            <View style={styles.fab}><Ionicons name="add" size={18} color="#FFFFFF" /></View>
+            <View style={styles.fab}><Ionicons name="add" size={20} color="#FFFFFF" /></View>
             <Text style={[styles.tabLabel, { color: FOCAL.jadeInk }]}>Upload</Text>
           </Pressable>
         </View>
@@ -298,13 +298,9 @@ const styles = StyleSheet.create({
     marginVertical: 2,
     overflow: 'visible',
   },
-  tabMist: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: 24,
-  },
   tabLabel: {
-    fontSize: 12,
-    fontWeight: '800',
+    ...figtree('600'),
+    fontSize: 11,
     letterSpacing: -0.1,
     textAlign: 'center',
     flexShrink: 1,
@@ -317,9 +313,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fab: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: FOCAL.jadeInk,
     alignItems: 'center',
     justifyContent: 'center',

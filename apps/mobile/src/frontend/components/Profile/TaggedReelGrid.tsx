@@ -333,7 +333,6 @@ const styles = StyleSheet.create({
     ...SCOREBOARD_DIGITS,
     color: colors.onVideo,
     fontSize: 10,
-    fontWeight: '800',
   },
   seki: {
     position: 'absolute',

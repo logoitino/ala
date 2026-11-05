@@ -2,13 +2,14 @@
 import { StyleSheet } from 'react-native';
 import { cardShadow, colors, KIT, MENU_METRICS, space } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
+import { DISPLAY_TEXT, FONT } from '@/theme/fonts';
 
 export const beyondStyles = StyleSheet.create({
   screen: { padding: 12, paddingBottom: 16, gap: 10 },
   header: { gap: space.xs },
   headerField: { position: 'absolute', top: 0, bottom: 0, right: 0, left: '38%', overflow: 'hidden', borderRadius: 14 },
-  title: { fontSize: 30, lineHeight: 34, fontWeight: '900', letterSpacing: -0.8, color: colors.text },
-  heading: { fontSize: 18, lineHeight: 24, fontWeight: '900', letterSpacing: -0.3, color: colors.text },
+  title: { ...DISPLAY_TEXT, fontSize: 30, lineHeight: 34, letterSpacing: -0.8, color: colors.text },
+  heading: { fontFamily: FONT.displayBold, fontWeight: 'normal', fontSize: 18, lineHeight: 24, letterSpacing: -0.3, color: colors.text },
   body: { fontSize: 13, lineHeight: 19, color: colors.text },
   hint: { fontSize: 13, lineHeight: 19, color: colors.textMuted },
   kicker: { fontSize: 12, lineHeight: 18, fontWeight: '800', color: FOCAL.jadeInk },

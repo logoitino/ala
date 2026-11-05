@@ -139,6 +139,7 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
   carried over; Daylight canvas and card panels/stat cards. Live Local games render as dark scoreboard cards
   with a solid LIVE pill; Spotlight's #1 row is a dark award card with gold rank and podium ranks 2–3; the
   locked Vault is a dark card with a gold one-time unlock; receipts show scoreboard amounts.
+- Lovable sample match: new app icon and logo, Bricolage Grotesque + Figtree fonts, photo-wall welcome with Sign in, and Lovable-style fan nav bar (same floating shape). Needs a new native build for the icon and embedded fonts.
 - Rollout: per-screen violet/cyan accents swept to the jade/ink system; quiz gameplay, reaction and tier colours kept as documented exceptions.
 - Rollout: Drip cards, Beyond, Fan Zone, Quiz buttons, role HQs, Expo admin controls and Join Crew now follow the plan.
 - Rollout: Highlights rail buttons (glass, light Give) and Profile (segmented sections, ink chips, neutral cards; violet accent retired).

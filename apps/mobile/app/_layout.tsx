@@ -7,6 +7,7 @@ import 'react-native-gesture-handler';
 import { useEffect, useRef } from 'react';
 import { LogBox, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
@@ -23,6 +24,7 @@ import { SoftWallProvider } from '@/context/SoftWallContext';
 import { CelebrationProvider } from '@/context/CelebrationContext';
 import { UploadSheetProvider } from '@/context/UploadSheetContext';
 import { colors, isLightCanvas } from '@/constants/theme';
+import { FONT_FILES } from '@/theme/fonts';
 import { telemetry } from '@/services/TelemetryManager';
 import { StripeProvider } from '@/lib/stripe';
 import { APPLE_PAY_MERCHANT_ID } from '@/lib/walletPay';
@@ -89,6 +91,9 @@ function RuntimeApp() {
 }
 
 export default function RootLayout() {
+  // Brand fonts (Lovable standard). Native builds embed them; this loads them for OTA updates and web.
+  // Rendering never waits: text uses the system face for the first frames if a font is still loading.
+  useFonts(FONT_FILES);
   return (
     <GestureHandlerRootView style={styles.root}>
       <AuthProvider>

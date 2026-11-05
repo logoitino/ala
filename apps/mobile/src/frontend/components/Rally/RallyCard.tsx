@@ -371,7 +371,6 @@ const styles = StyleSheet.create({
   amount: {
     ...SCOREBOARD_DIGITS,
     fontSize: 15,
-    fontWeight: '800',
     color: colors.text,
   },
   donors: {

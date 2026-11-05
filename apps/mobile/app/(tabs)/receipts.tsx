@@ -172,7 +172,6 @@ const styles = StyleSheet.create({
     ...SCOREBOARD_DIGITS,
     color: colors.primary,
     fontSize: 16,
-    fontWeight: '800',
     textAlign: 'center',
   },
   metricLabel: {

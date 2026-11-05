@@ -17,7 +17,7 @@
     "android": {
       "package": "com.logoitino.alasports",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0E6B4E",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -83,7 +83,21 @@
       "expo-video",
       "expo-web-browser",
       "react-native-compressor",
-      "expo-font",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/BricolageGrotesque-ExtraBold.ttf",
+            "./assets/fonts/BricolageGrotesque-Bold.ttf",
+            "./assets/fonts/Figtree-Regular.ttf",
+            "./assets/fonts/Figtree-Medium.ttf",
+            "./assets/fonts/Figtree-SemiBold.ttf",
+            "./assets/fonts/Figtree-Bold.ttf",
+            "./assets/fonts/Figtree-ExtraBold.ttf",
+            "./assets/fonts/Figtree-Black.ttf"
+          ]
+        }
+      ],
       "expo-status-bar",
       [
         "expo-build-properties",

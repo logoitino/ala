@@ -152,6 +152,11 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
   return <SoftWallContext.Provider value={value}>{children}</SoftWallContext.Provider>;
 }
 
+/** @purpose Soft-Wall access for chrome that can also render outside the provider (first-open welcome); null there. */
+export function useOptionalSoftWall(): SoftWallContextValue | null {
+  return useContext(SoftWallContext);
+}
+
 export function useSoftWall(): SoftWallContextValue {
   const context = useContext(SoftWallContext);
   if (!context) {

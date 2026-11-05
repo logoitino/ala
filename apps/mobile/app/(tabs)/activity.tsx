@@ -323,6 +323,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     flexShrink: 1,
-    fontWeight: '900',
   },
 });

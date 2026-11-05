@@ -6,6 +6,7 @@
 
 import { Platform, type TextStyle, type ViewStyle } from 'react-native';
 
+import { FONT } from '@/theme/fonts';
 import { FOCAL } from '@/theme/motion';
 
 export const palette = {
@@ -178,7 +179,9 @@ export const SCREEN_BOTTOM_GAP = 52;
  */
 export const SCOREBOARD_DIGITS: TextStyle = {
   fontVariant: ['tabular-nums'],
-  fontWeight: '900',
+  // Lovable standard: scoreboard figures are set in the display face (Bricolage Grotesque ExtraBold).
+  fontFamily: FONT.display,
+  fontWeight: 'normal',
   letterSpacing: -0.4,
 };
 
