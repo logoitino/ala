@@ -16,6 +16,10 @@ superseded history. Counsel drafts and exceptions: [report](docs/engineering/evi
 - First-open welcome becomes a full-screen night hero; copy, BRAND-01 tagline and dismiss behaviour unchanged.
 - Athlete HQ leads with a scoreboard gift total from the recorded ledger, lists gifts as rows, and shows
   badges as icon tiles (no progress until it is measured). Role dashboard panels drop the gold left edge.
+- Phase 2: sign-in sheet and age card get larger titles, 52pt controls, a lock reassurance strip and AA-safe
+  error ink; gift sheet uses scoreboard amount tiles, a 44pt scoreboard review total, ink-on-ink tip chips and
+  a solid Next action. Fan headings are larger; Activity rows use 44pt filled icons. Flows, copy and payment
+  guards unchanged.
 - Not yet run: mobile Jest suite (run `pnpm test` on Node 24). Admin portal layout unchanged pending owner call.
 
 ## 2026-10-22 — Metro disconnected-request repair (METRO-01)

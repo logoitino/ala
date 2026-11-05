@@ -65,7 +65,7 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
       style={({ pressed }) => [styles.row, item.actionable && styles.rowActionable, pressed && styles.rowPressed]}
     >
       <View style={[styles.rowIcon, { backgroundColor: meta.mist, borderColor: meta.tint }]}>
-        <Ionicons name={meta.icon} size={16} color={meta.ink} />
+        <Ionicons name={meta.icon} size={20} color={meta.ink} />
       </View>
       <View style={styles.rowBody}>
         <Text style={styles.rowTitle}>{item.title}</Text>
@@ -260,13 +260,14 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     minHeight: 44,
-    alignItems: 'flex-start',
-    gap: 8,
+    alignItems: 'center',
+    gap: 12,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     ...cardShadow,
   },
   rowActionable: {
@@ -277,10 +278,10 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   rowIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1.5,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -291,8 +292,8 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     color: colors.text,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 21,
     fontWeight: '800',
   },
   rowAgo: {
@@ -303,8 +304,8 @@ const styles = StyleSheet.create({
   },
   rowLede: {
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 20,
   },
   rowDetails: {
     flexDirection: 'row',
@@ -319,8 +320,8 @@ const styles = StyleSheet.create({
   },
   rowAmount: {
     ...SCOREBOARD_DIGITS,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 22,
     flexShrink: 1,
     fontWeight: '900',
   },
