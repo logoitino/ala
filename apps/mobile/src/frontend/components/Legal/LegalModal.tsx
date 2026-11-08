@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   sheet: {
     backgroundColor: colors.surface,
     gap: 10,
-    maxHeight: '90%',
+    maxHeight: '82%',
   },
   kicker: {
     fontSize: 11,

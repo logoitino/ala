@@ -10,7 +10,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, KIT, radii } from '@/constants/theme';
 import type { PressHaptic } from '@/lib/haptics';
 import { FOCAL } from '@/theme/motion';
-import { figtree } from '@/theme/fonts';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export type KitButtonVariant = 'primary' | 'secondary' | 'tint' | 'ghost' | 'destructive' | 'gold' | 'glass' | 'light';
 export type KitButtonSize = 'sm' | 'md' | 'lg';
@@ -38,9 +38,9 @@ const BUTTON_INK: Record<KitButtonVariant, string> = {
 };
 
 const BUTTON_SIZE: Record<KitButtonSize, { box: ViewStyle; label: TextStyle }> = {
-  sm: { box: { minHeight: 36, paddingHorizontal: 12, borderRadius: radii.sm }, label: { fontSize: 14 } },
-  md: { box: { minHeight: 44, paddingHorizontal: 16, borderRadius: KIT.controlRadius }, label: { fontSize: 15 } },
-  lg: { box: { minHeight: 52, paddingHorizontal: 20, borderRadius: KIT.controlRadius }, label: { fontSize: 16 } },
+  sm: { box: { minHeight: 36, paddingHorizontal: 10, borderRadius: radii.sm }, label: { ...TYPE.button } },
+  md: { box: { minHeight: 44, paddingHorizontal: 14, borderRadius: KIT.controlRadius }, label: { ...TYPE.button } },
+  lg: { box: { minHeight: 48, paddingHorizontal: 16, borderRadius: KIT.controlRadius }, label: { ...TYPE.section } },
 };
 
 /**
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipLabel: { ...figtree('600'), fontSize: 14 },
+  chipLabel: { ...figtree('600'), ...TYPE.button },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: radii.pill,
   },
-  badgeLabel: { ...figtree('700'), fontSize: 12, letterSpacing: 0.3 },
+  badgeLabel: { ...figtree('700'), ...TYPE.caption, letterSpacing: 0.3 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' },
   liveLabel: { color: '#FFFFFF' },
   track: { height: 8, borderRadius: radii.pill, overflow: 'hidden' },

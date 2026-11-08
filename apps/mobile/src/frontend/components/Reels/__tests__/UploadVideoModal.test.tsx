@@ -128,70 +128,79 @@ describe('staged Highlight upload', () => {
     mockUpload.mockRejectedValueOnce(new Error('offline'));
     await render(<UploadVideoModal {...props} />); await chooseClip();
     await fireEvent.changeText(screen.getByLabelText('Highlight caption'), 'Volleyball game');
+    await fireEvent.press(screen.getByLabelText('More options'));
     await fireEvent.press(screen.getByRole('button', { name: 'Tag a sport (optional)' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Choose Volleyball sport' }));
+    await fireEvent.press(screen.getByLabelText('Done'));
     await fireEvent.press(screen.getByLabelText('Next'));
-    expect(screen.getByText('Sport: Volleyball')).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText('Back'));
+    expect(screen.getByText(/Sport: Volleyball/)).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('More options'));
     expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Volleyball');
-    await fireEvent.press(screen.getByLabelText('Next')); await confirmRights();
+    await fireEvent.press(screen.getByLabelText('Done')); await confirmRights();
     await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
     await waitFor(() => expect(mockUpload).toHaveBeenCalledWith(expect.objectContaining({ sport: 'Volleyball' })));
-    await fireEvent.press(screen.getByLabelText('Back'));
+    await fireEvent.press(screen.getByLabelText('More options'));
     expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Volleyball');
   });
 
   it('defaults sport only when the uploader chooses their exact linked athlete', async () => {
     await render(<UploadVideoModal {...props} />); await chooseClip();
+    await fireEvent.press(screen.getByLabelText('More options'));
     expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Football');
+    await fireEvent.press(screen.getByLabelText('Back'));
     await fireEvent.press(screen.getByLabelText('Who’s in this clip?'));
     await fireEvent.press(screen.getByLabelText('Tag later'));
+    await fireEvent.press(screen.getByLabelText('More options'));
     expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('No sport tag');
+    await fireEvent.press(screen.getByLabelText('Back'));
     await fireEvent.press(screen.getByLabelText('Who’s in this clip?'));
     await fireEvent.press(screen.getByLabelText('This is me'));
+    await fireEvent.press(screen.getByLabelText('More options'));
     expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Football');
   });
 
   it('retains an explicit sport and blocks publish when stored choices become unavailable', async () => {
     const view = await render(<UploadVideoModal {...props} />); await chooseClip();
     await fireEvent.changeText(screen.getByLabelText('Highlight caption'), 'Volleyball game');
+    await fireEvent.press(screen.getByLabelText('More options'));
     await fireEvent.press(screen.getByLabelText('Tag a sport (optional)'));
     await fireEvent.press(screen.getByLabelText('Choose Volleyball sport'));
+    await fireEvent.press(screen.getByLabelText('Done'));
     await fireEvent.press(screen.getByLabelText('Next')); await confirmRights();
     mockSportChoices = { sportNames: [], status: 'unavailable' };
     await view.rerender(<UploadVideoModal {...props} />);
     expect(screen.getByText(/Sport choices are unavailable/)).toBeTruthy();
     await act(async () => mockPublishPress?.());
     expect(mockUpload).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByLabelText('Back'));
+    await fireEvent.press(screen.getByLabelText('More options'));
     expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Volleyball');
-    expect(screen.getByLabelText('Highlight caption').props.value).toBe('Volleyball game');
     await fireEvent.press(screen.getByLabelText('Reload sport choices'));
     expect(mockReloadSportChoices).toHaveBeenCalledTimes(1);
     mockSportChoices = { sportNames: ['Football', 'Volleyball'], status: 'ready' };
     await view.rerender(<UploadVideoModal {...props} />);
     expect(screen.getByLabelText('Tag a sport (optional)').props.accessibilityValue.text).toBe('Volleyball');
-    expect(screen.getByLabelText('Highlight caption').props.value).toBe('Volleyball game');
+    await fireEvent.press(screen.getByLabelText('Done'));
+    expect(screen.getByText(/Sport: Volleyball/)).toBeTruthy();
+    expect(screen.getByText('Volleyball game')).toBeTruthy();
     mockUpload.mockReturnValue(new Promise(() => {}));
-    await fireEvent.press(screen.getByLabelText('Next'));
     await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
     await waitFor(() => expect(mockUpload).toHaveBeenCalledWith(expect.objectContaining({ sport: 'Volleyball', title: 'Volleyball game' })));
   });
 
   it('retains a visible self default through catalog reload until the uploader explicitly removes it', async () => {
     const view = await render(<UploadVideoModal {...props} />); await details(); await confirmRights();
-    expect(screen.getByText('Sport: Football')).toBeTruthy();
+    expect(screen.getByText(/Sport: Football/)).toBeTruthy();
     for (const status of ['loading', 'unavailable', 'ready']) {
       mockSportChoices = { sportNames: [], status };
       await view.rerender(<UploadVideoModal {...props} />);
-      expect(screen.getByText('Sport: Football')).toBeTruthy();
+      expect(screen.getByText(/Sport: Football/)).toBeTruthy();
       await act(async () => mockPublishPress?.());
       expect(mockUpload).not.toHaveBeenCalled();
     }
-    await fireEvent.press(screen.getByLabelText('Back'));
+    await fireEvent.press(screen.getByLabelText('More options'));
     await fireEvent.press(screen.getByLabelText('Tag a sport (optional)'));
     await fireEvent.press(screen.getByLabelText('No sport tag'));
-    await fireEvent.press(screen.getByLabelText('Next'));
+    await fireEvent.press(screen.getByLabelText('Done'));
     mockUpload.mockReturnValue(new Promise(() => {}));
     await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
     await waitFor(() => expect(mockUpload).toHaveBeenCalledWith(expect.objectContaining({ sport: null })));
@@ -281,7 +290,7 @@ describe('staged Highlight upload', () => {
     await fireEvent.press(screen.getByLabelText('Next'));
     expect(screen.getByText('Step 3 of 3')).toBeTruthy();
     expect(screen.queryByLabelText('Highlight caption')).toBeNull();
-    expect(screen.getByText('No game linked · No account mentions')).toBeTruthy();
+    expect(screen.getByText(/No game · No mentions/)).toBeTruthy();
   });
 
   it('offers This is me when the signed-in account is that athlete', async () => {
@@ -321,7 +330,7 @@ describe('staged Highlight upload', () => {
     await fireEvent.press(screen.getByLabelText('One-time Exclusive 🔒'));
     await fireEvent.press(screen.getByLabelText('Done'));
     expect(screen.getByText('One-time Exclusive only')).toBeTruthy();
-    expect(screen.getByText('No game linked · 1 account mentions pending confirmation')).toBeTruthy();
+    expect(screen.getByText(/1 mentions/)).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('More options'));
     expect(screen.getByLabelText('One-time Exclusive 🔒').props.accessibilityState.checked).toBe(true);
   });

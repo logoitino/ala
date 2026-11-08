@@ -21,7 +21,7 @@ import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { AGE_GATE_REFUSAL, birthInputError, pauseAgeGate } from '@/lib/minors';
 import { SPRING_CARD } from '@/theme/motion';
-import { DISPLAY_TEXT } from '@/theme/fonts';
+import { DISPLAY_TEXT, TYPE } from '@/theme/fonts';
 
 const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
 
@@ -199,31 +199,29 @@ const styles = StyleSheet.create({
     maxHeight: '100%',
   },
   cardScroll: {
-    gap: 14,
+    gap: 10,
   },
   iconTile: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     backgroundColor: colors.goldSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     ...DISPLAY_TEXT,
-    fontSize: 30,
+    ...TYPE.display,
     color: colors.text,
-    letterSpacing: -0.6,
+    letterSpacing: -0.5,
   },
   body: {
-    fontSize: 15,
-    lineHeight: 21,
+    ...TYPE.body,
     fontWeight: '600',
     color: colors.textMuted,
   },
   error: {
-    fontSize: 13,
-    lineHeight: 18,
+    ...TYPE.body,
     fontWeight: '700',
     color: colors.danger,
   },
@@ -231,8 +229,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
     backgroundColor: colors.primary,
     borderRadius: KIT.controlRadius,
-    minHeight: 52,
-    paddingVertical: 14,
+    minHeight: 48,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
     ...KIT.shadowSoft,

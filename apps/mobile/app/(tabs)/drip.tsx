@@ -10,7 +10,8 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { FilterPills } from '@/components/UI/FilterPills';
-import { colors } from '@/constants/theme';
+import { colors, space } from '@/constants/theme';
+import { TYPE } from '@/theme/fonts';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { DRIP_FILTERS, type DripFilter, type DripItem } from '@/data/shop';
 import { useDripCatalog } from '@/hooks/useDripCatalog';
@@ -148,20 +149,19 @@ export default function DripTab() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingHorizontal: space.md,
+    paddingTop: space.xs,
     // TabScreen owns dock clearance, so catalog cards need only a small final scroll inset.
-    paddingBottom: 12,
-    gap: 8,
+    paddingBottom: space.sm,
+    gap: space.xs,
   },
   loading: {
-    paddingVertical: 20,
+    paddingVertical: space.lg,
     alignItems: 'center',
-    gap: 8,
+    gap: space.xs,
   },
   loadingLabel: {
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
+    ...TYPE.body,
   },
 });

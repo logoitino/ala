@@ -537,11 +537,11 @@ export default function MyHubTab() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingTop: 4,
     // TabScreen reserves the measured floating dock; only this small scroll inset is needed here.
-    paddingBottom: 12,
-    gap: 8,
+    paddingBottom: 10,
+    gap: 6,
   },
   menuHit: {
     width: 44,

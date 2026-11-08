@@ -2,6 +2,8 @@
 # Lovable UI/UX plan — the whole-app design standard
 
 **Status:** adopted 2026-11-04 by the owner ("my wish is that the whole app follows that now").
+**Density tighten (2026-11-08):** [DENSITY_AUDIT.md](./DENSITY_AUDIT.md) — same jade brand and
+layout, ~12% tighter `space` / `TYPE` / sheet radii; `touchTarget` stays 44; gift/checkout sheets out of scope.
 **Reference prototype:** Lovable project *Friday Night Lights*
 (<https://lovable.dev/projects/99b55089-c2b2-4609-a647-bd877e62ffa4>). It is a front-end-only web
 mockup with sample data; it is a **design reference, not source**. Real screens keep their own data,
@@ -17,10 +19,11 @@ owner-approved copy (BRAND-01, VOICE) and every legal/payment notice stay author
    obsidian night surface so they read as special.
 2. **One jade primary, gold only for awards, ember only for LIVE and danger.** Neon jade is a glow on
    dark surfaces, never text on light.
-3. **Hierarchy before decoration.** Big bold titles (30–34pt, weight 900), scoreboard numerals for
-   money, scores and Aura, one primary action per area. No stacks of equal-weight bold links.
+3. **Hierarchy before decoration.** Bold titles (`TYPE.display` ~26pt after the density pass; was
+   30–34), scoreboard numerals for money, scores and Aura, one primary action per area. No stacks of
+   equal-weight bold links.
 4. **Consistent controls.** Every action uses the shared button family; chips for filters and choices;
-   44pt minimum targets; 14pt control radius, 16 cards, 24 sheets and hero cards.
+   44pt minimum targets; denser radii (`KIT` / `MENU_METRICS`: control 12, card 14, sheet/hero 20).
 5. **Content is never lost in a restyle.** Every existing label, link, notice, number and route carries
    over. Lovable sample copy and invented features are not imported (see §6).
 

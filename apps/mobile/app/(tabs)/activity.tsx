@@ -15,7 +15,8 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
+import { cardShadow, colors, radii, SCOREBOARD_DIGITS, space } from '@/constants/theme';
+import { TYPE } from '@/theme/fonts';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
@@ -239,33 +240,32 @@ export default function ActivityTab() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 16,
-    gap: 10,
+    paddingHorizontal: space.sm,
+    paddingTop: space.xs,
+    paddingBottom: space.md,
+    gap: space.sm,
   },
   sectionTitle: {
     color: colors.text,
-    fontSize: 16,
-    lineHeight: 22,
+    ...TYPE.section,
     fontWeight: '800',
-    marginTop: 8,
+    marginTop: space.xs,
   },
   boot: {
-    paddingVertical: 32,
+    paddingVertical: 24,
     alignItems: 'center',
   },
   row: {
     flexDirection: 'row',
     minHeight: 44,
     alignItems: 'center',
-    gap: 12,
+    gap: space.sm,
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: space.sm,
+    paddingHorizontal: space.md,
     ...cardShadow,
   },
   rowActionable: {
@@ -286,40 +286,36 @@ const styles = StyleSheet.create({
   rowBody: {
     flex: 1,
     minWidth: 0,
-    gap: 6,
+    gap: 4,
   },
   rowTitle: {
     color: colors.text,
-    fontSize: 15,
-    lineHeight: 21,
+    ...TYPE.section,
     fontWeight: '800',
   },
   rowAgo: {
     color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 18,
+    ...TYPE.caption,
     fontWeight: '700',
   },
   rowLede: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    ...TYPE.body,
   },
   rowDetails: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 8,
+    gap: space.xs,
   },
   rowCta: {
-    fontSize: 12,
+    ...TYPE.caption,
     fontWeight: '800',
     marginTop: 2,
   },
   rowAmount: {
     ...SCOREBOARD_DIGITS,
-    fontSize: 16,
-    lineHeight: 22,
+    ...TYPE.section,
     flexShrink: 1,
   },
 });
