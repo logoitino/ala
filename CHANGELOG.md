@@ -1,7 +1,7 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
-## 2026-11-10 — Density EAS preview queued ($0 Free)
+## 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 
-- Android `df2a07a7` + iOS `a968716d` from density branch `4f37523` (PR #34).
+- Android APK `df2a07a7` and iOS IPA `a968716d` from density tip `4f37523` (PR #34).
 
 ## 2026-11-08 — UI density + content triage
 
