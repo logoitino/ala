@@ -1,4 +1,8 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-10 — Density EAS preview queued ($0 Free)
+
+- Android `df2a07a7` + iOS `a968716d` from density branch `4f37523` (PR #34).
+
 ## 2026-11-08 — UI density + content triage
 
 - ~12% denser type/padding tokens (`TYPE`, `space`, sheet radii); Local + upload flow first; fan tabs follow.

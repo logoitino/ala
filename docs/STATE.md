@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-08 · UI density pass (Local + upload + TYPE/space tokens). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-10 · Density EAS preview queued ($0 Free). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,13 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-10 — Density EAS preview queued ($0 Free)
+
+From branch `cursor/ui-density-audit-9a86` tip `4f37523` (PR #34 still open, CI green):
+- Android `df2a07a7` — https://expo.dev/accounts/logoitino/projects/ala-sports/builds/df2a07a7-c11a-4cf9-8071-780cad60f1dd
+- iOS `a968716d` — https://expo.dev/accounts/logoitino/projects/ala-sports/builds/a968716d-f78f-497d-af0c-c2a60cad32b6
+Wave 0 Free. Ad hoc iOS still limited to the registered iPad. Merge of #34 still owner.
 
 ### 2026-11-08 — UI density pass (Local + upload first, then tabs)
 
