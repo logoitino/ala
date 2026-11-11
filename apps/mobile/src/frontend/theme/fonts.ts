@@ -36,6 +36,26 @@ export const FONT_FILES = {
 export const DISPLAY_TEXT: TextStyle = { fontFamily: FONT.display, fontWeight: 'normal' };
 
 /**
+ * One density type scale (2026-11-08 UI density pass). Roughly 12% tighter than the Nov 5 Lovable
+ * sizes so more content fits without restyling the brand. Body stays ≥13pt; captions may sit at 11–12.
+ * Spread `{ ...TYPE.body }` (or pick size/lineHeight) — do not invent new per-screen sizes.
+ */
+export const TYPE = {
+  /** Fan / role screen titles (was ~30–32). */
+  display: { fontSize: 26, lineHeight: 30 } as TextStyle,
+  /** Compact headings and sheet titles (was ~24). */
+  title: { fontSize: 20, lineHeight: 24 } as TextStyle,
+  /** Section labels and card titles (was ~16). */
+  section: { fontSize: 15, lineHeight: 20 } as TextStyle,
+  /** Primary body copy (was ~14–15). Floor for readable body. */
+  body: { fontSize: 13, lineHeight: 18 } as TextStyle,
+  /** Secondary hints, kickers, meta (was ~12–13). */
+  caption: { fontSize: 11, lineHeight: 15 } as TextStyle,
+  /** Button / chip labels (was ~15–16). */
+  button: { fontSize: 14, lineHeight: 18 } as TextStyle,
+} as const;
+
+/**
  * @purpose Figtree face for a label weight, so callers keep thinking in weights ('700', '800'…).
  * @returns `{ fontFamily, fontWeight: 'normal' }` to spread into a text style.
  */

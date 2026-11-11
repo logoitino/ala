@@ -30,7 +30,7 @@ import { DEMO_FAN_EMAIL, DEMO_FAN_PASSWORD, demoFanSignInAvailable, signUpBirthP
 import { AGE_GATE_REFUSAL, isAgeGatePaused, pauseAgeGate } from '@/lib/minors';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
-import { DISPLAY_TEXT, figtree } from '@/theme/fonts';
+import { DISPLAY_TEXT, TYPE, figtree } from '@/theme/fonts';
 
 const SHEET_TRAVEL = 480;
 
@@ -424,24 +424,23 @@ const styles = StyleSheet.create({
   },
   title: {
     ...DISPLAY_TEXT,
-    fontSize: 30,
+    ...TYPE.display,
     color: colors.text,
-    letterSpacing: -0.6,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 15,
-    lineHeight: 21,
+    ...TYPE.body,
     fontWeight: '600',
     color: colors.textMuted,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   providerBtn: {
     borderRadius: KIT.controlRadius,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 52,
+    minHeight: 48,
   },
   appleBtn: { backgroundColor: colors.night },
   appleLabel: { ...figtree('700'), color: '#FFFFFF', fontSize: 16 },

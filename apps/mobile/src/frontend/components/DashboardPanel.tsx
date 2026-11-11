@@ -6,8 +6,8 @@
 import { type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { cardShadow, colors, radii } from '@/constants/theme';
-import { FONT } from '@/theme/fonts';
+import { cardShadow, colors, radii, space } from '@/constants/theme';
+import { FONT, TYPE } from '@/theme/fonts';
 
 type DashboardPanelProps = {
   title: string;
@@ -31,20 +31,19 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 18,
-    gap: 12,
+    padding: space.md,
+    gap: space.sm,
     ...cardShadow,
   },
   title: {
     fontFamily: FONT.displayBold,
     fontWeight: 'normal',
-    fontSize: 18,
+    ...TYPE.section,
     color: colors.text,
     letterSpacing: -0.3,
   },
   body: {
-    fontSize: 14,
-    lineHeight: 20,
+    ...TYPE.body,
     color: colors.textMuted,
   },
 });

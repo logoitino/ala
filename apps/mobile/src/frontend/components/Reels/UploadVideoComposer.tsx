@@ -30,6 +30,7 @@ import { displayValue } from '@/data/players';
 import { gameMatchupLabel, playerTagLabel } from '@/lib/reels';
 import type { AccountTagHit } from '@/lib/accountTags';
 import type { Game, Player } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export type UploadStep = 'clip' | 'details' | 'review' | 'options';
 type Props = {
@@ -57,12 +58,20 @@ type Props = {
 export function UploadVideoComposer(p: Props) {
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
+  /** Where More options was opened from so Back / Done return there (details or review). */
+  const [optionsFrom, setOptionsFrom] = useState<'details' | 'review'>('review');
   useEffect(() => { setQuery(''); }, [p.openSelect]);
-  const go = (step: UploadStep) => { if (p.uploading) return; Keyboard.dismiss(); p.onSelect(null); p.onStep(step); };
+  const go = (step: UploadStep) => {
+    if (p.uploading) return;
+    Keyboard.dismiss();
+    p.onSelect(null);
+    if (step === 'options' && (p.step === 'details' || p.step === 'review')) setOptionsFrom(p.step);
+    p.onStep(step);
+  };
   const back = () => {
     Keyboard.dismiss();
     if (p.openSelect) p.onSelect(null);
-    else go(p.step === 'review' ? 'details' : p.step === 'options' ? 'review' : 'clip');
+    else go(p.step === 'review' ? 'details' : p.step === 'options' ? optionsFrom : 'clip');
   };
   const number = p.step === 'clip' ? 1 : p.step === 'details' ? 2 : 3;
   const isPhotos = p.mediaKind === 'photo_story';
@@ -117,11 +126,22 @@ export function UploadVideoComposer(p: Props) {
         </View>
       ) : null}
       {!p.uploading && !p.openSelect && p.step !== 'options' ? <Text style={styles.footerHint}>
-        {p.step === 'clip' ? isPhotos ? mediaReady ? 'Your photos are ready.' : `Choose up to ${PHOTO_STORY_MAX_PHOTOS} photos to continue.` : mediaReady ? 'Your clip is ready.' : 'Choose or record a video to continue.' : p.step === 'details' ? isPhotos ? 'Add a caption and choose an athlete.' : 'Add a caption. Tagging an athlete can wait.' : 'Confirm to publish.'}
+        {p.step === 'clip'
+          ? isPhotos
+            ? mediaReady ? 'Photos ready.' : `Up to ${PHOTO_STORY_MAX_PHOTOS} photos.`
+            : mediaReady ? 'Clip ready.' : 'Choose or record a video.'
+          : p.step === 'details'
+            ? isPhotos ? 'Caption + athlete required.' : 'Caption required. Athlete tag can wait.'
+            : 'Confirm to publish.'}
       </Text> : null}
       <AnimatedButton accessibilityLabel={p.openSelect || p.step === 'options' ? 'Done' : p.step === 'review' ? HIGHLIGHT_PUBLISH_LABEL : 'Next'}
         disabled={p.uploading || (!p.openSelect && (p.step === 'clip' ? !mediaReady : p.step === 'details' ? !p.detailsReady : p.step === 'review' ? !p.canSubmit : false))}
-        onPress={() => { if (p.openSelect) { p.onSelect(null); Keyboard.dismiss(); } else if (p.step === 'review') p.onSubmit(); else go(p.step === 'clip' ? 'details' : 'review'); }}
+        onPress={() => {
+          if (p.openSelect) { p.onSelect(null); Keyboard.dismiss(); }
+          else if (p.step === 'options') go(optionsFrom);
+          else if (p.step === 'review') p.onSubmit();
+          else go(p.step === 'clip' ? 'details' : 'review');
+        }}
         contentStyle={[styles.submit, (p.uploading || (!p.openSelect && (p.step === 'clip' ? !mediaReady : p.step === 'details' ? !p.detailsReady : p.step === 'review' ? !p.canSubmit : false))) && styles.disabled]}>
         <Text style={styles.submitText}>{p.uploading ? 'Publishing…' : p.openSelect || p.step === 'options' ? 'Done' : p.step === 'review' ? HIGHLIGHT_PUBLISH_LABEL : 'Next'}</Text>
       </AnimatedButton>
@@ -209,28 +229,26 @@ export function UploadVideoComposer(p: Props) {
               {p.photosAvailable ? <MediaKindSwitch value={p.mediaKind} onChange={p.onMediaKind} disabled={p.uploading} /> : null}
               {isPhotos ? (
                 <>
-                  <View style={styles.hero}><View style={styles.heroBadge}><Ionicons name="images" size={30} color={colors.primary} /></View><Text style={styles.heroTitle}>Tell their story in photos.</Text><Text style={styles.heroHint}>Pick up to {PHOTO_STORY_MAX_PHOTOS} photos, then put them in order.</Text></View>
+                  <View style={styles.hero}><View style={styles.heroBadge}><Ionicons name="images" size={24} color={colors.primary} /></View><Text style={styles.heroTitle}>Tell their story in photos.</Text><Text style={styles.heroHint}>Up to {PHOTO_STORY_MAX_PHOTOS} photos, then put them in order.</Text></View>
                   {p.photos.length ? (
                     <PhotoStoryStrip photos={p.photos} onMove={p.onMovePhoto} onRemove={p.onRemovePhoto} onAdd={p.onPickPhotos} disabled={p.uploading} />
                   ) : (
                     <AnimatedButton accessibilityLabel="Choose photos from library" disabled={p.uploading} onPress={p.onPickPhotos} contentStyle={styles.source}>
-                      <Ionicons name="images-outline" size={26} color={colors.primary} />
+                      <Ionicons name="images-outline" size={22} color={colors.primary} />
                       <Text style={styles.label}>Library</Text><Text style={styles.hint}>Choose photos</Text>
                     </AnimatedButton>
                   )}
-                  <Text style={styles.heroHint}>Next, add a caption and choose the athlete.</Text>
                 </>
               ) : (<>
-              <View style={styles.hero}><View style={styles.heroBadge}><Ionicons name="play" size={30} color={colors.primary} /><View style={styles.spark}><Ionicons name="flash" size={13} color={colors.gold} /></View></View><Text style={styles.heroTitle}>Make their moment shine.</Text><Text style={styles.heroHint}>Start with a video up to {HIGHLIGHT_MAX_SECONDS} seconds.</Text></View>
+              <View style={styles.hero}><View style={styles.heroBadge}><Ionicons name="play" size={24} color={colors.primary} /><View style={styles.spark}><Ionicons name="flash" size={12} color={colors.gold} /></View></View><Text style={styles.heroTitle}>Make their moment shine.</Text><Text style={styles.heroHint}>Video up to {HIGHLIGHT_MAX_SECONDS}s.</Text></View>
               <View style={styles.sourceRow}>{(['library', 'camera'] as const).map((source) => (
                 <AnimatedButton key={source} accessibilityLabel={source === 'library' ? 'Choose a video from library' : 'Record a video'}
                   disabled={p.uploading} onPress={() => p.onPick(source)} style={styles.flex} contentStyle={[styles.source, p.pickSource === source && styles.selected]}>
-                  <Ionicons name={source === 'library' ? 'images-outline' : 'videocam-outline'} size={26} color={source === 'library' ? colors.primary : colors.gold} />
+                  <Ionicons name={source === 'library' ? 'images-outline' : 'videocam-outline'} size={22} color={source === 'library' ? colors.primary : colors.gold} />
                   <Text style={styles.label}>{source === 'library' ? 'Library' : 'Record'}</Text><Text style={styles.hint}>{source === 'library' ? 'Choose a video' : p.simulator ? 'Phone only' : 'Capture a moment'}</Text>
                 </AnimatedButton>
               ))}</View>
               {clipCard}
-              <Text style={styles.heroHint}>Next, add a caption. You can tag the athlete now or later.</Text>
               </>)}
             </>
           ) : p.step === 'details' ? (
@@ -248,7 +266,6 @@ export function UploadVideoComposer(p: Props) {
                 </Pressable>
               ) : null}
               {selectRow(isPhotos ? 'Who’s in these photos?' : 'Who’s in this clip?', p.playerLabel, 'player')}
-              {selectRow('Tag a sport (optional)', p.sport || 'No sport tag', 'sport')}
               <View style={styles.field}><Text style={styles.label}>Category</Text><View style={styles.categoryRow}>
                 {p.categoryPills.map((pill) => <Pressable key={pill.id} accessibilityRole="button" accessibilityLabel={pill.label} accessibilityState={{ selected: pill.id === p.category }}
                   disabled={p.uploading} onPress={() => p.onCategory(pill.id)} style={[styles.category, pill.id === p.category && styles.categoryActive]}>
@@ -263,10 +280,14 @@ export function UploadVideoComposer(p: Props) {
                 </Pressable>
               ) : null}</View>
               {isPhotos ? <PhotoDescriptionFields photos={p.photos} onDescription={p.onPhotoDescription} disabled={p.uploading} /> : null}
+              <Pressable accessibilityRole="button" accessibilityLabel="More options" disabled={p.uploading} onPress={() => go('options')} style={styles.select}>
+                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>{isPhotos ? 'Sport, game, account mentions' : 'Sport, game, account mentions, Exclusive'}</Text></View><Ionicons name="chevron-forward" size={16} color={colors.primary} />
+              </Pressable>
             </>
           ) : p.step === 'options' ? (
             <>
-              <Text style={styles.hint}>{isPhotos ? 'Add only what your story needs. Photo stories are always public.' : 'Add only what your clip needs.'}</Text>
+              <Text style={styles.hint}>{isPhotos ? 'Optional for this story. Photo stories stay public.' : 'Optional for this clip.'}</Text>
+              {selectRow('Tag a sport (optional)', p.sport || 'No sport tag', 'sport')}
               {selectRow('Tag a Game (optional)', p.gameLabel, 'game')}
               <AccountTagField value={p.accountTags} onChange={p.onAccountTags} disabled={p.uploading} />
               {/* v1 photo stories are public only (design decision 1): Vault photos wait for the private bucket. */}
@@ -283,12 +304,11 @@ export function UploadVideoComposer(p: Props) {
                 <View style={styles.sourceRow}><Text style={[styles.hint, styles.flex]} numberOfLines={1}>{p.asset?.fileName || 'Selected video'}{p.asset?.durationMs ? ` · ${Math.round(p.asset.durationMs / 1000)}s` : ''}</Text><Pressable accessibilityRole="button" accessibilityLabel="Change video" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}><Text style={styles.link}>Change</Text></Pressable></View>
               )}
               <View style={styles.summary}><Text style={styles.label} numberOfLines={2}>{p.caption}</Text><Text style={styles.hint}>{p.playerLabel} · {categoryLabel}</Text>
-                <Text style={styles.hint}>Sport: {p.sport || 'No sport tag'}</Text>
-                <Text style={styles.hint}>{p.gameId ? p.gameLabel : 'No game linked'} · {p.accountTags.length ? `${p.accountTags.length} account mentions pending confirmation` : 'No account mentions'}</Text>
+                <Text style={styles.hint}>Sport: {p.sport || 'No sport tag'} · {p.gameId ? p.gameLabel : 'No game'} · {p.accountTags.length ? `${p.accountTags.length} mentions` : 'No mentions'}</Text>
                 <Text style={styles.link}>{isPhotos ? 'Public photo story' : p.isExclusive ? 'One-time Exclusive only' : 'Public Highlight'}</Text>
               </View>
               <Pressable accessibilityRole="button" accessibilityLabel="More options" disabled={p.uploading} onPress={() => go('options')} style={styles.select}>
-                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>{isPhotos ? 'Game, account mentions' : 'Game, account mentions, one-time Exclusive access'}</Text></View><Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>{isPhotos ? 'Sport, game, mentions' : 'Sport, game, mentions, Exclusive'}</Text></View><Ionicons name="chevron-forward" size={16} color={colors.primary} />
               </Pressable>
               <View style={styles.field}><Text style={styles.label}>Before you publish</Text><Text style={styles.hint}>{COMPLIANCE_UPLOAD}</Text>
                 {(() => {
@@ -315,53 +335,53 @@ export function UploadVideoComposer(p: Props) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  sheet: { flex: 1, width: '100%', justifyContent: 'center', backgroundColor: colors.background, paddingHorizontal: 20 },
+  sheet: { flex: 1, width: '100%', justifyContent: 'center', backgroundColor: colors.background, paddingHorizontal: 14 },
   menu: { width: '100%', maxWidth: 420, maxHeight: '100%', alignSelf: 'center' },
   scroll: { flexGrow: 0, flexShrink: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingBottom: 12 },
-  headerCopy: { flex: 1, alignItems: 'center', gap: 3 },
-  iconButton: { minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
-  kicker: { color: colors.primary, fontSize: 11, fontWeight: '800', letterSpacing: 0.6 },
-  title: { color: colors.text, fontSize: 20, fontWeight: '800', textAlign: 'center' },
-  body: { gap: 14, paddingBottom: 16 },
-  hero: { alignItems: 'center', gap: 8, paddingVertical: 4 },
-  heroBadge: { width: 64, height: 64, borderRadius: 22, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
-  spark: { position: 'absolute', right: -5, top: -4, width: 24, height: 24, borderRadius: 12, backgroundColor: colors.goldSoft, alignItems: 'center', justifyContent: 'center' },
-  heroTitle: { fontSize: 24, fontWeight: '800', color: colors.text, textAlign: 'center' },
-  heroHint: { fontSize: 14, lineHeight: 20, color: colors.textMuted, textAlign: 'center' },
-  sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  source: { backgroundColor: colors.surface, borderRadius: MENU_METRICS.controlRadius, borderWidth: 1, borderColor: colors.border, padding: 14, alignItems: 'center', gap: 6, minHeight: 112 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingBottom: 8 },
+  headerCopy: { flex: 1, alignItems: 'center', gap: 2 },
+  iconButton: { minWidth: MENU_METRICS.touchTarget, minHeight: MENU_METRICS.touchTarget, justifyContent: 'center', alignItems: 'center' },
+  kicker: { ...figtree('800'), color: colors.primary, ...TYPE.caption, letterSpacing: 0.5 },
+  title: { ...figtree('800'), color: colors.text, ...TYPE.title, textAlign: 'center' },
+  body: { gap: 10, paddingBottom: 12 },
+  hero: { alignItems: 'center', gap: 6, paddingVertical: 2 },
+  heroBadge: { width: 52, height: 52, borderRadius: 18, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
+  spark: { position: 'absolute', right: -4, top: -3, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.goldSoft, alignItems: 'center', justifyContent: 'center' },
+  heroTitle: { ...figtree('800'), ...TYPE.title, color: colors.text, textAlign: 'center' },
+  heroHint: { ...TYPE.body, color: colors.textMuted, textAlign: 'center' },
+  sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  source: { backgroundColor: colors.surface, borderRadius: MENU_METRICS.controlRadius, borderWidth: 1, borderColor: colors.border, padding: 10, alignItems: 'center', gap: 4, minHeight: 88 },
   selected: { borderColor: colors.primary, backgroundColor: colors.accentSoft },
-  clipCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius },
-  thumb: { width: 52, height: 68, borderRadius: 8, backgroundColor: colors.photoPlaceholder },
+  clipCard: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius },
+  thumb: { width: 44, height: 58, borderRadius: 7, backgroundColor: colors.photoPlaceholder },
   thumbMark: { alignItems: 'center', justifyContent: 'center' },
-  smallButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 },
-  label: { fontSize: 14, fontWeight: '800', color: colors.text },
-  hint: { fontSize: 12, lineHeight: 18, color: colors.textMuted },
-  link: { fontSize: 12, lineHeight: 18, fontWeight: '800', color: colors.primary },
-  field: { gap: 8 },
-  input: { minHeight: 48, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, paddingHorizontal: 12, backgroundColor: colors.surface, color: colors.text, fontSize: 15 },
-  caption: { height: 86, paddingTop: 12, textAlignVertical: 'top' },
-  counter: { fontSize: 11, textAlign: 'right', color: colors.textMuted, marginTop: -4 },
-  select: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 52, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.surface },
-  selectText: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600' },
-  option: { minHeight: 52, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.surface, gap: 5 },
-  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  category: { maxWidth: '100%', minHeight: 44, paddingHorizontal: 12, justifyContent: 'center', borderRadius: radii.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  smallButton: { minHeight: MENU_METRICS.touchTarget, justifyContent: 'center', paddingHorizontal: 6 },
+  label: { ...figtree('800'), ...TYPE.body, color: colors.text },
+  hint: { ...TYPE.caption, color: colors.textMuted },
+  link: { ...figtree('800'), ...TYPE.caption, color: colors.primary },
+  field: { gap: 6 },
+  input: { minHeight: MENU_METRICS.touchTarget, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, paddingHorizontal: 10, backgroundColor: colors.surface, color: colors.text, fontSize: 14 },
+  caption: { height: 72, paddingTop: 10, textAlignVertical: 'top' },
+  counter: { ...TYPE.caption, textAlign: 'right', color: colors.textMuted, marginTop: -2 },
+  select: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: MENU_METRICS.touchTarget, padding: 10, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.surface },
+  selectText: { flex: 1, color: colors.text, ...TYPE.body, fontWeight: '600' },
+  option: { minHeight: MENU_METRICS.touchTarget, padding: 10, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.surface, gap: 3 },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  category: { maxWidth: '100%', minHeight: MENU_METRICS.touchTarget, paddingHorizontal: 10, justifyContent: 'center', borderRadius: radii.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   categoryActive: { borderColor: colors.primary, backgroundColor: colors.accentSoft },
-  categoryText: { flexShrink: 1, fontSize: 13, fontWeight: '700', color: colors.textMuted },
+  categoryText: { flexShrink: 1, ...figtree('700'), ...TYPE.body, color: colors.textMuted },
   categoryTextActive: { color: colors.primary },
-  summary: { gap: 6, padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.surface },
-  rightsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 },
+  summary: { gap: 4, padding: 10, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.surface },
+  rightsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: MENU_METRICS.touchTarget },
   checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   checkboxActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  rightsText: { flex: 1, fontSize: 12, lineHeight: 18, color: colors.text },
-  error: { color: colors.danger, fontSize: 13 },
-  footer: { gap: 8, paddingTop: 8 },
-  footerHint: { fontSize: 11, lineHeight: 16, textAlign: 'center', color: colors.textMuted },
-  submit: { minHeight: 52, justifyContent: 'center', alignItems: 'center', borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.primary },
-  submitText: { color: colors.onAccent, fontSize: 16, fontWeight: '800' },
+  rightsText: { flex: 1, ...TYPE.caption, color: colors.text },
+  error: { color: colors.danger, ...TYPE.body },
+  footer: { gap: 6, paddingTop: 6 },
+  footerHint: { ...TYPE.caption, textAlign: 'center', color: colors.textMuted },
+  submit: { minHeight: 48, justifyContent: 'center', alignItems: 'center', borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.primary },
+  submitText: { ...figtree('800'), color: colors.onAccent, ...TYPE.section },
   disabled: { opacity: 0.45 },
-  progressTrack: { height: 5, backgroundColor: colors.border, borderRadius: 3, overflow: 'hidden' },
-  progressFill: { height: 5, backgroundColor: colors.glow },
+  progressTrack: { height: 4, backgroundColor: colors.border, borderRadius: 2, overflow: 'hidden' },
+  progressFill: { height: 4, backgroundColor: colors.glow },
 });

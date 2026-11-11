@@ -19,7 +19,8 @@ import { RuntimePaused } from '@/components/RuntimePaused';
 import { TabScreen } from '@/components/TabScreen';
 import { MaloTipModal } from '@/components/TipSheetModal';
 import { EmptyState } from '@/components/UI/EmptyState';
-import { colors } from '@/constants/theme';
+import { colors, space } from '@/constants/theme';
+import { TYPE } from '@/theme/fonts';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { displayValue } from '@/data/players';
@@ -217,30 +218,28 @@ export default function SpotlightTab() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 16,
-    gap: 10,
+    paddingHorizontal: space.sm,
+    paddingTop: space.xs,
+    paddingBottom: space.md,
+    gap: space.sm,
   },
   boot: {
-    minHeight: 80,
+    minHeight: 72,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 24,
+    gap: space.sm,
+    paddingVertical: space.xl,
   },
   loadingLabel: {
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
+    ...TYPE.body,
   },
   list: {
-    gap: 8,
+    gap: space.xs,
   },
   section: {
     color: FOCAL.goldInk,
-    fontSize: 16,
-    lineHeight: 22,
+    ...TYPE.section,
     fontWeight: '800',
     letterSpacing: -0.2,
   },

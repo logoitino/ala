@@ -2,7 +2,7 @@
  * Upload ＋ chooser (owner 2026-10-16: posting must be one easy tap for every kind of user). Highlight opens the
  * existing athlete clip composer; Beyond moment opens the reviewed Beyond the Game composer. Story-focused
  * copy keeps the destination and review requirements clear. Tall text scrolls inside the sheet, leaving
- * its dismiss handle reachable. No upload happens here.
+ * its dismiss handle reachable. No upload happens here. 2026-11-08 density: hugs content (not 90% height).
  */
 import { BlurView } from 'expo-blur';
 import { Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -15,6 +15,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
+import { TYPE, figtree } from '@/theme/fonts';
 import { FOCAL } from '@/theme/motion';
 
 type UploadChoiceSheetProps = {
@@ -41,10 +42,10 @@ export function UploadChoiceSheet({ visible, onHighlight, onBeyond, onClose }: U
           <View style={styles.dim} />
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-          <SheetRise style={[styles.sheet, frame.card, { maxHeight: height * 0.9 }]}>
+          <SheetRise style={[styles.sheet, frame.card, { maxHeight: height * 0.72 }]}>
             <MenuBackdrop accent="jade" />
             <SheetHandle onDismiss={onClose} />
-            <ScrollView style={styles.scroll} contentContainerStyle={styles.content} bounces={false}>
+            <ScrollView style={styles.scroll} contentContainerStyle={styles.content} bounces={false} keyboardShouldPersistTaps="handled">
               <Text accessibilityRole="header" style={styles.title}>What are you sharing?</Text>
               <Text style={styles.intro}>The big play. The work behind it. The moments that make you.</Text>
 
@@ -55,12 +56,12 @@ export function UploadChoiceSheet({ visible, onHighlight, onBeyond, onClose }: U
                 onPress={onHighlight}
                 contentStyle={styles.option}
               >
-                <View style={styles.icon}><Ionicons name="flash" size={22} color={FOCAL.jadeInk} /></View>
+                <View style={styles.icon}><Ionicons name="flash" size={20} color={FOCAL.jadeInk} /></View>
                 <View style={styles.copy}>
                   <Text style={styles.optionTitle}>Highlight</Text>
-                  <Text style={styles.optionBody}>An athlete’s game play, workout or service. Shared in Highlights, where fans can give.</Text>
+                  <Text style={styles.optionBody}>Athlete game play, workout or service — in Highlights, where fans can give.</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </AnimatedButton>
 
               <AnimatedButton
@@ -70,12 +71,12 @@ export function UploadChoiceSheet({ visible, onHighlight, onBeyond, onClose }: U
                 onPress={onBeyond}
                 contentStyle={styles.option}
               >
-                <View style={styles.icon}><Ionicons name="compass" size={22} color={FOCAL.jadeInk} /></View>
+                <View style={styles.icon}><Ionicons name="compass" size={20} color={FOCAL.jadeInk} /></View>
                 <View style={styles.copy}>
                   <Text style={styles.optionTitle}>Beyond moment</Text>
-                  <Text style={styles.optionBody}>Your own workout, service, learning or everyday story. No athlete needed. Reviewed before sharing.</Text>
+                  <Text style={styles.optionBody}>Your workout, service, learning or story — reviewed before sharing. No athlete needed.</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </AnimatedButton>
 
               <AnimatedButton accessibilityLabel="Cancel" haptic="light" onPress={onClose} contentStyle={styles.cancel}>
@@ -92,27 +93,27 @@ export function UploadChoiceSheet({ visible, onHighlight, onBeyond, onClose }: U
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
   dim: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(7,10,12,0.45)' },
-  sheet: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, gap: 10 },
+  sheet: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, gap: 8 },
   scroll: { flexShrink: 1 },
-  content: { gap: 10, paddingBottom: 4 },
-  title: { color: colors.text, fontSize: 24, fontWeight: '800' },
-  intro: { color: colors.textMuted, fontSize: 14, lineHeight: 20, marginBottom: 8 },
+  content: { gap: 8, paddingBottom: 2 },
+  title: { ...figtree('800'), color: colors.text, ...TYPE.title },
+  intro: { color: colors.textMuted, ...TYPE.body, marginBottom: 4 },
   option: {
-    minHeight: 76,
+    minHeight: MENU_METRICS.touchTarget + 20,
     borderRadius: MENU_METRICS.cardRadius,
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
-  icon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistJade },
-  copy: { flex: 1, minWidth: 0, gap: 5 },
-  optionTitle: { color: colors.text, fontSize: 16, fontWeight: '800' },
-  optionBody: { color: colors.textMuted, fontSize: 13, lineHeight: 18, fontWeight: '600' },
-  cancel: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  cancelLabel: { color: colors.textMuted, fontSize: 15, fontWeight: '700' },
+  icon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistJade },
+  copy: { flex: 1, minWidth: 0, gap: 3 },
+  optionTitle: { ...figtree('800'), color: colors.text, ...TYPE.section },
+  optionBody: { ...figtree('600'), color: colors.textMuted, ...TYPE.body },
+  cancel: { minHeight: MENU_METRICS.touchTarget, alignItems: 'center', justifyContent: 'center' },
+  cancelLabel: { ...figtree('700'), color: colors.textMuted, ...TYPE.button },
 });

@@ -146,14 +146,14 @@ function MySportsDraft({ visible, profileId, snapshot, onClose, onSaved, onReloa
 }
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.backdrop },
-  sheet: { backgroundColor: colors.surface, borderRadius: MENU_METRICS.sheetRadius, overflow: 'hidden', maxHeight: '90%' },
-  heading: { flexDirection: 'row', alignItems: 'center', padding: 12, gap: 10 },
-  title: { flex: 1, fontSize: 22, fontWeight: '800', color: colors.text },
-  body: { padding: 16, gap: 12 }, entry: { borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 12, gap: 6 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  sheet: { backgroundColor: colors.surface, borderRadius: MENU_METRICS.sheetRadius, overflow: 'hidden', maxHeight: '78%' },
+  heading: { flexDirection: 'row', alignItems: 'center', padding: 10, gap: 8 },
+  title: { flex: 1, fontSize: 18, fontWeight: '800', color: colors.text },
+  body: { padding: 14, gap: 10 }, entry: { borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 10, gap: 4 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   button: { minHeight: 44, padding: 10, justifyContent: 'center', borderRadius: 12 },
-  label: { color: colors.text, fontSize: 14, fontWeight: '700' }, link: { color: colors.primary, fontSize: 14, fontWeight: '700' },
-  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 19 }, error: { color: colors.danger, fontSize: 13, lineHeight: 19 },
+  label: { color: colors.text, fontSize: 13, fontWeight: '700' }, link: { color: colors.primary, fontSize: 13, fontWeight: '700' },
+  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 18 }, error: { color: colors.danger, fontSize: 13, lineHeight: 18 },
   input: { minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, color: colors.text },
-  footer: { padding: 12, gap: 8 }, save: { backgroundColor: colors.primary, alignItems: 'center' }, saveLabel: { color: colors.onAccent, fontSize: 14, fontWeight: '800' },
+  footer: { padding: 10, gap: 6 }, save: { backgroundColor: colors.primary, alignItems: 'center' }, saveLabel: { color: colors.onAccent, fontSize: 14, fontWeight: '800' },
 });

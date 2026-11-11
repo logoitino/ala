@@ -73,7 +73,7 @@ function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accen
       onPress={() => { impactPress('selection'); onPress(); }}
     >
       <Animated.View style={iconStyle}>
-        <Ionicons name={focused ? activeIcon : icon} size={22} color={color} />
+        <Ionicons name={focused ? activeIcon : icon} size={20} color={color} />
       </Animated.View>
       <Text style={[styles.tabLabel, { color }]}>
         {label}
@@ -247,13 +247,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    minHeight: 56,
+    minHeight: 50,
     paddingHorizontal: 2,
-    borderRadius: 28,
+    borderRadius: 24,
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    borderRadius: 28,
+    borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
@@ -285,22 +285,22 @@ const styles = StyleSheet.create({
     }),
   },
   tabInner: {
-    minHeight: 52,
+    minHeight: 44,
     // Opaque control faces retain text contrast when the softened backdrop sits over dark artwork.
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
-    paddingVertical: 4,
+    gap: 1,
+    paddingVertical: 3,
     paddingHorizontal: 2,
-    borderRadius: 24,
+    borderRadius: 20,
     marginHorizontal: 2,
     marginVertical: 2,
     overflow: 'visible',
   },
   tabLabel: {
     ...figtree('600'),
-    fontSize: 11,
+    fontSize: 10,
     letterSpacing: -0.1,
     textAlign: 'center',
     flexShrink: 1,

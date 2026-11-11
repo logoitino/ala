@@ -41,6 +41,7 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 | --- | --- |
 | [Media service plan](engineering/design/MEDIA_SERVICE_PLAN.md) | Current video/photo upload and player contracts, replaceable storage and migration tests; long videos off until measured costs, live deferred. |
 | [Lovable UI/UX plan](engineering/design/LOVABLE_UI_UX_PLAN.md) | Whole-app design standard (owner 2026-11-04): tokens, Kit components, surface patterns, rollout status, what is not imported. |
+| [UI density audit](engineering/design/DENSITY_AUDIT.md) | 2026-11-08 tighten pass: TYPE/space before→after, Local + upload report, hard stops. |
 | [Athlete story UI plan](engineering/design/ATHLETE_STORY_UX_IMPROVEMENT_PLAN.md) | Existing Calm Island story/tab scope, accessibility criteria and verification boundaries. |
 | [UX-07](agents/UX-07.md) | Actual presentation exemption, source reviews, implementation and local UI verification receipts. |
 | [ARCHITECTURE.md](engineering/ARCHITECTURE.md) | How the apps, Supabase, Stripe and Edge Functions fit together. |

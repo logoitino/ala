@@ -1,4 +1,14 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-10 — Density EAS preview FINISHED ($0 Free)
+
+- Android APK `df2a07a7` and iOS IPA `a968716d` from density tip `4f37523` (PR #34).
+
+## 2026-11-08 — UI density + content triage
+
+- ~12% denser type/padding tokens (`TYPE`, `space`, sheet radii); Local + upload flow first; fan tabs follow.
+- Upload details: sport/game/mentions behind More options; athlete tag stays on the main path.
+- See [DENSITY_AUDIT.md](docs/engineering/design/DENSITY_AUDIT.md). Gift/checkout out of scope.
+
 ## 2026-11-04 — Lovable brand EAS preview FINISHED ($0 Free)
 
 - Android APK `d77f53d4` and iOS IPA `a4d637f8` from `main` `a38cb44` (preview profile).

@@ -403,13 +403,13 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800',
   },
   blurb: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
   sizeRow: {
     position: 'relative',
@@ -520,12 +520,12 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     color: colors.text,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   summaryValue: {
     color: colors.text,
-    fontSize: 21,
+    fontSize: 18,
     fontWeight: '800',
     letterSpacing: -0.3,
   },
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   buy: {
-    minHeight: 52,
+    minHeight: 48,
     borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.primary,
     alignItems: 'center',
@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
   },
   buyLabel: {
     color: colors.onAccent,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '800',
   },
 });

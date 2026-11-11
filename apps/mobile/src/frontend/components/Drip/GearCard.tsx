@@ -69,8 +69,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 14,
-    gap: 6,
+    padding: 12,
+    gap: 4,
     ...cardShadow,
   },
   top: {

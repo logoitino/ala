@@ -13,7 +13,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useViewerSport } from '@/hooks/useViewerSport';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
 import { MoreText } from '@/components/UI/MoreText';
-import { DISPLAY_TEXT, figtree } from '@/theme/fonts';
+import { DISPLAY_TEXT, TYPE, figtree } from '@/theme/fonts';
 
 type ScreenHeadingProps = {
   kicker?: string;
@@ -63,12 +63,12 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
 }
 
 const styles = StyleSheet.create({
-  fanWrap: { gap: 5, paddingTop: 4, paddingBottom: 4 },
-  fanTitle: { ...DISPLAY_TEXT, fontSize: 30, lineHeight: 34, letterSpacing: -0.8 },
-  fanLede: { fontSize: 13, lineHeight: 19 },
-  fanKickerBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, maxWidth: '100%' },
-  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  accentDot: { width: 6, height: 6, borderRadius: 3 },
+  fanWrap: { gap: 4, paddingTop: 2, paddingBottom: 2 },
+  fanTitle: { ...DISPLAY_TEXT, ...TYPE.display, letterSpacing: -0.6 },
+  fanLede: { ...TYPE.body },
+  fanKickerBadge: { alignSelf: 'flex-start', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10, maxWidth: '100%' },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  accentDot: { width: 5, height: 5, borderRadius: 3 },
   field: {
     position: 'absolute',
     top: 0,
@@ -76,54 +76,53 @@ const styles = StyleSheet.create({
     right: 0,
     left: '38%',
     overflow: 'hidden',
-    borderRadius: 14,
+    borderRadius: 12,
   },
   wrap: {
-    gap: 8,
-    paddingTop: 8,
-    paddingBottom: 8,
+    gap: 6,
+    paddingTop: 6,
+    paddingBottom: 6,
   },
   wrapCompact: {
-    gap: 5,
-    paddingTop: 6,
+    gap: 4,
+    paddingTop: 4,
   },
   kicker: {
     ...figtree('800'),
-    fontSize: 12,
-    letterSpacing: 0.8,
+    ...TYPE.caption,
+    letterSpacing: 0.7,
     textTransform: 'uppercase',
     color: colors.gold,
     flexShrink: 1,
   },
   kickerCompact: {
     fontSize: 10,
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   title: {
     ...DISPLAY_TEXT,
-    fontSize: 32,
+    ...TYPE.display,
     color: colors.text,
-    letterSpacing: -0.8,
+    letterSpacing: -0.6,
   },
   titleCompact: {
-    fontSize: 26,
+    fontSize: 22,
+    lineHeight: 26,
     letterSpacing: -0.3,
   },
   underline: {
-    width: 56,
-    height: 4,
+    width: 48,
+    height: 3,
     borderRadius: 2,
     backgroundColor: colors.electricGold,
-    marginTop: 4,
+    marginTop: 2,
   },
   lede: {
-    fontSize: 15,
-    lineHeight: 22,
+    ...TYPE.body,
     fontWeight: '600',
     color: colors.textMuted,
   },
   ledeCompact: {
-    fontSize: 14,
-    lineHeight: 20,
+    ...TYPE.body,
   },
 });

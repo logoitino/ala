@@ -127,51 +127,59 @@ export function isLightCanvas(hex: string): boolean {
 }
 
 export const radii = {
-  sm: 10,
-  md: 12,
-  lg: 16,
-  xl: 20,
+  sm: 8,
+  md: 10,
+  lg: 14,
+  xl: 16,
   pill: 999,
 };
 
-/** Shared padding rhythm for fan cards, sheets, and empty states. */
+/**
+ * Shared padding rhythm for fan cards, sheets, and empty states.
+ * 2026-11-08 density pass: ~12% tighter than the Nov 5 Lovable values (was 8/12/16/20/24).
+ */
 export const space = {
-  xs: 8,
-  sm: 12,
-  md: 16,
-  lg: 20,
-  xl: 24,
+  xs: 6,
+  sm: 10,
+  md: 14,
+  lg: 16,
+  xl: 20,
 };
 
-/** One geometry rhythm for fan menus; avoid changing video overlays or business rules. */
+/**
+ * One geometry rhythm for fan menus; avoid changing video overlays or business rules.
+ * `touchTarget` stays 44 — density shrinks type and padding inside controls, never the hit area.
+ */
 export const MENU_METRICS = {
-  sheetRadius: 24,
-  cardRadius: 16,
-  controlRadius: 14,
+  sheetRadius: 20,
+  cardRadius: 14,
+  controlRadius: 12,
   touchTarget: 44,
 } as const;
 
 /**
- * Design-refresh tokens (2026-11 Lovable pass): control radius, a softer lift shadow for primary actions, the
- * warning pair used by "Check" statuses, and the obsidian hero stack. Components read these through `Kit`.
+ * Design-refresh tokens (2026-11 Lovable pass + density tighten): control radius, a softer lift shadow for
+ * primary actions, the warning pair used by "Check" statuses, and the obsidian hero stack. Components read
+ * these through `Kit`.
  */
 export const KIT = {
-  controlRadius: 14,
-  cardRadius: 16,
-  sheetRadius: 24,
-  heroRadius: 24,
+  controlRadius: 12,
+  cardRadius: 14,
+  sheetRadius: 20,
+  heroRadius: 20,
   warnInk: '#7A5200',
   warnSoft: '#FBF1DC',
   obsidianRaised: '#1A2124',
   onVideoLine: 'rgba(244,247,245,0.12)',
   shadowSoft: Platform.select({
-    ios: { shadowColor: FOCAL.ink, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 12 },
+    ios: { shadowColor: FOCAL.ink, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.14, shadowRadius: 10 },
     android: { elevation: 3 },
-    default: { boxShadow: '0px 6px 16px rgba(20, 25, 27, 0.16)' },
+    default: { boxShadow: '0px 5px 14px rgba(20, 25, 27, 0.14)' },
   }) as ViewStyle,
 } as const;
 
-export const SCREEN_BOTTOM_GAP = 52;
+/** Clearance above the floating fan dock (tighter with the denser tab bar). */
+export const SCREEN_BOTTOM_GAP = 48;
 
 /**
  * Scoreboard digits (UX-08): fixed-width figures so live numbers (scores, Aura, hype counts) never jitter as they

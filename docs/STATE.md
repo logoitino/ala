@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-04 · Lovable brand EAS preview **FINISHED** — Android APK + iOS IPA ($0 Free). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-10 · Density EAS preview **FINISHED** ($0 Free). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,22 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-10 — Density EAS preview FINISHED ($0 Free)
+
+Both `preview` builds from `cursor/ui-density-audit-9a86` `4f37523` finished (America/Denver):
+- Android `df2a07a7` APK: https://expo.dev/artifacts/eas/iqWSseHxBOTcnFnx5cRp24w7WeSnpZGf_VRvSuXya84.apk
+- iOS `a968716d` IPA: https://expo.dev/artifacts/eas/SsX4y4SeSj-LWcSrRGsuyswTU4itSRHD88l9fFklOYs.ipa
+Build pages: Android https://expo.dev/accounts/logoitino/projects/ala-sports/builds/df2a07a7-c11a-4cf9-8071-780cad60f1dd · iOS https://expo.dev/accounts/logoitino/projects/ala-sports/builds/a968716d-f78f-497d-af0c-c2a60cad32b6
+Ad hoc iOS still limited to the registered iPad. PR #34 still open for merge.
+
+### 2026-11-08 — UI density pass (Local + upload first, then tabs)
+
+- Central `TYPE` scale in `theme/fonts.ts`; denser `space` / radii / `KIT` / `MENU_METRICS` (~12%); `touchTarget` 44 unchanged.
+- Local tab + `GameCard`, upload chooser (maxHeight 72%) + composer progressive disclosure (sport → More options); athlete tag still mandatory.
+- Fan tabs Activity / Beyond / Drip / Spotlight / Profile / receipts / user + SoftWall / AgeConfirm / ScreenHeading / FanTabBar / Kit / DashboardPanel.
+- Gift/checkout sheets left out. Report: [DENSITY_AUDIT.md](engineering/design/DENSITY_AUDIT.md). Device before/after screenshots still need a real phone/sim (STATE §3).
+- `pnpm check` green on `cursor/ui-density-audit-9a86` (Node 24); UploadVideoModal tests updated for More options sport path.
 
 ### 2026-11-04 — Lovable brand EAS preview FINISHED ($0 Free)
 

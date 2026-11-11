@@ -9,7 +9,8 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { EmptyState } from '@/components/UI/EmptyState';
-import { colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
+import { colors, radii, SCOREBOARD_DIGITS, space } from '@/constants/theme';
+import { TYPE } from '@/theme/fonts';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useFanTipHistory } from '@/hooks/useFanTipHistory';
@@ -124,15 +125,15 @@ export default function ReceiptsScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 16,
+    paddingHorizontal: space.md,
     paddingTop: 4,
-    paddingBottom: 28,
-    gap: 12,
+    paddingBottom: space.xl,
+    gap: space.sm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: space.xs,
   },
   backBtn: {
     width: 40,
@@ -154,8 +155,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
+    paddingVertical: space.sm,
+    paddingHorizontal: space.xs,
   },
   metric: {
     flex: 1,
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
   metricValue: {
     ...SCOREBOARD_DIGITS,
     color: colors.primary,
-    fontSize: 16,
+    ...TYPE.section,
     textAlign: 'center',
   },
   metricLabel: {
@@ -182,6 +183,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   spinner: {
-    marginTop: 24,
+    marginTop: space.xl,
   },
 });

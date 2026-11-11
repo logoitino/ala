@@ -339,22 +339,22 @@ export default function UserAthleteProfileScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingTop: 4,
     // The shell already clears the measured fan dock, including enlarged navigation labels.
-    paddingBottom: 12,
-    gap: 8,
+    paddingBottom: 10,
+    gap: 6,
   },
   missing: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    gap: 10,
+    padding: 20,
+    gap: 8,
   },
   missingTitle: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
   },
   missingText: {
@@ -362,9 +362,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retry: {
-    marginTop: 8,
+    marginTop: 6,
     minHeight: 44,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     borderRadius: radii.md,
     backgroundColor: colors.primary,
     alignItems: 'center',
