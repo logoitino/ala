@@ -161,15 +161,23 @@ Do these in order. **Do not paste the client secret into chat, git, Expo env, lo
 1. **Pick the Supabase project** that matches the app you will test (read
    `EXPO_PUBLIC_SUPABASE_URL` in `apps/mobile/.env.local`). Today’s agent env = **staging**
    `tucioqipfejqqqtuakdi`. If you intend development instead, switch the env URL/anon key first.
-2. **Google Cloud Console** → create/select an OAuth project (separate from Supabase) →
-   [Google Auth Platform](https://console.cloud.google.com/auth/overview) (or APIs & Services →
-   OAuth consent / Credentials).
+2. **Google Cloud Console** — sign in, pick or create a Cloud project (separate from Supabase).
+   Use these console pages (pick whichever loads for your account):
+   - Clients (create Web app here): https://console.cloud.google.com/auth/clients
+   - Create client directly: https://console.cloud.google.com/auth/clients/create
+   - Classic Credentials fallback: https://console.cloud.google.com/apis/credentials
+   - Branding / consent (if Clients asks you to register the app first):
+     https://console.cloud.google.com/auth/branding  
+     or https://console.cloud.google.com/apis/credentials/consent  
+   If a link 404s, open https://console.cloud.google.com/ → select the project in the top bar →
+   search **Clients** or **Credentials**.
 3. **Consent / branding:** app name **Tapua'i Sports**; your real support email. Audience
    **External** + **Testing**; add every tester Gmail under **Test users**. Scopes: `openid`,
    `email`, `profile`. Do not publish yet.
 4. **Create OAuth client → Web application** (e.g. `Tapua'i Sports staging Supabase`). Under
    **Authorized redirect URIs**, add **only** the Supabase Auth callback for that project
-   (table below). Save. Copy **Client ID** + **Client secret** privately.
+   (table below). Leave Authorized JavaScript origins empty for this Supabase redirect flow.
+   Save. Copy **Client ID** + **Client secret** privately (secret is shown once).
 5. **Supabase Dashboard** (same project) → **Authentication → Providers → Google** → paste
    Client ID + secret → **Enable** → Save.
 6. **Authentication → URL Configuration → Redirect URLs** → add every app return you will use
