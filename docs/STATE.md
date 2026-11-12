@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 16:40 MST · WEB-DESKTOP card feed FINISHED + data:map currency for CI. Owner merges #54 then #55.
+**Last updated:** 2026-11-15 · APP-TEST-C rebased onto main after WEB-DESKTOP #54+#55. C web smoke PARTIAL PASS (8s).
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -35,7 +35,7 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 | --- | --- | --- |
 | **A. Google account** | Guide in [ONBOARDING](ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21); callback repair landed | Google Cloud OAuth + enable Supabase Google on development; then AUTH/QA record signup/return/cancel/resume |
 | **B. Stripe test bank** | Adult/guardian Connect UI + guarded Terms local; Connect SQL written | Reviewed SQL/Edge apply; service-role for local bank fallback; KYC evidence still unwired; payouts stay 503 |
-| **C. Short Highlights** | Duration/size guards + synthetic fixtures | Hosted Storage/cleanup SQL as needed; real pick/upload/playback on web/iOS/Android |
+| **C. Short Highlights** | Duration/size guards + synthetic fixtures; **web 8s pick→publish→playback PASS** on development (`fac733e`, 2026-11-12) — receipt [COORD-01](agents/COORD-01.md#app-test-c-web-smoke--2026-11-12-utc) | iOS/Android device media; oversize/photo-story/cleanup SQL; Alert copy for 46s on web not captured (draft stayed rejected) |
 
 Lanes D–F (public-beta blockers, Legal-first telemetry, feel/a11y) stay sequenced after A–C. No new features ahead of this.
 
@@ -351,6 +351,10 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
   `EXPO_PUBLIC_APP_ENV` is not production so trivia can be tried without SQL.
 - Regenerated `DATA_MAP.md` + `supportTopology.json` for the new Home/HQ → trivia-demo screen edges
   (`pnpm data:map:check` green).
+### 2026-11-12 — APP-TEST-C web smoke (8s Highlight)
+
+Lane C on Expo web (`http://127.0.0.1:8081`, tip `fac733e`, development project): Demo Fan signed in → Upload → Highlight → 8s synthetic MP4 accepted → caption + Jordan Blake tag → rights ack → Publish. Storage `reels/…/1794518535903.mp4` **200**, `reels` insert **201** (`357605a8-…`), Home showed caption, `<video>` playing `readyState=4` duration 8s. 46s fixture did **not** enter Details (reject path). Sport tags unavailable on this project (publish without sport OK). `reels_feed` select with `sport` still **400** (hosted schema drift; fallback without `sport` works). Native iOS/Android media, oversize, photo story, and cleanup SQL remain open. Receipt: [COORD-01](agents/COORD-01.md#app-test-c-web-smoke--2026-11-12-utc). Screenshots: `/opt/cursor/artifacts/app-test-c-playback-8s.png`, `app-test-c-46s-reject.png`.
+
 
 ### 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 
