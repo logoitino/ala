@@ -291,14 +291,16 @@ SQL/Edge/private-server prerequisites below; it is not part of creating a Google
 
 ## Google account to later Stripe test bank — development rehearsal
 
-**Prepared 2026-10-21; manual walkthrough UNRUN.** This focused rehearsal uses the existing
-development project `ulfapgtabidorgwfjvwz` and Stripe **test mode**. It is separate from the older
-staging wave above. Use current source/build receipts in [STATE.md](../STATE.md) §4 and the
-[payee plan](design/PAYEE_VERIFICATION_PLAN.md) §10. Historical Google repair tests do not accept
-this new bank flow. The later read-only settings check found development Google disabled; app
-return allowlists and successful Google operation remain unverified. The new Connect SQL is
-unapplied and the updated Edge Function is undeployed. The local bank fallback still lacks its
-private service-role key; the template alone does not make bank setup ready.
+**Prepared 2026-10-21; manual walkthrough UNRUN.**
+**2026-11-12 staging probe (agent env `tucioqipfejqqqtuakdi`):** Connect RPCs and Edge
+`create-stripe-account` all **404** — do not start the bank walkthrough until the owner applies
+[ONBOARDING bank prep](../ONBOARDING.md#development-account-to-bank-preparation--2026-10-21) and
+confirms. Historical guide also names development `ulfapgtabidorgwfjvwz`. Stripe **test mode**
+only. Source/build receipts: [STATE.md](../STATE.md) §4 ·
+[payee plan](design/PAYEE_VERIFICATION_PLAN.md) §10 ·
+[COORD-01 B](../agents/COORD-01.md#app-test-b-connect-prep--2026-11-12-utc). Google provider is
+enabled on staging; full Google signup receipt is still separate. Local Metro bank fallback still
+needs its private service-role template when not using hosted Edge.
 
 ### Operator preparation
 

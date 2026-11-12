@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-12 · APP-TEST **A** Google **enabled** on staging; Soft-Wall popup PASS (full signup UNRUN). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-12 · APP-TEST **B** Connect prep: staging missing SQL/Edge (owner apply). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -34,7 +34,7 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 | Lane | Ready locally | Blocked on owner / provider |
 | --- | --- | --- |
 | **A. Google account** | Staging `tucioqipfejqqqtuakdi`: Auth **`google: true`** (2026-11-12); Soft-Wall Upload → Continue with Google → `accounts.google.com` popup (no mismatch); cancel/close keeps SoftWall retry. Receipt [COORD-01](agents/COORD-01.md#app-test-a-google-enabled-smoke--2026-11-12-utc) | Owner completes one Testing-audience Google signup + return + birth confirm + resume in a real browser; native `alasports://` = DEVICE_QA |
-| **B. Stripe test bank** | Adult/guardian Connect UI + guarded Terms local; Connect SQL written | Reviewed SQL/Edge apply; service-role for local bank fallback; KYC evidence still unwired; payouts stay 503 |
+| **B. Stripe test bank** | Adult/guardian Connect UI + guarded Terms local; Connect SQL written. **2026-11-12 staging probe:** `stripe_connect_context` / `save_stripe_connect_account` / `record_stripe_kyc` **404**; Edge `create-stripe-account` **404**. Checklist: [ONBOARDING](ONBOARDING.md#development-account-to-bank-preparation--2026-10-21) | Owner applies Connect migration (+ prereqs) on staging `tucioqipfejqqqtuakdi`, sets `sk_test_` Edge secret, deploys `create-stripe-account`. Then CONNECT/QA bank walkthrough. Payouts stay 503 |
 | **C. Short Highlights** | Duration/size guards + synthetic fixtures | Hosted Storage/cleanup SQL as needed; real pick/upload/playback on web/iOS/Android |
 
 Lanes D–F (public-beta blockers, Legal-first telemetry, feel/a11y) stay sequenced after A–C. No new features ahead of this.
@@ -174,6 +174,15 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-12 — APP-TEST-B Connect prep (staging SQL/Edge missing)
+
+Probed staging `tucioqipfejqqqtuakdi` (agent `.env.local`): Connect RPCs and
+`create-stripe-account` Edge all **404**. Refreshed
+[ONBOARDING bank checklist](ONBOARDING.md#development-account-to-bank-preparation--2026-10-21)
+for staging ref + owner apply/deploy order. Wave 0: SQL apply + Edge deploy + Stripe **test**
+secret are **$0** on Free/test. No SQL applied and no Edge deploy by the agent. Bank walkthrough
+still **UNRUN**. Receipt: [COORD-01](agents/COORD-01.md#app-test-b-connect-prep--2026-11-12-utc).
 
 ### 2026-11-12 — APP-TEST-A Google enabled + Soft-Wall popup smoke
 

@@ -106,6 +106,24 @@ app evidence. Final post-append docs/links/roles/feature/whitespace checks passe
 declared scopes. Root's remaining local integration/documentation claim is released. Hosted,
 business-event and operational delivery work remains open under the owners above.
 
+## APP-TEST-B Connect prep — 2026-11-12 UTC
+
+Continued APP-TEST after Google provider-on. Scope: probe staging Connect readiness and refresh
+the owner bank checklist. **No SQL applied, no Edge deploy, no Stripe secret written** by the
+agent (owner hard stop). Wave 0 spend: **$0** (Free Supabase / Stripe test).
+
+| Probe on `tucioqipfejqqqtuakdi` | Result |
+| --- | --- |
+| `stripe_connect_context` / `save_stripe_connect_account` / `record_stripe_kyc` | REST **404** PGRST202 |
+| Edge `create-stripe-account` | **404** function not found |
+| Local source | Migration `20261021120000_connect_account_context.sql` + mobile Connect UI present |
+
+**Owner next:** apply Connect migration (+ MINOR-01 / VERIFY-02 / custodial prereqs if missing)
+on staging → Edge secret `STRIPE_SECRET_KEY=sk_test_…` →
+`supabase functions deploy create-stripe-account --project-ref tucioqipfejqqqtuakdi` → reply
+ready for CONNECT/QA walkthrough. Payouts remain **503**. Lane A full Google signup still
+owner browser UNRUN (popup smoke already PASS).
+
 ## APP-TEST-A Google prep — 2026-11-12 UTC
 
 Owner asked for help with lane **A** (Google). Scope: refresh operator guide against the
