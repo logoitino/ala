@@ -106,6 +106,26 @@ app evidence. Final post-append docs/links/roles/feature/whitespace checks passe
 declared scopes. Root's remaining local integration/documentation claim is released. Hosted,
 business-event and operational delivery work remains open under the owners above.
 
+## APP-TEST-A Google prep — 2026-11-12 UTC
+
+Owner asked for help with lane **A** (Google). Scope: refresh operator guide against the
+**actual** Cloud Agent env and re-probe Auth. No Google Cloud project, OAuth client, or
+Supabase provider toggle was performed (owner dashboard only). Wave 0 spend: **$0**.
+
+| Check | Result |
+| --- | --- |
+| `EXPO_PUBLIC_SUPABASE_URL` | `https://tucioqipfejqqqtuakdi.supabase.co` (staging / preview) |
+| `GET /auth/v1/settings` | HTTP 200; **`google: false`**, `email: true`, `disable_signup: false` |
+| `GET /auth/v1/authorize?provider=google` | HTTP 400 `Unsupported provider: provider is not enabled` |
+| Docs | ONBOARDING checklist + TESTER_SCRIPT + STATE §0/§4 + WORK_QUEUE row A updated for staging callback + `8081` returns |
+
+**Owner next (only steps that unblock A):** Google Cloud Web OAuth client → redirect
+`https://tucioqipfejqqqtuakdi.supabase.co/auth/v1/callback` → paste ID/secret into Supabase
+staging **Authentication → Google** → enable → allowlist
+`http://127.0.0.1:8081/auth/callback`, `http://localhost:8081/auth/callback`,
+`http://localhost:8086/auth/callback`, `alasports://auth/callback`. Reply when enabled; agent
+runs Soft-Wall signup/return/cancel/resume. Do **not** paste the client secret into chat.
+
 ## APP-TEST-01 execution — 2026-10-21 UTC
 
 Owner said to execute the current-app test sequence and confirmed Google OAuth setup is not

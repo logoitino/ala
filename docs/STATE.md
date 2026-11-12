@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-10 · Density EAS preview **FINISHED** ($0 Free). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-12 · APP-TEST **A** Google guide refreshed for staging env (provider still **off**). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -33,7 +33,7 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 
 | Lane | Ready locally | Blocked on owner / provider |
 | --- | --- | --- |
-| **A. Google account** | Guide in [ONBOARDING](ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21); callback repair landed | Google Cloud OAuth + enable Supabase Google on development; then AUTH/QA record signup/return/cancel/resume |
+| **A. Google account** | Guide refreshed 2026-11-12 for **staging** `tucioqipfejqqqtuakdi` (current `.env.local`) + `8081`/`8086` returns; app Soft-Wall Google path ready; Auth settings recheck: **`google: false`** | Owner: Google Cloud OAuth Web client + enable Supabase Google on that project (secret only in dashboard). Then AUTH/QA: new/returning/cancel/resume. Native return separate |
 | **B. Stripe test bank** | Adult/guardian Connect UI + guarded Terms local; Connect SQL written | Reviewed SQL/Edge apply; service-role for local bank fallback; KYC evidence still unwired; payouts stay 503 |
 | **C. Short Highlights** | Duration/size guards + synthetic fixtures | Hosted Storage/cleanup SQL as needed; real pick/upload/playback on web/iOS/Android |
 
@@ -174,6 +174,15 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-12 — APP-TEST-A Google prep (owner enable still open)
+
+Rechecked Auth on the project in `apps/mobile/.env.local` (staging `tucioqipfejqqqtuakdi`):
+`google: false`, Email on. Authorize: `provider is not enabled`. Updated
+[ONBOARDING Google checklist](ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21)
+with staging vs development callback URIs and `127.0.0.1:8081` / `localhost:8081` Redirect URLs.
+Wave 0: Google Cloud OAuth + Supabase toggle are **$0**. No credentials were created or pasted
+by the agent. Signup/cancel/resume evidence still **UNRUN** until owner enables the provider.
 
 ### 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 
