@@ -246,12 +246,12 @@ STATE/COORD-01; this procedure does not close hosted SQL, policy, provider, push
 ## Google setup acceptance — browser first, then native
 
 **Prepared 2026-10-21; successful Google signup/sign-in and native return UNRUN.**
-**Rechecked 2026-11-12:** agent `.env.local` uses staging `tucioqipfejqqqtuakdi`; Auth settings
-HTTP 200 with **`google: false`**, Email on; authorize returns `provider is not enabled`. Owner
-has not supplied Google OAuth credentials. Follow
+**2026-11-12 staging enable:** Auth settings **`google: true`** on `tucioqipfejqqqtuakdi`;
+authorize **302** to Google; Soft-Wall **Continue with Google** opens Google Accounts popup;
+cancel/close leaves SoftWall retry (**PASS** for provider + popup). Full new/returning Google
+account + birth confirm + resume and native return remain **UNRUN**. Follow
 [Google operator setup](../ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21)
-(use the **staging** callback URI when testing this env). Preparing this script changed no hosted
-settings.
+and [COORD-01 receipt](../agents/COORD-01.md#app-test-a-google-enabled-smoke--2026-11-12-utc).
 
 1. After operator setup, verify Auth settings on the **same** project as `EXPO_PUBLIC_SUPABASE_URL`
    report Google enabled. Staging Web-client redirect:

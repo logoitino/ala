@@ -110,21 +110,33 @@ business-event and operational delivery work remains open under the owners above
 
 Owner asked for help with lane **A** (Google). Scope: refresh operator guide against the
 **actual** Cloud Agent env and re-probe Auth. No Google Cloud project, OAuth client, or
-Supabase provider toggle was performed (owner dashboard only). Wave 0 spend: **$0**.
+Supabase provider toggle was performed by the agent (owner dashboard only). Wave 0 spend: **$0**.
 
-| Check | Result |
+| Check (pre-enable) | Result |
 | --- | --- |
 | `EXPO_PUBLIC_SUPABASE_URL` | `https://tucioqipfejqqqtuakdi.supabase.co` (staging / preview) |
 | `GET /auth/v1/settings` | HTTP 200; **`google: false`**, `email: true`, `disable_signup: false` |
 | `GET /auth/v1/authorize?provider=google` | HTTP 400 `Unsupported provider: provider is not enabled` |
 | Docs | ONBOARDING checklist + TESTER_SCRIPT + STATE §0/§4 + WORK_QUEUE row A updated for staging callback + `8081` returns |
 
-**Owner next (only steps that unblock A):** Google Cloud Web OAuth client → redirect
-`https://tucioqipfejqqqtuakdi.supabase.co/auth/v1/callback` → paste ID/secret into Supabase
-staging **Authentication → Google** → enable → allowlist
-`http://127.0.0.1:8081/auth/callback`, `http://localhost:8081/auth/callback`,
-`http://localhost:8086/auth/callback`, `alasports://auth/callback`. Reply when enabled; agent
-runs Soft-Wall signup/return/cancel/resume. Do **not** paste the client secret into chat.
+## APP-TEST-A Google enabled smoke — 2026-11-12 UTC
+
+Owner enabled Google on staging and confirmed. Agent re-probed and ran Soft-Wall popup smoke on
+Expo web `http://127.0.0.1:8081` (tip base `fac733e` + this docs branch). Wave 0: **$0**.
+No client secret was shared with the agent.
+
+| Check | Result |
+| --- | --- |
+| `GET /auth/v1/settings` | **`google: true`**, `email: true` |
+| `GET /auth/v1/authorize?provider=google&redirect_to=http://127.0.0.1:8081/auth/callback` | **302** → `accounts.google.com` (client id redacted in evidence) |
+| Guest Soft-Wall (Upload) | Sheet shows **Continue with Google**; bank-free copy present |
+| Google popup | Opens `accounts.google.com`, title “Sign in - Google Accounts”; no `redirect_uri_mismatch` |
+| Cancel / close popup | SoftWall remains; **Continue with Google** still tappable |
+| New Google signup + birth confirm + resume | **UNRUN** (needs owner Testing-audience account in a real browser) |
+| Returning Google + native `alasports://` | **UNRUN** |
+
+Screenshots: `/opt/cursor/artifacts/app-test-a-google-softwall.png` (and oauth popup capture when taken).
+Claims released for provider-on + Soft-Wall popup/cancel only — not full account acceptance.
 
 ## APP-TEST-01 execution — 2026-10-21 UTC
 

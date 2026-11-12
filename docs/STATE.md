@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-12 · APP-TEST **A** Google guide refreshed for staging env (provider still **off**). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-12 · APP-TEST **A** Google **enabled** on staging; Soft-Wall popup PASS (full signup UNRUN). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -33,7 +33,7 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 
 | Lane | Ready locally | Blocked on owner / provider |
 | --- | --- | --- |
-| **A. Google account** | Guide refreshed 2026-11-12 for **staging** `tucioqipfejqqqtuakdi` (current `.env.local`) + `8081`/`8086` returns; app Soft-Wall Google path ready; Auth settings recheck: **`google: false`** | Owner: Google Cloud OAuth Web client + enable Supabase Google on that project (secret only in dashboard). Then AUTH/QA: new/returning/cancel/resume. Native return separate |
+| **A. Google account** | Staging `tucioqipfejqqqtuakdi`: Auth **`google: true`** (2026-11-12); Soft-Wall Upload → Continue with Google → `accounts.google.com` popup (no mismatch); cancel/close keeps SoftWall retry. Receipt [COORD-01](agents/COORD-01.md#app-test-a-google-enabled-smoke--2026-11-12-utc) | Owner completes one Testing-audience Google signup + return + birth confirm + resume in a real browser; native `alasports://` = DEVICE_QA |
 | **B. Stripe test bank** | Adult/guardian Connect UI + guarded Terms local; Connect SQL written | Reviewed SQL/Edge apply; service-role for local bank fallback; KYC evidence still unwired; payouts stay 503 |
 | **C. Short Highlights** | Duration/size guards + synthetic fixtures | Hosted Storage/cleanup SQL as needed; real pick/upload/playback on web/iOS/Android |
 
@@ -175,14 +175,20 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
-### 2026-11-12 — APP-TEST-A Google prep (owner enable still open)
+### 2026-11-12 — APP-TEST-A Google enabled + Soft-Wall popup smoke
 
-Rechecked Auth on the project in `apps/mobile/.env.local` (staging `tucioqipfejqqqtuakdi`):
-`google: false`, Email on. Authorize: `provider is not enabled`. Updated
-[ONBOARDING Google checklist](ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21)
-with staging vs development callback URIs and `127.0.0.1:8081` / `localhost:8081` Redirect URLs.
-Wave 0: Google Cloud OAuth + Supabase toggle are **$0**. No credentials were created or pasted
-by the agent. Signup/cancel/resume evidence still **UNRUN** until owner enables the provider.
+Owner enabled Google on staging `tucioqipfejqqqtuakdi` (Wave 0 **$0**). Recheck:
+`/auth/v1/settings` → **`google: true`**; authorize → **302** to `accounts.google.com`.
+Expo web Soft-Wall (Upload as guest): **Continue with Google** opens Google sign-in popup
+(title “Sign in - Google Accounts”); no `redirect_uri_mismatch`; closing popup leaves SoftWall
+retry. Full new/returning Google account + birth confirm + action resume still **UNRUN**
+(needs owner Testing-audience login). Screenshots:
+`/opt/cursor/artifacts/app-test-a-google-softwall.png`. Receipt:
+[COORD-01](agents/COORD-01.md#app-test-a-google-enabled-smoke--2026-11-12-utc).
+
+### 2026-11-12 — APP-TEST-A Google prep (pre-enable)
+
+Guide refreshed for staging callbacks + `8081` returns before owner enabled the provider.
 
 ### 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 
