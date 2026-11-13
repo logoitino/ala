@@ -183,6 +183,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
   via Feedback, then signs out. Honest copy: staff finishes wipe; gift/books rows may be kept (P1-01
   auto-erasure still open). Lovable MCP needs Desktop auth; density from LOVABLE_UI_UX_PLAN ($0).
 - `ProfileMenuSheet` / `PrivacySettingsSheet`: tighter row/type density; touch targets stay ≥44.
+- CI typecheck fix: `StyleSheet.absoluteFill` (RN 0.88) + typed Feedback mock on the delete-account test.
 
 ### 2026-11-12 — Claim-school scroll, vibrant Local polls, quiz demo path
 

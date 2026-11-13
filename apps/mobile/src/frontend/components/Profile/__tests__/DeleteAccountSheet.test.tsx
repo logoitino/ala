@@ -4,7 +4,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 const mockSignOut = jest.fn(async () => undefined);
-const mockSubmitAppFeedback = jest.fn(async () => undefined);
+const mockSubmitAppFeedback = jest.fn<Promise<void>, [string, string?, string?]>(async () => undefined);
 
 jest.mock('@/context/AuthContext', () => ({
   useAuth: () => ({
@@ -15,7 +15,7 @@ jest.mock('@/context/AuthContext', () => ({
 }));
 
 jest.mock('@/lib/feedback', () => ({
-  submitAppFeedback: (...args: unknown[]) => mockSubmitAppFeedback(...args),
+  submitAppFeedback: (body: string, kind?: string, surface?: string) => mockSubmitAppFeedback(body, kind, surface),
 }));
 
 jest.mock('@/hooks/useSheetFrame', () => ({
@@ -43,9 +43,10 @@ describe('DeleteAccountSheet', () => {
     fireEvent.press(screen.getByLabelText('Request account deletion and sign out'));
 
     await waitFor(() => expect(mockSubmitAppFeedback).toHaveBeenCalled());
-    expect(String(mockSubmitAppFeedback.mock.calls[0]?.[0])).toContain('[account-deletion-request]');
-    expect(mockSubmitAppFeedback.mock.calls[0]?.[1]).toBe('other');
-    expect(mockSubmitAppFeedback.mock.calls[0]?.[2]).toBe('profile');
+    const [body, kind, surface] = mockSubmitAppFeedback.mock.calls[0] ?? [];
+    expect(String(body)).toContain('[account-deletion-request]');
+    expect(kind).toBe('other');
+    expect(surface).toBe('profile');
     await waitFor(() => expect(mockSignOut).toHaveBeenCalled());
     expect(onClose).toHaveBeenCalled();
   });

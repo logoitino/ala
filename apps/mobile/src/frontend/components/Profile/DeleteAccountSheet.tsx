@@ -146,7 +146,7 @@ export function DeleteAccountSheet({ visible, onClose }: { visible: boolean; onC
 
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFillObject },
+  backdrop: { ...StyleSheet.absoluteFill },
   sheet: {
     backgroundColor: colors.surface,
     gap: 10,
