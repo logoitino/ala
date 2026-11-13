@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `dd8f47417558` → `dd8f47417558` · announced by cursor/popup-polls-quiz-9a86 ip packet
+
+App at announcement: commit `b8c85acde89c2fc2e906d53abad7dfd42a83c6f6`, source `dd8f47417558a580ac48136350a696c5044e186c8e56c7ce397496f0cd450f7e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- Baseline created; no prior plan to compare.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `448d531f9bc8` → `dd8f47417558` · announced by cursor/popup-polls-quiz-9a86 delete-account sheet
 
 App at announcement: commit `11ddf02598816eb724debce736898d04ca246a33`, source `dd8f47417558a580ac48136350a696c5044e186c8e56c7ce397496f0cd450f7e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
