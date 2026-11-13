@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `448d531f9bc8` → `dd8f47417558` · announced by cursor/popup-polls-quiz-9a86 delete-account sheet
+
+App at announcement: commit `11ddf02598816eb724debce736898d04ca246a33`, source `dd8f47417558a580ac48136350a696c5044e186c8e56c7ce397496f0cd450f7e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx c39a47ccef9cb5d730c6fb047219dcabc1b2ec4edded18fadba0a2cf1d794667`, `apps/mobile/src/frontend/components/Profile/DeleteAccountSheet.tsx 3ad0ff1399f29c350cc759599106f227fbba0aa5c71286257ca837696424a924`, `apps/mobile/src/frontend/components/Profile/__tests__/DeleteAccountSheet.test.tsx eb1e0752f26167a11adccf4c201d7c1dbd1a596c74f684579100e92611db43d2`, `apps/mobile/src/frontend/components/Profile/__tests__/PrivacyScreens.test.tsx d0e70f2c15c0e0dbd4200cd52b1ecd979aecdc3b505fb0aab7906f1399b8a822`; removed `apps/mobile/src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx eae1a77dfe512ffb8545922035e076695b1919301680a6d75d4bb52f1f304e10`, `apps/mobile/src/frontend/components/Profile/DeleteAccountSheet.tsx af7216f1c8b55401d55bf96514817f6bcfa5cef2c5019a2782ea6a3853cc3746`, `apps/mobile/src/frontend/components/Profile/__tests__/DeleteAccountSheet.test.tsx 6eb651f8efd1bb9904c165040fabd39d44ab974d82a3b428f8a7fd8b840c2bd3`, `apps/mobile/src/frontend/components/Profile/__tests__/PrivacyScreens.test.tsx 4eb1a7da65fa6be2b6955e19aaff09cf78e9fff4b8e286c1f8d56c96fca484ed`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `170a7881b747` → `448d531f9bc8` · announced by cursor/popup-polls-quiz-9a86 account UX
 
 App at announcement: commit `e3342c5e95cc4796d70fd91585cc28e71e7cb74d` + 7 uncommitted file(s), source `448d531f9bc8e25140b8b6e50bda1ca28ba7e1d3e0f1904d8743c10f605e28ab`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

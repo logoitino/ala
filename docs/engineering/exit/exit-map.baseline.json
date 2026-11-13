@@ -1,5 +1,5 @@
 {
- "planVersion": "448d531f9bc8",
+ "planVersion": "dd8f47417558",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1850,7 +1850,7 @@
    "apps/mobile/src/frontend/components/Auth/BirthMonthField.tsx ecd546567b7c363854fb4715eb269ecd1f046c6cf7cc8be0686b38d4762d2983",
    "apps/mobile/src/frontend/components/Auth/SoftWallModal.tsx abdb4bd9bc4d76556c7dff333182b7b702af4012c63520008512554e8e001116",
    "apps/mobile/src/frontend/components/Auth/__tests__/BirthMonthField.test.tsx 391985431cc50b28503b7c296b43c2fca7242b53c5580f81ef54e5ad80282a51",
-   "apps/mobile/src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx eae1a77dfe512ffb8545922035e076695b1919301680a6d75d4bb52f1f304e10",
+   "apps/mobile/src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx c39a47ccef9cb5d730c6fb047219dcabc1b2ec4edded18fadba0a2cf1d794667",
    "apps/mobile/src/frontend/components/BackedCelebration.tsx 845d7632d9255aa570877f019d001435317ca5fb36e05a272885b18e88b74af1",
    "apps/mobile/src/frontend/components/BeyondGame/BeyondGameComposer.tsx 96ceb135f697975d98c9ab7827a5e58b64b4dd4753e00a792fa6844e90fded55",
    "apps/mobile/src/frontend/components/BeyondGame/BeyondGameMedia.tsx 239858c2d462d881f53cb18c4370b6ff86bca562a1eb33f82bb68216c23cfb9a",
@@ -1949,7 +1949,7 @@
    "apps/mobile/src/frontend/components/Profile/AthleteStatsTab.tsx 167f0cab1cf9d0d919ab5f901e1d75298f665f43779ca7f266009a1032989a4f",
    "apps/mobile/src/frontend/components/Profile/AuraCardFlipModal.tsx f54910eca738e0a00d02351cd86a7c5d16945075fed83d2ef06c4f8ebe04122f",
    "apps/mobile/src/frontend/components/Profile/AuraTradingCard.tsx 718d3989574044e46649b5704601d6ad20253b721cf966299de826009bdb23ce",
-   "apps/mobile/src/frontend/components/Profile/DeleteAccountSheet.tsx af7216f1c8b55401d55bf96514817f6bcfa5cef2c5019a2782ea6a3853cc3746",
+   "apps/mobile/src/frontend/components/Profile/DeleteAccountSheet.tsx 3ad0ff1399f29c350cc759599106f227fbba0aa5c71286257ca837696424a924",
    "apps/mobile/src/frontend/components/Profile/EditProfileModal.tsx 2c433d317d0d1829675bc4f2551263a2d4024bab8db8601476407812db7e045a",
    "apps/mobile/src/frontend/components/Profile/ExclusivePaywall.tsx 7009b9824d5753ce7acd0a51ce5d1ee808b6c98385691efb358943dd3751604c",
    "apps/mobile/src/frontend/components/Profile/FanBackerBadge.tsx bb512487a76d67f96e54153b123e60eb5533c563fe5c144f96a95f4e06e61e55",
@@ -1985,13 +1985,13 @@
    "apps/mobile/src/frontend/components/Profile/__tests__/AthleteReelManager.test.tsx eac8862ba6bad954bf3422164335d9e019b87961be49d29d1fe951816a2802f1",
    "apps/mobile/src/frontend/components/Profile/__tests__/AthleteStatsTab.test.tsx 8ae85bbae0764d25e259d8204c49e60702710726e55918742aedc4ec63c3b0da",
    "apps/mobile/src/frontend/components/Profile/__tests__/AuraTradingCard.test.tsx 2ff57f5d3162ddfd306516528c63afc9d3567658821d564c82ed4b7be4a8e458",
-   "apps/mobile/src/frontend/components/Profile/__tests__/DeleteAccountSheet.test.tsx 6eb651f8efd1bb9904c165040fabd39d44ab974d82a3b428f8a7fd8b840c2bd3",
+   "apps/mobile/src/frontend/components/Profile/__tests__/DeleteAccountSheet.test.tsx eb1e0752f26167a11adccf4c201d7c1dbd1a596c74f684579100e92611db43d2",
    "apps/mobile/src/frontend/components/Profile/__tests__/FunFactShare.test.tsx dac1ccd1a2a67a77b72310d34896be7cb4654ddfc33fd29471aa03401460629a",
    "apps/mobile/src/frontend/components/Profile/__tests__/MySportsModal.test.tsx 75161e57862e83224047cce1cb34deb7f652f7f95c2d9f7324975c90f6399658",
    "apps/mobile/src/frontend/components/Profile/__tests__/NotificationSettingsSheet.test.tsx 1aeffc37af488fc4067baccb38de940047e78905cdd86a78b9cab0502f20d70f",
    "apps/mobile/src/frontend/components/Profile/__tests__/PayoutSetupCard.test.tsx a706910f3bc70d06b392efdd2e5683b075bc7cba490547ce601c67689bee0890",
    "apps/mobile/src/frontend/components/Profile/__tests__/PrivacyFunFacts.test.tsx 522501cece71739b98a91d81b1e4794b55fb42943c529ed92bc12ff966b11826",
-   "apps/mobile/src/frontend/components/Profile/__tests__/PrivacyScreens.test.tsx 4eb1a7da65fa6be2b6955e19aaff09cf78e9fff4b8e286c1f8d56c96fca484ed",
+   "apps/mobile/src/frontend/components/Profile/__tests__/PrivacyScreens.test.tsx d0e70f2c15c0e0dbd4200cd52b1ecd979aecdc3b505fb0aab7906f1399b8a822",
    "apps/mobile/src/frontend/components/Profile/__tests__/ProfileHeroAvatar.test.tsx 27f7e214218bdf0efc88e8accebc2fad17372434702999cd5f5e4803c6405da3",
    "apps/mobile/src/frontend/components/Profile/__tests__/ProfileStatRow.test.tsx 881e77aed8db2d6916122fcc6a88125ae4b7ddfa5370cab4ad2123a67ad70aa2",
    "apps/mobile/src/frontend/components/Profile/__tests__/ReceivedMaloPanel.test.tsx e07c493b1dde5b99cb40c8aa32f4fe81f0bcb28718499f84f7e0658dc89a8ae3",
