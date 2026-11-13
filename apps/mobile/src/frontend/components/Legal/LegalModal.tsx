@@ -3,20 +3,21 @@ import { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Checkbox } from 'expo-checkbox';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
+import { useFanSheetMotion } from '@/hooks/useFanSheetMotion';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { LEGAL_ACK_LABEL, LEGAL_MENU_LABEL, LEGAL_SECTIONS, LEGAL_TERMS_VERSION } from '@/data/legal';
 import { useLegalAck } from '@/hooks/useLegalAck';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_SHEET } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 
-const SHEET_TRAVEL = 460;
+const LEGAL_TRAVEL = 460;
 
 type LegalModalProps = {
   visible: boolean;
@@ -81,31 +82,24 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
   const { accepted, accept } = useLegalAck();
   const [open, setOpen] = useState(false);
   const [checked, setChecked] = useState(false);
-  const translateY = useSharedValue(SHEET_TRAVEL);
-  const backdropOpacity = useSharedValue(0);
+  const { sheetStyle, backdropStyle, playOpen, playClose } = useFanSheetMotion(LEGAL_TRAVEL);
 
   useEffect(() => {
     if (visible) {
       setOpen(true);
       setChecked(accepted);
       telemetry.trackFeature('legal_terms', 'profile');
-      translateY.value = withSpring(0, SPRING_SHEET);
-      backdropOpacity.value = withTiming(1, { duration: 200 });
+      playOpen();
     }
-  }, [accepted, backdropOpacity, translateY, visible]);
-
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
+  }, [accepted, playOpen, visible]);
 
   if (!open && !visible) return null;
 
   const dismiss = () => {
-    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
-    backdropOpacity.value = withTiming(0, { duration: 160 });
-    setTimeout(() => {
+    playClose(() => {
       setOpen(false);
       onClose();
-    }, 180);
+    });
   };
 
   const onConfirm = async () => {

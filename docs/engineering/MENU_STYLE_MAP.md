@@ -41,12 +41,12 @@ wash are rendered by its child `UploadVideoComposer`; donation steps live in chi
 | Component under `components/` | Source coverage | Notes |
 | --- | --- | --- |
 | `Auth/AgeConfirmModal.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
-| `Auth/SoftWallModal.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
+| `Auth/SoftWallModal.tsx` | `useFanSheetMotion` + shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
 | `BackedCelebration.tsx` | shared 440px sheet frame | Existing donation celebration chrome remains; shared frame geometry. |
 | `Drip/ProductSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Feedback/SuggestionSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Filmers/FilmerSheet.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
-| `Legal/LegalModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
+| `Legal/LegalModal.tsx` | `useFanSheetMotion` + shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Local/SponsorshipModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Local/TopAuraBoosters.tsx` | shared 440px sheet frame | Tier-based booster colors remain; shared frame geometry. |
 | `Onboarding/WelcomeOverlay.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |

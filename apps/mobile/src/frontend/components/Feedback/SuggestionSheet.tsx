@@ -4,11 +4,12 @@ import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useState } from 'react';
 import { Alert, Modal,  StyleSheet, Text, TextInput, View } from 'react-native';
 import { BlurView } from 'expo-blur';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
+import { useFanSheetMotion } from '@/hooks/useFanSheetMotion';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import {
   FEEDBACK_KINDS,
@@ -20,9 +21,7 @@ import {
 import { supportSignals } from '@/services/SupportSignalManager';
 import { supportFeatureForPath } from '@/services/supportRuntime';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_SHEET } from '@/theme/motion';
-
-const SHEET_TRAVEL = 420;
+import { FOCAL } from '@/theme/motion';
 
 type SuggestionSheetProps = {
   visible: boolean;
@@ -41,29 +40,22 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
   const [place, setPlace] = useState<AppFeedbackSurface>(surface);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
-  const translateY = useSharedValue(SHEET_TRAVEL);
-  const backdropOpacity = useSharedValue(0);
+  const { sheetStyle, backdropStyle, playOpen, playClose } = useFanSheetMotion();
 
   const canSend = body.trim().length >= 8 && !busy;
 
   useEffect(() => {
     if (visible) {
       setOpen(true);
-      translateY.value = withSpring(0, SPRING_SHEET);
-      backdropOpacity.value = withTiming(1, { duration: 200 });
+      playOpen();
     }
-  }, [backdropOpacity, translateY, visible]);
-
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
+  }, [playOpen, visible]);
 
   const dismiss = () => {
-    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
-    backdropOpacity.value = withTiming(0, { duration: 160 });
-    setTimeout(() => {
+    playClose(() => {
       setOpen(false);
       onClose();
-    }, 180);
+    });
   };
 
   const send = async () => {

@@ -11,7 +11,6 @@ import Reanimated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -26,6 +25,7 @@ import {
   SHARE_SAVE_LABEL,
   shareQrSubtitle,
 } from '@/data/share';
+import { useFanSheetMotion } from '@/hooks/useFanSheetMotion';
 import {
   copyGiftLink,
   giftQrTarget,
@@ -33,9 +33,7 @@ import {
   shareGiftLink,
 } from '@/lib/share';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_SHEET } from '@/theme/motion';
-
-const SHEET_TRAVEL = 420;
+import { FOCAL } from '@/theme/motion';
 
 type ShareQrModalProps = {
   visible: boolean;
@@ -66,8 +64,7 @@ export function ShareQrModal({ visible, onClose, athleteName, username, playerId
   const [busy, setBusy] = useState<'save' | 'copy' | 'share' | null>(null);
   const svgRef = useRef<QrSvgRef | null>(null);
   const pulse = useSharedValue(0.45);
-  const translateY = useSharedValue(SHEET_TRAVEL);
-  const backdropOpacity = useSharedValue(0);
+  const { sheetStyle, backdropStyle, playOpen, playClose } = useFanSheetMotion();
   const target = giftQrTarget(athleteName, username, playerId);
 
   useEffect(() => {
@@ -75,10 +72,9 @@ export function ShareQrModal({ visible, onClose, athleteName, username, playerId
       setOpen(true);
       setBusy(null);
       telemetry.trackFeature('share_qr', 'profile');
-      translateY.value = withSpring(0, SPRING_SHEET);
-      backdropOpacity.value = withTiming(1, { duration: 200 });
+      playOpen();
     }
-  }, [backdropOpacity, translateY, visible]);
+  }, [playOpen, visible]);
 
   useEffect(() => {
     if (!visible) {
@@ -97,19 +93,15 @@ export function ShareQrModal({ visible, onClose, athleteName, username, playerId
   const glowStyle = useAnimatedStyle(() => ({
     opacity: 0.28 + pulse.value * 0.45,
   }));
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
 
   if (!open && !visible) return null;
 
   const dismiss = () => {
-    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
-    backdropOpacity.value = withTiming(0, { duration: 160 });
     setBusy(null);
-    setTimeout(() => {
+    playClose(() => {
       setOpen(false);
       onClose();
-    }, 180);
+    });
   };
 
   const run = async (kind: 'save' | 'copy' | 'share', work: () => Promise<void>, ok: string) => {

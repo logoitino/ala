@@ -17,16 +17,17 @@ import {
   View,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
+import { useFanSheetMotion } from '@/hooks/useFanSheetMotion';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { useCelebration } from '@/context/CelebrationContext';
 import { RESERVED_BADGE_MARKS, RESERVED_BADGE_MARKS_ERROR } from '@/data/verification';
-import { FOCAL, SPRING_SHEET } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 import type { ProfileVisibility } from '@/types/database';
 import { fetchMyPrivacy } from '@/lib/privacy';
 import { FunFactShare } from '@/components/Profile/FunFactShare';
@@ -34,7 +35,7 @@ import { MySportsModal } from '@/components/Profile/MySportsModal';
 import { useAthleteSports } from '@/hooks/useAthleteSports';
 import type { AthleteSportsSnapshot } from '@/lib/athleteSports';
 
-const SHEET_TRAVEL = 520;
+const EDIT_PROFILE_TRAVEL = 520;
 const BIO_MAX = 500;
 
 const DEFAULT_VISIBILITY: Required<ProfileVisibility> = {
@@ -88,12 +89,12 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSave
   const [visibility, setVisibility] = useState<Required<ProfileVisibility>>(DEFAULT_VISIBILITY);
   // True once Profile → Privacy is available (PRIV-01 applied); the legacy switches then stay hidden and unsent.
   const [privacyReady, setPrivacyReady] = useState(false);
-  const translateY = useSharedValue(SHEET_TRAVEL);
-  const backdropOpacity = useSharedValue(0);
+  const { sheetStyle, backdropStyle, playOpen, playClose } = useFanSheetMotion(EDIT_PROFILE_TRAVEL);
 
   useEffect(() => {
     if (!visible) return;
     setOpen(true);
+    playOpen();
     if (initialized.current === profile?.id) return;
     initialized.current = profile?.id ?? null;
     setFullName(profile?.full_name ?? '');
@@ -102,24 +103,17 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSave
     setSocial({ ...(profile?.social_links ?? {}) });
     setVisibility({ ...DEFAULT_VISIBILITY, ...(profile?.profile_visibility ?? {}) });
     void fetchMyPrivacy().then(() => setPrivacyReady(true), () => setPrivacyReady(false));
-    translateY.value = withSpring(0, SPRING_SHEET);
-    backdropOpacity.value = withTiming(1, { duration: 200 });
-  }, [backdropOpacity, profile, translateY, visible]);
+  }, [playOpen, profile, visible]);
   useEffect(() => { if (!visible) { initialized.current = null; setSportsOpen(false); } }, [visible]);
-
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
 
   if (!open && !visible) return null;
 
   const dismiss = () => {
     if (saving) return;
-    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
-    backdropOpacity.value = withTiming(0, { duration: 160 });
-    setTimeout(() => {
+    playClose(() => {
       setOpen(false);
       onClose();
-    }, 180);
+    });
   };
 
   const onSave = async () => {

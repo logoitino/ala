@@ -2,16 +2,15 @@
 import { BlurView } from 'expo-blur';
 import { useEffect, useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
+import { SheetRise } from '@/components/UI/SheetRise';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { REPORT_REASONS, type ReportReasonId } from '@/data/contentRights';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
-import { SPRING_SHEET } from '@/theme/motion';
 
 type ReportContentModalProps = {
   visible: boolean;
@@ -46,27 +45,9 @@ export function ReportContentModal({
     if (!visible) setReason(null);
   }, [visible]);
 
-  const translateY = useSharedValue(24);
-  const sheetOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    if (visible) {
-      translateY.value = withSpring(0, SPRING_SHEET);
-      sheetOpacity.value = withTiming(1, { duration: 180 });
-      return;
-    }
-    translateY.value = withTiming(24, { duration: 140 });
-    sheetOpacity.value = withTiming(0, { duration: 120 });
-  }, [sheetOpacity, translateY, visible]);
-
-  const sheetStyle = useAnimatedStyle(() => ({
-    opacity: sheetOpacity.value,
-    transform: [{ translateY: translateY.value }],
-  }));
-
   return (
     <Modal
-      animationType="fade"
+      animationType="none"
       presentationStyle="overFullScreen"
       statusBarTranslucent
       transparent
@@ -79,7 +60,7 @@ export function ReportContentModal({
           <View style={styles.dim} />
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-        <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+        <SheetRise active={visible} style={[styles.sheet, frame.card]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={submitting ? undefined : onClose} />
           <Text style={styles.kicker}>Safety</Text>
@@ -126,7 +107,7 @@ export function ReportContentModal({
               <Text style={styles.cancelLabel}>Cancel</Text>
             </AnimatedButton>
           </View>
-        </Animated.View>
+        </SheetRise>
         </View>
       </View>
     </Modal>

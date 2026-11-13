@@ -14,13 +14,14 @@ import {
   View,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { LegalAckToggle, LegalModal } from '@/components/Legal/LegalModal';
 import { VarsityBadge } from '@/components/Profile/VarsityBadge';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
+import { useFanSheetMotion } from '@/hooks/useFanSheetMotion';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { useCelebration } from '@/context/CelebrationContext';
@@ -40,9 +41,9 @@ import {
 } from '@/data/verification';
 import { redeemTeamCode, requestAthleteVerification } from '@/lib/verification';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_SHEET } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 
-const SHEET_TRAVEL = 460;
+const VERIFY_TRAVEL = 460;
 
 type VerifyAthleteModalProps = {
   visible: boolean;
@@ -66,8 +67,7 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'redeem' | 'request' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const translateY = useSharedValue(SHEET_TRAVEL);
-  const backdropOpacity = useSharedValue(0);
+  const { sheetStyle, backdropStyle, playOpen, playClose } = useFanSheetMotion(VERIFY_TRAVEL);
 
   const status = resolveVerificationStatus(profile);
   const schoolClaimed = Boolean(profile?.school_id || profile?.team);
@@ -77,24 +77,18 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
       setOpen(true);
       setError(null);
       telemetry.trackFeature('athlete_verify', 'profile');
-      translateY.value = withSpring(0, SPRING_SHEET);
-      backdropOpacity.value = withTiming(1, { duration: 200 });
+      playOpen();
     }
-  }, [backdropOpacity, translateY, visible]);
-
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
+  }, [playOpen, visible]);
 
   if (!open && !visible) return null;
 
   const dismiss = () => {
-    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
-    backdropOpacity.value = withTiming(0, { duration: 160 });
     setBusy(null);
-    setTimeout(() => {
+    playClose(() => {
       setOpen(false);
       onClose();
-    }, 180);
+    });
   };
 
   const run = async (kind: 'redeem' | 'request', work: () => Promise<void>) => {

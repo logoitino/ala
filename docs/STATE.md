@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · Fluidity: keep Easing out of motion.ts module init for Jest. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Fluidity pass 2: Soft-Wall / Legal / Profile sheets on `useFanSheetMotion`; leftover slide menus → fade/`SheetRise`. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -177,12 +177,13 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ### 2026-11-13 — App fluidity (menus, sheets, tabs, scroll)
 
-- Shared `useFanSheetMotion` + sheet timing tokens (`SHEET_CLOSE_TIMING`, `SPRING_SHEET` travel).
+- Shared `useFanSheetMotion` + sheet timing tokens (`SHEET_DISMISS_MS` / `SPRING_SHEET`; Easing stays in hooks for Jest).
 - **Profile menu** slides away, then hides the native Modal; nested Soft-Wall / Legal wait for `onDismiss` (Android fallback timer).
-- Upload / Reel more: `animationType="none"` + `SheetRise active={visible}` (re-open rise).
-- Soft-Wall, Legal, Suggestion, Verify, Edit profile, Share QR, Role switcher, Drip Product:
-  vertical travel uses `SPRING_SHEET` (not bouncy `SPRING_CARD`).
-- Fan tabs: navigator fade removed; `TabScreen` enter 160ms (was 240) so switches do not double-flash.
+- Soft-Wall, Legal, Suggestion, Share QR, Verify, Edit profile: same `useFanSheetMotion` open/close (Reduce Motion branch).
+- Upload / Reel more / Filmer / Report / My sports: `animationType="none"` + `SheetRise active={visible}`.
+- Highlight picker / Operator roster: fade page sheets (no double OS slide). Local search overlay: `SPRING_SHEET` + Reduce Motion.
+- Role switcher, Drip Product, Tip sheet: vertical travel already `SPRING_SHEET`.
+- Fan tabs: navigator fade removed; `TabScreen` enter 160ms so switches do not double-flash.
 - Privacy / Notifications / Delete account / Rally / Challenge sheets: fade instead of slide.
 - `ScrollFxItem` skips mount spring when Reduce Motion is on.
 - **About to spend:** $0 (Wave 0 presentation). Device feel still needs APP-TEST / DEVICE_QA.
