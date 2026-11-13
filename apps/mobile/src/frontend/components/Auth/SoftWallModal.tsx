@@ -168,7 +168,16 @@ export function SoftWallModal() {
         setMessage('Check your email for the magic link. Keep this open, or unlock again after you sign in.');
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not sign in.');
+      const message = caught instanceof Error ? caught.message : 'Could not sign in.';
+      setError(message);
+      // Lane A while Google is still off on the project: open Create so email + birth month are one scroll away.
+      if (kind === 'google' && /Google sign-in is turned off/i.test(message) && mode !== 'create') {
+        setMode('create');
+        void isAgeGatePaused().then((paused) => {
+          setAgePaused(paused);
+          if (paused) setError(AGE_GATE_REFUSAL);
+        });
+      }
     } finally {
       running.current = false;
       setBusy(null);
@@ -200,7 +209,8 @@ export function SoftWallModal() {
           <SheetHandle onDismiss={busy ? undefined : dismiss} />
             <ScrollView
               keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
               contentContainerStyle={styles.sheetInner}
             >
               <BrandMark size={28} />
@@ -236,7 +246,9 @@ export function SoftWallModal() {
                     <Text style={styles.googleLabel}>Continue with Google</Text>
                   )}
                 </AnimatedButton>
-                <Text style={styles.demoHint}>Google works for new and existing accounts.</Text>
+                <Text style={styles.demoHint}>
+                  Google works for new and existing accounts when the project has it on. If it is off, use email below.
+                </Text>
                 <View style={styles.reassure}>
                   <Ionicons name="lock-closed-outline" size={16} color={colors.primary} />
                   <Text style={styles.reassureLabel}>No bank details are needed to create your profile.</Text>

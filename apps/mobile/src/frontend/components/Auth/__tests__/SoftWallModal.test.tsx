@@ -90,13 +90,25 @@ describe('SoftWallModal email form', () => {
     expect(mockSignUpWithEmailPassword).not.toHaveBeenCalled();
   });
 
+  it('opens Create account when Google is turned off on the project', async () => {
+    mockSignInWithGoogle.mockRejectedValueOnce(
+      new Error('Google sign-in is turned off on the server. Create an account with email.'),
+    );
+    await openSheet();
+    expect(screen.queryByLabelText('Choose birth month')).toBeNull();
+    await fireEvent.press(screen.getByLabelText('Continue with Google'));
+    expect(await screen.findByText(/Google sign-in is turned off on the server/)).toBeTruthy();
+    expect(await screen.findByLabelText('Choose birth month')).toBeTruthy();
+    expect(screen.getByLabelText('Create an account with email and password')).toBeTruthy();
+  });
+
   it('offers Google on web without an unsupported Apple button or requiring email fields', async () => {
     const originalOS = Platform.OS;
     try {
       Object.defineProperty(Platform, 'OS', { configurable: true, value: 'web' });
       await openSheet();
       expect(screen.queryByLabelText('Continue with Apple')).toBeNull();
-      expect(screen.getByText('Google works for new and existing accounts.')).toBeTruthy();
+      expect(screen.getByText(/Google works for new and existing accounts when the project has it on/)).toBeTruthy();
       expect(screen.getByText('No bank details are needed to create your profile.')).toBeTruthy();
       await fireEvent.press(screen.getByLabelText('Continue with Google'));
       expect(mockSignInWithGoogle).toHaveBeenCalledTimes(1);

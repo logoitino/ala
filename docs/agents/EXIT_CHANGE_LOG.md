@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `dd8f47417558` → `bd927957c23c` · announced by cursor/popup-polls-quiz-9a86 softwall google-off
+
+App at announcement: commit `e6940e669d06bf9d0e0cf82528b6febad9a108fe` + 2 uncommitted file(s), source `bd927957c23c98864a389e89666c59ba9b55b8fe0920401b07217ff1c7671da0`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Auth/SoftWallModal.tsx 2f8619740d3d6eebea6ad8c449bfbb452291b54aee22109a966d3e4025a138da`, `apps/mobile/src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx b8afdea0cc96f59f885dfb320920c6e1edb72402f09572fd1b177be7369f6483`; removed `apps/mobile/src/frontend/components/Auth/SoftWallModal.tsx abdb4bd9bc4d76556c7dff333182b7b702af4012c63520008512554e8e001116`, `apps/mobile/src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx c39a47ccef9cb5d730c6fb047219dcabc1b2ec4edded18fadba0a2cf1d794667`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `dd8f47417558` → `dd8f47417558` · announced by cursor/popup-polls-quiz-9a86 ip packet
 
 App at announcement: commit `b8c85acde89c2fc2e906d53abad7dfd42a83c6f6`, source `dd8f47417558a580ac48136350a696c5044e186c8e56c7ce397496f0cd450f7e`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

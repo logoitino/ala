@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-12 · Account birth pickers + delete-account request; popup/poll/quiz fixes. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-12 · SoftWall Google-off → Create email; account UX + popup/poll/quiz on #39. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,13 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-12 — SoftWall Google-off opens Create (APP-TEST lane A)
+
+- When Continue with Google fails with “turned off on the server”, SoftWall switches to **Create an
+  account** so email + birth month/year are ready without a second tap. Hint copy no longer implies
+  Google is always live. PR [#39](https://github.com/logoitino/ala/pull/39) CI was already green;
+  this continues the no-Exit test path. Owner still enables Google OAuth on the project for lane A.
 
 ### 2026-11-12 — Account birth pickers, delete-account request, compact menus
 
