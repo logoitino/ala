@@ -186,6 +186,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - **Android is not freer than Apple** for in-app digital Vault access — Play Billing is the same
   class as IAP. Gifts stay Stripe + 0% cut (counsel still owns 3.2.1(vii) / store claims).
 - Call sites: profile, public `/user/[id]`, ReelCard. StoreKit/Play Billing products **not built**.
+- CI fix: removed stale `exportsTriage` for `VAULT_ATHLETE_SHARE_BPS` (now used by `storeCommerce`).
 
 ### 2026-11-12 — SoftWall Google-off opens Create (APP-TEST lane A)
 
