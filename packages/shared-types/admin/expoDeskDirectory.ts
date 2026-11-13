@@ -47,7 +47,7 @@ export const EXPO_DESKS: readonly ExpoDesk[] = [
   { path: '/admin/moderation', title: 'Moderation', detail: 'Report review and hide decisions.', group: 'content' },
   { path: '/admin/fan-zone', title: 'Fan Zone', detail: 'Campaigns, private entries, and free ballots.', group: 'content' },
   { path: '/admin/sport-quiz', title: 'Sport Quiz', detail: 'Trivia rounds, Life Playbook, and fresh questions. Private noncash badges; IQ Aura only when that migration is applied.', group: 'content' },
-  { path: '/admin/money', title: 'Money', detail: 'Gifts, Vault Exclusive, optional Tip Tapua\'i, and Connect.', group: 'commerce' },
+  { path: '/admin/money', title: 'Money', detail: "Gifts, Vault Exclusive, optional Tip Tapua'i, and Connect.", group: 'commerce' },
   { path: '/admin/books', title: 'Books', detail: 'Finance ledger, reconciliation, and month close.', group: 'commerce' },
   { path: '/admin/drip', title: 'Drip', detail: 'Merchandise catalog and orders.', group: 'commerce' },
   { path: '/admin/wishlist', title: 'Wishlist', detail: 'Gear gift goals.', group: 'commerce' },
