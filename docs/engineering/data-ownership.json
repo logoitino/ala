@@ -1631,13 +1631,6 @@
     },
     {
       "file": "apps/mobile/src/frontend/data/finance.ts",
-      "name": "VAULT_ATHLETE_SHARE_BPS",
-      "decision": "keep",
-      "reason": "Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS.",
-      "status": "kept"
-    },
-    {
-      "file": "apps/mobile/src/frontend/data/finance.ts",
       "name": "platformBpsForSource",
       "decision": "keep",
       "reason": "Tested split lookup kept with the split constants.",

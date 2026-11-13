@@ -14,7 +14,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Database functions | 613 (253 used by hand, 63 trigger functions) |
 | Tables reached by at least one screen or server route | 125 of 128 |
 | Code files that read or write the database | 84 |
-| Exported symbols nothing imports | 47 (0 proposed for archive, 47 kept on purpose) |
+| Exported symbols nothing imports | 46 (0 proposed for archive, 46 kept on purpose) |
 | Operational data exports | 15 |
 | Rule failures | 0 |
 
@@ -1897,7 +1897,6 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | `@/components/UI/Kit.tsx` | `KitProgress` | keep | Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete — new/touched screens use Kit. |
 | `@/data/contentRights.ts` | `REPORTS_BEFORE_HIDE` | keep | Mirrors the SQL rule (three distinct reporters hide a clip) so copy and docs have one constant. |
 | `@/data/finance.ts` | `BOOSTER_OPERATOR_SHARE_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |
-| `@/data/finance.ts` | `VAULT_ATHLETE_SHARE_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |
 | `@/data/finance.ts` | `MERCH_PAYOUT_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |
 | `@/data/finance.ts` | `splitRevenueCents` | keep | Canonical split arithmetic mirrored by SQL record_company_revenue; reference for COMMERCE and CONTROLLER. |
 | `@/data/finance.ts` | `platformBpsForSource` | keep | Tested split lookup kept with the split constants. |

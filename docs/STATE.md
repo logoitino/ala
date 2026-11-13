@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · Vault Exclusive platform rails (web Stripe 20/80; production iOS/Android store billing). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Vault rails CI: drop stale VAULT_ATHLETE_SHARE_BPS triage. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
