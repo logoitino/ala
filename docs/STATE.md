@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · App fluidity: shared sheet motion, Profile menu close, tab fade. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · App fluidity + portal Tip Tapua'i copy fix. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
