@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · Fluidity: Tip / Role / Drip dismiss timings share sheet tokens. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Fluidity: exit-map ack after sheet motion source change. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
