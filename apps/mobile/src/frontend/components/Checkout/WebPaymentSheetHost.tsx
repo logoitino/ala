@@ -1,6 +1,8 @@
 /**
  * Web-only Stripe Payment Element host. Mirrors native PaymentSheet present/cancel for Expo web.
  * Mounted under the web StripeProvider; never imported from native entry points.
+ * Dismissal is locked while `confirmPayment` is in flight so a backdrop/Escape cancel cannot
+ * drop a successful charge before tips / Exclusive grant run.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -26,26 +28,34 @@ type WebPaymentSheetHostProps = {
 
 /**
  * @purpose Inner confirm UI once Elements has the PaymentIntent client secret.
+ * @param onBusyChange Shares the confirm lock with the host so backdrop/Escape cannot cancel mid-charge.
  */
 function WebPaymentSheetForm({
   merchantDisplayName,
   onClose,
+  onBusyChange,
 }: {
   merchantDisplayName: string;
   onClose: (result: WebPaymentSheetResult) => void;
+  onBusyChange: (busy: boolean) => void;
 }) {
   const stripe = useStripeJs();
   const elements = useElements();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const setConfirming = (next: boolean) => {
+    setBusy(next);
+    onBusyChange(next);
+  };
+
   const onSubmit = async () => {
     if (!stripe || !elements || busy) return;
-    setBusy(true);
+    setConfirming(true);
     setError(null);
     const { error: submitError } = await elements.submit();
     if (submitError) {
-      setBusy(false);
+      setConfirming(false);
       setError(submitError.message ?? 'Check your payment details.');
       return;
     }
@@ -56,8 +66,8 @@ function WebPaymentSheetForm({
         return_url: typeof window !== 'undefined' ? window.location.href : undefined,
       },
     });
-    setBusy(false);
     if (confirmError) {
+      setConfirming(false);
       if (confirmError.code === 'canceled' || confirmError.type === 'validation_error') {
         setError(confirmError.message ?? 'Payment could not be confirmed.');
         return;
@@ -65,6 +75,7 @@ function WebPaymentSheetForm({
       onClose({ error: { code: 'Failed', message: confirmError.message ?? 'Payment failed.' } });
       return;
     }
+    // Keep busy locked until the host clears the sheet after resolve.
     onClose({});
   };
 
@@ -109,17 +120,25 @@ function WebPaymentSheetForm({
  */
 export function WebPaymentSheetHost({ stripe }: WebPaymentSheetHostProps) {
   const [sheet, setSheet] = useState<SheetState>(null);
+  const [confirming, setConfirming] = useState(false);
 
   const finish = useCallback((result: WebPaymentSheetResult) => {
+    setConfirming(false);
     setSheet((current) => {
       current?.resolve(result);
       return null;
     });
   }, []);
 
+  const requestCancel = useCallback(() => {
+    if (confirming) return;
+    finish({ error: { code: 'Canceled', message: 'The payment has been canceled' } });
+  }, [confirming, finish]);
+
   useEffect(() => {
     registerWebPaymentSheetHost((request) => {
       return new Promise<WebPaymentSheetResult>((resolve) => {
+        setConfirming(false);
         setSheet({ ...request, resolve });
       });
     });
@@ -148,17 +167,23 @@ export function WebPaymentSheetHost({ stripe }: WebPaymentSheetHostProps) {
       visible={Boolean(sheet)}
       transparent
       animationType="fade"
-      onRequestClose={() => finish({ error: { code: 'Canceled', message: 'The payment has been canceled' } })}
+      onRequestClose={requestCancel}
     >
       <View style={styles.backdrop}>
         <Pressable
           accessibilityLabel="Dismiss checkout"
-          onPress={() => finish({ error: { code: 'Canceled', message: 'The payment has been canceled' } })}
+          accessibilityState={{ disabled: confirming }}
+          disabled={confirming}
+          onPress={requestCancel}
           style={StyleSheet.absoluteFill}
         />
         {sheet && stripe && elementsOptions ? (
           <Elements stripe={stripe} options={elementsOptions}>
-            <WebPaymentSheetForm merchantDisplayName={sheet.merchantDisplayName} onClose={finish} />
+            <WebPaymentSheetForm
+              merchantDisplayName={sheet.merchantDisplayName}
+              onBusyChange={setConfirming}
+              onClose={finish}
+            />
           </Elements>
         ) : null}
       </View>

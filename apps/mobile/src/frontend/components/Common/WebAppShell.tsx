@@ -6,12 +6,10 @@ import { type ReactNode } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { colors } from '@/constants/theme';
+import { WEB_PHONE_BREAKPOINT, WEB_PHONE_WIDTH } from '@/hooks/useAppViewport';
 import { FOCAL } from '@/theme/motion';
 
-/** Desktop canvas wider than this gets the phone column + side atmosphere. */
-export const WEB_PHONE_BREAKPOINT = 900;
-/** Max width of the interactive app column on large screens. */
-export const WEB_PHONE_WIDTH = 430;
+export { WEB_PHONE_BREAKPOINT, WEB_PHONE_WIDTH };
 
 type WebAppShellProps = {
   children: ReactNode;
