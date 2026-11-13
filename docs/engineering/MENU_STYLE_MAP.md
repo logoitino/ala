@@ -19,6 +19,7 @@ Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATU
 | `UI/MenuChrome.tsx` → `MenuBackdrop({ accent? })` | Non-interactive single soft wash for popup sheets (no dot accents since 2026-10-15); hidden from assistive technology. Tab pages (`TabScreen`, `ScreenShell`) no longer draw it. |
 | `UI/MenuChrome.tsx` → `MenuStepIndicator({ labels, current })` | Named, non-clickable step chips; one-based current stage announced to assistive technology |
 | `hooks/useSheetFrame.ts` | Centered sheets up to 440px, compact gutters, home-indicator clearance, common radius/border/shadow |
+| `hooks/useFanSheetMotion.ts` + `theme/motion.ts` sheet tokens | One open (`SPRING_SHEET`) / close (cubic dismiss) contract for fan bottom sheets; Reduce Motion timing branch. Profile menu settles before nested Soft-Wall. |
 | `ScreenShell.tsx` / `TabScreen.tsx` | Calm Island light page canvas without MenuBackdrop/corner decoration; dark video layouts retain contrast |
 | `ScreenHeading.tsx` | Wrapping screen header, readable supporting text and decorative accent; published text/gold and caller accent remain authoritative |
 | `UI/FanTabBar.tsx` / `UI/AnimatedButton.tsx` | Absolute measured floating fan dock, wrapping labels, selected/disabled semantics,44-point targets and OS Reduce Motion; Home media extends behind it, normal TabScreen reserves actual dock height. |
