@@ -1,5 +1,5 @@
 {
- "planVersion": "1680cee0cd00",
+ "planVersion": "75bb1f25b994",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1969,7 +1969,7 @@
    "apps/mobile/src/frontend/components/Profile/ProfileAvatarPicker.tsx 17c6374821ba7506aec553f2ad219ed389c065499e166719f6e58c715a751d7d",
    "apps/mobile/src/frontend/components/Profile/ProfileFriendActions.tsx 38a373bad7049428718a09e23f37be1ef6ca46df7198634df099fdd672446e4c",
    "apps/mobile/src/frontend/components/Profile/ProfileHeroAvatar.tsx 316e3b363db6dd7524495e5cd40166de97a28ea430321fd9093a868d8ddb154e",
-   "apps/mobile/src/frontend/components/Profile/ProfileMenuSheet.tsx ea6b12702fffcd4eb149c01f2c79ac1d73749a6e9b5519bdeee77811dea137ab",
+   "apps/mobile/src/frontend/components/Profile/ProfileMenuSheet.tsx 6d22646b0026545ee6f32de96c6bbd7f70bea0beb8c6ef3b69aff0fa023b909d",
    "apps/mobile/src/frontend/components/Profile/ProfileStatRow.tsx 762e78bf3ae871eb57d2c019ad3ea30362cf0d90d8c9b81de9aca3b217a33a43",
    "apps/mobile/src/frontend/components/Profile/ReceiptCard.tsx 2331e999a0fe874f2dba74ec470659e7c85625a4c1bc513fa603f49e4d9a9ac4",
    "apps/mobile/src/frontend/components/Profile/ReceivedMaloPanel.tsx 689abc49a6e7770051d9f10338d5ea26bff8ede3f932b8537fcc7e19219d3cca",
@@ -2579,7 +2579,7 @@
    "packages/shared-types/admin/departments.ts d356534f33f0774d838ab1aa54e14c23bb2902e48d78ad7c4b16aa620b32071e",
    "packages/shared-types/admin/engineeringSupport.ts 40d9dbee912baa1224d9ac061c03652e1c46824469422d45f4fe8dda7dbb2a14",
    "packages/shared-types/admin/eventLabels.ts 649a75ed28c977ddc1442f7b13abd75a9872817f463c480c3350cff60e2d1f3e",
-   "packages/shared-types/admin/expoDeskDirectory.ts bd53a747421a8b2dea0f71a128067c3426123e2df12b50cb84e6c1f8e77f72cc",
+   "packages/shared-types/admin/expoDeskDirectory.ts 1c6ca16bbb56fdafe90ffb4958116c3657bacc8c4c7566d597d06866c6a432cc",
    "packages/shared-types/admin/financeCatalog.ts 27fc3e815e7e15c939b818b89971555d877dce8ef811fa533444f790cf5a4057",
    "packages/shared-types/admin/financeChecks.ts fed2a4c93cd3700b4a1bf6ec45b68b377a7d3d0069f8ebba3de0182bb48750f7",
    "packages/shared-types/admin/financeFilters.ts c04ce08cc6db105fc079a34cda0f9152ed15161c04c75c9c1863fb66b9cd16d4",

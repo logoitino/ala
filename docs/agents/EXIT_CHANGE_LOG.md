@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `1680cee0cd00` → `75bb1f25b994` · announced by cursor/app-fluidity-9a86 merge portal IP/exit-map
+
+App at announcement: commit `6228c6040a3c6034378706d64700bc52f6237147`, source `75bb1f25b99477756c6b3bb68568dc473afbd7977cb5b8158a9b1e448dce55be`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Profile/ProfileMenuSheet.tsx 6d22646b0026545ee6f32de96c6bbd7f70bea0beb8c6ef3b69aff0fa023b909d`, `packages/shared-types/admin/expoDeskDirectory.ts 1c6ca16bbb56fdafe90ffb4958116c3657bacc8c4c7566d597d06866c6a432cc`; removed `apps/mobile/src/frontend/components/Profile/ProfileMenuSheet.tsx ea6b12702fffcd4eb149c01f2c79ac1d73749a6e9b5519bdeee77811dea137ab`, `packages/shared-types/admin/expoDeskDirectory.ts bd53a747421a8b2dea0f71a128067c3426123e2df12b50cb84e6c1f8e77f72cc`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `937c789922a8` → `1680cee0cd00` · announced by cursor/app-fluidity-9a86 sheet motion
 
 App at announcement: commit `5af949e11173c0bd91881026887d949f54b0de91` + 23 uncommitted file(s), source `1680cee0cd00460bc4611126b5b5a1ec6f335efe44794c16d2dfa4f84bdc6308`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
