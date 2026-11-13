@@ -1459,7 +1459,10 @@
         ],
         "paths": [
           "apps/mobile/src/frontend/components/Admin/Reports/AdminReportHealth.tsx",
-          "apps/mobile/src/frontend/lib/notifications.ts"
+          "apps/mobile/src/frontend/lib/notifications.ts",
+          "packages/shared-types/admin/unappliedControls.ts",
+          "apps/admin-portal/app/(protected)/operations/page.tsx",
+          "apps/admin-portal/lib/unappliedControls.ts"
         ]
       },
       "disable": {
