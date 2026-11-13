@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `79afc84d9bb2` → `cf1b7d370cf1` · announced by cursor/web-app-parity-9a86 checkout copy polish
+
+App at announcement: commit `262cced36d0e9190591c7e3d286fb5b019f0ddbe`, source `cf1b7d370cf1eb1888e9a7181df74db7a1376cb037d438edde86c40ca9abdab3`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Checkout/WebPaymentSheetHost.tsx 705e5bdcd967a27013f87bc2a79ce043369d8bfda222fcfcd7af6b4e522a5599`, `apps/mobile/src/frontend/components/Drip/ProductSheet.tsx adfbacdd6fc1c3604ff43f4afdd6019dad24f4b598f5441249d3e09dd020cf5b`, `apps/mobile/src/frontend/components/Local/SponsorshipModal.tsx ec43466cd2085fad88cf8a0234467b985a55fc3c72640fb9821197b477cafd26`, `apps/mobile/src/frontend/components/Profile/ExclusivePaywall.tsx 7c5ab48e7b03aeda38fe34057c9e71056739c74306eff9d4992512b220ff745c`, `apps/mobile/src/frontend/components/Reels/ReelCard.tsx 6a60de2863a7b15962fa180c430af35ce22f64f6119035be1b2564658bca06b4`; removed `apps/mobile/src/frontend/components/Checkout/WebPaymentSheetHost.tsx bf0167bb35f7540375d76d3453c21593422f1288bad562a43a139ff1a83aca61`, `apps/mobile/src/frontend/components/Drip/ProductSheet.tsx 796d5eb8bfb88f91d343995e9fb65c7a25b91abf2841919f80331a4c70a8e63f`, `apps/mobile/src/frontend/components/Local/SponsorshipModal.tsx cf67dd097a62680f1fe216d0044a4a4753724951611293c16dd55ffe12cbc569`, `apps/mobile/src/frontend/components/Profile/ExclusivePaywall.tsx b761c6312e53320693d763ea5159e9c67f3f334aeb8f1e35d8302683450a7e7a`, `apps/mobile/src/frontend/components/Reels/ReelCard.tsx e456c8ed54400b6b170b9c5d5affb32c342a50f644cfeaf2c01769325c1d19db`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `bd927957c23c` → `79afc84d9bb2` · announced by cursor/web-app-parity-9a86 Phase 1 Stripe.js + WebAppShell
 
 App at announcement: commit `87a8e2e927821a695bce9fb412ccdda3b047d6da` + 11 uncommitted file(s), source `79afc84d9bb2a06ee0bcc35dab4f084fe5ecb72206b169e5dc1abaf92090a5d3`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

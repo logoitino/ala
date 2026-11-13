@@ -1,5 +1,5 @@
 {
- "planVersion": "79afc84d9bb2",
+ "planVersion": "cf1b7d370cf1",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1865,7 +1865,7 @@
    "apps/mobile/src/frontend/components/Challenges/ChallengeSettings.tsx bfc2f37b5c1b90a6c7fb3fab110c5249ffd7e7af20870e29f0f3221c743db2c9",
    "apps/mobile/src/frontend/components/Challenges/ChallengeSettingsSheet.tsx 8ed7033054310f0f89ff552a470e745e758b2d41d275a25be48f8864b103b52e",
    "apps/mobile/src/frontend/components/Challenges/__tests__/Challenges.test.tsx 1aabca14cb4851ed077794db3612a18aefb24f329c80924deb4397227279a157",
-   "apps/mobile/src/frontend/components/Checkout/WebPaymentSheetHost.tsx bf0167bb35f7540375d76d3453c21593422f1288bad562a43a139ff1a83aca61",
+   "apps/mobile/src/frontend/components/Checkout/WebPaymentSheetHost.tsx 705e5bdcd967a27013f87bc2a79ce043369d8bfda222fcfcd7af6b4e522a5599",
    "apps/mobile/src/frontend/components/Common/FeatureBoundary.tsx e69be7f2a78f1bd35fc2ec78ef24631e51d04dc243c19154a684b17ea2a3c1c6",
    "apps/mobile/src/frontend/components/Common/SupportRuntimeObserver.tsx 3f7dd4f6a4b686f719ea343fdc6b61831899ee56bd22624dec283b0247411be4",
    "apps/mobile/src/frontend/components/Common/SwipeableBannerWrapper.tsx 173d2ffdcabc43c6be7774496fb88815ffbc4c18405e9337678d72afabd4abd1",
@@ -1887,7 +1887,7 @@
    "apps/mobile/src/frontend/components/Custodial/__tests__/GuardianSupervision.test.tsx efe3ae224ab1e194fb9f6126e1f955887b3ad054640c7a248210798b8f0576c1",
    "apps/mobile/src/frontend/components/DashboardPanel.tsx 6d569340910dba0c864ec580cba3ee9983bf1f560644ca0fbe18c1dac8cea6d8",
    "apps/mobile/src/frontend/components/Drip/GearCard.tsx 9d0fee26c7957308f3e51f27df8b5b8fee9f2a3d415c46151f2574584c8d72c3",
-   "apps/mobile/src/frontend/components/Drip/ProductSheet.tsx 796d5eb8bfb88f91d343995e9fb65c7a25b91abf2841919f80331a4c70a8e63f",
+   "apps/mobile/src/frontend/components/Drip/ProductSheet.tsx adfbacdd6fc1c3604ff43f4afdd6019dad24f4b598f5441249d3e09dd020cf5b",
    "apps/mobile/src/frontend/components/Effects/CardShine.tsx f3b2c051fead00d9c0d74b6d0b9ff597f3f43909297d9783b0d5c32916b48276",
    "apps/mobile/src/frontend/components/Effects/GlowingNeonBorder.tsx c399e40ffd6ebe4c0a39de85f2055e0bbf32e8ac4a0e50660893226f7482d202",
    "apps/mobile/src/frontend/components/Effects/HypeBurst.tsx 58468fb6a579a595c7f70b0d59b5d758e6b6524962a0ade71597f7dbc1e5ee41",
@@ -1924,7 +1924,7 @@
    "apps/mobile/src/frontend/components/Local/RivalryWeekBanner.tsx f55692331a0d2f719448a6e7588bb8580f157e3fac870cb52b15af3a87c27c07",
    "apps/mobile/src/frontend/components/Local/SearchResultsOverlay.tsx dab1a57fa14613377ab6808499a647f05ec0ed4ec614eac01af9f9c2a5c0a12c",
    "apps/mobile/src/frontend/components/Local/SponsorRailCard.tsx f4695a8bf84f2260d54a54bd8b32fa49aa3e28f25fdd07d7e6bf2033a148333c",
-   "apps/mobile/src/frontend/components/Local/SponsorshipModal.tsx cf67dd097a62680f1fe216d0044a4a4753724951611293c16dd55ffe12cbc569",
+   "apps/mobile/src/frontend/components/Local/SponsorshipModal.tsx ec43466cd2085fad88cf8a0234467b985a55fc3c72640fb9821197b477cafd26",
    "apps/mobile/src/frontend/components/Local/TabSwitcher.tsx d16fe4a53aa85fb682c7b487b120a1995c2bd62492c67207fc080c99d1701f5e",
    "apps/mobile/src/frontend/components/Local/TopAuraBoosters.tsx 9d9faa60343b0d865eaafcf8b974f276c10fb311e71ebdf1b077223e35be050b",
    "apps/mobile/src/frontend/components/Local/__tests__/CheerPollCard.test.tsx 7c3b187947faf1ea1867e2491e5596b48897edc15c51c1283a001d7b61f3a190",
@@ -1953,7 +1953,7 @@
    "apps/mobile/src/frontend/components/Profile/AuraTradingCard.tsx 718d3989574044e46649b5704601d6ad20253b721cf966299de826009bdb23ce",
    "apps/mobile/src/frontend/components/Profile/DeleteAccountSheet.tsx 3ad0ff1399f29c350cc759599106f227fbba0aa5c71286257ca837696424a924",
    "apps/mobile/src/frontend/components/Profile/EditProfileModal.tsx 2c433d317d0d1829675bc4f2551263a2d4024bab8db8601476407812db7e045a",
-   "apps/mobile/src/frontend/components/Profile/ExclusivePaywall.tsx b761c6312e53320693d763ea5159e9c67f3f334aeb8f1e35d8302683450a7e7a",
+   "apps/mobile/src/frontend/components/Profile/ExclusivePaywall.tsx 7c5ab48e7b03aeda38fe34057c9e71056739c74306eff9d4992512b220ff745c",
    "apps/mobile/src/frontend/components/Profile/FanBackerBadge.tsx bb512487a76d67f96e54153b123e60eb5533c563fe5c144f96a95f4e06e61e55",
    "apps/mobile/src/frontend/components/Profile/FunFactShare.tsx 6d0be4aa4631d3debcaedcc34266a4489ea2a9389f4905842e7f4fa78fdd9178",
    "apps/mobile/src/frontend/components/Profile/GlowingCardWrapper.tsx 0c206205641d3a7c6be8c8b32a4d006aed1f49fa6b5110349e40f8fca8af6525",
@@ -2021,7 +2021,7 @@
    "apps/mobile/src/frontend/components/Reels/PlayBroadcastBanner.tsx 5cc003f0bca0fd02b08d1e0aa737ea49c386faa8a65549c6eee1426025357db0",
    "apps/mobile/src/frontend/components/Reels/README.md caf9f229aa71e72b8eeb60476346c0016788deba5e4e3e606553dc29bb7b7b3a",
    "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx 8d5d2a0734f50079e38cf1f6dbcb11611fcfb8fcdabae56e43b780050b58a3bc",
-   "apps/mobile/src/frontend/components/Reels/ReelCard.tsx e456c8ed54400b6b170b9c5d5affb32c342a50f644cfeaf2c01769325c1d19db",
+   "apps/mobile/src/frontend/components/Reels/ReelCard.tsx 6a60de2863a7b15962fa180c430af35ce22f64f6119035be1b2564658bca06b4",
    "apps/mobile/src/frontend/components/Reels/ReelCardStyles.ts b3f0e1ce78333013d82be5adb90da934e9421a197ce28a92745dbb387176b962",
    "apps/mobile/src/frontend/components/Reels/ReelMoreSheet.tsx fe9c8dbfe3b7077a51e76cc7c253cc16f3a76b1c1a59587a79a9cda13cd0ee6c",
    "apps/mobile/src/frontend/components/Reels/ReelOwnerPeek.tsx 40a53c846efcb3d0e6f76d6abd36a9cbf6405852dae169e3f08de105619218ec",
