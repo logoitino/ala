@@ -3,14 +3,16 @@
 
 ## Efficient APP-TEST loop — no Exit (2026-11-12)
 
-Use this order on staging `tucioqipfejqqqtuakdi` / local Expo web. Wave 0 costs **$0**
-(Demo Fan, `4242`, Free Metro). Do **not** start Exit drills here.
+Use this order on staging `tucioqipfejqqqtuakdi`. Wave 0 costs **$0** (Demo Fan, `4242`, Free
+Metro). Do **not** start Exit drills here.
 
-1. **Demo Fan** — SoftWall → Use test account / email `demo@tapuai.app` (skip Google if short on time).
-2. **Highlight (lane C)** — Upload → 8s fixture → caption + athlete → rights → Publish → confirm Home playback. Reject 46s / >8MiB (must not reach Details).
-3. **Gift** — Athlete profile → **Give $5** → Review → PaymentSheet card `4242 4242 4242 4242`. Needs signed-in session + Stripe **test** secret on the server route.
-4. **Google (lane A)** — Guest → Upload SoftWall → Continue with Google → Test-users Gmail → birth if asked → confirm resume. Popup/cancel already verified.
-5. **Bank (lane B)** — Only after owner applies Connect SQL + deploys `create-stripe-account` with `sk_test_`. Payouts stay 503.
+| Step | Where | Status / what to click |
+| --- | --- | --- |
+| 1. Demo Fan | SoftWall → Use test account / `demo@tapuai.app` | **PASS** (session works) |
+| 2. Highlight (C) | Upload → 8s fixture → Publish → Home playback | **PASS** on web; reject 46s / >8MiB |
+| 3. Gift charge | Edge `create-payment-intent` + Stripe test | **PASS** mint + confirm `succeeded` ($5 test, **$0**). Web sheet is stubbed — use **Expo Go / preview** for Give → `4242` (client `tips` row). |
+| 4. Google (A) | Guest → Upload SoftWall → Continue with Google | Popup **PASS**; finish Test-users Gmail signup + resume |
+| 5. Bank (B) | Owner only | Connect SQL → deploy `create-stripe-account` (checkout `sk_test_` already on staging). Payouts stay 503. |
 
 PRs: C [#35](https://github.com/logoitino/ala/pull/35) · A [#36](https://github.com/logoitino/ala/pull/36) · B [#37](https://github.com/logoitino/ala/pull/37).
 

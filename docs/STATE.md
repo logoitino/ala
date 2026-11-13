@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-12 · APP-TEST efficient path (no Exit): C web PASS · A popup PASS · B owner SQL/Edge. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-12 · APP-TEST efficient path (no Exit): C web PASS · gift charge PASS · A popup PASS · B owner SQL/Edge. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -35,11 +35,11 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 | Lane | Evidence now | Your next click (owner) |
 | --- | --- | --- |
 | **C. Highlights** | Web **PASS**: 8s pick→publish→playback (`fac733e`); 46s/oversize stayed out of Details. PR [#35](https://github.com/logoitino/ala/pull/35) | Optional: density EAS APK/IPA on a phone; photo-story later |
-| **A. Google** | Provider **on**; Soft-Wall → Google popup **PASS**; cancel/retry **PASS**. PR [#36](https://github.com/logoitino/ala/pull/36) | One Test-users Gmail signup on `localhost:8086` (birth + Upload resume) |
-| **B. Test bank** | Staging Connect RPCs + Edge **404**. Checklist ready. PR [#37](https://github.com/logoitino/ala/pull/37) | Apply Connect SQL → `sk_test_` Edge secret → deploy `create-stripe-account` |
-| **Gift (parallel)** | Demo Fan signed in; Andre profile **Give $5** reachable; anon PaymentIntent **401** (expected). Card `4242` = **$0** | After Demo Fan session: Give → Review → `4242` on device or local web with Stripe test secret loaded |
+| **Gift (money)** | Demo Fan session **OK**; Jordan Blake **Give $5** reachable; Edge `create-payment-intent` mints + Stripe test confirm **`succeeded`** $5 (`pm_card_visa`, livemode false = **$0**). Web PaymentSheet is stubbed by design. | Expo Go / preview: Give → `4242` once (client `tips` insert + sheet UX). No new secret needed for checkout Edge. |
+| **A. Google** | Provider **on**; Soft-Wall → Google popup **PASS**; cancel/retry **PASS**. PR [#36](https://github.com/logoitino/ala/pull/36) | One Test-users Gmail signup on Metro web (birth + Upload resume) |
+| **B. Test bank** | Staging Connect RPCs + `create-stripe-account` Edge **404**. Checkout Edge already has `sk_test_`. PR [#37](https://github.com/logoitino/ala/pull/37) | Apply Connect SQL → deploy `create-stripe-account` (reuse existing test secret) |
 
-**Fastest fully-tested loop (Wave 0 · $0):** Demo Fan email → Upload 8s (done) → Give `4242` → (optional) Google signup → only then bank SQL/Edge. Skip Exit until A–C + gift have receipts.
+**Fastest fully-tested loop (Wave 0 · $0):** Demo Fan → Upload 8s (**done**) → gift charge (**Edge PASS**) → native PaymentSheet `4242` on phone → (optional) Google signup → only then bank SQL/Edge. Skip Exit until A–C + gift have receipts.
 
 ### Next (engineering) vs owner/counsel only
 | Engineering may | Owner / counsel only (hard stop) |
@@ -176,6 +176,15 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-12 — APP-TEST gift charge smoke (no Exit · $0)
+
+Continued efficient path. Staging Demo Fan password sign-in **OK**. Expo web: Jordan Blake
+profile **Give $5** reachable (PaymentSheet alerted to Expo Go — web stub by design). Edge
+`create-payment-intent` with JWT + `playerId` minted a PI; Stripe test confirm with
+`pm_card_visa` → **`succeeded`** / 500¢ / `livemode: false` (**$0**). Checkout Edge secret is
+already set; Connect Edge still **404**. Native sheet + client `tips` insert remain the owner
+phone click. Exit still deferred.
 
 ### 2026-11-12 — APP-TEST efficient path (no Exit)
 

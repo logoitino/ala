@@ -296,8 +296,8 @@ race at the Supabase session boundary. This repair does not serialize every poss
 
 ### Development account-to-bank preparation — 2026-10-21
 
-**Rechecked 2026-11-12 (America/Denver):** agent `.env.local` targets **staging**
-`tucioqipfejqqqtuakdi` (Stripe **test** mode). Anonymous probes:
+**Rechecked 2026-11-12 (America/Denver); gift charge recheck same day:** agent `.env.local`
+targets **staging** `tucioqipfejqqqtuakdi` (Stripe **test** mode).
 
 | Probe | Result |
 | --- | --- |
@@ -305,12 +305,13 @@ race at the Supabase session boundary. This repair does not serialize every poss
 | `POST /rest/v1/rpc/save_stripe_connect_account` | **404** PGRST202 |
 | `POST /rest/v1/rpc/record_stripe_kyc` | **404** PGRST202 |
 | `POST /functions/v1/create-stripe-account` | **404** `Requested function was not found` |
+| `POST /functions/v1/create-payment-intent` (Demo Fan JWT) | **PASS** — mints `clientSecret`; Stripe test confirm **`succeeded`** ($5 / livemode false) |
 
-So on **staging**, Connect context SQL and the Edge Function are **not** available to the app
-yet. Historical guide target was development `ulfapgtabidorgwfjvwz`. Apply/deploy to the
-**same** project as `EXPO_PUBLIC_SUPABASE_URL`. Local UI + migration files exist; provider
-walkthrough remains **UNRUN**. Google is now enabled on staging (lane A); full Google signup
-receipt is still separate. Receipts: [STATE.md](STATE.md) §4 ·
+So on **staging**, **checkout** Edge is live with `sk_test_`; **Connect** SQL + Edge are still
+missing. Historical guide target was development `ulfapgtabidorgwfjvwz`. Apply/deploy Connect
+to the **same** project as `EXPO_PUBLIC_SUPABASE_URL`. Local UI + migration files exist;
+provider walkthrough remains **UNRUN**. Google is enabled on staging (lane A); full Google
+signup receipt is still separate. Receipts: [STATE.md](STATE.md) §4 ·
 [payee plan](engineering/design/PAYEE_VERIFICATION_PLAN.md) §10.
 
 #### Owner checklist — lane B (Wave 0 · **$0** on Free Supabase / Stripe test)
@@ -325,7 +326,9 @@ receipt is still separate. Receipts: [STATE.md](STATE.md) §4 ·
    - [Connect context migration](../supabase/migrations/20261021120000_connect_account_context.sql)
    - Confirm `stripe_connect_context` and `save_stripe_connect_account` exist and are
      **service-role only** (anon/authenticated execute denied).
-3. Supabase → Edge Functions secrets: set `STRIPE_SECRET_KEY` = `sk_test_…` (test only).
+3. Supabase → Edge Functions secrets: confirm `STRIPE_SECRET_KEY` = `sk_test_…` (test only).
+   Checkout already proves this secret works on staging; reuse it for Connect — do not invent a
+   second key.
 4. Deploy the compatible function to **that** project ref and record the build:
 
    ```bash

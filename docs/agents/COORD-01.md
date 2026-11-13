@@ -114,11 +114,27 @@ Owner asked to continue on the non-Exit path and make testing efficient. Disposi
 | --- | --- |
 | Exit / Redundancy drills | **Deferred** (same-turn map only if code touches exit) |
 | Lane C web Highlight | **PASS** (8s publish + playback); rejects stay out of Details |
+| Gift charge | Demo Fan + Jordan Blake Give reachable; Edge PI mint + Stripe test confirm **`succeeded`** ($5 / livemode false = **$0**). Native PaymentSheet + client `tips` insert still owner Expo Go / preview. |
 | Lane A Google | Provider + Soft-Wall popup **PASS**; full signup **owner browser** |
-| Lane B Connect | Staging SQL/Edge **404**; owner checklist ready |
-| Gift `4242` | Demo Fan + Andre **Give $5** reachable; complete PaymentSheet on owner device/local with test secret — **$0** |
+| Lane B Connect | Staging Connect SQL/Edge **404**; checkout Edge secret already present |
 
 STATE §0 carries the fast loop. No Exit work started.
+
+## APP-TEST gift charge — 2026-11-13 UTC
+
+Executor: cloud agent on `cursor/app-test-b-bank-9a86`. Target staging
+`tucioqipfejqqqtuakdi`. Spend: Stripe test confirm **$0** (Wave 0).
+
+| Check | Result |
+| --- | --- |
+| Demo Fan `signInWithPassword` | **OK** |
+| Expo web `/user/bfb339a8-…` Give $5 | Reachable; web alerts to Expo Go (stub) |
+| Edge `create-payment-intent` (JWT + playerId, 500¢) | Minted `clientSecret` |
+| Stripe confirm `pm_card_visa` + `client_secret` | **`succeeded`**, amount 500, `livemode: false` |
+| Connect `create-stripe-account` | Still **404** (unchanged) |
+
+Next owner click: Expo Go / preview → Demo Fan → Give → card `4242` (sheet UX + `tips`
+insert). Then optional Google signup; bank SQL/Edge last.
 
 ## APP-TEST-B Connect prep — 2026-11-12 UTC
 
