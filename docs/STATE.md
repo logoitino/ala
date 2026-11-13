@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · Expo web Phase 1 + vault exit-map ack merge. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Expo web Phase 1 + vault IP packet refresh. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -200,6 +200,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - **Android is not freer than Apple** for in-app digital Vault. StoreKit/Play Billing **not built**.
 - Call sites: profile, public `/user/[id]`, ReelCard.
 - CI fix: removed stale `exportsTriage` for `VAULT_ATHLETE_SHARE_BPS` (now used by `storeCommerce`).
+- CI fix: `pnpm ip:sync` refreshed `docs/legal/IP_COUNSEL_PACKET.md` so source-release verify
+  does not mutate inventory mid-check.
 
 ### 2026-11-12 — SoftWall Google-off opens Create (APP-TEST lane A)
 
