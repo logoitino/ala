@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `0655dbc5fe0b` → `9d7fed1ccb7d` · announced by cloud-agent/local-daylight-polish
+
+App at announcement: commit `abd0d72ea9284a83bb1af5b909ef48bc1d5ab7ce` + 6 uncommitted file(s), source `9d7fed1ccb7ddc2c6cd70dc335371396e9b698fa4bf4f9a5ff34dee038952cd0`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app/(tabs)/local/index.tsx 31db54b31790c63595038b82e06df532f258d34543da083c8d31f4c9eb1f8037`, `apps/mobile/src/frontend/components/Feedback/SuggestionSheet.tsx 525d5c050a72cc6dd48c35324c257a47c081a9d67e27b691c1ad3ee5fad5de7b`, `apps/mobile/src/frontend/components/Local/GameCard.tsx ee9676c1db9dae7fd5ad7a65a164101301c47a2dab9882669637232d7a1adb8d`, `apps/mobile/src/frontend/components/Local/TopAuraBoosters.tsx 6982f33ab4d0ba11572061e84ce8c7317e5617ad17abc1b1e60a368efbe0edb4`, `apps/mobile/src/frontend/components/Reels/LiveMatchBanner.tsx e0b353cf849edae51c5eef2272c6b1ce31647674b1b2d6b730b4fb2abe194375`, `apps/mobile/src/frontend/components/Reels/ReportContentModal.tsx 8959333359c40c641bf38fd709ed63e97a8e92db13825b199dbe1f78da4b70e9`; removed `apps/mobile/app/(tabs)/local/index.tsx 404186c06dcade877d4a44c001b9d18ed1f219e31d86d6781bc147d94fb5a0c3`, `apps/mobile/src/frontend/components/Feedback/SuggestionSheet.tsx e01d976dd11355272d178c42dca1aa05dce437c2c430367a7ae929739cdabf7e`, `apps/mobile/src/frontend/components/Local/GameCard.tsx b68a4682cf8094a675b65d3ab8fa5a2e9814c5f4efba37050975e801933d240d`, `apps/mobile/src/frontend/components/Local/TopAuraBoosters.tsx 9d9faa60343b0d865eaafcf8b974f276c10fb311e71ebdf1b077223e35be050b`, `apps/mobile/src/frontend/components/Reels/LiveMatchBanner.tsx b43ee882ad57b80ca6796ba51abfdd1b6bf891d29ed05b5382f7cc3adaf9d352`, `apps/mobile/src/frontend/components/Reels/ReportContentModal.tsx 08dd6b1c9d7c980420231db85329da7e4122d06ff2522bfb100cdec136c757d3`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `75bb1f25b994` → `0655dbc5fe0b` · announced by cloud-agent/app-fluidity
 
 App at announcement: commit `5d813070ea0d43f042f3c11f25ca95728e93a91a`, source `0655dbc5fe0bc40c85b2c5c477ccf1c9babef4c4cd998b81ea65f08c784c5635`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.

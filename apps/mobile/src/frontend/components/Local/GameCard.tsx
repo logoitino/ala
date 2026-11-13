@@ -2,7 +2,7 @@
  * Compact Local discovery scoreboard: the entire card opens the game; a small arrow marks that action.
  * Neutral letter tiles identify teams without pretending to be approved school crests.
  * Booster logos display through `mediaUri` (legacy full URL or `sb:` reference, SCALE-02); no logo shows initials.
- * Live games switch to the dark scoreboard card from the 2026-11 design refresh (ember LIVE pill, bright scores).
+ * Live and scheduled share the same Daylight surface; live only adds an ember LIVE pill (no night card).
  * @sideEffects Light haptic through AnimatedPressable; parent owns match navigation.
  */
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -35,21 +35,21 @@ function teamInitials(name: string): string {
  * @purpose Keep a team's full identity beside its own score on narrow game cards.
  * @returns A wrapping name and school with a separate, tabular score column.
  */
-function TeamScoreRow({ name, school, side, score, dark = false }: { name: string; school: string; side: string; score: string; dark?: boolean }) {
+function TeamScoreRow({ name, school, side, score }: { name: string; school: string; side: string; score: string }) {
   const schoolName = school?.trim() ?? '';
   return (
     <View style={styles.teamRow}>
-      <View style={[styles.monogram, dark && styles.monogramDark]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <Text style={[styles.monogramLabel, dark && styles.onDark]} maxFontSizeMultiplier={1.5}>{teamInitials(name)}</Text>
+      <View style={styles.monogram} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <Text style={styles.monogramLabel} maxFontSizeMultiplier={1.5}>{teamInitials(name)}</Text>
       </View>
       <View style={styles.teamIdentity}>
-        <Text style={[styles.side, dark && styles.onDarkMuted]}>{side}</Text>
-        <Text style={[styles.teamName, dark && styles.onDark]}>{name}</Text>
+        <Text style={styles.side}>{side}</Text>
+        <Text style={styles.teamName}>{name}</Text>
         {schoolName && schoolName.toLowerCase() !== name.toLowerCase() ? (
-          <Text style={[styles.school, dark && styles.onDarkMuted]}>{schoolName}</Text>
+          <Text style={styles.school}>{schoolName}</Text>
         ) : null}
       </View>
-      <Text style={[styles.score, dark && styles.onDark]}>{score}</Text>
+      <Text style={styles.score}>{score}</Text>
     </View>
   );
 }
@@ -59,7 +59,7 @@ function TeamScoreRow({ name, school, side, score, dark = false }: { name: strin
  * @param game Recorded games row; missing scores stay unreported.
  * @param onPress Opens the in-tab match feed and rosters.
  * @param sponsors Silver+ booster logos tagged to this matchup.
- * @returns A Daylight card using jade primary (night surface when live) and a jade roster action.
+ * @returns A Daylight card with jade primary and an ember LIVE pill when the match is live.
  * @sideEffects Light haptic via AnimatedPressable.
  */
 export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
@@ -90,28 +90,31 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
     >
       {/* UX-08: the game's surface, clipped in its own layer so the card keeps its iOS shadow. */}
       <View pointerEvents="none" style={styles.fieldLayer}>
-        <SportField sport={sport} opacity={live ? 0.05 : 0.08} />
+        <SportField sport={sport} opacity={0.08} />
       </View>
       <View style={styles.topRow}>
-        <View style={styles.sportBadge}><SportIcon sport={sport} size={16} color={live ? colors.onVideoMuted : colors.primary} /><Text style={[styles.sport, live && styles.onDarkMuted]}>{sport || 'Game day'}</Text></View>
+        <View style={styles.sportBadge}>
+          <SportIcon sport={sport} size={16} color={colors.primary} />
+          <Text style={styles.sport}>{sport || 'Game day'}</Text>
+        </View>
         <View style={[styles.statusTag, live && styles.statusLive]}>
           {live ? <View style={styles.liveDot} /> : null}
           <Text style={[styles.statusText, live && styles.statusLiveText]}>{status.label}</Text>
         </View>
       </View>
-      {status.detail ? <Text style={[styles.gameDetail, live && styles.onDarkMuted]}>{status.detail}</Text> : null}
+      {status.detail ? <Text style={styles.gameDetail}>{status.detail}</Text> : null}
       <View style={styles.scoreboard}>
-        <TeamScoreRow name={home} school={game.home_school} side="Home" score={homeScore} dark={live} />
-        <View style={[styles.scoreDivider, live && styles.scoreDividerDark]} />
-        <TeamScoreRow name={away} school={game.away_school} side="Away" score={awayScore} dark={live} />
+        <TeamScoreRow name={home} school={game.home_school} side="Home" score={homeScore} />
+        <View style={styles.scoreDivider} />
+        <TeamScoreRow name={away} school={game.away_school} side="Away" score={awayScore} />
       </View>
       <View style={styles.venueRow}>
-        <Text style={[styles.venue, live && styles.onDarkMuted]}>{game.venue?.trim() || 'Venue TBA'}</Text>
-        <Text style={[styles.ctaArrow, live && styles.ctaArrowDark]} accessibilityElementsHidden importantForAccessibility="no">↗</Text>
+        <Text style={styles.venue}>{game.venue?.trim() || 'Venue TBA'}</Text>
+        <Text style={styles.ctaArrow} accessibilityElementsHidden importantForAccessibility="no">↗</Text>
       </View>
       {sponsors.length > 0 ? (
         <View style={styles.sponsorRow}>
-          <Text style={[styles.sponsorCaption, live && styles.onDarkMuted]}>Boosted by</Text>
+          <Text style={styles.sponsorCaption}>Boosted by</Text>
           {sponsors.slice(0, 4).map((sponsor) => {
             const logo = mediaUri(sponsor.logo_url);
             return (
@@ -141,12 +144,8 @@ const styles = StyleSheet.create({
     gap: 8,
     ...cardShadow,
   },
-  cardLive: { backgroundColor: colors.videoSurface, borderColor: colors.videoSurface },
-  onDark: { color: colors.onVideo },
-  onDarkMuted: { color: colors.onVideoMuted },
-  monogramDark: { backgroundColor: 'rgba(244,247,245,0.10)' },
-  scoreDividerDark: { backgroundColor: 'rgba(244,247,245,0.12)' },
-  ctaArrowDark: { color: colors.glow },
+  /** Live stays on Daylight; only the status pill flips to ember. */
+  cardLive: { borderColor: FOCAL.ember, borderWidth: 1.5 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' },
   sportBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1, maxWidth: '100%' },
   topRow: {

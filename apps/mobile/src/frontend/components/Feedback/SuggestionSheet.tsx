@@ -2,7 +2,7 @@
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useState } from 'react';
-import { Alert, Modal,  StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated from 'react-native-reanimated';
 
@@ -30,7 +30,7 @@ type SuggestionSheetProps = {
 };
 
 /**
- * @purpose Fan suggestion / bug / look note. Distinct from Report / Hide on a clip.
+ * @purpose Fan suggestion / bug / look note. Kind and place are short scroll menus — not pill grids.
  * @sideEffects `submit_app_feedback`.
  */
 export function SuggestionSheet({ visible, surface = 'other', onClose }: SuggestionSheetProps) {
@@ -43,13 +43,16 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
   const { sheetStyle, backdropStyle, playOpen, playClose } = useFanSheetMotion();
 
   const canSend = body.trim().length >= 8 && !busy;
+  const kindLabel = FEEDBACK_KINDS.find((item) => item.id === kind)?.label ?? 'Suggestion';
+  const placeLabel = FEEDBACK_SURFACES.find((item) => item.id === place)?.label ?? 'Other';
 
   useEffect(() => {
     if (visible) {
       setOpen(true);
+      setPlace(surface);
       playOpen();
     }
-  }, [playOpen, visible]);
+  }, [playOpen, surface, visible]);
 
   const dismiss = () => {
     playClose(() => {
@@ -99,36 +102,61 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
         <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
-          <View style={styles.handle} />
           <Text style={styles.kicker}>Improve Tapua'i</Text>
           <Text style={styles.title}>Send a suggestion</Text>
-          <Text style={styles.lede}>Not a clip report. This goes to the admin Feedback desk, then Engineer Lab if it should ship as chrome.</Text>
-          <View style={styles.pills}>
-            {FEEDBACK_KINDS.map((item) => (
-              <AnimatedButton
-                key={item.id}
-                haptic="selection"
-                accessibilityLabel={item.label}
-                contentStyle={[styles.pill, kind === item.id && styles.pillOn]}
-                onPress={() => setKind(item.id)}
-              >
-                <Text style={[styles.pillLabel, kind === item.id && styles.pillLabelOn]}>{item.label}</Text>
-              </AnimatedButton>
-            ))}
-          </View>
-          <View style={styles.pills}>
-            {FEEDBACK_SURFACES.map((item) => (
-              <AnimatedButton
-                key={item.id}
-                haptic="selection"
-                accessibilityLabel={item.label}
-                contentStyle={[styles.pill, place === item.id && styles.pillOn]}
-                onPress={() => setPlace(item.id)}
-              >
-                <Text style={[styles.pillLabel, place === item.id && styles.pillLabelOn]}>{item.label}</Text>
-              </AnimatedButton>
-            ))}
-          </View>
+          <Text style={styles.lede}>Goes to the admin Feedback desk — not a clip report.</Text>
+
+          <Text style={styles.fieldLabel}>Type · {kindLabel}</Text>
+          <ScrollView
+            horizontal
+            nestedScrollEnabled
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.menuRail}
+          >
+            {FEEDBACK_KINDS.map((item) => {
+              const on = kind === item.id;
+              return (
+                <Pressable
+                  key={item.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={item.label}
+                  haptic="selection"
+                  onPress={() => setKind(item.id)}
+                  style={[styles.menuChip, on && styles.menuChipOn]}
+                >
+                  <Text style={[styles.menuChipLabel, on && styles.menuChipLabelOn]}>{item.label}</Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          <Text style={styles.fieldLabel}>Where · {placeLabel}</Text>
+          <ScrollView
+            nestedScrollEnabled
+            style={styles.menuList}
+            contentContainerStyle={styles.menuListContent}
+            showsVerticalScrollIndicator
+          >
+            {FEEDBACK_SURFACES.map((item) => {
+              const on = place === item.id;
+              return (
+                <Pressable
+                  key={item.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={item.label}
+                  haptic="selection"
+                  onPress={() => setPlace(item.id)}
+                  style={[styles.menuRow, on && styles.menuRowOn]}
+                >
+                  <Text style={[styles.menuRowLabel, on && styles.menuRowLabelOn]}>{item.label}</Text>
+                  {on ? <Text style={styles.menuCheck}>✓</Text> : null}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
           <TextInput
             value={body}
             onChangeText={setBody}
@@ -172,14 +200,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 8,
   },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    marginBottom: 4,
-  },
   kicker: {
     color: FOCAL.jadeInk,
     fontSize: 11,
@@ -198,14 +218,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 18,
   },
-  pills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  fieldLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+    marginTop: 2,
   },
-  pill: {
-    minHeight: 32,
-    paddingHorizontal: 10,
+  menuRail: {
+    gap: 8,
+    paddingVertical: 2,
+    paddingRight: 8,
+  },
+  menuChip: {
+    minHeight: 36,
+    paddingHorizontal: 12,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
@@ -213,20 +240,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pillOn: {
-    backgroundColor: FOCAL.neonJade,
+  menuChipOn: {
+    backgroundColor: FOCAL.mistJade,
     borderColor: FOCAL.jadeInk,
   },
-  pillLabel: {
+  menuChipLabel: {
     color: colors.textMuted,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
   },
-  pillLabelOn: {
-    color: FOCAL.ink,
+  menuChipLabelOn: {
+    color: FOCAL.jadeInk,
+  },
+  menuList: {
+    maxHeight: 148,
+    borderRadius: MENU_METRICS.controlRadius,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  menuListContent: {
+    paddingVertical: 4,
+  },
+  menuRow: {
+    minHeight: 40,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  menuRowOn: {
+    backgroundColor: FOCAL.mistJade,
+  },
+  menuRowLabel: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  menuRowLabelOn: {
+    color: FOCAL.jadeInk,
+  },
+  menuCheck: {
+    color: FOCAL.jadeInk,
+    fontSize: 14,
+    fontWeight: '800',
   },
   field: {
-    minHeight: 96,
+    minHeight: 88,
     borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,

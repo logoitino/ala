@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · Fluidity: exit-map ack after sheet motion source change. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Local Daylight polish: light live matchups, compact Aura boosters, scroll report menus. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,14 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-13 — Local Daylight polish (boosters, report, live)
+
+- **Top Aura Boosters:** compact sponsor-style cards (avatar + name + pts + one badge); shorter hub lede.
+- **Suggestion / Report sheets:** scroll menus instead of dense pill grids; shorter copy.
+- **Live matchups:** `GameCard` and `LiveMatchBanner` stay on Daylight surface (ember LIVE pill only — no night card).
+- Dark scheme deferred. Skipped Lovable agent (workspace credits; price not in Wave 0 ROADMAP).
+- **About to spend:** $0 (Wave 0 presentation). Device feel still APP-TEST / DEVICE_QA.
 
 ### 2026-11-13 — App fluidity (menus, sheets, tabs, scroll)
 

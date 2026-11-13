@@ -44,11 +44,11 @@ wash are rendered by its child `UploadVideoComposer`; donation steps live in chi
 | `Auth/SoftWallModal.tsx` | `useFanSheetMotion` + shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
 | `BackedCelebration.tsx` | shared 440px sheet frame | Existing donation celebration chrome remains; shared frame geometry. |
 | `Drip/ProductSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
-| `Feedback/SuggestionSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
+| `Feedback/SuggestionSheet.tsx` | shared 440px sheet frame; kind horizontal scroll + where vertical scroll menu | Feature actions/validation retained; native fit unverified. |
 | `Filmers/FilmerSheet.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
 | `Legal/LegalModal.tsx` | `useFanSheetMotion` + shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Local/SponsorshipModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
-| `Local/TopAuraBoosters.tsx` | shared 440px sheet frame | Tier-based booster colors remain; shared frame geometry. |
+| `Local/TopAuraBoosters.tsx` | compact Daylight rail cards (sponsor density) + peek sheet | Tier face washes remain; peek uses surface chrome. |
 | `Onboarding/WelcomeOverlay.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
 | `Operator/OperatorRosterModal.tsx` | accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Operator/PINClaimModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
@@ -66,7 +66,7 @@ wash are rendered by its child `UploadVideoComposer`; donation steps live in chi
 | `Reels/HighlightPickerModal.tsx` | accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Reels/ReelMoreSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Reels/ReelViewModal.tsx` | custom full-screen layout | Full-screen video viewer remains Midnight; playback controls stay visible. |
-| `Reels/ReportContentModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
+| `Reels/ReportContentModal.tsx` | shared 440px sheet frame; reason vertical scroll menu | Feature actions/validation retained; native fit unverified. |
 | `Reels/UploadVideoModal.tsx` | custom full-screen layout | Feature actions/validation retained; native fit unverified. |
 | `Spotlight/SpotlightModal.tsx` | custom full-screen layout | Full-screen award/video reveal; Midnight video contrast retained. |
 | `TipSheetModal.tsx` | shared 440px sheet frame | Feature actions/validation retained; native fit unverified. |
@@ -102,10 +102,10 @@ Next admin remains read-only; published theme choices are still owned by Expo ad
 
 | Source | Presentation and data rule |
 | --- | --- |
-| `Local/GameCard.tsx` / `Local/gamePresentation.ts` | Cyan Local accent, neutral team letter tiles, wrapping school/team names and individual score columns. Scheduled and final states override stale clock data; unknown scores/clocks are not fabricated. |
+| `Local/GameCard.tsx` / `Local/gamePresentation.ts` | Daylight surface for live and scheduled (ember LIVE pill only). Neutral team letter tiles; wrapping school/team names and score columns. Scheduled/final override stale clocks; unknown scores/clocks are not fabricated. |
 | `Profile/AthleteProfileView.tsx` / `Profile/ProfileHeroAvatar.tsx` | Compact photo/name hero with known sport, position and class; direct wrapping Goals/Team/owner Manage navigation. Community accounts omit athlete credentials; public athletes do not use the viewer’s private profile metadata. School crest confirmation and Aura/avatar actions remain. |
 | `Reels/ReelCard.tsx` / `Reels/ReelActionOverlay.tsx` | Real roster jersey/position beside a larger athlete label; athlete and school allow two lines. Midnight contrast, reactions, donation and profile navigation remain. |
-| `Reels/LiveMatchBanner.tsx` | Scoreboard uses the chrome width. Each school is one line beside a fixed score column. Recorded-state rules stay; no default clock or invented live status. |
+| `Reels/LiveMatchBanner.tsx` | Daylight surface scoreboard (not night scrim). Each school is one line beside a fixed score column. Recorded-state rules stay; no default clock or invented live status. |
 
 UX-03 follow-up evidence: `pnpm check` passes both app typechecks, 55 suites / 261 tests
 and all guards. Same-name public-athlete credentials require an exact linked player ID;
