@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-12 · Popup scroll + vibrant Local polls + quiz demo when SQL missing. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-12 · Account birth pickers + delete-account request; popup/poll/quiz fixes. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,15 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-12 — Account birth pickers, delete-account request, compact menus
+
+- `BirthMonthField`: twelve-month pill grid → compact Month/Year dropdown scroll lists (works inside
+  SoftWall without a nested Modal). Age card + Privacy reuse it.
+- Profile Settings: **Delete account** opens `DeleteAccountSheet` — records `[account-deletion-request]`
+  via Feedback, then signs out. Honest copy: staff finishes wipe; gift/books rows may be kept (P1-01
+  auto-erasure still open). Lovable MCP needs Desktop auth; density from LOVABLE_UI_UX_PLAN ($0).
+- `ProfileMenuSheet` / `PrivacySettingsSheet`: tighter row/type density; touch targets stay ≥44.
 
 ### 2026-11-12 — Claim-school scroll, vibrant Local polls, quiz demo path
 

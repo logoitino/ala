@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    gap: 10,
+    gap: 8,
   },
   kicker: {
     fontSize: 11,
@@ -197,18 +197,18 @@ const styles = StyleSheet.create({
     color: FOCAL.goldInk,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.3,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   list: {
-    gap: 14,
+    gap: 10,
     paddingBottom: 4,
   },
   section: {
-    gap: 8,
+    gap: 6,
   },
   sectionTitle: {
     fontSize: 11,
@@ -219,24 +219,24 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   row: {
-    minHeight: 54,
+    minHeight: MENU_METRICS.touchTarget,
     borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 10,
   },
   copy: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
   label: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: colors.text,
   },
@@ -244,16 +244,16 @@ const styles = StyleSheet.create({
     color: FOCAL.ember,
   },
   hint: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: colors.textMuted,
   },
   close: {
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   closeLabel: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: colors.textMuted,
   },

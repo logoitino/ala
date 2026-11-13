@@ -45,6 +45,7 @@ import { fetchRecentTips } from '@/lib/finance';
 import { colors } from '@/constants/theme';
 import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
 import { PrivacySettingsSheet } from '@/components/Profile/PrivacySettingsSheet';
+import { DeleteAccountSheet } from '@/components/Profile/DeleteAccountSheet';
 import { NotificationSettingsSheet } from '@/components/Profile/NotificationSettingsSheet';
 import { ChallengeSettingsSheet } from '@/components/Challenges/ChallengeSettingsSheet';
 
@@ -76,6 +77,7 @@ export default function MyHubTab() {
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [challengesOpen, setChallengesOpen] = useState(false);
@@ -266,10 +268,17 @@ export default function MyHubTab() {
         section: 'account',
         label: 'Sign out',
         hint: profile?.full_name?.trim() || profile?.username || 'Return to guest browse',
-        danger: true,
         onPress: () => {
           void signOut();
         },
+      });
+      items.push({
+        id: 'delete-account',
+        section: 'account',
+        label: 'Delete account',
+        hint: 'Request deletion · staff finishes after review',
+        danger: true,
+        onPress: () => setDeleteAccountOpen(true),
       });
     }
     if (live.tabs.drip) {
@@ -528,6 +537,7 @@ export default function MyHubTab() {
       <VerifyAthleteModal visible={verifyOpen} onClose={() => setVerifyOpen(false)} />
       <EditProfileModal visible={editProfileOpen} onClose={() => setEditProfileOpen(false)} onOpenPrivacy={() => setPrivacyOpen(true)} onSportsSaved={sports.acceptConfirmed} />
       <PrivacySettingsSheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      <DeleteAccountSheet visible={deleteAccountOpen} onClose={() => setDeleteAccountOpen(false)} />
       <NotificationSettingsSheet visible={notificationsOpen && profileOpen && !isGuest} onClose={() => setNotificationsOpen(false)} />
       <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />
       <ChallengeSettingsSheet visible={challengesOpen} onClose={() => setChallengesOpen(false)} />

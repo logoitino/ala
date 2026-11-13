@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `170a7881b747` → `448d531f9bc8` · announced by cursor/popup-polls-quiz-9a86 account UX
+
+App at announcement: commit `e3342c5e95cc4796d70fd91585cc28e71e7cb74d` + 7 uncommitted file(s), source `448d531f9bc8e25140b8b6e50bda1ca28ba7e1d3e0f1904d8743c10f605e28ab`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app/(tabs)/profile.tsx a775e54666ae51926eb03e922f758471f44b225598a7e547c9d68716ce841417`, `apps/mobile/src/frontend/components/Auth/BirthMonthField.tsx ecd546567b7c363854fb4715eb269ecd1f046c6cf7cc8be0686b38d4762d2983`, `apps/mobile/src/frontend/components/Auth/__tests__/BirthMonthField.test.tsx 391985431cc50b28503b7c296b43c2fca7242b53c5580f81ef54e5ad80282a51`, `apps/mobile/src/frontend/components/Profile/DeleteAccountSheet.tsx af7216f1c8b55401d55bf96514817f6bcfa5cef2c5019a2782ea6a3853cc3746`, `apps/mobile/src/frontend/components/Profile/PrivacySettingsSheet.tsx 937f26f835c036b5c4ed94baa693efda2b2c03044611ebf47ea0c5a93e43951b`, `apps/mobile/src/frontend/components/Profile/ProfileMenuSheet.tsx 5f38b598b1775ca865beeadb6ef96d65187314d9a4a978a3bd75e68d68a34ca0`, `apps/mobile/src/frontend/components/Profile/__tests__/DeleteAccountSheet.test.tsx 6eb651f8efd1bb9904c165040fabd39d44ab974d82a3b428f8a7fd8b840c2bd3`; removed `apps/mobile/app/(tabs)/profile.tsx bf6d0e4bb90a95ce458b6a041af58aab27329335e489029b4a9045fb3cecca64`, `apps/mobile/src/frontend/components/Auth/BirthMonthField.tsx 3dfe4e4091e7b9ec7b8f960828aca5574b8e2d3492e6784658857900d8ac8349`, `apps/mobile/src/frontend/components/Auth/__tests__/BirthMonthField.test.tsx c53c650302d2a04a6dd01bd473f84f81a7e3e37348d6f866efd6fca9e2928a11`, `apps/mobile/src/frontend/components/Profile/PrivacySettingsSheet.tsx 8fe84cc251b0c6ce39f60686c04e5ebc3204082ec0fe4a4f2a9e88288cbc4b13`, `apps/mobile/src/frontend/components/Profile/ProfileMenuSheet.tsx b44d63a8964b6482dd7b5c7172b045d4235c9457eec00acc9ae8c9af28feced8`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `799e7e8ec361` → `170a7881b747` · announced by cursor/popup-polls-quiz-9a86 cloud agent
 
 App at announcement: commit `33eb84b1e315eedbb5d83cf4e947cbc8d2aa55eb`, source `170a7881b7474793b3a6d557010bf5ef03fed344651637f40e99022a2cae86f8`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
