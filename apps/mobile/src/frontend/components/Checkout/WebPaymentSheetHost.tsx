@@ -72,7 +72,9 @@ function WebPaymentSheetForm({
     <View style={styles.sheet} accessibilityRole="summary">
       <Text style={styles.kicker}>{merchantDisplayName}</Text>
       <Text style={styles.title}>Secure checkout</Text>
-      <Text style={styles.hint}>Test mode: use card 4242 4242 4242 4242.</Text>
+      {process.env.EXPO_PUBLIC_APP_ENV !== 'production' ? (
+        <Text style={styles.hint}>Test mode: use card 4242 4242 4242 4242.</Text>
+      ) : null}
       <View style={styles.elementWrap}>
         <PaymentElement options={{ layout: 'tabs' }} />
       </View>

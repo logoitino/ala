@@ -628,7 +628,7 @@ function ReelCardImpl({
               style={({ pressed }) => [styles.unlockBtn, pressed && styles.pressed, unlocking && styles.disabled]}
             >
               <Text style={styles.unlockLabel}>
-                {unlocking ? 'Opening PaymentSheet…' : vaultUnlockLabel(live.catalog.exclusiveDollars)}
+                {unlocking ? 'Opening checkout…' : vaultUnlockLabel(live.catalog.exclusiveDollars)}
               </Text>
             </Pressable>
           </View>

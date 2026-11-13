@@ -47,7 +47,7 @@ export function VaultLockedCard({ busy = false, onUnlock }: VaultLockedCardProps
         contentStyle={styles.button}
       >
         <Text style={styles.buttonLabel}>
-          {busy ? (decision.allowStripe ? 'Opening PaymentSheet…' : 'Opening…') : subscribeLabel}
+          {busy ? (decision.allowStripe ? 'Opening checkout…' : 'Opening…') : subscribeLabel}
         </Text>
       </AnimatedButton>
     </View>

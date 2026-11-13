@@ -315,7 +315,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
                 onPress={buy}
                 contentStyle={[styles.buy, busy && styles.buyOff]}
               >
-                <Text style={styles.buyLabel}>{busy ? 'Opening PaymentSheet…' : buyLabel}</Text>
+                <Text style={styles.buyLabel}>{busy ? 'Opening checkout…' : buyLabel}</Text>
               </AnimatedButton>
             </Animated.View>
           ) : null}

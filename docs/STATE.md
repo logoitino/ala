@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · Expo web Phase 1 + vault triage CI fix. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Expo web Phase 1 polish + vault triage CI fix. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -184,6 +184,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - **Desktop shell:** wide viewports get a phone-width column (`WebAppShell`) so dock/Highlights stay usable.
 - Exclusive rails: web Stripe + books 20/80; production iOS/Android still block Stripe Exclusive until
   IAP / Play Billing. Hosted `tapuai.app` deploy still owner/ops. Upload/auth polish = later phases.
+- Follow-up from web-gap pass: busy CTAs say “Opening checkout…” (not PaymentSheet); TROUBLESHOOTING §6
+  no longer calls web Stripe a stub; test-card hint hidden when `EXPO_PUBLIC_APP_ENV=production`.
 - **About to spend:** $0 (Wave 0). Budget unchanged; hosting later is owner spend.
 
 ### 2026-11-13 — Vault Exclusive platform rails (web cut; native store billing)
