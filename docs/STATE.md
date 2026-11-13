@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · App fluidity + portal Tip Tapua'i copy fix. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Profile menu nested-modal onDismiss sequencing. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -178,7 +178,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ### 2026-11-13 — App fluidity (menus, sheets, tabs, scroll)
 
 - Shared `useFanSheetMotion` + sheet timing tokens (`SHEET_CLOSE_TIMING`, `SPRING_SHEET` travel).
-- **Profile menu** waits for slide-away before clearing `visible` / opening nested Soft-Wall.
+- **Profile menu** slides away, then hides the native Modal; nested Soft-Wall / Legal wait for `onDismiss` (Android fallback timer).
 - Upload / Reel more: `animationType="none"` + `SheetRise active={visible}` (re-open rise).
 - Soft-Wall, Legal, Suggestion, Verify, Edit profile, Share QR, Role switcher, Drip Product:
   vertical travel uses `SPRING_SHEET` (not bouncy `SPRING_CARD`).

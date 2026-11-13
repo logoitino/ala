@@ -59,7 +59,10 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
   const frame = useSheetFrame();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
+  /** Keep the tree mounted through the slide-away; nested Soft-Wall waits for native `onDismiss`. */
   const [mounted, setMounted] = useState(false);
+  /** Native Modal visibility — flipped off only after the close animation settles. */
+  const [modalVisible, setModalVisible] = useState(false);
   const { sheetStyle, backdropStyle, playOpen, playClose } = useFanSheetMotion();
   const afterRef = useRef<(() => void) | undefined>(undefined);
   const closingToken = useRef<number | null>(null);
@@ -83,6 +86,7 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
     afterRef.current = undefined;
     parentNotified.current = false;
     setMounted(true);
+    setModalVisible(true);
     playOpen();
   }, [playOpen, visible]);
 
@@ -92,6 +96,8 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
     const after = afterRef.current;
     afterRef.current = undefined;
     setMounted(false);
+    setModalVisible(false);
+    // Nested Soft-Wall / Legal / Role must open only after this native Modal is gone (iOS).
     after?.();
   };
 
@@ -103,13 +109,14 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
     closingToken.current = token;
     afterRef.current = after;
     playClose(() => {
+      // Hide the native Modal after the slide; `onDismiss` (or the fallback) runs `after`.
+      setModalVisible(false);
       if (!parentNotified.current) {
         parentNotified.current = true;
         onClose();
       }
-      finishDismiss(token);
     });
-    // Android may never fire Modal onDismiss; keep a fallback if the close animation callback is lost.
+    // Android may never fire Modal onDismiss; keep a platform fallback.
     setTimeout(() => {
       if (closingToken.current !== token) return;
       if (!parentNotified.current) {
@@ -124,7 +131,7 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
     <Modal
       transparent
       animationType="none"
-      visible={visible || mounted}
+      visible={modalVisible}
       onRequestClose={() => dismiss()}
       onDismiss={() => {
         if (closingToken.current != null) finishDismiss(closingToken.current);
