@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `4f4105ac0345` → `4f4105ac0345` · announced by cursor/web-app-parity-9a86 merge vault exit-map ack
+
+App at announcement: commit `9d992f117e9e34ff7691bc88b0d6307fcce4fa27`, source `4f4105ac03459bfb3b80d31725be242388f08eb685ab6362bfeeebc7f7290e34`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- Baseline created; no prior plan to compare.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `4f4105ac0345` → `4f4105ac0345` · announced by cursor/web-app-parity-9a86 register Stripe.js packages
 
 App at announcement: commit `402609bf21591ff949a42a150b74d77d81684fd3`, source `4f4105ac03459bfb3b80d31725be242388f08eb685ab6362bfeeebc7f7290e34`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
