@@ -1,12 +1,10 @@
 /**
  * Fan sheet timing tokens stay consistent for TipSheet / Profile menu / Soft-Wall.
+ * Easing lives in hooks (not this module) so Jest Reanimated mocks stay loadable.
  */
-import { Easing } from 'react-native-reanimated';
-
 import {
   SHEET_BACKDROP_IN_MS,
   SHEET_BACKDROP_OUT_MS,
-  SHEET_CLOSE_TIMING,
   SHEET_DISMISS_MS,
   SHEET_REDUCED_MS,
   SHEET_TRAVEL,
@@ -25,7 +23,5 @@ describe('fan sheet motion tokens', () => {
     expect(SHEET_REDUCED_MS).toBeLessThan(SHEET_DISMISS_MS);
     expect(SHEET_BACKDROP_OUT_MS).toBeLessThanOrEqual(SHEET_DISMISS_MS);
     expect(SHEET_BACKDROP_IN_MS).toBe(200);
-    expect(SHEET_CLOSE_TIMING.duration).toBe(SHEET_DISMISS_MS);
-    expect(SHEET_CLOSE_TIMING.easing).toBe(Easing.in(Easing.cubic));
   });
 });

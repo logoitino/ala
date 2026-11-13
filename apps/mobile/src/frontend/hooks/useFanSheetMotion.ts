@@ -17,9 +17,9 @@ import {
 } from 'react-native-reanimated';
 
 import {
-  SHEET_BACKDROP_IN_TIMING,
+  SHEET_BACKDROP_IN_MS,
   SHEET_BACKDROP_OUT_MS,
-  SHEET_CLOSE_TIMING,
+  SHEET_DISMISS_MS,
   SHEET_REDUCED_MS,
   SHEET_TRAVEL,
   SPRING_SHEET,
@@ -68,7 +68,10 @@ export function useFanSheetMotion(travel: number = SHEET_TRAVEL): FanSheetMotion
         return;
       }
       translateY.value = withSpring(0, SPRING_SHEET);
-      backdropOpacity.value = withTiming(1, SHEET_BACKDROP_IN_TIMING);
+      backdropOpacity.value = withTiming(1, {
+        duration: SHEET_BACKDROP_IN_MS,
+        easing: Easing.out(Easing.cubic),
+      });
     });
   }, [backdropOpacity, reduceMotion, translateY, travel]);
 
@@ -84,9 +87,10 @@ export function useFanSheetMotion(travel: number = SHEET_TRAVEL): FanSheetMotion
     backdropOpacity.value = withTiming(0, { duration: outMs });
     translateY.value = withTiming(
       travel,
-      reduceMotion
-        ? { duration: SHEET_REDUCED_MS, easing: Easing.in(Easing.cubic) }
-        : SHEET_CLOSE_TIMING,
+      {
+        duration: reduceMotion ? SHEET_REDUCED_MS : SHEET_DISMISS_MS,
+        easing: Easing.in(Easing.cubic),
+      },
       (finished) => {
         if (finished) runOnJS(settle)();
       },

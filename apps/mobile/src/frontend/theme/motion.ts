@@ -1,6 +1,6 @@
 /** Shared motion and sport accents keep fan destinations consistent; bright glows never replace readable text inks. */
 import { Platform, type ViewStyle } from 'react-native';
-import { Easing, type WithSpringConfig, type WithTimingConfig } from 'react-native-reanimated';
+import type { WithSpringConfig } from 'react-native-reanimated';
 
 /**
  * @purpose Shared Reanimated springs plus focal color tokens for every fan tab (Reel, Local, Drip, Profile, Upload).
@@ -56,17 +56,10 @@ export const SHEET_DISMISS_MS = 220;
 /** Instant-feel open/close when Reduce Motion is on. */
 export const SHEET_REDUCED_MS = 100;
 
-/** Shared close timing for fan sheets — cubic ease-in so the card accelerates off-screen. */
-export const SHEET_CLOSE_TIMING: WithTimingConfig = {
-  duration: SHEET_DISMISS_MS,
-  easing: Easing.in(Easing.cubic),
-};
-
-/** Shared open backdrop timing. */
-export const SHEET_BACKDROP_IN_TIMING: WithTimingConfig = {
-  duration: SHEET_BACKDROP_IN_MS,
-  easing: Easing.out(Easing.cubic),
-};
+/**
+ * Timing objects that call `Easing.*` stay inside hooks/components — not this module —
+ * so Jest's Reanimated mock (which may omit `Easing`) can still import FOCAL / springs.
+ */
 
 /**
  * Highlights pager depth: the outgoing page shrinks / sinks / rounds while the incoming page
