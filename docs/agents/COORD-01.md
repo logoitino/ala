@@ -106,6 +106,20 @@ app evidence. Final post-append docs/links/roles/feature/whitespace checks passe
 declared scopes. Root's remaining local integration/documentation claim is released. Hosted,
 business-event and operational delivery work remains open under the owners above.
 
+## APP-TEST efficient path — 2026-11-12 UTC
+
+Owner asked to continue on the non-Exit path and make testing efficient. Disposition:
+
+| Track | Status |
+| --- | --- |
+| Exit / Redundancy drills | **Deferred** (same-turn map only if code touches exit) |
+| Lane C web Highlight | **PASS** (8s publish + playback); rejects stay out of Details |
+| Lane A Google | Provider + Soft-Wall popup **PASS**; full signup **owner browser** |
+| Lane B Connect | Staging SQL/Edge **404**; owner checklist ready |
+| Gift `4242` | Demo Fan + Andre **Give $5** reachable; complete PaymentSheet on owner device/local with test secret — **$0** |
+
+STATE §0 carries the fast loop. No Exit work started.
+
 ## APP-TEST-B Connect prep — 2026-11-12 UTC
 
 Continued APP-TEST after Google provider-on. Scope: probe staging Connect readiness and refresh

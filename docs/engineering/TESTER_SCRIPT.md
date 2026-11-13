@@ -1,6 +1,19 @@
 <!-- Test procedures distinguish historical wave checks from current source, provider and device acceptance. -->
 # Tester script — Phase 3 internal wave
 
+## Efficient APP-TEST loop — no Exit (2026-11-12)
+
+Use this order on staging `tucioqipfejqqqtuakdi` / local Expo web. Wave 0 costs **$0**
+(Demo Fan, `4242`, Free Metro). Do **not** start Exit drills here.
+
+1. **Demo Fan** — SoftWall → Use test account / email `demo@tapuai.app` (skip Google if short on time).
+2. **Highlight (lane C)** — Upload → 8s fixture → caption + athlete → rights → Publish → confirm Home playback. Reject 46s / >8MiB (must not reach Details).
+3. **Gift** — Athlete profile → **Give $5** → Review → PaymentSheet card `4242 4242 4242 4242`. Needs signed-in session + Stripe **test** secret on the server route.
+4. **Google (lane A)** — Guest → Upload SoftWall → Continue with Google → Test-users Gmail → birth if asked → confirm resume. Popup/cancel already verified.
+5. **Bank (lane B)** — Only after owner applies Connect SQL + deploys `create-stripe-account` with `sk_test_`. Payouts stay 503.
+
+PRs: C [#35](https://github.com/logoitino/ala/pull/35) · A [#36](https://github.com/logoitino/ala/pull/36) · B [#37](https://github.com/logoitino/ala/pull/37).
+
 ## Current giving checks — MONEY-TIPS-01 (2026-10-22)
 
 Use the [rollout runbook](GIFT_TIP_ROLLOUT.md) and [COORD-02](../agents/COORD-02.md) first.
