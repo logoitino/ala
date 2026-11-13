@@ -72,6 +72,7 @@ import { useAthleteSubscription } from '@/hooks/useAthleteSubscription';
 import { useGameEventBroadcast } from '@/hooks/useGameEventBroadcast';
 import { useSavedReel } from '@/hooks/useSavedReel';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
+import { beginExclusiveUnlock } from '@/lib/exclusiveCheckout';
 import { addUserAura, auraBadgeLabel, auraTierForPoints, emitPlayerAura, emitProfileAura, resolveAuraPoints } from '@/lib/aura';
 import { hypeFromPlayer } from '@/lib/hype';
 import { formatGameEventHeadline } from '@/lib/operator';
@@ -463,22 +464,14 @@ function ReelCardImpl({
       onOpenProfile?.();
       return;
     }
-    // Soft-Wall first: a stashed resume may close over a pre-login startCheckout; live session
-    // resolution in useTipCheckout / useAthleteSubscription.grant still writes fan_id + the pass.
-    requireAuth({
-      kind: 'exclusive',
-      athleteName: player.name,
-      athleteId: player.id,
-      resume: () => {
-        void startCheckout({
-          player,
-          tipAmount: live.catalog.exclusiveDollars,
-          coverFees: false,
-          auraPoints: live.catalog.exclusiveAura,
-          skipBacker: true,
-          onPaid: grant,
-        });
-      },
+    // Soft-Wall + platform rail: production iOS/Android block Stripe Exclusive; web/test keep PaymentSheet.
+    beginExclusiveUnlock({
+      player,
+      tipAmount: live.catalog.exclusiveDollars,
+      auraPoints: live.catalog.exclusiveAura,
+      requireAuth,
+      startCheckout,
+      onPaid: grant,
     });
   }, [grant, live.catalog.exclusiveAura, live.catalog.exclusiveDollars, onOpenProfile, player, requireAuth, startCheckout, surface, unlocking]);
 

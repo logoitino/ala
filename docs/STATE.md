@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-12 · SoftWall Google-off → Create email; account UX + popup/poll/quiz on #39. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Vault Exclusive platform rails (web Stripe 20/80; production iOS/Android store billing). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,18 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-13 — Vault Exclusive platform rails (web cut; native store billing)
+
+- Books Exclusive split stays **20% Tapua'i / 80% athlete** (`VAULT_PLATFORM_CUT_BPS`); fan Vault
+  card + athlete Lock Vault copy disclose it.
+- Platform gate (`data/storeCommerce.ts` + `lib/exclusiveCheckout.ts`): **web** keeps Stripe
+  Exclusive; **production iOS/Android** block Stripe for Exclusive and offer unlock on the website
+  until App Store IAP / Google Play Billing ship. Preview/test builds still use Stripe so APP-TEST
+  can unlock.
+- **Android is not freer than Apple** for in-app digital Vault access — Play Billing is the same
+  class as IAP. Gifts stay Stripe + 0% cut (counsel still owns 3.2.1(vii) / store claims).
+- Call sites: profile, public `/user/[id]`, ReelCard. StoreKit/Play Billing products **not built**.
 
 ### 2026-11-12 — SoftWall Google-off opens Create (APP-TEST lane A)
 
@@ -1639,6 +1651,12 @@ Do not re-diagnose these. Fix them or leave them.
    optional tip for Tapua'i at checkout (default No tip, never pre-selected). Built; SQL recorded applied to staging on 2026-09-30, not development.
    Still open: counsel on App Store 3.2.1(vii), which appears to require 100% for non-IAP gifts —
    fallback is `MALO_PLATFORM_CUT_BPS` = 0 with the tip kept (LEGAL row L).
+   - **Exclusive / Vault store rails (owner 2026-11-13, engineering working model):** Web Exclusive
+     uses Stripe with the existing **20/80** books split. Production **iOS** Exclusive must use
+     App Store IAP (not Stripe in-app). Production **Android** Exclusive must use Google Play
+     Billing — **Android is not exempt** from store billing for in-app digital goods. Gate is
+     coded (`storeCommerce` / `exclusiveCheckout`); StoreKit and Play Billing products are **not
+     built**. Counsel must review before store listing claims or live money.
 
 10. **Athlete verification and fake highlights** — `docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md`.
     **Decided 2026-09-29:** gifts are held until verified and the athlete sees that in the app; the

@@ -8,6 +8,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors, KIT } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { exclusiveSubscribeLabel, exclusiveVaultCallout } from '@/data/exclusive';
+import { decideExclusiveCheckout } from '@/data/storeCommerce';
 
 type VaultLockedCardProps = {
   busy?: boolean;
@@ -16,13 +17,17 @@ type VaultLockedCardProps = {
 
 /**
  * @purpose Vault-tab callout for fans who have not purchased the exclusive pass. Price comes from Catalogs.
+ * Shows the books 20/80 Exclusive split and honest store-rail copy (web Stripe vs App Store / Play).
  * @param busy Disables the CTA while PaymentSheet is open.
- * @param onUnlock Starts exclusive checkout.
- * @returns Callout with the live exclusive dollars.
+ * @param onUnlock Starts exclusive checkout (or the store-rail redirect when Stripe is blocked).
+ * @returns Callout with the live exclusive dollars and platform rail note.
  */
 export function VaultLockedCard({ busy = false, onUnlock }: VaultLockedCardProps) {
   const { live } = useAppRuntime();
-  const subscribeLabel = exclusiveSubscribeLabel(live.catalog.exclusiveDollars);
+  const decision = decideExclusiveCheckout();
+  const subscribeLabel = decision.allowStripe
+    ? exclusiveSubscribeLabel(live.catalog.exclusiveDollars)
+    : decision.fanCta;
   const callout = exclusiveVaultCallout(live.catalog.exclusiveDollars);
   return (
     <View style={styles.banner} accessibilityRole="summary">
@@ -31,6 +36,7 @@ export function VaultLockedCard({ busy = false, onUnlock }: VaultLockedCardProps
       </View>
       <Text style={styles.kicker}>Vault 🔒</Text>
       <Text style={styles.body}>{callout}</Text>
+      <Text style={styles.split}>{decision.fanBody}</Text>
       <AnimatedButton
         accessibilityLabel={subscribeLabel}
         accessibilityState={{ disabled: busy }}
@@ -41,7 +47,7 @@ export function VaultLockedCard({ busy = false, onUnlock }: VaultLockedCardProps
         contentStyle={styles.button}
       >
         <Text style={styles.buttonLabel}>
-          {busy ? 'Opening PaymentSheet…' : subscribeLabel}
+          {busy ? (decision.allowStripe ? 'Opening PaymentSheet…' : 'Opening…') : subscribeLabel}
         </Text>
       </AnimatedButton>
     </View>
@@ -80,6 +86,14 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  split: {
+    color: colors.onVideoMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '500',
+    textAlign: 'center',
+    opacity: 0.92,
   },
   buttonWrap: {
     marginTop: 8,

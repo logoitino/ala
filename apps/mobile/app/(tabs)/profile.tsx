@@ -32,6 +32,7 @@ import { countStoredCheerVotes } from '@/hooks/useCheerPoll';
 import { useRoster } from '@/hooks/useRoster';
 import { readMaloDroppedCount, useTipCheckout } from '@/hooks/useTipCheckout';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
+import { beginExclusiveUnlock } from '@/lib/exclusiveCheckout';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst } from '@/lib/reels';
 import { formatCapabilityLine } from '@/lib/roles';
 import { handleFromName, resolveAuraPoints, subscribePlayerAura } from '@/lib/aura';
@@ -199,20 +200,13 @@ export default function MyHubTab() {
   const showVarsityChrome = isAthlete || schoolClaimed || verifyStatus !== 'unverified';
 
   const subscribe = () => {
-    requireAuth({
-      kind: 'exclusive',
-      athleteName: athlete.name,
-      athleteId: athlete.id,
-      resume: () => {
-        void startCheckout({
-          player: athlete,
-          tipAmount: live.catalog.exclusiveDollars,
-          coverFees: false,
-          auraPoints: live.catalog.exclusiveAura,
-          skipBacker: true,
-          onPaid: grant,
-        });
-      },
+    beginExclusiveUnlock({
+      player: athlete,
+      tipAmount: live.catalog.exclusiveDollars,
+      auraPoints: live.catalog.exclusiveAura,
+      requireAuth,
+      startCheckout,
+      onPaid: grant,
     });
   };
 

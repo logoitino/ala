@@ -1,4 +1,11 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-13 — Vault Exclusive platform rails
+
+- Disclose Exclusive books split (20% Tapua'i / 80% athlete) on Vault lock + unlock UI.
+- Web keeps Stripe Exclusive; production iOS/Android block Stripe Exclusive until App Store IAP /
+  Google Play Billing ship (Android not freer than Apple for digital Vault). Test builds still
+  Stripe for APP-TEST. `data/storeCommerce.ts` · `lib/exclusiveCheckout.ts`.
+
 ## 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 
 - Android APK `df2a07a7` and iOS IPA `a968716d` from density tip `4f37523` (PR #34).
