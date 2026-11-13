@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `cf1b7d370cf1` → `4f4105ac0345` · announced by cursor/web-app-parity-9a86 Codex viewport + dismiss lock
+
+App at announcement: commit `adb72ea7c60a664455ef8b9606d8e5e60548a659`, source `4f4105ac03459bfb3b80d31725be242388f08eb685ab6362bfeeebc7f7290e34`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Checkout/WebPaymentSheetHost.tsx cbf1609916662cd13d55fcd5bc4680983feffec2aac7d7c2fb41e977e56c71f6`, `apps/mobile/src/frontend/components/Common/WebAppShell.tsx d3a38aa4124f9b3ef7aeaff6604f8f185d36e7744969f8c2007d7d18c8db422b`, `apps/mobile/src/frontend/components/Profile/TaggedReelGrid.tsx 91efc00afc31c2677dfadb9ebd79b5be0f6ab20c575e31aa91a747d778ad518e`, `apps/mobile/src/frontend/hooks/__tests__/useAppViewport.test.ts 4702ba65fd1832868ecbf7a880665a0e581ca9fd85d2b333e13aeec454b3b919`, `apps/mobile/src/frontend/hooks/useAppViewport.ts 48ca9a71a87cdfa56f490bd8a7fec8f1ccd8d82fbc05413d082892c2cc07d265`, `apps/mobile/src/frontend/hooks/useSheetFrame.ts d65be887428fc28739a1a7c37df26617e9374046fd6d65f0f87db9758750728e`; removed `apps/mobile/src/frontend/components/Checkout/WebPaymentSheetHost.tsx 705e5bdcd967a27013f87bc2a79ce043369d8bfda222fcfcd7af6b4e522a5599`, `apps/mobile/src/frontend/components/Common/WebAppShell.tsx bdb9257dbb5493dd5170255374f19834efadf19301d6da7eb83f171804db9316`, `apps/mobile/src/frontend/components/Profile/TaggedReelGrid.tsx 38f236a1da301b964a3e1fab3eae9a1001b11db7d90273a3483ab31129255d96`, `apps/mobile/src/frontend/hooks/useSheetFrame.ts b718ec534e1f1fd71cd64fd2e61650e0127eeebf858de308b5ba7edf3433b0ec`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `79afc84d9bb2` → `cf1b7d370cf1` · announced by cursor/web-app-parity-9a86 checkout copy polish
 
 App at announcement: commit `262cced36d0e9190591c7e3d286fb5b019f0ddbe`, source `cf1b7d370cf1eb1888e9a7181df74db7a1376cb037d438edde86c40ca9abdab3`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
