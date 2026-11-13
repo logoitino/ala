@@ -18,16 +18,6 @@ jest.mock('@/lib/feedback', () => ({
   submitAppFeedback: (body: string, kind?: string, surface?: string) => mockSubmitAppFeedback(body, kind, surface),
 }));
 
-jest.mock('@/hooks/useSheetFrame', () => ({
-  SHEET_BLUR_INTENSITY: 24,
-  useSheetFrame: () => ({
-    dock: { paddingHorizontal: 12 },
-    card: { padding: 16 },
-  }),
-}));
-
-jest.mock('expo-blur', () => ({ BlurView: ({ children }: { children?: unknown }) => children ?? null }));
-
 import { DeleteAccountSheet } from '@/components/Profile/DeleteAccountSheet';
 
 describe('DeleteAccountSheet', () => {
@@ -49,5 +39,10 @@ describe('DeleteAccountSheet', () => {
     expect(surface).toBe('profile');
     await waitFor(() => expect(mockSignOut).toHaveBeenCalled());
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('renders nothing while closed so Profile tests need no SafeAreaProvider', async () => {
+    await render(<DeleteAccountSheet visible={false} onClose={jest.fn()} />);
+    expect(screen.queryByLabelText('Request account deletion and sign out')).toBeNull();
   });
 });

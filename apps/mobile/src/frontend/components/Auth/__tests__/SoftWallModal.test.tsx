@@ -67,10 +67,12 @@ async function typePassword(password = PASSWORD) {
 const signInButton = () => screen.getByLabelText('Sign in with email and password');
 const createButton = () => screen.getByLabelText('Create an account with email and password');
 const magicButton = () => screen.getByLabelText('Send magic link email');
-// MINOR-01: birth month and year replace the 13+ checkbox.
+// MINOR-01: birth month and year replace the 13+ checkbox (compact dropdown scroll menus).
 async function enterBirth(year: number | string = 1990, month = 'Apr') {
-  await fireEvent.press(screen.getByLabelText(`Birth month: ${month}`));
-  await fireEvent.changeText(screen.getByLabelText('Birth year'), String(year));
+  await fireEvent.press(screen.getByLabelText('Choose birth month'));
+  await fireEvent.press(screen.getByLabelText(month));
+  await fireEvent.press(screen.getByLabelText('Choose birth year'));
+  await fireEvent.press(screen.getByLabelText(String(year)));
 }
 
 beforeEach(() => {
