@@ -2,9 +2,9 @@
 ## 2026-11-13 — Vault Exclusive platform rails
 
 - Disclose Exclusive books split (20% Tapua'i / 80% athlete) on Vault lock + unlock UI.
-- Web keeps Stripe Exclusive; production iOS/Android block Stripe Exclusive until App Store IAP /
-  Google Play Billing ship (Android not freer than Apple for digital Vault). Test builds still
-  Stripe for APP-TEST. `data/storeCommerce.ts` · `lib/exclusiveCheckout.ts`.
+- Test/preview native keeps Stripe Exclusive; production iOS/Android and web show honest
+  unavailable (no fake website redirect — web PaymentSheet not built). Android not freer than
+  Apple for digital Vault. `data/storeCommerce.ts` · `lib/exclusiveCheckout.ts`.
 
 ## 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 

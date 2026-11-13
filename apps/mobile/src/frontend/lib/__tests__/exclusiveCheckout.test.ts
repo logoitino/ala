@@ -1,4 +1,4 @@
-/** Exclusive unlock: Soft-Wall + Stripe when allowed; Alert + web URL when production store rails block. */
+/** Exclusive unlock: Soft-Wall + Stripe when allowed; honest unavailable Alert when blocked. */
 import { beginExclusiveUnlock } from '@/lib/exclusiveCheckout';
 import type { Player } from '@/types/database';
 
@@ -35,10 +35,9 @@ describe('beginExclusiveUnlock', () => {
     );
   });
 
-  it('alerts and offers the website when Stripe is blocked', () => {
+  it('alerts unavailable with a single OK when Stripe is blocked (no website redirect)', () => {
     const requireAuth = jest.fn();
     const alert = jest.fn();
-    const openUrl = jest.fn();
     beginExclusiveUnlock({
       player,
       tipAmount: 4.99,
@@ -47,23 +46,19 @@ describe('beginExclusiveUnlock', () => {
       startCheckout: jest.fn(),
       onPaid: jest.fn(),
       alert: alert as typeof import('react-native').Alert.alert,
-      openUrl,
       decision: {
         allowStripe: false,
         rail: 'app_store_iap',
         reason: 'prod ios',
-        fanCta: 'Unlock on the website',
-        fanBody: 'Use the website',
+        fanCta: 'OK',
+        fanBody: 'Exclusive unlock is unavailable on this build.',
       },
     });
     expect(requireAuth).not.toHaveBeenCalled();
     expect(alert).toHaveBeenCalledWith(
       'Exclusive access',
-      'Use the website',
-      expect.any(Array),
+      'Exclusive unlock is unavailable on this build.',
+      [{ text: 'OK' }],
     );
-    const buttons = alert.mock.calls[0][2] as { text: string; onPress?: () => void }[];
-    buttons.find((b) => b.text === 'Unlock on the website')?.onPress?.();
-    expect(openUrl).toHaveBeenCalledWith(expect.stringMatching(/\/user\/p1$/));
   });
 });

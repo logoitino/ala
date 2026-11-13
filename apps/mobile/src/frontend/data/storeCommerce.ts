@@ -2,11 +2,13 @@
  * Platform payment rails for gifts vs Exclusive (Vault) digital access.
  * Records the owner/engineering working model for web / iOS / Android. Not counsel advice —
  * App Store and Play policies still need LEGAL review before store claims or live money.
+ *
+ * Honest checkout availability: native PaymentSheet exists today; web PaymentSheet does not
+ * (`useTipCheckout` returns on web). Do not promise a website unlock until web Stripe ships.
  */
 import { Platform } from 'react-native';
 
 import { VAULT_ATHLETE_SHARE_BPS, VAULT_PLATFORM_CUT_BPS } from '@/data/finance';
-import { TAPUAI_WEB_ORIGIN } from '@/data/share';
 
 export type CommerceSurface = 'ios' | 'android' | 'web';
 
@@ -18,7 +20,7 @@ export type ExclusiveCheckoutDecision = {
   rail: ExclusiveCheckoutRail;
   /** Short engineering reason (logs / docs). */
   reason: string;
-  /** Primary button when Stripe is blocked. */
+  /** Dismiss / CTA label when Stripe is blocked (single OK — no fake redirect). */
   fanCta: string;
   /** Fan-facing body: Vault cut + which rail applies. */
   fanBody: string;
@@ -70,23 +72,14 @@ export function exclusiveAthleteSplitHint(
 }
 
 /**
- * @purpose Web deep link for Exclusive when a production store app must not open Stripe for digital Vault.
- * @param athleteId `players.id` on `/user/[id]`.
- */
-export function formatExclusiveWebUrl(athleteId: string): string {
-  const id = athleteId.trim();
-  return `${TAPUAI_WEB_ORIGIN}/user/${encodeURIComponent(id || 'athlete')}`;
-}
-
-/**
  * @purpose Decide whether Exclusive may use Stripe on this surface.
  *
  * Working model (counsel still owns final store claims):
- * - **Web:** Stripe PaymentSheet + Vault 20/80 books split.
+ * - **Web (planned):** Stripe + Vault 20/80 when web PaymentSheet ships — **not available today**.
  * - **iOS App Store:** digital Vault unlock is App Store IAP class — not Stripe in the production app.
  * - **Android / Google Play:** same class as Apple for in-app digital goods — Play Billing is required
  *   for that SKU in the Play-distributed app. Android is **not** freer than Apple here.
- * - **Wave 0 / non-production:** Stripe Exclusive stays on so APP-TEST can unlock Vault, with honest copy.
+ * - **Wave 0 / non-production native:** Stripe Exclusive stays on so APP-TEST can unlock Vault.
  *
  * Gifts stay on Stripe (0% Tapua'i cut); Apple 3.2.1(vii) / gift treatment remains a LEGAL open item.
  *
@@ -101,11 +94,11 @@ export function decideExclusiveCheckout(
 
   if (surface === 'web') {
     return {
-      allowStripe: true,
+      allowStripe: false,
       rail: 'web_stripe',
-      reason: 'Web Exclusive uses Stripe; books record the Vault 20/80 split.',
-      fanCta: 'One-time Exclusive',
-      fanBody: split,
+      reason: 'Web Exclusive is planned on Stripe with the Vault 20/80 split, but PaymentSheet is not available on web today.',
+      fanCta: 'OK',
+      fanBody: `${split} Exclusive unlock is not available in the browser yet. Use a phone test build for Wave 0, or wait for web checkout.`,
     };
   }
 
@@ -124,17 +117,17 @@ export function decideExclusiveCheckout(
     return {
       allowStripe: false,
       rail: 'app_store_iap',
-      reason: 'Production iOS Exclusive requires App Store IAP; Stripe digital unlock stays web-only until StoreKit ships.',
-      fanCta: 'Unlock on the website',
-      fanBody: `On iPhone and iPad, App Store rules apply to digital Vault access. ${split} In-app App Store purchase is not wired yet — unlock Exclusive on the Tapua'i website for now.`,
+      reason: 'Production iOS Exclusive requires App Store IAP; Stripe Exclusive is blocked until StoreKit ships.',
+      fanCta: 'OK',
+      fanBody: `On iPhone and iPad, App Store rules apply to digital Vault access. ${split} In-app App Store purchase is not wired yet, so Exclusive unlock is unavailable on this build.`,
     };
   }
 
   return {
     allowStripe: false,
     rail: 'play_billing',
-    reason: 'Production Android Exclusive requires Google Play Billing; Stripe digital unlock stays web-only until Play Billing ships.',
-    fanCta: 'Unlock on the website',
-    fanBody: `On Android, Google Play Billing generally applies to digital Vault access the same way Apple IAP does — Android is not exempt. ${split} Play Billing is not wired yet — unlock Exclusive on the Tapua'i website for now.`,
+    reason: 'Production Android Exclusive requires Google Play Billing; Stripe Exclusive is blocked until Play Billing ships.',
+    fanCta: 'OK',
+    fanBody: `On Android, Google Play Billing generally applies to digital Vault access the same way Apple IAP does — Android is not exempt. ${split} Play Billing is not wired yet, so Exclusive unlock is unavailable on this build.`,
   };
 }

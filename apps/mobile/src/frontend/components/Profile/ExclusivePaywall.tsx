@@ -27,7 +27,7 @@ export function VaultLockedCard({ busy = false, onUnlock }: VaultLockedCardProps
   const decision = decideExclusiveCheckout();
   const subscribeLabel = decision.allowStripe
     ? exclusiveSubscribeLabel(live.catalog.exclusiveDollars)
-    : decision.fanCta;
+    : 'Exclusive unavailable';
   const callout = exclusiveVaultCallout(live.catalog.exclusiveDollars);
   return (
     <View style={styles.banner} accessibilityRole="summary">

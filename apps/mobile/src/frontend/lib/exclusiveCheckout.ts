@@ -1,12 +1,12 @@
 /**
  * Shared Exclusive (Vault) unlock entry: Soft-Wall resume + platform Stripe gate.
- * Production iOS/Android block Stripe for digital Exclusive; web and test builds keep PaymentSheet.
+ * Preview/test native builds keep PaymentSheet. Production store apps and web show an honest
+ * unavailable alert — do not redirect to a website that cannot complete Exclusive checkout.
  */
-import { Alert, Linking } from 'react-native';
+import { Alert } from 'react-native';
 
 import {
   decideExclusiveCheckout,
-  formatExclusiveWebUrl,
   type ExclusiveCheckoutDecision,
 } from '@/data/storeCommerce';
 import type { Player } from '@/types/database';
@@ -36,31 +36,20 @@ export type BeginExclusiveUnlockArgs = {
   onPaid: () => void | boolean | Promise<void | boolean>;
   /** Injectable for tests. */
   decision?: ExclusiveCheckoutDecision;
-  openUrl?: (url: string) => PromiseLike<unknown>;
   alert?: typeof Alert.alert;
 };
 
 /**
- * @purpose Start one-time Exclusive unlock with Soft-Wall, or redirect when store rails block Stripe.
+ * @purpose Start one-time Exclusive unlock with Soft-Wall, or an honest unavailable alert.
  * @param args Athlete, catalog dollars/Aura, Soft-Wall + PaymentSheet hooks, optional test doubles.
- * @sideEffects SoftWallModal, Stripe PaymentSheet, or Alert + optional browser open to the web profile.
+ * @sideEffects SoftWallModal, Stripe PaymentSheet, or Alert when the rail is not ready.
  */
 export function beginExclusiveUnlock(args: BeginExclusiveUnlockArgs): ExclusiveCheckoutDecision {
   const decision = args.decision ?? decideExclusiveCheckout();
   const alert = args.alert ?? Alert.alert;
-  const openUrl = args.openUrl ?? ((url: string) => Linking.openURL(url));
 
   if (!decision.allowStripe) {
-    const url = formatExclusiveWebUrl(args.player.id);
-    alert('Exclusive access', decision.fanBody, [
-      { text: 'Not now', style: 'cancel' },
-      {
-        text: decision.fanCta,
-        onPress: () => {
-          void openUrl(url);
-        },
-      },
-    ]);
+    alert('Exclusive access', decision.fanBody, [{ text: decision.fanCta }]);
     return decision;
   }
 

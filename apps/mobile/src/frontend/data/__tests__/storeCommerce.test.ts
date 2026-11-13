@@ -1,10 +1,9 @@
-/** Platform Exclusive rails: web Stripe; production native store billing; Android not freer than Apple. */
+/** Platform Exclusive rails: test native Stripe; production native store billing; web not ready. */
 import {
   commerceSurface,
   decideExclusiveCheckout,
   exclusiveAthleteSplitHint,
   exclusiveSplitDisclosure,
-  formatExclusiveWebUrl,
   isStoreProductionBuild,
 } from '@/data/storeCommerce';
 
@@ -41,18 +40,13 @@ describe('exclusiveAthleteSplitHint', () => {
   });
 });
 
-describe('formatExclusiveWebUrl', () => {
-  it('points at /user/{id} on the trusted web origin', () => {
-    expect(formatExclusiveWebUrl('abc-123')).toMatch(/\/user\/abc-123$/);
-  });
-});
-
 describe('decideExclusiveCheckout', () => {
-  it('allows Stripe on web in production with the Vault split body', () => {
+  it('blocks Stripe on web until web PaymentSheet exists (no fake unlock promise)', () => {
     const d = decideExclusiveCheckout('web', true);
-    expect(d.allowStripe).toBe(true);
+    expect(d.allowStripe).toBe(false);
     expect(d.rail).toBe('web_stripe');
-    expect(d.fanBody).toMatch(/20%/);
+    expect(d.fanBody).toMatch(/not available in the browser/i);
+    expect(d.fanCta).toBe('OK');
   });
 
   it('allows Stripe on native test builds and warns that store billing comes later', () => {
@@ -67,15 +61,18 @@ describe('decideExclusiveCheckout', () => {
     expect(android.fanBody).toMatch(/not a freer Stripe path|not exempt|same digital-goods/i);
   });
 
-  it('blocks Stripe on production iOS and Android (Android is not exempt)', () => {
+  it('blocks Stripe on production iOS and Android without promising a website checkout', () => {
     const ios = decideExclusiveCheckout('ios', true);
     expect(ios.allowStripe).toBe(false);
     expect(ios.rail).toBe('app_store_iap');
-    expect(ios.fanCta).toMatch(/website/i);
+    expect(ios.fanCta).toBe('OK');
+    expect(ios.fanBody).toMatch(/unavailable/i);
+    expect(ios.fanBody).not.toMatch(/website/i);
 
     const android = decideExclusiveCheckout('android', true);
     expect(android.allowStripe).toBe(false);
     expect(android.rail).toBe('play_billing');
     expect(android.fanBody).toMatch(/not exempt|same way Apple/i);
+    expect(android.fanBody).not.toMatch(/website/i);
   });
 });
