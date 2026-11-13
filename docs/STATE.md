@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · Expo web Codex fixes: checkout dismiss lock + viewport width. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Register `@stripe/stripe-js` packages in infrastructure.json. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -188,6 +188,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
   no longer calls web Stripe a stub; test-card hint hidden when `EXPO_PUBLIC_APP_ENV=production`.
 - Codex on #42: lock web Payment Element dismiss while confirm is pending; sheets/grids use
   `useAppViewportWidth` (phone column) instead of full browser width.
+- CI: claim `@stripe/stripe-js` + `@stripe/react-stripe-js` on the Stripe infra service (source-release).
 - **About to spend:** $0 (Wave 0). Budget unchanged; hosting later is owner spend.
 
 ### 2026-11-13 — Vault Exclusive platform rails (web cut; native store billing)
