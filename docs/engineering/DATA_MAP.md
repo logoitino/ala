@@ -954,7 +954,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `quiz_group_ensure_set`
 - Read by: —; database functions: `quiz_admin_snapshot`, `quiz_round_pick`
 - Removed by: `quiz_admin_retention`, `quiz_erase_history`
-- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/beyond`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_groups`
 
@@ -982,7 +982,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `quiz_admin_life_snapshot`, `quiz_level`, `quiz_life_progress`
 - Removed by: `quiz_erase_history`
 - Triggers: `quiz_level_guard → quiz_guard_level`, `quiz_level_truncate_guard → quiz_guard_truncate`
-- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/beyond`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_life_chapters`
 
@@ -991,7 +991,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `quiz_admin_life_chapter`
 - Read by: —; database functions: `quiz_admin_import`, `quiz_admin_life_snapshot`, `quiz_admin_question`, `quiz_admin_refill`, `quiz_admin_snapshot`, `quiz_guard_question` +6 more
 - Triggers: `quiz_life_chapter_guard → quiz_guard_life_chapter`
-- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/beyond`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_preferences`
 
@@ -1025,7 +1025,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `quiz_admin_retention`, `quiz_report`
 - Read by: —; database functions: `quiz_admin_needs_look`, `quiz_open_reports`
 - Removed by: `quiz_admin_retention`, `quiz_erase_history`
-- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/beyond`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_requests`
 
@@ -1144,7 +1144,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/services/TelemetryManager.ts`; database functions: —
 - Read by: `@/lib/admin.ts`; database functions: `get_admin_platform_metrics`, `get_admin_reports`
 - Removed by: `@/lib/admin.ts`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +55 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
 
 ### `tips`
 

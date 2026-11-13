@@ -184,6 +184,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - Quiz: staging still missing `quiz_snapshot` (owner [TRIVIA_STAGING_APPLY](engineering/TRIVIA_STAGING_APPLY.md)).
   Home / HQ / `/sport-quiz` now surface “not switched on” and offer `/dev/trivia-preview` when
   `EXPO_PUBLIC_APP_ENV` is not production so trivia can be tried without SQL.
+- Regenerated `DATA_MAP.md` + `supportTopology.json` for the new Home/HQ → trivia-demo screen edges
+  (`pnpm data:map:check` green).
 
 ### 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 
