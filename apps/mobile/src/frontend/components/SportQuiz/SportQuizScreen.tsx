@@ -49,6 +49,8 @@ import { SportQuizAllowances } from './SportQuizAllowances';
 import { SportQuizLevel } from './SportQuizLevel';
 import { LifePlaybookCard } from './LifePlaybookCard';
 import { LifePlaybookHome } from './LifePlaybookHome';
+import { triviaPreviewAvailable } from './TriviaPreview';
+import { NOT_SWITCHED_ON } from '@/lib/rpc';
 /** `life` is set (a chapter id, or null for any open chapter) only for a Life Playbook round. */
 type PreparationIntent = { topic: TimedQuizTopic; sport: string | null; duration: 30 | 90; group: string | null; life?: LifeChapterId | null; key: string; generation: number };
 type GroupPreparation = { groupId: string; label: string; theme: string | null };
@@ -251,8 +253,13 @@ function SportQuizContent({ quiz, initialSport, learnAthlete, autoPlay }: {
  <View style={styles.hero}><Text style={styles.heroKicker}>Trivia</Text><Text ref={titleRef} accessibilityRole="header" style={styles.heroTitle}>Sport Pop Quiz</Text><Text style={styles.heroCopy}>Optional timed trivia · Testing only</Text></View>
  {(inRound || round.pendingStart) ? <SportQuizRound round={round} busy={busy} reports={reports} auraUserId={auth.user?.id ?? null}/> : null}
  {quiz.loading && !s ? <Text>Checking quiz availability…</Text> : null}{!s && !quiz.loading && !quiz.error ? <Text>Trivia is not available for this account. You can keep browsing.</Text> : null}
- {quiz.error ? <Text accessibilityRole="alert">{quiz.error}</Text> : null}{round.error ? <Text accessibilityRole="alert">{round.error}</Text> : null}
+ {quiz.error ? <Text accessibilityRole="alert" style={styles.alert}>{quiz.error === NOT_SWITCHED_ON
+   ? 'Trivia is not switched on for this server yet (quiz SQL not applied).'
+   : quiz.error}</Text> : null}{round.error ? <Text accessibilityRole="alert">{round.error}</Text> : null}
  {life.error && !life.switchedOff ? <Text accessibilityRole="alert">{life.error}</Text> : null}
+ {!s && quiz.error === NOT_SWITCHED_ON && triviaPreviewAvailable() ? (
+   <QuizButton label="Try the trivia demo" onPress={() => router.push('/dev/trivia-preview' as Href)} />
+ ) : null}
  {!s && quiz.error ? <QuizButton label="Refresh quiz" quiet disabled={busy} onPress={() => { void quiz.refresh(); void life.refresh(); void level.refresh(); }}/> : null}
  {s ? <><Text>{`UTC week starts ${s.week_start}; next week ${s.week_end}.`}</Text>
  {separate && idle && s.profile_id ? <SportQuizAllowances snapshot={s} life={lifeRow} headerRef={weekRef}/> : null}

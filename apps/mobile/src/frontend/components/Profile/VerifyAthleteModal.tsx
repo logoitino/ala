@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -157,6 +158,13 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
             <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
+              {/* maxHeight alone clipped legal + submit; ScrollView keeps the claim form reachable on short phones. */}
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                bounces={false}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollBody}
+              >
               <View style={styles.handle} />
               <Text style={styles.kicker}>{VERIFY_SHEET_KICKER}</Text>
               <Text style={styles.title}>{VERIFY_SHEET_TITLE}</Text>
@@ -248,6 +256,7 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
               <Pressable accessibilityRole="button" onPress={dismiss} style={styles.close}>
                 <Text style={styles.closeLabel}>Close</Text>
               </Pressable>
+              </ScrollView>
             </Animated.View>
             </View>
           </KeyboardAvoidingView>
@@ -271,8 +280,12 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    gap: 10,
     maxHeight: '92%',
+    overflow: 'hidden',
+  },
+  scrollBody: {
+    gap: 10,
+    paddingBottom: 8,
   },
   handle: {
     alignSelf: 'center',

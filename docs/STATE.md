@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-10 · Density EAS preview **FINISHED** ($0 Free). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-12 · Popup scroll + vibrant Local polls + quiz demo when SQL missing. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,16 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-12 — Claim-school scroll, vibrant Local polls, quiz demo path
+
+- `VerifyAthleteModal`: sheet content now scrolls under `maxHeight` (claim school was clipped).
+- `CheerPollCard` (Local): brighter rivalry chrome — jade home / cyan away / ember LIVE (Lovable
+  Friday Night Lights tokens). Lovable MCP needs Desktop auth in this cloud agent; design applied
+  in-repo from [LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md) ($0).
+- Quiz: staging still missing `quiz_snapshot` (owner [TRIVIA_STAGING_APPLY](engineering/TRIVIA_STAGING_APPLY.md)).
+  Home / HQ / `/sport-quiz` now surface “not switched on” and offer `/dev/trivia-preview` when
+  `EXPO_PUBLIC_APP_ENV` is not production so trivia can be tried without SQL.
 
 ### 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 

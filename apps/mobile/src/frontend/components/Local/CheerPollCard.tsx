@@ -1,4 +1,5 @@
 /** Compact Local cheer cards retain their legal notice, full team names and existing vote authority.
+ * Vibrant Daylight rivalry chrome (Lovable Friday Night Lights): jade home, cyan away, ember LIVE.
  * @sideEffects Existing useCheerPoll votes, usage telemetry and haptic feedback.
  */
 import { useEffect, useRef, useState } from 'react';
@@ -33,7 +34,9 @@ const FLOAT_MS = 720;
 const FLOAT_RISE = -60;
 
 /**
- * @purpose Live community cheer poll (Westlake Thunder vs Lone Peak Knights). The share bar uses jade primary (ember only for LIVE heat on the away share). A chosen side is a white button with that color as a border, so it does not blend into the bar. A tap springs the bar from 0% to the new share, fires Medium haptics, floats +1 Vote ⚡ from the press point (+60px), and persists via `cast_cheer_vote`.
+ * @purpose Live community cheer poll (Westlake Thunder vs Lone Peak Knights). Share bar: jade home /
+ *   island cyan away; LIVE heat stays ember. Chosen side is a white button with that color border.
+ *   Tap springs the bar, Medium haptics, floats +1 Vote ⚡, persists via `cast_cheer_vote`.
  * @param slug `cheer_polls.slug` (featured rivalry is `westlake-lone-peak`).
  * @param homeLabel Home school display name.
  * @param awayLabel Away school display name.
@@ -104,7 +107,7 @@ export function CheerPollCard({
 
   return (
     <View style={styles.card} accessibilityRole="summary" accessibilityLabel="Cheer poll">
-      {/* Compact: count joins the header; percentages live on the vote buttons. The policy line stays visible. */}
+      <View style={styles.ribbon} />
       <View style={styles.top}>
         <Text style={styles.kicker}>Live cheer poll</Text>
         <View style={styles.livePill}>
@@ -113,8 +116,11 @@ export function CheerPollCard({
         </View>
         <Text style={styles.voteCount}>{total.toLocaleString()} cheers</Text>
       </View>
-      <Text style={styles.title}>
-        Who are you riding with? <Text style={styles.matchup}>{homeLabel} vs {awayLabel}</Text>
+      <Text style={styles.title}>Who are you riding with?</Text>
+      <Text style={styles.matchup}>
+        <Text style={styles.homeName}>{homeLabel}</Text>
+        {'  vs  '}
+        <Text style={styles.awayName}>{awayLabel}</Text>
       </Text>
       <Text style={styles.policy}>{COMPLIANCE_POLL}</Text>
 
@@ -176,7 +182,7 @@ function TeamVoteButton({
       {floats
         .filter((item) => item.side === side)
         .map((item) => (
-          <CheerVoteFloat key={item.id} x={item.x} y={item.y} onDone={() => onDropFloat(item.id)} />
+          <CheerVoteFloat key={item.id} x={item.x} y={item.y} side={side} onDone={() => onDropFloat(item.id)} />
         ))}
       <AnimatedPressable
         haptic="none"
@@ -202,7 +208,7 @@ function TeamVoteButton({
   );
 }
 
-function CheerVoteFloat({ x, y, onDone }: { x: number; y: number; onDone: () => void }) {
+function CheerVoteFloat({ x, y, side, onDone }: { x: number; y: number; side: CheerSide; onDone: () => void }) {
   const rise = useSharedValue(0);
   const fade = useSharedValue(1);
   const doneRef = useRef(onDone);
@@ -220,7 +226,15 @@ function CheerVoteFloat({ x, y, onDone }: { x: number; y: number; onDone: () => 
   }, [fade, rise]);
 
   return (
-    <Animated.Text pointerEvents="none" style={[styles.floatBadge, { left: x - 42, top: y - 12 }, style]}>
+    <Animated.Text
+      pointerEvents="none"
+      style={[
+        styles.floatBadge,
+        side === 'home' ? styles.floatHome : styles.floatAway,
+        { left: x - 42, top: y - 12 },
+        style,
+      ]}
+    >
       +1 Vote ⚡
     </Animated.Text>
   );
@@ -228,22 +242,33 @@ function CheerVoteFloat({ x, y, onDone }: { x: number; y: number; onDone: () => 
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: FOCAL.mistGold,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    borderWidth: 1.5,
-    borderColor: FOCAL.electricGold,
-    padding: 10,
-    gap: 6,
+    borderWidth: 2,
+    borderColor: FOCAL.islandCyan,
+    padding: 12,
+    gap: 8,
     overflow: 'visible',
     ...cardShadow,
+  },
+  ribbon: {
+    position: 'absolute',
+    top: 0,
+    left: 16,
+    right: 16,
+    height: 4,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    backgroundColor: FOCAL.neonJade,
   },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginTop: 4,
   },
   kicker: {
-    color: FOCAL.goldInk,
+    color: FOCAL.jadeInk,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.7,
@@ -254,16 +279,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderWidth: 1,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderWidth: 1.5,
     borderColor: FOCAL.ember,
     backgroundColor: FOCAL.mistEmber,
   },
   liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
     backgroundColor: FOCAL.ember,
   },
   liveLabel: {
@@ -274,13 +299,22 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '900',
+    letterSpacing: -0.2,
   },
   matchup: {
     color: colors.textMuted,
     fontSize: 13,
     fontWeight: '700',
+  },
+  homeName: {
+    color: FOCAL.jadeInk,
+    fontWeight: '900',
+  },
+  awayName: {
+    color: FOCAL.cyanInk,
+    fontWeight: '900',
   },
   // Policy line: smaller than before but never clamped or muted into the background.
   policy: {
@@ -290,37 +324,39 @@ const styles = StyleSheet.create({
   },
   track: {
     flexDirection: 'row',
-    height: 6,
+    height: 12,
     borderRadius: 999,
     overflow: 'hidden',
-    backgroundColor: colors.background,
+    backgroundColor: FOCAL.mistViolet,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   homeFill: {
-    height: 6,
-    backgroundColor: FOCAL.jadeInk,
+    height: 12,
+    backgroundColor: FOCAL.neonJade,
   },
   awayFill: {
-    height: 6,
-    backgroundColor: colors.primaryMuted,
+    height: 12,
+    backgroundColor: FOCAL.islandCyan,
   },
   homePct: {
     ...SCOREBOARD_DIGITS,
-    color: colors.primary,
-    fontSize: 14,
+    color: FOCAL.jadeInk,
+    fontSize: 15,
   },
   awayPct: {
     ...SCOREBOARD_DIGITS,
-    color: colors.primary,
-    fontSize: 14,
+    color: FOCAL.cyanInk,
+    fontSize: 15,
   },
   pctLeading: {
-    fontSize: 16,
+    fontSize: 17,
   },
   voteCount: {
     marginLeft: 'auto',
-    color: colors.textMuted,
+    color: FOCAL.violetInk,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   actions: {
     flexDirection: 'row',
@@ -332,10 +368,10 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   teamBtn: {
-    minHeight: 44,
+    minHeight: 48,
     flexDirection: 'row',
     borderRadius: radii.md,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: colors.border,
     backgroundColor: colors.background,
     alignItems: 'center',
@@ -344,16 +380,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   teamDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     overflow: 'hidden',
   },
   teamDotHome: {
-    backgroundColor: FOCAL.jadeInk,
+    backgroundColor: FOCAL.neonJade,
   },
   teamDotAway: {
-    backgroundColor: colors.primary,
+    backgroundColor: FOCAL.islandCyan,
   },
   teamDotGloss: {
     position: 'absolute',
@@ -370,17 +406,17 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.mistJade,
   },
   awayBtn: {
-    borderColor: colors.border,
-    backgroundColor: FOCAL.mistJade,
+    borderColor: FOCAL.cyanInk,
+    backgroundColor: FOCAL.mistCyan,
   },
   homeChosen: {
     backgroundColor: colors.surface,
-    borderColor: FOCAL.jadeInk,
+    borderColor: FOCAL.neonJade,
     borderWidth: 2.5,
   },
   awayChosen: {
     backgroundColor: colors.surface,
-    borderColor: colors.primary,
+    borderColor: FOCAL.islandCyan,
     borderWidth: 2.5,
   },
   teamDotChosen: {
@@ -398,15 +434,20 @@ const styles = StyleSheet.create({
     color: FOCAL.jadeInk,
   },
   awayLabelOn: {
-    color: colors.primary,
+    color: FOCAL.cyanInk,
   },
   floatBadge: {
     position: 'absolute',
     width: 84,
     zIndex: 4,
     textAlign: 'center',
-    color: colors.primary,
     fontSize: 13,
     fontWeight: '800',
+  },
+  floatHome: {
+    color: FOCAL.jadeInk,
+  },
+  floatAway: {
+    color: FOCAL.cyanInk,
   },
 });
