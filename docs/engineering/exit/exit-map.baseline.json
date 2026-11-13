@@ -1,5 +1,5 @@
 {
- "planVersion": "937c789922a8",
+ "planVersion": "884f4bc641f6",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1470,7 +1470,7 @@
    "app.json b7c55adf9886178318b9a475422a1a361cb6a3211b82f774104c77e460a1ec88",
    "apps/admin-portal/app/(protected)/analytics/page.tsx 82e248d65403cc8a8b2de3930950a0f30ac0c0e4064e6629a21c74a15af81bff",
    "apps/admin-portal/app/(protected)/audience/page.tsx c9688c32856d71f50aef35e3f7bbd3e9e204364ce3a10f540299d34c9f324059",
-   "apps/admin-portal/app/(protected)/auth/page.tsx dfabd5f29432bf2fd9e3b3f555a8c1e658ffb19ac65754bb0f62ed67c7edb932",
+   "apps/admin-portal/app/(protected)/auth/page.tsx 18a2441d0a3c11329e81d89a19c69d4491a9fdb89f3ea5cbb50d96cfc2cfbd22",
    "apps/admin-portal/app/(protected)/features/page.tsx daa3fc23fd08856a71629c8f4ee32823131878a0b42247d4ed637b704bb435ed",
    "apps/admin-portal/app/(protected)/layout.tsx 0fa6e6f60f35006185caa69cf5a41435333cb23e16637e0ce9caba1fabb3a425",
    "apps/admin-portal/app/(protected)/manage/page.tsx 215e4dd139a83cdede38d084ee43eaebec9845b51c84786617cea5e492d4f0b5",
@@ -2577,7 +2577,7 @@
    "packages/shared-types/admin/departments.ts d356534f33f0774d838ab1aa54e14c23bb2902e48d78ad7c4b16aa620b32071e",
    "packages/shared-types/admin/engineeringSupport.ts 40d9dbee912baa1224d9ac061c03652e1c46824469422d45f4fe8dda7dbb2a14",
    "packages/shared-types/admin/eventLabels.ts 649a75ed28c977ddc1442f7b13abd75a9872817f463c480c3350cff60e2d1f3e",
-   "packages/shared-types/admin/expoDeskDirectory.ts bd53a747421a8b2dea0f71a128067c3426123e2df12b50cb84e6c1f8e77f72cc",
+   "packages/shared-types/admin/expoDeskDirectory.ts 1c6ca16bbb56fdafe90ffb4958116c3657bacc8c4c7566d597d06866c6a432cc",
    "packages/shared-types/admin/financeCatalog.ts 27fc3e815e7e15c939b818b89971555d877dce8ef811fa533444f790cf5a4057",
    "packages/shared-types/admin/financeChecks.ts fed2a4c93cd3700b4a1bf6ec45b68b377a7d3d0069f8ebba3de0182bb48750f7",
    "packages/shared-types/admin/financeFilters.ts c04ce08cc6db105fc079a34cda0f9152ed15161c04c75c9c1863fb66b9cd16d4",

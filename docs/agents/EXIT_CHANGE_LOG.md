@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `937c789922a8` → `884f4bc641f6` · announced by cursor/admin-portal-optimize-9a86 Tip Tapua'i copy + IP
+
+App at announcement: commit `015d65c5e3abd27589f392ab0fedefdad8d4e269`, source `884f4bc641f6d40a942c2bbf77c82f07652a5dd47ef6ca31933fa5dde83c5e85`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/admin-portal/app/(protected)/auth/page.tsx 18a2441d0a3c11329e81d89a19c69d4491a9fdb89f3ea5cbb50d96cfc2cfbd22`, `packages/shared-types/admin/expoDeskDirectory.ts 1c6ca16bbb56fdafe90ffb4958116c3657bacc8c4c7566d597d06866c6a432cc`; removed `apps/admin-portal/app/(protected)/auth/page.tsx dfabd5f29432bf2fd9e3b3f555a8c1e658ffb19ac65754bb0f62ed67c7edb932`, `packages/shared-types/admin/expoDeskDirectory.ts bd53a747421a8b2dea0f71a128067c3426123e2df12b50cb84e6c1f8e77f72cc`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `4f4105ac0345` → `937c789922a8` · announced by cursor/admin-portal-optimize-9a86 portal Control map
 
 App at announcement: commit `0d0671b5c98395bcd302971a9526dc427dbba2a1` + 12 uncommitted file(s), source `937c789922a89e53072b28c080f2fdb4201ec5a7e82f4c7d50caf2e8c51e7f77`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
