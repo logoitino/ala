@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · Fluidity pass 2: Soft-Wall / Legal / Profile sheets on `useFanSheetMotion`; leftover slide menus → fade/`SheetRise`. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Fluidity: Tip / Role / Drip dismiss timings share sheet tokens. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -182,7 +182,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - Soft-Wall, Legal, Suggestion, Share QR, Verify, Edit profile: same `useFanSheetMotion` open/close (Reduce Motion branch).
 - Upload / Reel more / Filmer / Report / My sports: `animationType="none"` + `SheetRise active={visible}`.
 - Highlight picker / Operator roster: fade page sheets (no double OS slide). Local search overlay: `SPRING_SHEET` + Reduce Motion.
-- Role switcher, Drip Product, Tip sheet: vertical travel already `SPRING_SHEET`.
+- Role switcher, Drip Product, Tip sheet: `SPRING_SHEET` travel + shared dismiss/backdrop ms tokens.
 - Fan tabs: navigator fade removed; `TabScreen` enter 160ms so switches do not double-flash.
 - Privacy / Notifications / Delete account / Rally / Challenge sheets: fade instead of slide.
 - `ScrollFxItem` skips mount spring when Reduce Motion is on.
