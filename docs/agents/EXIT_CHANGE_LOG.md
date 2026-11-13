@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-13 · plan `bd927957c23c` → `7af0d90c652b` · announced by cursor/vault-platform-rails-9a86 VAULT_ATHLETE_SHARE_BPS triage
+
+App at announcement: commit `d395a8da6a1895e89d7ff90d4f00286dcd0991c1`, source `7af0d90c652be5815682b334ab8555f6ad9a5026a57ff202c3b14247a920a8fe`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app/(tabs)/profile.tsx e2fdd86353b8e9826c9f2c7bea15cfde934a3fbc1621e6f223b34bd85d0c59be`, `apps/mobile/app/(tabs)/user/[id].tsx 7d9daaf7f70374d42246089416fda32ee2fc13aa53f2c513f835fc17e57ba3be`, `apps/mobile/src/frontend/components/Profile/ExclusivePaywall.tsx b761c6312e53320693d763ea5159e9c67f3f334aeb8f1e35d8302683450a7e7a`, `apps/mobile/src/frontend/components/Profile/VaultLockCard.tsx 16a353ca6419f4723cef43a77ff62c2790b6e5d7160432bb1f470f46de898d9c`, `apps/mobile/src/frontend/components/Reels/ReelCard.tsx e456c8ed54400b6b170b9c5d5affb32c342a50f644cfeaf2c01769325c1d19db`, `apps/mobile/src/frontend/data/__tests__/storeCommerce.test.ts 4beb5e85f87b541829eb9558ba11e867c8d2bddd72b17b306b6a57cc8d5146c1`, `apps/mobile/src/frontend/data/storeCommerce.ts 3073e2879db3ba608815af115f6d1394945bd575268fca6e522da76008bae803`, `apps/mobile/src/frontend/lib/__tests__/exclusiveCheckout.test.ts b3dffaf12e96eae319a0af3a606d718f36c04c49bdbfb3fe63d8984ad298652e`, `apps/mobile/src/frontend/lib/exclusiveCheckout.ts 21f5f84ee51fd609f67f6acb13e954597a31c57bb571b74fdb8ae3507f29edf0`; removed `apps/mobile/app/(tabs)/profile.tsx a775e54666ae51926eb03e922f758471f44b225598a7e547c9d68716ce841417`, `apps/mobile/app/(tabs)/user/[id].tsx 7cf2c13679eb8e986b194662215d10b487d355dbab7acefbb94c9a992eac02ac`, `apps/mobile/src/frontend/components/Profile/ExclusivePaywall.tsx 7009b9824d5753ce7acd0a51ce5d1ee808b6c98385691efb358943dd3751604c`, `apps/mobile/src/frontend/components/Profile/VaultLockCard.tsx 57b464a5a8f13a3808c53887901dcee1d35a39e13bb984823fd257505d729cac`, `apps/mobile/src/frontend/components/Reels/ReelCard.tsx 347d9bf6151f22d2aae4ba54921580e780c4a7b419dcb46f7769a79c7124c0bd`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-13 · plan `dd8f47417558` → `bd927957c23c` · announced by cursor/popup-polls-quiz-9a86 softwall google-off
 
 App at announcement: commit `e6940e669d06bf9d0e0cf82528b6febad9a108fe` + 2 uncommitted file(s), source `bd927957c23c98864a389e89666c59ba9b55b8fe0920401b07217ff1c7671da0`, app 1.0.0, latest migration `20261022152000_no_cut_gifts_optional_tips.sql`.
