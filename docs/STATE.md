@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · Expo web Phase 1 + vault IP packet refresh. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · Next portal Control map + Expo desk directory accountability. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,17 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-13 — Next admin portal: Control map + feature accountability
+
+- Read-only Product **Control map** (`/coverage`) from shared `PORTAL_COVERAGE_SURFACES`; Product
+  overview lists the full **Expo desk directory** (`EXPO_DESKS`). Writes stay in Expo `/admin`.
+- Revenue **Checkout rails** note: gifts 0% cut; Vault 20/80; web Stripe vs native store billing.
+- Health unapplied catalog probes **notifications** (`get_admin_notification_health`).
+- Expo `adminCoverage` adds **web** surface (shell, gift/Exclusive Payment Element, store rails).
+- Feature-admin: enroll **WEB-01** + **VAULT-RAILS-01** (planned); QUIZ-01 marked historical /
+  superseded by QUIZ-02+. Workflow requires same-turn portal desk/coverage updates.
+- `pnpm portal:test` is part of `pnpm check`. **About to spend:** $0 (Wave 0 docs/portal only).
 
 ### 2026-11-13 — Expo web Phase 1 (Stripe.js + desktop shell)
 

@@ -914,13 +914,13 @@
     },
     {
       "id": "QUIZ-01",
-      "title": "Weekly Sport Pop Quiz with noncash private learning badges",
+      "title": "Weekly Sport Pop Quiz with noncash private learning badges (historical; superseded by QUIZ-02+)",
       "owner": "POLLS",
       "status": "admin-ready",
       "plannedAt": "2026-10-14T05:31:01Z",
       "exemption": null,
       "source": {
-        "description": "Server-assigned approved question version once per canonical eligible profile/UTC week, durable answer/idempotent request, private noncash completion badge, skip status. No correct-answer leakage before completion; no money/Aura/vote effect. Design docs/engineering/design/SPORT_POP_QUIZ_DESIGN.md.",
+        "description": "HISTORICAL enrollment: participant/admin authority moved to QUIZ-02 (timed), QUIZ-03 (play together), QUIZ-04 (Life Playbook), QUIZ-05 (fresh questions). Keep this row for the original pop-quiz migration/evidence; do not treat as the live Sport Quiz contract. Original scope: server-assigned approved question version once per canonical eligible profile/UTC week, durable answer/idempotent request, private noncash completion badge, skip status. Design docs/engineering/design/SPORT_POP_QUIZ_DESIGN.md.",
         "paths": [
           "supabase/migrations/20261014140000_sport_pop_quiz.sql",
           "packages/shared-types/sportQuiz.ts",
@@ -2052,6 +2052,135 @@
           ]
         }
       }
+    },
+    {
+      "id": "WEB-01",
+      "title": "Expo web Phase 1: Stripe.js checkout and desktop phone-column shell",
+      "owner": "CHECKOUT",
+      "status": "planned",
+      "plannedAt": "2026-11-13T19:00:00Z",
+      "exemption": null,
+      "source": {
+        "description": "Browser Exclusive and gift checkout use Stripe.js Payment Element through webPaymentSheetBridge and WebPaymentSheetHost; createPaymentIntent remains the shared money core. WebAppShell + useAppViewportWidth clamp desktop layout to a 430px phone column. DecideExclusiveCheckout rail web_stripe on web; production native Exclusive blocked until store billing. Wave 0 test mode; no live money.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/webPaymentSheetBridge.ts",
+          "apps/mobile/src/frontend/components/Checkout/WebPaymentSheetHost.tsx",
+          "apps/mobile/src/frontend/components/Common/WebAppShell.tsx",
+          "apps/mobile/src/frontend/data/storeCommerce.ts",
+          "docs/engineering/design/WEB_APP_PARITY.md"
+        ]
+      },
+      "admin": {
+        "route": "/admin/money",
+        "actions": [
+          "Review Money and Features desks for Vault / optional tip flags that gate web Exclusive and gift extras",
+          "Use Expo Control map web surface rows for phone-column and Payment Element ownership",
+          "Repair via existing Features Publish and Money Connect desks; Next portal remains read-only oversight"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/MoneyTool.tsx",
+          "apps/mobile/src/frontend/lib/adminCoverage.ts",
+          "apps/admin-portal/app/(protected)/money/page.tsx",
+          "apps/admin-portal/app/(protected)/coverage/page.tsx"
+        ]
+      },
+      "report": {
+        "route": "/money",
+        "metrics": [
+          "Portal Revenue Checkout rails note documents web Stripe vs native store Exclusive; ledger streams retain Vault 20/80 when charged. Missing migration or unread ledger shows Not in this read, never invented web GMV. Control map /coverage lists the web surface. Expo /admin/product/coverage remains the live telemetry desk."
+        ],
+        "paths": [
+          "apps/admin-portal/app/(protected)/money/page.tsx",
+          "packages/shared-types/admin/expoDeskDirectory.ts",
+          "apps/admin-portal/app/(protected)/coverage/page.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Publish buttons.vault OFF or pause Exclusive features in Expo Features; web Exclusive follows decideExclusiveCheckout. No separate web runtime flag yet — owner of code release. Stripe test keys stay out of production builds. Dismiss lock during confirmPayment prevents mid-flight cancel desync.",
+        "paths": [
+          "apps/mobile/src/frontend/data/storeCommerce.ts",
+          "apps/mobile/src/frontend/lib/exclusiveCheckout.ts",
+          "apps/mobile/src/frontend/components/Checkout/WebPaymentSheetHost.tsx"
+        ]
+      },
+      "access": {
+        "roles": ["admin"],
+        "deniedBehavior": "Only Expo admins change Features/Money. Next portal reads ledger and shows checkout-rails copy without write controls. Fan web checkout still requires Soft-Wall session for Exclusive; guests cannot confirm Payment Element without auth resume.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/exclusiveCheckout.ts",
+          "apps/admin-portal/app/(protected)/money/page.tsx"
+        ]
+      },
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/mobile/src/frontend/components/Common/WebAppShell.tsx",
+          "apps/mobile/src/frontend/lib/stripe.web.ts"
+        ]
+      },
+      "readiness": { "admin": null, "app": null }
+    },
+    {
+      "id": "VAULT-RAILS-01",
+      "title": "Vault Exclusive platform split and store-billing rails",
+      "owner": "COMMERCE",
+      "status": "planned",
+      "plannedAt": "2026-11-13T19:05:00Z",
+      "exemption": null,
+      "source": {
+        "description": "Exclusive/Vault books VAULT_PLATFORM_CUT_BPS (20% Tapua'i / 80% athlete). decideExclusiveCheckout: web Stripe allowed; production iOS requires App Store IAP; production Android requires Play Billing (same class as Apple for in-app digital goods); preview/test native may keep Stripe for APP-TEST. Fan copy discloses the split. StoreKit/Play Billing products not built.",
+        "paths": [
+          "apps/mobile/src/frontend/data/storeCommerce.ts",
+          "apps/mobile/src/frontend/lib/exclusiveCheckout.ts",
+          "packages/shared-types/index.ts"
+        ]
+      },
+      "admin": {
+        "route": "/admin/features",
+        "actions": [
+          "Review Vault flag and Exclusive price in Features/Catalogs",
+          "Confirm Money/Books show Vault stream split; do not promise store IAP until products ship",
+          "Portal Revenue and Control map web surface document rails for oversight"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/FeaturesTool.tsx",
+          "apps/mobile/src/frontend/lib/adminCoverage.ts",
+          "apps/admin-portal/app/(protected)/money/page.tsx"
+        ]
+      },
+      "report": {
+        "route": "/money",
+        "metrics": [
+          "Vault athlete share remains on Revenue ledger streams when present; Checkout rails section states 20/80 and store-billing honesty. Unknown stream amounts stay dash. Expo Money remains the write desk."
+        ],
+        "paths": [
+          "apps/admin-portal/app/(protected)/money/page.tsx",
+          "packages/shared-types/admin/reports.ts"
+        ]
+      },
+      "disable": {
+        "strategy": "Publish buttons.vault OFF. Production native already refuses Stripe Exclusive with an honest unavailable alert. Web can still charge when flag on until separate web pause exists; Features Publish is the stop.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/exclusiveCheckout.ts",
+          "apps/mobile/src/frontend/data/storeCommerce.ts"
+        ]
+      },
+      "access": {
+        "roles": ["admin"],
+        "deniedBehavior": "Fans cannot change rails. Soft-Wall gates guest Exclusive. Next portal never toggles Vault.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/exclusiveCheckout.ts",
+          "apps/admin-portal/components/PortalShell.tsx"
+        ]
+      },
+      "app": {
+        "route": "/profile",
+        "paths": [
+          "apps/mobile/src/frontend/lib/exclusiveCheckout.ts",
+          "apps/mobile/src/frontend/data/storeCommerce.ts"
+        ]
+      },
+      "readiness": { "admin": null, "app": null }
     }
   ]
 }

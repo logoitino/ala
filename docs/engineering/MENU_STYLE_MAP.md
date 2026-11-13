@@ -154,7 +154,9 @@ Owner Lovable standard: dark left sidebar (top bar below `lg`), Daylight canvas,
 | Surfaces | Shared format |
 | --- | --- |
 | Home, Trends, Audience, Revenue, Health, Product, Analytics, Departments | `PortalShell`: dark sidebar nav, Daylight main canvas, bold titles, card panels. |
-| Product’s Features, Profile, Sign-in and People desks | Same shell, nested Product nav and open `Panel` sections. |
+| Product’s Control map, Features, Profile, Sign-in and People desks | Same shell, nested Product nav. Control map (`/coverage`) lists fan surfaces from `PORTAL_COVERAGE_SURFACES`; live control telemetry stays in Expo `/admin/product/coverage`. |
+| Product Expo desk directory | Shared `EXPO_DESKS` catalog on Product overview — read-only paths, no portal writes. |
+| Revenue checkout rails note | Honest Gift / Vault 20/80 / web Stripe vs native store-billing copy; Wave 0 test mode banner retained. |
 | Charts, KPI values, meters, ledgers and department status | Open card panels; full summaries, source disclosures, Data rows, missing-state words and legal ledger notes retained. Enlarged text may wrap labels and values. |
 
 Local evidence and remaining browser-tool coverage limits: [COMMUNITY_DASHBOARD_QA.md](design/COMMUNITY_DASHBOARD_QA.md).

@@ -1,4 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-13 — Next portal Control map + desk accountability
+
+- Shared `expoDeskDirectory` + portal `/coverage`, Product Expo desk list, Revenue checkout-rails note.
+- Notifications unapplied probe; WEB-01 / VAULT-RAILS-01 feature-admin enrollment; `pnpm portal:test` in check.
+
 ## 2026-11-13 — Expo web Phase 1 (checkout + shell)
 
 - Stripe.js Payment Element on Expo web for gifts / Exclusive / Drip / booster (`stripe.web.ts`).
