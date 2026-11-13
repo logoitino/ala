@@ -197,6 +197,9 @@ Additional build/host returns need their own exact allowlist entry after checkin
    Open `http://localhost:8086` manually and allow the sign-in popup for that origin. If the port
    is occupied, resolve the conflict before using a different origin; update and verify its exact
    callback allowlist if changing ports. Do not source missing bank credentials for this auth check.
+   Expo web checkout uses Stripe.js Payment Element (same `create-payment-intent` as native) when
+   `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` is set — test card `4242…`. Desktop layouts use a phone-width
+   column; see [WEB_APP_PARITY.md](engineering/design/WEB_APP_PARITY.md).
 7. Recheck development Auth settings through the configured app: Google should now report enabled.
    That setting alone is not a successful sign-in receipt. Run the
    [browser Google checks](engineering/TESTER_SCRIPT.md#google-setup-acceptance--browser-first-then-native),

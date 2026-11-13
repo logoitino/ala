@@ -41,12 +41,12 @@ describe('exclusiveAthleteSplitHint', () => {
 });
 
 describe('decideExclusiveCheckout', () => {
-  it('blocks Stripe on web until web PaymentSheet exists (no fake unlock promise)', () => {
+  it('allows Stripe on web with the Vault 20/80 disclosure', () => {
     const d = decideExclusiveCheckout('web', true);
-    expect(d.allowStripe).toBe(false);
+    expect(d.allowStripe).toBe(true);
     expect(d.rail).toBe('web_stripe');
-    expect(d.fanBody).toMatch(/not available in the browser/i);
-    expect(d.fanCta).toBe('OK');
+    expect(d.fanBody).toMatch(/20%/);
+    expect(d.fanBody).toMatch(/browser|Stripe/i);
   });
 
   it('allows Stripe on native test builds and warns that store billing comes later', () => {

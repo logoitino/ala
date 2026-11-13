@@ -1,10 +1,15 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-13 — Expo web Phase 1 (checkout + shell)
+
+- Stripe.js Payment Element on Expo web for gifts / Exclusive / Drip / booster (`stripe.web.ts`).
+- Desktop `WebAppShell` phone column; parity plan in `docs/engineering/design/WEB_APP_PARITY.md`.
+- Dependencies: `@stripe/stripe-js`, `@stripe/react-stripe-js`.
+
 ## 2026-11-13 — Vault Exclusive platform rails
 
 - Disclose Exclusive books split (20% Tapua'i / 80% athlete) on Vault lock + unlock UI.
-- Test/preview native keeps Stripe Exclusive; production iOS/Android and web show honest
-  unavailable (no fake website redirect — web PaymentSheet not built). Android not freer than
-  Apple for digital Vault. `data/storeCommerce.ts` · `lib/exclusiveCheckout.ts`.
+- Test/preview native keeps Stripe Exclusive; production iOS/Android show honest unavailable until
+  store billing. Web Exclusive uses Phase 1 Stripe.js. Android not freer than Apple for digital Vault.
 
 ## 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 

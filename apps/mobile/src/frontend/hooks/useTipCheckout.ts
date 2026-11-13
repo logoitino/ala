@@ -1,12 +1,14 @@
 /**
- * Gift checkout: opens native Stripe PaymentSheet for a gift, one-time Exclusive purchase, Drip order or
- * booster sponsorship purchase, then records the result. Gifts retain existing giver/athlete Aura; counsel must review digital consideration.
- * Code names keep `tip` / `malo`; on-screen words follow docs/product/VOICE.md. Needs a dev or preview build, not Expo Go.
- * @sideEffects Edge Function `create-payment-intent` (Metro route as fallback), Stripe PaymentSheet, inserts into `tips`.
+ * Gift checkout: opens Stripe PaymentSheet (native) or Payment Element (Expo web) for a gift, one-time
+ * Exclusive purchase, Drip order or booster sponsorship purchase, then records the result. Gifts retain
+ * existing giver/athlete Aura; counsel must review digital consideration.
+ * Code names keep `tip` / `malo`; on-screen words follow docs/product/VOICE.md. Native needs a dev or
+ * preview build (not Expo Go). Web uses Stripe.js via `lib/stripe.web.ts`.
+ * @sideEffects Edge Function `create-payment-intent` (Metro route as fallback), Stripe sheet, inserts into `tips`.
  */
 
 import { useCallback, useRef, useState } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
@@ -21,7 +23,7 @@ import { paymentIntentIdFromSecret, resolveTipOrigin, type TipEntry, type TipOri
 import { createPaymentIntent, incrementBackerCount } from '@/lib/payments';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { resolveSessionUserId } from '@/lib/sessionToken';
-import { NATIVE_STRIPE_UNAVAILABLE_MESSAGE, useStripe } from '@/lib/stripe';
+import { useStripe } from '@/lib/stripe';
 import { supportSignals } from '@/services/SupportSignalManager';
 import { telemetry } from '@/services/TelemetryManager';
 import type { Player } from '@/types/database';
@@ -91,7 +93,7 @@ function applyAuraAward(
 }
 
 /**
- * @purpose Native Stripe PaymentSheet for gifts, exclusive purchase, Drip, or booster sponsorships. Gifts retain Aura for the giver and the athlete.
+ * @purpose Stripe checkout for gifts, exclusive purchase, Drip, or booster sponsorships (native PaymentSheet or web Payment Element). Gifts retain Aura for the giver and the athlete.
  * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may give to a tagged athlete.
  * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a gift (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`, `cover_fee_cents`, `stripe_payment_intent_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`. Fan id is resolved from the live session so Soft-Wall resume still writes `tips.fan_id` and payer Aura.
  */
@@ -135,11 +137,6 @@ export function useTipCheckout() {
       onPaid,
     }: StartCheckoutArgs) => {
       if (checkoutRef.current || busy) return;
-
-      if (Platform.OS === 'web') {
-        Alert.alert('Stripe payments', NATIVE_STRIPE_UNAVAILABLE_MESSAGE);
-        return;
-      }
 
       const isGift = !skipBacker && !!player;
       const pointsToAdd = auraPoints ?? auraPointsForTip(tipAmount);

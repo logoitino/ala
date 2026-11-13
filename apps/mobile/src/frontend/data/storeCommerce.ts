@@ -3,8 +3,8 @@
  * Records the owner/engineering working model for web / iOS / Android. Not counsel advice —
  * App Store and Play policies still need LEGAL review before store claims or live money.
  *
- * Honest checkout availability: native PaymentSheet exists today; web PaymentSheet does not
- * (`useTipCheckout` returns on web). Do not promise a website unlock until web Stripe ships.
+ * Honest checkout availability: native PaymentSheet and Expo web Payment Element (Stripe.js) when
+ * `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` is set. Production App Store / Play builds still need store billing for Exclusive.
  */
 import { Platform } from 'react-native';
 
@@ -75,7 +75,7 @@ export function exclusiveAthleteSplitHint(
  * @purpose Decide whether Exclusive may use Stripe on this surface.
  *
  * Working model (counsel still owns final store claims):
- * - **Web (planned):** Stripe + Vault 20/80 when web PaymentSheet ships — **not available today**.
+ * - **Web:** Stripe.js Payment Element + Vault 20/80 books split (same create-payment-intent as native).
  * - **iOS App Store:** digital Vault unlock is App Store IAP class — not Stripe in the production app.
  * - **Android / Google Play:** same class as Apple for in-app digital goods — Play Billing is required
  *   for that SKU in the Play-distributed app. Android is **not** freer than Apple here.
@@ -94,11 +94,11 @@ export function decideExclusiveCheckout(
 
   if (surface === 'web') {
     return {
-      allowStripe: false,
+      allowStripe: true,
       rail: 'web_stripe',
-      reason: 'Web Exclusive is planned on Stripe with the Vault 20/80 split, but PaymentSheet is not available on web today.',
-      fanCta: 'OK',
-      fanBody: `${split} Exclusive unlock is not available in the browser yet. Use a phone test build for Wave 0, or wait for web checkout.`,
+      reason: 'Web Exclusive uses Stripe.js Payment Element; books record the Vault 20/80 split.',
+      fanCta: 'One-time Exclusive',
+      fanBody: `${split} Checkout runs in the browser with Stripe (test card 4242 in Wave 0).`,
     };
   }
 
