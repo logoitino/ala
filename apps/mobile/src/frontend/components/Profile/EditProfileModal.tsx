@@ -26,7 +26,7 @@ import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { useCelebration } from '@/context/CelebrationContext';
 import { RESERVED_BADGE_MARKS, RESERVED_BADGE_MARKS_ERROR } from '@/data/verification';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 import type { ProfileVisibility } from '@/types/database';
 import { fetchMyPrivacy } from '@/lib/privacy';
 import { FunFactShare } from '@/components/Profile/FunFactShare';
@@ -102,7 +102,7 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSave
     setSocial({ ...(profile?.social_links ?? {}) });
     setVisibility({ ...DEFAULT_VISIBILITY, ...(profile?.profile_visibility ?? {}) });
     void fetchMyPrivacy().then(() => setPrivacyReady(true), () => setPrivacyReady(false));
-    translateY.value = withSpring(0, SPRING_CARD);
+    translateY.value = withSpring(0, SPRING_SHEET);
     backdropOpacity.value = withTiming(1, { duration: 200 });
   }, [backdropOpacity, profile, translateY, visible]);
   useEffect(() => { if (!visible) { initialized.current = null; setSportsOpen(false); } }, [visible]);

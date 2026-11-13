@@ -14,7 +14,7 @@ import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { LEGAL_ACK_LABEL, LEGAL_MENU_LABEL, LEGAL_SECTIONS, LEGAL_TERMS_VERSION } from '@/data/legal';
 import { useLegalAck } from '@/hooks/useLegalAck';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 
 const SHEET_TRAVEL = 460;
 
@@ -89,7 +89,7 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
       setOpen(true);
       setChecked(accepted);
       telemetry.trackFeature('legal_terms', 'profile');
-      translateY.value = withSpring(0, SPRING_CARD);
+      translateY.value = withSpring(0, SPRING_SHEET);
       backdropOpacity.value = withTiming(1, { duration: 200 });
     }
   }, [accepted, backdropOpacity, translateY, visible]);

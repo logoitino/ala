@@ -34,7 +34,7 @@ export function NotificationSettingsSheet({ visible, onClose }: { visible: boole
   const { draft, availability, loading, busy, error, notice, dirty, conflicted } = state;
   const locked = loading || busy || conflicted;
 
-  return <Modal visible animationType="slide" transparent onRequestClose={onClose}>
+  return <Modal visible animationType="fade" transparent onRequestClose={onClose}>
     <View style={styles.root}>
       <View style={frame.dock}>
         <View accessibilityViewIsModal style={[styles.sheet, frame.card, { maxHeight: height * 0.85 }]}>

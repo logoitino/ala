@@ -40,7 +40,7 @@ import {
 } from '@/data/verification';
 import { redeemTeamCode, requestAthleteVerification } from '@/lib/verification';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 
 const SHEET_TRAVEL = 460;
 
@@ -77,7 +77,7 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
       setOpen(true);
       setError(null);
       telemetry.trackFeature('athlete_verify', 'profile');
-      translateY.value = withSpring(0, SPRING_CARD);
+      translateY.value = withSpring(0, SPRING_SHEET);
       backdropOpacity.value = withTiming(1, { duration: 200 });
     }
   }, [backdropOpacity, translateY, visible]);

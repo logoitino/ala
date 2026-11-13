@@ -20,7 +20,7 @@ import {
 import { supportSignals } from '@/services/SupportSignalManager';
 import { supportFeatureForPath } from '@/services/supportRuntime';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 
 const SHEET_TRAVEL = 420;
 
@@ -49,7 +49,7 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
   useEffect(() => {
     if (visible) {
       setOpen(true);
-      translateY.value = withSpring(0, SPRING_CARD);
+      translateY.value = withSpring(0, SPRING_SHEET);
       backdropOpacity.value = withTiming(1, { duration: 200 });
     }
   }, [backdropOpacity, translateY, visible]);

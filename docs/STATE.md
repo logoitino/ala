@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-13 · Portal Control map + Sign-in web Soft-Wall note + NOTIFY Health probe. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-13 · App fluidity: shared sheet motion, Profile menu close, tab fade. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,18 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-13 — App fluidity (menus, sheets, tabs, scroll)
+
+- Shared `useFanSheetMotion` + sheet timing tokens (`SHEET_CLOSE_TIMING`, `SPRING_SHEET` travel).
+- **Profile menu** waits for slide-away before clearing `visible` / opening nested Soft-Wall.
+- Upload / Reel more: `animationType="none"` + `SheetRise active={visible}` (re-open rise).
+- Soft-Wall, Legal, Suggestion, Verify, Edit profile, Share QR, Role switcher, Drip Product:
+  vertical travel uses `SPRING_SHEET` (not bouncy `SPRING_CARD`).
+- Fan tabs: navigator fade removed; `TabScreen` enter 160ms (was 240) so switches do not double-flash.
+- Privacy / Notifications / Delete account / Rally / Challenge sheets: fade instead of slide.
+- `ScrollFxItem` skips mount spring when Reduce Motion is on.
+- **About to spend:** $0 (Wave 0 presentation). Device feel still needs APP-TEST / DEVICE_QA.
 
 ### 2026-11-13 — Next admin portal: Control map + feature accountability
 

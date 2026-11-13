@@ -29,7 +29,7 @@ import { COMPLIANCE_ACCOUNT } from '@/data/legal';
 import { DEMO_FAN_EMAIL, DEMO_FAN_PASSWORD, demoFanSignInAvailable, signUpBirthProblem, softWallEmailGates, type BirthMonth } from '@/lib/auth';
 import { AGE_GATE_REFUSAL, isAgeGatePaused, pauseAgeGate } from '@/lib/minors';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 import { DISPLAY_TEXT, TYPE, figtree } from '@/theme/fonts';
 
 const SHEET_TRAVEL = 480;
@@ -86,7 +86,7 @@ export function SoftWallModal() {
     if (visible) {
       wasVisible.current = true;
       setOpen(true);
-      translateY.value = withSpring(0, SPRING_CARD);
+      translateY.value = withSpring(0, SPRING_SHEET);
       backdropOpacity.value = withTiming(1, { duration: 200 });
     } else if (wasVisible.current) {
       wasVisible.current = false;

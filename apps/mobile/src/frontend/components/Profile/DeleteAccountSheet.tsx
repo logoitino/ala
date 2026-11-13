@@ -72,7 +72,7 @@ export function DeleteAccountSheet({ visible, onClose }: { visible: boolean; onC
   };
 
   return (
-    <Modal transparent animationType="slide" visible={visible} onRequestClose={dismiss}>
+    <Modal transparent animationType="fade" visible={visible} onRequestClose={dismiss}>
       <View style={styles.root}>
         <Pressable haptic="none" style={styles.backdrop} onPress={dismiss} />
         <View style={styles.sheet}>

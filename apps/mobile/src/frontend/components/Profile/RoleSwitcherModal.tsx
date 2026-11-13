@@ -42,7 +42,7 @@ import {
   type SchoolTeam,
 } from '@/data/teams';
 import { activeSportNames } from '@/data/sports';
-import { SPRING_CARD } from '@/theme/motion';
+import { SPRING_CARD, SPRING_SHEET } from '@/theme/motion';
 import { useLegalAck } from '@/hooks/useLegalAck';
 
 const SHEET_OFF = 720;
@@ -147,7 +147,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
     translateY.value = SHEET_OFF;
     dim.value = 0;
     const frame = requestAnimationFrame(() => {
-      translateY.value = withSpring(0, SPRING_CARD);
+      translateY.value = withSpring(0, SPRING_SHEET);
       dim.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
     });
     return () => cancelAnimationFrame(frame);

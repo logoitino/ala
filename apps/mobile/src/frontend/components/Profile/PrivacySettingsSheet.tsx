@@ -217,7 +217,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
       ];
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={styles.root}>
         <View style={styles.sheet}>
           <MenuBackdrop accent="jade" />
@@ -412,7 +412,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
           </AnimatedButton>
         </View>
       </View>
-      <Modal visible={guardianOpen} animationType="slide" transparent onRequestClose={() => setGuardianOpen(false)}>
+      <Modal visible={guardianOpen} animationType="fade" transparent onRequestClose={() => setGuardianOpen(false)}>
         <View style={styles.root}>
           <View style={styles.sheet}>
             <SheetHandle onDismiss={() => setGuardianOpen(false)} />

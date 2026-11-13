@@ -35,14 +35,14 @@ export function UploadChoiceSheet({ visible, onHighlight, onBeyond, onClose }: U
   const frame = useSheetFrame();
   const { height } = useWindowDimensions();
   return (
-    <Modal animationType="fade" presentationStyle="overFullScreen" statusBarTranslucent transparent visible={visible} onRequestClose={onClose}>
+    <Modal animationType="none" presentationStyle="overFullScreen" statusBarTranslucent transparent visible={visible} onRequestClose={onClose}>
       <View style={styles.root}>
         <Pressable haptic="none" onPress={onClose} style={StyleSheet.absoluteFill}>
           <BlurView intensity={SHEET_BLUR_INTENSITY} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           <View style={styles.dim} />
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-          <SheetRise style={[styles.sheet, frame.card, { maxHeight: height * 0.72 }]}>
+          <SheetRise active={visible} style={[styles.sheet, frame.card, { maxHeight: height * 0.72 }]}>
             <MenuBackdrop accent="jade" />
             <SheetHandle onDismiss={onClose} />
             <ScrollView style={styles.scroll} contentContainerStyle={styles.content} bounces={false} keyboardShouldPersistTaps="handled">

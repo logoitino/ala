@@ -2,13 +2,14 @@
  * Account settings sheet opened from the Profile hamburger (sign in / out, role, receipts, legal). Nested sheets
  * open only after this one has fully dismissed, to avoid overlapping native modals (see STATE.md, 2026-09-29).
  * Rows are grouped into short categories and the list scrolls inside the sheet so long menus stay reachable.
+ * Close waits for the slide animation (useFanSheetMotion) before clearing parent `visible` / running `after`.
  */
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
@@ -16,8 +17,9 @@ import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
+import { useFanSheetMotion } from '@/hooks/useFanSheetMotion';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
-import { FOCAL, SPRING_SHEET } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 
 export type ProfileMenuSectionId = 'account' | 'activity' | 'money' | 'support';
 
@@ -50,20 +52,19 @@ const SECTION_META: { id: ProfileMenuSectionId; title: string }[] = [
  * @param items Menu rows with optional `section`. Nested modals open only after this sheet's native Modal has dismissed.
  * @returns Blur bottom sheet matching RoleSwitcher / SoftWall chrome.
  */
-const SHEET_TRAVEL = 420;
 /** iOS `onDismiss` is the real signal; this covers Android and a missed callback. */
-const DISMISS_FALLBACK_MS = Platform.OS === 'ios' ? 650 : 280;
+const DISMISS_FALLBACK_MS = Platform.OS === 'ios' ? 650 : 320;
 
 export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMenuSheetProps) {
   const frame = useSheetFrame();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const [mounted, setMounted] = useState(false);
-  const translateY = useSharedValue(SHEET_TRAVEL);
-  const backdropOpacity = useSharedValue(0);
+  const { sheetStyle, backdropStyle, playOpen, playClose } = useFanSheetMotion();
   const afterRef = useRef<(() => void) | undefined>(undefined);
   const closingToken = useRef<number | null>(null);
   const gen = useRef(0);
+  const parentNotified = useRef(false);
 
   const sections = useMemo(() => {
     return SECTION_META.map((meta) => ({
@@ -80,13 +81,10 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
     gen.current += 1;
     closingToken.current = null;
     afterRef.current = undefined;
+    parentNotified.current = false;
     setMounted(true);
-    translateY.value = withSpring(0, SPRING_SHEET);
-    backdropOpacity.value = withTiming(1, { duration: 200 });
-  }, [backdropOpacity, translateY, visible]);
-
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
+    playOpen();
+  }, [playOpen, visible]);
 
   const finishDismiss = (token: number) => {
     if (closingToken.current !== token) return;
@@ -100,20 +98,33 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
   if (!mounted && !visible) return null;
 
   const dismiss = (after?: () => void) => {
+    if (closingToken.current != null) return;
     const token = ++gen.current;
     closingToken.current = token;
     afterRef.current = after;
-    translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
-    backdropOpacity.value = withTiming(0, { duration: 160 });
-    onClose();
-    setTimeout(() => finishDismiss(token), DISMISS_FALLBACK_MS);
+    playClose(() => {
+      if (!parentNotified.current) {
+        parentNotified.current = true;
+        onClose();
+      }
+      finishDismiss(token);
+    });
+    // Android may never fire Modal onDismiss; keep a fallback if the close animation callback is lost.
+    setTimeout(() => {
+      if (closingToken.current !== token) return;
+      if (!parentNotified.current) {
+        parentNotified.current = true;
+        onClose();
+      }
+      finishDismiss(token);
+    }, DISMISS_FALLBACK_MS);
   };
 
   return (
     <Modal
       transparent
       animationType="none"
-      visible={visible}
+      visible={visible || mounted}
       onRequestClose={() => dismiss()}
       onDismiss={() => {
         if (closingToken.current != null) finishDismiss(closingToken.current);
@@ -151,7 +162,7 @@ export function ProfileMenuSheet({ visible, onClose, items, footer }: ProfileMen
                         // iOS only presents one Modal. Opening SoftWall (or Role / Legal) in the same
                         // turn this sheet unmounts drops the second presentation: React still has
                         // `visible` true, but the native sheet never stays on screen. `after` runs from
-                        // `onDismiss` (or the platform fallback) once this Modal is actually gone.
+                        // close settle (or the platform fallback) once this Modal is actually gone.
                         dismiss(() => item.onPress());
                       }}
                       contentStyle={styles.row}

@@ -1,4 +1,8 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-13 — App fluidity (sheets, tabs, scroll)
+
+- `useFanSheetMotion`, Profile menu close-after-settle, SheetRise re-open, SPRING_SHEET on fan menus, single tab fade.
+
 ## 2026-11-13 — Next portal Control map + desk accountability
 
 - Shared `expoDeskDirectory` + portal `/coverage`, Product Expo desk list, Revenue checkout-rails note.

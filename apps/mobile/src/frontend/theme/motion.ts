@@ -1,6 +1,6 @@
 /** Shared motion and sport accents keep fan destinations consistent; bright glows never replace readable text inks. */
 import { Platform, type ViewStyle } from 'react-native';
-import type { WithSpringConfig } from 'react-native-reanimated';
+import { Easing, type WithSpringConfig, type WithTimingConfig } from 'react-native-reanimated';
 
 /**
  * @purpose Shared Reanimated springs plus focal color tokens for every fan tab (Reel, Local, Drip, Profile, Upload).
@@ -39,6 +39,33 @@ export const SPRING_SHEET: WithSpringConfig = {
   stiffness: 260,
   damping: 28,
   mass: 0.85,
+};
+
+/** Default off-screen travel for fan bottom sheets (px). Tip checkout may use a taller off value. */
+export const SHEET_TRAVEL = 420;
+
+/** Backdrop fade-in for fan sheets (matches TipSheet open). */
+export const SHEET_BACKDROP_IN_MS = 200;
+
+/** Backdrop fade-out while the sheet slides away. */
+export const SHEET_BACKDROP_OUT_MS = 160;
+
+/** Sheet slide-away duration when Reduce Motion is off. */
+export const SHEET_DISMISS_MS = 220;
+
+/** Instant-feel open/close when Reduce Motion is on. */
+export const SHEET_REDUCED_MS = 100;
+
+/** Shared close timing for fan sheets — cubic ease-in so the card accelerates off-screen. */
+export const SHEET_CLOSE_TIMING: WithTimingConfig = {
+  duration: SHEET_DISMISS_MS,
+  easing: Easing.in(Easing.cubic),
+};
+
+/** Shared open backdrop timing. */
+export const SHEET_BACKDROP_IN_TIMING: WithTimingConfig = {
+  duration: SHEET_BACKDROP_IN_MS,
+  easing: Easing.out(Easing.cubic),
 };
 
 /**

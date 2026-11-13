@@ -33,7 +33,7 @@ import {
   shareGiftLink,
 } from '@/lib/share';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 
 const SHEET_TRAVEL = 420;
 
@@ -75,7 +75,7 @@ export function ShareQrModal({ visible, onClose, athleteName, username, playerId
       setOpen(true);
       setBusy(null);
       telemetry.trackFeature('share_qr', 'profile');
-      translateY.value = withSpring(0, SPRING_CARD);
+      translateY.value = withSpring(0, SPRING_SHEET);
       backdropOpacity.value = withTiming(1, { duration: 200 });
     }
   }, [backdropOpacity, translateY, visible]);
