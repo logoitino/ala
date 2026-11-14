@@ -41,6 +41,26 @@ export const SPRING_SHEET: WithSpringConfig = {
   mass: 0.85,
 };
 
+/** Default off-screen travel for fan bottom sheets (px). Tip checkout may use a taller off value. */
+export const SHEET_TRAVEL = 420;
+
+/** Backdrop fade-in for fan sheets (matches TipSheet open). */
+export const SHEET_BACKDROP_IN_MS = 200;
+
+/** Backdrop fade-out while the sheet slides away. */
+export const SHEET_BACKDROP_OUT_MS = 160;
+
+/** Sheet slide-away duration when Reduce Motion is off. */
+export const SHEET_DISMISS_MS = 220;
+
+/** Instant-feel open/close when Reduce Motion is on. */
+export const SHEET_REDUCED_MS = 100;
+
+/**
+ * Timing objects that call `Easing.*` stay inside hooks/components — not this module —
+ * so Jest's Reanimated mock (which may omit `Easing`) can still import FOCAL / springs.
+ */
+
 /**
  * Highlights pager depth: the outgoing page shrinks / sinks / rounds while the incoming page
  * scales up from `scaleIn`. `sink` is a fraction of page height.

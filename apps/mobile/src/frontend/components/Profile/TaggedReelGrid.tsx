@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Image, StyleSheet, Text, useWindowDimensions, View, type ViewInstance } from 'react-native';
+import { Image, StyleSheet, Text, View, type ViewInstance } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { formatCompactCount } from '@/lib/hype';
@@ -16,6 +16,7 @@ import { colors, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { isClipVaultOnly, isFlashUnlockActive, VAULT_BADGE_LABEL } from '@/data/exclusive';
 import { isPhotoStory, type HighlightClip } from '@/data/highlights';
 import type { Player } from '@/data/players';
+import { useAppViewportWidth } from '@/hooks/useAppViewport';
 import { hypeFromReel, sortClipsNewestFirst, type ReelHype } from '@/lib/reels';
 import { FOCAL } from '@/theme/motion';
 
@@ -70,7 +71,7 @@ export function TaggedReelGrid({
   onBacked,
   openClipId,
 }: TaggedReelGridProps) {
-  const { width } = useWindowDimensions();
+  const width = useAppViewportWidth();
   const ordered = useMemo(() => sortClipsNewestFirst(clips), [clips]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [hypeById, setHypeById] = useState<Record<string, ReelHype>>({});

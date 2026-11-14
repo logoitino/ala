@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
+import { SheetRise } from '@/components/UI/SheetRise';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import type { SchoolTeam } from '@/data/teams';
@@ -98,9 +99,9 @@ function MySportsDraft({ visible, profileId, snapshot, onClose, onSaved, onReloa
   const catalogNotice = catalogStatus === 'loading' ? 'Loading sport choices. Your draft stays here.' : catalogStatus === 'unavailable' ? 'Sport choices are unavailable right now. Your draft stays here. Reload sport choices to try again.'
     : blockedNewSport ? 'A new sport in your draft is no longer available. Keep the draft or remove that sport before saving.'
       : sportNames.length === 0 ? 'No active sports are available to add. Existing sport details stay here.' : null;
-  return <Modal visible transparent animationType="slide" onRequestClose={back}>
+  return <Modal visible transparent animationType="none" onRequestClose={back}>
     <View style={styles.root}><KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={frame.dock}>
-      <View style={[styles.sheet, frame.card]}><MenuBackdrop accent="jade" />
+      <SheetRise active={visible} style={[styles.sheet, frame.card]}><MenuBackdrop accent="jade" />
         <View style={styles.heading}><Pressable accessibilityRole="button" accessibilityLabel="Back" disabled={saving} onPress={back} style={styles.button}><Text style={styles.link}>Back</Text></Pressable>
           <Text accessibilityRole="header" style={styles.title}>{schoolSport ? `${schoolSport} school / team` : adding ? 'Add a sport' : 'My sports'}</Text></View>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
@@ -141,7 +142,7 @@ function MySportsDraft({ visible, profileId, snapshot, onClose, onSaved, onReloa
             onPress={() => { setDraft(clone(snapshot)); setError(null); }}><Text style={styles.link}>Use latest sports (replaces draft)</Text></Pressable> : null}
           {available ? <Pressable accessibilityRole="button" accessibilityLabel="Save sports" disabled={saving || catalogStatus !== 'ready' || blockedNewSport} style={[styles.button, styles.save]} onPress={() => void save()}>{saving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.saveLabel}>Save sports</Text>}</Pressable> : null}
         </View> : null}
-      </View></KeyboardAvoidingView></View>
+      </SheetRise></KeyboardAvoidingView></View>
   </Modal>;
 }
 const styles = StyleSheet.create({

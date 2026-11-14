@@ -29,6 +29,8 @@ export type ReelCardProps = {
   onReelHypeChange?: (reelId: string, hype: ReelHype) => void;
   /** After Report / Hide, parent drops this clip from the paging feed. */
   onHide?: (reelId: string) => void;
+  /** FEED-01 "Why this clip" line for signed-in Home. Guests omit. */
+  whyThisClip?: string | null;
   /** Tab that owns this card so usage reports know which surface liked / failed the control. */
   surface?: UsageSurface;
 };
@@ -79,7 +81,8 @@ export function sameReelCardProps(prev: ReelCardProps, next: ReelCardProps): boo
     prev.onTip !== next.onTip ||
     prev.onOpenProfile !== next.onOpenProfile ||
     prev.onReelHypeChange !== next.onReelHypeChange ||
-    prev.onHide !== next.onHide
+    prev.onHide !== next.onHide ||
+    prev.whyThisClip !== next.whyThisClip
   ) {
     return false;
   }

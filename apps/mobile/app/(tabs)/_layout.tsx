@@ -33,11 +33,8 @@ function FanTabs() {
         screenOptions={{
           headerShown: false,
           freezeOnBlur: true,
-          animation: 'fade',
-          transitionSpec: {
-            animation: 'timing',
-            config: { duration: 180 },
-          },
+          // TabScreen owns the enter/exit fade; a second navigator fade double-flashed tab switches.
+          animation: 'none',
           sceneStyle: { backgroundColor: live.theme.background },
           tabBarStyle: {
             position: 'absolute',

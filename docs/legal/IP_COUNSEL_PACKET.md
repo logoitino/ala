@@ -11,9 +11,9 @@ This packet contains source fingerprints and supplied investigation notes. It is
 
 ## 1. Current source and open work
 
-- Inventory SHA-256: `8e94577cfe6a613a45e61a03106efb34cee190e68e4e0ceca7d3bb91340cea43`
+- Inventory SHA-256: `5db58358dfac350881dbba1e002cb69f84411f708b83469e74eea29c1d9aa4d1`
 - Register SHA-256: `86a11d86b776757dd362bc03cdfc5c8e88d1c7a862e65db85ba00dd7c6073a71`
-- Safe source/manifest files monitored: 1120. Git-tracked and non-ignored untracked source; excluded files require separate human review.
+- Safe source/manifest files monitored: 1147. Git-tracked and non-ignored untracked source; excluded files require separate human review.
 - Investigation candidates: 3; missing engineering reviews: 3; stale engineering reviews: 0.
 - Rights categories awaiting counsel review: 7.
 - Supplied filing receipts: 0. Receipt entries require independent verification; no legal status is inferred.
@@ -23,9 +23,9 @@ A changed inventory requires Documentation/feature-owner review for new capabili
 
 | Monitored area | Files |
 | --- | --- |
-| apps/ | 955 |
-| packages/ | 34 |
-| supabase/ | 128 |
+| apps/ | 980 |
+| packages/ | 35 |
+| supabase/ | 129 |
 
 ## 2. Technical investigation disclosures
 
@@ -35,7 +35,7 @@ These candidates are questions to investigate. None has an established novelty, 
 
 **Feature owner:** HIGHLIGHTS with ACCOUNT\_TAGS / PRIVACY\_ENGINEERING
 
-Candidate source SHA-256: `073c88421315c7e79e9bdb5bef4c80d3eacb836d1a659d7f2f4abec63f7023c3`
+Candidate source SHA-256: `652c40b5ec82bf5adc74720c51db80ed18e9f245b13cec0f976eb5e72d2154c6`
 
 **Review state:** No engineering review supplied.
 
@@ -55,7 +55,7 @@ Candidate source SHA-256: `073c88421315c7e79e9bdb5bef4c80d3eacb836d1a659d7f2f4ab
 | --- | --- |
 | [apps/mobile/src/frontend/lib/reels.ts](../../apps/mobile/src/frontend/lib/reels.ts) | `4da5c804dfec788fc750f8851b6be6f4907f6400662efd649b3956c487cf52bd` |
 | [apps/mobile/src/frontend/lib/privacy.ts](../../apps/mobile/src/frontend/lib/privacy.ts) | `ae53d3bab4f2e9c458a1d9296a75692f8c2c049c8c549f81b26cea559c31fd02` |
-| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `9d964b7fe04c65af50aa75eebe6f5e84a2e387c405ed08ff58ac759e5f3771a6` |
+| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `d1729a7ee7de8e3258e35363e7955977d32d73210a6ceb91d57921ed1f172c86` |
 | [docs/engineering/design/PROFILE\_PRIVACY\_DESIGN.md](../../docs/engineering/design/PROFILE_PRIVACY_DESIGN.md) | `2cd42389d6492030f1bf9ff40f47c1b085cdf01bc6ebc7f0cecdf17bdabe8168` |
 
 References are source reading locations, not evidence that tests or counsel review ran.
@@ -73,7 +73,7 @@ No records supplied.
 
 **Feature owner:** VAULT / STORAGE with RLS\_SECURITY
 
-Candidate source SHA-256: `7a50aedc556efc0d775ee787941cace33772dc32c5405976b7fc9dbb215e3e47`
+Candidate source SHA-256: `8c4c37f2325a3286f26b66ef5f846b2c2bbc0d83b8aefa8b758022d71e97db1e`
 
 **Review state:** No engineering review supplied.
 
@@ -93,7 +93,7 @@ Candidate source SHA-256: `7a50aedc556efc0d775ee787941cace33772dc32c5405976b7fc9
 | --- | --- |
 | [apps/mobile/src/frontend/lib/vault.ts](../../apps/mobile/src/frontend/lib/vault.ts) | `e037ac3f9d373c371bf55fcdae8f313267fb28e358fc7e13967c79207bebe35a` |
 | [apps/mobile/src/frontend/lib/media.ts](../../apps/mobile/src/frontend/lib/media.ts) | `e187e7d37869ff21a9257b66f82651cd4d004d01151d676061b4cb50dd348d41` |
-| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `9d964b7fe04c65af50aa75eebe6f5e84a2e387c405ed08ff58ac759e5f3771a6` |
+| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `d1729a7ee7de8e3258e35363e7955977d32d73210a6ceb91d57921ed1f172c86` |
 | [docs/engineering/design/MEDIA\_SERVICE\_PLAN.md](../../docs/engineering/design/MEDIA_SERVICE_PLAN.md) | `84f083e341edd1fccd10dcf9cc77e52b69800cc388d7cf8ac6ea4fa0a567789f` |
 
 References are source reading locations, not evidence that tests or counsel review ran.
@@ -111,7 +111,7 @@ No records supplied.
 
 **Feature owner:** OPERATOR / LIVE\_SCORES with BACKEND
 
-Candidate source SHA-256: `eee2752a2796ac9fad6788378754a6592da80f60dfb21452a38445c38e03f3e5`
+Candidate source SHA-256: `277ff9e842785fd764ec36526d30adfd047f2ce6d35b083fccb5f0d6243f1e9c`
 
 **Review state:** No engineering review supplied.
 
@@ -131,7 +131,7 @@ Candidate source SHA-256: `eee2752a2796ac9fad6788378754a6592da80f60dfb21452a3844
 | --- | --- |
 | [apps/mobile/src/frontend/lib/liveScoreSync.ts](../../apps/mobile/src/frontend/lib/liveScoreSync.ts) | `97952a2ab2ad2d0d48c909ab94fc0bc4bde26051478b6f3e3e4780ed88431b63` |
 | [apps/mobile/src/frontend/hooks/useLiveScores.ts](../../apps/mobile/src/frontend/hooks/useLiveScores.ts) | `eb41d5a58fbd01000263ce3a434a5dbb37bc97f1fc72509dd004d3a03bd266ec` |
-| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `9d964b7fe04c65af50aa75eebe6f5e84a2e387c405ed08ff58ac759e5f3771a6` |
+| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `d1729a7ee7de8e3258e35363e7955977d32d73210a6ceb91d57921ed1f172c86` |
 | [docs/agents/SCALE-03.md](../../docs/agents/SCALE-03.md) | `87325c3233d93ccb84701a6c182377a1cf89e80b77309ffcd7cda450333f0745` |
 
 References are source reading locations, not evidence that tests or counsel review ran.
@@ -166,8 +166,8 @@ Names/versions are source observations, not a license audit. Transitive dependen
 | Manifest | SHA-256 | Direct dependency observations |
 | --- | --- | --- |
 | [apps/admin-portal/package.json](../../apps/admin-portal/package.json) | `3f19f62e557398519cabdcbe5f29466c741e0bf5c0a468addecb0c53c979c2b3` | @supabase/ssr (^0.12.7); @supabase/supabase-js (^2.116.0); @tailwindcss/postcss (^4.1.12); @tapuai/shared-types (workspace:\*); @types/node (^22.15.29); @types/react (^19.2.2); @types/react-dom (^19.2.2); next (^15.5.2); react (^19.2.3); react-dom (^19.2.3); tailwindcss (^4.1.12); typescript (~6.0.3) |
-| [apps/mobile/package.json](../../apps/mobile/package.json) | `6650182b648802b995c9c8280b2f5d602ae97972993e51acb2af04369e52d5f0` | @expo/dom-webview (^58.0.2); @expo/metro-runtime (~58.0.14); @expo/vector-icons (^15.0.2); @react-native-async-storage/async-storage (2.2.0); @react-native-community/netinfo (12.0.1); @react-native-picker/picker (2.11.4); @react-native/jest-preset (0.88.0); @react-native/metro-config (0.88.0); @shopify/react-native-skia (2.14.0); @stripe/stripe-react-native (0.83.0); @supabase/supabase-js (^2.116.0); @tapuai/shared-types (workspace:\*); @testing-library/react-native (^14.0.1); @types/jest (^30.0.0); @types/react (~19.3.0); babel-preset-expo (~58.0.17); expo (~58.0.14); expo-apple-authentication (^58.0.2); expo-auth-session (^58.0.13); expo-blur (~58.0.4); expo-build-properties (~58.0.11); expo-checkbox (~58.0.2); expo-clipboard (~58.0.3); expo-constants (~58.0.12); expo-crypto (^58.0.7); expo-file-system (~58.0.9); expo-font (~58.0.8); expo-haptics (~58.0.7); expo-image-picker (~58.0.10); expo-linking (~58.0.13); expo-location (~58.0.17); expo-media-library (~58.0.10); expo-router (~58.0.23); expo-sqlite (~58.0.13); expo-status-bar (~58.0.3); expo-updates (~58.0.17); expo-video (~58.0.11); expo-web-browser (~58.0.6); jest (^30.5.2); jest-expo (~58.0.11); react (19.3.0); react-dom (19.3.0); react-native (0.88.0); react-native-canvas (^0.1.40); react-native-compressor (^2.0.3); react-native-confetti-cannon (^1.5.2); react-native-gesture-handler (~3.3.0); react-native-nitro-modules (0.37.1); react-native-qrcode-svg (^6.3.24); react-native-reanimated (4.7.1); react-native-safe-area-context (~5.10.1); react-native-screens (~4.30.0); react-native-svg (15.16.0); react-native-url-polyfill (^4.0.0); react-native-web (^0.21.4); react-native-webview (14.0.1); react-native-worklets (0.13.0); stripe (^22.6.2); typescript (~6.0.3) |
-| [package.json](../../package.json) | `5bd8b95532ba1b9641917ed8e6f12ea22f04aa07a9b8bd85faf3e818639f5c0b` | None declared |
+| [apps/mobile/package.json](../../apps/mobile/package.json) | `f9197512e476ab13c7912639909c49926342e68e347dc4d3ceddb9a881ef1ba3` | @expo/dom-webview (^58.0.2); @expo/metro-runtime (~58.0.14); @expo/vector-icons (^15.0.2); @react-native-async-storage/async-storage (2.2.0); @react-native-community/netinfo (12.0.1); @react-native-picker/picker (2.11.4); @react-native/jest-preset (0.88.0); @react-native/metro-config (0.88.0); @shopify/react-native-skia (2.14.0); @stripe/react-stripe-js (^7.1.0); @stripe/stripe-js (^10.3.0); @stripe/stripe-react-native (0.83.0); @supabase/supabase-js (^2.116.0); @tapuai/shared-types (workspace:\*); @testing-library/react-native (^14.0.1); @types/jest (^30.0.0); @types/react (~19.3.0); babel-preset-expo (~58.0.17); expo (~58.0.14); expo-apple-authentication (^58.0.2); expo-auth-session (^58.0.13); expo-blur (~58.0.4); expo-build-properties (~58.0.11); expo-checkbox (~58.0.2); expo-clipboard (~58.0.3); expo-constants (~58.0.12); expo-crypto (^58.0.7); expo-file-system (~58.0.9); expo-font (~58.0.8); expo-haptics (~58.0.7); expo-image-picker (~58.0.10); expo-linking (~58.0.13); expo-location (~58.0.17); expo-media-library (~58.0.10); expo-router (~58.0.23); expo-sqlite (~58.0.13); expo-status-bar (~58.0.3); expo-updates (~58.0.17); expo-video (~58.0.11); expo-web-browser (~58.0.6); jest (^30.5.2); jest-expo (~58.0.11); react (19.3.0); react-dom (19.3.0); react-native (0.88.0); react-native-canvas (^0.1.40); react-native-compressor (^2.0.3); react-native-confetti-cannon (^1.5.2); react-native-gesture-handler (~3.3.0); react-native-nitro-modules (0.37.1); react-native-qrcode-svg (^6.3.24); react-native-reanimated (4.7.1); react-native-safe-area-context (~5.10.1); react-native-screens (~4.30.0); react-native-svg (15.16.0); react-native-url-polyfill (^4.0.0); react-native-web (^0.21.4); react-native-webview (14.0.1); react-native-worklets (0.13.0); stripe (^22.6.2); typescript (~6.0.3) |
+| [package.json](../../package.json) | `b524865be40e40b9ba05f74f95de417fad5fb8df426acd320cf2b0dc942f3089` | None declared |
 | [packages/shared-types/package.json](../../packages/shared-types/package.json) | `92ece91b4e72e2cb2b2270f786b84e6c3d6866e5df0e146b4086cbe107dce89d` | typescript (~6.0.3) |
 
 ## 4. Disclosure history

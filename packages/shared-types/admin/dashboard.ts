@@ -116,19 +116,25 @@ const COMPACT_USD = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
   notation: 'compact',
+  minimumFractionDigits: 0,
   maximumFractionDigits: 1,
 });
 
-const COMPACT_COUNT = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
+const COMPACT_COUNT = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 1,
+});
 
 /** Count as a short gridline label, e.g. "950", "1.2K". */
 export function formatCompactCount(value: number): string {
-  return COMPACT_COUNT.format(value);
+  return COMPACT_COUNT.format(value).replace(/\.0(?=[A-Za-z]|$)/, '');
 }
 
 /** Cents as a short dollar label for chart gridlines, e.g. "$40", "$1.2K". */
 export function formatCompactUsd(cents: number): string {
-  return COMPACT_USD.format(Math.max(0, cents) / 100);
+  // Some Node ICU builds emit `$40.0` for whole dollars under compact currency; strip a trailing `.0`.
+  return COMPACT_USD.format(Math.max(0, cents) / 100).replace(/\.0(?=[A-Za-z]|$)/, '');
 }
 
 /**

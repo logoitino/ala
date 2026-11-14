@@ -149,9 +149,13 @@ export function ScrollFxItem({ children, index = 0, variant = 'rise', exitFade =
   const enter = useSharedValue(0);
 
   useEffect(() => {
+    if (reduceMotion) {
+      enter.value = 1;
+      return;
+    }
     const slot = Math.min(Math.max(0, index), SCROLL_FX.maxStagger);
     enter.value = withDelay(slot * SCROLL_FX.staggerMs, withSpring(1, SPRING_CARD));
-  }, [enter, index]);
+  }, [enter, index, reduceMotion]);
 
   const onLayout = (event: LayoutChangeEvent) => {
     height.value = event.nativeEvent.layout.height;

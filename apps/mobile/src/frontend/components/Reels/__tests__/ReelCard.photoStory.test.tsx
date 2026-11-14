@@ -148,17 +148,35 @@ describe('ReelCard photo-story branch', () => {
     expect(screen.queryByTestId('video-view')).toBeNull();
     expect(mockCreatePlayer).not.toHaveBeenCalled();
     // Nothing on screen yet (photos still loading or failed): no view time accrues.
-    expect(mockTracker).toHaveBeenLastCalledWith('c1', true, false, 3000);
+    expect(mockTracker).toHaveBeenLastCalledWith(
+      'c1',
+      true,
+      false,
+      3000,
+      expect.objectContaining({ athleteId: 'p1', school: 'ALA' }),
+    );
     await fireEvent.press(screen.getByLabelText('simulate photo loaded'));
-    // reelId, signedIn, "playing" = loaded, visible and current, 3000 ms threshold.
-    expect(mockTracker).toHaveBeenLastCalledWith('c1', true, true, 3000);
+    // reelId, signedIn, "playing" = loaded, visible and current, 3000 ms threshold (+ FEED-01 meta).
+    expect(mockTracker).toHaveBeenLastCalledWith(
+      'c1',
+      true,
+      true,
+      3000,
+      expect.objectContaining({ athleteId: 'p1', school: 'ALA' }),
+    );
     expect(mockOverlay).toHaveBeenLastCalledWith(expect.objectContaining({ storyNote: 'Food bank morning', caption: 'Service day' }));
   });
 
   it('does not count a photo story that is not the current card', async () => {
     await renderCard({ ...base, mediaType: 'photo_story', photoCount: 3 }, false);
     await fireEvent.press(screen.getByLabelText('simulate photo loaded'));
-    expect(mockTracker).toHaveBeenLastCalledWith('c1', true, false, 3000);
+    expect(mockTracker).toHaveBeenLastCalledWith(
+      'c1',
+      true,
+      false,
+      3000,
+      expect.objectContaining({ athleteId: 'p1', school: 'ALA' }),
+    );
   });
 
   it('keeps a mounted neighbor on an empty player and loads its source when the card becomes current', async () => {
@@ -193,7 +211,13 @@ describe('ReelCard photo-story branch', () => {
     expect(mockVideoPlayer.play).toHaveBeenCalledTimes(1);
     expect(mockTracker.mock.calls.every(call => call[2] === false)).toBe(true);
     await act(async () => { mockVideoEvents.playingChange({ isPlaying: true, oldIsPlaying: false }); });
-    expect(mockTracker).toHaveBeenLastCalledWith('v1', true, true, 3000);
+    expect(mockTracker).toHaveBeenLastCalledWith(
+      'v1',
+      true,
+      true,
+      3000,
+      expect.objectContaining({ athleteId: 'p1', school: 'ALA' }),
+    );
   });
 
   it('hides failed-source recovery on an offscreen card and never resumes it from a ready event', async () => {

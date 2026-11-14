@@ -21,6 +21,7 @@ import { useAthleteStats } from '@/hooks/useAthleteStats';
 import { useAthleteSubscription } from '@/hooks/useAthleteSubscription';
 import { useRoster } from '@/hooks/useRoster';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
+import { beginExclusiveUnlock } from '@/lib/exclusiveCheckout';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst, type ReelHype } from '@/lib/reels';
 import { hydratePlayerHype } from '@/lib/hype';
 import { fetchGuestPlayer, fetchPublicProfileForPlayer } from '@/lib/roster';
@@ -213,20 +214,13 @@ export default function UserAthleteProfileScreen() {
 
   const unlockExclusive = () => {
     if (!player) return;
-    requireAuth({
-      kind: 'exclusive',
-      athleteName: player.name,
-      athleteId: player.id,
-      resume: () => {
-        void startCheckout({
-          player,
-          tipAmount: live.catalog.exclusiveDollars,
-          coverFees: false,
-          auraPoints: live.catalog.exclusiveAura,
-          skipBacker: true,
-          onPaid: grant,
-        });
-      },
+    beginExclusiveUnlock({
+      player,
+      tipAmount: live.catalog.exclusiveDollars,
+      auraPoints: live.catalog.exclusiveAura,
+      requireAuth,
+      startCheckout,
+      onPaid: grant,
     });
   };
 

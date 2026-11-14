@@ -19,6 +19,7 @@ Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATU
 | `UI/MenuChrome.tsx` → `MenuBackdrop({ accent? })` | Non-interactive single soft wash for popup sheets (no dot accents since 2026-10-15); hidden from assistive technology. Tab pages (`TabScreen`, `ScreenShell`) no longer draw it. |
 | `UI/MenuChrome.tsx` → `MenuStepIndicator({ labels, current })` | Named, non-clickable step chips; one-based current stage announced to assistive technology |
 | `hooks/useSheetFrame.ts` | Centered sheets up to 440px, compact gutters, home-indicator clearance, common radius/border/shadow |
+| `hooks/useFanSheetMotion.ts` + `theme/motion.ts` sheet tokens | One open (`SPRING_SHEET`) / close (cubic dismiss) contract for fan bottom sheets; Reduce Motion timing branch. Profile menu settles before nested Soft-Wall. |
 | `ScreenShell.tsx` / `TabScreen.tsx` | Calm Island light page canvas without MenuBackdrop/corner decoration; dark video layouts retain contrast |
 | `ScreenHeading.tsx` | Wrapping screen header, readable supporting text and decorative accent; published text/gold and caller accent remain authoritative |
 | `UI/FanTabBar.tsx` / `UI/AnimatedButton.tsx` | Absolute measured floating fan dock, wrapping labels, selected/disabled semantics,44-point targets and OS Reduce Motion; Home media extends behind it, normal TabScreen reserves actual dock height. |
@@ -40,14 +41,14 @@ wash are rendered by its child `UploadVideoComposer`; donation steps live in chi
 | Component under `components/` | Source coverage | Notes |
 | --- | --- | --- |
 | `Auth/AgeConfirmModal.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
-| `Auth/SoftWallModal.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
+| `Auth/SoftWallModal.tsx` | `useFanSheetMotion` + shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
 | `BackedCelebration.tsx` | shared 440px sheet frame | Existing donation celebration chrome remains; shared frame geometry. |
 | `Drip/ProductSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
-| `Feedback/SuggestionSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
+| `Feedback/SuggestionSheet.tsx` | shared 440px sheet frame; kind horizontal scroll + where vertical scroll menu | Feature actions/validation retained; native fit unverified. |
 | `Filmers/FilmerSheet.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
-| `Legal/LegalModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
+| `Legal/LegalModal.tsx` | `useFanSheetMotion` + shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Local/SponsorshipModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
-| `Local/TopAuraBoosters.tsx` | shared 440px sheet frame | Tier-based booster colors remain; shared frame geometry. |
+| `Local/TopAuraBoosters.tsx` | compact Daylight rail cards (sponsor density) + peek sheet | Tier face washes remain; peek uses surface chrome. |
 | `Onboarding/WelcomeOverlay.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
 | `Operator/OperatorRosterModal.tsx` | accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Operator/PINClaimModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
@@ -65,7 +66,7 @@ wash are rendered by its child `UploadVideoComposer`; donation steps live in chi
 | `Reels/HighlightPickerModal.tsx` | accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Reels/ReelMoreSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Reels/ReelViewModal.tsx` | custom full-screen layout | Full-screen video viewer remains Midnight; playback controls stay visible. |
-| `Reels/ReportContentModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
+| `Reels/ReportContentModal.tsx` | shared 440px sheet frame; reason vertical scroll menu | Feature actions/validation retained; native fit unverified. |
 | `Reels/UploadVideoModal.tsx` | custom full-screen layout | Feature actions/validation retained; native fit unverified. |
 | `Spotlight/SpotlightModal.tsx` | custom full-screen layout | Full-screen award/video reveal; Midnight video contrast retained. |
 | `TipSheetModal.tsx` | shared 440px sheet frame | Feature actions/validation retained; native fit unverified. |
@@ -101,10 +102,10 @@ Next admin remains read-only; published theme choices are still owned by Expo ad
 
 | Source | Presentation and data rule |
 | --- | --- |
-| `Local/GameCard.tsx` / `Local/gamePresentation.ts` | Cyan Local accent, neutral team letter tiles, wrapping school/team names and individual score columns. Scheduled and final states override stale clock data; unknown scores/clocks are not fabricated. |
+| `Local/GameCard.tsx` / `Local/gamePresentation.ts` | Daylight surface for live and scheduled (ember LIVE pill only). Neutral team letter tiles; wrapping school/team names and score columns. Scheduled/final override stale clocks; unknown scores/clocks are not fabricated. |
 | `Profile/AthleteProfileView.tsx` / `Profile/ProfileHeroAvatar.tsx` | Compact photo/name hero with known sport, position and class; direct wrapping Goals/Team/owner Manage navigation. Community accounts omit athlete credentials; public athletes do not use the viewer’s private profile metadata. School crest confirmation and Aura/avatar actions remain. |
 | `Reels/ReelCard.tsx` / `Reels/ReelActionOverlay.tsx` | Real roster jersey/position beside a larger athlete label; athlete and school allow two lines. Midnight contrast, reactions, donation and profile navigation remain. |
-| `Reels/LiveMatchBanner.tsx` | Scoreboard uses the chrome width. Each school is one line beside a fixed score column. Recorded-state rules stay; no default clock or invented live status. |
+| `Reels/LiveMatchBanner.tsx` | Daylight surface scoreboard (not night scrim). Each school is one line beside a fixed score column. Recorded-state rules stay; no default clock or invented live status. |
 
 UX-03 follow-up evidence: `pnpm check` passes both app typechecks, 55 suites / 261 tests
 and all guards. Same-name public-athlete credentials require an exact linked player ID;
@@ -154,7 +155,9 @@ Owner Lovable standard: dark left sidebar (top bar below `lg`), Daylight canvas,
 | Surfaces | Shared format |
 | --- | --- |
 | Home, Trends, Audience, Revenue, Health, Product, Analytics, Departments | `PortalShell`: dark sidebar nav, Daylight main canvas, bold titles, card panels. |
-| Product’s Features, Profile, Sign-in and People desks | Same shell, nested Product nav and open `Panel` sections. |
+| Product’s Control map, Features, Profile, Sign-in and People desks | Same shell, nested Product nav. Control map (`/coverage`) lists fan surfaces from `PORTAL_COVERAGE_SURFACES`; live control telemetry stays in Expo `/admin/product/coverage`. |
+| Product Expo desk directory | Shared `EXPO_DESKS` catalog on Product overview — read-only paths, no portal writes. |
+| Revenue checkout rails note | Honest Gift / Vault 20/80 / web Stripe vs native store-billing copy; Wave 0 test mode banner retained. |
 | Charts, KPI values, meters, ledgers and department status | Open card panels; full summaries, source disclosures, Data rows, missing-state words and legal ledger notes retained. Enlarged text may wrap labels and values. |
 
 Local evidence and remaining browser-tool coverage limits: [COMMUNITY_DASHBOARD_QA.md](design/COMMUNITY_DASHBOARD_QA.md).

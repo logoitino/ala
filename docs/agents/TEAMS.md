@@ -607,7 +607,8 @@ These are not extra companies. They are the Dev team, split by the part of the a
 | Expo shell | `app/(admin)/admin/*` · `AdminShell` · `AdminLensContext` |
 | Features flags | `FeaturesTool.tsx` · `lib/runtime.ts` · `APP_RUNTIME_FLAG_GROUPS` |
 | Coverage map | `lib/adminCoverage.ts` (source of fan-control inventory) |
-| Next portal (read-only) | `apps/admin-portal/` · `components/PortalShell.tsx`'s `FlagStatusList` |
+| Portal Control map + Expo desk directory | `packages/shared-types/admin/expoDeskDirectory.ts` · Next `/coverage` · Product Expo desk list (`PORTAL`) |
+| Next portal (read-only) | `apps/admin-portal/` · `components/PortalShell.tsx`'s `FlagStatusList` · nested Product Control map |
 
 **ADM-02 — main admin (owner request 2026-10-12):** Expo `/admin` combines the report
 design selected at `:3033` with reports, Analytics, Departments and every editing desk.
@@ -780,7 +781,7 @@ Full detail and rationale: `.claude/agents/qa.md` (the executable copy of this c
 | Studio | `/admin/studio` | `ADMIN` |
 | Lab / QA utilities | `/admin/lab` · `/admin/qa` | `ADMIN` + `QA` |
 
-Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/reports` Trends (`ADMIN`) · `/audience` Audience (`PORTAL`) · `/money` Revenue (`COMMERCE`) · `/operations` Health (`PORTAL`) · `/product` Product (`PORTAL`) · `/manage` Departments (`PORTAL`) · `/auth` Sign-in (`AUTH`) · `/profile` Profile chrome (`PROFILE`) · `/features` flag board (`ADMIN`) · `/people` roster oversight (`AUTH` / `PROFILE`).
+Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/reports` Trends (`ADMIN`) · `/audience` Audience (`PORTAL`) · `/money` Revenue (`COMMERCE`) · `/operations` Health (`PORTAL`) · `/product` Product (`PORTAL`) · `/coverage` Control map (`PORTAL`) · `/manage` Departments (`PORTAL`) · `/auth` Sign-in (`AUTH`) · `/profile` Profile chrome (`PROFILE`) · `/features` flag board (`ADMIN`) · `/people` roster oversight (`AUTH` / `PROFILE`).
 
 ---
 

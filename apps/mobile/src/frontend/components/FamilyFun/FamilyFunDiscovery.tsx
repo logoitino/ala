@@ -16,6 +16,8 @@ import { thisWeekSubject } from '@/lib/quizWeek';
 import { useAuth } from '@/context/AuthContext';
 import { useSportQuiz } from '@/hooks/useSportQuiz';
 import { useFanZone } from '@/hooks/useFanZone';
+import { NOT_SWITCHED_ON } from '@/lib/rpc';
+import { triviaPreviewAvailable } from '@/components/SportQuiz/TriviaPreview';
 
 type DiscoverySurface = 'home' | 'hq' | 'beyond';
 /** One Highlight invite per account-week. Play and Not now both write this, so the card stays gone until the next week. */
@@ -121,7 +123,10 @@ function QuizDiscovery({ overVideo, surface }: { overVideo: boolean; surface: Di
   }, [key]);
   const homeStopped = snapshot?.attempt?.status === 'skipped' || !!snapshot?.week_spent
     || snapshot?.availability === 'paused' || snapshot?.availability === 'not_enrolled';
-  const homeChecking = surface === 'home' && !!identity && !dismissed && !homeStopped && (!snapshot || !!quiz.error || snapshot.availability === 'unavailable');
+  // Missing trivia SQL is stable — don't spin retries. Other read failures retry quietly.
+  const homeChecking = surface === 'home' && !!identity && !dismissed && !homeStopped
+    && quiz.error !== NOT_SWITCHED_ON
+    && (!snapshot || !!quiz.error || snapshot.availability === 'unavailable');
   // The Highlight invite never asks the player to refresh. A quiet retry covers a failed read.
   useEffect(() => {
     if (!homeChecking || !focused) return;
@@ -132,6 +137,15 @@ function QuizDiscovery({ overVideo, surface }: { overVideo: boolean; surface: Di
   const open=()=>router.push('/sport-quiz');
   const dismiss=()=>{ setDismissed(key); if (key) AsyncStorage.setItem(TRIVIA_NOTICE_WEEK, key).catch(() => {}); };
   if (surface === 'home') {
+    // Staging often lacks quiz SQL; offer the local demo so Home still brings trivia up.
+    if (quiz.error === NOT_SWITCHED_ON && triviaPreviewAvailable()) {
+      return <TriviaSideNotice
+        busy={!!quiz.busy}
+        subject="Trivia demo"
+        onPlay={() => { dismiss(); router.push('/dev/trivia-preview' as Href); }}
+        onDismiss={dismiss}
+      />;
+    }
     // A failed read retries quietly. The invite appears only when a round can actually start.
     if (homeStopped || !snapshot || snapshot.availability !== 'ready' || !!quiz.error) return null;
     const kind = snapshot.scheduled_topic === 'fun' || snapshot.scheduled_topic === 'sport' ? snapshot.scheduled_topic : null;
@@ -140,9 +154,23 @@ function QuizDiscovery({ overVideo, surface }: { overVideo: boolean; surface: Di
   const skip=async()=>{const captured=key;const receipt=await quiz.skip();if(currentKey.current===captured)setFailedSkip(receipt?.outcome==='skipped'?null:captured);};
   const hasHistory=!!snapshot&&(snapshot.history_count>0||snapshot.badge_count>0||snapshot.correction_count>0);
   if (quiz.error || snapshot?.availability === 'unavailable') return <DiscoveryCard overVideo={overVideo}>
-    <Text style={[styles.title, overVideo && styles.titleVideo]}>Sport Pop Quiz is unavailable.</Text>
-    <Text style={[styles.copy, overVideo && styles.copyVideo]}>{failedSkip === key ? 'Skip was not confirmed. Refresh to check this week.' : 'Refresh to check availability. You can leave or try later.'}</Text>
-    <QuizButton label="Refresh quiz" disabled={quiz.loading || !!quiz.busy} onPress={() => { claimInFlight.current = null; void quiz.refresh(); }} />
+    <Text style={[styles.title, overVideo && styles.titleVideo]}>
+      {quiz.error === NOT_SWITCHED_ON ? 'Trivia is not switched on yet.' : 'Sport Pop Quiz is unavailable.'}
+    </Text>
+    <Text style={[styles.copy, overVideo && styles.copyVideo]}>
+      {failedSkip === key
+        ? 'Skip was not confirmed. Refresh to check this week.'
+        : quiz.error === NOT_SWITCHED_ON
+          ? (triviaPreviewAvailable()
+            ? 'This server still needs the trivia SQL packet. You can try the local demo meanwhile — nothing is saved.'
+            : 'This server still needs the trivia SQL packet before a live round can start.')
+          : 'Refresh to check availability. You can leave or try later.'}
+    </Text>
+    {quiz.error === NOT_SWITCHED_ON && triviaPreviewAvailable() ? (
+      <QuizButton fill label="Try the trivia demo" onPress={() => router.push('/dev/trivia-preview' as Href)} />
+    ) : (
+      <QuizButton label="Refresh quiz" disabled={quiz.loading || !!quiz.busy} onPress={() => { claimInFlight.current = null; void quiz.refresh(); }} />
+    )}
     <View style={styles.row}>
       <QuizButton fill label={hasHistory ? 'Private quiz history' : 'Open quiz page'} quiet onVideo={overVideo} onPress={open} />
       <QuizButton fill label="Not now" quiet onVideo={overVideo} onPress={dismiss} />

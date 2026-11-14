@@ -1,4 +1,30 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-14 — FEED-01 interest Highlights feed (Phase 1)
+
+- `user_feed_prefs` migration + owner-only RLS; Settings / first-run picks; Personal feed toggle.
+- `rankHomeFeed` prefs scoring + Why this clip; Phase 2/3 gated OFF; money never ranks.
+
+## 2026-11-13 — App fluidity (sheets, tabs, scroll)
+
+- `useFanSheetMotion`, Profile menu close-after-settle, SheetRise re-open, SPRING_SHEET on fan menus, single tab fade.
+
+## 2026-11-13 — Next portal Control map + desk accountability
+
+- Shared `expoDeskDirectory` + portal `/coverage`, Product Expo desk list, Revenue checkout-rails note.
+- Notifications unapplied probe; WEB-01 / VAULT-RAILS-01 feature-admin enrollment; `pnpm portal:test` in check.
+
+## 2026-11-13 — Expo web Phase 1 (checkout + shell)
+
+- Stripe.js Payment Element on Expo web for gifts / Exclusive / Drip / booster (`stripe.web.ts`).
+- Desktop `WebAppShell` phone column; parity plan in `docs/engineering/design/WEB_APP_PARITY.md`.
+- Dependencies: `@stripe/stripe-js`, `@stripe/react-stripe-js`.
+
+## 2026-11-13 — Vault Exclusive platform rails
+
+- Disclose Exclusive books split (20% Tapua'i / 80% athlete) on Vault lock + unlock UI.
+- Test/preview native keeps Stripe Exclusive; production iOS/Android show honest unavailable until
+  store billing. Web Exclusive uses Phase 1 Stripe.js. Android not freer than Apple for digital Vault.
+
 ## 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 
 - Android APK `df2a07a7` and iOS IPA `a968716d` from density tip `4f37523` (PR #34).

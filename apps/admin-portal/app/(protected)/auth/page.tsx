@@ -66,11 +66,13 @@ export default async function SoftWallAuthPage() {
       <Panel title="Zero lost context" kicker="Product lock">
         <p className="text-sm leading-6 text-[var(--ink-soft)]">
           After a guest signs in with Apple, Google or a Magic Link, the app reopens what they were doing: the give
-          sheet, the Crew toggle, or the gear-goal gift. Each gate is counted on the Coverage desk in Expo.
+          sheet, the Crew toggle, the gear-goal gift, or Vault Exclusive. Each gate is counted on the Coverage desk in
+          Expo. On Expo web the same Soft-Wall resume applies before Stripe.js Exclusive checkout.
         </p>
         <Keys title="Zero lost context">
-          <Key label="Code" value="SoftWallModal · SoftWallContext" />
+          <Key label="Code" value="SoftWallModal · SoftWallContext · exclusiveCheckout" />
           <Key label="Telemetry" value={oversight.softWallGates.map((gate) => gate.telemetry).join(' · ')} />
+          <Key label="Web surface" value="adminCoverage web.* · portal /coverage" />
         </Keys>
       </Panel>
 

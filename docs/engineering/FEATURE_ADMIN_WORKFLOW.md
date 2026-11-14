@@ -68,6 +68,10 @@ The normal sequence is:
   in `apps/mobile/src/frontend/lib/adminCoverage.ts` with the admin owner, app surface,
   runtime switch (or its deliberate absence) and telemetry key (or its deliberate absence).
   Reuse a shared key only when its counts cannot be mistaken for per-control/surface counts.
+  **Same turn:** update `packages/shared-types/admin/expoDeskDirectory.ts`
+  (`PORTAL_COVERAGE_SURFACES` and/or `EXPO_DESKS`) so the Next portal Product / Control map
+  (`/coverage`) stays accountable; add portal `report.paths` when oversight copy or Health
+  probes change. Agents do not leave Expo and Next out of sync after a feature lands.
 - **Data map:** every new table, view, database function or export the feature adds is recorded in
   `docs/engineering/data-ownership.json` with its owner and purpose, and `docs/engineering/DATA_MAP.md`
   is regenerated in the same change; `DATA_GOVERNANCE` reviews the data paths before admin readiness.

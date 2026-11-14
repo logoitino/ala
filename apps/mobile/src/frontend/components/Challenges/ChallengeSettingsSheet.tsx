@@ -17,7 +17,7 @@ import { ChallengeSettings } from './ChallengeSettings';
  */
 export function ChallengeSettingsSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={styles.root}>
         <View style={styles.sheet}>
           <MenuBackdrop accent="jade" />

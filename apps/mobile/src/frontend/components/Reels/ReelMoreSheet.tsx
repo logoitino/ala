@@ -47,7 +47,7 @@ export function ReelMoreSheet({
 
   return (
     <Modal
-      animationType="fade"
+      animationType="none"
       presentationStyle="overFullScreen"
       statusBarTranslucent
       transparent
@@ -60,7 +60,7 @@ export function ReelMoreSheet({
           <View style={styles.dim} />
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-        <SheetRise style={[styles.sheet, frame.card]}>
+        <SheetRise active={visible} style={[styles.sheet, frame.card]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={onClose} />
           <Text style={styles.kicker}>More</Text>
