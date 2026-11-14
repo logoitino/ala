@@ -10,4 +10,8 @@ describe('appViewportWidth', () => {
     expect(appViewportWidth(1440, 'ios')).toBe(1440);
     expect(appViewportWidth(390, 'web')).toBe(390);
   });
+
+  it('leaves wide web unclamped until the shell layout is ready (SSR / first paint)', () => {
+    expect(appViewportWidth(1440, 'web', false)).toBe(1440);
+  });
 });

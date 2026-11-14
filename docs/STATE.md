@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-14 · FEED-01 scroll menus on main; `user_feed_prefs` applied; device smoke + counsel send remain. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-14 · WebAppShell hydration-safe desktop layout for Expo web. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,11 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-14 — Expo web WebAppShell hydration fix
+
+- `WebAppShell` / `useAppViewportWidth` wait until after mount before branching to the desktop phone column, so SSR HTML matches the first client paint (`useWindowDimensions` mismatch).
+- **About to spend:** $0. Reload Expo web to verify the red hydration overlay is gone, then resume FEED-01 signed-in smoke.
 
 ### 2026-11-14 — FEED-01 picks sheet scroll menus
 

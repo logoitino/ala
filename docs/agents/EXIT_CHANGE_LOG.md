@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-14 · plan `277e85094525` → `9a503335d588` · announced by WebAppShell hydration fix
+
+App at announcement: commit `ea9b22b6b77208ae8f1a28a7073b74657b0955da` + 4 uncommitted file(s), source `9a503335d5886e7f28d1c14ee49437d2e17866e3aa7c57034c7744cf6fbc39a9`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Common/WebAppShell.tsx c224504b4ce3c206e4497c947cbc2b205620eb18ddd66232e7217e84020e30b5`, `apps/mobile/src/frontend/components/Common/__tests__/WebAppShell.test.tsx 4438d0c3cfaa40d37e53196b44e0a7afc3f55ce85c0d301011d674c91ba8ae75`, `apps/mobile/src/frontend/hooks/__tests__/useAppViewport.test.ts cdbea564fae6b5498d3654f1ca9d063f4700ea4a288d372ec87dccb53ff62b05`, `apps/mobile/src/frontend/hooks/useAppViewport.ts ec86503b5e7462caf9aecf3a83dcf1f7910077264b43c0dd6d954fc2b0b73580`; removed `apps/mobile/src/frontend/components/Common/WebAppShell.tsx d3a38aa4124f9b3ef7aeaff6604f8f185d36e7744969f8c2007d7d18c8db422b`, `apps/mobile/src/frontend/hooks/__tests__/useAppViewport.test.ts 4702ba65fd1832868ecbf7a880665a0e581ca9fd85d2b333e13aeec454b3b919`, `apps/mobile/src/frontend/hooks/useAppViewport.ts 48ca9a71a87cdfa56f490bd8a7fec8f1ccd8d82fbc05413d082892c2cc07d265`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-14 · plan `0b33e9dcf7c8` → `277e85094525` · announced by FEED-01 picks scroll menus
 
 App at announcement: commit `989d74eb6036a37a6e0b6e3face723a776253e09` + 2 uncommitted file(s), source `277e85094525f5d81710226f0de4c4dab2e33e9d9960b472e2a9ccca27a88569`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
