@@ -72,6 +72,6 @@ retention, third-party/ad ban, and “Why this clip” wording.
 | Density → `main` | Merged as [#47](https://github.com/logoitino/ala/pull/47) (`989d74e`) |
 | Local ranking / hide / sheet tests | Pass |
 | Hosted `user_feed_prefs` | **Applied** 2026-11-14 (America/Denver): SQL Editor Success; PostgREST now returns permission-denied for `anon` (expected — owner-only RLS), no longer missing-table |
-| Signed-in device smoke | Blocked on SQL + device |
+| Signed-in device smoke | **PASS** 2026-11-14 14:37 MST (America/Denver): Expo web / Demo Fan A–D; see [FEED-01-phase1-signed-in-smoke.md](FEED-01-phase1-signed-in-smoke.md) |
 | Published Privacy Policy line | Open — draft + send note (`FEED-01-counsel-send.md`) |
 | Phase 2 flag | OFF |
