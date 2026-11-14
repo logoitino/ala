@@ -68,9 +68,10 @@ retention, third-party/ad ban, and “Why this clip” wording.
 
 | Gate | State |
 | --- | --- |
-| CI on #46 | Green (source-release) |
+| Stack #39–#46 | Merged into `cursor/ui-density-audit-9a86` via async merge (2026-11-14) |
+| Density → `main` | Merged as [#47](https://github.com/logoitino/ala/pull/47) (`989d74e`) |
 | Local ranking / hide / sheet tests | Pass |
-| Hosted `user_feed_prefs` | Not applied |
+| Hosted `user_feed_prefs` | **Not applied** — owner SQL Editor next |
 | Signed-in device smoke | Blocked on SQL + device |
-| Published Privacy Policy line | Open — draft only |
+| Published Privacy Policy line | Open — draft + send note (`FEED-01-counsel-send.md`) |
 | Phase 2 flag | OFF |
