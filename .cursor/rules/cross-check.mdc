@@ -1,0 +1,25 @@
+---
+description: Every task ends with a CHECK-01 check request; the matrix picks reviewers
+alwaysApply: true
+---
+
+# Cross-check (CHECK-01)
+
+Protocol: `docs/agents/CHECK-01.md`. Audit: `docs/agents/CHECK-AUDIT.md`.
+
+1. **End every task with a check request.** Add the check record to the task's Handoff
+   record (`docs/agents/WORK_QUEUE.md` → Handoff format). Name the matrix rows the change
+   touches and the files.
+2. **The matrix decides the reviewers.** Never choose your own reviewers, and never drop a row
+   because it is inconvenient. A checker with nothing to check writes `no-op: <reason>`.
+3. **A review by the same session does not count.** The session that built a change cannot
+   record a verdict on it. A Jev score or a bot review (Codex on GitHub) is context, not a verdict.
+4. **Stale rule.** A new commit to a touched file voids earlier verdicts on it. Record the
+   commit you checked.
+5. **Shared surfaces (◆).** For migrations and views, shared types and tokens, flags, CI and
+   dependencies, and the role/protocol docs, the row's checkers and the registry owner of each
+   touched path ack or object. Unacked means not done.
+6. **Decisions route up; they are never made here.** The order is lead certification, then the
+   CTO, then the owner for prices, counsel, SQL apply, merge and live money, then QA last.
+   Do not merge, apply SQL or approve on the owner's behalf. No auto-merge.
+7. Report a missing checker or matrix row to `VP_OPERATIONS`. Do not invent a role.

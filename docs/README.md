@@ -168,6 +168,8 @@ location (tracked in [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_P
 | [TEAM_HIERARCHY.md](agents/TEAM_HIERARCHY.md) | Org chart of departments and agents. |
 | [VAULT-01.md](agents/VAULT-01.md) | Vault value ladder, wording, money-back arithmetic and owner decisions V1–V6 (approved 2026-11-15). Not built. |
 | [VAULT-AUDIT.md](agents/VAULT-AUDIT.md) | Audit behind VAULT-01: what a Vault holds today, the pass payment path, fee math and hosted state. |
+| [CHECK-01.md](agents/CHECK-01.md) | Cross-check protocol: which roles must check each kind of change, how the check flows up, the check-record template. |
+| [CHECK-AUDIT.md](agents/CHECK-AUDIT.md) | Audit behind CHECK-01: existing review mechanisms, the last five landed changes and what they were missing. |
 | [DETECT-01.md](agents/DETECT-01.md) | Engineering Support setup, file claims, detection gaps and actual verification. |
 | [COORD-01.md](agents/COORD-01.md) | Actual Documentation and team-coordination assignments, checks, results and continuity limits. |
 | [TEAM_STATUS.md](agents/TEAM_STATUS.md) | Current whole-team briefing, complete role coverage, gaps and next owners. |

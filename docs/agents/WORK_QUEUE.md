@@ -737,6 +737,17 @@ dispatching. Before editing shared files, agree on ownership and claim them in t
 was tested, what remains unverified, and whether it is merely written or actually applied.
 `QA` owns the final release gate; department completion does not override it.
 
+**Check record (CHECK-01).** Each Handoff record also carries the following. Template: [CHECK-01](CHECK-01.md#check-record-template).
+- The change type, as matrix rows, and the files touched.
+- The author role and session.
+- One line per required checker: verdict, date and commit checked.
+- Shared-surface acks.
+- Lead certification and the CTO verdict.
+- Any owner decision.
+- Open drift, with a next owner.
+
+A verdict on an older commit than the touched files is stale. A task with an incomplete check record is not done.
+
 ## Future feature acceptance
 
 All future feature assignments follow [FEATURE_ADMIN_WORKFLOW](../engineering/FEATURE_ADMIN_WORKFLOW.md).
