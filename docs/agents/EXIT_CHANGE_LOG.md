@@ -10,6 +10,22 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-14 · plan `7c3bbeef6d47` → `0b33e9dcf7c8` · announced by DEVICE_QA FEED-01 phase 1 local smoke
+
+App at announcement: commit `c0d4f021afac363a3ad1c2888c0d789017749e6c` + 2 uncommitted file(s), source `0b33e9dcf7c814a8d252257cdc8f44d21cc94dd924d06709d2227fb764652cc6`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/lib/__tests__/hiddenReels.hide.test.ts a02114483ada00605130d21374f57a8d5964a800fcd1c066bf3459db9dd3c4f7`; removed —. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
+## 2026-11-14 · plan `02d01e36d3fc` → `7c3bbeef6d47` · announced by DEVICE_QA FEED-01 phase 1 local smoke
+
+App at announcement: commit `c0d4f021afac363a3ad1c2888c0d789017749e6c` + 2 uncommitted file(s), source `7c3bbeef6d479d7f734b92ed61f9e95dfd5c518f3c504565a255b2179bd5baea`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Reels/__tests__/FeedPicksSheet.test.tsx 6f4bc28d30221527b2b8227929b40a540da5d511493b2b9e14c0d909ccb2a061`; removed —. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-14 · plan `02d01e36d3fc` → `02d01e36d3fc` · announced by FEED-01 ip:sync after SoftWall/exit follow-ups
 
 App at announcement: commit `5799203b5f4a7b783c57d733d73dc7307fde9e13`, source `02d01e36d3fc9e323823fe589fcfbe8b4eb29f7933b890d1583bd15caedf0de3`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.

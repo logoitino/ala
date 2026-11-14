@@ -1,5 +1,5 @@
 {
- "planVersion": "02d01e36d3fc",
+ "planVersion": "0b33e9dcf7c8",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -2045,6 +2045,7 @@
    "apps/mobile/src/frontend/components/Reels/UploadChoiceSheet.tsx 68e06265c52297ab8bfb3d4acb558225d39213f5f70eab31cb52c86d8b43d644",
    "apps/mobile/src/frontend/components/Reels/UploadVideoComposer.tsx 38127e43830bf67f028fda1c396a4bcebd409a3d609ff08934ec29d97d604c08",
    "apps/mobile/src/frontend/components/Reels/UploadVideoModal.tsx e366cc8be0d6a9228872c966e55f1b421434b1a02eeacae08ea5c88b046218c3",
+   "apps/mobile/src/frontend/components/Reels/__tests__/FeedPicksSheet.test.tsx 6f4bc28d30221527b2b8227929b40a540da5d511493b2b9e14c0d909ccb2a061",
    "apps/mobile/src/frontend/components/Reels/__tests__/HighlightPickerModal.test.tsx b8d0bc2b2ae1e5087b87fbc8c99e75fd0c2f9b6edea17e067fa49727a60a95c8",
    "apps/mobile/src/frontend/components/Reels/__tests__/LiveMatchBanner.test.tsx 8949be3bd06577b91d1b17f958fa79438cd204d2f04b395800eb9ae7498ef29f",
    "apps/mobile/src/frontend/components/Reels/__tests__/PhotoStoryMedia.test.tsx 63143c74e34c11abf3abf7b4b308ee18a51ce36b9bbe821d989f7ba26d321dda",
@@ -2317,6 +2318,7 @@
    "apps/mobile/src/frontend/lib/__tests__/gameVenueAdmin.test.ts 39190d0258c2499c4e6fefe56e5c6778ad9bf20c18a96ab79ea01086265d46c0",
    "apps/mobile/src/frontend/lib/__tests__/giftLink.test.ts bcea9ba43c67767fb6cf7cdd2c5946ef93cadac90f1033178338b105218156a8",
    "apps/mobile/src/frontend/lib/__tests__/guestGames.test.ts 3ea35c8afcd58c9bcbee1c62a8ab0bf1126f1a970adeff4fb290b85144f0eb94",
+   "apps/mobile/src/frontend/lib/__tests__/hiddenReels.hide.test.ts a02114483ada00605130d21374f57a8d5964a800fcd1c066bf3459db9dd3c4f7",
    "apps/mobile/src/frontend/lib/__tests__/hookLibMoves.test.ts 7352e4707e9dd4c77d759bcbf0a91d309f83cfd8ab5c061a64482b92ffe07238",
    "apps/mobile/src/frontend/lib/__tests__/leaderboards.test.ts fcc7f3d9f406f6438d848956d6118a261c5ce2314961e58234d75f49c676175f",
    "apps/mobile/src/frontend/lib/__tests__/legal.test.ts f55d3ce62ad5c8b4a75f41a5bdf0957d38523da667eab4adbbb27df1b135c900",
