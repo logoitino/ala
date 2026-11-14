@@ -1,6 +1,7 @@
 /**
  * FEED-01 first-run / Settings Highlights picks: up to 3 sports, up to 3 schools, one category lean.
- * Skippable ("Not now"). Guests never see this sheet. No restyle beyond existing sheet chrome.
+ * Skippable ("Not now"). Guests never see this sheet.
+ * Sports/schools use vertical scroll menus (Report / Suggestion pattern); category is a short horizontal rail.
  * @sideEffects Saves via `useFeedPrefs` → `user_feed_prefs`.
  */
 import { useEffect, useMemo, useState } from 'react';
@@ -11,7 +12,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
-import { colors } from '@/constants/theme';
+import { colors, MENU_METRICS } from '@/constants/theme';
 import {
   REEL_CATEGORY_GAME,
   REEL_CATEGORY_SERVE,
@@ -51,6 +52,11 @@ function togglePick(list: string[], value: string, max: number): string[] {
   }
   if (list.length >= max) return list;
   return [...list, trimmed];
+}
+
+function summarizePicks(list: string[], max: number): string {
+  if (list.length === 0) return `0 of ${max}`;
+  return `${list.length} of ${max} · ${list.join(', ')}`;
 }
 
 /**
@@ -106,6 +112,8 @@ export function FeedPicksSheet({
     return out;
   }, [schoolOptions]);
 
+  const categoryLabel = CATEGORY_OPTIONS.find((row) => row.id === categoryPref)?.label ?? 'All';
+
   if (!visible) return null;
 
   return (
@@ -118,55 +126,84 @@ export function FeedPicksSheet({
           <Text style={styles.kicker}>Highlights</Text>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.body}>
-            Pick up to 3 sports and 3 schools. We use these only to order your Home feed — never for ads.
+            Pick sports and schools for your Home feed. Stored on your account only — never for ads.
           </Text>
-          <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-            <Text style={styles.section}>Sports (up to 3)</Text>
-            <View style={styles.wrap}>
+
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={styles.fieldLabel}>Sports · {summarizePicks(sports, 3)}</Text>
+            <ScrollView
+              nestedScrollEnabled
+              style={styles.menuList}
+              contentContainerStyle={styles.menuListContent}
+              showsVerticalScrollIndicator
+            >
               {sportsList.map((sport) => {
                 const on = sports.some((row) => row.toLowerCase() === sport.toLowerCase());
+                const full = !on && sports.length >= 3;
                 return (
                   <Pressable
                     key={sport}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: on }}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: on, disabled: full }}
                     accessibilityLabel={`Sport ${sport}`}
                     haptic="selection"
+                    disabled={full}
                     onPress={() => setSports((current) => togglePick(current, sport, 3))}
-                    style={[styles.chip, on && styles.chipOn]}
+                    style={[styles.menuRow, on && styles.menuRowOn, full && styles.menuRowDim]}
                   >
-                    <Text style={[styles.chipLabel, on && styles.chipLabelOn]}>{sport}</Text>
+                    <Text style={[styles.menuRowLabel, on && styles.menuRowLabelOn]}>{sport}</Text>
+                    {on ? <Text style={styles.menuCheck}>✓</Text> : null}
                   </Pressable>
                 );
               })}
-            </View>
-            <Text style={styles.section}>Schools (up to 3)</Text>
-            <View style={styles.wrap}>
-              {schoolsList.length === 0 ? (
-                <Text style={styles.hint}>No schools on this feed yet. You can edit this later in Settings.</Text>
-              ) : (
-                schoolsList.map((school) => {
+            </ScrollView>
+
+            <Text style={styles.fieldLabel}>Schools · {summarizePicks(schools, 3)}</Text>
+            {schoolsList.length === 0 ? (
+              <Text style={styles.hint}>No schools on this feed yet. You can edit this later in Settings.</Text>
+            ) : (
+              <ScrollView
+                nestedScrollEnabled
+                style={styles.menuListShort}
+                contentContainerStyle={styles.menuListContent}
+                showsVerticalScrollIndicator
+              >
+                {schoolsList.map((school) => {
                   const on = schools.some((row) => row.toLowerCase() === school.toLowerCase());
+                  const full = !on && schools.length >= 3;
                   return (
                     <Pressable
                       key={school}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: on }}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: on, disabled: full }}
                       accessibilityLabel={`School ${school}`}
                       haptic="selection"
+                      disabled={full}
                       onPress={() => setSchools((current) => togglePick(current, school, 3))}
-                      style={[styles.chip, on && styles.chipOn]}
+                      style={[styles.menuRow, on && styles.menuRowOn, full && styles.menuRowDim]}
                     >
-                      <Text style={[styles.chipLabel, on && styles.chipLabelOn]} numberOfLines={1}>
+                      <Text style={[styles.menuRowLabel, on && styles.menuRowLabelOn]} numberOfLines={1}>
                         {school}
                       </Text>
+                      {on ? <Text style={styles.menuCheck}>✓</Text> : null}
                     </Pressable>
                   );
-                })
-              )}
-            </View>
-            <Text style={styles.section}>Category lean</Text>
-            <View style={styles.wrap}>
+                })}
+              </ScrollView>
+            )}
+
+            <Text style={styles.fieldLabel}>Category lean · {categoryLabel}</Text>
+            <ScrollView
+              horizontal
+              nestedScrollEnabled
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.menuRail}
+            >
               {CATEGORY_OPTIONS.map((option) => {
                 const on = categoryPref === option.id;
                 return (
@@ -177,15 +214,17 @@ export function FeedPicksSheet({
                     accessibilityLabel={`Category ${option.label}`}
                     haptic="selection"
                     onPress={() => setCategoryPref(option.id)}
-                    style={[styles.chip, on && styles.chipOn]}
+                    style={[styles.railChip, on && styles.railChipOn]}
                   >
-                    <Text style={[styles.chipLabel, on && styles.chipLabelOn]}>{option.label}</Text>
+                    <Text style={[styles.railChipLabel, on && styles.railChipLabelOn]}>{option.label}</Text>
                   </Pressable>
                 );
               })}
-            </View>
+            </ScrollView>
+
             {error ? <Text style={styles.error}>{error}</Text> : null}
           </ScrollView>
+
           <View style={styles.actions}>
             {allowSkip ? (
               <AnimatedButton
@@ -233,42 +272,95 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     maxHeight: '88%',
     paddingBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   kicker: {
     marginTop: 4,
     marginHorizontal: 20,
-    color: FOCAL.neonJade,
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.6,
+    color: FOCAL.jadeInk,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
-  title: { marginHorizontal: 20, marginTop: 4, color: colors.text, fontSize: 22, fontWeight: '800' },
-  body: { marginHorizontal: 20, marginTop: 6, marginBottom: 8, color: colors.textMuted, fontSize: 14, lineHeight: 20 },
-  scroll: { maxHeight: 420 },
+  title: {
+    marginHorizontal: 20,
+    marginTop: 4,
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  body: {
+    marginHorizontal: 20,
+    marginTop: 6,
+    marginBottom: 4,
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+  },
+  scroll: { maxHeight: 440 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 12, gap: 8 },
-  section: { marginTop: 10, color: colors.text, fontSize: 13, fontWeight: '700' },
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    minHeight: 44,
-    paddingHorizontal: 14,
-    borderRadius: 999,
+  fieldLabel: {
+    marginTop: 8,
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  menuList: {
+    maxHeight: 168,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
+  },
+  menuListShort: {
+    maxHeight: 120,
+    borderRadius: MENU_METRICS.controlRadius,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  menuListContent: { paddingVertical: 4 },
+  menuRow: {
+    minHeight: 44,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  menuRowOn: { backgroundColor: FOCAL.mistJade },
+  menuRowDim: { opacity: 0.45 },
+  menuRowLabel: { flex: 1, color: colors.text, fontSize: 15, fontWeight: '700' },
+  menuRowLabelOn: { color: FOCAL.jadeInk },
+  menuCheck: { color: FOCAL.jadeInk, fontSize: 15, fontWeight: '800' },
+  menuRail: { gap: 8, paddingVertical: 2, paddingRight: 4 },
+  railChip: {
+    minHeight: 44,
+    paddingHorizontal: 14,
+    borderRadius: MENU_METRICS.controlRadius,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipOn: { borderColor: FOCAL.neonJade, backgroundColor: 'rgba(16,185,129,0.14)' },
-  chipLabel: { color: colors.text, fontSize: 14, fontWeight: '600' },
-  chipLabelOn: { color: FOCAL.neonJade },
-  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
+  railChipOn: {
+    backgroundColor: FOCAL.mistJade,
+    borderColor: FOCAL.jadeInk,
+  },
+  railChipLabel: { color: colors.textMuted, fontSize: 14, fontWeight: '800' },
+  railChipLabelOn: { color: FOCAL.jadeInk },
+  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 18, fontWeight: '600' },
   error: { color: colors.danger, fontSize: 13, marginTop: 8 },
   actions: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 8 },
   secondary: {
     flex: 1,
     minHeight: 48,
-    borderRadius: 14,
+    borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
@@ -278,7 +370,7 @@ const styles = StyleSheet.create({
   primary: {
     flex: 1,
     minHeight: 48,
-    borderRadius: 14,
+    borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: FOCAL.neonJade,
     alignItems: 'center',
     justifyContent: 'center',

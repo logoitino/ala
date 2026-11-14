@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-14 · FEED-01 go-live packet + Privacy draft for counsel. Webhook tip crediting stays **off**. Hosted SQL and signed-in device journeys remain open.
+**Last updated:** 2026-11-14 · FEED-01 picks sheet scroll menus (sports/schools + category rail). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,9 +175,14 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-14 — FEED-01 picks sheet scroll menus
+
+- `FeedPicksSheet`: sports/schools are vertical scroll menus with live “n of 3” summaries; category lean is a horizontal rail (matches Suggestion / Report Daylight menus). No pill wrap grid.
+- **About to spend:** $0 (Wave 0 presentation). Hosted SQL already applied; device feel still DEVICE_QA.
+
 ### 2026-11-14 — FEED-01 interest-based Highlights Home feed
 
-- Migration `user_feed_prefs` (owner-only RLS + Closed accounts when MINOR-01 present; written, not hosted-applied).
+- Migration `user_feed_prefs` (owner-only RLS + Closed accounts when MINOR-01 present; hosted applied 2026-11-14).
 - First-run + Settings → Highlights picks; Personal feed toggle; prefs broadcast so Home refreshes after Settings.
 - `rankHomeFeed` prefs bonuses; money never ranks; Phase 2/3 env-gated **including AsyncStorage collectors**.
 - Admin: `/admin/highlights` `FeedInterestPanel` + coverage `home_feed_interest` (presentation-only exemption removed).
