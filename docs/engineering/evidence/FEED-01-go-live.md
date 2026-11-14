@@ -1,18 +1,35 @@
 # FEED-01 go-live packet (Phase 1)
 
 **Date:** 2026-11-14 (America/Denver)  
-**Branch / PR:** `cursor/highlights-interest-feed-9a86` · [#46](https://github.com/logoitino/ala/pull/46)  
+**Last updated:** 2026-11-14 16:25 MST  
+**Phase 1 status:** **FINISHED** — [FEED-01-phase1-finished.md](FEED-01-phase1-finished.md)  
+**Branch / PR (evidence closeout):** `cursor/feed-01-device-smoke-9a86` · [#51](https://github.com/logoitino/ala/pull/51)  
+**Feature landed via:** stack #39–#46 → density [#47](https://github.com/logoitino/ala/pull/47) on `main`  
 **Spend:** Applying the migration in Supabase SQL Editor is **$0** on Wave 0. Preview builds are
 **$0** until Expo’s free build quota runs out. Supabase Free can pause; Pro is about **$25/mo**
 only if that happens. Live Stripe keys are not this wave. Apple Developer **$99/yr** is already
-enrolled.
+enrolled. Local smoke is **$0**.
 
 This packet is the owner checklist. It does not merge PRs, apply SQL, or accept legal text.
 
-## 1. Merge order (agent cannot merge — GitHub write is owner)
+## Phase 1 status: FINISHED
 
-Whole interest-feed stack is green and MERGEABLE as of this note. Merge **bottom-up**; do not
-merge #46 ahead of its base:
+All engineering gates for Phase 1 are done and smoked. Phase 1 ranking/picks stay live as shipped.
+**Phase 2 stays OFF** until counsel returns written answers (see §4). Publishing a Privacy Policy
+line still needs the owner counsel send — that is a companion legal step, not a reopen of Phase 1
+product work.
+
+| Gate | State |
+| --- | --- |
+| Stack #39–#46 | Merged into density → `main` via [#47](https://github.com/logoitino/ala/pull/47) (`989d74e`) |
+| Local ranking / hide / sheet tests | Pass ([FEED-01-phase1-smoke.md](FEED-01-phase1-smoke.md)) |
+| Hosted `user_feed_prefs` | **Applied** 2026-11-14 (America/Denver) |
+| Signed-in smoke A–D | **PASS** 14:37 MST — [FEED-01-phase1-signed-in-smoke.md](FEED-01-phase1-signed-in-smoke.md) |
+| Guest smoke (chronological, no picks) | **PASS** 14:48 MST — same evidence file §E |
+| Published Privacy Policy line | **Owner → counsel** — draft + send note ready ([FEED-01-counsel-send.md](FEED-01-counsel-send.md)) |
+| Phase 2 flag (`EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS`) | **OFF** — blocked on counsel written answers |
+
+## 1. Merge order (historical — done)
 
 | Order | PR | Branch → base |
 | --- | --- | --- |
@@ -24,54 +41,42 @@ merge #46 ahead of its base:
 | 6 | [#45](https://github.com/logoitino/ala/pull/45) | `cursor/local-daylight-polish-9a86` → fluidity |
 | 7 | [#46](https://github.com/logoitino/ala/pull/46) | `cursor/highlights-interest-feed-9a86` → daylight |
 
-If the density base (`cursor/ui-density-audit-9a86`) is not yet on `main`, merge that first (or
-retarget #39) before this sequence. APP-TEST PRs #35/#36 are separate from this stack.
+Density → `main` as [#47](https://github.com/logoitino/ala/pull/47).
 
-## 2. Hosted SQL apply (owner — $0)
+## 2. Hosted SQL apply (done — $0)
 
-On the **existing** staging/dev Supabase project (not a fresh schema paste):
+Migration `supabase/migrations/20261114010000_user_feed_prefs.sql` applied on staging/dev.
+Anon correctly denied; signed-in owner read/write verified in smoke.
 
-1. Supabase → SQL Editor.
-2. Paste all of `supabase/migrations/20261114010000_user_feed_prefs.sql`.
-3. Run. Expect table `public.user_feed_prefs` + owner RLS (+ Closed accounts policy if
-   MINOR-01’s `caller_not_age_blocked()` already exists; otherwise the migration notices and
-   skips that policy).
-4. Smoke check:
+## 3. Device smoke (done on Expo web)
 
-```sql
-select to_regclass('public.user_feed_prefs') as table_ok;
-select polname from pg_policy where polrelid = 'public.user_feed_prefs'::regclass;
-```
+1. Sign in → Settings → Highlights → pick sports/schools → Save. **PASS**
+2. Reload → Home reflects picks / why-line. **PASS**
+3. Personal feed off → no why-line (newest-first path). **PASS**
+4. Hide a clip → stays out after leave/reload. **PASS**
+5. Guests chronological; no picks screen; no `user_feed_prefs` traffic. **PASS**
 
-Do **not** re-paste full `schema.sql` on a live project. Record the apply time in STATE §4.
-
-## 3. Device smoke (DEVICE_QA — after SQL)
-
-Local Jest already covers ranking, hide storage, and sheet render:
-[FEED-01-phase1-smoke.md](FEED-01-phase1-smoke.md). Still required on a signed-in build:
-
-1. Sign in → first-run or Settings → Highlights → pick sports/schools → Save.
-2. Kill and relaunch → Home order reflects picks.
-3. Settings → Highlights → turn **Personal feed** off → Home is newest-first.
-4. Hide a clip → it does not return after leave/relaunch.
-5. Guests stay chronological; no picks screen.
+Native iOS/Android not re-run in the Playwright session (web signed-in + guest only).
 
 ## 4. Counsel (Phase 1 companion; Phase 2 blocked)
 
 Candidate Privacy Policy line (draft only):
 [FEED_INTEREST_PRIVACY_DRAFT.md](../../legal/FEED_INTEREST_PRIVACY_DRAFT.md).
 
+Owner send packet: [FEED-01-counsel-send.md](FEED-01-counsel-send.md).
+
 Phase 2 (`EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS`) stays **OFF** until written answers for minors,
 retention, third-party/ad ban, and “Why this clip” wording.
 
-## Status snapshot
+## Ready for next phase?
 
-| Gate | State |
+| Question | Answer |
 | --- | --- |
-| Stack #39–#46 | Merged into `cursor/ui-density-audit-9a86` via async merge (2026-11-14) |
-| Density → `main` | Merged as [#47](https://github.com/logoitino/ala/pull/47) (`989d74e`) |
-| Local ranking / hide / sheet tests | Pass |
-| Hosted `user_feed_prefs` | **Applied** 2026-11-14 (America/Denver): SQL Editor Success; PostgREST now returns permission-denied for `anon` (expected — owner-only RLS), no longer missing-table |
-| Signed-in device smoke | Blocked on SQL + device |
-| Published Privacy Policy line | Open — draft + send note (`FEED-01-counsel-send.md`) |
-| Phase 2 flag | OFF |
+| Phase 1 finished? | **Yes** — [FEED-01-phase1-finished.md](FEED-01-phase1-finished.md) |
+| May turn on Phase 2 flag? | **No** — counsel written answers required first |
+| Owner admin (not Phase 1 product) | Merge [#51](https://github.com/logoitino/ala/pull/51); send counsel note; keep Phase 2 OFF |
+| Phase 2 unlock packet | [FEED-01-phase2-unlock.md](FEED-01-phase2-unlock.md) — fill counsel table, then enable sequence + P2 smoke |
+
+Flag-off collector/ranking Jest re-confirmed 2026-11-14 (11 passed). Demo Fan **Personal feed** restored ON after smoke C (2026-11-14 15:01 MST).
+
+**Demo Fan Home empty after smoke D:** expected — `reported_by` still lists Demo Fan for the APP-TEST-C clip. Optional staging SQL to restore is in [FEED-01-phase1-signed-in-smoke.md](FEED-01-phase1-signed-in-smoke.md) §D ($0). Guests still see the clip.

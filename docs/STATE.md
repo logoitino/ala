@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-14 · WebAppShell hydration-safe desktop layout for Expo web. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-14 16:25 MST · FEED-01 Phase 1 **FINISHED**; Phase 2 OFF (counsel). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,6 +175,20 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-14 — FEED-01 Phase 1 FINISHED
+
+- Receipt: `docs/engineering/evidence/FEED-01-phase1-finished.md`. Product on `main` + SQL + smoke A–E; no further Phase 1 engineering. Phase 2 flag stays OFF.
+- Owner admin left: merge evidence [#51](https://github.com/logoitino/ala/pull/51); send counsel note. Optional Demo Fan `reported_by` hygiene SQL in smoke §D ($0).
+- **About to spend:** $0. Counsel email outside product spend. Do not enable Phase 2 without unlock checklist.
+
+### 2026-11-14 — FEED-01 Phase 2 unlock packet (flag still OFF)
+
+- `FEED-01-phase2-unlock.md` + WORK_QUEUE FEED-01 row; flag-off Jest 11 passed; Demo Fan Personal feed restored ON.
+
+### 2026-11-14 — FEED-01 Phase 1 engineering COMPLETE
+
+- Smoke A–E PASS; go-live engineering-complete. Evidence under `docs/engineering/evidence/FEED-01-*` and `feed-01-signed-in-smoke/`.
+
 ### 2026-11-14 — Expo web WebAppShell hydration fix
 
 - `WebAppShell` / `useAppViewportWidth` wait until after mount before branching to the desktop phone column, so SSR HTML matches the first client paint (`useWindowDimensions` mismatch).
@@ -194,7 +208,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - CI follow-up: regenerate `database.generated.ts` for `user_feed_prefs`; fix ReelCard tracker meta expectations; mock Highlights settings in profile quiz test; register `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` in infrastructure.json; acknowledge build-layers after migration inventory; mock SoftWall sheet motion so Jest does not exit 1 on torn-down rAF.
 - Phase 0: Wave 0 seeded feed has 5 clips — too small (`docs/engineering/evidence/FEED-01-phase0.md`).
 - Phase 1 local smoke (`docs/engineering/evidence/FEED-01-phase1-smoke.md`): Jest 4 suites / 17 tests passed on Node 22.23.4 (picks sheet render, personalization-off newest-first, `tapuai.hiddenReels` hide). Signed-in web/device journey not run. Metro was not started (earlier Expo web heap abort; about 2.6 Gi available).
-- Go-live packet (`docs/engineering/evidence/FEED-01-go-live.md`): stack #39–#46 async-merged into density, then [#47](https://github.com/logoitino/ala/pull/47) landed on `main` (`989d74e`). Hosted `user_feed_prefs` **applied** (owner SQL Editor; anon correctly denied). Signed-in device smoke + counsel send still open. Privacy draft + counsel send note (`docs/legal/FEED_INTEREST_PRIVACY_DRAFT.md`, `docs/engineering/evidence/FEED-01-counsel-send.md`) — not accepted policy.
+- Go-live packet (`docs/engineering/evidence/FEED-01-go-live.md`): Phase 1 engineering **COMPLETE** (SQL + smoke A–E). Stack on `main` via [#47](https://github.com/logoitino/ala/pull/47). Counsel Privacy send still open (not accepted policy); Phase 2 OFF.
 - **About to spend:** SQL apply was **$0**. Preview build **$0** until Expo free quota runs out. Supabase Free may pause (Pro ~$25/mo). Live Stripe keys are not this wave.
 
 ### 2026-11-13 — Local Daylight polish (boosters, report, live)
