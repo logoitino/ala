@@ -100,15 +100,15 @@ Open drift → next owner: <item> → <ROLE>
 
 | Required (rows: Schema ◆, Minors/privacy, Shared contracts ◆, New capability, UI, Copy) | Actually checked | Verdict |
 | --- | --- | --- |
-| BACKEND, DATABASE_MIGRATIONS, RLS_SECURITY, DATA_GOVERNANCE, DATA_LINEAGE, STORAGE (no-op), EXIT_DATABASE | `data:map:check`, the generated-types gate and an exit notice, all structural. No role verdict. | **Missing** |
-| MINOR_SAFETY, TRUST_SAFETY, PRIVACY_ENGINEERING, LEGAL, COMPLIANCE | A privacy draft and a counsel send note exist. No verdict. | **Missing**. Counsel is owner-gated and correctly still open. |
+| BACKEND, DATABASE_MIGRATIONS, RLS_SECURITY, DATA_GOVERNANCE, DATA_LINEAGE, STORAGE (no-op), EXIT_DATABASE | `data:map:check`, the generated-types gate and an exit notice, all structural. No role verdict. | **Missing** at merge. The live trial later recorded RLS_SECURITY accept with follow-ups. |
+| MINOR_SAFETY, TRUST_SAFETY, PRIVACY_ENGINEERING, LEGAL, COMPLIANCE | A privacy draft and a counsel send note exist. No verdict. | **Missing** at merge. The live trial later recorded PRIVACY_ENGINEERING accept for Phase 1. Counsel is owner-gated and still open. |
 | SHARED_CONTRACTS, FULLSTACK, RUNTIME_CONFIG (`EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS`) + consuming owners | None | **Missing** |
 | ADMIN, SUPPORT, TELEMETRY, PRODUCT, a non-author for admin-ready/app-ready | The author wrote both checkpoints 5 minutes apart | **Missing** |
 | DESIGN, ACCESSIBILITY, VISUAL_QA, DEVICE_QA, VOICE | Local Jest only. Device smoke is open. | **Missing** |
 | QA (last) | CI green on `33aac2e`; Codex bot on the same head (context) | Not a QA verdict |
 | Lead (HIGHLIGHTS → ENGINEERING) · CTO · owner merge | None recorded. Merged by `cursor[bot]`. Owner applied SQL with no RLS record attached. | **Fails** |
 
-**Result:** under CHECK-01, FEED-01 would not be done. The record shows 25+ missing verdicts, plus
+**Result** (this table is the state at merge): under CHECK-01, FEED-01 would not be done. The record shows 25+ missing verdicts, plus
 a stale migration header ("Applied: not applied" against STATE's "applied"). Next owners:
 RLS_SECURITY and PRIVACY_ENGINEERING review the applied table first, then HIGHLIGHTS collects the rest.
 
@@ -122,7 +122,8 @@ Checkers: VP_OPERATIONS, DOCUMENTATION, CTO, CI, SUPPLY_CHAIN_SECURITY, ARCHITEC
 Lead: pending · CTO: pending · Owner decision: merge pending
 Verdicts on c0ca0c5 (2026-11-14; separate Claude general-purpose agent sessions performing each role, not the pinned models, which were unavailable):
   VP_OPERATIONS accept · DOCUMENTATION accept · CI accept · SUPPLY_CHAIN_SECURITY accept
-  These became stale under the stale rule when the follow-up commit changed CHECK-01, check-agents.mjs, WORK_QUEUE and CHECK-AUDIT; re-checks are recorded on the PR.
+  These became stale under the stale rule when a follow-up commit changed the touched files.
+  Current verdicts, acks and the lead/CTO decision are recorded in PR #52 comments. Comments do not change files, so they do not void verdicts.
 ARCHITECTURE_SYNC: no-op — no stack layer moved
 Open drift → next owner:
   live trial recorded in WORK_QUEUE "FEED-01 — retrospective check record" → HIGHLIGHTS
