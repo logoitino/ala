@@ -1,5 +1,5 @@
 {
- "planVersion": "df0b07577dd3",
+ "planVersion": "f6fe941048ad",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1624,7 +1624,7 @@
    "apps/mobile/app/(sponsor)/sponsor/index.tsx cd3135e79e5441db7c0e9755f52c0542b7e00cd1b85e64174370784b25702cc4",
    "apps/mobile/app/(tabs)/__tests__/fan-role-access.test.tsx 3b258cdd1440ed0bcaba7f94b321486fe83a7cdad702d0a74395360859168117",
    "apps/mobile/app/(tabs)/__tests__/highlights-jump.test.tsx b7ae4f1d5edc8f578d7ecd256246324a1a4fba9e62757554cf60b105a72d5a30",
-   "apps/mobile/app/(tabs)/__tests__/profile-quiz-history.test.tsx 9352db9fdf0a68d44ff7ed37457d72610fa63bab8c27df40b8fe62a28312f7d7",
+   "apps/mobile/app/(tabs)/__tests__/profile-quiz-history.test.tsx f0b211a3393766b9a21a8839b7d231857a2bbae12b2473b2b17d9615a514fbe7",
    "apps/mobile/app/(tabs)/__tests__/public-profile-navigation.test.tsx fcebb09ffd7dad279246fc8798bcb9a36e6f0b226adc96d1f37ce70c052c3733",
    "apps/mobile/app/(tabs)/__tests__/tab-story-states.test.tsx 1fd9a4f9045ff2ea9f5c701156373f93185f9e6d9cbc62c8ac60d5fd56bde505",
    "apps/mobile/app/(tabs)/_layout.tsx b1155f823e9e67884ea11feb40b64b07f531591f2a69c032b978fc5c4e4348fd",
@@ -2049,7 +2049,7 @@
    "apps/mobile/src/frontend/components/Reels/__tests__/LiveMatchBanner.test.tsx 8949be3bd06577b91d1b17f958fa79438cd204d2f04b395800eb9ae7498ef29f",
    "apps/mobile/src/frontend/components/Reels/__tests__/PhotoStoryMedia.test.tsx 63143c74e34c11abf3abf7b4b308ee18a51ce36b9bbe821d989f7ba26d321dda",
    "apps/mobile/src/frontend/components/Reels/__tests__/ReelActionOverlay.test.tsx 15cf9ad904f07a08c0881941e7fc755572b0a9b8eab534014d133644d9e9ee28",
-   "apps/mobile/src/frontend/components/Reels/__tests__/ReelCard.photoStory.test.tsx 18f00aa3e89e98c3c993205f3af77c8eeb2fd2aad9464d97b7a49842269e2b65",
+   "apps/mobile/src/frontend/components/Reels/__tests__/ReelCard.photoStory.test.tsx 10818c77e3e4b9fc67bedf36c4b32672854a9ca1ef7f08edf4a2114a865934cb",
    "apps/mobile/src/frontend/components/Reels/__tests__/ReelOwnerPeek.test.tsx 05def752379dc8d04ad8c7891d481b8417fbf98dd3469fd7802728228e6cb528",
    "apps/mobile/src/frontend/components/Reels/__tests__/ReelVideoPlayer.web.test.ts abb36bc8e039e7e1a7d92dae6aff754039e6bb38291ff56a27c7b5391f43583a",
    "apps/mobile/src/frontend/components/Reels/__tests__/UploadChoiceSheet.test.tsx a196927c07ade46ddf7e5ba9246046c4ed5c988502ddee0dcff65b2014396d0a",
@@ -2491,7 +2491,7 @@
    "apps/mobile/src/frontend/theme/hypeFx.ts 3da7a5c199c0177cd6ea3a5c774ab6a47565b94234a6be80187dfe089916f475",
    "apps/mobile/src/frontend/theme/motion.ts 3fa40f50f5767b4e8807af6a98a7e367a8f67c0487cba5facf648051da168673",
    "apps/mobile/src/frontend/types/__tests__/databaseDrift.test.ts 0d97299bec240fb00773bee6f132a47eda4f49493534e5879d6e9eee5521499c",
-   "apps/mobile/src/frontend/types/database.generated.ts 1d4af169bc37c7695dd6c0a8bb95e02a71d8ff0474703f445488d521d27cafde",
+   "apps/mobile/src/frontend/types/database.generated.ts 9c2cafb90cf97a51bc1763503852e87ab5ee12f247a5cff1a0b978e6f2e083d5",
    "apps/mobile/src/frontend/types/database.ts fa7ae47c68575766b1136637a2a11084a4cb73956eb5a022382f777ee3ede3d7",
    "apps/mobile/tsconfig.json 8f0ea87302dc7f5b6ae1b86469887d882b36cdcfc83af5de4bf8f8ffe089f7c7",
    "docs/engineering/exit/exit-map.json bcf87ca10a1cfdd50ced364d0793a6a7b099bfe7aa2fd0b5f4e458625374282e",

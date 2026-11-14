@@ -40,14 +40,14 @@ owner-reported or unverified. Portability and exits: [PORTABILITY.md](PORTABILIT
 | AWS/Azure self-hosted Supabase deployment | — | — | — | — |
 | Apple Maps / Google Maps (directions links) | — | — | — | — |
 
-Local libraries (no outside service): 52. App configuration variables: `NODE_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `ANALYTICS_TEST_RESOLVER`.
+Local libraries (no outside service): 52. App configuration variables: `NODE_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `ANALYTICS_TEST_RESOLVER`, `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS`.
 
 ## How deeply we are integrated with Supabase
 
 | Measure | Count | Meaning |
 | --- | --- | --- |
-| `auth.uid()` / `auth.role()` in SQL | 303 / 121 | Identity calls a non-Supabase host must provide (prefer `my_profile_id()` in new SQL) |
-| Grants to `anon` / `authenticated` / `service_role` | 396 | The PostgREST role model |
+| `auth.uid()` / `auth.role()` in SQL | 307 / 121 | Identity calls a non-Supabase host must provide (prefer `my_profile_id()` in new SQL) |
+| Grants to `anon` / `authenticated` / `service_role` | 401 | The PostgREST role model |
 | `storage.*` references in SQL | 137 | Storage policies and bucket rules |
 | Realtime references in SQL / client channels | 28 / 12 | Live updates to replace on another host |
 | Realtime publication tables | 4 | `app_runtime_config`, `cheer_polls`, `game_events`, `games` |

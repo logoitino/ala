@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-14 · plan `df0b07577dd3` → `f6fe941048ad` · announced by FEED-01 infra env register
+
+App at announcement: commit `f3780902460d25dffae44ad54c993fd79b701b1b`, source `f6fe941048ad47a165cb78746f1f8c500e454882ce19d1be575b902df8579562`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app/(tabs)/__tests__/profile-quiz-history.test.tsx f0b211a3393766b9a21a8839b7d231857a2bbae12b2473b2b17d9615a514fbe7`, `apps/mobile/src/frontend/components/Reels/__tests__/ReelCard.photoStory.test.tsx 10818c77e3e4b9fc67bedf36c4b32672854a9ca1ef7f08edf4a2114a865934cb`, `apps/mobile/src/frontend/types/database.generated.ts 9c2cafb90cf97a51bc1763503852e87ab5ee12f247a5cff1a0b978e6f2e083d5`; removed `apps/mobile/app/(tabs)/__tests__/profile-quiz-history.test.tsx 9352db9fdf0a68d44ff7ed37457d72610fa63bab8c27df40b8fe62a28312f7d7`, `apps/mobile/src/frontend/components/Reels/__tests__/ReelCard.photoStory.test.tsx 18f00aa3e89e98c3c993205f3af77c8eeb2fd2aad9464d97b7a49842269e2b65`, `apps/mobile/src/frontend/types/database.generated.ts 1d4af169bc37c7695dd6c0a8bb95e02a71d8ff0474703f445488d521d27cafde`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-14 · plan `749d874be6fb` → `df0b07577dd3` · announced by FEED-01 Codex P1/P2
 
 App at announcement: commit `d6d7426eee53ac2673b2d2c87988fffe144b1a04` + 9 uncommitted file(s), source `df0b07577dd3675e3f37e1454a3387c7b1a659d4d7beb6ae4a40cd1e09558648`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
