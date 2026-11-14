@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-14 · FEED-01 interest Highlights picks + ranking (Phase 2/3 flag OFF). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-14 · FEED-01 SoftWall Jest teardown fix for source-release. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -181,7 +181,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - First-run + Settings → Highlights picks; Personal feed toggle; prefs broadcast so Home refreshes after Settings.
 - `rankHomeFeed` prefs bonuses; money never ranks; Phase 2/3 env-gated **including AsyncStorage collectors**.
 - Admin: `/admin/highlights` `FeedInterestPanel` + coverage `home_feed_interest` (presentation-only exemption removed).
-- CI follow-up: regenerate `database.generated.ts` for `user_feed_prefs`; fix ReelCard tracker meta expectations; mock Highlights settings in profile quiz test; register `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` in infrastructure.json.
+- CI follow-up: regenerate `database.generated.ts` for `user_feed_prefs`; fix ReelCard tracker meta expectations; mock Highlights settings in profile quiz test; register `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` in infrastructure.json; acknowledge build-layers after migration inventory; mock SoftWall sheet motion so Jest does not exit 1 on torn-down rAF.
 - Phase 0: Wave 0 seeded feed has 5 clips — too small (`docs/engineering/evidence/FEED-01-phase0.md`).
 - **About to spend:** $0 (Wave 0). Hosted SQL apply and device smoke remain owner / DEVICE_QA.
 

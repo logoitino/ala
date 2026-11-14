@@ -1,5 +1,5 @@
 /** Account creation keeps Google available without email fields or bank setup; age rules remain separate. */
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 
 import { SoftWallModal } from '@/components/Auth/SoftWallModal';
@@ -33,6 +33,21 @@ jest.mock('@/context/AuthContext', () => ({
 }));
 
 jest.mock('@/hooks/useSheetFrame', () => ({ useSheetFrame: () => ({ dock: {}, card: {} }) }));
+// Motion uses requestAnimationFrame → setTimeout under the RN Jest preset; leave no pending
+// frame after the suite or Jest exits 1 with a torn-down environment (CI source-release).
+jest.mock('@/hooks/useFanSheetMotion', () => ({
+  useFanSheetMotion: () => ({
+    translateY: { value: 0 },
+    backdropOpacity: { value: 1 },
+    sheetStyle: {},
+    backdropStyle: {},
+    playOpen: jest.fn(),
+    playClose: jest.fn((onSettled?: () => void) => {
+      onSettled?.();
+    }),
+    reduceMotion: true,
+  }),
+}));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn() } }));
 jest.mock('expo-blur', () => ({ BlurView: 'BlurView' }));
 // MINOR-01: the under-13 device pause lives in AsyncStorage; keep it in memory per test (`?.`: the Supabase client
@@ -78,6 +93,10 @@ async function enterBirth(year: number | string = 1990, month = 'Apr') {
 beforeEach(() => {
   jest.clearAllMocks();
   mockStore.clear();
+});
+
+afterEach(() => {
+  cleanup();
 });
 
 describe('SoftWallModal email form', () => {
