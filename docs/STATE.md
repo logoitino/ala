@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-14 16:12 MST · FEED-01 Phase 1 done; owner merge #51 + counsel send. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-14 16:25 MST · FEED-01 Phase 1 **FINISHED**; Phase 2 OFF (counsel). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,11 +175,11 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
-### 2026-11-14 — FEED-01 owner handoff (merge + counsel)
+### 2026-11-14 — FEED-01 Phase 1 FINISHED
 
-- Engineering idle on FEED-01 until owner merges [#51](https://github.com/logoitino/ala/pull/51) and sends counsel note. Optional staging SQL to clear Demo Fan from `reported_by` after smoke D is in the signed-in smoke receipt ($0).
-- Canvas: FEED-01 owner handoff (copy subject/body). Phase 2 unlock packet remains; flag OFF.
-- **About to spend:** $0 for merge/docs/SQL hygiene. Counsel email outside product spend.
+- Receipt: `docs/engineering/evidence/FEED-01-phase1-finished.md`. Product on `main` + SQL + smoke A–E; no further Phase 1 engineering. Phase 2 flag stays OFF.
+- Owner admin left: merge evidence [#51](https://github.com/logoitino/ala/pull/51); send counsel note. Optional Demo Fan `reported_by` hygiene SQL in smoke §D ($0).
+- **About to spend:** $0. Counsel email outside product spend. Do not enable Phase 2 without unlock checklist.
 
 ### 2026-11-14 — FEED-01 Phase 2 unlock packet (flag still OFF)
 

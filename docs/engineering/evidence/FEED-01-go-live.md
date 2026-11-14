@@ -1,7 +1,8 @@
 # FEED-01 go-live packet (Phase 1)
 
 **Date:** 2026-11-14 (America/Denver)  
-**Last updated:** 2026-11-14 15:01 MST  
+**Last updated:** 2026-11-14 16:25 MST  
+**Phase 1 status:** **FINISHED** — [FEED-01-phase1-finished.md](FEED-01-phase1-finished.md)  
 **Branch / PR (evidence closeout):** `cursor/feed-01-device-smoke-9a86` · [#51](https://github.com/logoitino/ala/pull/51)  
 **Feature landed via:** stack #39–#46 → density [#47](https://github.com/logoitino/ala/pull/47) on `main`  
 **Spend:** Applying the migration in Supabase SQL Editor is **$0** on Wave 0. Preview builds are
@@ -11,11 +12,12 @@ enrolled. Local smoke is **$0**.
 
 This packet is the owner checklist. It does not merge PRs, apply SQL, or accept legal text.
 
-## Phase 1 engineering status: COMPLETE
+## Phase 1 status: FINISHED
 
-All engineering gates for Phase 1 are done. **Phase 2 stays OFF** until counsel returns written
-answers (see §4). The only remaining Phase 1 owner action before publishing a Privacy line is
-sending the counsel note — that does not block keeping Phase 1 ranking/picks live as shipped.
+All engineering gates for Phase 1 are done and smoked. Phase 1 ranking/picks stay live as shipped.
+**Phase 2 stays OFF** until counsel returns written answers (see §4). Publishing a Privacy Policy
+line still needs the owner counsel send — that is a companion legal step, not a reopen of Phase 1
+product work.
 
 | Gate | State |
 | --- | --- |
@@ -70,9 +72,9 @@ retention, third-party/ad ban, and “Why this clip” wording.
 
 | Question | Answer |
 | --- | --- |
-| Engineering ready to leave Phase 1? | **Yes** |
+| Phase 1 finished? | **Yes** — [FEED-01-phase1-finished.md](FEED-01-phase1-finished.md) |
 | May turn on Phase 2 flag? | **No** — counsel written answers required first |
-| Owner next action | Merge [#51](https://github.com/logoitino/ala/pull/51) evidence if not yet on `main`; send counsel note; keep Phase 2 OFF |
+| Owner admin (not Phase 1 product) | Merge [#51](https://github.com/logoitino/ala/pull/51); send counsel note; keep Phase 2 OFF |
 | Phase 2 unlock packet | [FEED-01-phase2-unlock.md](FEED-01-phase2-unlock.md) — fill counsel table, then enable sequence + P2 smoke |
 
 Flag-off collector/ranking Jest re-confirmed 2026-11-14 (11 passed). Demo Fan **Personal feed** restored ON after smoke C (2026-11-14 15:01 MST).

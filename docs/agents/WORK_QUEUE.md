@@ -123,18 +123,18 @@ unchanged; hierarchy is checked, not rewritten. Exact final checks and claim rel
 integrated by root in [COORD-01](COORD-01.md). These assignments do not establish pinned-model
 execution or a continuous delivery service.
 
-## FEED-01 — Highlights interest feed (Phase 1 done; Phase 2 blocked) — 2026-11-14
+## FEED-01 — Highlights interest feed (Phase 1 FINISHED; Phase 2 blocked) — 2026-11-14
 
-**Phase 1 engineering COMPLETE** (SQL applied, smoke A–E PASS, evidence [#51](https://github.com/logoitino/ala/pull/51)).
-`EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` stays **OFF**.
+**Phase 1 FINISHED** ([FEED-01-phase1-finished.md](../engineering/evidence/FEED-01-phase1-finished.md)):
+code on `main`, SQL applied, smoke A–E PASS. `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` stays **OFF**.
 
 | Next | Owner | Blocked on |
 | --- | --- | --- |
-| Merge evidence PR #51 | Owner | — |
+| Merge evidence PR #51 | Owner | CI green; agent cannot merge |
 | Send counsel note | Owner / LEGAL | [FEED-01-counsel-send.md](../engineering/evidence/FEED-01-counsel-send.md) |
-| Enable Phase 2 flag + smoke | Owner authorizes → HIGHLIGHTS / DEVICE_QA | Written counsel answers (a)–(d); unlock checklist [FEED-01-phase2-unlock.md](../engineering/evidence/FEED-01-phase2-unlock.md) |
+| Enable Phase 2 flag + smoke | Owner authorizes → HIGHLIGHTS / DEVICE_QA | Written counsel answers (a)–(d); [FEED-01-phase2-unlock.md](../engineering/evidence/FEED-01-phase2-unlock.md) |
 
-Do not start Phase 2 collection/ranking without the unlock checklist. APP-TEST-01 lanes A–C remain the active app priority ahead of optional Phase 2 enable.
+Do not start Phase 2 without the unlock checklist. Return to APP-TEST-01 A–C as the active app priority.
 
 ## APP-TEST-01 — Current app testing priorities — 2026-10-21 UTC
 

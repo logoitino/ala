@@ -1,11 +1,11 @@
 # FEED-01 — ready-to-send counsel note
 
 **Date:** 2026-11-14 (America/Denver)  
-**Last updated:** 2026-11-14 14:48 MST  
+**Last updated:** 2026-11-14 16:25 MST  
 **Status:** Draft handoff text for the owner to send. Not counsel advice. Not accepted policy.  
-**Engineering gate:** Phase 1 code, SQL, and smoke A–E are **done**. This note is the remaining
-owner action before a published Privacy line; it does **not** unblock Phase 2 by itself —
-Phase 2 needs the written answers in item 2 below.
+**Phase 1 product:** **FINISHED** ([FEED-01-phase1-finished.md](FEED-01-phase1-finished.md)).
+This note is the remaining owner action before a published Privacy line; it does **not** unblock
+Phase 2 by itself — Phase 2 needs the written answers in item 2 below.
 
 **Spend:** Sending email to counsel is outside Wave 0 product spend. Keeping Phase 2 OFF is **$0**.
 
