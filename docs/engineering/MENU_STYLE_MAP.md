@@ -67,6 +67,7 @@ wash are rendered by its child `UploadVideoComposer`; donation steps live in chi
 | `Reels/ReelMoreSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Reels/ReelViewModal.tsx` | custom full-screen layout | Full-screen video viewer remains Midnight; playback controls stay visible. |
 | `Reels/ReportContentModal.tsx` | shared 440px sheet frame; reason vertical scroll menu | Feature actions/validation retained; native fit unverified. |
+| `Reels/FeedPicksSheet.tsx` | jade wash; sports/schools vertical scroll menus + category horizontal rail (FEED-01) | Replaces pill wrap grids; 44pt rows; native fit unverified. |
 | `Reels/UploadVideoModal.tsx` | custom full-screen layout | Feature actions/validation retained; native fit unverified. |
 | `Spotlight/SpotlightModal.tsx` | custom full-screen layout | Full-screen award/video reveal; Midnight video contrast retained. |
 | `TipSheetModal.tsx` | shared 440px sheet frame | Feature actions/validation retained; native fit unverified. |
