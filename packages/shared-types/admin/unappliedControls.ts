@@ -77,6 +77,15 @@ export const UNAPPLIED_CONTROLS: readonly UnappliedControl[] = [
     rpc: 'quiz_admin_life_snapshot',
     args: {},
   },
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    migration: '20261021140000_notifications.sql',
+    adminPath: '/admin/features',
+    rpc: 'get_admin_notification_health',
+    args: {},
+    note: 'Payment-context follow-up is 20261021150000_notification_payment_context.sql. Queue depth and 24h outcomes appear on Expo Health when the RPC answers; this portal lists the waiting migration until then.',
+  },
 ];
 
 /**

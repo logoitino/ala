@@ -56,6 +56,8 @@ type ReelActionOverlayProps = {
   caption?: string;
   /** Photo stories: the current photo's optional description, shown above the name and caption. */
   storyNote?: string | null;
+  /** FEED-01 signed-in "Why this clip" line. Guests omit. Never shows a score number. */
+  whyThisClip?: string | null;
   /** Confirmed account mentions, already joined for one line. */
   withAccounts?: string;
   /** Fan who filmed the clip ("🎥 Filmed by …"). Null when the athlete posted it. */
@@ -98,6 +100,7 @@ export function ReelActionOverlay({
   position,
   caption,
   storyNote,
+  whyThisClip,
   withAccounts,
   filmedBy,
   onOpenFilmer,
@@ -260,6 +263,20 @@ export function ReelActionOverlay({
           <Text style={styles.school} numberOfLines={2}>
             {schoolName}
           </Text>
+        ) : null}
+        {whyThisClip ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Why this clip: ${whyThisClip}`}
+            haptic="selection"
+            hitSlop={6}
+            style={styles.whyHit}
+            onPress={() => undefined}
+          >
+            <Text style={styles.whyLine} numberOfLines={2}>
+              {whyThisClip}
+            </Text>
+          </Pressable>
         ) : null}
         {filmedBy ? (
           <Pressable
@@ -550,6 +567,15 @@ const styles = StyleSheet.create({
     color: 'rgba(243,251,247,0.82)',
     fontSize: 12,
     fontWeight: '700',
+    textShadowColor: 'rgba(0,0,0,0.55)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  whyHit: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', maxWidth: '92%' },
+  whyLine: {
+    color: 'rgba(243,251,247,0.72)',
+    fontSize: 12,
+    fontWeight: '600',
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,

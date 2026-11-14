@@ -625,6 +625,16 @@ export type SavedReel = {
   created_at: string;
 };
 
+/** FEED-01 owner Highlights picks (`public.user_feed_prefs`). Deleted with the account. Never used for ads. */
+export type UserFeedPrefsRow = {
+  user_id: string;
+  sports: string[];
+  schools: string[];
+  category_pref: 'all' | 'game_play' | 'train_like_me' | 'serve_like_me';
+  personalization_on: boolean;
+  updated_at: string;
+};
+
 /** One Seki / Aura / Flex per fan per clip (`public.reel_hype_votes`). */
 export type ReelHypeVote = {
   user_id: string;
@@ -764,6 +774,11 @@ export type Database = {
         Pick<SubscriberRequest, 'subscriber_id' | 'athlete_id' | 'body'> & Partial<SubscriberRequest>
       >;
       saved_reels: Table<SavedReel, Pick<SavedReel, 'user_id' | 'reel_id'> & Partial<SavedReel>>;
+      user_feed_prefs: Table<
+        UserFeedPrefsRow,
+        Pick<UserFeedPrefsRow, 'user_id'> & Partial<UserFeedPrefsRow>,
+        Partial<UserFeedPrefsRow>
+      >;
       reel_hype_votes: Table<
         ReelHypeVote,
         Pick<ReelHypeVote, 'user_id' | 'reel_id' | 'kind'> & Partial<ReelHypeVote>

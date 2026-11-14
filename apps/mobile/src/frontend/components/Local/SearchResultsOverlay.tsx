@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import Animated, {
   FadeInUp,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring,
   withTiming,
@@ -15,7 +16,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { useLocalSearch, useRecentLocalSearches } from '@/hooks/useLocalSearch';
 import type { LocalSearchHit, LocalSearchKind } from '@/types/database';
-import { SPRING_CARD } from '@/theme/motion';
+import { SHEET_REDUCED_MS, SPRING_SHEET } from '@/theme/motion';
 
 const KIND_PILLS: { id: LocalSearchKind; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -80,18 +81,24 @@ export function SearchResultsOverlay({
     });
     return [...hits, ...extras];
   }, [extraHits, hits, kind]);
+  const reduceMotion = useReducedMotion() === true;
   const translateY = useSharedValue(28);
   const opacity = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
-      translateY.value = withSpring(0, SPRING_CARD);
+      if (reduceMotion) {
+        translateY.value = withTiming(0, { duration: SHEET_REDUCED_MS });
+        opacity.value = withTiming(1, { duration: SHEET_REDUCED_MS });
+        return;
+      }
+      translateY.value = withSpring(0, SPRING_SHEET);
       opacity.value = withTiming(1, { duration: 160 });
       return;
     }
-    translateY.value = withTiming(24, { duration: 140 });
-    opacity.value = withTiming(0, { duration: 120 });
-  }, [opacity, translateY, visible]);
+    translateY.value = withTiming(24, { duration: reduceMotion ? SHEET_REDUCED_MS : 140 });
+    opacity.value = withTiming(0, { duration: reduceMotion ? SHEET_REDUCED_MS : 120 });
+  }, [opacity, reduceMotion, translateY, visible]);
 
   const sheetStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,

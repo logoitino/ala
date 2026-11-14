@@ -4441,6 +4441,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_feed_prefs: {
+        Row: {
+          category_pref: string
+          personalization_on: boolean
+          schools: string[]
+          sports: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category_pref?: string
+          personalization_on?: boolean
+          schools?: string[]
+          sports?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category_pref?: string
+          personalization_on?: boolean
+          schools?: string[]
+          sports?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       verification_requests: {
         Row: {
           class_year: string | null

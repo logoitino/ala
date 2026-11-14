@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-10 · Density EAS preview **FINISHED** ($0 Free). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-14 · FEED-01 go-live packet + Privacy draft for counsel. Webhook tip crediting stays **off**. Hosted SQL and signed-in device journeys remain open.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,107 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-14 — FEED-01 interest-based Highlights Home feed
+
+- Migration `user_feed_prefs` (owner-only RLS + Closed accounts when MINOR-01 present; written, not hosted-applied).
+- First-run + Settings → Highlights picks; Personal feed toggle; prefs broadcast so Home refreshes after Settings.
+- `rankHomeFeed` prefs bonuses; money never ranks; Phase 2/3 env-gated **including AsyncStorage collectors**.
+- Admin: `/admin/highlights` `FeedInterestPanel` + coverage `home_feed_interest` (presentation-only exemption removed).
+- CI follow-up: regenerate `database.generated.ts` for `user_feed_prefs`; fix ReelCard tracker meta expectations; mock Highlights settings in profile quiz test; register `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` in infrastructure.json; acknowledge build-layers after migration inventory; mock SoftWall sheet motion so Jest does not exit 1 on torn-down rAF.
+- Phase 0: Wave 0 seeded feed has 5 clips — too small (`docs/engineering/evidence/FEED-01-phase0.md`).
+- Phase 1 local smoke (`docs/engineering/evidence/FEED-01-phase1-smoke.md`): Jest 4 suites / 17 tests passed on Node 22.23.4 (picks sheet render, personalization-off newest-first, `tapuai.hiddenReels` hide). Signed-in web/device journey not run. Metro was not started (earlier Expo web heap abort; about 2.6 Gi available).
+- Go-live packet (`docs/engineering/evidence/FEED-01-go-live.md`): merge order #39→#40→#42→#43→#44→#45→#46; SQL apply steps; device smoke remaining. Privacy candidate draft for counsel (`docs/legal/FEED_INTEREST_PRIVACY_DRAFT.md`) — not accepted policy. Agent cannot merge (GitHub write) or apply hosted SQL (owner-gated).
+- **About to spend:** Hosted SQL apply is **$0** on Wave 0. Preview build **$0** until Expo free quota runs out. Supabase Free may pause (Pro ~$25/mo). Live Stripe keys are not this wave.
+
+### 2026-11-13 — Local Daylight polish (boosters, report, live)
+
+- **Top Aura Boosters:** compact sponsor-style cards (avatar + name + pts + one badge); shorter hub lede.
+- **Suggestion / Report sheets:** scroll menus instead of dense pill grids; shorter copy.
+- **Live matchups:** `GameCard` and `LiveMatchBanner` stay on Daylight surface (ember LIVE pill only — no night card).
+- Dark scheme deferred. Skipped Lovable agent (workspace credits; price not in Wave 0 ROADMAP).
+- **About to spend:** $0 (Wave 0 presentation). Device feel still APP-TEST / DEVICE_QA.
+
+### 2026-11-13 — App fluidity (menus, sheets, tabs, scroll)
+
+- Shared `useFanSheetMotion` + sheet timing tokens (`SHEET_DISMISS_MS` / `SPRING_SHEET`; Easing stays in hooks for Jest).
+- **Profile menu** slides away, then hides the native Modal; nested Soft-Wall / Legal wait for `onDismiss` (Android fallback timer).
+- Soft-Wall, Legal, Suggestion, Share QR, Verify, Edit profile: same `useFanSheetMotion` open/close (Reduce Motion branch).
+- Upload / Reel more / Filmer / Report / My sports: `animationType="none"` + `SheetRise active={visible}`.
+- Highlight picker / Operator roster: fade page sheets (no double OS slide). Local search overlay: `SPRING_SHEET` + Reduce Motion.
+- Role switcher, Drip Product, Tip sheet: `SPRING_SHEET` travel + shared dismiss/backdrop ms tokens.
+- Fan tabs: navigator fade removed; `TabScreen` enter 160ms so switches do not double-flash.
+- Privacy / Notifications / Delete account / Rally / Challenge sheets: fade instead of slide.
+- `ScrollFxItem` skips mount spring when Reduce Motion is on.
+- **About to spend:** $0 (Wave 0 presentation). Device feel still needs APP-TEST / DEVICE_QA.
+
+### 2026-11-13 — Next admin portal: Control map + feature accountability
+
+- Read-only Product **Control map** (`/coverage`) from shared `PORTAL_COVERAGE_SURFACES`; Product
+  overview lists the full **Expo desk directory** (`EXPO_DESKS`). Writes stay in Expo `/admin`.
+- Revenue **Checkout rails** note: gifts 0% cut; Vault 20/80; web Stripe vs native store billing.
+- Health unapplied catalog probes **notifications** (`get_admin_notification_health`).
+- Expo `adminCoverage` adds **web** surface (shell, gift/Exclusive Payment Element, store rails).
+- Feature-admin: enroll **WEB-01** + **VAULT-RAILS-01** (planned); QUIZ-01 marked historical /
+  superseded by QUIZ-02+. Workflow requires same-turn portal desk/coverage updates.
+- `pnpm portal:test` is part of `pnpm check`. **About to spend:** $0 (Wave 0 docs/portal only).
+
+### 2026-11-13 — Expo web Phase 1 (Stripe.js + desktop shell)
+
+- Web app = same Expo Router app (`pnpm` / `expo start --web`), not a Lovable fork. Plan:
+  [WEB_APP_PARITY.md](engineering/design/WEB_APP_PARITY.md).
+- **Web Stripe checkout:** `@stripe/stripe-js` Payment Element host mirrors PaymentSheet for
+  gifts / Exclusive / Drip / booster (`lib/stripe.web.ts`, `WebPaymentSheetHost`). Test card `4242`.
+- **Desktop shell:** wide viewports get a phone-width column (`WebAppShell`) so dock/Highlights stay usable.
+- Exclusive rails: web Stripe + books 20/80; production iOS/Android still block Stripe Exclusive until
+  IAP / Play Billing. Hosted `tapuai.app` deploy still owner/ops. Upload/auth polish = later phases.
+- Follow-up from web-gap pass: busy CTAs say “Opening checkout…” (not PaymentSheet); TROUBLESHOOTING §6
+  no longer calls web Stripe a stub; test-card hint hidden when `EXPO_PUBLIC_APP_ENV=production`.
+- Codex on #42: lock web Payment Element dismiss while confirm is pending; sheets/grids use
+  `useAppViewportWidth` (phone column) instead of full browser width.
+- CI: claim `@stripe/stripe-js` + `@stripe/react-stripe-js` on the Stripe infra service (source-release).
+- **About to spend:** $0 (Wave 0). Budget unchanged; hosting later is owner spend.
+
+### 2026-11-13 — Vault Exclusive platform rails (web cut; native store billing)
+
+- Books Exclusive split stays **20% Tapua'i / 80% athlete** (`VAULT_PLATFORM_CUT_BPS`); fan Vault
+  card + athlete Lock Vault copy disclose it.
+- Platform gate (`data/storeCommerce.ts` + `lib/exclusiveCheckout.ts`): preview/test native Stripe;
+  production iOS/Android unavailable until store billing; web now uses Payment Element (Phase 1 above).
+- **Android is not freer than Apple** for in-app digital Vault. StoreKit/Play Billing **not built**.
+- Call sites: profile, public `/user/[id]`, ReelCard.
+- CI fix: removed stale `exportsTriage` for `VAULT_ATHLETE_SHARE_BPS` (now used by `storeCommerce`).
+- CI fix: `pnpm ip:sync` refreshed `docs/legal/IP_COUNSEL_PACKET.md` so source-release verify
+  does not mutate inventory mid-check.
+
+### 2026-11-12 — SoftWall Google-off opens Create (APP-TEST lane A)
+
+- When Continue with Google fails with “turned off on the server”, SoftWall switches to **Create an
+  account** so email + birth month/year are ready without a second tap. Hint copy no longer implies
+  Google is always live. PR [#39](https://github.com/logoitino/ala/pull/39) CI was already green;
+  this continues the no-Exit test path. Owner still enables Google OAuth on the project for lane A.
+
+### 2026-11-12 — Account birth pickers, delete-account request, compact menus
+
+- `BirthMonthField`: twelve-month pill grid → compact Month/Year dropdown scroll lists (works inside
+  SoftWall without a nested Modal). Age card + Privacy reuse it.
+- Profile Settings: **Delete account** opens `DeleteAccountSheet` — records `[account-deletion-request]`
+  via Feedback, then signs out. Honest copy: staff finishes wipe; gift/books rows may be kept (P1-01
+  auto-erasure still open). Lovable MCP needs Desktop auth; density from LOVABLE_UI_UX_PLAN ($0).
+- `ProfileMenuSheet` / `PrivacySettingsSheet`: tighter row/type density; touch targets stay ≥44.
+- CI typecheck fix: `StyleSheet.absoluteFill` (RN 0.88) + typed Feedback mock on the delete-account test.
+
+### 2026-11-12 — Claim-school scroll, vibrant Local polls, quiz demo path
+
+- `VerifyAthleteModal`: sheet content now scrolls under `maxHeight` (claim school was clipped).
+- `CheerPollCard` (Local): brighter rivalry chrome — jade home / cyan away / ember LIVE (Lovable
+  Friday Night Lights tokens). Lovable MCP needs Desktop auth in this cloud agent; design applied
+  in-repo from [LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md) ($0).
+- Quiz: staging still missing `quiz_snapshot` (owner [TRIVIA_STAGING_APPLY](engineering/TRIVIA_STAGING_APPLY.md)).
+  Home / HQ / `/sport-quiz` now surface “not switched on” and offer `/dev/trivia-preview` when
+  `EXPO_PUBLIC_APP_ENV` is not production so trivia can be tried without SQL.
+- Regenerated `DATA_MAP.md` + `supportTopology.json` for the new Home/HQ → trivia-demo screen edges
+  (`pnpm data:map:check` green).
 
 ### 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 
@@ -1610,6 +1711,11 @@ Do not re-diagnose these. Fix them or leave them.
    optional tip for Tapua'i at checkout (default No tip, never pre-selected). Built; SQL recorded applied to staging on 2026-09-30, not development.
    Still open: counsel on App Store 3.2.1(vii), which appears to require 100% for non-IAP gifts —
    fallback is `MALO_PLATFORM_CUT_BPS` = 0 with the tip kept (LEGAL row L).
+   - **Exclusive / Vault store rails (owner 2026-11-13, engineering working model):** **Web**
+     Exclusive uses Stripe.js with the existing **20/80** books split (Phase 1 local). Production
+     **iOS** Exclusive must use App Store IAP (not Stripe in-app). Production **Android** Exclusive
+     must use Google Play Billing — **Android is not exempt**. StoreKit / Play Billing **not built**.
+     Counsel must review before store listing claims or live money. Hosted web deploy is owner/ops.
 
 10. **Athlete verification and fake highlights** — `docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md`.
     **Decided 2026-09-29:** gifts are held until verified and the athlete sees that in the app; the

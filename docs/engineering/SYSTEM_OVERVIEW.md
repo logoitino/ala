@@ -55,7 +55,7 @@ Roles: `guest`, `fan`, `athlete`, `parent`, `operator`, `booster`, `sponsor`, `a
 | Graphics | **`@shopify/react-native-skia`** 2.6.2 — `Effects/GlowingNeonBorder` SweepGradient + BlurMask on the Aura trading card (Expo web loads CanvasKit via `WithSkiaWeb` + `apps/mobile/public/canvaskit.wasm`) |
 | Video | **`expo-video` only** (do not use `expo-av` for the feed; do not set `useCaching: true`) |
 | Backend | **Supabase** — Auth, Postgres, Realtime WebSockets (`games`, `game_events`, `cheer_polls`), Storage (`game_highlights`, `reels`, `avatars`) |
-| Payments | **Stripe Connect Express / PaymentSheet, test mode** (`pk_test_` / `sk_test_`). Native: `stripe.native.ts`. Web PaymentSheet is stubbed; Connect uses `expo-web-browser`. Express Account Links are minted only by Edge Function `create-stripe-account` with the session JWT — never on device. |
+| Payments | **Stripe Connect Express / PaymentSheet, test mode** (`pk_test_` / `sk_test_`). Native: `stripe.native.ts` PaymentSheet. Expo web: `stripe.web.ts` Stripe.js Payment Element (`WebPaymentSheetHost`). Connect uses `expo-web-browser`. Express Account Links are minted only by Edge Function `create-stripe-account` with the session JWT — never on device. |
 | API | JWT `POST /api/create-payment-intent`, JWT `POST /api/create-payout` (destination from `profiles.stripe_connect_id`, never the request body), JWT `POST /api/create-stripe-account` (Metro fallback). Production Connect: `supabase.functions.invoke('create-stripe-account')`. Server secret is `STRIPE_SECRET_KEY` only. |
 | Env | Mobile: `EXPO_PUBLIC_*` in `apps/mobile/.env.local`. Admin portal: `NEXT_PUBLIC_*` in `apps/admin-portal/.env.local`. |
 | Workspace | `pnpm install` at repo root. `pnpm mobile` / `pnpm admin` / `pnpm docs:sync`. |

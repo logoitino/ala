@@ -5,6 +5,8 @@
  * Playbook opt-in / chapters, and the page Skip now reads "Skip my round this week". QUIZ-05 adds Report a problem,
  * the athlete's Share a fun fact, the Privacy fun facts audience and the guardian's fun-fact Approve / Decline.
  * MONEY-TIPS-01 separates optional checkout controls from gifts; its absent telemetry is explicit.
+ * WEB-01 / Vault rails (2026-11-13): browser Stripe Payment Element, phone-column shell, and store-billing
+ * gates for production native Exclusive — keep portal Coverage (`PORTAL_COVERAGE_SURFACES`) in sync.
  */
 
 import type { AdminNavHref } from '@/lib/admin';
@@ -26,7 +28,8 @@ export type CoverageSurface =
   | 'sponsor'
   | 'auth'
   | 'sport-quiz'
-  | 'fan-zone';
+  | 'fan-zone'
+  | 'web';
 
 export type CoverageControl = {
   id: string;
@@ -58,6 +61,7 @@ export const COVERAGE_SURFACES: { id: CoverageSurface; label: string }[] = [
   { id: 'sponsor', label: 'Sponsor HQ' },
   { id: 'sport-quiz', label: 'Sport Quiz' },
   { id: 'fan-zone', label: 'Fan Zone' },
+  { id: 'web', label: 'Expo web' },
 ];
 
 /** @purpose Map existing FUN-01 controls to campaign stop, exact permission and tracked case/removal authority. No passive sensor is invented. */
@@ -175,6 +179,16 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'quiz.parent.funfacts', label: 'Approve or decline a fun fact · parent', hint: 'QUIZ-05 guardian of an under-16 approves or declines only (never writes, edits or withdraws); an admin checks after; sport_quiz_settings enabled/testing-only pilot allowlist is the stop authority', surface: 'parent', fanHref: '/parent', adminHref: '/admin/sport-quiz' },
   { id: 'tab.home', label: 'Home tab', hint: 'Fan bar', surface: 'home', fanHref: '/', adminHref: '/admin/features', flag: 'tabs.home', telemetry: 'tab.home' },
   { id: 'home_search', label: 'Clip search', hint: 'Highlights ⚡ search', surface: 'home', fanHref: '/', adminHref: '/admin/features', flag: 'layouts.homeSearch', telemetry: 'home_search' },
+  {
+    id: 'home_feed_interest',
+    label: 'Interest feed picks',
+    hint: 'FEED-01 Settings/first-run sports·schools·lean; Personal feed toggle; Phase 2 env-gated',
+    surface: 'home',
+    fanHref: '/',
+    adminHref: '/admin/highlights',
+    telemetry: 'highlights.feed_settings',
+    owner: 'desk',
+  },
   { id: 'feed.home', label: 'Home mix pill', hint: 'For You ranking', surface: 'home', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'feed.home' },
   { id: 'feed.all', label: 'All pill', hint: 'Full clip list', surface: 'home', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'feed.all' },
   { id: 'feed.seki', label: 'Seki mix', hint: 'Not on the Highlight bar. Home, search, and Local are the controls.', surface: 'home', fanHref: '/', adminHref: '/admin/highlights', telemetry: 'feed.seki' },
@@ -326,4 +340,9 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'sponsor', label: 'Sponsor HQ', hint: 'Sideline ads', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/boosters', flag: 'layouts.sponsorHq' },
   { id: 'sponsor_sideline', label: 'Place sideline board', hint: 'sponsor_ads', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/boosters', flag: 'layouts.sponsorHq', telemetry: 'sponsor_sideline' },
   { id: 'sponsor_rivalry', label: 'Publish rivalry banner', hint: 'sponsor_ads', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/boosters', flag: 'layouts.sponsorHq', telemetry: 'sponsor_rivalry' },
+
+  { id: 'web.shell', label: 'Web phone column', hint: 'WebAppShell 430px desktop frame; useAppViewportWidth clamps sheets', surface: 'web', fanHref: '/', adminHref: '/admin/product/coverage', owner: 'code' },
+  { id: 'web.gift_checkout', label: 'Web gift Payment Element', hint: 'Stripe.js bridge via WebPaymentSheetHost; dismiss locked while confirmPayment runs', surface: 'web', fanHref: '/', adminHref: '/admin/money', owner: 'code' },
+  { id: 'web.exclusive_checkout', label: 'Web Exclusive Stripe', hint: 'decideExclusiveCheckout web_stripe rail; books 20/80 Vault split; test card 4242 in Wave 0', surface: 'web', fanHref: '/', adminHref: '/admin/money', flag: 'buttons.vault', owner: 'code' },
+  { id: 'web.store_rails', label: 'Native store Exclusive rails', hint: 'Production iOS App Store IAP / Android Play Billing required; Stripe Exclusive blocked with honest unavailable until store billing ships', surface: 'web', fanHref: '/', adminHref: '/admin/features', flag: 'buttons.vault', owner: 'code' },
 ];

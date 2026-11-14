@@ -171,7 +171,9 @@ the player patch repairs the object. Evidence: [PLAY-01](../agents/PLAY-01.md).
 
 ## 6. PaymentSheet never opens / payment 500
 
-**Cause:** Web stub (`stripe.web.ts`); `STRIPE_SECRET_KEY` not set as a Supabase secret for the `create-payment-intent` Edge Function (or, for the Metro fallback only, not loaded into the shell); amount &lt; 50 cents; missing or expired session JWT (401).
+**Cause (native):** `STRIPE_SECRET_KEY` not set as a Supabase secret for the `create-payment-intent` Edge Function (or, for the Metro fallback only, not loaded into the shell); amount &lt; 50 cents; missing or expired session JWT (401); Expo Go without the native Stripe module.
+
+**Cause (Expo web):** Missing `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` (Stripe.js never loads); Payment Element host not mounted; same server JWT / amount / secret issues as native. Web checkout is Stripe.js Payment Element (`lib/stripe.web.ts` + `WebPaymentSheetHost`), not a stub — see [WEB_APP_PARITY.md](design/WEB_APP_PARITY.md).
 
 **Fix:** Expo Go on iOS/Android. Sign in (Soft-Wall). Set the secret with `supabase secrets set STRIPE_SECRET_KEY=...`; never in `.env.local` (Expo logs loaded env values), never as `EXPO_PUBLIC_STRIPE_SECRET_KEY`, never under `apps/mobile/src/frontend/`. The client calls Edge `create-payment-intent` first; JWT `POST /api/create-payment-intent` is the Metro fallback and needs the key loaded into the shell (`set -a; source ~/.config/ala-sports/stripe-secret.env; set +a`).
 

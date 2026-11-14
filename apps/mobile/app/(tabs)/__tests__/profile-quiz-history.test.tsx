@@ -34,6 +34,22 @@ jest.mock('@/components/Profile/VerifyAthleteModal', () => ({ CLAIM_VERIFY_CTA: 
 jest.mock('@/components/Profile/PrivacySettingsSheet', () => ({ PrivacySettingsSheet: () => null }));
 // Notification settings have their own owner, source and UI fixtures.
 jest.mock('@/components/Profile/NotificationSettingsSheet', () => ({ NotificationSettingsSheet: () => null }));
+jest.mock('@/components/Profile/HighlightsFeedSettingsSheet', () => ({ HighlightsFeedSettingsSheet: () => null }));
+jest.mock('@/hooks/useFeedPrefs', () => ({
+  useFeedPrefs: () => ({
+    prefs: { sports: [], schools: [], categoryPref: 'all', personalizationOn: true },
+    available: false,
+    loading: false,
+    error: null,
+    promptOpen: false,
+    implicit: null,
+    refresh: jest.fn(),
+    save: jest.fn(),
+    skipPrompt: jest.fn(),
+    setPersonalizationOn: jest.fn(),
+    signedIn: true,
+  }),
+}));
 jest.mock('@/components/Feedback/SuggestionSheet', () => ({ SuggestionSheet: () => null }));
 jest.mock('@/components/Legal/LegalModal', () => ({ LegalModal: () => null }));
 jest.mock('@/hooks/useRoster', () => ({ useRoster: () => ({ players: mockRosterPlayers, applyBackerCount: jest.fn(), applyVaultLocked: jest.fn() }) }));

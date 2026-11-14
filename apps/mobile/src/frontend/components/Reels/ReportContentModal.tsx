@@ -1,17 +1,17 @@
 /** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { BlurView } from 'expo-blur';
 import { useEffect, useState } from 'react';
-import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import { Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
+import { SheetRise } from '@/components/UI/SheetRise';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { REPORT_REASONS, type ReportReasonId } from '@/data/contentRights';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
-import { SPRING_SHEET } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 
 type ReportContentModalProps = {
   visible: boolean;
@@ -46,27 +46,9 @@ export function ReportContentModal({
     if (!visible) setReason(null);
   }, [visible]);
 
-  const translateY = useSharedValue(24);
-  const sheetOpacity = useSharedValue(0);
-
-  useEffect(() => {
-    if (visible) {
-      translateY.value = withSpring(0, SPRING_SHEET);
-      sheetOpacity.value = withTiming(1, { duration: 180 });
-      return;
-    }
-    translateY.value = withTiming(24, { duration: 140 });
-    sheetOpacity.value = withTiming(0, { duration: 120 });
-  }, [sheetOpacity, translateY, visible]);
-
-  const sheetStyle = useAnimatedStyle(() => ({
-    opacity: sheetOpacity.value,
-    transform: [{ translateY: translateY.value }],
-  }));
-
   return (
     <Modal
-      animationType="fade"
+      animationType="none"
       presentationStyle="overFullScreen"
       statusBarTranslucent
       transparent
@@ -79,15 +61,23 @@ export function ReportContentModal({
           <View style={styles.dim} />
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-        <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+        <SheetRise active={visible} style={[styles.sheet, frame.card]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={submitting ? undefined : onClose} />
           <Text style={styles.kicker}>Safety</Text>
-          <Text style={styles.title}>Report / Hide Highlight 🚩</Text>
+          <Text style={styles.title}>Report / Hide</Text>
           <Text style={styles.body}>
-            Hide {who} from your feed. Tell us what is wrong so we can review it. It will not show on this account again.
+            Hide {who} from your feed. Pick a reason, then confirm.
           </Text>
-          <View style={styles.reasons}>
+          <Text style={styles.menuLabel}>
+            Reason{reason ? ` · ${REPORT_REASONS.find((row) => row.id === reason)?.label ?? ''}` : ''}
+          </Text>
+          <ScrollView
+            nestedScrollEnabled
+            style={styles.reasonMenu}
+            contentContainerStyle={styles.reasonMenuContent}
+            showsVerticalScrollIndicator
+          >
             {REPORT_REASONS.filter((row) => showCoachReason || row.id !== 'coach_level').map((row) => {
               const selected = reason === row.id;
               return (
@@ -96,14 +86,16 @@ export function ReportContentModal({
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                   disabled={submitting}
+                  haptic="selection"
                   onPress={() => setReason(row.id)}
                   style={[styles.reason, selected && styles.reasonOn]}
                 >
                   <Text style={[styles.reasonLabel, selected && styles.reasonLabelOn]}>{row.label}</Text>
+                  {selected ? <Text style={styles.reasonCheck}>✓</Text> : null}
                 </Pressable>
               );
             })}
-          </View>
+          </ScrollView>
           <View style={styles.actions}>
             <AnimatedButton
               accessibilityLabel="Report and hide this highlight"
@@ -126,7 +118,7 @@ export function ReportContentModal({
               <Text style={styles.cancelLabel}>Cancel</Text>
             </AnimatedButton>
           </View>
-        </Animated.View>
+        </SheetRise>
         </View>
       </View>
     </Modal>
@@ -161,46 +153,62 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
   },
   body: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: '600',
   },
-  reasons: {
-    gap: 8,
-    marginTop: 4,
+  menuLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 2,
   },
-  reason: {
-    minHeight: 44,
+  reasonMenu: {
+    maxHeight: 200,
     borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
-    justifyContent: 'center',
+  },
+  reasonMenuContent: {
+    paddingVertical: 4,
+  },
+  reason: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
     paddingHorizontal: 12,
   },
   reasonOn: {
-    borderColor: colors.primary,
-    backgroundColor: colors.surface,
+    backgroundColor: FOCAL.mistJade,
   },
   reasonLabel: {
+    flex: 1,
     color: colors.text,
     fontSize: 14,
     fontWeight: '700',
   },
   reasonLabelOn: {
-    color: colors.primary,
+    color: FOCAL.jadeInk,
+  },
+  reasonCheck: {
+    color: FOCAL.jadeInk,
+    fontSize: 14,
+    fontWeight: '800',
   },
   actions: {
-    gap: 10,
-    marginTop: 8,
+    gap: 8,
+    marginTop: 6,
   },
   reportBtn: {
-    minHeight: 52,
+    minHeight: 48,
     borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.danger,
     alignItems: 'center',
@@ -208,22 +216,19 @@ const styles = StyleSheet.create({
   },
   reportLabel: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '800',
   },
   cancelBtn: {
-    minHeight: 44,
+    minHeight: 40,
     borderRadius: MENU_METRICS.controlRadius,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelLabel: {
-    color: colors.text,
+    color: colors.textMuted,
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   busy: {
     opacity: 0.7,

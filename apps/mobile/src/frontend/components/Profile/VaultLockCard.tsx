@@ -11,6 +11,7 @@ import {
   VAULT_OPEN_ACTION,
   VAULT_OPEN_HINT,
 } from '@/data/exclusive';
+import { exclusiveAthleteSplitHint } from '@/data/storeCommerce';
 import { FOCAL } from '@/theme/motion';
 
 type VaultLockCardProps = {
@@ -34,7 +35,7 @@ export function VaultLockCard({ locked, busy = false, onToggle }: VaultLockCardP
       <Text style={styles.body}>{locked ? VAULT_LOCKED_HINT : VAULT_OPEN_HINT}</Text>
       <Text style={styles.meta}>
         {locked
-          ? `Fans pay $${dollars.toFixed(2)} for one-time Exclusive access to watch Vault Highlights ⚡.`
+          ? exclusiveAthleteSplitHint(dollars)
           : 'Long-press a clip to move it into the Vault collection, then lock when you are ready.'}
       </Text>
       <AnimatedButton

@@ -1,5 +1,5 @@
 /** Account creation keeps Google available without email fields or bank setup; age rules remain separate. */
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 
 import { SoftWallModal } from '@/components/Auth/SoftWallModal';
@@ -33,6 +33,21 @@ jest.mock('@/context/AuthContext', () => ({
 }));
 
 jest.mock('@/hooks/useSheetFrame', () => ({ useSheetFrame: () => ({ dock: {}, card: {} }) }));
+// Motion uses requestAnimationFrame → setTimeout under the RN Jest preset; leave no pending
+// frame after the suite or Jest exits 1 with a torn-down environment (CI source-release).
+jest.mock('@/hooks/useFanSheetMotion', () => ({
+  useFanSheetMotion: () => ({
+    translateY: { value: 0 },
+    backdropOpacity: { value: 1 },
+    sheetStyle: {},
+    backdropStyle: {},
+    playOpen: jest.fn(),
+    playClose: jest.fn((onSettled?: () => void) => {
+      onSettled?.();
+    }),
+    reduceMotion: true,
+  }),
+}));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn() } }));
 jest.mock('expo-blur', () => ({ BlurView: 'BlurView' }));
 // MINOR-01: the under-13 device pause lives in AsyncStorage; keep it in memory per test (`?.`: the Supabase client
@@ -67,15 +82,21 @@ async function typePassword(password = PASSWORD) {
 const signInButton = () => screen.getByLabelText('Sign in with email and password');
 const createButton = () => screen.getByLabelText('Create an account with email and password');
 const magicButton = () => screen.getByLabelText('Send magic link email');
-// MINOR-01: birth month and year replace the 13+ checkbox.
+// MINOR-01: birth month and year replace the 13+ checkbox (compact dropdown scroll menus).
 async function enterBirth(year: number | string = 1990, month = 'Apr') {
-  await fireEvent.press(screen.getByLabelText(`Birth month: ${month}`));
-  await fireEvent.changeText(screen.getByLabelText('Birth year'), String(year));
+  await fireEvent.press(screen.getByLabelText('Choose birth month'));
+  await fireEvent.press(screen.getByLabelText(month));
+  await fireEvent.press(screen.getByLabelText('Choose birth year'));
+  await fireEvent.press(screen.getByLabelText(String(year)));
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockStore.clear();
+});
+
+afterEach(() => {
+  cleanup();
 });
 
 describe('SoftWallModal email form', () => {
@@ -88,13 +109,25 @@ describe('SoftWallModal email form', () => {
     expect(mockSignUpWithEmailPassword).not.toHaveBeenCalled();
   });
 
+  it('opens Create account when Google is turned off on the project', async () => {
+    mockSignInWithGoogle.mockRejectedValueOnce(
+      new Error('Google sign-in is turned off on the server. Create an account with email.'),
+    );
+    await openSheet();
+    expect(screen.queryByLabelText('Choose birth month')).toBeNull();
+    await fireEvent.press(screen.getByLabelText('Continue with Google'));
+    expect(await screen.findByText(/Google sign-in is turned off on the server/)).toBeTruthy();
+    expect(await screen.findByLabelText('Choose birth month')).toBeTruthy();
+    expect(screen.getByLabelText('Create an account with email and password')).toBeTruthy();
+  });
+
   it('offers Google on web without an unsupported Apple button or requiring email fields', async () => {
     const originalOS = Platform.OS;
     try {
       Object.defineProperty(Platform, 'OS', { configurable: true, value: 'web' });
       await openSheet();
       expect(screen.queryByLabelText('Continue with Apple')).toBeNull();
-      expect(screen.getByText('Google works for new and existing accounts.')).toBeTruthy();
+      expect(screen.getByText(/Google works for new and existing accounts when the project has it on/)).toBeTruthy();
       expect(screen.getByText('No bank details are needed to create your profile.')).toBeTruthy();
       await fireEvent.press(screen.getByLabelText('Continue with Google'));
       expect(mockSignInWithGoogle).toHaveBeenCalledTimes(1);

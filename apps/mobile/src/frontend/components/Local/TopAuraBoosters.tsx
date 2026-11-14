@@ -1,5 +1,5 @@
 /**
- * Compact Local Boosters rail keeps ranked fans' full names and a peek sheet per booster.
+ * Compact Local Boosters rail: ranked fans as short sponsor-style cards (avatar, name, pts, one badge).
  * Data from `hooks/useAuraBoosters`; tiers and colours from `lib/aura.ts`.
  */
 
@@ -11,11 +11,11 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { AnimatedPressable } from '@/components/UI/AnimatedPressable';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { colors, radii } from '@/constants/theme';
+import { cardShadow, colors, radii } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 import { useAuraBoosters } from '@/hooks/useAuraBoosters';
-import { auraBadgeLabel, type AuraBooster } from '@/lib/aura';
+import { type AuraBooster } from '@/lib/aura';
 
 type TopAuraBoostersProps = {
   hideTitle?: boolean;
@@ -32,25 +32,13 @@ function auraShadow(color: string, glow: string, strong: boolean) {
   return Platform.select({
     ios: {
       shadowColor: color,
-      shadowOpacity: strong ? 0.35 : 0.12,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: strong ? 0.28 : 0.1,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 3 },
     },
-    android: { elevation: strong ? 8 : 3 },
-    default: { boxShadow: `0px 4px 14px ${glow}` },
+    android: { elevation: strong ? 5 : 2 },
+    default: { boxShadow: `0px 3px 10px ${glow}` },
   });
-}
-
-function AuraTicks({ color, size = 14, weight = 1.5 }: { color: string; size?: number; weight?: number }) {
-  const tick = { width: size, height: size, borderColor: color, borderWidth: weight };
-  return (
-    <>
-      <View pointerEvents="none" style={[styles.tick, styles.tickTl, tick]} />
-      <View pointerEvents="none" style={[styles.tick, styles.tickTr, tick]} />
-      <View pointerEvents="none" style={[styles.tick, styles.tickBl, tick]} />
-      <View pointerEvents="none" style={[styles.tick, styles.tickBr, tick]} />
-    </>
-  );
 }
 
 function AuraBoosterCard({
@@ -63,7 +51,6 @@ function AuraBoosterCard({
   onPress: () => void;
 }) {
   const tier = booster.current_tier;
-  const badge = auraBadgeLabel(tier);
   const rankColor = rank === 1 ? FOCAL.electricGold : tier.color;
 
   return (
@@ -71,46 +58,44 @@ function AuraBoosterCard({
       haptic="light"
       scaleTo={0.96}
       overshoot={false}
-      accessibilityLabel={`${rank}. ${booster.full_name}, ${badge}, ${booster.aura_points} aura points`}
+      accessibilityLabel={`${rank}. ${booster.full_name}, ${tier.title}, ${booster.aura_points} aura points`}
       onPress={onPress}
       contentStyle={[
         styles.card,
-        { backgroundColor: tier.face, borderColor: tier.color, ...auraShadow(tier.color, tier.glow, tier.tier >= 3) },
+        {
+          backgroundColor: tier.face,
+          borderColor: rank === 1 ? FOCAL.electricGold : tier.color,
+          ...auraShadow(tier.color, tier.glow, tier.tier >= 3),
+        },
       ]}
     >
-      <AuraTicks color={tier.color} />
-      <View style={styles.topRow}>
-        <View
-          style={[
-            styles.rank,
-            { borderColor: rankColor, backgroundColor: `${rankColor}22` },
-            rank === 1 && styles.rankTop,
-          ]}
-        >
-          {rank === 1 ? (
-            <Ionicons name="star" size={10} color={FOCAL.goldInk} style={styles.rankStar} />
-          ) : null}
-          <Text style={[styles.rankLabel, { color: rank === 1 ? FOCAL.goldInk : tier.ink }]}>#{rank}</Text>
-        </View>
-        <View style={[styles.badge, { borderColor: tier.color, backgroundColor: `${tier.color}22` }]}>
-          <Text style={[styles.badgeLabel, { color: tier.ink }]}>{badge}</Text>
-        </View>
-      </View>
-
-      <View style={styles.identity}>
+      <View style={styles.cardTop}>
         <View style={[styles.avatar, { borderColor: tier.color }]}>
-          <View pointerEvents="none" style={styles.avatarGloss} />
           <Text style={[styles.initials, { color: tier.ink }]}>{initialsFor(booster.full_name)}</Text>
         </View>
-        <Text style={styles.name}>
-          {booster.full_name}
-        </Text>
-        <Text style={styles.handle}>
-          @{booster.username}
-        </Text>
+        <View style={styles.meta}>
+          <Text style={styles.name} numberOfLines={1}>
+            {booster.full_name}
+          </Text>
+          <Text style={styles.handle} numberOfLines={1}>
+            @{booster.username}
+          </Text>
+          <Text style={[styles.points, { color: tier.ink }]}>
+            {booster.aura_points.toLocaleString()} pts
+          </Text>
+        </View>
       </View>
-
-      <Text style={[styles.points, { color: tier.ink }]}>{booster.aura_points.toLocaleString()} pts</Text>
+      <View style={styles.badgeRow}>
+        <View style={[styles.rank, { borderColor: rankColor, backgroundColor: `${rankColor}18` }]}>
+          {rank === 1 ? <Ionicons name="star" size={10} color={FOCAL.goldInk} /> : null}
+          <Text style={[styles.rankLabel, { color: rank === 1 ? FOCAL.goldInk : tier.ink }]}>#{rank}</Text>
+        </View>
+        <View style={[styles.badge, { borderColor: tier.color }]}>
+          <Text style={[styles.badgeLabel, { color: tier.ink }]} numberOfLines={1}>
+            {tier.title}
+          </Text>
+        </View>
+      </View>
     </AnimatedPressable>
   );
 }
@@ -140,7 +125,6 @@ function BoosterPeek({
 
   if (!booster) return null;
   const tier = booster.current_tier;
-  const badge = auraBadgeLabel(tier);
 
   return (
     <Modal transparent animationType="fade" visible onRequestClose={onClose}>
@@ -157,24 +141,24 @@ function BoosterPeek({
           style={[
             styles.peek,
             frame.card,
-            { borderColor: tier.color, backgroundColor: tier.face, ...auraShadow(tier.color, tier.glow, true) },
+            { borderColor: tier.color, backgroundColor: colors.surface, ...auraShadow(tier.color, tier.glow, true) },
             cardStyle,
           ]}
         >
-          <AuraTicks color={tier.color} size={18} weight={2} />
           <Text style={styles.peekKicker}>Booster profile</Text>
-          <View style={[styles.peekAvatar, { borderColor: tier.color }]}>
-            <View pointerEvents="none" style={styles.peekAvatarGloss} />
+          <View style={[styles.peekAvatar, { borderColor: tier.color, backgroundColor: tier.face }]}>
             <Text style={[styles.peekInitials, { color: tier.ink }]}>{initialsFor(booster.full_name)}</Text>
           </View>
           <Text style={styles.peekName}>{booster.full_name}</Text>
           <Text style={styles.peekHandle}>@{booster.username}</Text>
-          <View style={[styles.peekBadge, { borderColor: tier.color, backgroundColor: `${tier.color}22` }]}>
+          <View style={[styles.peekBadge, { borderColor: tier.color, backgroundColor: tier.face }]}>
             <Text style={[styles.peekBadgeLabel, { color: tier.ink }]}>
-              #{rank} · {badge}
+              #{rank} · {tier.title}
             </Text>
           </View>
-          <Text style={[styles.peekPoints, { color: tier.ink }]}>{booster.aura_points.toLocaleString()} Aura pts</Text>
+          <Text style={[styles.peekPoints, { color: tier.ink }]}>
+            {booster.aura_points.toLocaleString()} Aura pts
+          </Text>
           <AnimatedButton accessibilityLabel="Close booster profile" onPress={onClose} contentStyle={styles.peekClose}>
             <Text style={styles.peekCloseLabel}>Close</Text>
           </AnimatedButton>
@@ -185,8 +169,8 @@ function BoosterPeek({
 }
 
 /**
- * @purpose Horizontal Top Aura Boosters rail with 7-tier light face washes and dynamic borders; tap scales the card and opens a booster peek.
- * @param hideTitle Hide the section heading when the Local hub pill already says Top Boosters.
+ * @purpose Horizontal Top Aura Boosters rail — compact Daylight cards matching Team sponsors density.
+ * @param hideTitle Hide the section heading when the Local hub already titles the pane.
  * @returns Horizontal booster cards plus an optional profile peek modal.
  * @sideEffects `useAuraBoosters` profile fetch + Aura event bus.
  */
@@ -220,69 +204,75 @@ export function TopAuraBoosters({ hideTitle = false }: TopAuraBoostersProps) {
 
 const styles = StyleSheet.create({
   section: {
-    gap: 10,
+    gap: 8,
     marginHorizontal: -12,
   },
   sectionFlush: {
     marginTop: 2,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '800',
     color: colors.text,
     marginTop: 4,
     paddingHorizontal: 12,
   },
   rail: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    gap: 8,
   },
   card: {
-    width: 168,
+    width: 156,
     borderRadius: radii.lg,
     borderWidth: 1.5,
-    padding: 12,
+    padding: 10,
     gap: 8,
-    overflow: 'hidden',
+    ...cardShadow,
   },
-  tick: {
-    position: 'absolute',
-    zIndex: 2,
-  },
-  tickTl: {
-    top: -1,
-    left: -1,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 10,
-  },
-  tickTr: {
-    top: -1,
-    right: -1,
-    borderLeftWidth: 0,
-    borderBottomWidth: 0,
-    borderTopRightRadius: 10,
-  },
-  tickBl: {
-    bottom: -1,
-    left: -1,
-    borderRightWidth: 0,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 10,
-  },
-  tickBr: {
-    bottom: -1,
-    right: -1,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    borderBottomRightRadius: 10,
-  },
-  topRow: {
+  cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: 8,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initials: {
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  meta: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  name: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  handle: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  points: {
+    fontSize: 14,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   rank: {
     flexDirection: 'row',
@@ -290,85 +280,25 @@ const styles = StyleSheet.create({
     gap: 3,
     borderWidth: 1,
     borderRadius: 999,
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 3,
-  },
-  rankTop: {
-    borderWidth: 1.5,
-    ...Platform.select({
-      ios: {
-        shadowColor: FOCAL.electricGold,
-        shadowOpacity: 0.5,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 0 },
-      },
-      android: { elevation: 4 },
-      default: { boxShadow: `0px 0px 8px ${FOCAL.electricGold}88` },
-    }),
-  },
-  rankStar: {
-    marginTop: -1,
   },
   rankLabel: {
     fontSize: 10,
     fontWeight: '800',
   },
   badge: {
-    flexShrink: 1,
+    flex: 1,
+    minWidth: 0,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,
+    backgroundColor: colors.background,
   },
   badgeLabel: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.2,
-  },
-  identity: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.background,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  avatarGloss: {
-    position: 'absolute',
-    top: -12,
-    left: -9,
-    width: 42,
-    height: 27,
-    borderRadius: 21,
-    backgroundColor: 'rgba(255,255,255,0.55)',
-    transform: [{ rotate: '-18deg' }],
-  },
-  initials: {
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  name: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  handle: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  points: {
-    fontSize: 16,
-    fontWeight: '800',
-    textAlign: 'center',
   },
   modalRoot: {
     flex: 1,
@@ -378,14 +308,16 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(8, 12, 14, 0.78)',
+    backgroundColor: 'rgba(8, 12, 14, 0.55)',
   },
   peek: {
-    borderWidth: 2,
-    gap: 10,
+    borderWidth: 1.5,
+    gap: 8,
     alignItems: 'center',
     overflow: 'hidden',
     zIndex: 2,
+    maxWidth: 320,
+    width: '100%',
   },
   peekKicker: {
     color: colors.primary,
@@ -395,28 +327,16 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   peekAvatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 18,
-    backgroundColor: colors.background,
+    width: 72,
+    height: 72,
+    borderRadius: 16,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
-    overflow: 'hidden',
-  },
-  peekAvatarGloss: {
-    position: 'absolute',
-    top: -20,
-    left: -14,
-    width: 70,
-    height: 44,
-    borderRadius: 35,
-    backgroundColor: 'rgba(255,255,255,0.55)',
-    transform: [{ rotate: '-18deg' }],
+    marginTop: 2,
   },
   peekInitials: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     letterSpacing: 1,
   },
@@ -438,15 +358,15 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   peekBadgeLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
   },
   peekPoints: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '800',
   },
   peekClose: {
-    marginTop: 6,
+    marginTop: 4,
     minHeight: 44,
     paddingHorizontal: 18,
     borderRadius: radii.md,

@@ -119,6 +119,23 @@ it('home hides the trivia notice when a round cannot start', async () => {
   expect(screen.queryByRole('button', { name: 'Refresh quiz' })).toBeNull();
   expect(screen.queryByText('Fan Zone is unavailable.')).toBeNull();
 });
+it('home offers the local trivia demo when quiz SQL is not switched on', async () => {
+  const original = mockClient.rpc.bind(mockClient);
+  type RpcReply = { data: unknown; error: { code?: string; message?: string } | null };
+  const missingQuizRpc = async (fn: string, args: unknown): Promise<RpcReply> => {
+    mockClient.calls.push({ fn, args });
+    if (fn === 'quiz_snapshot') return { data: null, error: { code: 'PGRST202', message: 'Could not find the function' } };
+    if (fn === 'fun_snapshot') return { data: mockClient.fan, error: null };
+    throw new Error('Unexpected automatic mutation');
+  };
+  // Wider than the happy-path mock so PostgREST missing-function errors can be returned.
+  (mockClient as { rpc: (fn: string, args: unknown) => Promise<RpcReply> }).rpc = missingQuizRpc;
+  await render(<FamilyFunDiscovery surface="home" />);
+  expect(await screen.findByText(/Trivia demo/)).toBeTruthy();
+  await fireEvent.press(screen.getByRole('button', { name: 'Play trivia' }));
+  expect(mockPush).toHaveBeenCalledWith('/dev/trivia-preview');
+  (mockClient as { rpc: typeof original }).rpc = original;
+});
 it('home Play opens this week’s round', async () => {
   const weekly = { ...quizSnapshot, preferences: { ...quizSnapshot.preferences, invitation_mode: 'weekly' as const } };
   mockClient.quiz = weekly;
