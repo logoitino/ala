@@ -98,7 +98,9 @@ const checkPath = path.join(root, checkFile);
 const between = (source, name) => {
   const start = source.indexOf(`<!-- ${name}:start -->`);
   const end = source.indexOf(`<!-- ${name}:end -->`);
-  return start >= 0 && end > start ? source.slice(start, end) : null;
+  if (start < 0 || end <= start) return null;
+  // Hidden rows must not count: drop HTML comments inside the block before parsing.
+  return source.slice(start + `<!-- ${name}:start -->`.length, end).replace(/<!--[\s\S]*?-->/g, '');
 };
 const callsIn = (text) => [...text.matchAll(/`([A-Z][A-Z0-9_]*)`/g)].map((match) => match[1]);
 let matrixRows = 0;
@@ -114,8 +116,9 @@ if (!fs.existsSync(checkPath)) {
     const checkers = new Set();
     const rowNames = new Set();
     for (const line of matrix.split('\n')) {
-      const cells = line.split('|').map((cell) => cell.trim());
-      if (cells.length < 4 || !cells[1] || cells[1] === 'Change type' || /^-+$/.test(cells[1])) continue;
+      // Split on unescaped pipes only, so an escaped \| inside a cell stays in that cell.
+      const cells = line.split(/(?<!\\)\|/).map((cell) => cell.trim());
+      if (cells.length < 4 || !cells[1] || cells[1] === 'Change type' || /^:?-+:?$/.test(cells[1])) continue;
       matrixRows += 1;
       if (rowNames.has(cells[1])) fail(`${checkFile}: duplicate matrix row ${cells[1]}`);
       rowNames.add(cells[1]);

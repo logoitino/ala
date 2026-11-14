@@ -20,7 +20,7 @@ The same Cursor session wrote its admin-ready and app-ready checkpoints five min
 | Pairing rules by change kind (finance, data, schema, money, minors/privacy, docs, QA, concurrency) | `TEAM_HIERARCHY.md:399-411` | Prose only. No per-task verdict format. |
 | Per-task cross-team tables (Primary · Pair / independent review · Lead chain) | `TEAM_HIERARCHY.md:357-397` (SAFETY-01, M8-01, GROWTH-01, UX-05a–e, ADM-01, ADM-02, BOOKS, DATA-01, DETECT-02, STANDARD-01, COORD-01) | Names reviewers per task. Does not record their verdicts. No FEED-01 row exists. |
 | Self-review disclosure | `TEAM_HIERARCHY.md:365` ("The Cursor session that committed `1231af8` did the build... Separate specialist agents did not run.") | The loophole is disclosed, but nothing stops it. |
-| One primary owner + independent reviewer for cross-functional work | `TEAMS.md:796` (call-sheet rule 6), `TEAMS.md:807` | Prose only. |
+| One primary owner + independent reviewer for cross-functional work | `TEAMS.md:795` (call-sheet rule 6), `TEAMS.md:807` | Prose only. |
 | Concurrent sessions: claim, check times, never revert; outside edits need owner review | `TEAMS.md:821-825` (item 10) | Prose only. The claims table lives in each task tracker. |
 | Handoff format (ID, lead, paired reviewer, paths, acceptance, evidence, next action) | `WORK_QUEUE.md:702-707` | This is the only template. WORK_QUEUE has no "Status template" heading. |
 | Exit-plan change notices with an ack line | `EXIT_CHANGE_LOG.md:7` (`reviewed by <CALL> <date>: ok / follow-up`), `TEAMS.md:818` (item 13) | `exit:map:check` fails if a change is not *announced*. It does not check acks. |
@@ -77,8 +77,9 @@ Checked against `TEAM_HIERARCHY.md:399-411` and `TEAMS.md` items 1–15:
 
 ## 5. Corrections to the cross-check prompt's §0
 
-- **Role count.** The registry has **116** roles, not 115. `TEAM_HIERARCHY.md:631` still says
-  "107 callable agents" (fixed in this change). COORD-02's "115" remains a dated record.
+- **Role count.** The registry has **116** roles, not 115. `TEAM_HIERARCHY.md:623` (at `076bf0a`)
+  still said "107 callable agents" (fixed in this change). COORD-02's "115" and COORD-01's "107"
+  (`TEAM_HIERARCHY.md:88`, `TEAMS.md:139`, `TEAMS.md:306`) remain dated records.
 - **`.cursor/rules/tapuai.mdc` is not tracked in the repository.** Tracked rules are
   `documentation.mdc`, `front-docs.mdc`, `jev.mdc` and `spend.mdc`. CHECK-01 adds a tracked
   `cross-check.mdc` instead of editing an untracked local file. Any local `tapuai.mdc` hard

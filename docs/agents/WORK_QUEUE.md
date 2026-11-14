@@ -1,6 +1,51 @@
 <!-- Current priorities and dated task evidence; queue assignments do not authorize hosted operations or release. -->
 # Specialist work queue
 
+## FEED-01 — retrospective check record (CHECK-01 live trial, 2026-11-14)
+
+This is the first check record filed under [CHECK-01](CHECK-01.md). It covers FEED-01 after it landed (#47 `989d74e`; picks menus #49; counsel note #48).
+It was filed after the fact, so each missing verdict is listed as open drift.
+The checks below are source review at `076bf0a`. Nobody re-read the hosted catalog for this record.
+
+```text
+Check record — FEED-01 (retrospective)
+Change type(s): Schema ◆ · Minors, privacy · Shared contracts ◆ · New capability · UI · Copy
+Files: supabase/migrations/20261114010000_user_feed_prefs.sql, schema.sql, lib/feedPrefs.ts, hooks/useFeedPrefs.ts, data/highlights.ts, Reels/FeedPicksSheet.tsx, Profile/HighlightsFeedSettingsSheet.tsx, Admin/FeedInterestPanel.tsx
+Author: HIGHLIGHTS · Cursor sessions (cursor/highlights-interest-feed-9a86 and stack) · merged 989d74e
+RLS_SECURITY: accept · 2026-11-14 · 076bf0a — performed by Claude Code session claude/check-01-cross-check (not the FEED-01 builder; not the pinned model). Checked:
+  - anon/public revoked; authenticated gets select/insert/update only (no delete)
+  - select/insert/update each bound to auth.uid() = user_id
+  - restrictive "Closed accounts" policy present when MINOR-01 exists
+  - schema.sql copy matches the migration
+  Follow-ups:
+  (a) element length of sports/schools is unbounded at the database; only the client trims and caps count → BACKEND
+  (b) hosted policies were not re-read for this record → RLS_SECURITY next hosted check
+PRIVACY_ENGINEERING: accept for Phase 1 · 2026-11-14 · 076bf0a — same session. Checked:
+  - data is owner-only and used to order that owner's feed
+  - account deletion cascades
+  - Phase 2 implicit signals stay off behind EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS
+  - the DATA_PRIVACY_MAP row exists
+  Follow-ups:
+  (c) the DATA_PRIVACY_MAP.md:29 row still says "not hosted-applied" → DOCUMENTATION
+  (d) the migration header line 5 still says "not applied"; applied migrations are not edited, so record the apply in the migrations README → DATABASE_MIGRATIONS
+  (e) personalization_on defaults to true for teen accounts → MINOR_SAFETY decision
+  (f) a user can clear their picks but cannot delete the row short of deleting the account → PRIVACY_ENGINEERING with counsel
+BACKEND, DATABASE_MIGRATIONS, DATA_GOVERNANCE, DATA_LINEAGE, EXIT_DATABASE: missing (structural gates passed only)
+STORAGE: no-op — no bucket touched
+MINOR_SAFETY, TRUST_SAFETY, LEGAL, COMPLIANCE: missing; counsel line drafted, not accepted
+MODERATION, CONTENT_RIGHTS, ATHLETE_VERIFICATION: no-op — no content, rights or identity path
+SHARED_CONTRACTS, FULLSTACK, RUNTIME_CONFIG, DESIGN (tokens): missing
+ADMIN, SUPPORT, TELEMETRY, PRODUCT, TEST_AUTOMATION: missing — admin-ready and app-ready were both written by the author
+DESIGN, ACCESSIBILITY, MOTION, VISUAL_QA, DEVICE_QA: missing (device smoke open) · VOICE, BRAND: missing
+QA: missing · Lead (HIGHLIGHTS → ENGINEERING): missing · CTO: missing
+Owner decision: hosted SQL applied 2026-11-14 (recorded in STATE §4); merge of #47 by cursor[bot], not recorded as an owner decision
+Open drift → next owner: follow-ups (a)–(f) above; each missing verdict → that role; HIGHLIGHTS collects the record
+```
+
+**Matrix change from the trial (VP_OPERATIONS function, same turn):** CHECK-01 now states how a
+check record is filed for work that has already landed. Missing verdicts stay open drift, and a
+verdict that comes after the fact never makes up for a hosted apply that happened before it.
+
 ## METRO-01 — SDK58 request cancellation repair (2026-10-22)
 
 ENGINEERING/FULLSTACK owns the narrow dependency repair, paired with SUPPORT/RELIABILITY.

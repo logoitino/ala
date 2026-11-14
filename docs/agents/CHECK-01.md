@@ -35,6 +35,12 @@ notify lists are not required acks. EXIT_SYNC and ARCHITECTURE_SYNC keep announc
 - the lead and the CTO have signed, or the lead alone for docs-only
 - every open item is named with a next owner
 
+**Landed without a record.** A change that landed with no record gets a retrospective one. Each
+missing verdict is open drift with a next owner. A verdict given after the fact never stands in
+for one that should have come before a hosted apply or merge.
+**DOCUMENTATION** still receives every feature or fix handoff under the pairing rules. A handoff
+is not a verdict.
+
 **Jev** is context for complex forks only. It is recorded in the check record when it was used.
 It never counts as a review and is never given secrets, personal data or whole money, auth or legal
 modules ([JEV](../engineering/JEV.md)). Bot reviews (Codex on GitHub) are also context, not a role verdict.
@@ -114,5 +120,11 @@ Change type(s): Roles, protocol, priorities ◆ ; Infra, CI (agents:check script
 Author: VP_OPERATIONS function performed by this session · Claude Code (claude/check-01-cross-check)
 Checkers: VP_OPERATIONS, DOCUMENTATION, CTO, CI, SUPPLY_CHAIN_SECURITY, ARCHITECTURE_SYNC (no-op expected): pending — must be a different session
 Lead: pending · CTO: pending · Owner decision: merge pending
-Open drift → next owner: the first real task after merge runs end to end → VP_OPERATIONS records matrix changes here
+Verdicts on c0ca0c5 (2026-11-14; separate Claude general-purpose agent sessions performing each role, not the pinned models, which were unavailable):
+  VP_OPERATIONS accept · DOCUMENTATION accept · CI accept · SUPPLY_CHAIN_SECURITY accept
+  These became stale under the stale rule when the follow-up commit changed CHECK-01, check-agents.mjs, WORK_QUEUE and CHECK-AUDIT; re-checks are recorded on the PR.
+ARCHITECTURE_SYNC: no-op — no stack layer moved
+Open drift → next owner:
+  live trial recorded in WORK_QUEUE "FEED-01 — retrospective check record" → HIGHLIGHTS
+  the first new task after merge runs end to end → VP_OPERATIONS
 ```
