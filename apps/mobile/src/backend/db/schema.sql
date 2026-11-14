@@ -4155,6 +4155,17 @@ create policy "Owners update own feed prefs"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+-- MINOR-01 closed-account boundary (table added after that migration's table sweep).
+do $$
+begin
+  if to_regprocedure('public.caller_not_age_blocked()') is not null then
+    execute 'drop policy if exists "Closed accounts" on public.user_feed_prefs';
+    execute 'create policy "Closed accounts" on public.user_feed_prefs as restrictive for all to authenticated
+             using ((select public.caller_not_age_blocked()))
+             with check ((select public.caller_not_age_blocked()))';
+  end if;
+end $$;
+
 drop policy if exists "Fans read own saved reels" on public.saved_reels;
 create policy "Fans read own saved reels"
   on public.saved_reels for select

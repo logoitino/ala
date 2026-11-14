@@ -43,7 +43,7 @@ export const EXPO_DESKS: readonly ExpoDesk[] = [
   { path: '/admin/polls', title: 'Polls', detail: 'Cheer polls and Local engagement.', group: 'operations' },
   { path: '/admin/boosters', title: 'Boosters', detail: 'Booster tiers and Top Boosters.', group: 'operations' },
   { path: '/admin/publish', title: 'Publish', detail: 'Publish draft runtime switches to the app.', group: 'operations' },
-  { path: '/admin/highlights', title: 'Highlights', detail: 'Beyond contributions, challenges, and coach-level label.', group: 'content' },
+  { path: '/admin/highlights', title: 'Highlights', detail: 'Beyond contributions, challenges, coach-level label, and FEED-01 interest-feed contract.', group: 'content' },
   { path: '/admin/moderation', title: 'Moderation', detail: 'Report review and hide decisions.', group: 'content' },
   { path: '/admin/fan-zone', title: 'Fan Zone', detail: 'Campaigns, private entries, and free ballots.', group: 'content' },
   { path: '/admin/sport-quiz', title: 'Sport Quiz', detail: 'Trivia rounds, Life Playbook, and fresh questions. Private noncash badges; IQ Aura only when that migration is applied.', group: 'content' },
@@ -98,7 +98,7 @@ export type PortalCoverageSurface = {
  * @purpose Read-only Control map surfaces for the Next portal. Counts stay in Expo `/admin/product/coverage`.
  */
 export const PORTAL_COVERAGE_SURFACES: readonly PortalCoverageSurface[] = [
-  { id: 'home', label: 'Home · Highlights ⚡', adminPath: '/admin/highlights', hint: 'Reel pager, hype, Vault unlock on Home.' },
+  { id: 'home', label: 'Home · Highlights ⚡', adminPath: '/admin/highlights', hint: 'Reel pager, hype, Vault unlock, FEED-01 interest picks.' },
   { id: 'beyond', label: 'Beyond the Game', adminPath: '/admin/highlights', hint: 'Train / Serve contributions and challenges.' },
   { id: 'local', label: 'Local', adminPath: '/admin/games', hint: 'Live scores, polls, boosters.' },
   { id: 'activity', label: 'Activity', adminPath: '/admin/features', hint: 'Feed and notification inbox actions.' },

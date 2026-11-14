@@ -7,39 +7,55 @@
       "title": "Interest-based Highlights Home feed (explicit picks; Phase 2/3 behind counsel flag)",
       "owner": "HIGHLIGHTS",
       "status": "app-ready",
-      "plannedAt": "2026-11-13T20:00:00.000Z",
-      "exemption": {
-        "kind": "presentation-only",
-        "reason": "Viewer self-serve Settings + first-run picks; ranking is a pure client function on existing reels_feed rows. No new operator write desk. Phase 2 implicit signals default OFF (EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS) until counsel clears minors/retention/third-party/disclosure. No ads, no money-in-rank, no guest personalization.",
-        "reviewedBy": "Cloud agent FEED-01 implementation; owner/counsel gates listed in PR remain open for Phase 2"
-      },
+      "plannedAt": "2026-11-14T01:45:07.000Z",
+      "exemption": null,
       "source": {
         "description": "user_feed_prefs owner-only RLS table; rankHomeFeed prefs + school cap; Why this clip; Phase 2/3 gated OFF.",
         "paths": [
           "supabase/migrations/20261114010000_user_feed_prefs.sql",
           "apps/mobile/src/frontend/data/highlights.ts",
           "apps/mobile/src/frontend/lib/feedPrefs.ts",
-          "apps/mobile/src/frontend/hooks/useFeedPrefs.ts",
-          "apps/mobile/src/frontend/components/Reels/FeedPicksSheet.tsx",
-          "apps/mobile/src/frontend/components/Profile/HighlightsFeedSettingsSheet.tsx"
+          "apps/mobile/src/frontend/hooks/useFeedPrefs.ts"
         ]
       },
-      "admin": null,
-      "report": null,
+      "admin": {
+        "route": "/admin/highlights",
+        "actions": [
+          "Review FEED-01 interest-feed contract on Highlights desk (FeedInterestPanel)",
+          "Confirm Phase 2 EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS stays off until counsel clears",
+          "No staff edit of another viewer's user_feed_prefs (owner-only RLS)"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/FeedInterestPanel.tsx",
+          "apps/mobile/src/frontend/components/Admin/HighlightsTool.tsx",
+          "apps/mobile/src/frontend/lib/adminCoverage.ts"
+        ]
+      },
+      "report": {
+        "route": "/admin/highlights",
+        "metrics": [
+          "No per-user picks report (privacy). Desk states Phase 2 flag and disable path; ranking stays client-side."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/FeedInterestPanel.tsx"
+        ]
+      },
       "disable": {
-        "strategy": "personalization_on false or empty picks \u2192 chronological Home; EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS defaults off so Phase 2/3 never run without counsel.",
+        "strategy": "Viewer personalization_on false \u2192 newest-first Home. Keep EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS unset/false so Phase 2 collection and diversity never run. Hosted SQL unapplied leaves prefs unavailable (chronological + empty picks).",
         "paths": [
           "apps/mobile/src/frontend/data/highlights.ts",
-          "apps/mobile/src/frontend/components/Profile/HighlightsFeedSettingsSheet.tsx"
+          "apps/mobile/src/frontend/components/Profile/HighlightsFeedSettingsSheet.tsx",
+          "apps/mobile/src/frontend/lib/feedPrefs.ts"
         ]
       },
       "access": {
         "roles": [
           "signed-in account"
         ],
-        "deniedBehavior": "Guests stay on chronological Home with no picks sheet and no Why line. Owner-only RLS on user_feed_prefs.",
+        "deniedBehavior": "Guests stay chronological with no picks UI. Owner-only RLS. Age-blocked accounts denied via restrictive Closed accounts policy when MINOR-01 is present. Phase 2 collectors no-op while the env flag is off.",
         "paths": [
-          "supabase/migrations/20261114010000_user_feed_prefs.sql"
+          "supabase/migrations/20261114010000_user_feed_prefs.sql",
+          "apps/mobile/src/backend/db/schema.sql"
         ]
       },
       "app": {
@@ -47,27 +63,29 @@
         "paths": [
           "apps/mobile/app/(tabs)/index.tsx",
           "apps/mobile/app/(tabs)/profile.tsx",
-          "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx"
+          "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx",
+          "apps/mobile/src/frontend/components/Reels/FeedPicksSheet.tsx",
+          "apps/mobile/src/frontend/components/Profile/HighlightsFeedSettingsSheet.tsx"
         ]
       },
       "readiness": {
         "admin": {
-          "date": "2026-11-13T21:00:00.000Z",
+          "date": "2026-11-14T03:35:07.000Z",
           "evidence": [
             {
               "path": "docs/engineering/evidence/FEED-01-phase0.md",
-              "command": "feature-admin presentation-only exemption; Jest FEED-01 ranking suite",
-              "result": "Local ranking tests green; Phase 0 Wave 0 feed too small for production shares; Phase 2 counsel gates open by name in PR."
+              "command": "Highlights desk FeedInterestPanel + coverage home_feed_interest; feature-admin:check FEED-01; Closed accounts policy in migration; Phase 2 collectors gated",
+              "result": "Admin contract on /admin/highlights; presentation-only exemption removed. Local gates only \u2014 hosted SQL and counsel Phase 2 still open."
             }
           ]
         },
         "app": {
-          "date": "2026-11-13T22:00:00.000Z",
+          "date": "2026-11-14T03:40:07.000Z",
           "evidence": [
             {
               "path": "docs/engineering/evidence/FEED-01-phase0.md",
-              "command": "pnpm --filter @tapuai/mobile exec jest highlights.feedRanking; local typecheck/docs as available",
-              "result": "Ranking unit evidence recorded. Device smoke (pick \u2192 relaunch \u2192 toggle off \u2192 hide) still DEVICE_QA / APP-TEST. Hosted SQL not applied."
+              "command": "Jest highlights.feedRanking + highlights-jump; mobile tsc; prefs broadcast sync; collector gate",
+              "result": "App ranking/UI evidence. Device smoke still DEVICE_QA. Codex P1/P2 addressed in follow-up commit."
             }
           ]
         }

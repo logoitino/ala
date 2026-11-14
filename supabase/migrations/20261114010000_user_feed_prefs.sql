@@ -43,4 +43,17 @@ create policy "Owners update own feed prefs"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+-- MINOR-01: age-blocked / closed accounts must not read or write prefs (table added after that migration).
+do $$
+begin
+  if to_regprocedure('public.caller_not_age_blocked()') is null then
+    raise notice 'MINOR-01 is not applied: Closed accounts policy on user_feed_prefs skipped. Re-run after MINOR-01.';
+  else
+    execute 'drop policy if exists "Closed accounts" on public.user_feed_prefs';
+    execute 'create policy "Closed accounts" on public.user_feed_prefs as restrictive for all to authenticated
+             using ((select public.caller_not_age_blocked()))
+             with check ((select public.caller_not_age_blocked()))';
+  end if;
+end $$;
+
 -- No DELETE grant for clients beyond cascade from auth.users; no service-role ranking reads.

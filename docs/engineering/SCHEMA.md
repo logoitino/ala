@@ -277,7 +277,7 @@ FEED-01 signed-in Highlights interest picks. Used only to order that owner's Hom
 | `personalization_on` | boolean | Default true. Off → Home is newest-first with no `rankHomeFeed` bonuses. |
 | `updated_at` | timestamptz | |
 
-**RLS:** owner-only SELECT / INSERT / UPDATE (`auth.uid() = user_id`). No public / anon access. No service-role ranking reads. Client: `lib/feedPrefs.ts`, Settings → Highlights, first-run `FeedPicksSheet`.
+**RLS:** owner-only SELECT / INSERT / UPDATE (`auth.uid() = user_id`). Restrictive `Closed accounts` policy (`caller_not_age_blocked`) when MINOR-01 is present. No public / anon access. No service-role ranking reads. Client: `lib/feedPrefs.ts`, Settings → Highlights, first-run `FeedPicksSheet`. Admin note: `/admin/highlights` `FeedInterestPanel`.
 
 ### `reel_hype_votes`
 

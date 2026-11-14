@@ -15,11 +15,13 @@ import {
   EMPTY_PREFS,
   fetchFeedPrefs,
   markFeedPicksPrompted,
+  notifyFeedPrefsChanged,
   readFeedHideDemotions,
   readFeedPicksPrompted,
   readFeedSaveTouches,
   readFeedViewTouches,
   saveFeedPrefs,
+  subscribeFeedPrefs,
 } from '@/lib/feedPrefs';
 
 /**
@@ -86,6 +88,11 @@ export function useFeedPrefs() {
     void refresh();
   }, [refresh]);
 
+  // Profile Settings and Home each mount their own hook; broadcast keeps Home ranking current after a save.
+  useEffect(() => subscribeFeedPrefs(() => {
+    void refresh();
+  }), [refresh]);
+
   const save = useCallback(
     async (next: UserFeedPrefs) => {
       if (!userId) return { prefs: next, error: 'Sign in to save Highlights picks.' };
@@ -95,6 +102,7 @@ export function useFeedPrefs() {
         setAvailable(true);
         await markFeedPicksPrompted();
         setPromptOpen(false);
+        notifyFeedPrefsChanged();
       }
       setError(result.error);
       return result;
@@ -105,6 +113,7 @@ export function useFeedPrefs() {
   const skipPrompt = useCallback(async () => {
     await markFeedPicksPrompted();
     setPromptOpen(false);
+    notifyFeedPrefsChanged();
   }, []);
 
   const setPersonalizationOn = useCallback(

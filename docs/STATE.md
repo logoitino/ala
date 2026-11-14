@@ -177,12 +177,11 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ### 2026-11-14 — FEED-01 interest-based Highlights Home feed
 
-- Migration `user_feed_prefs` (owner-only RLS; written, not hosted-applied) + schema / SCHEMA / data map.
-- First-run + Settings → Highlights picks (≤3 sports/schools, category lean) and Personal feed toggle.
-- `rankHomeFeed` prefs bonuses (sport +40, school +35 with school cap 60, category +20); money never ranks; ads out of scope.
-- Signed-in “Why this clip” line; guests stay chronological with no picks UI.
-- Phase 2 implicit + Phase 3 diversity behind `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` (default OFF until counsel).
-- Phase 0: Wave 0 seeded feed has 5 clips — too small; re-measure on pilot school (`docs/engineering/evidence/FEED-01-phase0.md`).
+- Migration `user_feed_prefs` (owner-only RLS + Closed accounts when MINOR-01 present; written, not hosted-applied).
+- First-run + Settings → Highlights picks; Personal feed toggle; prefs broadcast so Home refreshes after Settings.
+- `rankHomeFeed` prefs bonuses; money never ranks; Phase 2/3 env-gated **including AsyncStorage collectors**.
+- Admin: `/admin/highlights` `FeedInterestPanel` + coverage `home_feed_interest` (presentation-only exemption removed).
+- Phase 0: Wave 0 seeded feed has 5 clips — too small (`docs/engineering/evidence/FEED-01-phase0.md`).
 - **About to spend:** $0 (Wave 0). Hosted SQL apply and device smoke remain owner / DEVICE_QA.
 
 ### 2026-11-13 — Local Daylight polish (boosters, report, live)

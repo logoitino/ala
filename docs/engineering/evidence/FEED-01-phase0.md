@@ -45,3 +45,10 @@ Seeded `HIGHLIGHT_CLIPS` in `apps/mobile/src/frontend/data/highlights.ts` has **
 3. Retention limits for views/saves used in ranking.
 4. No third-party / ad sharing of feed signals (confirm in writing).
 5. Approved “Why this clip” disclosure wording.
+
+## Codex follow-up (2026-11-14)
+
+- Phase 2 **collection** (`rememberFeedViewTouch` / save / hide demotion) is gated by the same env flag as ranking — no AsyncStorage behavioral history while the flag is off.
+- Restrictive `Closed accounts` policy added to the migration when `caller_not_age_blocked` exists.
+- Feature-admin presentation-only exemption removed; `/admin/highlights` `FeedInterestPanel` + coverage `home_feed_interest`.
+- Prefs broadcast so Home refreshes after Profile Settings save.
