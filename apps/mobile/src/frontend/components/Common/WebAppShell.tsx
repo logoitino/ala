@@ -1,8 +1,10 @@
 /**
  * Expo web chrome: on wide desktops, constrain the fan app to a phone-width column so tab chrome
  * and Highlights pager stay usable. Native ignores this wrapper.
+ * Desktop vs narrow branching waits until after mount so SSR HTML matches the first client paint
+ * (`useWindowDimensions` differs between server and browser).
  */
-import { type ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { colors } from '@/constants/theme';
@@ -23,9 +25,16 @@ type WebAppShellProps = {
  */
 export function WebAppShell({ children, backgroundColor = colors.background }: WebAppShellProps) {
   const { width } = useWindowDimensions();
+  // Match Home's web `clientFeed` gate: server and first paint share one tree.
+  const [layoutReady, setLayoutReady] = useState(Platform.OS !== 'web');
+
+  useEffect(() => {
+    setLayoutReady(true);
+  }, []);
+
   if (Platform.OS !== 'web') return <>{children}</>;
 
-  const desktop = width >= WEB_PHONE_BREAKPOINT;
+  const desktop = layoutReady && width >= WEB_PHONE_BREAKPOINT;
   if (!desktop) {
     return <View style={[styles.fill, { backgroundColor }]}>{children}</View>;
   }

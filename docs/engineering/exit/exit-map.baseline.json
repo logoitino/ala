@@ -1,5 +1,5 @@
 {
- "planVersion": "277e85094525",
+ "planVersion": "9a503335d588",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1880,12 +1880,13 @@
    "apps/mobile/src/frontend/components/Common/FeatureBoundary.tsx e69be7f2a78f1bd35fc2ec78ef24631e51d04dc243c19154a684b17ea2a3c1c6",
    "apps/mobile/src/frontend/components/Common/SupportRuntimeObserver.tsx 3f7dd4f6a4b686f719ea343fdc6b61831899ee56bd22624dec283b0247411be4",
    "apps/mobile/src/frontend/components/Common/SwipeableBannerWrapper.tsx 173d2ffdcabc43c6be7774496fb88815ffbc4c18405e9337678d72afabd4abd1",
-   "apps/mobile/src/frontend/components/Common/WebAppShell.tsx d3a38aa4124f9b3ef7aeaff6604f8f185d36e7744969f8c2007d7d18c8db422b",
+   "apps/mobile/src/frontend/components/Common/WebAppShell.tsx c224504b4ce3c206e4497c947cbc2b205620eb18ddd66232e7217e84020e30b5",
    "apps/mobile/src/frontend/components/Common/__tests__/FeatureBoundary.test.tsx 6d229202bf3aa0b6977573586b7f85f3b5fd55b396eeb9d9f347f0bc9e1ae3ab",
    "apps/mobile/src/frontend/components/Common/__tests__/SwipeableBannerWrapper.test.tsx 11f1c9183fe98d205e33e859e0c3022223d9e24bc850a1bc6ff358e7ad6fe119",
    "apps/mobile/src/frontend/components/Common/__tests__/TipCheckout.test.tsx af4f7f68cab05f5c3b4dbf0988a8c591d6f60cadf7905dac20cdb44da7560ceb",
    "apps/mobile/src/frontend/components/Common/__tests__/TipCheckoutMonetization.test.tsx 2289c40f22de694427fa95ee87201008f20f71e5c7a10dab368bb5a8444b6c30",
    "apps/mobile/src/frontend/components/Common/__tests__/TipSheetModal.test.tsx 862e32f4a69c450278c1a0b7ce76c66a4de58d28e8fa4e36182b12754c5b4821",
+   "apps/mobile/src/frontend/components/Common/__tests__/WebAppShell.test.tsx 4438d0c3cfaa40d37e53196b44e0a7afc3f55ce85c0d301011d674c91ba8ae75",
    "apps/mobile/src/frontend/components/Custodial/AthleteMoneyCard.tsx 1fea469ab77b302234211b74ce2363f6df828c06305ffb7cd9457dc9d1e0051f",
    "apps/mobile/src/frontend/components/Custodial/GuardianConsentForm.tsx e963a11e13bdba5f870ecbcfee7000376d5e24295f8d203ccd75c4f94ae703dc",
    "apps/mobile/src/frontend/components/Custodial/GuardianCustodialCard.tsx f04710cbe133508bc3992a2802ca70d65af27dff779fab41b58d48a82eca46b2",
@@ -2184,7 +2185,7 @@
    "apps/mobile/src/frontend/hooks/__tests__/useActivityFeed.test.tsx 4875206131f0fcff912527b74469f4d1aeee73c4a1fad1806651765a64adedbf",
    "apps/mobile/src/frontend/hooks/__tests__/useAdminAction.test.tsx 04074e88aa3a4584d7d945526aac0c00b1d9bab1e497b5ef0e82d8333ebdf40a",
    "apps/mobile/src/frontend/hooks/__tests__/useAdminReports.test.tsx d87fa6b5056a63dd01442800e1e8b5c8a0953e8107c3c62938168386ec3a95b9",
-   "apps/mobile/src/frontend/hooks/__tests__/useAppViewport.test.ts 4702ba65fd1832868ecbf7a880665a0e581ca9fd85d2b333e13aeec454b3b919",
+   "apps/mobile/src/frontend/hooks/__tests__/useAppViewport.test.ts cdbea564fae6b5498d3654f1ca9d063f4700ea4a288d372ec87dccb53ff62b05",
    "apps/mobile/src/frontend/hooks/__tests__/useAthleteSports.test.tsx 58e419f4c346b8f99aa7d1b3761f3988e692358ba4f1254fb0526230aad2965b",
    "apps/mobile/src/frontend/hooks/__tests__/useAthleteStats.test.tsx be3ecc3dcad8ca13d9325baca87dc65bedd1de19dbc4c3487fe5624d7cc3b0d2",
    "apps/mobile/src/frontend/hooks/__tests__/useChallenges.test.tsx a20bf12e63142e9530ad5f436bb24d30ce2ae8c0578f35af04893e301c276645",
@@ -2216,7 +2217,7 @@
    "apps/mobile/src/frontend/hooks/useAdminAction.ts 4932833542d34db76a76ce08b98755d69a1c59aa18f291630d331597b8489129",
    "apps/mobile/src/frontend/hooks/useAdminDashboard.ts 64caa67c5764a3a2cd971f4de58e3d0203ea094449a37c0fa93269213562c35c",
    "apps/mobile/src/frontend/hooks/useAdminReports.ts 9c89ecbf5e12e1ace3ea6d6b5f0389b5887e47e7cdc7392ceff4221732238e52",
-   "apps/mobile/src/frontend/hooks/useAppViewport.ts 48ca9a71a87cdfa56f490bd8a7fec8f1ccd8d82fbc05413d082892c2cc07d265",
+   "apps/mobile/src/frontend/hooks/useAppViewport.ts ec86503b5e7462caf9aecf3a83dcf1f7910077264b43c0dd6d954fc2b0b73580",
    "apps/mobile/src/frontend/hooks/useAthleteSports.ts 66db84e76c68ca385a6f61d12458191514b9d8582a492070ae60f09c0bf8ff7c",
    "apps/mobile/src/frontend/hooks/useAthleteStats.ts 99adc7dceba42cfcb31168130459fdf783487df64135c9bfc4cf85d6d6ecec25",
    "apps/mobile/src/frontend/hooks/useAthleteSubscription.ts 46118303675c035668e2df5aca91c6af5225831fed4608a7c9e704042750bfd7",

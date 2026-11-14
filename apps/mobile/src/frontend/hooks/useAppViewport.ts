@@ -1,7 +1,9 @@
 /**
  * Layout width for fan chrome. On Expo web desktop the app sits in a phone column
  * (`WebAppShell`); consumers must not size sheets/grids from the full browser width.
+ * Web clamp waits until after mount so it stays aligned with `WebAppShell`'s hydration-safe layout.
  */
+import { useEffect, useState } from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 
 /** Desktop canvas wider than this gets the phone column + side atmosphere. */
@@ -13,9 +15,14 @@ export const WEB_PHONE_WIDTH = 430;
  * @purpose Clamp window width to the Expo web phone column when the desktop shell is active.
  * @param windowWidth `useWindowDimensions().width`
  * @param os Platform OS (injectable for tests).
+ * @param layoutReady False until the web shell has mounted (SSR / first paint stay unclamped).
  */
-export function appViewportWidth(windowWidth: number, os: string = Platform.OS): number {
-  if (os === 'web' && windowWidth >= WEB_PHONE_BREAKPOINT) {
+export function appViewportWidth(
+  windowWidth: number,
+  os: string = Platform.OS,
+  layoutReady: boolean = true,
+): number {
+  if (os === 'web' && layoutReady && windowWidth >= WEB_PHONE_BREAKPOINT) {
     return WEB_PHONE_WIDTH;
   }
   return windowWidth;
@@ -28,5 +35,9 @@ export function appViewportWidth(windowWidth: number, os: string = Platform.OS):
  */
 export function useAppViewportWidth(): number {
   const { width } = useWindowDimensions();
-  return appViewportWidth(width);
+  const [layoutReady, setLayoutReady] = useState(Platform.OS !== 'web');
+  useEffect(() => {
+    setLayoutReady(true);
+  }, []);
+  return appViewportWidth(width, Platform.OS, layoutReady);
 }
