@@ -2,7 +2,7 @@
  * FEED-01 Phase 1: Highlights picks sheet and Settings → Highlights open when the parent sets them visible.
  * This is a component render. It is not a signed-in Home or Profile session.
  */
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { HighlightsFeedSettingsSheet } from '@/components/Profile/HighlightsFeedSettingsSheet';
 import { FeedPicksSheet } from '@/components/Reels/FeedPicksSheet';
@@ -35,8 +35,15 @@ describe('FeedPicksSheet', () => {
       />,
     );
     expect(screen.getByText('Shape your Highlights')).toBeTruthy();
+    expect(screen.getByText(/Sports · 0 of 3/)).toBeTruthy();
+    expect(screen.getByText(/Schools · 0 of 3/)).toBeTruthy();
+    expect(screen.getByText(/Category lean · All/)).toBeTruthy();
     expect(screen.getByLabelText('Sport Football')).toBeTruthy();
     expect(screen.getByLabelText('School East High')).toBeTruthy();
+    await act(async () => {
+      await fireEvent.press(screen.getByLabelText('Sport Football'));
+    });
+    expect(await screen.findByText(/Sports · 1 of 3 · Football/)).toBeTruthy();
     expect(screen.getByLabelText('Save Highlights picks')).toBeTruthy();
     expect(screen.getByLabelText('Not now')).toBeTruthy();
   });

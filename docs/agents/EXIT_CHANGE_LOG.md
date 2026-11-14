@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-14 · plan `0b33e9dcf7c8` → `277e85094525` · announced by FEED-01 picks scroll menus
+
+App at announcement: commit `989d74eb6036a37a6e0b6e3face723a776253e09` + 2 uncommitted file(s), source `277e85094525f5d81710226f0de4c4dab2e33e9d9960b472e2a9ccca27a88569`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Reels/FeedPicksSheet.tsx 3a81229d329fb0bcb9fe034f11721a69cf1b019b71fbd5b0358d1e1205dd4a9b`, `apps/mobile/src/frontend/components/Reels/__tests__/FeedPicksSheet.test.tsx 805eb6bcf94c21c5e21db5767852574c3d7aae25835727eba593db40f66d4eef`; removed `apps/mobile/src/frontend/components/Reels/FeedPicksSheet.tsx 9f38976f1afa8a5ce79e76c456e03129e683fae86b77953e9700d2f3ae14cfba`, `apps/mobile/src/frontend/components/Reels/__tests__/FeedPicksSheet.test.tsx 6f4bc28d30221527b2b8227929b40a540da5d511493b2b9e14c0d909ccb2a061`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-14 · plan `0b33e9dcf7c8` → `0b33e9dcf7c8` · announced by FEED-01 go-live + privacy draft
 
 App at announcement: commit `a6f8dff9f9d93f3b8ab6d4c010a1c9aeb8f4cb20`, source `0b33e9dcf7c814a8d252257cdc8f44d21cc94dd924d06709d2227fb764652cc6`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
