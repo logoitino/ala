@@ -32,6 +32,8 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 | [Gift/tip rollout](engineering/GIFT_TIP_ROLLOUT.md) | Prerequisite chain, coordinated checkout rollout, zero-cut containment and unverified provider/native gates. |
 | [Gift rollout preflight](engineering/evidence/GIFT_ROLLOUT_PREFLIGHT.md) | Source bindings and actual bounded local/hosted read-only observations. |
 | [FEED-01 Phase 1 smoke](engineering/evidence/FEED-01-phase1-smoke.md) | Local Jest receipt for Highlights picks, newest-first fallback, and hide. Signed-in device gaps stay open. |
+| [FEED-01 go-live](engineering/evidence/FEED-01-go-live.md) | Owner merge order, $0 SQL apply, device smoke, counsel gates for interest feed Phase 1. |
+| [FEED interest Privacy draft](legal/FEED_INTEREST_PRIVACY_DRAFT.md) | Counsel candidate Privacy Policy line for Highlights picks; not accepted policy. |
 | [PORTABLE_INTEGRATIONS](engineering/PORTABLE_INTEGRATIONS.md) | Shared app connection contract, matching target profiles and local installed-SDK compatibility tests. |
 | [**Exit reading home**](engineering/exit/README.md) | **One folder** for Redundancy & Exit: charter, generated map/security report, migration runbooks, plans. Runnable code stays under `infrastructure/`. |
 | [Portable connection plan](engineering/design/PORTABLE_CONNECTION_IMPLEMENTATION_PLAN.md) | REDUNDANCY-06 executable local portability plan and scoped specialist assignments. |
@@ -133,6 +135,7 @@ Also: [`supabase/migrations/README.md`](../supabase/migrations/README.md) for ho
 | Document | What it answers |
 | --- | --- |
 | [Gift / Donation / Tip Terms draft](legal/GIFT_DONATION_TIP_TERMS_DRAFT.md) | Separate proposed terms for counsel; not lawyer-final. |
+| [FEED interest Privacy draft](legal/FEED_INTEREST_PRIVACY_DRAFT.md) | FEED-01 Phase 1 picks Privacy Policy candidate for counsel; Phase 2 stays OFF. |
 | [LEGAL_BRIEFING.md](legal/LEGAL_BRIEFING.md) | Every legal and money-copy risk as a lettered row. Owned by Legal. |
 | [VERIFICATION_AND_SAFE_GROWTH_REVIEW.md](legal/VERIFICATION_AND_SAFE_GROWTH_REVIEW.md) | Joint Legal/Growth/Dev source review, guardian/Stripe/school checks, consent gaps and proposed owner decisions. |
 | [IP protection plan](legal/IP_PROTECTION_PLAN.md) | Confidential copyright/patent/trademark/secret preparation, upkeep and presentation checklist. |

@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-14 · FEED-01 Phase 1 local smoke evidence. Webhook tip crediting stays **off**. Hosted SQL and signed-in device journeys remain open.
+**Last updated:** 2026-11-14 · FEED-01 go-live packet + Privacy draft for counsel. Webhook tip crediting stays **off**. Hosted SQL and signed-in device journeys remain open.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -184,7 +184,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - CI follow-up: regenerate `database.generated.ts` for `user_feed_prefs`; fix ReelCard tracker meta expectations; mock Highlights settings in profile quiz test; register `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` in infrastructure.json; acknowledge build-layers after migration inventory; mock SoftWall sheet motion so Jest does not exit 1 on torn-down rAF.
 - Phase 0: Wave 0 seeded feed has 5 clips — too small (`docs/engineering/evidence/FEED-01-phase0.md`).
 - Phase 1 local smoke (`docs/engineering/evidence/FEED-01-phase1-smoke.md`): Jest 4 suites / 17 tests passed on Node 22.23.4 (picks sheet render, personalization-off newest-first, `tapuai.hiddenReels` hide). Signed-in web/device journey not run. Metro was not started (earlier Expo web heap abort; about 2.6 Gi available).
-- **About to spend:** $0 (Wave 0). Hosted SQL apply and a signed-in device pass remain owner / DEVICE_QA.
+- Go-live packet (`docs/engineering/evidence/FEED-01-go-live.md`): merge order #39→#40→#42→#43→#44→#45→#46; SQL apply steps; device smoke remaining. Privacy candidate draft for counsel (`docs/legal/FEED_INTEREST_PRIVACY_DRAFT.md`) — not accepted policy. Agent cannot merge (GitHub write) or apply hosted SQL (owner-gated).
+- **About to spend:** Hosted SQL apply is **$0** on Wave 0. Preview build **$0** until Expo free quota runs out. Supabase Free may pause (Pro ~$25/mo). Live Stripe keys are not this wave.
 
 ### 2026-11-13 — Local Daylight polish (boosters, report, live)
 
