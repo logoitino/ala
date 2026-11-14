@@ -68,7 +68,7 @@ Earlier ComputerUse attempt on this branch was **BLOCKED** by Xfce dock overlap 
 
 **Evidence:** `feed-01-smoke-c-personal-off.png`, `feed-01-smoke-c-home-no-why.png`
 
-**Note:** Demo Fan **Personal feed left OFF** after this test so the receipt matches the account. Flip it back on in Settings → Highlights if needed for other demos.
+**Note:** Personal feed was left OFF during the receipt, then **restored ON** for Demo Fan at 15:01 MST (America/Denver) after Phase 1 closeout.
 
 ### Test D: Report / Hide
 

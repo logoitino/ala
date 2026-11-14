@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-14 14:48 MST · FEED-01 Phase 1 engineering **COMPLETE** (smoke A–E PASS; Phase 2 OFF pending counsel). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-14 15:01 MST · FEED-01 Phase 1 done; Phase 2 unlock packet ready (flag still OFF). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,12 +175,15 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-14 — FEED-01 Phase 2 unlock packet (flag still OFF)
+
+- Added `docs/engineering/evidence/FEED-01-phase2-unlock.md`: counsel answer table + enable sequence + P2 smoke. WORK_QUEUE FEED-01 row points here. Flag-off Jest collectors/ranking **11 passed**. Demo Fan Personal feed restored ON after smoke C.
+- Owner next: merge [#51](https://github.com/logoitino/ala/pull/51); send `FEED-01-counsel-send.md`. Do **not** set `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS=1` until unlock checklist is filled.
+- **About to spend:** $0. Phase 2 enable later stays $0 unless Expo free quota ends or Supabase Free pauses (~$25/mo Pro).
+
 ### 2026-11-14 — FEED-01 Phase 1 engineering COMPLETE
 
-- Smoke A–D (Demo Fan) + **E guest** (isolated context: chronological Home, no picks sheet, no why-line, no `user_feed_prefs` traffic) **PASS** on Expo web. Go-live packet marked engineering-complete; Phase 2 flag stays OFF.
-- Owner next: merge evidence [#51](https://github.com/logoitino/ala/pull/51) if needed; send counsel note (`FEED-01-counsel-send.md`). Counsel written Phase 2 answers required before `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS`.
-- Evidence: `docs/engineering/evidence/FEED-01-go-live.md`, `FEED-01-phase1-signed-in-smoke.md`, PNGs under `feed-01-signed-in-smoke/`.
-- **About to spend:** $0 (local smoke). Counsel email is outside product spend; Phase 2 enable remains blocked.
+- Smoke A–E PASS; go-live engineering-complete. Evidence under `docs/engineering/evidence/FEED-01-*` and `feed-01-signed-in-smoke/`.
 
 ### 2026-11-14 — Expo web WebAppShell hydration fix
 

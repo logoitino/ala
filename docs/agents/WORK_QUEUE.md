@@ -123,6 +123,19 @@ unchanged; hierarchy is checked, not rewritten. Exact final checks and claim rel
 integrated by root in [COORD-01](COORD-01.md). These assignments do not establish pinned-model
 execution or a continuous delivery service.
 
+## FEED-01 — Highlights interest feed (Phase 1 done; Phase 2 blocked) — 2026-11-14
+
+**Phase 1 engineering COMPLETE** (SQL applied, smoke A–E PASS, evidence [#51](https://github.com/logoitino/ala/pull/51)).
+`EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` stays **OFF**.
+
+| Next | Owner | Blocked on |
+| --- | --- | --- |
+| Merge evidence PR #51 | Owner | — |
+| Send counsel note | Owner / LEGAL | [FEED-01-counsel-send.md](../engineering/evidence/FEED-01-counsel-send.md) |
+| Enable Phase 2 flag + smoke | Owner authorizes → HIGHLIGHTS / DEVICE_QA | Written counsel answers (a)–(d); unlock checklist [FEED-01-phase2-unlock.md](../engineering/evidence/FEED-01-phase2-unlock.md) |
+
+Do not start Phase 2 collection/ranking without the unlock checklist. APP-TEST-01 lanes A–C remain the active app priority ahead of optional Phase 2 enable.
+
 ## APP-TEST-01 — Current app testing priorities — 2026-10-21 UTC
 
 **2026-11-04 owner priority:** App readiness is the active engineering queue (lanes **A → B → C**

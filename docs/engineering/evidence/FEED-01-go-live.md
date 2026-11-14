@@ -1,7 +1,7 @@
 # FEED-01 go-live packet (Phase 1)
 
 **Date:** 2026-11-14 (America/Denver)  
-**Last updated:** 2026-11-14 14:48 MST  
+**Last updated:** 2026-11-14 15:01 MST  
 **Branch / PR (evidence closeout):** `cursor/feed-01-device-smoke-9a86` · [#51](https://github.com/logoitino/ala/pull/51)  
 **Feature landed via:** stack #39–#46 → density [#47](https://github.com/logoitino/ala/pull/47) on `main`  
 **Spend:** Applying the migration in Supabase SQL Editor is **$0** on Wave 0. Preview builds are
@@ -73,3 +73,6 @@ retention, third-party/ad ban, and “Why this clip” wording.
 | Engineering ready to leave Phase 1? | **Yes** |
 | May turn on Phase 2 flag? | **No** — counsel written answers required first |
 | Owner next action | Merge [#51](https://github.com/logoitino/ala/pull/51) evidence if not yet on `main`; send counsel note; keep Phase 2 OFF |
+| Phase 2 unlock packet | [FEED-01-phase2-unlock.md](FEED-01-phase2-unlock.md) — fill counsel table, then enable sequence + P2 smoke |
+
+Flag-off collector/ranking Jest re-confirmed 2026-11-14 (11 passed). Demo Fan **Personal feed** restored ON after smoke C (2026-11-14 15:01 MST).
