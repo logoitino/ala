@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-14 15:01 MST · FEED-01 Phase 1 done; Phase 2 unlock packet ready (flag still OFF). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-14 16:12 MST · FEED-01 Phase 1 done; owner merge #51 + counsel send. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,11 +175,15 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-14 — FEED-01 owner handoff (merge + counsel)
+
+- Engineering idle on FEED-01 until owner merges [#51](https://github.com/logoitino/ala/pull/51) and sends counsel note. Optional staging SQL to clear Demo Fan from `reported_by` after smoke D is in the signed-in smoke receipt ($0).
+- Canvas: FEED-01 owner handoff (copy subject/body). Phase 2 unlock packet remains; flag OFF.
+- **About to spend:** $0 for merge/docs/SQL hygiene. Counsel email outside product spend.
+
 ### 2026-11-14 — FEED-01 Phase 2 unlock packet (flag still OFF)
 
-- Added `docs/engineering/evidence/FEED-01-phase2-unlock.md`: counsel answer table + enable sequence + P2 smoke. WORK_QUEUE FEED-01 row points here. Flag-off Jest collectors/ranking **11 passed**. Demo Fan Personal feed restored ON after smoke C.
-- Owner next: merge [#51](https://github.com/logoitino/ala/pull/51); send `FEED-01-counsel-send.md`. Do **not** set `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS=1` until unlock checklist is filled.
-- **About to spend:** $0. Phase 2 enable later stays $0 unless Expo free quota ends or Supabase Free pauses (~$25/mo Pro).
+- `FEED-01-phase2-unlock.md` + WORK_QUEUE FEED-01 row; flag-off Jest 11 passed; Demo Fan Personal feed restored ON.
 
 ### 2026-11-14 — FEED-01 Phase 1 engineering COMPLETE
 

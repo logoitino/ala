@@ -76,3 +76,5 @@ retention, third-party/ad ban, and “Why this clip” wording.
 | Phase 2 unlock packet | [FEED-01-phase2-unlock.md](FEED-01-phase2-unlock.md) — fill counsel table, then enable sequence + P2 smoke |
 
 Flag-off collector/ranking Jest re-confirmed 2026-11-14 (11 passed). Demo Fan **Personal feed** restored ON after smoke C (2026-11-14 15:01 MST).
+
+**Demo Fan Home empty after smoke D:** expected — `reported_by` still lists Demo Fan for the APP-TEST-C clip. Optional staging SQL to restore is in [FEED-01-phase1-signed-in-smoke.md](FEED-01-phase1-signed-in-smoke.md) §D ($0). Guests still see the clip.

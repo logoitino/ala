@@ -81,6 +81,14 @@ Earlier ComputerUse attempt on this branch was **BLOCKED** by Xfce dock overlap 
 
 **Evidence:** `feed-01-smoke-d-hidden.png`, `feed-01-smoke-d-after-reload.png`
 
+**Staging hygiene (owner, $0):** Smoke D called `report_reel`, so Demo Fan’s user id is in `reels.reported_by` for clip `357605a8-de27-4e8b-ab30-b20ab151246c`. Clearing `tapuai.hiddenReels` alone does **not** restore that clip for Demo Fan. Guests still see it. To unhide for Demo Fan on staging only:
+
+```sql
+update public.reels
+set reported_by = array_remove(reported_by, '4ee7be1a-29f6-4cc4-8054-43703b1be68d'::uuid)
+where id = '357605a8-de27-4e8b-ab30-b20ab151246c';
+```
+
 ---
 
 ### Test E: Guest chronological, no picks screen
