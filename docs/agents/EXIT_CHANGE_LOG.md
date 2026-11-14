@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-14 · plan `02d01e36d3fc` → `02d01e36d3fc` · announced by FEED-01 ip:sync after SoftWall/exit follow-ups
+
+App at announcement: commit `5799203b5f4a7b783c57d733d73dc7307fde9e13`, source `02d01e36d3fc9e323823fe589fcfbe8b4eb29f7933b890d1583bd15caedf0de3`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- Baseline created; no prior plan to compare.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-14 · plan `f6fe941048ad` → `02d01e36d3fc` · announced by FEED-01 SoftWall Jest teardown fix
 
 App at announcement: commit `887b802c96c39ba277a3c021a5240082dc6d2d1c`, source `02d01e36d3fc9e323823fe589fcfbe8b4eb29f7933b890d1583bd15caedf0de3`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
