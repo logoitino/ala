@@ -181,6 +181,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - First-run + Settings → Highlights picks; Personal feed toggle; prefs broadcast so Home refreshes after Settings.
 - `rankHomeFeed` prefs bonuses; money never ranks; Phase 2/3 env-gated **including AsyncStorage collectors**.
 - Admin: `/admin/highlights` `FeedInterestPanel` + coverage `home_feed_interest` (presentation-only exemption removed).
+- CI follow-up: regenerate `database.generated.ts` for `user_feed_prefs`; fix ReelCard tracker meta expectations; mock Highlights settings in profile quiz test.
 - Phase 0: Wave 0 seeded feed has 5 clips — too small (`docs/engineering/evidence/FEED-01-phase0.md`).
 - **About to spend:** $0 (Wave 0). Hosted SQL apply and device smoke remain owner / DEVICE_QA.
 
