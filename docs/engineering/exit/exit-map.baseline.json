@@ -1,5 +1,5 @@
 {
- "planVersion": "f6fe941048ad",
+ "planVersion": "02d01e36d3fc",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1861,7 +1861,7 @@
    "apps/mobile/src/frontend/components/Auth/BirthMonthField.tsx ecd546567b7c363854fb4715eb269ecd1f046c6cf7cc8be0686b38d4762d2983",
    "apps/mobile/src/frontend/components/Auth/SoftWallModal.tsx 11bd97a3f149715d2977e85f53aa71facd06be769da0945a33bd74e4d03dee5e",
    "apps/mobile/src/frontend/components/Auth/__tests__/BirthMonthField.test.tsx 391985431cc50b28503b7c296b43c2fca7242b53c5580f81ef54e5ad80282a51",
-   "apps/mobile/src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx b8afdea0cc96f59f885dfb320920c6e1edb72402f09572fd1b177be7369f6483",
+   "apps/mobile/src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx 6d86f67857564c0de69ef84763d62af078d9dbe104437c77ca22cb313c65e112",
    "apps/mobile/src/frontend/components/BackedCelebration.tsx 845d7632d9255aa570877f019d001435317ca5fb36e05a272885b18e88b74af1",
    "apps/mobile/src/frontend/components/BeyondGame/BeyondGameComposer.tsx 96ceb135f697975d98c9ab7827a5e58b64b4dd4753e00a792fa6844e90fded55",
    "apps/mobile/src/frontend/components/BeyondGame/BeyondGameMedia.tsx 239858c2d462d881f53cb18c4370b6ff86bca562a1eb33f82bb68216c23cfb9a",

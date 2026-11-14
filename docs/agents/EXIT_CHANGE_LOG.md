@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-14 · plan `f6fe941048ad` → `02d01e36d3fc` · announced by FEED-01 SoftWall Jest teardown fix
+
+App at announcement: commit `887b802c96c39ba277a3c021a5240082dc6d2d1c`, source `02d01e36d3fc9e323823fe589fcfbe8b4eb29f7933b890d1583bd15caedf0de3`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx 6d86f67857564c0de69ef84763d62af078d9dbe104437c77ca22cb313c65e112`; removed `apps/mobile/src/frontend/components/Auth/__tests__/SoftWallModal.test.tsx b8afdea0cc96f59f885dfb320920c6e1edb72402f09572fd1b177be7369f6483`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-14 · plan `df0b07577dd3` → `f6fe941048ad` · announced by FEED-01 infra env register
 
 App at announcement: commit `f3780902460d25dffae44ad54c993fd79b701b1b`, source `f6fe941048ad47a165cb78746f1f8c500e454882ce19d1be575b902df8579562`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
