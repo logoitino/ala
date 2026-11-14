@@ -19,8 +19,9 @@
 | **B** | Selections persist after reload | **PASS** | After full navigation reload, why-line remained; Edit picks still **Sports · 3 of 3 · Lacrosse, Football, Basketball** |
 | **C** | Toggle Personal feed OFF | **PASS** | Switch unchecked; `user_feed_prefs` upsert 200; Home why-line gone (newest-first, no ranking label) |
 | **D** | Report-Hide a Highlight | **PASS** | Reason Other → Report and hide; Home **0 clips**; leave/return + reload still hidden; `tapuai.hiddenReels` = `["357605a8-de27-4e8b-ab30-b20ab151246c"]` |
+| **E** | Guest chronological / no picks | **PASS** | Isolated guest context: Watch highlights; no Shape your Highlights; no why-line; no `user_feed_prefs` network; no auth localStorage keys |
 
-**Overall Status:** PASS — Wave 0 signed-in smoke A–D complete on Expo web.
+**Overall Status:** PASS — Wave 0 signed-in A–D + guest E complete on Expo web. Phase 1 engineering smoke gate closed.
 
 Earlier ComputerUse attempt on this branch was **BLOCKED** by Xfce dock overlap on bottom Fan Dock. This run used Playwright (accessibility clicks), which bypasses the OS dock hit-target problem.
 
@@ -82,15 +83,27 @@ Earlier ComputerUse attempt on this branch was **BLOCKED** by Xfce dock overlap 
 
 ---
 
+### Test E: Guest chronological, no picks screen
+
+**Status:** PASS · 2026-11-14 14:48 MST
+
+1. New Playwright isolated context `feed01-guest` (no Demo Fan cookies).
+2. Dismissed Player of the Week → **Watch highlights** (guest browse).
+3. Home shows Jordan Blake; **no** Shape your Highlights sheet; **no** Why this clip / Your school.
+4. Network: no `user_feed_prefs` requests. localStorage: no supabase auth keys; no `tapuai.hiddenReels`.
+
+**Evidence:** `feed-01-signed-in-smoke/feed-01-smoke-e-guest.png`
+
+---
+
 ## Environment notes
 
-- Console noise unrelated to A–D: `reels_feed` 400 on some select shapes, `get_reel_account_tags` / `quiz_snapshot` 404 (known staging gaps). Feed still ranked from available seed + prefs.
-- FEED-01 console sample logs present (`[FEED-01 Phase 0]` sampleSize 1 after hide/filter).
-- Native iOS/Android not run in this session — web signed-in pass only.
-- Guests chronological / no picks screen not re-run here (covered in earlier Phase 1 local notes).
+- Console noise unrelated to smoke: `reels_feed` 400 on some select shapes, `get_reel_account_tags` / `quiz_snapshot` 404 (known staging gaps).
+- FEED-01 console sample logs present (`[FEED-01 Phase 0]`).
+- Native iOS/Android not run in this session — Expo web only.
 
 ---
 
 ## Conclusion
 
-Signed-in Wave 0 smoke **A–D passed** on Expo web with Demo Fan against hosted `user_feed_prefs`. Remaining FEED-01 owner items: counsel Privacy send (`FEED-01-counsel-send.md`); Phase 2 flag stays OFF.
+Wave 0 smoke **A–E passed** on Expo web. Phase 1 engineering smoke is closed. Remaining FEED-01 owner items: merge evidence PR if needed; counsel Privacy send (`FEED-01-counsel-send.md`); Phase 2 flag stays OFF until written counsel answers.

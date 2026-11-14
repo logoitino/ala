@@ -47,7 +47,7 @@ The prompt author and this draft are not counsel. If counsel has not answered, P
 
 ## Owner / LEGAL next steps
 
-1. LEGAL routes this draft to counsel with the product facts above.
+1. LEGAL routes this draft to counsel with the product facts above (send packet: `docs/engineering/evidence/FEED-01-counsel-send.md`).
 2. Owner decides when to publish the approved Privacy Policy line.
-3. DEVICE_QA runs signed-in device smoke after hosted SQL apply (see go-live evidence).
+3. DEVICE_QA signed-in + guest Expo web smoke **PASS** 2026-11-14 (see go-live + `FEED-01-phase1-signed-in-smoke.md`). Native device optional follow-up.
 4. Do not enable Phase 2 collection or ranking until the written answers exist.

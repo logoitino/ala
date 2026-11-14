@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-14 14:37 MST · FEED-01 signed-in smoke A–D **PASS** (Expo web / Demo Fan). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-14 14:48 MST · FEED-01 Phase 1 engineering **COMPLETE** (smoke A–E PASS; Phase 2 OFF pending counsel). Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,13 +175,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
-### 2026-11-14 — FEED-01 signed-in smoke A–D PASS (Expo web)
+### 2026-11-14 — FEED-01 Phase 1 engineering COMPLETE
 
-- Playwright signed-in smoke on `cursor/feed-01-device-smoke-9a86` @ `076bf0a` (Demo Fan): **A** picks save + why-line Your school; **B** reload persist; **C** Personal feed OFF clears why-line; **D** Report/Hide Other → Home 0 clips after leave/reload (`tapuai.hiddenReels`).
-- Earlier ComputerUse pass blocked by Xfce dock overlap; Playwright accessibility clicks completed the gate.
-- Evidence: `docs/engineering/evidence/FEED-01-phase1-signed-in-smoke.md` + PNGs under `docs/engineering/evidence/feed-01-signed-in-smoke/`.
-- Demo Fan Personal feed left OFF after test C; Phase 2 implicit signals still OFF. Counsel Privacy send still open.
-- **About to spend:** $0 (Wave 0 local web smoke).
+- Smoke A–D (Demo Fan) + **E guest** (isolated context: chronological Home, no picks sheet, no why-line, no `user_feed_prefs` traffic) **PASS** on Expo web. Go-live packet marked engineering-complete; Phase 2 flag stays OFF.
+- Owner next: merge evidence [#51](https://github.com/logoitino/ala/pull/51) if needed; send counsel note (`FEED-01-counsel-send.md`). Counsel written Phase 2 answers required before `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS`.
+- Evidence: `docs/engineering/evidence/FEED-01-go-live.md`, `FEED-01-phase1-signed-in-smoke.md`, PNGs under `feed-01-signed-in-smoke/`.
+- **About to spend:** $0 (local smoke). Counsel email is outside product spend; Phase 2 enable remains blocked.
 
 ### 2026-11-14 — Expo web WebAppShell hydration fix
 
@@ -202,7 +201,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - CI follow-up: regenerate `database.generated.ts` for `user_feed_prefs`; fix ReelCard tracker meta expectations; mock Highlights settings in profile quiz test; register `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` in infrastructure.json; acknowledge build-layers after migration inventory; mock SoftWall sheet motion so Jest does not exit 1 on torn-down rAF.
 - Phase 0: Wave 0 seeded feed has 5 clips — too small (`docs/engineering/evidence/FEED-01-phase0.md`).
 - Phase 1 local smoke (`docs/engineering/evidence/FEED-01-phase1-smoke.md`): Jest 4 suites / 17 tests passed on Node 22.23.4 (picks sheet render, personalization-off newest-first, `tapuai.hiddenReels` hide). Signed-in web/device journey not run. Metro was not started (earlier Expo web heap abort; about 2.6 Gi available).
-- Go-live packet (`docs/engineering/evidence/FEED-01-go-live.md`): stack #39–#46 async-merged into density, then [#47](https://github.com/logoitino/ala/pull/47) landed on `main` (`989d74e`). Hosted `user_feed_prefs` **applied** (owner SQL Editor; anon correctly denied). Signed-in device smoke **PASS** (2026-11-14); counsel Privacy send still open. Privacy draft + counsel send note (`docs/legal/FEED_INTEREST_PRIVACY_DRAFT.md`, `docs/engineering/evidence/FEED-01-counsel-send.md`) — not accepted policy.
+- Go-live packet (`docs/engineering/evidence/FEED-01-go-live.md`): Phase 1 engineering **COMPLETE** (SQL + smoke A–E). Stack on `main` via [#47](https://github.com/logoitino/ala/pull/47). Counsel Privacy send still open (not accepted policy); Phase 2 OFF.
 - **About to spend:** SQL apply was **$0**. Preview build **$0** until Expo free quota runs out. Supabase Free may pause (Pro ~$25/mo). Live Stripe keys are not this wave.
 
 ### 2026-11-13 — Local Daylight polish (boosters, report, live)
