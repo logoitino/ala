@@ -35,6 +35,7 @@ import { useSoftWall } from '@/context/SoftWallContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useFanDockHeight } from '@/context/FanNavigationContext';
 import { FOCAL, SPRING_SHEET } from '@/theme/motion';
+import { FeedPicksSheet } from '@/components/Reels/FeedPicksSheet';
 import {
   HIGHLIGHT_CLIPS,
   HIGHLIGHT_FEED_BEYOND,
@@ -42,12 +43,17 @@ import {
   homePagerClips,
   isBeyondHighlight,
   isSekiHighlight,
+  measureHomeFeedTop,
   pinFeedOrder,
   rankHomeFeed,
+  rankHomeFeedWithReasons,
+  whyThisClipLine,
+  type FeedReasonCode,
   type HighlightClip,
   type HighlightFeedFilter,
 } from '@/data/highlights';
 import { useActiveSpotlight } from '@/hooks/useActiveSpotlight';
+import { useFeedPrefs } from '@/hooks/useFeedPrefs';
 import { adjacentStoryClips, prefetchStoryPhotos } from '@/hooks/useStoryPhotos';
 import { useFanTipHistory } from '@/hooks/useFanTipHistory';
 import { useLiveGame } from '@/hooks/useLiveGame';
@@ -89,6 +95,7 @@ export default function HighlightsTab() {
   const { players, applyBackerCount } = useRoster();
   const { reels, refresh, setReels, applyReelHype, applyReelTips } = useReels();
   const { receipts } = useFanTipHistory();
+  const feedPrefs = useFeedPrefs();
   const liveGame = useLiveGame();
   const liveGameId = liveGame.gameId;
   const { noteScrollPct, trackFeature } = useSurfaceUsage('home');
@@ -188,9 +195,35 @@ export default function HighlightsTab() {
     () => ({
       crewIds,
       school: profile?.team?.name?.trim() || '',
+      prefs: isGuest ? null : feedPrefs.prefs,
+      implicit: isGuest ? null : feedPrefs.implicit,
     }),
-    [crewIds, profile?.team?.name],
+    [crewIds, feedPrefs.implicit, feedPrefs.prefs, isGuest, profile?.team?.name],
   );
+
+  const pickSportOptions = useMemo(() => {
+    const out: string[] = [];
+    for (const item of clips) {
+      const sport = item.clip.sport?.trim();
+      if (!sport) continue;
+      if (out.some((row) => row.toLowerCase() === sport.toLowerCase())) continue;
+      out.push(sport);
+    }
+    return out;
+  }, [clips]);
+
+  const pickSchoolOptions = useMemo(() => {
+    const out: string[] = [];
+    const own = profile?.team?.name?.trim();
+    if (own) out.push(own);
+    for (const item of clips) {
+      const school = (item.player?.school_name || item.clip.school || '').trim();
+      if (!school) continue;
+      if (out.some((row) => row.toLowerCase() === school.toLowerCase())) continue;
+      out.push(school);
+    }
+    return out;
+  }, [clips, profile?.team?.name]);
 
   // Rank when the set of clips, the pill, the viewer's context or a pull-to-refresh changes — never
   // on a hype tap. Ranking and the Seki filter read hype counts, so re-ranking per tap moved the
@@ -199,19 +232,36 @@ export default function HighlightsTab() {
   clipsRef.current = clips;
   const clipIdsKey = useMemo(() => clips.map((item) => item.clip.id).join('|'), [clips]);
   const [rankEpoch, setRankEpoch] = useState(0);
-  const feedOrder = useMemo(() => {
+  const homeRanked = useMemo(() => {
     const current = clipsRef.current;
-    const ranked =
-      feedFilter === 'seki'
-        ? current.filter((item) => isSekiHighlight(item.clip))
-        : feedFilter === 'beyond'
-          ? current.filter((item) => isBeyondHighlight(item.clip))
-          : feedFilter === 'home'
-          ? rankHomeFeed(current, homeContext)
-          : current;
-    return ranked.map((item) => item.clip.id);
+    if (feedFilter !== 'home') return null;
+    const ranked = rankHomeFeedWithReasons(current, homeContext);
+    if (__DEV__) {
+      // Phase 0 local measurement only — never ships to users / never leaves the device.
+      // eslint-disable-next-line no-console
+      console.log('[FEED-01 Phase 0]', measureHomeFeedTop(ranked.map((row) => row.item), homeContext));
+    }
+    return ranked;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `clips` is read through the ref on purpose.
   }, [clipIdsKey, feedFilter, homeContext, rankEpoch]);
+  const feedReasons = useMemo(() => {
+    if (!homeRanked || isGuest) return new Map<string, FeedReasonCode[]>();
+    return new Map(homeRanked.map((row) => [row.item.clip.id, row.reasons]));
+  }, [homeRanked, isGuest]);
+  const feedOrder = useMemo(() => {
+    const current = clipsRef.current;
+    if (feedFilter === 'seki') {
+      return current.filter((item) => isSekiHighlight(item.clip)).map((item) => item.clip.id);
+    }
+    if (feedFilter === 'beyond') {
+      return current.filter((item) => isBeyondHighlight(item.clip)).map((item) => item.clip.id);
+    }
+    if (feedFilter === 'home' && homeRanked) {
+      return homeRanked.map((row) => row.item.clip.id);
+    }
+    return current.map((item) => item.clip.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `clips` is read through the ref on purpose.
+  }, [clipIdsKey, feedFilter, homeRanked, rankEpoch]);
   const feed = useMemo(() => pinFeedOrder(feedOrder, clips), [clips, feedOrder]);
 
   /** Pill badges: "All 24" / "Seki 8" reads as a promise about what is behind the tab. */
@@ -583,12 +633,43 @@ export default function HighlightsTab() {
                     onOpenProfile={openProfile}
                     onReelHypeChange={applyReelHype}
                     onHide={hideClip}
+                    whyThisClip={
+                      isGuest || feedFilter !== 'home'
+                        ? null
+                        : whyThisClipLine(feedReasons.get(item.clip.id) ?? [], {
+                            athleteName: item.player?.name ?? item.clip.athleteName,
+                            sport: item.clip.sport,
+                            school: item.player?.school_name ?? item.clip.school,
+                          })
+                    }
                   />
                 </ReelPage>
               );
             }}
           />
         )}
+        {!isGuest ? (
+          <FeedPicksSheet
+            visible={feedPrefs.promptOpen}
+            prefs={{
+              ...feedPrefs.prefs,
+              schools:
+                feedPrefs.prefs.schools.length > 0
+                  ? feedPrefs.prefs.schools
+                  : profile?.team?.name?.trim()
+                    ? [profile.team.name.trim()]
+                    : [],
+            }}
+            sportOptions={pickSportOptions}
+            schoolOptions={pickSchoolOptions}
+            busy={feedPrefs.loading}
+            error={feedPrefs.error}
+            allowSkip
+            onClose={() => void feedPrefs.skipPrompt()}
+            onSkip={() => void feedPrefs.skipPrompt()}
+            onSave={(next) => feedPrefs.save(next)}
+          />
+        ) : null}
         <View
           pointerEvents="box-none"
           style={[styles.topChrome, { paddingTop: Math.max(insets.top, 8) }]}

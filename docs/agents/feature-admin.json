@@ -3,6 +3,77 @@
   "version": 1,
   "features": [
     {
+      "id": "FEED-01",
+      "title": "Interest-based Highlights Home feed (explicit picks; Phase 2/3 behind counsel flag)",
+      "owner": "HIGHLIGHTS",
+      "status": "app-ready",
+      "plannedAt": "2026-11-13T20:00:00.000Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Viewer self-serve Settings + first-run picks; ranking is a pure client function on existing reels_feed rows. No new operator write desk. Phase 2 implicit signals default OFF (EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS) until counsel clears minors/retention/third-party/disclosure. No ads, no money-in-rank, no guest personalization.",
+        "reviewedBy": "Cloud agent FEED-01 implementation; owner/counsel gates listed in PR remain open for Phase 2"
+      },
+      "source": {
+        "description": "user_feed_prefs owner-only RLS table; rankHomeFeed prefs + school cap; Why this clip; Phase 2/3 gated OFF.",
+        "paths": [
+          "supabase/migrations/20261114010000_user_feed_prefs.sql",
+          "apps/mobile/src/frontend/data/highlights.ts",
+          "apps/mobile/src/frontend/lib/feedPrefs.ts",
+          "apps/mobile/src/frontend/hooks/useFeedPrefs.ts",
+          "apps/mobile/src/frontend/components/Reels/FeedPicksSheet.tsx",
+          "apps/mobile/src/frontend/components/Profile/HighlightsFeedSettingsSheet.tsx"
+        ]
+      },
+      "admin": null,
+      "report": null,
+      "disable": {
+        "strategy": "personalization_on false or empty picks \u2192 chronological Home; EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS defaults off so Phase 2/3 never run without counsel.",
+        "paths": [
+          "apps/mobile/src/frontend/data/highlights.ts",
+          "apps/mobile/src/frontend/components/Profile/HighlightsFeedSettingsSheet.tsx"
+        ]
+      },
+      "access": {
+        "roles": [
+          "signed-in account"
+        ],
+        "deniedBehavior": "Guests stay on chronological Home with no picks sheet and no Why line. Owner-only RLS on user_feed_prefs.",
+        "paths": [
+          "supabase/migrations/20261114010000_user_feed_prefs.sql"
+        ]
+      },
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/mobile/app/(tabs)/index.tsx",
+          "apps/mobile/app/(tabs)/profile.tsx",
+          "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-13T21:00:00.000Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/FEED-01-phase0.md",
+              "command": "feature-admin presentation-only exemption; Jest FEED-01 ranking suite",
+              "result": "Local ranking tests green; Phase 0 Wave 0 feed too small for production shares; Phase 2 counsel gates open by name in PR."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-13T22:00:00.000Z",
+          "evidence": [
+            {
+              "path": "docs/engineering/evidence/FEED-01-phase0.md",
+              "command": "pnpm --filter @tapuai/mobile exec jest highlights.feedRanking; local typecheck/docs as available",
+              "result": "Ranking unit evidence recorded. Device smoke (pick \u2192 relaunch \u2192 toggle off \u2192 hide) still DEVICE_QA / APP-TEST. Hosted SQL not applied."
+            }
+          ]
+        }
+      }
+    },
+    {
       "id": "BOOKS-02",
       "title": "Finance & Books hub, finance data catalog and reconciliation",
       "owner": "FINANCE_DATA",
@@ -2099,7 +2170,7 @@
         ]
       },
       "disable": {
-        "strategy": "Publish buttons.vault OFF or pause Exclusive features in Expo Features; web Exclusive follows decideExclusiveCheckout. No separate web runtime flag yet — owner of code release. Stripe test keys stay out of production builds. Dismiss lock during confirmPayment prevents mid-flight cancel desync.",
+        "strategy": "Publish buttons.vault OFF or pause Exclusive features in Expo Features; web Exclusive follows decideExclusiveCheckout. No separate web runtime flag yet \u2014 owner of code release. Stripe test keys stay out of production builds. Dismiss lock during confirmPayment prevents mid-flight cancel desync.",
         "paths": [
           "apps/mobile/src/frontend/data/storeCommerce.ts",
           "apps/mobile/src/frontend/lib/exclusiveCheckout.ts",
@@ -2107,7 +2178,9 @@
         ]
       },
       "access": {
-        "roles": ["admin"],
+        "roles": [
+          "admin"
+        ],
         "deniedBehavior": "Only Expo admins change Features/Money. Next portal reads ledger and shows checkout-rails copy without write controls. Fan web checkout still requires Soft-Wall session for Exclusive; guests cannot confirm Payment Element without auth resume.",
         "paths": [
           "apps/mobile/src/frontend/lib/exclusiveCheckout.ts",
@@ -2121,7 +2194,10 @@
           "apps/mobile/src/frontend/lib/stripe.web.ts"
         ]
       },
-      "readiness": { "admin": null, "app": null }
+      "readiness": {
+        "admin": null,
+        "app": null
+      }
     },
     {
       "id": "VAULT-RAILS-01",
@@ -2169,7 +2245,9 @@
         ]
       },
       "access": {
-        "roles": ["admin"],
+        "roles": [
+          "admin"
+        ],
         "deniedBehavior": "Fans cannot change rails. Soft-Wall gates guest Exclusive. Next portal never toggles Vault.",
         "paths": [
           "apps/mobile/src/frontend/lib/exclusiveCheckout.ts",
@@ -2183,7 +2261,10 @@
           "apps/mobile/src/frontend/data/storeCommerce.ts"
         ]
       },
-      "readiness": { "admin": null, "app": null }
+      "readiness": {
+        "admin": null,
+        "app": null
+      }
     }
   ]
 }

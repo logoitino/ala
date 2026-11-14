@@ -7,13 +7,13 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 
 | Measure | Count |
 | --- | --- |
-| Tables | 125 |
+| Tables | 126 |
 | Views | 3 |
 | Storage buckets | 6 |
 | Feature switches read by the fan app | 42 of 42 |
 | Database functions | 613 (253 used by hand, 63 trigger functions) |
-| Tables reached by at least one screen or server route | 125 of 128 |
-| Code files that read or write the database | 84 |
+| Tables reached by at least one screen or server route | 126 of 129 |
+| Code files that read or write the database | 85 |
 | Exported symbols nothing imports | 46 (0 proposed for archive, 46 kept on purpose) |
 | Operational data exports | 15 |
 | Rule failures | 0 |
@@ -37,7 +37,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `DONATION_THANKS` | `donation_thanks` | 3 |
 | `DRIP` | `shop_orders`, `shop_products` | 0 |
 | `FILMER_REWARDS` | `filmer_props`, `filmer_rewards` | 4 |
-| `HIGHLIGHTS` | `beyond_admin_events`, `beyond_media`, `beyond_posts`, `beyond_reports`, `beyond_settings`, `beyond_submission_quota`, `challenge_athlete_settings`, `challenge_badges`, `challenge_mutes`, `challenge_nudges`, `challenge_response_quota`, `challenge_responses`, `reel_hype_votes`, `reels`, `safety_label_events`, `saved_reels`, `reels_feed` | 58 |
+| `HIGHLIGHTS` | `beyond_admin_events`, `beyond_media`, `beyond_posts`, `beyond_reports`, `beyond_settings`, `beyond_submission_quota`, `challenge_athlete_settings`, `challenge_badges`, `challenge_mutes`, `challenge_nudges`, `challenge_response_quota`, `challenge_responses`, `reel_hype_votes`, `reels`, `safety_label_events`, `saved_reels`, `user_feed_prefs`, `reels_feed` | 58 |
 | `INCIDENT_TRIAGE` | `support_reviews` | 1 |
 | `LEDGER` | `company_revenue_logs`, `stripe_webhook_events`, `tips` | 7 |
 | `LOCAL` | `games` | 3 |
@@ -1164,6 +1164,14 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Removed by: `unblock_user`
 - Triggers: `user_blocks_end_links → user_blocks_end_guardian_links`, `quiz_groups_block → quiz_groups_on_block`, `quiz_facts_block → quiz_facts_on_block`
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
+
+### `user_feed_prefs`
+
+**Owner:** `HIGHLIGHTS` · FEED-01 owner Highlights picks (sports/schools/category lean/personalization toggle). Used only to order that owner's Home feed. Deleted with the account. Never shared for ads or third-party ranking.
+
+- Written by: `@/lib/feedPrefs.ts`; database functions: —
+- Read by: `@/lib/feedPrefs.ts`; database functions: —
+- Screens: `/`, `/profile`
 
 ### `verification_requests`
 

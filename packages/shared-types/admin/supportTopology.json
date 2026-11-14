@@ -6429,6 +6429,26 @@
       ]
     },
     {
+      "name": "user_feed_prefs",
+      "kind": "table",
+      "owner": "HIGHLIGHTS",
+      "purpose": "FEED-01 owner Highlights picks (sports/schools/category lean/personalization toggle). Used only to order that owner's Home feed. Deleted with the account. Never shared for ads or third-party ranking.",
+      "writers": [
+        "apps/mobile/src/frontend/lib/feedPrefs.ts"
+      ],
+      "readers": [
+        "apps/mobile/src/frontend/lib/feedPrefs.ts"
+      ],
+      "sqlWriters": [],
+      "sqlReaders": [],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/",
+        "/profile"
+      ]
+    },
+    {
       "name": "verification_requests",
       "kind": "table",
       "owner": "ATHLETE_VERIFICATION",

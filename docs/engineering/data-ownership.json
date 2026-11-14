@@ -222,6 +222,10 @@
       "owner": "HIGHLIGHTS",
       "purpose": "Highlights a fan saved."
     },
+    "user_feed_prefs": {
+      "owner": "HIGHLIGHTS",
+      "purpose": "FEED-01 owner Highlights picks (sports/schools/category lean/personalization toggle). Used only to order that owner's Home feed. Deleted with the account. Never shared for ads or third-party ranking."
+    },
     "school_confirmers": {
       "owner": "ATHLETE_VERIFICATION",
       "purpose": "School staff allowed to confirm athletes, with hashed link tokens."

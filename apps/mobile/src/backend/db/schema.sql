@@ -410,6 +410,21 @@ create index if not exists reels_uploaded_by_idx
 create index if not exists profiles_player_id_idx
   on public.profiles (player_id);
 
+create table if not exists public.user_feed_prefs (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  sports text[] not null default '{}',
+  schools text[] not null default '{}',
+  category_pref text not null default 'all'
+    check (category_pref in ('all', 'game_play', 'train_like_me', 'serve_like_me')),
+  personalization_on boolean not null default true,
+  updated_at timestamptz not null default now(),
+  constraint user_feed_prefs_sports_len check (cardinality(sports) <= 3),
+  constraint user_feed_prefs_schools_len check (cardinality(schools) <= 3)
+);
+
+comment on table public.user_feed_prefs is
+  'FEED-01: signed-in Highlights picks. Used only to order the Home feed for that owner. Deleted with the account. Never shared for ads.';
+
 create table if not exists public.saved_reels (
   user_id uuid not null,
   reel_id uuid not null references public.reels (id) on delete cascade,
@@ -3318,6 +3333,7 @@ alter table public.sponsorships enable row level security;
 alter table public.verification_requests enable row level security;
 alter table public.disbursements enable row level security;
 alter table public.reels enable row level security;
+alter table public.user_feed_prefs enable row level security;
 alter table public.saved_reels enable row level security;
 alter table public.reel_hype_votes enable row level security;
 alter table public.subscriptions enable row level security;
@@ -4116,6 +4132,28 @@ create policy "Admin moderates any reel"
   to authenticated
   using (public.current_user_role() = 'admin')
   with check (public.current_user_role() = 'admin');
+
+revoke all on public.user_feed_prefs from public, anon;
+grant select, insert, update on public.user_feed_prefs to authenticated;
+
+drop policy if exists "Owners read own feed prefs" on public.user_feed_prefs;
+create policy "Owners read own feed prefs"
+  on public.user_feed_prefs for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "Owners insert own feed prefs" on public.user_feed_prefs;
+create policy "Owners insert own feed prefs"
+  on public.user_feed_prefs for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Owners update own feed prefs" on public.user_feed_prefs;
+create policy "Owners update own feed prefs"
+  on public.user_feed_prefs for update
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 drop policy if exists "Fans read own saved reels" on public.saved_reels;
 create policy "Fans read own saved reels"

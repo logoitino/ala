@@ -1,4 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-14 — FEED-01 interest Highlights feed (Phase 1)
+
+- `user_feed_prefs` migration + owner-only RLS; Settings / first-run picks; Personal feed toggle.
+- `rankHomeFeed` prefs scoring + Why this clip; Phase 2/3 gated OFF; money never ranks.
+
 ## 2026-11-13 — App fluidity (sheets, tabs, scroll)
 
 - `useFanSheetMotion`, Profile menu close-after-settle, SheetRise re-open, SPRING_SHEET on fan menus, single tab fade.

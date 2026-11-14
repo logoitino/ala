@@ -47,8 +47,11 @@ import { colors } from '@/constants/theme';
 import type { ReelWithPlayer, TipLedgerEntry } from '@/types/database';
 import { PrivacySettingsSheet } from '@/components/Profile/PrivacySettingsSheet';
 import { DeleteAccountSheet } from '@/components/Profile/DeleteAccountSheet';
+import { HighlightsFeedSettingsSheet } from '@/components/Profile/HighlightsFeedSettingsSheet';
 import { NotificationSettingsSheet } from '@/components/Profile/NotificationSettingsSheet';
 import { ChallengeSettingsSheet } from '@/components/Challenges/ChallengeSettingsSheet';
+import { useFeedPrefs } from '@/hooks/useFeedPrefs';
+import { SPORT_CONFIG_SEEDS } from '@/data/sports';
 
 const FAN_SELF_PREFIX = 'fan-self';
 
@@ -80,8 +83,10 @@ export default function MyHubTab() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [highlightsFeedOpen, setHighlightsFeedOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [challengesOpen, setChallengesOpen] = useState(false);
+  const feedPrefs = useFeedPrefs();
   const [flipOpen, setFlipOpen] = useState(false);
   const [vaultLockBusy, setVaultLockBusy] = useState(false);
   const [localOnboardTeam, setLocalOnboardTeam] = useState<SchoolTeam | null>(null);
@@ -332,6 +337,16 @@ export default function MyHubTab() {
           setNotificationsOpen(true);
         },
       });
+      items.push({
+        id: 'highlights-feed',
+        section: 'activity',
+        label: 'Highlights',
+        hint: 'Personal feed and sports / school picks',
+        onPress: () => {
+          trackFeature('highlights.feed_settings');
+          setHighlightsFeedOpen(true);
+        },
+      });
     }
     items.push({
       id: 'capability',
@@ -533,6 +548,24 @@ export default function MyHubTab() {
       <PrivacySettingsSheet visible={privacyOpen} onClose={() => setPrivacyOpen(false)} />
       <DeleteAccountSheet visible={deleteAccountOpen} onClose={() => setDeleteAccountOpen(false)} />
       <NotificationSettingsSheet visible={notificationsOpen && profileOpen && !isGuest} onClose={() => setNotificationsOpen(false)} />
+      <HighlightsFeedSettingsSheet
+        visible={highlightsFeedOpen && profileOpen && !isGuest}
+        prefs={feedPrefs.prefs}
+        sportOptions={SPORT_CONFIG_SEEDS.filter((row) => row.isActive).map((row) => row.sport)}
+        schoolOptions={[
+          ...(profile?.team?.name?.trim() ? [profile.team.name.trim()] : []),
+          ...players
+            .map((player) => (player.school_name || '').trim())
+            .filter(Boolean)
+            .filter((school, index, all) => all.findIndex((row) => row.toLowerCase() === school.toLowerCase()) === index)
+            .slice(0, 24),
+        ]}
+        busy={feedPrefs.loading}
+        error={feedPrefs.error}
+        onClose={() => setHighlightsFeedOpen(false)}
+        onSave={(next) => feedPrefs.save(next)}
+        onTogglePersonalization={(on) => feedPrefs.setPersonalizationOn(on)}
+      />
       <SuggestionSheet visible={suggestOpen} surface="profile" onClose={() => setSuggestOpen(false)} />
       <ChallengeSettingsSheet visible={challengesOpen} onClose={() => setChallengesOpen(false)} />
     </TabScreen>

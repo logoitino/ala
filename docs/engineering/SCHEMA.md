@@ -264,6 +264,21 @@ Fan bookmarks from the Reel right rail. Incremental: `supabase/legacy/saved_reel
 
 **RLS:** SELECT / INSERT / DELETE own rows (`auth.uid() = user_id`). Guests persist `tapuai.savedReel.guest.{reelId}` locally via `useSavedReel`.
 
+### `user_feed_prefs`
+
+FEED-01 signed-in Highlights interest picks. Used only to order that owner's Home feed. Deleted with the account (`ON DELETE CASCADE` from `auth.users`). Never shared for ads. Migration: `supabase/migrations/20261114010000_user_feed_prefs.sql` (written; hosted apply is owner-gated).
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `user_id` | uuid PK → `auth.users` ON DELETE CASCADE | Owner only. |
+| `sports` | text[] | Max 3. Values from recorded `reels.sport` vocabulary — never free text for ranking invent. |
+| `schools` | text[] | Max 3. Viewer school may be pre-checked on first-run. |
+| `category_pref` | text | `all` \| `game_play` \| `train_like_me` \| `serve_like_me`. |
+| `personalization_on` | boolean | Default true. Off → Home is newest-first with no `rankHomeFeed` bonuses. |
+| `updated_at` | timestamptz | |
+
+**RLS:** owner-only SELECT / INSERT / UPDATE (`auth.uid() = user_id`). No public / anon access. No service-role ranking reads. Client: `lib/feedPrefs.ts`, Settings → Highlights, first-run `FeedPicksSheet`.
+
 ### `reel_hype_votes`
 
 One Seki / Aura / Flex per signed-in fan per Highlight. A second tap on the same chip removes it. Incremental: `supabase/legacy/reel_hype_votes.sql`, `supabase/legacy/clear_reel_hype.sql`. Client: `loadReelVotes` / `markReelVote` / `clearReelVote` (`tapuai.reelVotes.*`). `increment_reel_hype` returns `applied: false` on a duplicate. `clear_reel_hype` deletes that fan's `reel_hype_votes` row, steps the counter down by one (never below zero), and returns `applied: false` when there was no vote to remove. Execute is `authenticated` only.
@@ -458,7 +473,7 @@ Successful Mālo (`useTipCheckout`, `!skipBacker`) **inserts** one `tips` row. H
 
 ### Related
 
-`players` (roster + hype + `aura_points` + combine measurables), `athlete_career_stats`, `athlete_game_logs`, `subscriptions`, `subscriber_requests`, `game_events`, `cheer_polls`, `operator_gigs`, `operator_checkins`, `sponsor_ads`, `sponsorships`, `shop_products`, `shop_orders`, `wishlist_items`, `company_revenue_logs`, `telemetry_logs`, `verification_requests`, `disbursements`, `schools_and_teams`, `crew_follows`, `crew_push_queue`, `app_runtime_config`, `app_feedback`. See canonical `schema.sql`.
+`players` (roster + hype + `aura_points` + combine measurables), `athlete_career_stats`, `athlete_game_logs`, `subscriptions`, `subscriber_requests`, `game_events`, `cheer_polls`, `operator_gigs`, `operator_checkins`, `sponsor_ads`, `sponsorships`, `shop_products`, `shop_orders`, `wishlist_items`, `company_revenue_logs`, `telemetry_logs`, `verification_requests`, `disbursements`, `schools_and_teams`, `crew_follows`, `crew_push_queue`, `app_runtime_config`, `app_feedback`, `user_feed_prefs`. See canonical `schema.sql`.
 
 ### `sponsorships`
 
@@ -1326,6 +1341,7 @@ If `aura_points` is unset on a player, the client falls back to `aura_count + se
 | `app_feedback` | Admin or `anon` | INSERT anyone; admin or `anon` UPDATE — not tightened this pass |
 | `telemetry_logs` | Authenticated (any signed-in user — still open, STATE §6) | INSERT anyone, including anon (guest browse). Row shape is bounded by CHECKs in `20260929190000_telemetry_logs_bounds.sql` (staging only) |
 | `saved_reels` | Own rows | INSERT / DELETE own rows |
+| `user_feed_prefs` | Own row | INSERT / UPDATE own row |
 | `reel_hype_votes` | Own rows | INSERT own rows, **authenticated only** (anon execute on `increment_reel_hype` defeated this table's own per-user dedupe — closed) |
 | `schools_and_teams` | Public | Admin INSERT / UPDATE / DELETE |
 | `athlete_career_stats` | Public | Seed-only |

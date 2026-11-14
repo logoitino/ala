@@ -118,6 +118,7 @@ function ReelCardImpl({
   onOpenProfile,
   onReelHypeChange,
   onHide,
+  whyThisClip = null,
   surface = 'home',
 }: ReelCardProps) {
   const insets = useSafeAreaInsets();
@@ -443,6 +444,8 @@ function ReelCardImpl({
       if (reason !== 'coach_level') {
         await hideReelLocally(clip.id);
         onHide?.(clip.id);
+        const { rememberFeedHideAthlete } = await import('@/lib/feedPrefs');
+        await rememberFeedHideAthlete(clip.playerId ?? player?.id);
       }
       telemetry.trackIssue('report', surface);
       celebration?.showToast(reason === 'coach_level' ? 'Sent to reviewers. This Highlight stays up.' : 'Highlight hidden 🚩');
@@ -455,7 +458,7 @@ function ReelCardImpl({
     } finally {
       setReporting(false);
     }
-  }, [celebration, clip.id, onHide, reporting, surface, user?.id]);
+  }, [celebration, clip.id, clip.playerId, onHide, player?.id, reporting, surface, user?.id]);
 
   const unlockVault = useCallback(() => {
     if (unlocking) return;
@@ -551,6 +554,11 @@ function ReelCardImpl({
     Boolean(user?.id),
     photoStory ? storyLoaded && isFocused && !locked : playing && isFocused && !locked,
     photoStory ? VIEW_PLAY_MS : viewThresholdMs(playing ? durationSec : null),
+    {
+      athleteId: clip.playerId ?? player?.id,
+      school: schoolName || clip.school,
+      sport: clip.sport,
+    },
   );
 
   return (
@@ -703,6 +711,7 @@ function ReelCardImpl({
           position={player?.position}
           caption={clip.tag}
           storyNote={storyNote}
+          whyThisClip={whyThisClip}
           withAccounts={withAccounts}
           filmedBy={clip.filmedBy}
           onOpenFilmer={clip.filmedBy && clip.uploadedBy ? () => setFilmerOpen(true) : undefined}
@@ -771,7 +780,20 @@ function ReelCardImpl({
         }}
         onToggleSave={() => {
           telemetry.trackFeature('save', surface);
-          void toggleSave();
+          void (async () => {
+            const next = !saved;
+            await toggleSave();
+            if (next && user?.id) {
+              const { rememberFeedSaveTouch } = await import('@/lib/feedPrefs');
+              await rememberFeedSaveTouch({
+                clipId: clip.id,
+                athleteId: clip.playerId ?? player?.id,
+                school: schoolName || clip.school,
+                sport: clip.sport,
+                atMs: Date.now(),
+              });
+            }
+          })();
         }}
         onReport={() => {
           setMoreOpen(false);
