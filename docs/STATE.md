@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 13:15 MST · WEB-DESKTOP card feed CI: typed FeedReasonCode in DesktopHighlightFeed tests + NetInfo stub. PR #55.
+**Last updated:** 2026-11-15 13:20 MST · WEB-DESKTOP card feed CI currency (`ip:sync`, exit map, security:infra). PR #55.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,10 +175,11 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
-### 2026-11-15 — WEB-DESKTOP card feed CI (typecheck + NetInfo)
+### 2026-11-15 — WEB-DESKTOP card feed CI currency
 
-- Typed `feedReasons` as `Map<string, FeedReasonCode[]>` in DesktopHighlightFeed tests (CI
-  typecheck). `highlights-jump` stubs desktop feed so NetInfo never boots. PR #55.
+- `pnpm ip:sync` / exit map acknowledge / `security:infra` after card-feed source touch. Prior:
+  typed FeedReasonCode in DesktopHighlightFeed tests; `highlights-jump` stubs desktop feed
+  (NetInfo). PR #55.
 - **About to spend:** **$0**.
 
 ### 2026-11-15 — WEB-DESKTOP card feed Codex review fixes

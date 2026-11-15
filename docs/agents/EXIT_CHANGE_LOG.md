@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-15 · plan `8d3c9f2e2fc4` → `fd36c39243b6` · announced by WEB-DESKTOP card-feed CI currency
+
+App at announcement: commit `5eb65e75247acdfa45c7f849a89eaa5427422270`, source `fd36c39243b69d9650c3b7ae5708d71489a01bb651789f67e151fea07e0aed30`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app/(tabs)/__tests__/highlights-jump.test.tsx daa10081e54ad9a6ec2d460ba288472f9c61448034e784ce483c577994781165`, `apps/mobile/app/(tabs)/index.tsx 57a12eb896f47dcc4db5cedd1738017971a654b7d45f3d5b710b8a2aeff5eb7c`, `apps/mobile/src/frontend/components/Reels/DesktopHighlightFeed.tsx 9cbe8c17632b6e7040dc4a030be3e6f88475ab587b16fd4c4f98b7f4acec85af`, `apps/mobile/src/frontend/components/Reels/ReelViewModal.tsx 3fc21054a2fcab9eccbaab7e95a3ffa6a1d8569fc0d760ba4e989c56b5d42378`, `apps/mobile/src/frontend/components/Reels/__tests__/DesktopHighlightFeed.test.tsx 982449a7f8521a7bf843190757b7cc87a012ce6f9686e6b600d7e6b1e62f1e31`, `apps/mobile/src/frontend/data/__tests__/guestBrowse.test.ts 786a78428de5be96951885c2a62ef8cf13dd9058c1eb51fd903a2386a882e5fb`, `apps/mobile/src/frontend/data/guestBrowse.ts fffec050d6cc82efdc2603f47279d252ce985822555ce0123ec8b12f833b41fd`; removed `apps/mobile/app/(tabs)/__tests__/highlights-jump.test.tsx b7ae4f1d5edc8f578d7ecd256246324a1a4fba9e62757554cf60b105a72d5a30`, `apps/mobile/app/(tabs)/index.tsx c35e2c65dd43b7ff97bd94354fc3720e5af6a62ac3996f5897719a291d5f3591`, `apps/mobile/src/frontend/components/Reels/DesktopHighlightFeed.tsx e73204249df253bc1f0307bbbb719f4b83ea89d3fea578d08e6ffde974a7d482`, `apps/mobile/src/frontend/components/Reels/ReelViewModal.tsx 75214e5d081eb82df413f86b7aa93b550d4fdc685d545d9db5f6ea53229c06a1`, `apps/mobile/src/frontend/components/Reels/__tests__/DesktopHighlightFeed.test.tsx 5f2940eb7341c7f0656eaa64627308a27fb826c4d00ae55bb091237cd1a23fd9`, `apps/mobile/src/frontend/data/__tests__/guestBrowse.test.ts 26c48718d4d6d5f3438e23c6e57c2b675d3fc018986b585bb0e7e09b350c7bf4`, `apps/mobile/src/frontend/data/guestBrowse.ts a41baf69a867f3013c3adbb5b5e8ae0f03bfb00ef5a3ac3bbc8274d38734b225`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-15 · plan `e93b9c6f8748` → `8d3c9f2e2fc4` · announced by WEB-DESKTOP card feed
 
 App at announcement: commit `083ba27f86d5c44fff084f0c4624ee9891570290` + 5 uncommitted file(s), source `8d3c9f2e2fc4797b9c715f7a8e3413e15e4a6b741244d43f5d36e6d177a44854`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
