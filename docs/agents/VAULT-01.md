@@ -1,7 +1,7 @@
-<!-- VAULT-01 proposal: the Vault value ladder, its wording and the money-back arithmetic. Nothing here is decided or built; owner decisions V1–V6 are listed at the end. -->
-# VAULT-01 — Vault value ladder (proposal)
+<!-- VAULT-01: the Vault value ladder, its wording and the money-back arithmetic. The owner approved decisions V1–V6 on 2026-11-15; nothing is built yet. -->
+# VAULT-01 — Vault value ladder
 
-**Status:** proposal, 2026-11-14. Nothing is built or priced by this document. **Evidence:** [VAULT-AUDIT](VAULT-AUDIT.md).
+**Status:** owner approved V1–V6 as recommended on 2026-11-15. Nothing is built yet; the build starts after APP-TEST lanes A–C. **Evidence:** [VAULT-AUDIT](VAULT-AUDIT.md).
 **Owner:** COMMERCE (extends feature `VAULT-RAILS-01`), with VAULT, BILLING, VOICE, LEGAL, MINOR_SAFETY and CFO.
 Reviews by those roles are pending. If the CHECK-01 protocol (PR #52) merges, its Money, Minors/privacy and Copy rows apply.
 
@@ -20,9 +20,9 @@ These come before any tier and are not optional:
 | Tier | Who pays | What they get | Price | Athlete side | Tapua'i keeps | Ready? |
 | --- | --- | --- | --- | --- | --- | --- |
 | 0. Free public feed | Nobody | Highlights, tagging, gifts at 100% | Free | 100% of gifts | Optional tips only | Exists. Unchanged. |
-| 1. One-time Exclusive pass | Fan | That athlete's Vault clips, shoutout / Q&A requests, Flash Unlock windows | $4.99 today (Catalogs desk) | 80% recorded | 20% before processor or store fees | Exists on web and test builds. Needs the five fixes above. |
-| 2. Athlete subscription | Athlete or guardian | Vault tools: scheduled Flash Unlock, Vault view counts, pinned Vault intro | Owner decides; the model says $5–10 a month | Does not apply (they are the buyer) | Price less store fee | **Not ready.** Design only. |
-| 3. Fan subscription | Fan | Vault access across followed athletes | Not proposed | Would need a sharing rule | Not proposed | **Not recommended now.** |
+| 1. One-time Exclusive pass | Fan | That athlete's Vault clips, shoutout / Q&A requests, Flash Unlock windows | $4.99 today (Catalogs desk) | 80% of proceeds after the store or processor fee | 20% of the same proceeds | Exists on web and test builds. Needs the five fixes above. |
+| 2. Athlete subscription | Athlete or guardian | Vault tools: scheduled Flash Unlock, Vault view counts, pinned Vault intro | Owner decides; the model says $5–10 a month | Does not apply (they are the buyer) | Price less store fee | **Held** (V1). Not built. |
+| 3. Fan subscription | Fan | Vault access across followed athletes | Not proposed | Would need a sharing rule | Not proposed | **Held** (V1). Not built. |
 
 **One honest line per tier, written from what exists:**
 - **Tier 0:** "Watch, tag and give. Free, always."
@@ -66,7 +66,7 @@ Principles and their source in [VOICE](../product/VOICE.md) "Keep people donatin
 
 **Before anyone pays, the screen says:**
 - **What it is:** "A one-time Exclusive purchase."
-- **Who gets it:** "80% is recorded for {first name}. Tapua'i keeps 20% to run the platform." Store builds add: "{Store} fees are separate."
+- **Who gets it:** "After payment fees, 80% is recorded for {first name} and Tapua'i keeps 20% to run the platform." This follows V1: the split is taken from what is left after the store or processor fee. Today's copy and books split the full price, so both change in build step 1.
 - **What it is not:** "This is a purchase, not a gift. It is not tax-deductible and does not affect recruiting or eligibility."
 - **Flash Unlock:** "{first name} opened this clip for 2 hours." It is the athlete's own choice and a real window.
 - **Guardians:** the same split in the same words, plus lock/open.
@@ -106,31 +106,46 @@ rates are outside facts to verify.
 - A handful of athlete subscriptions covers the pilot, where passes need dozens of sales a month.
 - That is the business case for Tier 2. It is also the reason to be careful: the buyer is a family, often a minor's.
 
-## Owner decisions (route to FACILITATOR)
+## Owner decisions (decided 2026-11-15, all as recommended)
 
-| # | Decision | Recommendation |
+| # | Decision | Owner's answer |
 | --- | --- | --- |
-| V1 | Tiers and prices, including the store rule (who absorbs Apple, Google and Stripe fees) | Keep Tier 1 at $4.99. Split 20/80 **of proceeds after the store or processor fee**. Hold Tiers 2 and 3. |
-| V2 | What is in each tier | Tier 1: clips, requests and Flash Unlock, as today. Add a clip count to the locked preview. |
-| V3 | The +100 Aura on purchase (counsel) | Remove it from the purchase, or reframe it as a thank-you with no number. Do not extend it. |
-| V4 | In-app payment path | Confirm: web Stripe; store builds wait for StoreKit and Play Billing. Until then a store build sells no pass. |
-| V5 | Earnings view and custodial direction | Build the free "recorded for you" view. Finalise direction A (STATE §6 item 8) with counsel before any "paid" wording or cost goals. |
-| V6 | Final wording | VOICE and LEGAL review the table above; the owner approves. |
+| V1 | Tiers, prices and the store rule | **Approved.** The one-time pass stays at $4.99. The split is 20/80 of proceeds **after** the store or processor fee. Tiers 2 and 3 are held and not built. |
+| V2 | What is in each tier | **Approved.** Tier 1 stays clips, shoutout / Q&A requests and Flash Unlock. The locked preview gains the clip count. |
+| V3 | The +100 Aura on purchase | **Approved.** Remove it from the purchase, or reframe it as a thank-you with no number. Counsel decides which. It is not extended to anything else. |
+| V4 | In-app payment path | **Approved.** Web stays Stripe. Store builds wait for StoreKit and Play Billing, and sell no pass until then. |
+| V5 | Earnings view and custodial direction | **Approved.** Build the free "recorded for you" view for the athlete and guardian. Finalise direction A with counsel before any "paid" wording or cost goals. |
+| V6 | Wording | **Approved.** The wording table goes to VOICE and LEGAL review. |
+
+**Athlete share on a $4.99 pass under V1** (rates to confirm):
+
+| Rail | Fee | Recorded for the athlete | Tapua'i |
+| --- | --- | --- | --- |
+| Web Stripe | $0.44 | $3.64 | $0.91 |
+| Apple IAP at 30% | $1.50 | $2.79 | $0.70 |
+| Apple IAP at 15% | $0.75 | $3.39 | $0.85 |
+
+**Still open, not decided:**
+- Whether Apple's rate is 15% or 30% for this account.
+- The store classification of the pass.
+- The counsel items below.
 
 **Counsel-open (do not design around):**
+- The final form of V3 (remove the Aura grant, or reframe it).
+- Custodial direction A.
 - A minor fan buying a pass.
 - A minor athlete earning commercial income.
 - Store classification of the pass.
 - Aura tied to a purchase.
 - Tax and eligibility statements.
 
-## Build order once V1–V6 are answered (after APP-TEST lanes A–C)
+## Build order (owner-approved; starts after APP-TEST lanes A–C)
 
 1. **Server-granted pass:**
    - A payment purpose on the PaymentIntent.
    - The webhook or a confirm call inserts the pass.
    - Remove the client insert grant.
-   - Record the real price.
+   - Record the real price and the real fee, and split 20/80 of the proceeds (V1).
    - Handle refunds.
 
    This crosses the Money and Schema ◆ rows; the owner applies the SQL.
