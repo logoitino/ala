@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 16:00 MST · WEB-DESKTOP card feed **FINISHED** (Crew shortcuts + Playwright 1920/820/390). Owner merges #54 then #55.
+**Last updated:** 2026-11-15 16:40 MST · WEB-DESKTOP card feed FINISHED + data:map currency for CI. Owner merges #54 then #55.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,11 +175,16 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-15 — WEB-DESKTOP card feed data:map currency
+
+- Regenerated `DATA_MAP.md` + `supportTopology.json` after Crew shortcuts (`fetchCrewShortcuts`).
+- **About to spend:** **$0**.
+
 ### 2026-11-15 — WEB-DESKTOP card feed FINISHED
 
 - Real Crew shortcuts on left rail (`fetchCrewShortcuts`); Playwright smoke 1920/820/390 in
   `docs/engineering/evidence/web-desktop-card-feed/`. PR [#55](https://github.com/logoitino/ala/pull/55)
-  CI green; owner merges #54 then #55.
+  owner merges #54 then #55.
 - **About to spend:** **$0**.
 
 ### 2026-11-15 — WEB-DESKTOP card feed CI currency

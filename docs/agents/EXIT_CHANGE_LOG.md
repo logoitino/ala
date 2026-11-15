@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-15 · plan `67f9fb440f6c` → `06bb9af8d4c9` · announced by WEB-DESKTOP card-feed data:map currency
+
+App at announcement: commit `296e2ef14d8c9cac3ab603cfc88e938c9fe5ad4f` + 1 uncommitted file(s), source `06bb9af8d4c9c8aa72ae3c77e399b13bd52e3c8ad9541340836ef589c6fffec7`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `packages/shared-types/admin/supportTopology.json 60494d6a291e1b737c600182f90f729fccc14f5b1b943e35f63ea55b9423686d`; removed `packages/shared-types/admin/supportTopology.json b4dad9d806293d6cc75d5196dec12101c151b429b39edf2cf3bac41478d64a80`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-15 · plan `fd36c39243b6` → `67f9fb440f6c` · announced by WEB-DESKTOP card-feed Crew shortcuts finish
 
 App at announcement: commit `ec219c46613982132140ca33237a4faf7af184f5` + 3 uncommitted file(s), source `67f9fb440f6c83ff9d284510cf14ae8054c7a9f920e077cb191038055a4efaf2`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
