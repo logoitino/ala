@@ -16115,6 +16115,7 @@
       "path": "tabs.home",
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx"
       ]
     },
@@ -16145,6 +16146,7 @@
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
         "apps/mobile/app/(tabs)/activity.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx"
       ]
     },
@@ -16155,6 +16157,7 @@
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
         "apps/mobile/app/(tabs)/spotlight.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx"
       ]
     },
@@ -16164,7 +16167,9 @@
       "path": "tabs.drip",
       "readers": [
         "apps/mobile/app/(tabs)/drip.tsx",
-        "apps/mobile/app/(tabs)/profile.tsx"
+        "apps/mobile/app/(tabs)/profile.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx"
       ]
     },
     {
@@ -16173,6 +16178,7 @@
       "path": "tabs.profile",
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx"
       ]
     },

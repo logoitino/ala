@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 11:50 MST · WEB-DESKTOP-01 **FINISHED** (PR #54; CI fix + smoke). FEED-01 Phase 1 finished; webhook tip crediting stays **off**.
+**Last updated:** 2026-11-15 11:56 MST · WEB-DESKTOP-01 **FINISHED**; CI data-map/exit refresh. FEED-01 Phase 1 finished; webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -178,9 +178,11 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ### 2026-11-15 — WEB-DESKTOP-01 FINISHED
 
 - Receipt: [WEB-DESKTOP-01-finish.md](engineering/evidence/WEB-DESKTOP-01-finish.md). Shell + Lovable
-  reference + width after-table + guest smoke (1920 rails, Local nav, 390 dock). CI: `ip:sync`,
-  `exit:map --acknowledge`, `security:infra`. Owner merges [#54](https://github.com/logoitino/ala/pull/54).
+  reference + width after-table + guest smoke (1920 rails, Local nav, 390 dock). CI follow-up:
+  `data:map`, `ip:sync`, `exit:map --acknowledge`, `security:infra`. Owner merges
+  [#54](https://github.com/logoitino/ala/pull/54).
 - **About to spend:** Lovable **3 credits** (not in ROADMAP Wave 0). Else **$0**.
+  Note: Exit source-release artifact upload may warn if GitHub Actions free storage quota is full.
 
 ### 2026-11-15 — WEB-DESKTOP three-panel Expo web shell
 

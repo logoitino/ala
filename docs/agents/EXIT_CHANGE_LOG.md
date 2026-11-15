@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-15 · plan `1479831a71a4` → `e93b9c6f8748` · announced by cursor/web-desktop-layout-9a86 data-map
+
+App at announcement: commit `7be97617016775b84866b96da5229e5d2a93824b` + 1 uncommitted file(s), source `e93b9c6f8748a267aab2cec5584544bdb8638b607a99ee056b479bca960af1ea`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `packages/shared-types/admin/supportTopology.json b4dad9d806293d6cc75d5196dec12101c151b429b39edf2cf3bac41478d64a80`; removed `packages/shared-types/admin/supportTopology.json 805772f8c34a0febcf5e255ebd3cded17e552dca36eea560f50473f73c055ccf`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-15 · plan `9a503335d588` → `1479831a71a4` · announced by cursor/web-desktop-layout-9a86 WEB-DESKTOP-01
 
 App at announcement: commit `378e6de32c63348e197a212c464661c2eb636de8`, source `1479831a71a4815323d78295d3bcabbcad63842c03ef8292593f75c853231545`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
