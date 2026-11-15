@@ -1,5 +1,5 @@
 {
- "planVersion": "e93b9c6f8748",
+ "planVersion": "8d3c9f2e2fc4",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1633,7 +1633,7 @@
    "apps/mobile/app/(tabs)/athlete/_layout.tsx cd1b594efd4f856981fb7c61ade58e3d5804d8c656afcd7320fcd0c5291953e8",
    "apps/mobile/app/(tabs)/beyond.tsx 396de53b060320efa9c09d60efbb3876b32fc250bf5515304c43c07ea216e86a",
    "apps/mobile/app/(tabs)/drip.tsx cfe88a41af0f870a65080ac230d1eab268c0effd4ee320a755ea4eedab5eaf62",
-   "apps/mobile/app/(tabs)/index.tsx 80a145122b7bd6c1dcba5c48ef01b542c2eb368ca262f996ab1dfd6b78e529af",
+   "apps/mobile/app/(tabs)/index.tsx c35e2c65dd43b7ff97bd94354fc3720e5af6a62ac3996f5897719a291d5f3591",
    "apps/mobile/app/(tabs)/local/_layout.tsx 5aceae7a0036a3d8525e9a567b035a146bbe217232bc5c14b23703499bd9592f",
    "apps/mobile/app/(tabs)/local/game/[id].tsx e0adfdd8c363e16fd6ad4b4e91dd9c2a11854e65bb24345441208b5625b7e9f6",
    "apps/mobile/app/(tabs)/local/index.tsx 31db54b31790c63595038b82e06df532f258d34543da083c8d31f4c9eb1f8037",
@@ -1877,7 +1877,7 @@
    "apps/mobile/src/frontend/components/Challenges/ChallengeSettingsSheet.tsx 7a06a6659e982d692d6c7fa45a5e84c7e96e35bda3878bc496a0151dbd75c2f3",
    "apps/mobile/src/frontend/components/Challenges/__tests__/Challenges.test.tsx 1aabca14cb4851ed077794db3612a18aefb24f329c80924deb4397227279a157",
    "apps/mobile/src/frontend/components/Checkout/WebPaymentSheetHost.tsx cbf1609916662cd13d55fcd5bc4680983feffec2aac7d7c2fb41e977e56c71f6",
-   "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx 3a3745f9e6ad800c7582506ac453ad8513e07792d41d6a553750eb53ebbfe3e5",
+   "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx b5686c7835e8f5545ff747145529fe2b13aada15999f2b640ee40b360e2235ba",
    "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx acc371e5162011d3cc20ee0896d22525ee44f5e0c22db5c9dbb82ad7975d5c66",
    "apps/mobile/src/frontend/components/Common/FeatureBoundary.tsx e69be7f2a78f1bd35fc2ec78ef24631e51d04dc243c19154a684b17ea2a3c1c6",
    "apps/mobile/src/frontend/components/Common/SupportRuntimeObserver.tsx 3f7dd4f6a4b686f719ea343fdc6b61831899ee56bd22624dec283b0247411be4",
@@ -2024,6 +2024,8 @@
    "apps/mobile/src/frontend/components/Rally/__tests__/RallyCard.test.tsx e7b0654ecd6c841c439dc320e28af46bd7490ec416222c4870023b3d44183b20",
    "apps/mobile/src/frontend/components/Reels/AccountTagField.tsx 435902f2a67a74136283e4012789886ea7968c318a212c638c4b36c130673070",
    "apps/mobile/src/frontend/components/Reels/CoachLevelBadge.tsx 046d6cd73c9a601f8d795d7727693255c30cf6f490a664cc2cfd1c714d8d99e0",
+   "apps/mobile/src/frontend/components/Reels/DesktopHighlightCard.tsx fac0b9f9794653f09138ea625ce1f8cb26698df0ba80f6727600a1cd1eb122b4",
+   "apps/mobile/src/frontend/components/Reels/DesktopHighlightFeed.tsx e73204249df253bc1f0307bbbb719f4b83ea89d3fea578d08e6ffde974a7d482",
    "apps/mobile/src/frontend/components/Reels/FeedPicksSheet.tsx 3a81229d329fb0bcb9fe034f11721a69cf1b019b71fbd5b0358d1e1205dd4a9b",
    "apps/mobile/src/frontend/components/Reels/HighlightPickerModal.tsx 590de838f208fef47fab4172a5bcc8ede0811b42e469f8f091ea959104d65b3f",
    "apps/mobile/src/frontend/components/Reels/HomeCampaignCopy.tsx 85eeb8c3773ae2ca0a228573a831e80f99cfd92f3fa94d8887c913199ee1a01e",
@@ -2048,6 +2050,7 @@
    "apps/mobile/src/frontend/components/Reels/UploadChoiceSheet.tsx 68e06265c52297ab8bfb3d4acb558225d39213f5f70eab31cb52c86d8b43d644",
    "apps/mobile/src/frontend/components/Reels/UploadVideoComposer.tsx 38127e43830bf67f028fda1c396a4bcebd409a3d609ff08934ec29d97d604c08",
    "apps/mobile/src/frontend/components/Reels/UploadVideoModal.tsx e366cc8be0d6a9228872c966e55f1b421434b1a02eeacae08ea5c88b046218c3",
+   "apps/mobile/src/frontend/components/Reels/__tests__/DesktopHighlightFeed.test.tsx 5f2940eb7341c7f0656eaa64627308a27fb826c4d00ae55bb091237cd1a23fd9",
    "apps/mobile/src/frontend/components/Reels/__tests__/FeedPicksSheet.test.tsx 805eb6bcf94c21c5e21db5767852574c3d7aae25835727eba593db40f66d4eef",
    "apps/mobile/src/frontend/components/Reels/__tests__/HighlightPickerModal.test.tsx b8d0bc2b2ae1e5087b87fbc8c99e75fd0c2f9b6edea17e067fa49727a60a95c8",
    "apps/mobile/src/frontend/components/Reels/__tests__/LiveMatchBanner.test.tsx 8949be3bd06577b91d1b17f958fa79438cd204d2f04b395800eb9ae7498ef29f",

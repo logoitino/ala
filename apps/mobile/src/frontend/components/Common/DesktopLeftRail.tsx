@@ -76,6 +76,18 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
       accessibilityRole="navigation"
       accessibilityLabel="Main"
     >
+      <Pressable
+        onPress={() => router.push('/')}
+        accessibilityRole="link"
+        accessibilityLabel="Tapua'i Home"
+        style={[styles.brand, iconsOnly && styles.brandCompact]}
+      >
+        {iconsOnly ? (
+          <Text style={styles.brandMark}>T</Text>
+        ) : (
+          <Text style={styles.brandName}>{"Tapua'i"}</Text>
+        )}
+      </Pressable>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {fanItems.map((item) => {
           const on = pathMatches(pathname, String(item.href));
@@ -156,8 +168,29 @@ const styles = StyleSheet.create({
   rootCompact: {
     width: 72,
   },
+  brand: {
+    paddingHorizontal: space.md,
+    paddingTop: space.md,
+    paddingBottom: space.sm,
+    minHeight: 52,
+    justifyContent: 'center',
+  },
+  brandCompact: {
+    alignItems: 'center',
+    paddingHorizontal: 0,
+  },
+  brandName: {
+    fontFamily: FONT.display,
+    fontSize: 26,
+    color: colors.primary,
+  },
+  brandMark: {
+    fontFamily: FONT.display,
+    fontSize: 22,
+    color: colors.primary,
+  },
   scroll: {
-    paddingVertical: space.md,
+    paddingVertical: space.sm,
     paddingHorizontal: space.sm,
     gap: 2,
   },

@@ -1,4 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-15 — WEB-DESKTOP Lovable-outline card feed
+
+- Expo web ≥820 Home center: scrollable Highlight cards (sport pills, Why this clip, Cheer / Send a gift) matching the Lovable desktop outline with live data.
+- Phone pager unchanged on native and web &lt;820. Three-panel shell remains PR #54.
+
 ## 2026-11-14 — FEED-01 interest Highlights feed (Phase 1)
 
 - `user_feed_prefs` migration + owner-only RLS; Settings / first-run picks; Personal feed toggle.

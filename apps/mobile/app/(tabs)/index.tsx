@@ -12,6 +12,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DesktopHighlightFeed } from '@/components/Reels/DesktopHighlightFeed';
 import { HomeCampaignCopy } from '@/components/Reels/HomeCampaignCopy';
 import { HomeFeedEmpty } from '@/components/Reels/HomeFeedEmpty';
 import { HomeFeedSwitch } from '@/components/Reels/HomeFeedSwitch';
@@ -36,6 +37,7 @@ import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useFanDockHeight } from '@/context/FanNavigationContext';
 import { FOCAL, SPRING_SHEET } from '@/theme/motion';
 import { FeedPicksSheet } from '@/components/Reels/FeedPicksSheet';
+import { useWebDesktopMode } from '@/hooks/useAppViewport';
 import {
   HIGHLIGHT_CLIPS,
   HIGHLIGHT_FEED_BEYOND,
@@ -77,7 +79,7 @@ const HOME_PILL: { id: HighlightFeedFilter; label: string } = { id: 'home', labe
 const BEYOND_PILL: { id: HighlightFeedFilter; label: string } = { id: 'beyond', label: HIGHLIGHT_FEED_BEYOND };
 
 /**
- * @purpose Full-screen Home feed: Home mix, a Beyond switch (workout + service Highlights, with a link to the Beyond the Game page for fan posts), clip + athlete search, and a Local jump. All and Seki stay off the bar until a later pass. Exclusive mute/Aura gestures, live score banner, donation sheet, Player of the Week spotlight. A guest can watch the opened Highlight and two more swipes, then the account sheet. Pages ride `ReelPage` for card-deck depth on vertical paging and swipe left / right to peek the athlete who owns the clip.
+ * @purpose Full-screen Home feed: Home mix, a Beyond switch (workout + service Highlights, with a link to the Beyond the Game page for fan posts), clip + athlete search, and a Local jump. All and Seki stay off the bar until a later pass. Exclusive mute/Aura gestures, live score banner, donation sheet, Player of the Week spotlight. A guest can watch the opened Highlight and two more swipes, then the account sheet. Pages ride `ReelPage` for card-deck depth on vertical paging and swipe left / right to peek the athlete who owns the clip. On Expo web ≥820px, the Lovable-outline card feed (`DesktopHighlightFeed`) replaces the phone pager; native and phone web stay unchanged.
  * @sideEffects `useReels` fetch; `crew_follows` for Home ranking; `clearVideoCacheAsync` on mount; `get_active_spotlight_award` launch popup; `MaloTipModal` PaymentSheet; hide list after Report; Reanimated scroll handler feeds the pager depth math.
  */
 export default function HighlightsTab() {
@@ -85,6 +87,8 @@ export default function HighlightsTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const dockHeight = useFanDockHeight();
+  const desktopMode = useWebDesktopMode();
+  const useDesktopCards = Platform.OS === 'web' && desktopMode !== 'mobile';
   const listRef = useRef<FlatList<FeedItem>>(null);
   const guestSeen = useRef(new Set<string>());
   const guestAllowedIndex = useRef(0);
@@ -534,6 +538,81 @@ export default function HighlightsTab() {
           ? 'Your Home mix is quiet. Find an athlete with search, then follow their story in Crew.'
           : 'Your Home mix is quiet. New Highlights from athletes you follow will appear here.'
         : runtime.copy.homeEmpty;
+
+  if (useDesktopCards) {
+    return (
+      <TabScreen>
+        {!cacheReady || !clientFeed ? (
+          <View style={styles.boot}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : (
+          <DesktopHighlightFeed
+            feed={feed}
+            feedReasons={feedReasons}
+            sportOptions={pickSportOptions}
+            emptyCopy={emptyCopy}
+            isGuest={isGuest}
+            refreshing={refreshing}
+            onRefresh={() => void onPullRefresh()}
+            tippedIds={tippedIds}
+            tipPlayer={tipPlayer}
+            onReelHypeChange={applyReelHype}
+            tipTarget={tipTarget}
+            onCloseTip={() => setTipTarget(null)}
+            onBacked={(nextCount) => {
+              if (tipTarget) applyBackerCount(tipTarget.player.id, nextCount);
+            }}
+            onTipped={(amountCents) => {
+              if (tipTarget?.reelId) {
+                applyReelTips(tipTarget.reelId, amountCents);
+                setLocalTipped((current) =>
+                  current.includes(tipTarget.reelId!) ? current : [tipTarget.reelId!, ...current],
+                );
+              }
+            }}
+          />
+        )}
+        {!isGuest ? (
+          <FeedPicksSheet
+            visible={feedPrefs.promptOpen}
+            prefs={{
+              ...feedPrefs.prefs,
+              schools:
+                feedPrefs.prefs.schools.length > 0
+                  ? feedPrefs.prefs.schools
+                  : profile?.team?.name?.trim()
+                    ? [profile.team.name.trim()]
+                    : [],
+            }}
+            sportOptions={pickSportOptions}
+            schoolOptions={pickSchoolOptions}
+            busy={feedPrefs.loading}
+            error={feedPrefs.error}
+            allowSkip
+            onClose={() => void feedPrefs.skipPrompt()}
+            onSkip={() => void feedPrefs.skipPrompt()}
+            onSave={(next) => feedPrefs.save(next)}
+          />
+        ) : null}
+        <SpotlightModal
+          award={spotlight.award}
+          visible={cacheReady && spotlight.visible}
+          onDismiss={() => {
+            void spotlight.dismiss();
+          }}
+          onSupport={(player, reelId) => {
+            afterSpotlightHide(() => {
+              void tipPlayer(player, reelId);
+            });
+          }}
+          onWatch={(reelId, playerId) => {
+            afterSpotlightHide(() => jumpToSpotlightClip(reelId, playerId));
+          }}
+        />
+      </TabScreen>
+    );
+  }
 
   return (
     <TabScreen dark>

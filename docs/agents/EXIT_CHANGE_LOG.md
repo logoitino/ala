@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-15 · plan `e93b9c6f8748` → `8d3c9f2e2fc4` · announced by WEB-DESKTOP card feed
+
+App at announcement: commit `083ba27f86d5c44fff084f0c4624ee9891570290` + 5 uncommitted file(s), source `8d3c9f2e2fc4797b9c715f7a8e3413e15e4a6b741244d43f5d36e6d177a44854`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app/(tabs)/index.tsx c35e2c65dd43b7ff97bd94354fc3720e5af6a62ac3996f5897719a291d5f3591`, `apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx b5686c7835e8f5545ff747145529fe2b13aada15999f2b640ee40b360e2235ba`, `apps/mobile/src/frontend/components/Reels/DesktopHighlightCard.tsx fac0b9f9794653f09138ea625ce1f8cb26698df0ba80f6727600a1cd1eb122b4`, `apps/mobile/src/frontend/components/Reels/DesktopHighlightFeed.tsx e73204249df253bc1f0307bbbb719f4b83ea89d3fea578d08e6ffde974a7d482`, `apps/mobile/src/frontend/components/Reels/__tests__/DesktopHighlightFeed.test.tsx 5f2940eb7341c7f0656eaa64627308a27fb826c4d00ae55bb091237cd1a23fd9`; removed `apps/mobile/app/(tabs)/index.tsx 80a145122b7bd6c1dcba5c48ef01b542c2eb368ca262f996ab1dfd6b78e529af`, `apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx 3a3745f9e6ad800c7582506ac453ad8513e07792d41d6a553750eb53ebbfe3e5`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-15 · plan `1479831a71a4` → `e93b9c6f8748` · announced by cursor/web-desktop-layout-9a86 data-map
 
 App at announcement: commit `7be97617016775b84866b96da5229e5d2a93824b` + 1 uncommitted file(s), source `e93b9c6f8748a267aab2cec5584544bdb8638b607a99ee056b479bca960af1ea`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
