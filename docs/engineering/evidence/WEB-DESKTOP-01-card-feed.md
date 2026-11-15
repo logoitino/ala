@@ -31,6 +31,7 @@
 | Gift from playback modal | `onTipped(reelId, cents)` / `onBacked(playerId, count)` from modal + card sheet |
 | Spotlight Watch | `jumpToSpotlightClip` → `requestDesktopPlay` when desktop cards |
 | Report hide | `ReelViewModal` `onHide` → Home `hideClip` + clear `playClipId` |
+| CI `highlights-jump` | Stub `DesktopHighlightFeed` so NetInfo/OfflineQueue does not crash phone-pager suite |
 
 ## Hard stops held
 
