@@ -4,7 +4,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { DesktopHighlightFeed } from '@/components/Reels/DesktopHighlightFeed';
-import type { HighlightClip } from '@/data/highlights';
+import type { FeedReasonCode, HighlightClip } from '@/data/highlights';
 
 jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 
@@ -92,7 +92,7 @@ const baseProps = () => ({
     { clip: clip('1', 'Volleyball', 'Malia'), player: null },
     { clip: clip('2', 'Football', 'Sione'), player: null },
   ],
-  feedReasons: new Map([['1', ['crew', 'sport']]]),
+  feedReasons: new Map<string, FeedReasonCode[]>([['1', ['crew', 'sport']]]),
   sportOptions: ['Volleyball', 'Football'],
   emptyCopy: 'Quiet',
   isGuest: false,
@@ -187,7 +187,7 @@ describe('DesktopHighlightFeed', () => {
       <DesktopHighlightFeed
         {...baseProps()}
         feed={[{ clip: clip('1', 'Volleyball', 'Malia'), player: null }]}
-        feedReasons={new Map([['1', ['crew']]])}
+        feedReasons={new Map<string, FeedReasonCode[]>([['1', ['crew']]])}
         sportOptions={['Volleyball']}
         isGuest
       />,

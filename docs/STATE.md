@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 13:10 MST · WEB-DESKTOP card feed CI: stub desktop feed in highlights-jump (NetInfo). Review Soft-Wall/gift/Spotlight/hide fixes on PR #55. Shell PR #54.
+**Last updated:** 2026-11-15 13:15 MST · WEB-DESKTOP card feed CI: typed FeedReasonCode in DesktopHighlightFeed tests + NetInfo stub. PR #55.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,10 +175,10 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
-### 2026-11-15 — WEB-DESKTOP card feed CI (highlights-jump NetInfo)
+### 2026-11-15 — WEB-DESKTOP card feed CI (typecheck + NetInfo)
 
-- `highlights-jump` phone-pager suite stubs `DesktopHighlightFeed` + `useWebDesktopMode` so
-  OfflineQueue/NetInfo never boots on import. Unblocks `build-and-check` / source-release on #55.
+- Typed `feedReasons` as `Map<string, FeedReasonCode[]>` in DesktopHighlightFeed tests (CI
+  typecheck). `highlights-jump` stubs desktop feed so NetInfo never boots. PR #55.
 - **About to spend:** **$0**.
 
 ### 2026-11-15 — WEB-DESKTOP card feed Codex review fixes
