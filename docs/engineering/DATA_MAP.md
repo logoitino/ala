@@ -1230,13 +1230,13 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 
 | Switch | Read by |
 | --- | --- |
-| `tabs.home` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/UI/FanTabBar.tsx` |
+| `tabs.home` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.beyond` | `apps/mobile/app/(tabs)/beyond.tsx`, `apps/mobile/app/(tabs)/index.tsx`, `@/components/Reels/HomeFeedSwitch.tsx`, `@/context/UploadSheetContext.tsx` |
 | `tabs.local` | `apps/mobile/app/(tabs)/local/index.tsx`, `@/components/Reels/HomeFeedSwitch.tsx` |
-| `tabs.activity` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/activity.tsx`, `@/components/UI/FanTabBar.tsx` |
-| `tabs.spotlight` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/spotlight.tsx`, `@/components/UI/FanTabBar.tsx` |
-| `tabs.drip` | `apps/mobile/app/(tabs)/drip.tsx`, `apps/mobile/app/(tabs)/profile.tsx` |
-| `tabs.profile` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/UI/FanTabBar.tsx` |
+| `tabs.activity` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/activity.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
+| `tabs.spotlight` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/spotlight.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
+| `tabs.drip` | `apps/mobile/app/(tabs)/drip.tsx`, `apps/mobile/app/(tabs)/profile.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/Common/DesktopRightRail.tsx` |
+| `tabs.profile` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.upload` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Reels/HomeFeedEmpty.tsx`, `@/components/UI/FanTabBar.tsx`, `@/components/UI/PlayNavBar.tsx` |
 | `buttons.seki` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.aura` | `@/components/Reels/ReelActionOverlay.tsx` |

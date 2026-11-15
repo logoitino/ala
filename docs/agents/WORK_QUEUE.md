@@ -123,6 +123,17 @@ unchanged; hierarchy is checked, not rewritten. Exact final checks and claim rel
 integrated by root in [COORD-01](COORD-01.md). These assignments do not establish pinned-model
 execution or a continuous delivery service.
 
+## WEB-DESKTOP-01 — Fan desktop web layout (**FINISHED** on branch) — 2026-11-15
+
+Finish: [WEB-DESKTOP-01-finish.md](../engineering/evidence/WEB-DESKTOP-01-finish.md) · PR [#54](https://github.com/logoitino/ala/pull/54).
+
+| Next | Owner | Blocked on |
+| --- | --- | --- |
+| Merge PR #54 | FACILITATOR | CI green on finish commit |
+| Optional post-merge visual | VISUAL_QA | Mac browser at 1920/1280/820 |
+
+Return to APP-TEST-01 A–C as the active app priority.
+
 ## FEED-01 — Highlights interest feed (Phase 1 FINISHED; Phase 2 blocked) — 2026-11-14
 
 **Phase 1 FINISHED** ([FEED-01-phase1-finished.md](../engineering/evidence/FEED-01-phase1-finished.md)):

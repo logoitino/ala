@@ -341,7 +341,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'sponsor_sideline', label: 'Place sideline board', hint: 'sponsor_ads', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/boosters', flag: 'layouts.sponsorHq', telemetry: 'sponsor_sideline' },
   { id: 'sponsor_rivalry', label: 'Publish rivalry banner', hint: 'sponsor_ads', surface: 'sponsor', fanHref: '/sponsor', adminHref: '/admin/boosters', flag: 'layouts.sponsorHq', telemetry: 'sponsor_rivalry' },
 
-  { id: 'web.shell', label: 'Web phone column', hint: 'WebAppShell 430px desktop frame; useAppViewportWidth clamps sheets', surface: 'web', fanHref: '/', adminHref: '/admin/product/coverage', owner: 'code' },
+  { id: 'web.shell', label: 'Web desktop shell', hint: 'WebAppShell three-panel ≥1280 / icon+drawer 820–1279; phone <820; useAppViewportWidth = center column', surface: 'web', fanHref: '/', adminHref: '/admin/product/coverage', owner: 'code' },
   { id: 'web.gift_checkout', label: 'Web gift Payment Element', hint: 'Stripe.js bridge via WebPaymentSheetHost; dismiss locked while confirmPayment runs', surface: 'web', fanHref: '/', adminHref: '/admin/money', owner: 'code' },
   { id: 'web.exclusive_checkout', label: 'Web Exclusive Stripe', hint: 'decideExclusiveCheckout web_stripe rail; books 20/80 Vault split; test card 4242 in Wave 0', surface: 'web', fanHref: '/', adminHref: '/admin/money', flag: 'buttons.vault', owner: 'code' },
   { id: 'web.store_rails', label: 'Native store Exclusive rails', hint: 'Production iOS App Store IAP / Android Play Billing required; Stripe Exclusive blocked with honest unavailable until store billing ships', surface: 'web', fanHref: '/', adminHref: '/admin/features', flag: 'buttons.vault', owner: 'code' },

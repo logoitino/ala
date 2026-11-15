@@ -10,6 +10,22 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-15 · plan `1479831a71a4` → `e93b9c6f8748` · announced by cursor/web-desktop-layout-9a86 data-map
+
+App at announcement: commit `7be97617016775b84866b96da5229e5d2a93824b` + 1 uncommitted file(s), source `e93b9c6f8748a267aab2cec5584544bdb8638b607a99ee056b479bca960af1ea`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `packages/shared-types/admin/supportTopology.json b4dad9d806293d6cc75d5196dec12101c151b429b39edf2cf3bac41478d64a80`; removed `packages/shared-types/admin/supportTopology.json 805772f8c34a0febcf5e255ebd3cded17e552dca36eea560f50473f73c055ccf`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
+## 2026-11-15 · plan `9a503335d588` → `1479831a71a4` · announced by cursor/web-desktop-layout-9a86 WEB-DESKTOP-01
+
+App at announcement: commit `378e6de32c63348e197a212c464661c2eb636de8`, source `1479831a71a4815323d78295d3bcabbcad63842c03ef8292593f75c853231545`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/app/(tabs)/_layout.tsx 1974bd8b599c39fdb8d1bb14137faa2ac9c4f6612f47c875df9983b959e9541c`, `apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx 3a3745f9e6ad800c7582506ac453ad8513e07792d41d6a553750eb53ebbfe3e5`, `apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx acc371e5162011d3cc20ee0896d22525ee44f5e0c22db5c9dbb82ad7975d5c66`, `apps/mobile/src/frontend/components/Common/WebAppShell.tsx ad7f7252893a13538f3a387cff5308060e2c01070dd8128df7c7b6253380cad6`, `apps/mobile/src/frontend/components/Common/__tests__/WebAppShell.test.tsx f856ab1f5baba5e9f51b5e49901a246b79e4571fed935c58bd7fb02c539ad9f1`, `apps/mobile/src/frontend/hooks/__tests__/useAppViewport.test.ts 88dee826aa9f731e40666c929c513f308e95374687e5f9166806bdefd4cd5a57`, `apps/mobile/src/frontend/hooks/useAppViewport.ts 64aafd0f6be27fe0f4c1a3fbdb01022018f7263a51d59000d532c97b410374f6`, `apps/mobile/src/frontend/lib/adminCoverage.ts dd0d0c91d9d443758d75f291b99cfcfdb65417521c279ce704a15649e210ee22`; removed `apps/mobile/app/(tabs)/_layout.tsx b1155f823e9e67884ea11feb40b64b07f531591f2a69c032b978fc5c4e4348fd`, `apps/mobile/src/frontend/components/Common/WebAppShell.tsx c224504b4ce3c206e4497c947cbc2b205620eb18ddd66232e7217e84020e30b5`, `apps/mobile/src/frontend/components/Common/__tests__/WebAppShell.test.tsx 4438d0c3cfaa40d37e53196b44e0a7afc3f55ce85c0d301011d674c91ba8ae75`, `apps/mobile/src/frontend/hooks/__tests__/useAppViewport.test.ts cdbea564fae6b5498d3654f1ca9d063f4700ea4a288d372ec87dccb53ff62b05`, `apps/mobile/src/frontend/hooks/useAppViewport.ts ec86503b5e7462caf9aecf3a83dcf1f7910077264b43c0dd6d954fc2b0b73580`, `apps/mobile/src/frontend/lib/adminCoverage.ts a99958de78449069a907b16b7e1899c021a520678e0f9fce945b03663cfb554d`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-14 · plan `277e85094525` → `9a503335d588` · announced by WebAppShell hydration fix
 
 App at announcement: commit `ea9b22b6b77208ae8f1a28a7073b74657b0955da` + 4 uncommitted file(s), source `9a503335d5886e7f28d1c14ee49437d2e17866e3aa7c57034c7744cf6fbc39a9`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
