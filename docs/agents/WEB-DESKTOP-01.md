@@ -1,6 +1,6 @@
 # WEB-DESKTOP-01 — Desktop web layout (design proposal)
 
-**Status:** **FINISHED** shell (Phases 0–3, PR #54) + **card-feed port** on `cursor/web-desktop-card-feed-9a86` / PR #55 (guest browse, gift ids, Spotlight Watch, report hide wired).  
+**Status:** **FINISHED** (shell PR #54 + card-feed PR #55). Owner merges #54 then #55.  
 **Receipt:** [WEB-DESKTOP-01-finish.md](../engineering/evidence/WEB-DESKTOP-01-finish.md) · [WEB-DESKTOP-01-card-feed.md](../engineering/evidence/WEB-DESKTOP-01-card-feed.md).  
 **Lovable:** [Tapua'i Web Desktop](https://lovable.dev/projects/55b66713-1e11-484e-a8a9-7520ad55b7eb) (3 credits, 2026-11-15) — reference outline (W4); live center is Expo cards, not SAMPLE stubs.  
 **Depends on:** [WEB-DESKTOP-AUDIT.md](WEB-DESKTOP-AUDIT.md) (Phase 0 measured 2026-11-15).  

@@ -153,6 +153,39 @@ export async function fetchSquadAthleteIds(userId?: string | null): Promise<stri
   return data.map((row) => row.athlete_id).filter(Boolean);
 }
 
+export type CrewShortcut = { id: string; name: string };
+
+/**
+ * @purpose Left-rail Crew shortcuts for Expo web desktop (WEB-DESKTOP-01): followed athletes with display names.
+ * @param userId Signed-in `auth.uid()`.
+ * @param limit Max shortcuts (default 5).
+ * @returns Named athlete rows; empty for guests / missing data. Never invents athletes.
+ * @sideEffects `crew_follows` + `players` SELECT.
+ */
+export async function fetchCrewShortcuts(
+  userId?: string | null,
+  limit = 5,
+): Promise<CrewShortcut[]> {
+  const ids = await fetchSquadAthleteIds(userId);
+  if (ids.length === 0) return [];
+  const slice = ids.slice(0, Math.max(1, Math.min(limit, 8)));
+  if (!isSupabaseConfigured) {
+    return slice.map((id) => ({ id, name: 'Athlete' }));
+  }
+  const { data, error } = await supabase.from('players').select('id, name').in('id', slice);
+  if (error || !Array.isArray(data)) {
+    return slice.map((id) => ({ id, name: 'Athlete' }));
+  }
+  const byId = new Map(
+    data.map((row) => {
+      const id = String((row as { id?: string }).id ?? '');
+      const name = String((row as { name?: string | null }).name ?? '').trim() || 'Athlete';
+      return [id, name] as const;
+    }),
+  );
+  return slice.map((id) => ({ id, name: byId.get(id) ?? 'Athlete' }));
+}
+
 function plusHoursIso(hours: number): string {
   return new Date(Date.now() + hours * 3_600_000).toISOString();
 }

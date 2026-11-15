@@ -11,9 +11,9 @@ This packet contains source fingerprints and supplied investigation notes. It is
 
 ## 1. Current source and open work
 
-- Inventory SHA-256: `c3109aeddf968634028251c939446e6359a371dd6181b65eca51b693a24ccd1d`
+- Inventory SHA-256: `1f207a28a8706040efd9d7d8874f355943de1fd39c07a6a4f286d5717de8388d`
 - Register SHA-256: `86a11d86b776757dd362bc03cdfc5c8e88d1c7a862e65db85ba00dd7c6073a71`
-- Safe source/manifest files monitored: 1153. Git-tracked and non-ignored untracked source; excluded files require separate human review.
+- Safe source/manifest files monitored: 1154. Git-tracked and non-ignored untracked source; excluded files require separate human review.
 - Investigation candidates: 3; missing engineering reviews: 3; stale engineering reviews: 0.
 - Rights categories awaiting counsel review: 7.
 - Supplied filing receipts: 0. Receipt entries require independent verification; no legal status is inferred.
@@ -23,7 +23,7 @@ A changed inventory requires Documentation/feature-owner review for new capabili
 
 | Monitored area | Files |
 | --- | --- |
-| apps/ | 986 |
+| apps/ | 987 |
 | packages/ | 35 |
 | supabase/ | 129 |
 
