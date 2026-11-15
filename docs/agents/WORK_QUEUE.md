@@ -123,6 +123,19 @@ unchanged; hierarchy is checked, not rewritten. Exact final checks and claim rel
 integrated by root in [COORD-01](COORD-01.md). These assignments do not establish pinned-model
 execution or a continuous delivery service.
 
+## WEB-DESKTOP-01 — Fan desktop web layout (Phase 0 done; design awaiting owner) — 2026-11-15
+
+Owner: Facebook-style three panels on Expo web; mobile app untouched.  
+Evidence: [WEB-DESKTOP-AUDIT.md](WEB-DESKTOP-AUDIT.md) · design: [WEB-DESKTOP-01.md](WEB-DESKTOP-01.md).
+
+| Next | Owner | Blocked on |
+| --- | --- | --- |
+| Record W1–W4 | FACILITATOR | Three-panel map, roles, right-rail set, Lovable target vs reference |
+| Lovable prototype | DESIGN after W1–W4 | Guardrails + design; zip missing from git — supply or greenfield |
+| Extend `WebAppShell` in repo | ENGINEERING / DESIGN after prototype review | Approved W1–W4; beat audit width table; no money/VOICE changes |
+
+Do not start Phase 3 build before W1–W4. APP-TEST-01 A–C remain the active app-test priority.
+
 ## FEED-01 — Highlights interest feed (Phase 1 FINISHED; Phase 2 blocked) — 2026-11-14
 
 **Phase 1 FINISHED** ([FEED-01-phase1-finished.md](../engineering/evidence/FEED-01-phase1-finished.md)):

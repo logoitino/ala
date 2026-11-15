@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-14 16:25 MST · FEED-01 Phase 1 **FINISHED**; Phase 2 OFF (counsel). Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-15 11:20 MST · WEB-DESKTOP Phase 0 audit + Phase 1 design (owner W1–W4 open). FEED-01 Phase 1 finished; webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,17 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-15 — WEB-DESKTOP Phase 0 audit + Phase 1 design
+
+- Owner asked for a true desktop web layout (Facebook-style three panels). Audit first:
+  [WEB-DESKTOP-AUDIT.md](agents/WEB-DESKTOP-AUDIT.md) — measured Expo web at 1920/1440/1280/820/390;
+  interactive width stays **430** on desktop (~67–78% waste); existing `WebAppShell` is the
+  phone-column shell from `6130775` / PR #50, not a multi-panel layout. Lovable zip not in git.
+- Design proposal (no build yet): [WEB-DESKTOP-01.md](agents/WEB-DESKTOP-01.md). Owner decisions
+  **W1–W4** blank. Screenshots: `docs/agents/web-desktop-audit/before-*.png`.
+- **About to spend:** docs/screenshots **$0**. Lovable Phase 2 credits: price not in ROADMAP Wave 0
+  table — confirm vendor before prototyping. Mobile app / money / VOICE untouched.
 
 ### 2026-11-14 — FEED-01 Phase 1 FINISHED
 
