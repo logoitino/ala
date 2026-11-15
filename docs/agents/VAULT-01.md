@@ -19,13 +19,13 @@ These come before any tier and are not optional:
 
 | Tier | Who pays | What they get | Price | Athlete side | Tapua'i keeps | Ready? |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0. Free public feed | Nobody | Highlights, tagging, gifts at 100% | Free | 100% of gifts | Optional tips only | Exists. Unchanged. |
+| 0. Free public feed | Nobody | Highlights, tagging, gifts with no Tapua'i cut (see VOICE for the processing disclosure) | Free | The gift, with no Tapua'i cut | Optional tips only | Exists. Unchanged. |
 | 1. One-time Exclusive pass | Fan | That athlete's Vault clips, shoutout / Q&A requests, Flash Unlock windows | $4.99 today (Catalogs desk) | 80% of proceeds after the store or processor fee | 20% of the same proceeds | Exists on web and test builds. Needs the five fixes above. |
 | 2. Athlete subscription | Athlete or guardian | Vault tools: scheduled Flash Unlock, Vault view counts, pinned Vault intro | Owner decides; the model says $5–10 a month | Does not apply (they are the buyer) | Price less store fee | **Held** (V1). Not built. |
 | 3. Fan subscription | Fan | Vault access across followed athletes | Not proposed | Would need a sharing rule | Not proposed | **Held** (V1). Not built. |
 
 **One honest line per tier, written from what exists:**
-- **Tier 0:** "Watch, tag and give. Free, always."
+- **Tier 0:** "Free to watch, tag and give."
 - **Tier 1:** "Unlock the clips {first name} keeps for their Crew."
 - **Tier 2:** No line can be written yet. No Vault tool exists that an athlete would miss, so by the prompt's own test the tier is not ready.
 - **Tier 3:** No line can be written. Staging has 0 Vault clips, so there is nothing to bundle.
@@ -58,8 +58,8 @@ Principles and their source in [VOICE](../product/VOICE.md) "Keep people donatin
 
 | Principle | Line a person reads |
 | --- | --- |
-| Identity, not transaction | "Unlock the work behind the highlights." |
-| Autonomy | Locked preview: "{n} clips in {first name}'s Vault. One-time purchase. Yours to keep." Athlete side: "You choose what goes in your Vault. Open or lock it any time." |
+| Identity, not transaction | "Unlock the clips {first name} keeps for their Crew." |
+| Autonomy | Locked preview: "{n} clips in {first name}'s Vault. One-time purchase. No renewal." Athlete side: "You choose what goes in your Vault. Open or lock it any time." |
 | Progress, not rank | Athlete: "{n} passes this season. ${x} recorded for you." No leaderboard and no "top supporter". |
 | Community | "{first name}'s Crew, family and school, a little closer in." |
 | Reciprocity, preset only | The five `THANKS_MESSAGES`, no free text. Requests: "{first name} answers when they can." No timer. |
@@ -67,7 +67,7 @@ Principles and their source in [VOICE](../product/VOICE.md) "Keep people donatin
 **Before anyone pays, the screen says:**
 - **What it is:** "A one-time Exclusive purchase."
 - **Who gets it:** "After payment fees, 80% is recorded for {first name} and Tapua'i keeps 20% to run the platform." This follows V1: the split is taken from what is left after the store or processor fee. Today's copy and books split the full price, so both change in build step 1.
-- **What it is not:** "This is a purchase, not a gift. It is not tax-deductible and does not affect recruiting or eligibility."
+- **What it is not:** "This is a purchase, not a gift." Any line about tax, recruiting or eligibility waits for counsel and is not written here.
 - **Flash Unlock:** "{first name} opened this clip for 2 hours." It is the athlete's own choice and a real window.
 - **Guardians:** the same split in the same words, plus lock/open.
 
@@ -81,6 +81,7 @@ or NIL promises, "invest", or any gift-for-perk line.
 ## Money-back arithmetic
 
 **Baseline:** $25–50 a month running cost plus $99 a year Apple, which is **$33.25–$58.25 a month**.
+It leaves out the owner-reported AI tools cost of about $200 a month (FINANCE_OPERATIONS §6.1), Google Play Billing, refunds and dispute fees.
 This is arithmetic only. It predicts no sales, conversion rate or date.
 
 **Passes a month that cover the baseline at $4.99.** The Stripe rate (2.9% + $0.30) and the Apple
@@ -103,7 +104,7 @@ rates are outside facts to verify.
 | $10 | $7.00 | 5–9 | $8.50 | 4–7 |
 
 **What the arithmetic shows:**
-- A handful of athlete subscriptions covers the pilot, where passes need dozens of sales a month.
+- A handful of athlete subscriptions would cover the stated baseline, where passes need dozens of sales a month.
 - That is the business case for Tier 2. It is also the reason to be careful: the buyer is a family, often a minor's.
 
 ## Owner decisions (decided 2026-11-15, all as recommended)
@@ -138,13 +139,29 @@ rates are outside facts to verify.
 - Store classification of the pass.
 - Aura tied to a purchase.
 - Tax and eligibility statements.
+- Refund and consumer terms for digital content.
+- Whether a minor athlete's Vault clips are commercial use of their likeness that needs guardian consent.
+- The "recorded for you" wording.
+
+**Review changes (2026-11-15, independent VOICE, LEGAL, CFO and MINOR_SAFETY sessions):**
+- Four proposed lines were replaced:
+  - "Unlock the work behind the highlights" implied practice content that does not exist.
+  - "Yours to keep" was wrong, because an athlete can lock or remove clips.
+  - "Free, always" was an open-ended promise.
+  - The tax, recruiting and eligibility sentence was a legal conclusion counsel has not given.
+- Follow-ups before the build:
+  - LEGAL: add a Vault row to LEGAL_BRIEFING and update its line 62 and row X, which assume 80% of the full price.
+  - MINOR_SAFETY: confirm shoutout / Q&A requests are preset or moderated and visible to a guardian, and whether an adult buyer may send them to an under-16.
+  - MINOR_SAFETY: Vault lock and Flash Unlock respect the MINOR-01 under-16 approvals.
+  - A minor fan's purchase needs a guardian or age gate before any store build.
 
 ## Build order (owner-approved; starts after APP-TEST lanes A–C)
 
 1. **Server-granted pass:**
    - A payment purpose on the PaymentIntent.
    - The webhook or a confirm call inserts the pass.
-   - Remove the client insert grant.
+   - Remove the client insert and update grants.
+   - Grant any Aura on the server too, or not at all (V3).
    - Record the real price and the real fee, and split 20/80 of the proceeds (V1).
    - Handle refunds.
 

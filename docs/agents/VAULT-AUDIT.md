@@ -11,7 +11,7 @@ A Vault pass is not tied to a payment: any signed-in account can give itself a p
 own `subscriptions` row, and that insert also books a $4.99 sale that never happened.
 
 Evidence:
-- The insert policy checks only `auth.uid() = subscriber_id` and that the athlete is not frozen (`schema.sql:4208-4211`; the same check is live on staging).
+- The insert policy checks only `auth.uid() = subscriber_id` and that the athlete is not frozen (`schema.sql:4208-4211`; the same check is live on staging). The account can also update its own row (`schema.sql:4214-4220`).
 - `authenticated` holds the insert grant (`schema.sql:4367`).
 - Trigger `company_revenue_subscriptions_ai` (`schema.sql:5711`) writes a `vault` revenue row for every pass row.
 - The PaymentIntent for a pass carries no purpose or pass reference, only the user and player ids (`paymentIntent.ts:117-127`).
@@ -40,7 +40,7 @@ and an athlete cannot see or receive Vault earnings.
 - A Vault holds **clips only**: Highlights with `is_vault_only`.
 - The paywall promises "full game breakdowns and raw practice film" (`data/exclusive.ts:28-30`). No content type, upload label or seed row backs that promise.
 
-**What a fan sees on a locked Vault today** (`Profile/ExclusivePaywall.tsx:31-39`):
+**What a fan sees on a locked Vault today** (`Profile/ExclusivePaywall.tsx:31-51`):
 - the kicker "Vault 🔒"
 - that callout
 - the split line
@@ -60,8 +60,10 @@ It shows no count and no kinds, so the fan cannot tell whether the Vault is empt
    - **Preview / development native build:** Stripe PaymentSheet, labelled a test checkout.
    - **Production iOS or Android build:** Stripe is **blocked**, and an honest "not available yet" alert is shown.
 3. The Soft-Wall sign-in runs, then `useTipCheckout` with `skipBacker: true`. That is the same `create-payment-intent` as gifts, with amount $4.99 and no cover-fee add-on (`lib/exclusiveCheckout.ts:61-68`).
-4. On success the app adds +100 Aura to the buyer (`useTipCheckout.ts:142, 291-293`) and inserts the `subscriptions` row (`useAthleteSubscription.ts:100`).
-5. The insert trigger books the sale (`schema.sql:31028-31041`).
+4. On success the app adds +100 Aura to the buyer (`useTipCheckout.ts:142, 271-274`; the toast is at 291-293) and inserts the `subscriptions` row (`useAthleteSubscription.ts:100`).
+5. The insert trigger books the sale (`schema.sql:5676-5685`, trigger at `5711-5714`). The backfill `sync_company_revenue_logs()` writes the same row (`schema.sql:31028-31041`).
+
+The Aura grant runs before the pass insert and does not depend on it, so a refused insert still leaves the +100 Aura granted.
 
 **Verdict on the prompt's "blocking" test: not blocking.**
 - In-app Stripe for the pass exists only in test builds. A store build refuses it (feature `VAULT-RAILS-01`, planned).
@@ -71,7 +73,7 @@ It shows no count and no kinds, so the fan cannot tell whether the Vault is empt
 
 ## 3. Fee math at $4.99
 
-**What the code records** (`data/finance.ts:13-14`, `schema.sql:31028-31041`):
+**What the code records** (`data/finance.ts:13-14`, `schema.sql:5676-5685`):
 
 | Line | Amount |
 | --- | --- |
@@ -96,7 +98,7 @@ facts to verify (30% standard; 15% if enrolled in the Small Business Program).
 | Apple IAP 15%, 20/80 of proceeds | $0.75 | $0.85 | $3.39 |
 
 **Two defects found:**
-- **The books hardcode $4.99.** The trigger writes `499` cents for every pass (`schema.sql:31035-31040`), while the Catalogs desk lets the owner change the price (`CatalogTool.tsx:104`). A published price other than $4.99 would make every Vault row in the books wrong.
+- **The books hardcode $4.99.** The trigger writes `499` cents for every pass (`schema.sql:5679`), and the backfill does the same (`schema.sql:31035-31040`), while the Catalogs desk lets the owner change the price (`CatalogTool.tsx:104`). A published price other than $4.99 would make every Vault row in the books wrong.
 - **There are no refunds for a pass.** Nothing revokes a pass or reverses its revenue row on a refund or dispute.
 
 ## 4. Hosted state (staging)
