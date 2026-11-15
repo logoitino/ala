@@ -17,7 +17,7 @@ Admin stays Expo `/admin` (writes) + Next `admin-portal` (read-only).
 ## Phase 1 (this change)
 
 1. **Web Stripe checkout** — Payment Element modal matching `initPaymentSheet` / `presentPaymentSheet` so gifts, Exclusive, Drip, and booster paths work in the browser (test card `4242`).
-2. **Desktop shell** — Wide viewports get a phone-width column so Home / dock / sheets stay usable.
+2. **Desktop shell** — Originally a phone-width column. **WEB-DESKTOP-01 (2026-11-15):** ≥1280 three panels (left nav / center / right live rail); 820–1279 icon rail + right drawer; &lt;820 phone chrome unchanged. See [WEB-DESKTOP-01](../../agents/WEB-DESKTOP-01.md).
 3. **Exclusive rails** — Web may use Stripe Exclusive with books 20/80 once Payment Element is live; production native store apps still require IAP / Play Billing (not built).
 
 ## Later phases (not claimed done)

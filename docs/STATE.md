@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 11:20 MST · WEB-DESKTOP Phase 0 audit + Phase 1 design (owner W1–W4 open). FEED-01 Phase 1 finished; webhook tip crediting stays **off**.
+**Last updated:** 2026-11-15 11:45 MST · WEB-DESKTOP three-panel shell on web (≥1280 / 820 tablet). FEED-01 Phase 1 finished; webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,16 +175,20 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-15 — WEB-DESKTOP three-panel Expo web shell
+
+- Owner “continue” → W1–W4 approved as written. Lovable reference
+  [Tapua'i Web Desktop](https://lovable.dev/projects/55b66713-1e11-484e-a8a9-7520ad55b7eb) (3 credits).
+- Repo: extend `WebAppShell` — ≥1280 left/center/right; 820–1279 icon rail + extras drawer;
+  &lt;820 phone chrome. `DesktopLeftRail` / `DesktopRightRail` (live scores + Aura boosters, honest Vault
+  pointer). Bottom dock hidden on web ≥820. Width waste 1920: **78% → 25%** (audit after table).
+- **About to spend:** Lovable **3 credits** (price not in ROADMAP Wave 0 table). Code/docs **$0**.
+  Mobile native / money / VOICE untouched.
+
 ### 2026-11-15 — WEB-DESKTOP Phase 0 audit + Phase 1 design
 
-- Owner asked for a true desktop web layout (Facebook-style three panels). Audit first:
-  [WEB-DESKTOP-AUDIT.md](agents/WEB-DESKTOP-AUDIT.md) — measured Expo web at 1920/1440/1280/820/390;
-  interactive width stays **430** on desktop (~67–78% waste); existing `WebAppShell` is the
-  phone-column shell from `6130775` / PR #50, not a multi-panel layout. Lovable zip not in git.
-- Design proposal (no build yet): [WEB-DESKTOP-01.md](agents/WEB-DESKTOP-01.md). Owner decisions
-  **W1–W4** blank. Screenshots: `docs/agents/web-desktop-audit/before-*.png`.
-- **About to spend:** docs/screenshots **$0**. Lovable Phase 2 credits: price not in ROADMAP Wave 0
-  table — confirm vendor before prototyping. Mobile app / money / VOICE untouched.
+- Audit: [WEB-DESKTOP-AUDIT.md](agents/WEB-DESKTOP-AUDIT.md); design: [WEB-DESKTOP-01.md](agents/WEB-DESKTOP-01.md).
+  Before: phone column 430px. Screenshots `docs/agents/web-desktop-audit/before-*.png`.
 
 ### 2026-11-14 — FEED-01 Phase 1 FINISHED
 

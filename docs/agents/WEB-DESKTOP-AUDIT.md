@@ -18,7 +18,7 @@ Owner prompt asked for measure-first evidence before any Facebook-style three-pa
 | Screens use phone SafeArea shell | Confirmed: `ScreenShell.tsx` SafeArea + `SCREEN_BOTTOM_GAP` | Keep |
 | “Desktop shell” from Nov 14 may be missing on Mac | **Present on `origin/main`:** `apps/mobile/src/frontend/components/Common/WebAppShell.tsx`. Landed in `6130775` (“Ship Expo web Phase 1: Stripe.js checkout and desktop shell”); hydration fix PR #50 / `7fdddda`. | Extend this shell — do not invent a second one |
 | What “desktop shell” means today | **Phone column**, not a multi-panel desktop. `WEB_PHONE_WIDTH = 430`, breakpoint `900`. Admin coverage label: “Web phone column”. Design note: [WEB_APP_PARITY.md](../engineering/design/WEB_APP_PARITY.md). | Correct §0 language: shell exists; it wastes wide viewports on purpose |
-| Lovable zip `lovable/99b55089-….zip` | **Not in this git tree** (`origin/main` has no `lovable/` path; only `docs/engineering/design/LOVABLE_UI_UX_PLAN.md`). Guardrails path `~/workspace/your_files/ala-lovable-guardrails.md` also absent here. | Owner: place zip or point to Mac-only path before Phase 2 claims “opened the zip” |
+| Lovable zip `lovable/99b55089-….zip` | Zip not in git. **Live Lovable project** `99b55089-c2b2-4609-a647-bd877e62ffa4` (“Friday Night Lights”, 2026-11-04) matches that id — mobile/admin proto with sample clips, not a three-panel desktop. New Phase 2 project: `55b66713-1e11-484e-a8a9-7520ad55b7eb`. | Treat FNL as brand/reference only (W4) |
 | FEED-01 Phase 1 on main; Phase 2 flag OFF | Matches STATE / WORK_QUEUE | Keep |
 | Brand + density settled | Matches Lovable plan + PR #34 density | Keep |
 
@@ -73,6 +73,18 @@ Code constants match the desktop rows (`WEB_PHONE_WIDTH = 430`). Tablet (820) wa
 
 **Phase 3 acceptance:** any approved three-panel layout must beat the desktop rows above (higher used px / lower % wasted) without shrinking type or touch targets below current density rules.
 
+### After (Phase 3 shell on this branch — measured 2026-11-15)
+
+Interactive = left + center + right (or icon rail + center on tablet). Shell row caps at 1440 on ultra-wide.
+
+| Viewport | Used (interactive) | Wasted | % wasted | Notes | Screenshot |
+| --- | --- | --- | --- | --- | --- |
+| **1920** | **1440** (240+880+320) | **480** | **25.0%** | was 78% | [after-1920.png](web-desktop-audit/after-1920.png) |
+| **1280** | **1280** (240+720+320) | **0** | **0%** | was 66% | [after-1280.png](web-desktop-audit/after-1280.png) |
+| **820** | **820** (72 + center + FAB) | **0** | **0%** | was 48% (430 clamp) | [after-820.png](web-desktop-audit/after-820.png) |
+
+Beats Phase 0 on every desktop/tablet row without shrinking type or 44pt targets.
+
 ---
 
 ## 3. Panel inventory (surfaces that could fill a desktop)
@@ -104,15 +116,13 @@ Bottom bar today: `FanTabBar` — Home / Activity / Upload / Spotlight / Profile
 
 ---
 
-## 4. Lovable zip
+## 4. Lovable zip / project
 
-**Result:** cannot open — file not present in this repository checkout or on `origin/main`.
+**Zip file:** still absent from git (`lovable/` path not on `origin/main`).
 
-- Expected: `lovable/99b55089-c2b2-4609-a647-bd877e62ffa4.zip` (owner prompt, ~1.3 MB, 2026-11-05)
-- Searched: workspace tree, `git ls-tree origin/main`, filesystem name match — none
-- Related in-repo: [LOVABLE_UI_UX_PLAN.md](../engineering/design/LOVABLE_UI_UX_PLAN.md) (brand standard), community-preview desktop PNGs under `docs/engineering/design/community-preview/` (admin/community format previews — not the fan three-panel shell)
+**Live project (same id as the zip name):** [Friday Night Lights](https://lovable.dev/projects/99b55089-c2b2-4609-a647-bd877e62ffa4) — mobile + admin prototype (`src/components/proto/mobile.tsx`, `admin.tsx`, sample clip assets). Usable for brand/sample imagery; **stale as a desktop shell** (no three-panel layout).
 
-**Phase 2 blocker until owner supplies the zip or confirms Mac-only path.** Brand tokens for a new Lovable prototype can still follow the UI/UX plan without the old zip.
+**Phase 2 desktop prototype (new):** [Tapua'i Web Desktop](https://lovable.dev/projects/55b66713-1e11-484e-a8a9-7520ad55b7eb) · preview `https://id-preview--55b66713-1e11-484e-a8a9-7520ad55b7eb.lovable.app` (W4 reference-first).
 
 ---
 

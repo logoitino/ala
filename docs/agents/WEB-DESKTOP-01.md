@@ -1,25 +1,24 @@
 # WEB-DESKTOP-01 — Desktop web layout (design proposal)
 
-**Status:** Phase 1 design for owner approval. **Do not build** until W1–W4 are recorded below.  
+**Status:** Phase 1 **approved** · Phase 2 Lovable **shipped** (reference) · Phase 3 **in repo** on `cursor/web-desktop-layout-9a86`.  
+**Lovable:** [Tapua'i Web Desktop](https://lovable.dev/projects/55b66713-1e11-484e-a8a9-7520ad55b7eb) (3 credits, 2026-11-15) — reference only (W4).  
 **Depends on:** [WEB-DESKTOP-AUDIT.md](WEB-DESKTOP-AUDIT.md) (Phase 0 measured 2026-11-15).  
 **Prior shell:** Extend `WebAppShell` (phone column today) — see audit §1. Do not add a second shell.  
 **Related:** [WEB_APP_PARITY.md](../engineering/design/WEB_APP_PARITY.md) (Phase 1 Stripe.js + phone column — shipping history, not the three-panel target).  
-**Spend:** Design docs **$0**. Lovable prototype later uses workspace credits — price **not** listed in ROADMAP Wave 0 table; name vendor plan before starting Phase 2. Rebuild preview remains **$0** until Expo free quota ends.
+**Spend:** Docs **$0**. Lovable prototype uses workspace credits — **price not listed** in ROADMAP Wave 0 table (confirm vendor plan). Preview rebuild **$0** until Expo free quota ends.
 
 Owner ask (2026-11-15): on website, use the whole browser — Facebook-style, multiple panels at once — without changing the mobile app, money rules, or VOICE wording.
 
 ---
 
-## Owner decisions (FACILITATOR — blank until decided)
+## Owner decisions (FACILITATOR)
 
 | ID | Decision | Options | Owner choice | Date |
 | --- | --- | --- | --- | --- |
-| **W1** | Three-panel map + breakpoints | Approve as written below / revise map / defer | | |
-| **W2** | Panels per role | Approve table below / revise | | |
-| **W3** | Right-rail launch set | Live + Boosters + Vault preview + school; or smaller set (name which) | | |
-| **W4** | Lovable | Build target vs reference-only; zip missing from git — supply path? | | |
-
-Until W1–W4 are filled, Phase 2 (Lovable) and Phase 3 (repo) stay blocked.
+| **W1** | Three-panel map + breakpoints | Approve as written below / revise map / defer | **Approve as written** | 2026-11-15 (continue) |
+| **W2** | Panels per role | Approve table below / revise | **Approve table as written** | 2026-11-15 (continue) |
+| **W3** | Right-rail launch set | Live + Boosters + Vault preview + school; or smaller set (name which) | **Live + Boosters + Vault preview + school + Drip peek** | 2026-11-15 (continue) |
+| **W4** | Lovable | Build target vs reference-only; zip missing from git — supply path? | **Reference-first prototype** (greenfield; zip still missing from git); repo extends `WebAppShell` — Lovable is not a live fork | 2026-11-15 (continue) |
 
 ---
 

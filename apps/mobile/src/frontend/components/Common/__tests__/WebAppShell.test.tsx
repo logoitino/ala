@@ -1,11 +1,25 @@
 /**
- * WebAppShell: native pass-through; wide web gets the phone column after mount effects.
- * SSR / first-paint sameness is covered by deferring desktop on `layoutReady` (see useAppViewport).
+ * WebAppShell: native pass-through; web ≥820 gets desktop rails after mount effects.
+ * SSR / first-paint sameness is covered by deferring desktop on `layoutReady`.
  */
 import { render, screen } from '@testing-library/react-native';
 import { Platform, Text } from 'react-native';
 
 import { WebAppShell } from '@/components/Common/WebAppShell';
+
+jest.mock('@/components/Common/DesktopLeftRail', () => ({
+  DesktopLeftRail: () => {
+    const { Text } = require('react-native');
+    return <Text>Left rail</Text>;
+  },
+}));
+
+jest.mock('@/components/Common/DesktopRightRail', () => ({
+  DesktopRightRail: () => {
+    const { Text } = require('react-native');
+    return <Text>Right rail</Text>;
+  },
+}));
 
 const windowDimensions = jest.spyOn(require('react-native'), 'useWindowDimensions');
 
@@ -33,7 +47,7 @@ describe('WebAppShell', () => {
     expect(screen.queryByLabelText("Tapua'i web app")).toBeNull();
   });
 
-  it('uses the phone column on wide Expo web after mount', async () => {
+  it('uses three-panel chrome on wide Expo web after mount', async () => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: 'web' });
     viewport(1440);
     await render(
@@ -43,9 +57,24 @@ describe('WebAppShell', () => {
     );
     expect(await screen.findByLabelText("Tapua'i web app")).toBeTruthy();
     expect(screen.getByText('Home')).toBeTruthy();
+    expect(screen.getByText('Left rail')).toBeTruthy();
+    expect(screen.getByText('Right rail')).toBeTruthy();
   });
 
-  it('stays full-bleed on narrow Expo web', async () => {
+  it('uses icon rail + extras toggle on tablet Expo web', async () => {
+    Object.defineProperty(Platform, 'OS', { configurable: true, value: 'web' });
+    viewport(900);
+    await render(
+      <WebAppShell>
+        <Text>Home</Text>
+      </WebAppShell>,
+    );
+    expect(await screen.findByLabelText("Tapua'i web app")).toBeTruthy();
+    expect(screen.getByText('Left rail')).toBeTruthy();
+    expect(screen.getByLabelText('Open extras panel')).toBeTruthy();
+  });
+
+  it('stays full-bleed on phone Expo web', async () => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: 'web' });
     viewport(390);
     await render(

@@ -19,30 +19,36 @@ import { colors } from '@/constants/theme';
 import { USER_ROLES } from '@/lib/roles';
 import { useRoster } from '@/hooks/useRoster';
 import { FanNavigationProvider } from '@/context/FanNavigationContext';
+import { useWebDesktopMode } from '@/hooks/useAppViewport';
 
 function FanTabs() {
   const { players } = useRoster();
   const { visible, chooserVisible, closeChooser, closeUpload, notifyUploaded, openBeyondComposer, openHighlightUpload } = useUploadSheet();
   const { live } = useAppRuntime();
+  // WEB-DESKTOP-01: left rail replaces the bottom dock on web ≥820; native / phone web keep FanTabBar.
+  const desktopMode = useWebDesktopMode();
+  const hideDock = desktopMode !== 'mobile';
 
   return (
     <SafeAreaView edges={['left', 'right']} style={[styles.shell, { backgroundColor: live.theme.background }]}>
       <Tabs
         detachInactiveScreens={false}
-        tabBar={(props) => <FanTabBar {...props} />}
+        tabBar={(props) => (hideDock ? null : <FanTabBar {...props} />)}
         screenOptions={{
           headerShown: false,
           freezeOnBlur: true,
           // TabScreen owns the enter/exit fade; a second navigator fade double-flashed tab switches.
           animation: 'none',
           sceneStyle: { backgroundColor: live.theme.background },
-          tabBarStyle: {
-            position: 'absolute',
-            backgroundColor: 'transparent',
-            borderTopWidth: 0,
-            elevation: 0,
-            overflow: 'visible',
-          },
+          tabBarStyle: hideDock
+            ? { display: 'none', height: 0 }
+            : {
+                position: 'absolute',
+                backgroundColor: 'transparent',
+                borderTopWidth: 0,
+                elevation: 0,
+                overflow: 'visible',
+              },
         }}
       >
         <Tabs.Screen name="index" options={{ title: 'Home', tabBarLabel: 'Home', href: live.tabs.home ? undefined : null }} />
@@ -89,11 +95,11 @@ const styles = StyleSheet.create({
   shell: {
     flex: 1,
     backgroundColor: colors.background,
+    // Phone web stays full-bleed inside WebAppShell; desktop width comes from the three-panel shell.
     ...Platform.select({
       web: {
         width: '100%',
-        maxWidth: 430,
-        alignSelf: 'center',
+        alignSelf: 'stretch',
       },
       default: {},
     }),
