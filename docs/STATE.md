@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 12:55 MST · WEB-DESKTOP card feed (Lovable outline) on Expo web ≥820. WEB-DESKTOP-01 shell still on PR #54. FEED-01 Phase 1 finished; webhook tip crediting stays **off**.
+**Last updated:** 2026-11-15 13:05 MST · WEB-DESKTOP card feed review fixes (guest browse, gift ids, Spotlight Watch, report hide). Shell PR #54; card feed PR #55. FEED-01 Phase 1 finished; webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,13 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-15 — WEB-DESKTOP card feed Codex review fixes
+
+- Guest three-Highlight browse on desktop card opens (`decideGuestDesktopPlay`); playback gift
+  updates use reel/athlete ids from `ReelViewModal`; Spotlight Watch opens `playClipId`; report
+  hide forwards to Home. PR [#55](https://github.com/logoitino/ala/pull/55).
+- **About to spend:** **$0**. Wave 0 unchanged.
 
 ### 2026-11-15 — WEB-DESKTOP Lovable-outline card feed
 

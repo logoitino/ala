@@ -45,8 +45,13 @@ type DesktopHighlightFeedProps = {
   onReelHypeChange: (reelId: string, hype: ReelHype) => void;
   tipTarget: { player: Player; reelId?: string } | null;
   onCloseTip: () => void;
-  onBacked: (nextCount: number) => void;
-  onTipped: (amountCents: number) => void;
+  /** Controlled playback — Home owns guest browse + Spotlight Watch. */
+  playClipId: string | null;
+  onPlayClip: (clipId: string) => void;
+  onClosePlay: () => void;
+  onHideClip: (reelId: string) => void;
+  onBacked: (playerId: string, nextCount: number) => void;
+  onTipped: (reelId: string, amountCents: number) => void;
 };
 
 /**
@@ -61,10 +66,14 @@ type DesktopHighlightFeedProps = {
  * @param tippedIds Clips this fan already gifted.
  * @param tipPlayer Soft-Wall → gift sheet.
  * @param onReelHypeChange Cheer (Seki) count updates.
- * @param tipTarget Open gift sheet target.
+ * @param tipTarget Open gift sheet target (card-level sheet).
  * @param onCloseTip Close gift sheet.
- * @param onBacked After gift backer count.
- * @param onTipped After gift cents on a clip.
+ * @param playClipId Open playback modal clip id, or null.
+ * @param onPlayClip Request play (Home applies guest browse).
+ * @param onClosePlay Close playback modal.
+ * @param onHideClip Report-hide from playback — drop card from Home feed.
+ * @param onBacked After gift backer count (player id + count).
+ * @param onTipped After gift cents on a clip (reel id + cents).
  * @sideEffects ReelViewModal playback; MaloTipModal; Soft-Wall via cards.
  */
 export function DesktopHighlightFeed({
@@ -80,6 +89,10 @@ export function DesktopHighlightFeed({
   onReelHypeChange,
   tipTarget,
   onCloseTip,
+  playClipId,
+  onPlayClip,
+  onClosePlay,
+  onHideClip,
   onBacked,
   onTipped,
 }: DesktopHighlightFeedProps) {
@@ -87,7 +100,6 @@ export function DesktopHighlightFeed({
   const { live: runtime } = useAppRuntime();
   const { openUpload } = useUploadSheet();
   const [sportPick, setSportPick] = useState<string>('All');
-  const [playClipId, setPlayClipId] = useState<string | null>(null);
 
   const pills = useMemo(() => {
     const rows = ['All', ...sportOptions];
@@ -100,11 +112,15 @@ export function DesktopHighlightFeed({
     return feed.filter((item) => (item.clip.sport ?? '').trim().toLowerCase() === want);
   }, [feed, sportPick]);
 
-  // One clip at a time so the modal tip target matches the card athlete (ReelViewModal is single-player).
-  const playRow = useMemo(
-    () => (playClipId ? shown.find((item) => item.clip.id === playClipId) ?? null : null),
-    [playClipId, shown],
-  );
+  // Prefer the full feed for Spotlight Watch / filter mismatch; fall back to filtered list.
+  const playRow = useMemo(() => {
+    if (!playClipId) return null;
+    return (
+      feed.find((item) => item.clip.id === playClipId) ??
+      shown.find((item) => item.clip.id === playClipId) ??
+      null
+    );
+  }, [feed, playClipId, shown]);
   const playClips = useMemo(() => (playRow ? [playRow.clip] : []), [playRow]);
   const playPlayer = playRow?.player ?? null;
 
@@ -184,7 +200,7 @@ export function DesktopHighlightFeed({
                 whyThisClip={why}
                 userTipped={tippedIds.has(item.clip.id)}
                 onOpenProfile={item.player ? () => openProfile(item.player) : undefined}
-                onPlay={() => setPlayClipId(item.clip.id)}
+                onPlay={() => onPlayClip(item.clip.id)}
                 onTip={() => void tipPlayer(item.player, item.clip.id)}
                 onReelHypeChange={onReelHypeChange}
               />
@@ -198,15 +214,19 @@ export function DesktopHighlightFeed({
         initialClipId={playClipId}
         player={playPlayer}
         tipping={Boolean(tipTarget)}
-        onClose={() => setPlayClipId(null)}
+        onClose={onClosePlay}
         onOpenAthlete={(playerId) => {
-          setPlayClipId(null);
+          onClosePlay();
           router.push(userProfileHref(playerId));
         }}
         onHypeChange={onReelHypeChange}
-        onBacked={onBacked}
-        onTipped={(_reelId, amountCents) => {
-          onTipped(amountCents);
+        onHide={onHideClip}
+        onBacked={(nextCount) => {
+          const playerId = tipTarget?.player.id ?? playPlayer?.id;
+          if (playerId) onBacked(playerId, nextCount);
+        }}
+        onTipped={(reelId, amountCents) => {
+          onTipped(reelId, amountCents);
         }}
       />
 
@@ -214,9 +234,11 @@ export function DesktopHighlightFeed({
         player={tipTarget?.player ?? null}
         reelId={tipTarget?.reelId}
         onClose={onCloseTip}
-        onBacked={onBacked}
+        onBacked={(nextCount) => {
+          if (tipTarget) onBacked(tipTarget.player.id, nextCount);
+        }}
         onTipped={(amountCents) => {
-          onTipped(amountCents);
+          if (tipTarget?.reelId) onTipped(tipTarget.reelId, amountCents);
         }}
       />
     </View>

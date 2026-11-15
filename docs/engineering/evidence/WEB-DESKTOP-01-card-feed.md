@@ -23,6 +23,15 @@
 | `pnpm copy:check` | PASS |
 | `tsc` on new card file | PASS after `absoluteFill` fix |
 
+## Review fixes (2026-11-15)
+
+| Finding | Fix |
+| --- | --- |
+| Guest browse on desktop play | `decideGuestDesktopPlay` + Home `requestDesktopPlay` (same 3-clip Soft-Wall) |
+| Gift from playback modal | `onTipped(reelId, cents)` / `onBacked(playerId, count)` from modal + card sheet |
+| Spotlight Watch | `jumpToSpotlightClip` → `requestDesktopPlay` when desktop cards |
+| Report hide | `ReelViewModal` `onHide` → Home `hideClip` + clear `playClipId` |
+
 ## Hard stops held
 
 - Money rules / VOICE gift wording unchanged; tip still Soft-Wall `malo`.

@@ -63,8 +63,14 @@ jest.mock('@/services/TelemetryManager', () => ({
   telemetry: { trackFeature: jest.fn() },
 }));
 
+const modalProps: { onTipped?: (reelId: string, amountCents: number) => void; onHide?: (reelId: string) => void } =
+  {};
+
 jest.mock('@/components/Reels/ReelViewModal', () => ({
-  ReelViewModal: () => null,
+  ReelViewModal: (props: typeof modalProps & { initialClipId: string | null }) => {
+    Object.assign(modalProps, props);
+    return null;
+  },
 }));
 
 jest.mock('@/components/TipSheetModal', () => ({
@@ -81,28 +87,45 @@ const clip = (id: string, sport: string, name: string): HighlightClip => ({
   sekiCount: 2,
 });
 
+const baseProps = () => ({
+  feed: [
+    { clip: clip('1', 'Volleyball', 'Malia'), player: null },
+    { clip: clip('2', 'Football', 'Sione'), player: null },
+  ],
+  feedReasons: new Map([['1', ['crew', 'sport']]]),
+  sportOptions: ['Volleyball', 'Football'],
+  emptyCopy: 'Quiet',
+  isGuest: false,
+  refreshing: false,
+  onRefresh: jest.fn(),
+  tippedIds: new Set<string>(),
+  tipPlayer: jest.fn(),
+  onReelHypeChange: jest.fn(),
+  tipTarget: null as null,
+  onCloseTip: jest.fn(),
+  playClipId: null as string | null,
+  onPlayClip: jest.fn(),
+  onClosePlay: jest.fn(),
+  onHideClip: jest.fn(),
+  onBacked: jest.fn(),
+  onTipped: jest.fn(),
+});
+
 describe('DesktopHighlightFeed', () => {
+  beforeEach(() => {
+    Object.keys(modalProps).forEach((key) => {
+      delete (modalProps as Record<string, unknown>)[key];
+    });
+  });
+
   it('renders Highlights heading, sport pills, and cards', async () => {
     const tipPlayer = jest.fn();
+    const onPlayClip = jest.fn();
     await render(
       <DesktopHighlightFeed
-        feed={[
-          { clip: clip('1', 'Volleyball', 'Malia'), player: null },
-          { clip: clip('2', 'Football', 'Sione'), player: null },
-        ]}
-        feedReasons={new Map([['1', ['crew', 'sport']]])}
-        sportOptions={['Volleyball', 'Football']}
-        emptyCopy="Quiet"
-        isGuest={false}
-        refreshing={false}
-        onRefresh={jest.fn()}
-        tippedIds={new Set()}
+        {...baseProps()}
         tipPlayer={tipPlayer}
-        onReelHypeChange={jest.fn()}
-        tipTarget={null}
-        onCloseTip={jest.fn()}
-        onBacked={jest.fn()}
-        onTipped={jest.fn()}
+        onPlayClip={onPlayClip}
       />,
     );
 
@@ -126,23 +149,47 @@ describe('DesktopHighlightFeed', () => {
     expect(tipPlayer).toHaveBeenCalled();
   });
 
+  it('routes card play through onPlayClip', async () => {
+    const onPlayClip = jest.fn();
+    await render(
+      <DesktopHighlightFeed
+        {...baseProps()}
+        onPlayClip={onPlayClip}
+      />,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Play Highlight: Malia play'));
+    });
+    expect(onPlayClip).toHaveBeenCalledWith('1');
+  });
+
+  it('forwards playback gift and hide identities to Home', async () => {
+    const onTipped = jest.fn();
+    const onHideClip = jest.fn();
+    await render(
+      <DesktopHighlightFeed
+        {...baseProps()}
+        playClipId="1"
+        onTipped={onTipped}
+        onHideClip={onHideClip}
+      />,
+    );
+    expect(typeof modalProps.onTipped).toBe('function');
+    expect(typeof modalProps.onHide).toBe('function');
+    modalProps.onTipped?.('1', 500);
+    expect(onTipped).toHaveBeenCalledWith('1', 500);
+    modalProps.onHide?.('1');
+    expect(onHideClip).toHaveBeenCalledWith('1');
+  });
+
   it('hides Why this clip for guests', async () => {
     await render(
       <DesktopHighlightFeed
+        {...baseProps()}
         feed={[{ clip: clip('1', 'Volleyball', 'Malia'), player: null }]}
         feedReasons={new Map([['1', ['crew']]])}
         sportOptions={['Volleyball']}
-        emptyCopy="Quiet"
         isGuest
-        refreshing={false}
-        onRefresh={jest.fn()}
-        tippedIds={new Set()}
-        tipPlayer={jest.fn()}
-        onReelHypeChange={jest.fn()}
-        tipTarget={null}
-        onCloseTip={jest.fn()}
-        onBacked={jest.fn()}
-        onTipped={jest.fn()}
       />,
     );
     expect(screen.queryByText(/Why this clip/)).toBeNull();

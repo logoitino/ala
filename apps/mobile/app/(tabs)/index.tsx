@@ -65,7 +65,7 @@ import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { isAuraUuid } from '@/lib/aura';
 import { fetchSquadAthleteIds } from '@/lib/crew';
 import { playerFromReel, readHiddenReelIds, reelHiddenForUser, reelToClip } from '@/lib/reels';
-import { guestBrowseNeedsAccount } from '@/data/guestBrowse';
+import { decideGuestDesktopPlay, guestBrowseNeedsAccount } from '@/data/guestBrowse';
 import { userProfileHref } from '@/lib/navigation';
 import type { Player, Reel } from '@/types/database';
 
@@ -92,6 +92,9 @@ export default function HighlightsTab() {
   const listRef = useRef<FlatList<FeedItem>>(null);
   const guestSeen = useRef(new Set<string>());
   const guestAllowedIndex = useRef(0);
+  /** Last free desktop clip id for guests (mirrors guestAllowedIndex on the phone pager). */
+  const guestAllowedClipId = useRef<string | null>(null);
+  const [desktopPlayClipId, setDesktopPlayClipId] = useState<string | null>(null);
   const { user, profile, loading: authLoading, isGuest } = useAuth();
   const { live: runtime } = useAppRuntime();
   const { requireAuth, visible: accountSheetOpen } = useSoftWall();
@@ -325,8 +328,11 @@ export default function HighlightsTab() {
   useEffect(() => {
     if (!isGuest) {
       guestSeen.current.clear();
+      guestAllowedClipId.current = null;
       return;
     }
+    // Desktop card opens are gated in requestDesktopPlay; phone pager uses activeIndex.
+    if (useDesktopCards) return;
     const clipId = feed[activeIndex]?.clip.id;
     if (!clipId) return;
     guestSeen.current.add(clipId);
@@ -350,7 +356,33 @@ export default function HighlightsTab() {
         listRef.current?.scrollToOffset({ offset: pageHeight * back, animated: true });
       }
     });
-  }, [accountSheetOpen, activeIndex, feed, isGuest, pageHeight, requireAuth]);
+  }, [accountSheetOpen, activeIndex, feed, isGuest, pageHeight, requireAuth, useDesktopCards]);
+
+  const requestDesktopPlay = useCallback(
+    (clipId: string) => {
+      if (!isGuest) {
+        setDesktopPlayClipId(clipId);
+        return;
+      }
+      const decision = decideGuestDesktopPlay(
+        guestSeen.current,
+        clipId,
+        guestAllowedClipId.current,
+      );
+      if (decision.allow) {
+        guestAllowedClipId.current = decision.nextAllowedClipId;
+        setDesktopPlayClipId(clipId);
+        return;
+      }
+      if (!accountSheetOpen) {
+        requireAuth({
+          kind: 'browse',
+          resume: () => undefined,
+        });
+      }
+    },
+    [accountSheetOpen, isGuest, requireAuth],
+  );
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ index?: number | null }> }) => {
@@ -468,25 +500,34 @@ export default function HighlightsTab() {
         if (athleteName && item.clip.athleteName.toLowerCase() === athleteName) return true;
         return false;
       };
-      const index = feed.findIndex(matches);
-      if (index >= 0) {
-        setActiveIndex(index);
-        const offset = pageHeight * index;
-        requestAnimationFrame(() => {
-          try {
-            listRef.current?.scrollToIndex({ index, animated: true });
-          } catch {
-            listRef.current?.scrollToOffset({ offset, animated: true });
-          }
-        });
-        return;
-      }
-      // Home already includes every clip. Land it there if this page was on another mix.
-      const unfiltered = clips.find(matches);
-      if (unfiltered) {
-        setPendingClipId(unfiltered.clip.id);
-        setFeedFilter('home');
-        return;
+      if (useDesktopCards) {
+        const row = feed.find(matches) ?? clips.find(matches);
+        if (row) {
+          setFeedFilter('home');
+          requestDesktopPlay(row.clip.id);
+          return;
+        }
+      } else {
+        const index = feed.findIndex(matches);
+        if (index >= 0) {
+          setActiveIndex(index);
+          const offset = pageHeight * index;
+          requestAnimationFrame(() => {
+            try {
+              listRef.current?.scrollToIndex({ index, animated: true });
+            } catch {
+              listRef.current?.scrollToOffset({ offset, animated: true });
+            }
+          });
+          return;
+        }
+        // Home already includes every clip. Land it there if this page was on another mix.
+        const unfiltered = clips.find(matches);
+        if (unfiltered) {
+          setPendingClipId(unfiltered.clip.id);
+          setFeedFilter('home');
+          return;
+        }
       }
       // No clip in the feed at all: fall back to the athlete's profile, same as the
       // Spotlight tab's own onWatch chain.
@@ -499,10 +540,12 @@ export default function HighlightsTab() {
       clips,
       feed,
       pageHeight,
+      requestDesktopPlay,
       router,
       spotlight.award?.player?.id,
       spotlight.award?.player?.name,
       spotlight.award?.player_id,
+      useDesktopCards,
     ],
   );
 
@@ -560,16 +603,21 @@ export default function HighlightsTab() {
             onReelHypeChange={applyReelHype}
             tipTarget={tipTarget}
             onCloseTip={() => setTipTarget(null)}
-            onBacked={(nextCount) => {
-              if (tipTarget) applyBackerCount(tipTarget.player.id, nextCount);
+            playClipId={desktopPlayClipId}
+            onPlayClip={requestDesktopPlay}
+            onClosePlay={() => setDesktopPlayClipId(null)}
+            onHideClip={(reelId) => {
+              hideClip(reelId);
+              setDesktopPlayClipId((current) => (current === reelId ? null : current));
             }}
-            onTipped={(amountCents) => {
-              if (tipTarget?.reelId) {
-                applyReelTips(tipTarget.reelId, amountCents);
-                setLocalTipped((current) =>
-                  current.includes(tipTarget.reelId!) ? current : [tipTarget.reelId!, ...current],
-                );
-              }
+            onBacked={(playerId, nextCount) => {
+              applyBackerCount(playerId, nextCount);
+            }}
+            onTipped={(reelId, amountCents) => {
+              applyReelTips(reelId, amountCents);
+              setLocalTipped((current) =>
+                current.includes(reelId) ? current : [reelId, ...current],
+              );
             }}
           />
         )}
