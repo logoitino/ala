@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 11:45 MST · WEB-DESKTOP three-panel shell on web (≥1280 / 820 tablet). FEED-01 Phase 1 finished; webhook tip crediting stays **off**.
+**Last updated:** 2026-11-15 11:50 MST · WEB-DESKTOP-01 **FINISHED** (PR #54; CI fix + smoke). FEED-01 Phase 1 finished; webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -175,15 +175,17 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-15 — WEB-DESKTOP-01 FINISHED
+
+- Receipt: [WEB-DESKTOP-01-finish.md](engineering/evidence/WEB-DESKTOP-01-finish.md). Shell + Lovable
+  reference + width after-table + guest smoke (1920 rails, Local nav, 390 dock). CI: `ip:sync`,
+  `exit:map --acknowledge`, `security:infra`. Owner merges [#54](https://github.com/logoitino/ala/pull/54).
+- **About to spend:** Lovable **3 credits** (not in ROADMAP Wave 0). Else **$0**.
+
 ### 2026-11-15 — WEB-DESKTOP three-panel Expo web shell
 
-- Owner “continue” → W1–W4 approved as written. Lovable reference
-  [Tapua'i Web Desktop](https://lovable.dev/projects/55b66713-1e11-484e-a8a9-7520ad55b7eb) (3 credits).
-- Repo: extend `WebAppShell` — ≥1280 left/center/right; 820–1279 icon rail + extras drawer;
-  &lt;820 phone chrome. `DesktopLeftRail` / `DesktopRightRail` (live scores + Aura boosters, honest Vault
-  pointer). Bottom dock hidden on web ≥820. Width waste 1920: **78% → 25%** (audit after table).
-- **About to spend:** Lovable **3 credits** (price not in ROADMAP Wave 0 table). Code/docs **$0**.
-  Mobile native / money / VOICE untouched.
+- W1–W4 approved; Lovable [Tapua'i Web Desktop](https://lovable.dev/projects/55b66713-1e11-484e-a8a9-7520ad55b7eb)
+  (3 credits, reference). `WebAppShell` three-panel / tablet drawer; 1920 waste **78% → 25%**.
 
 ### 2026-11-15 — WEB-DESKTOP Phase 0 audit + Phase 1 design
 

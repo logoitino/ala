@@ -123,18 +123,16 @@ unchanged; hierarchy is checked, not rewritten. Exact final checks and claim rel
 integrated by root in [COORD-01](COORD-01.md). These assignments do not establish pinned-model
 execution or a continuous delivery service.
 
-## WEB-DESKTOP-01 — Fan desktop web layout (Phases 0–3 landed on branch) — 2026-11-15
+## WEB-DESKTOP-01 — Fan desktop web layout (**FINISHED** on branch) — 2026-11-15
 
-Owner: Facebook-style three panels on Expo web; mobile app untouched.  
-Evidence: [WEB-DESKTOP-AUDIT.md](WEB-DESKTOP-AUDIT.md) · design: [WEB-DESKTOP-01.md](WEB-DESKTOP-01.md) · PR #54.
+Finish: [WEB-DESKTOP-01-finish.md](../engineering/evidence/WEB-DESKTOP-01-finish.md) · PR [#54](https://github.com/logoitino/ala/pull/54).
 
 | Next | Owner | Blocked on |
 | --- | --- | --- |
-| Merge PR #54 | Owner | CI + visual check at 1920/1280/820 |
-| Optional Lovable polish | DESIGN | W4 reference-only — do not fork into production |
-| Device / guest smoke on web desktop | DEVICE_QA / VISUAL_QA | After merge; Soft-Wall + gift checkout still Stripe.js |
+| Merge PR #54 | FACILITATOR | CI green on finish commit |
+| Optional post-merge visual | VISUAL_QA | Mac browser at 1920/1280/820 |
 
-APP-TEST-01 A–C remain the active app-test priority alongside this.
+Return to APP-TEST-01 A–C as the active app priority.
 
 ## FEED-01 — Highlights interest feed (Phase 1 FINISHED; Phase 2 blocked) — 2026-11-14
 

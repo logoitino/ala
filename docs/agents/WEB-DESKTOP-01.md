@@ -1,6 +1,7 @@
 # WEB-DESKTOP-01 — Desktop web layout (design proposal)
 
-**Status:** Phase 1 **approved** · Phase 2 Lovable **shipped** (reference) · Phase 3 **in repo** on `cursor/web-desktop-layout-9a86`.  
+**Status:** **FINISHED** — Phases 0–3 on `cursor/web-desktop-layout-9a86` / PR #54.  
+**Receipt:** [WEB-DESKTOP-01-finish.md](../engineering/evidence/WEB-DESKTOP-01-finish.md).  
 **Lovable:** [Tapua'i Web Desktop](https://lovable.dev/projects/55b66713-1e11-484e-a8a9-7520ad55b7eb) (3 credits, 2026-11-15) — reference only (W4).  
 **Depends on:** [WEB-DESKTOP-AUDIT.md](WEB-DESKTOP-AUDIT.md) (Phase 0 measured 2026-11-15).  
 **Prior shell:** Extend `WebAppShell` (phone column today) — see audit §1. Do not add a second shell.  
