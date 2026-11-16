@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 17:10 MST · WEB-DESKTOP #54+#55 on `main`. APP-TEST **A** Google enabled (Soft-Wall popup PASS; full signup UNRUN). Next: land A/B/C PRs + remaining smoke. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-15 17:15 MST · WEB-DESKTOP #54+#55 on `main`. APP-TEST efficient path: C web PASS · gift Edge PASS · A popup PASS · B owner SQL/Edge. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -28,16 +28,18 @@ Historical §0 running log: [STATE_LOG_ARCHIVE.md](engineering/STATE_LOG_ARCHIVE
 - **Readiness:** Soft-Wall + ARCHITECTURE_SYNC + Jev + HS/college + reviewer readiness + layers/Exit CI soft-upload (#27) on `main`. R2 SQL layout landed. R3/R4 not production-ready. Plan: [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_PLAN.md).
 - **Spend (Wave 0):** Apple Developer $99/yr (enrolled). Supabase / Expo / Stripe test = **$0**. Preview builds and `4242` test gifts are **$0** unless Expo free quota runs out or a free Supabase project pauses (Pro ~$25/mo). Lovable preview **FINISHED** 2026-11-04 ($0 Free): Android APK `8e0237fb` · iOS IPA `bf9b8567` (see §4). Prior Android `03e28f4e` also finished.
 
-### Next priority — APP-TEST-01 lanes A–C
-Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc) · receipts: [COORD-01](agents/COORD-01.md#app-test-01-execution--2026-10-21-utc) · script: [TESTER_SCRIPT](engineering/TESTER_SCRIPT.md).
+### Next priority — APP-TEST-01 lanes A–C (efficient path · **no Exit**)
+Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-testing-priorities--2026-10-21-utc) · receipts: [COORD-01](agents/COORD-01.md) · script: [TESTER_SCRIPT](engineering/TESTER_SCRIPT.md).
+**Do not** start Exit drills / cloud restore / Redundancy sprints while this path is open.
 
-| Lane | Ready locally | Blocked on owner / provider |
+| Lane | Evidence now | Your next click (owner) |
 | --- | --- | --- |
-| **A. Google account** | Staging `tucioqipfejqqqtuakdi`: Auth **`google: true`** (2026-11-12); Soft-Wall Upload → Continue with Google → `accounts.google.com` popup (no mismatch); cancel/close keeps SoftWall retry. Receipt [COORD-01](agents/COORD-01.md#app-test-a-google-enabled-smoke--2026-11-12-utc) | Owner completes one Testing-audience Google signup + return + birth confirm + resume in a real browser; native `alasports://` = DEVICE_QA |
-| **B. Stripe test bank** | Adult/guardian Connect UI + guarded Terms local; Connect SQL written | Reviewed SQL/Edge apply; service-role for local bank fallback; KYC evidence still unwired; payouts stay 503 |
-| **C. Short Highlights** | Duration/size guards + synthetic fixtures | Hosted Storage/cleanup SQL as needed; real pick/upload/playback on web/iOS/Android |
+| **C. Highlights** | Web **PASS**: 8s pick→publish→playback (`fac733e`); 46s/oversize stayed out of Details. PR [#35](https://github.com/logoitino/ala/pull/35) | Optional: density EAS APK/IPA on a phone; photo-story later |
+| **Gift (money)** | Demo Fan session **OK**; Jordan Blake **Give $5** reachable; Edge `create-payment-intent` mints + Stripe test confirm **`succeeded`** $5 (`pm_card_visa`, livemode false = **$0**). Web PaymentSheet is stubbed by design. | Expo Go / preview: Give → `4242` once (client `tips` insert + sheet UX). No new secret needed for checkout Edge. |
+| **A. Google** | Provider **on**; Soft-Wall → Google popup **PASS**; cancel/retry **PASS**. PR [#36](https://github.com/logoitino/ala/pull/36) | One Test-users Gmail signup on Metro web (birth + Upload resume) |
+| **B. Test bank** | Staging Connect RPCs + `create-stripe-account` Edge **404**. Checkout Edge already has `sk_test_`. PR [#37](https://github.com/logoitino/ala/pull/37) | Apply Connect SQL → deploy `create-stripe-account` (reuse existing test secret) |
 
-Lanes D–F (public-beta blockers, Legal-first telemetry, feel/a11y) stay sequenced after A–C. No new features ahead of this.
+**Fastest fully-tested loop (Wave 0 · $0):** Demo Fan → Upload 8s (**done**) → gift charge (**Edge PASS**) → native PaymentSheet `4242` on phone → (optional) Google signup → only then bank SQL/Edge. Skip Exit until A–C + gift have receipts.
 
 ### Next (engineering) vs owner/counsel only
 | Engineering may | Owner / counsel only (hard stop) |
@@ -48,7 +50,7 @@ Lanes D–F (public-beta blockers, Legal-first telemetry, feel/a11y) stay sequen
 | | Enable webhook tip crediting; live money; minors-facing consent to real families |
 
 ### Staging smoke (test only)
-Project `ala-sports-staging`. Preview EAS builds; test card `4242…`. Account sheet includes `demo@tapuai.app` until production env. Google **enabled** on staging Auth (`google: true`); Soft-Wall popup PASS — full Testing-audience signup still owner. Script: [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) · [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md). Confirm which project the build points at.
+Project `ala-sports-staging` (`tucioqipfejqqqtuakdi`). Preview EAS builds; test card `4242…`. Account sheet includes `demo@tapuai.app` until production env. Google **enabled** (`google: true`); Soft-Wall popup PASS — full Testing-audience signup still owner. Demo Fan email works today. Script: [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) · [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md). Confirm which project the build points at.
 
 ### Prove green before editing
 `pnpm check` (Node 24). Merge gates vs reports: [REVIEWER_START_HERE.md](REVIEWER_START_HERE.md).
@@ -351,6 +353,30 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
   `EXPO_PUBLIC_APP_ENV` is not production so trivia can be tried without SQL.
 - Regenerated `DATA_MAP.md` + `supportTopology.json` for the new Home/HQ → trivia-demo screen edges
   (`pnpm data:map:check` green).
+
+### 2026-11-12 — APP-TEST gift charge smoke (no Exit · $0)
+
+Continued efficient path. Staging Demo Fan password sign-in **OK**. Expo web: Jordan Blake
+profile **Give $5** reachable (PaymentSheet alerted to Expo Go — web stub by design). Edge
+`create-payment-intent` with JWT + `playerId` minted a PI; Stripe test confirm with
+`pm_card_visa` → **`succeeded`** / 500¢ / `livemode: false` (**$0**). Checkout Edge secret is
+already set; Connect Edge still **404**. Native sheet + client `tips` insert remain the owner
+phone click. Exit still deferred.
+
+### 2026-11-12 — APP-TEST efficient path (no Exit)
+
+STATE §0 rewritten as a short A/B/C + gift loop: C web publish/playback done; A Google popup
+done; B waits on owner SQL/Edge; gift `4242` is the parallel $0 money smoke. Exit stays
+backburner. Reconfirmed staging Google **on**, Connect still **404**, Demo Fan session usable.
+
+### 2026-11-12 — APP-TEST-B Connect prep (staging SQL/Edge missing)
+
+Probed staging `tucioqipfejqqqtuakdi` (agent `.env.local`): Connect RPCs and
+`create-stripe-account` Edge all **404**. Refreshed
+[ONBOARDING bank checklist](ONBOARDING.md#development-account-to-bank-preparation--2026-10-21)
+for staging ref + owner apply/deploy order. Wave 0: SQL apply + Edge deploy + Stripe **test**
+secret are **$0** on Free/test. No SQL applied and no Edge deploy by the agent. Bank walkthrough
+still **UNRUN**. Receipt: [COORD-01](agents/COORD-01.md#app-test-b-connect-prep--2026-11-12-utc).
 
 ### 2026-11-12 — APP-TEST-A Google enabled + Soft-Wall popup smoke
 

@@ -1,6 +1,21 @@
 <!-- Test procedures distinguish historical wave checks from current source, provider and device acceptance. -->
 # Tester script — Phase 3 internal wave
 
+## Efficient APP-TEST loop — no Exit (2026-11-12)
+
+Use this order on staging `tucioqipfejqqqtuakdi`. Wave 0 costs **$0** (Demo Fan, `4242`, Free
+Metro). Do **not** start Exit drills here.
+
+| Step | Where | Status / what to click |
+| --- | --- | --- |
+| 1. Demo Fan | SoftWall → Use test account / `demo@tapuai.app` | **PASS** (session works) |
+| 2. Highlight (C) | Upload → 8s fixture → Publish → Home playback | **PASS** on web; reject 46s / >8MiB |
+| 3. Gift charge | Edge `create-payment-intent` + Stripe test | **PASS** mint + confirm `succeeded` ($5 test, **$0**). Web sheet is stubbed — use **Expo Go / preview** for Give → `4242` (client `tips` row). |
+| 4. Google (A) | Guest → Upload SoftWall → Continue with Google | Popup **PASS**; finish Test-users Gmail signup + resume |
+| 5. Bank (B) | Owner only | Connect SQL → deploy `create-stripe-account` (checkout `sk_test_` already on staging). Payouts stay 503. |
+
+PRs: C [#35](https://github.com/logoitino/ala/pull/35) · A [#36](https://github.com/logoitino/ala/pull/36) · B [#37](https://github.com/logoitino/ala/pull/37).
+
 ## Current giving checks — MONEY-TIPS-01 (2026-10-22)
 
 Use the [rollout runbook](GIFT_TIP_ROLLOUT.md) and [COORD-02](../agents/COORD-02.md) first.
@@ -291,14 +306,16 @@ SQL/Edge/private-server prerequisites below; it is not part of creating a Google
 
 ## Google account to later Stripe test bank — development rehearsal
 
-**Prepared 2026-10-21; manual walkthrough UNRUN.** This focused rehearsal uses the existing
-development project `ulfapgtabidorgwfjvwz` and Stripe **test mode**. It is separate from the older
-staging wave above. Use current source/build receipts in [STATE.md](../STATE.md) §4 and the
-[payee plan](design/PAYEE_VERIFICATION_PLAN.md) §10. Historical Google repair tests do not accept
-this new bank flow. The later read-only settings check found development Google disabled; app
-return allowlists and successful Google operation remain unverified. The new Connect SQL is
-unapplied and the updated Edge Function is undeployed. The local bank fallback still lacks its
-private service-role key; the template alone does not make bank setup ready.
+**Prepared 2026-10-21; manual walkthrough UNRUN.**
+**2026-11-12 staging probe (agent env `tucioqipfejqqqtuakdi`):** Connect RPCs and Edge
+`create-stripe-account` all **404** — do not start the bank walkthrough until the owner applies
+[ONBOARDING bank prep](../ONBOARDING.md#development-account-to-bank-preparation--2026-10-21) and
+confirms. Historical guide also names development `ulfapgtabidorgwfjvwz`. Stripe **test mode**
+only. Source/build receipts: [STATE.md](../STATE.md) §4 ·
+[payee plan](design/PAYEE_VERIFICATION_PLAN.md) §10 ·
+[COORD-01 B](../agents/COORD-01.md#app-test-b-connect-prep--2026-11-12-utc). Google provider is
+enabled on staging; full Google signup receipt is still separate. Local Metro bank fallback still
+needs its private service-role template when not using hosted Edge.
 
 ### Operator preparation
 

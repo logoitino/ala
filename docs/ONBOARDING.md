@@ -307,38 +307,53 @@ race at the Supabase session boundary. This repair does not serialize every poss
 
 ### Development account-to-bank preparation — 2026-10-21
 
-The owner selected the existing development project, `ulfapgtabidorgwfjvwz`, with Stripe **test
-mode**. This is a local implementation checkpoint. The new database migration is **unapplied**,
-the revised `create-stripe-account` Edge Function is **undeployed**, and the provider/device
-walkthrough is **UNRUN**. The later read-only development settings check around 2026-10-21
-03:00 UTC found Google disabled; the earlier network failures are historical. Google credentials
-and redirect allowlists are not configured/verified by these instructions. Local test receipts belong in [STATE.md](STATE.md) §4 and the
+**Rechecked 2026-11-12 (America/Denver); gift charge recheck same day:** agent `.env.local`
+targets **staging** `tucioqipfejqqqtuakdi` (Stripe **test** mode).
+
+| Probe | Result |
+| --- | --- |
+| `POST /rest/v1/rpc/stripe_connect_context` | **404** PGRST202 (function not in API schema) |
+| `POST /rest/v1/rpc/save_stripe_connect_account` | **404** PGRST202 |
+| `POST /rest/v1/rpc/record_stripe_kyc` | **404** PGRST202 |
+| `POST /functions/v1/create-stripe-account` | **404** `Requested function was not found` |
+| `POST /functions/v1/create-payment-intent` (Demo Fan JWT) | **PASS** — mints `clientSecret`; Stripe test confirm **`succeeded`** ($5 / livemode false) |
+
+So on **staging**, **checkout** Edge is live with `sk_test_`; **Connect** SQL + Edge are still
+missing. Historical guide target was development `ulfapgtabidorgwfjvwz`. Apply/deploy Connect
+to the **same** project as `EXPO_PUBLIC_SUPABASE_URL`. Local UI + migration files exist;
+provider walkthrough remains **UNRUN**. Google is enabled on staging (lane A); full Google
+signup receipt is still separate. Receipts: [STATE.md](STATE.md) §4 ·
 [payee plan](engineering/design/PAYEE_VERIFICATION_PLAN.md) §10.
 
-Prepare the development operator steps in this order; these instructions are not an execution receipt:
+#### Owner checklist — lane B (Wave 0 · **$0** on Free Supabase / Stripe test)
 
-1. Confirm the app URL/anon key, server project and Stripe test keys refer to the intended
-   development setup. Verify Google's provider settings and the actual app return URI in the
-   Dashboard before attempting signup. Keep Google/Stripe secrets off the client.
-2. Review the new [Connect context migration](../supabase/migrations/20261021120000_connect_account_context.sql)
-   and its MINOR-01, VERIFY-02 and custodial prerequisites against the development database.
-   Have the database operator apply that reviewed file and record the result. Verify that
-   `stripe_connect_context` and `save_stripe_connect_account` deny direct client execution and
-   derive the destination from the live authenticated actor. Local SQL replay was blocked by OS
-   PostgreSQL shared-memory permissions and the PGlite download; SQL behavior is not yet accepted.
-3. Load `STRIPE_SECRET_KEY` privately into development Edge secrets. After the database gate,
-   deploy the compatible function and record its source/build receipt:
+**Hard stop:** only the owner applies SQL / deploys Edge / pastes secrets. Agent does not.
+
+1. Confirm app env, Dashboard project, and Stripe **test** keys all name the same project
+   (today: staging `tucioqipfejqqqtuakdi`). Keep `sk_test_` / service-role out of Expo public env.
+2. Review prerequisites, then apply in order on that project (SQL Editor or approved CLI), and
+   **record pass/fail** for each:
+   - MINOR-01 / VERIFY-02 / custodial money (if not already on this project)
+   - [Connect context migration](../supabase/migrations/20261021120000_connect_account_context.sql)
+   - Confirm `stripe_connect_context` and `save_stripe_connect_account` exist and are
+     **service-role only** (anon/authenticated execute denied).
+3. Supabase → Edge Functions secrets: confirm `STRIPE_SECRET_KEY` = `sk_test_…` (test only).
+   Checkout already proves this secret works on staging; reuse it for Connect — do not invent a
+   second key.
+4. Deploy the compatible function to **that** project ref and record the build:
 
    ```bash
-   supabase functions deploy create-stripe-account --project-ref ulfapgtabidorgwfjvwz
+   # staging (current agent env):
+   supabase functions deploy create-stripe-account --project-ref tucioqipfejqqqtuakdi
+   # development (historical):
+   # supabase functions deploy create-stripe-account --project-ref ulfapgtabidorgwfjvwz
    ```
 
-   Hosted Edge supplies its Supabase keys automatically. For the local Metro fallback, use the
-   private template above instead. Merely having a Stripe test secret does not make that fallback ready.
-4. Use a current SDK 58 development client or browser build and the focused
-   [tester walkthrough](engineering/TESTER_SCRIPT.md#google-account-to-later-stripe-test-bank--development-rehearsal).
-   Record Google signup, native/browser return, bank cancellation and confirmed status separately.
-   Use synthetic internal guardian fixtures only; guardian consent still awaits counsel.
+   Hosted Edge gets Supabase keys automatically. Local Metro `/api` fallback still needs the
+   private `~/.config/ala-sports/…` / `test-server.env` template — not required for hosted Edge.
+5. Reply **“bank SQL + Edge ready on \<ref\>”**. Then run
+   [tester walkthrough](engineering/TESTER_SCRIPT.md#google-account-to-later-stripe-test-bank--development-rehearsal)
+   with synthetic adult/guardian fixtures only. Payouts stay **503**; no live money.
 
 Account creation never requires bank details. An eligible adult uses their own Profile bank card.
 A guardian selects the athlete on `/parent`, confirms the custodial test record and bank-name
