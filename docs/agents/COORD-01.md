@@ -120,6 +120,24 @@ Owner asked to continue on the non-Exit path and make testing efficient. Disposi
 
 STATE §0 carries the fast loop. No Exit work started.
 
+## APP-TEST gift charge — web Payment Element — 2026-11-16 UTC
+
+Executor: cloud agent on `cursor/app-test-loop-4242-9a86`. Target staging
+`tucioqipfejqqqtuakdi`. Spend: Stripe test **$0** (Wave 0).
+
+| Check | Result |
+| --- | --- |
+| Demo Fan Soft-Wall → Continue as Demo Fan | **OK** |
+| Expo web `/user/bfb339a8-e1b9-494f-9914-6a04e64e064d` Give $5 | Opens Stripe.js Payment Element (not Expo Go stub) |
+| Card `4242 4242 4242 4242` + ZIP `80301` → Pay now | Mālo toast **Gift sent** + +50 Aura |
+| Client `tips` insert | **201** id `b1478f4d-3899-46f7-839d-04a3da44fd5c`, PI `pi_3UcXUP4jAsjtyL0Z0SeSCLDw` |
+| Edge mint + `pm_card_visa` confirm (same session earlier) | **`succeeded`**, 500¢, `livemode: false` |
+| Connect `create-stripe-account` / Connect RPCs | Still **404** |
+
+Screenshots: `docs/engineering/evidence/app-test-gift-web-4242.png`,
+`app-test-gift-web-4242-success.png`. Next owner: Testing-audience Google signup; then Connect
+SQL + Edge. Optional native preview PaymentSheet. Webhook tip crediting stays **off**.
+
 ## APP-TEST gift charge — 2026-11-13 UTC
 
 Executor: cloud agent on `cursor/app-test-b-bank-9a86`. Target staging
@@ -128,13 +146,12 @@ Executor: cloud agent on `cursor/app-test-b-bank-9a86`. Target staging
 | Check | Result |
 | --- | --- |
 | Demo Fan `signInWithPassword` | **OK** |
-| Expo web `/user/bfb339a8-…` Give $5 | Reachable; web alerts to Expo Go (stub) |
+| Expo web `/user/bfb339a8-…` Give $5 | Reachable (later superseded by 2026-11-16 Payment Element PASS) |
 | Edge `create-payment-intent` (JWT + playerId, 500¢) | Minted `clientSecret` |
 | Stripe confirm `pm_card_visa` + `client_secret` | **`succeeded`**, amount 500, `livemode: false` |
 | Connect `create-stripe-account` | Still **404** (unchanged) |
 
-Next owner click: Expo Go / preview → Demo Fan → Give → card `4242` (sheet UX + `tips`
-insert). Then optional Google signup; bank SQL/Edge last.
+Superseded for sheet UX by 2026-11-16 web Payment Element receipt above.
 
 ## APP-TEST-B Connect prep — 2026-11-12 UTC
 

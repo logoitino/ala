@@ -10,8 +10,8 @@ Metro). Do **not** start Exit drills here.
 | --- | --- | --- |
 | 1. Demo Fan | SoftWall → Use test account / `demo@tapuai.app` | **PASS** (session works) |
 | 2. Highlight (C) | Upload → 8s fixture → Publish → Home playback | **PASS** on web; reject 46s / >8MiB |
-| 3. Gift charge | Edge `create-payment-intent` + Stripe test | **PASS** mint + confirm `succeeded` ($5 test, **$0**). Web sheet is stubbed — use **Expo Go / preview** for Give → `4242` (client `tips` row). |
-| 4. Google (A) | Guest → Upload SoftWall → Continue with Google | Popup **PASS**; finish Test-users Gmail signup + resume |
+| 3. Gift charge | Expo web Payment Element **or** Edge + Stripe test | **PASS** 2026-11-16: Demo Fan → Give $5 → `4242` → Mālo toast + `tips` row (PI `pi_3UcXUP4jAsjtyL0Z0SeSCLDw`, **$0**). Optional: native preview PaymentSheet (not Expo Go). |
+| 4. Google (A) | Guest → SoftWall → Continue with Google | Popup **PASS**; finish Test-users Gmail signup + resume |
 | 5. Bank (B) | Owner only | Connect SQL → deploy `create-stripe-account` (checkout `sk_test_` already on staging). Payouts stay 503. |
 
 PRs: C [#35](https://github.com/logoitino/ala/pull/35) · A [#36](https://github.com/logoitino/ala/pull/36) · B [#37](https://github.com/logoitino/ala/pull/37).
