@@ -134,6 +134,13 @@ Finish: [WEB-DESKTOP-01-finish.md](../engineering/evidence/WEB-DESKTOP-01-finish
 
 Return to APP-TEST-01 A–C as the active app priority.
 
+## FEED-ENDLESS — TikTok-shaped endless Home queue — 2026-11-16
+
+**Phase 0 AUDIT written** ([FEED-ENDLESS-AUDIT.md](FEED-ENDLESS-AUDIT.md)). Sharpest gap: pager
+is TikTok-shaped but the list is one-shot (staging playable pool **1**; no refill/cycle).
+Phase 1 design (`FEED-ENDLESS-01.md`) **held** until FACILITATOR accepts §0 file diffs in the
+audit. Do not build until owner decides T1–T4. FEED-01 Phase 2 flag stays OFF.
+
 ## FEED-01 — Highlights interest feed (Phase 1 FINISHED; Phase 2 blocked) — 2026-11-14
 
 **Phase 1 FINISHED** ([FEED-01-phase1-finished.md](../engineering/evidence/FEED-01-phase1-finished.md)):

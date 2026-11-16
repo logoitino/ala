@@ -34,6 +34,7 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 | [FEED-01 Phase 1 smoke](engineering/evidence/FEED-01-phase1-smoke.md) | Local Jest receipt for Highlights picks, newest-first fallback, and hide. Signed-in device gaps stay open. |
 | [FEED-01 go-live](engineering/evidence/FEED-01-go-live.md) | Owner merge order, $0 SQL apply, device smoke, counsel gates for interest feed Phase 1. |
 | [FEED-01 counsel send](engineering/evidence/FEED-01-counsel-send.md) | Ready-to-send counsel email for Phase 1 Privacy line + Phase 2 open questions. |
+| [FEED-ENDLESS Phase 0 audit](agents/FEED-ENDLESS-AUDIT.md) | Endless Home queue measure-first: pool size, end-of-feed behavior, signals, §0 diffs; Phase 1 design held. |
 | [FEED interest Privacy draft](legal/FEED_INTEREST_PRIVACY_DRAFT.md) | Counsel candidate Privacy Policy line for Highlights picks; not accepted policy. |
 | [PORTABLE_INTEGRATIONS](engineering/PORTABLE_INTEGRATIONS.md) | Shared app connection contract, matching target profiles and local installed-SDK compatibility tests. |
 | [**Exit reading home**](engineering/exit/README.md) | **One folder** for Redundancy & Exit: charter, generated map/security report, migration runbooks, plans. Runnable code stays under `infrastructure/`. |
@@ -174,6 +175,7 @@ location (tracked in [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_P
 | [FEATURE_ADMIN_TEMPLATE.md](agents/FEATURE_ADMIN_TEMPLATE.md) | Future feature registration and readiness checkpoint template. |
 | [feature-admin.json](agents/feature-admin.json) | Enrolled future feature contracts checked by `pnpm feature-admin:check`. |
 | [WORK_QUEUE.md](agents/WORK_QUEUE.md) | Ordered tasks with acceptance criteria and owners. |
+| [FEED-ENDLESS-AUDIT.md](agents/FEED-ENDLESS-AUDIT.md) | Phase 0 endless Home queue audit (pool, end behavior, signals); design held for owner. |
 | [IP-01](agents/IP-01.md) | Actual documentation/tooling execution, local checks and pending counsel work. |
 | [REDUNDANCY-03.md](agents/REDUNDANCY-03.md) | Current exact-source release, Storage/runtime/evidence safeguards, actual independent reviews and pending cloud drill. |
 | [REDUNDANCY-04.md](agents/REDUNDANCY-04.md) | Automatic current-source watcher, all-branch CI, actual activation and crash/failure/retention evidence. |
