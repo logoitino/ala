@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 · APP-TEST A (#36) + B (#37) on `main`; C merge-fix after. Efficient path: C web PASS · gift Edge PASS · A popup PASS · B owner SQL/Edge. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-16 · APP-TEST gift web **PASS** (Give $5 → Stripe Payment Element `4242` → `tips` + Mālo toast). C/A docs on `main`; B still owner SQL/Edge. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -34,12 +34,12 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 
 | Lane | Evidence now | Your next click (owner) |
 | --- | --- | --- |
-| **C. Highlights** | Web **PASS**: 8s pick→publish→playback (`fac733e`); 46s/oversize stayed out of Details. PR [#35](https://github.com/logoitino/ala/pull/35) | Optional: density EAS APK/IPA on a phone; photo-story later |
-| **Gift (money)** | Demo Fan session **OK**; Jordan Blake **Give $5** reachable; Edge `create-payment-intent` mints + Stripe test confirm **`succeeded`** $5 (`pm_card_visa`, livemode false = **$0**). Web PaymentSheet is stubbed by design. | Expo Go / preview: Give → `4242` once (client `tips` insert + sheet UX). No new secret needed for checkout Edge. |
+| **C. Highlights** | Web **PASS**: 8s pick→publish→playback (`fac733e`); 46s/oversize stayed out of Details. PR [#35](https://github.com/logoitino/ala/pull/35) **merged** | Optional: density EAS APK/IPA on a phone; photo-story later |
+| **Gift (money)** | Web **PASS** 2026-11-16: Demo Fan → Jordan Blake **Give $5** → Stripe.js Payment Element card `4242` → Pay → Mālo toast + `tips` row `b1478f4d-…` / PI `pi_3UcXUP4jAsjtyL0Z0SeSCLDw` (livemode false = **$0**). Prior Edge mint + `pm_card_visa` confirm also PASS. | Optional native preview PaymentSheet (Expo Go lacks Stripe modules). No new secret. |
 | **A. Google** | Provider **on**; Soft-Wall → Google popup **PASS**; cancel/retry **PASS**. PR [#36](https://github.com/logoitino/ala/pull/36) **merged** | One Test-users Gmail signup on Metro web (birth + Upload resume) |
-| **B. Test bank** | Staging Connect RPCs + `create-stripe-account` Edge **404**. Checkout Edge already has `sk_test_`. PR [#37](https://github.com/logoitino/ala/pull/37) **merged** | Apply Connect SQL → deploy `create-stripe-account` (reuse existing test secret) |
+| **B. Test bank** | Staging Connect RPCs + `create-stripe-account` Edge **404** (rechecked 2026-11-16). Checkout Edge already has `sk_test_`. PR [#37](https://github.com/logoitino/ala/pull/37) **merged** | Apply Connect SQL → deploy `create-stripe-account` (reuse existing test secret) |
 
-**Fastest fully-tested loop (Wave 0 · $0):** Demo Fan → Upload 8s (**done**) → gift charge (**Edge PASS**) → native PaymentSheet `4242` on phone → (optional) Google signup → only then bank SQL/Edge. Skip Exit until A–C + gift have receipts.
+**Fastest fully-tested loop (Wave 0 · $0):** Demo Fan → Upload 8s (**done**) → gift web `4242` (**done**) → (optional) Google signup → bank SQL/Edge. Skip Exit until A–C + gift have receipts.
 
 ### Next (engineering) vs owner/counsel only
 | Engineering may | Owner / counsel only (hard stop) |
@@ -176,6 +176,14 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-16 — APP-TEST gift web Give → 4242 PASS ($0)
+
+- Staging `tucioqipfejqqqtuakdi`: Demo Fan → `/user/bfb339a8-…` Give $5 → Payment Element
+  (`4242` / 12/34 / 123 / ZIP 80301) → **Mālo! Gift sent** + Aura toast; `tips` insert
+  `b1478f4d-…` with `stripe_payment_intent_id` `pi_3UcXUP4jAsjtyL0Z0SeSCLDw`. Screenshots:
+  `docs/engineering/evidence/app-test-gift-web-4242-success.png`. Connect still **404**.
+- **About to spend:** **$0** (Stripe test / Wave 0). Webhook tip crediting stays **off**.
 
 ### 2026-11-15 — APP-TEST A + B merged; C merge-fix
 
