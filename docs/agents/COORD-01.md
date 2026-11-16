@@ -114,7 +114,7 @@ Owner asked to continue on the non-Exit path and make testing efficient. Disposi
 | --- | --- |
 | Exit / Redundancy drills | **Deferred** (same-turn map only if code touches exit) |
 | Lane C web Highlight | **PASS** (8s publish + playback); rejects stay out of Details |
-| Gift charge | Demo Fan + Jordan Blake Give reachable; Edge PI mint + Stripe test confirm **`succeeded`** ($5 / livemode false = **$0**). Native PaymentSheet + client `tips` insert still owner Expo Go / preview. |
+| Gift charge | Web **PASS** 2026-11-16: Give $5 → Payment Element `4242` → Mālo toast + `tips` (PI `pi_3UcXUP4jAsjtyL0Z0SeSCLDw`, **$0**). Optional native preview sheet. |
 | Lane A Google | Provider + Soft-Wall popup **PASS**; full signup **owner browser** |
 | Lane B Connect | Staging Connect SQL/Edge **404**; checkout Edge secret already present |
 
