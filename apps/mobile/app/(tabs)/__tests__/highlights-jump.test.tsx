@@ -57,6 +57,12 @@ jest.mock('@/components/FamilyFun/FamilyFunDiscovery', () => ({ FamilyFunDiscove
   return <Text>Optional quiz discovery</Text>;
 } }));
 jest.mock('@/components/TipSheetModal', () => ({ MaloTipModal: () => null }));
+// Phone-pager suite: stub the desktop card column so OfflineQueue/NetInfo never boots on import.
+jest.mock('@/components/Reels/DesktopHighlightFeed', () => ({ DesktopHighlightFeed: () => null }));
+jest.mock('@/hooks/useAppViewport', () => ({
+  useWebDesktopMode: () => 'mobile',
+  webDesktopMode: () => 'mobile',
+}));
 jest.mock('@/components/Reels/ReelPage', () => {
   const { View, Text } = require('react-native');
   return { ReelPage: ({ children, peekInsetTop, peekInsetBottom, height }: { children?: React.ReactNode; peekInsetTop: number; peekInsetBottom: number; height: number }) => <View testID="measured-reel-page" height={height} peekInsetBottom={peekInsetBottom}><Text>{`peek:${peekInsetTop}`}</Text>{children}</View> };

@@ -24,6 +24,7 @@ type ReelViewModalProps = {
   onClose: () => void;
   onOpenAthlete?: (playerId: string) => void;
   onHypeChange?: (reelId: string, hype: ReelHype) => void;
+  onHide?: (reelId: string) => void;
   onBacked?: (nextCount: number) => void;
   onTipped?: (reelId: string, amountCents: number) => void;
 };
@@ -32,6 +33,7 @@ type ReelViewModalProps = {
  * @purpose Full-screen profile / athlete clip pager: same `ReelCard` double-tap Aura, mute, chips, Mālo, Share, Save, and Report as the hub feed. Pages newest → oldest from the tapped tile.
  * @param clips Already newest-first tagged clips.
  * @param initialClipId Opens on that clip; `null` hides the modal.
+ * @param onHide Optional — parent feed should drop the clip when Report hides it (not coach_level).
  * @sideEffects `ReelCard` video + hype RPCs; `MaloTipModal` PaymentSheet. GestureHandlerRootView so Exclusive taps work inside RN Modal.
  */
 export function ReelViewModal({
@@ -42,6 +44,7 @@ export function ReelViewModal({
   onClose,
   onOpenAthlete,
   onHypeChange,
+  onHide,
   onBacked,
   onTipped,
 }: ReelViewModalProps) {
@@ -59,6 +62,7 @@ export function ReelViewModal({
           onClose={onClose}
           onOpenAthlete={onOpenAthlete}
           onHypeChange={onHypeChange}
+          onHide={onHide}
           onBacked={onBacked}
           onTipped={onTipped}
         />
@@ -75,6 +79,7 @@ function ReelViewPager({
   onClose,
   onOpenAthlete,
   onHypeChange,
+  onHide,
   onBacked,
   onTipped,
 }: {
@@ -85,6 +90,7 @@ function ReelViewPager({
   onClose: () => void;
   onOpenAthlete?: (playerId: string) => void;
   onHypeChange?: (reelId: string, hype: ReelHype) => void;
+  onHide?: (reelId: string) => void;
   onBacked?: (nextCount: number) => void;
   onTipped?: (reelId: string, amountCents: number) => void;
 }) {
@@ -154,9 +160,13 @@ function ReelViewPager({
 
   const viewabilityConfig = useMemo(() => ({ itemVisiblePercentThreshold: 80 }), []);
 
-  const hideClip = useCallback((reelId: string) => {
-    setHiddenIds((current) => (current.includes(reelId) ? current : [reelId, ...current]));
-  }, []);
+  const hideClip = useCallback(
+    (reelId: string) => {
+      setHiddenIds((current) => (current.includes(reelId) ? current : [reelId, ...current]));
+      onHide?.(reelId);
+    },
+    [onHide],
+  );
 
   const openTip = useCallback(
     (reelId: string) => {

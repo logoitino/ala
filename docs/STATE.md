@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 11:56 MST · WEB-DESKTOP-01 **FINISHED**; CI data-map/exit refresh. FEED-01 Phase 1 finished; webhook tip crediting stays **off**.
+**Last updated:** 2026-11-15 16:40 MST · WEB-DESKTOP card feed FINISHED + data:map currency for CI. Owner merges #54 then #55.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -174,6 +174,39 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-15 — WEB-DESKTOP card feed data:map currency
+
+- Regenerated `DATA_MAP.md` + `supportTopology.json` after Crew shortcuts (`fetchCrewShortcuts`).
+- **About to spend:** **$0**.
+
+### 2026-11-15 — WEB-DESKTOP card feed FINISHED
+
+- Real Crew shortcuts on left rail (`fetchCrewShortcuts`); Playwright smoke 1920/820/390 in
+  `docs/engineering/evidence/web-desktop-card-feed/`. PR [#55](https://github.com/logoitino/ala/pull/55)
+  owner merges #54 then #55.
+- **About to spend:** **$0**.
+
+### 2026-11-15 — WEB-DESKTOP card feed CI currency
+
+- `pnpm ip:sync` / exit map acknowledge / `security:infra` after card-feed source touch. Prior:
+  typed FeedReasonCode in DesktopHighlightFeed tests; `highlights-jump` stubs desktop feed
+  (NetInfo). PR #55.
+- **About to spend:** **$0**.
+
+### 2026-11-15 — WEB-DESKTOP card feed Codex review fixes
+
+- Guest three-Highlight browse on desktop card opens (`decideGuestDesktopPlay`); playback gift
+  updates use reel/athlete ids from `ReelViewModal`; Spotlight Watch opens `playClipId`; report
+  hide forwards to Home. PR [#55](https://github.com/logoitino/ala/pull/55).
+- **About to spend:** **$0**. Wave 0 unchanged.
+
+### 2026-11-15 — WEB-DESKTOP Lovable-outline card feed
+
+- Expo web ≥820: Home uses `DesktopHighlightFeed` (scroll cards, sport pills, Cheer→Seki,
+  Send a gift Soft-Wall) instead of the phone vertical pager. Native / phone web unchanged.
+  Brand mark on `DesktopLeftRail`. Branch `cursor/web-desktop-card-feed-9a86` stacks on shell #54.
+- **About to spend:** **$0** (docs/tests only). Lovable stays reference (W4); no new credits this pass.
 
 ### 2026-11-15 — WEB-DESKTOP-01 FINISHED
 

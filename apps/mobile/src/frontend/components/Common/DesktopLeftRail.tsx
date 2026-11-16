@@ -2,6 +2,7 @@
  * Expo web left navigation for the three-panel desktop shell (WEB-DESKTOP-01).
  * Replaces the bottom FanTabBar at ≥820px; collapses labels below 1280 (icons only).
  */
+import { useEffect, useState } from 'react';
 import { type Href, usePathname, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -10,6 +11,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { colors, space } from '@/constants/theme';
 import { FONT } from '@/theme/fonts';
+import { fetchCrewShortcuts, type CrewShortcut } from '@/lib/crew';
+import { userProfileHref } from '@/lib/navigation';
 import { ROLE_HOME } from '@/lib/roles';
 import { useWebDesktopMode } from '@/hooks/useAppViewport';
 import type { UserRole } from '@/types/database';
@@ -45,16 +48,34 @@ function pathMatches(pathname: string, href: string): boolean {
 }
 
 /**
- * @purpose Left rail links for Expo web desktop / tablet (WEB-DESKTOP-01).
+ * @purpose Left rail links for Expo web desktop / tablet (WEB-DESKTOP-01), including Crew shortcuts.
  * @param compact When true (tablet), show icons only.
+ * @sideEffects `fetchCrewShortcuts` (`crew_follows` + `players`) for signed-in fans.
  */
 export function DesktopLeftRail({ compact }: { compact?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const mode = useWebDesktopMode();
   const iconsOnly = compact ?? mode !== 'desktop';
-  const { roles, isGuest, isAdmin } = useAuth();
+  const { user, roles, isGuest, isAdmin } = useAuth();
   const { live } = useAppRuntime();
+  const [crew, setCrew] = useState<CrewShortcut[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    if (isGuest || !user?.id) {
+      setCrew([]);
+      return () => {
+        active = false;
+      };
+    }
+    void fetchCrewShortcuts(user.id, 5).then((rows) => {
+      if (active) setCrew(rows);
+    });
+    return () => {
+      active = false;
+    };
+  }, [isGuest, user?.id]);
 
   const fanItems = FAN_NAV.filter((item) => {
     if (item.key === 'drip' && live.tabs.drip === false) return false;
@@ -76,6 +97,18 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
       accessibilityRole="navigation"
       accessibilityLabel="Main"
     >
+      <Pressable
+        onPress={() => router.push('/')}
+        accessibilityRole="link"
+        accessibilityLabel="Tapua'i Home"
+        style={[styles.brand, iconsOnly && styles.brandCompact]}
+      >
+        {iconsOnly ? (
+          <Text style={styles.brandMark}>T</Text>
+        ) : (
+          <Text style={styles.brandName}>{"Tapua'i"}</Text>
+        )}
+      </Pressable>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {fanItems.map((item) => {
           const on = pathMatches(pathname, String(item.href));
@@ -126,19 +159,57 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
 
         <View style={styles.section}>
           {!iconsOnly ? <Text style={styles.sectionTitle}>Crew</Text> : null}
-          <Pressable
-            onPress={() => router.push('/profile')}
-            accessibilityRole="link"
-            accessibilityLabel={isGuest ? 'Sign in to see Crew' : 'Open Profile for Crew'}
-            style={[styles.item, iconsOnly && styles.itemCompact]}
-          >
-            <Ionicons name="flash-outline" size={22} color={colors.textMuted} />
-            {!iconsOnly ? (
-              <Text style={[styles.label, styles.muted]} numberOfLines={2}>
-                {isGuest ? 'Sign in for Crew' : 'Crew on Profile'}
-              </Text>
-            ) : null}
-          </Pressable>
+          {isGuest ? (
+            <Pressable
+              onPress={() => router.push('/profile')}
+              accessibilityRole="link"
+              accessibilityLabel="Sign in to see Crew"
+              style={[styles.item, iconsOnly && styles.itemCompact]}
+            >
+              <Ionicons name="flash-outline" size={22} color={colors.textMuted} />
+              {!iconsOnly ? (
+                <Text style={[styles.label, styles.muted]} numberOfLines={2}>
+                  Sign in for Crew
+                </Text>
+              ) : null}
+            </Pressable>
+          ) : crew.length === 0 ? (
+            <Pressable
+              onPress={() => router.push('/profile')}
+              accessibilityRole="link"
+              accessibilityLabel="Open Profile for Crew"
+              style={[styles.item, iconsOnly && styles.itemCompact]}
+            >
+              <Ionicons name="flash-outline" size={22} color={colors.textMuted} />
+              {!iconsOnly ? (
+                <Text style={[styles.label, styles.muted]} numberOfLines={2}>
+                  Follow athletes to fill Crew
+                </Text>
+              ) : null}
+            </Pressable>
+          ) : (
+            crew.map((row) => {
+              const initial = row.name.trim().charAt(0).toUpperCase() || '?';
+              return (
+                <Pressable
+                  key={row.id}
+                  onPress={() => router.push(userProfileHref(row.id))}
+                  accessibilityRole="link"
+                  accessibilityLabel={`Open ${row.name} profile`}
+                  style={[styles.item, iconsOnly && styles.itemCompact]}
+                >
+                  <View style={styles.crewDot} accessibilityElementsHidden>
+                    <Text style={styles.crewInitial}>{initial}</Text>
+                  </View>
+                  {!iconsOnly ? (
+                    <Text style={styles.label} numberOfLines={1}>
+                      {row.name}
+                    </Text>
+                  ) : null}
+                </Pressable>
+              );
+            })
+          )}
         </View>
       </ScrollView>
     </View>
@@ -156,8 +227,29 @@ const styles = StyleSheet.create({
   rootCompact: {
     width: 72,
   },
+  brand: {
+    paddingHorizontal: space.md,
+    paddingTop: space.md,
+    paddingBottom: space.sm,
+    minHeight: 52,
+    justifyContent: 'center',
+  },
+  brandCompact: {
+    alignItems: 'center',
+    paddingHorizontal: 0,
+  },
+  brandName: {
+    fontFamily: FONT.display,
+    fontSize: 26,
+    color: colors.primary,
+  },
+  brandMark: {
+    fontFamily: FONT.display,
+    fontSize: 22,
+    color: colors.primary,
+  },
   scroll: {
-    paddingVertical: space.md,
+    paddingVertical: space.sm,
     paddingHorizontal: space.sm,
     gap: 2,
   },
@@ -203,5 +295,18 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     paddingHorizontal: space.sm,
     marginBottom: 4,
+  },
+  crewDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  crewInitial: {
+    fontFamily: FONT.bold,
+    fontSize: 12,
+    color: colors.primary,
   },
 });

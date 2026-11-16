@@ -125,7 +125,7 @@ execution or a continuous delivery service.
 
 ## WEB-DESKTOP-01 — Fan desktop web layout (**FINISHED** on branch) — 2026-11-15
 
-Finish: [WEB-DESKTOP-01-finish.md](../engineering/evidence/WEB-DESKTOP-01-finish.md) · PR [#54](https://github.com/logoitino/ala/pull/54).
+Finish: [WEB-DESKTOP-01-finish.md](../engineering/evidence/WEB-DESKTOP-01-finish.md) · shell PR [#54](https://github.com/logoitino/ala/pull/54) · card-feed PR [#55](https://github.com/logoitino/ala/pull/55) ([receipt](../engineering/evidence/WEB-DESKTOP-01-card-feed.md)). Owner merges **#54 then #55**.
 
 | Next | Owner | Blocked on |
 | --- | --- | --- |

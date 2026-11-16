@@ -3441,6 +3441,7 @@
         "apps/mobile/src/frontend/lib/adminCatalog.ts",
         "apps/mobile/src/frontend/lib/athleteStats.ts",
         "apps/mobile/src/frontend/lib/bookkeeping.ts",
+        "apps/mobile/src/frontend/lib/crew.ts",
         "apps/mobile/src/frontend/lib/guestGames.ts",
         "apps/mobile/src/frontend/lib/localSearch.ts",
         "apps/mobile/src/frontend/lib/operator.ts",

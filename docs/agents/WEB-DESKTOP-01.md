@@ -1,8 +1,8 @@
 # WEB-DESKTOP-01 — Desktop web layout (design proposal)
 
-**Status:** **FINISHED** — Phases 0–3 on `cursor/web-desktop-layout-9a86` / PR #54.  
-**Receipt:** [WEB-DESKTOP-01-finish.md](../engineering/evidence/WEB-DESKTOP-01-finish.md).  
-**Lovable:** [Tapua'i Web Desktop](https://lovable.dev/projects/55b66713-1e11-484e-a8a9-7520ad55b7eb) (3 credits, 2026-11-15) — reference only (W4).  
+**Status:** **FINISHED** (shell PR #54 + card-feed PR #55). Owner merges #54 then #55.  
+**Receipt:** [WEB-DESKTOP-01-finish.md](../engineering/evidence/WEB-DESKTOP-01-finish.md) · [WEB-DESKTOP-01-card-feed.md](../engineering/evidence/WEB-DESKTOP-01-card-feed.md).  
+**Lovable:** [Tapua'i Web Desktop](https://lovable.dev/projects/55b66713-1e11-484e-a8a9-7520ad55b7eb) (3 credits, 2026-11-15) — reference outline (W4); live center is Expo cards, not SAMPLE stubs.  
 **Depends on:** [WEB-DESKTOP-AUDIT.md](WEB-DESKTOP-AUDIT.md) (Phase 0 measured 2026-11-15).  
 **Prior shell:** Extend `WebAppShell` (phone column today) — see audit §1. Do not add a second shell.  
 **Related:** [WEB_APP_PARITY.md](../engineering/design/WEB_APP_PARITY.md) (Phase 1 Stripe.js + phone column — shipping history, not the three-panel target).  

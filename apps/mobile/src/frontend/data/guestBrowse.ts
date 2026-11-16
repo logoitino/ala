@@ -14,3 +14,29 @@ export const GUEST_FREE_HIGHLIGHTS = 3;
 export function guestBrowseNeedsAccount(distinctClipsSeen: number): boolean {
   return distinctClipsSeen > GUEST_FREE_HIGHLIGHTS;
 }
+
+export type GuestDesktopPlayDecision =
+  | { allow: true; nextAllowedClipId: string | null }
+  | { allow: false };
+
+/**
+ * @purpose Apply the same three-Highlight guest limit to desktop card opens (WEB-DESKTOP card feed).
+ * @param seen Distinct clip ids already opened this guest session (mutated when a new id is allowed in).
+ * @param clipId Clip the guest wants to open.
+ * @param allowedClipId Last free clip id (mirrors phone `guestAllowedIndex`).
+ * @returns Whether playback may open, and the updated allowed clip when still inside the free set.
+ */
+export function decideGuestDesktopPlay(
+  seen: Set<string>,
+  clipId: string,
+  allowedClipId: string | null,
+): GuestDesktopPlayDecision {
+  seen.add(clipId);
+  if (!guestBrowseNeedsAccount(seen.size)) {
+    return { allow: true, nextAllowedClipId: clipId };
+  }
+  if (clipId === allowedClipId) {
+    return { allow: true, nextAllowedClipId: allowedClipId };
+  }
+  return { allow: false };
+}
