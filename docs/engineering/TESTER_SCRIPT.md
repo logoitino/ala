@@ -1,6 +1,21 @@
 <!-- Test procedures distinguish historical wave checks from current source, provider and device acceptance. -->
 # Tester script — Phase 3 internal wave
 
+## Efficient APP-TEST loop — no Exit (2026-11-12)
+
+Use this order on staging `tucioqipfejqqqtuakdi`. Wave 0 costs **$0** (Demo Fan, `4242`, Free
+Metro). Do **not** start Exit drills here.
+
+| Step | Where | Status / what to click |
+| --- | --- | --- |
+| 1. Demo Fan | SoftWall → Use test account / `demo@tapuai.app` | **PASS** (session works) |
+| 2. Highlight (C) | Upload → 8s fixture → Publish → Home playback | **PASS** on web; reject 46s / >8MiB |
+| 3. Gift charge | Edge `create-payment-intent` + Stripe test | **PASS** mint + confirm `succeeded` ($5 test, **$0**). Web sheet is stubbed — use **Expo Go / preview** for Give → `4242` (client `tips` row). |
+| 4. Google (A) | Guest → Upload SoftWall → Continue with Google | Popup **PASS**; finish Test-users Gmail signup + resume |
+| 5. Bank (B) | Owner only | Connect SQL → deploy `create-stripe-account` (checkout `sk_test_` already on staging). Payouts stay 503. |
+
+PRs: C [#35](https://github.com/logoitino/ala/pull/35) · A [#36](https://github.com/logoitino/ala/pull/36) · B [#37](https://github.com/logoitino/ala/pull/37).
+
 ## Current giving checks — MONEY-TIPS-01 (2026-10-22)
 
 Use the [rollout runbook](GIFT_TIP_ROLLOUT.md) and [COORD-02](../agents/COORD-02.md) first.
@@ -260,24 +275,29 @@ STATE/COORD-01; this procedure does not close hosted SQL, policy, provider, push
 
 ## Google setup acceptance — browser first, then native
 
-**Prepared 2026-10-21; successful Google signup/sign-in and native return UNRUN.** The actual
-read-only development Auth settings request returned HTTP 200 around **03:00 UTC**: Google
-disabled, Email enabled, signup not disabled. The owner has not supplied Google OAuth credentials.
-This observation does not verify redirect allowlists or successful email signup. Follow the
-concrete [Google operator setup](../ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21)
-before trying Google; preparing this script changed no hosted settings.
+**Prepared 2026-10-21; successful Google signup/sign-in and native return UNRUN.**
+**2026-11-12 staging enable:** Auth settings **`google: true`** on `tucioqipfejqqqtuakdi`;
+authorize **302** to Google; Soft-Wall **Continue with Google** opens Google Accounts popup;
+cancel/close leaves SoftWall retry (**PASS** for provider + popup). Full new/returning Google
+account + birth confirm + resume and native return remain **UNRUN**. Follow
+[Google operator setup](../ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21)
+and [COORD-01 receipt](../agents/COORD-01.md#app-test-a-google-enabled-smoke--2026-11-12-utc).
 
-1. Verify the saved development provider reports Google enabled after operator setup. The Web
-   client's Google redirect is `https://ulfapgtabidorgwfjvwz.supabase.co/auth/v1/callback`;
-   Supabase must separately allow `http://localhost:8086/auth/callback`. Keep credentials and
-   returned callback tokens out of evidence. Google setup requires no service-role or Stripe key.
+1. After operator setup, verify Auth settings on the **same** project as `EXPO_PUBLIC_SUPABASE_URL`
+   report Google enabled. Staging Web-client redirect:
+   `https://tucioqipfejqqqtuakdi.supabase.co/auth/v1/callback` (development historical:
+   `https://ulfapgtabidorgwfjvwz.supabase.co/auth/v1/callback`). Supabase must also allow the exact
+   app return (`http://localhost:8086/auth/callback` and, for Cloud Agent web,
+   `http://127.0.0.1:8081/auth/callback` + `http://localhost:8081/auth/callback`). Keep credentials
+   and callback tokens out of evidence. No service-role or Stripe key required.
 2. Start the current browser preview with Node 24 on PATH:
 
    ```bash
    BROWSER=none pnpm --filter @tapuai/mobile exec expo start --web --localhost --port 8086
+   # or port 8081 / http://127.0.0.1:8081 when that is the allowlisted origin
    ```
 
-   Open `http://localhost:8086` and allow the Google popup for that origin. Record the build/origin;
+   Open that origin and allow the Google popup. Record the build/origin;
    an already signed-in browser session is not evidence of a new Google signup.
 3. With a Google account allowed by the development testing audience, test **Create an account**
    and **Sign in** separately. New accounts require the existing birth month/year check, create a
@@ -301,14 +321,16 @@ SQL/Edge/private-server prerequisites below; it is not part of creating a Google
 
 ## Google account to later Stripe test bank — development rehearsal
 
-**Prepared 2026-10-21; manual walkthrough UNRUN.** This focused rehearsal uses the existing
-development project `ulfapgtabidorgwfjvwz` and Stripe **test mode**. It is separate from the older
-staging wave above. Use current source/build receipts in [STATE.md](../STATE.md) §4 and the
-[payee plan](design/PAYEE_VERIFICATION_PLAN.md) §10. Historical Google repair tests do not accept
-this new bank flow. The later read-only settings check found development Google disabled; app
-return allowlists and successful Google operation remain unverified. The new Connect SQL is
-unapplied and the updated Edge Function is undeployed. The local bank fallback still lacks its
-private service-role key; the template alone does not make bank setup ready.
+**Prepared 2026-10-21; manual walkthrough UNRUN.**
+**2026-11-12 staging probe (agent env `tucioqipfejqqqtuakdi`):** Connect RPCs and Edge
+`create-stripe-account` all **404** — do not start the bank walkthrough until the owner applies
+[ONBOARDING bank prep](../ONBOARDING.md#development-account-to-bank-preparation--2026-10-21) and
+confirms. Historical guide also names development `ulfapgtabidorgwfjvwz`. Stripe **test mode**
+only. Source/build receipts: [STATE.md](../STATE.md) §4 ·
+[payee plan](design/PAYEE_VERIFICATION_PLAN.md) §10 ·
+[COORD-01 B](../agents/COORD-01.md#app-test-b-connect-prep--2026-11-12-utc). Google provider is
+enabled on staging; full Google signup receipt is still separate. Local Metro bank fallback still
+needs its private service-role template when not using hosted Edge.
 
 ### Operator preparation
 

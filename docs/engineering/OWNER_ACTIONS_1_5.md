@@ -1,17 +1,18 @@
 <!-- Owner-only Wave 0 leftovers: artifact prune, staging smoke, Android EAS, counsel/SQL, R1-02/R1-03. -->
 # Owner actions 1–5 — Wave 0 leftovers (2026-11-03)
 
-Agent tokens cannot complete these alone (artifact DELETE / branch protection → 403; no
-staging `.env.local` or Supabase access token in this environment). This page is the exact
-checklist. Prices: prune / protection / counsel review routing are not Wave 0 product spend;
-Android preview and `4242` gifts are **$0** on free Expo/Stripe test quotas.
+Agent tokens cannot complete artifact DELETE / branch protection alone (403). Staging
+`.env.local` is present in the cloud agent; gift **charge** path is already smoked (Edge PI +
+Stripe test confirm **succeeded**, **$0**). Native PaymentSheet still needs Expo Go / preview.
+Prices: prune / protection / counsel review routing are not Wave 0 product spend; Android
+preview and `4242` gifts are **$0** on free Expo/Stripe test quotas.
 
-**Agent progress (2026-11-03 America/Denver):**
+**Agent progress (updated 2026-11-12 America/Denver):**
 
 | # | Item | Status |
 | --- | --- | --- |
 | 1 | Prune exit-source artifacts | Workflow on `main` + **weekly Sunday schedule** (keep 3). ~30 left — quota still blocks **upload** (verify-code now soft). Immediate prune needs owner **Run workflow** (agent 403). |
-| 2 | Staging smoke | Still blocked here (no `apps/mobile/.env.local`). Owner runs [TESTER_SCRIPT](TESTER_SCRIPT.md). |
+| 2 | Staging smoke | Highlight web **PASS**. Gift Edge charge **PASS**. Owner: Expo Go / preview Give → `4242` for sheet + `tips` row ([TESTER_SCRIPT](TESTER_SCRIPT.md)). |
 | 3 | Android EAS preview | Build `03e28f4e` **FINISHED** (~3:59 PM America/Denver, **$0** Free). APK: https://expo.dev/artifacts/eas/gHK7JkOq4LnlNN_lcUmMBZxmY6-CqFpszt8cTbxATzA.apk |
 | 4 | Counsel + SQL apply | Packet ready; **owner engages counsel** and applies SQL. Agent will not invent conclusions or `db push`. |
 | 5 | R1-02 / R1-03 | Protection GET/PUT → 403. Owner sets branch protection; private legal/company move when destination named. |

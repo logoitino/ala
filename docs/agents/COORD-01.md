@@ -106,6 +106,86 @@ app evidence. Final post-append docs/links/roles/feature/whitespace checks passe
 declared scopes. Root's remaining local integration/documentation claim is released. Hosted,
 business-event and operational delivery work remains open under the owners above.
 
+## APP-TEST efficient path — 2026-11-12 UTC
+
+Owner asked to continue on the non-Exit path and make testing efficient. Disposition:
+
+| Track | Status |
+| --- | --- |
+| Exit / Redundancy drills | **Deferred** (same-turn map only if code touches exit) |
+| Lane C web Highlight | **PASS** (8s publish + playback); rejects stay out of Details |
+| Gift charge | Demo Fan + Jordan Blake Give reachable; Edge PI mint + Stripe test confirm **`succeeded`** ($5 / livemode false = **$0**). Native PaymentSheet + client `tips` insert still owner Expo Go / preview. |
+| Lane A Google | Provider + Soft-Wall popup **PASS**; full signup **owner browser** |
+| Lane B Connect | Staging Connect SQL/Edge **404**; checkout Edge secret already present |
+
+STATE §0 carries the fast loop. No Exit work started.
+
+## APP-TEST gift charge — 2026-11-13 UTC
+
+Executor: cloud agent on `cursor/app-test-b-bank-9a86`. Target staging
+`tucioqipfejqqqtuakdi`. Spend: Stripe test confirm **$0** (Wave 0).
+
+| Check | Result |
+| --- | --- |
+| Demo Fan `signInWithPassword` | **OK** |
+| Expo web `/user/bfb339a8-…` Give $5 | Reachable; web alerts to Expo Go (stub) |
+| Edge `create-payment-intent` (JWT + playerId, 500¢) | Minted `clientSecret` |
+| Stripe confirm `pm_card_visa` + `client_secret` | **`succeeded`**, amount 500, `livemode: false` |
+| Connect `create-stripe-account` | Still **404** (unchanged) |
+
+Next owner click: Expo Go / preview → Demo Fan → Give → card `4242` (sheet UX + `tips`
+insert). Then optional Google signup; bank SQL/Edge last.
+
+## APP-TEST-B Connect prep — 2026-11-12 UTC
+
+Continued APP-TEST after Google provider-on. Scope: probe staging Connect readiness and refresh
+the owner bank checklist. **No SQL applied, no Edge deploy, no Stripe secret written** by the
+agent (owner hard stop). Wave 0 spend: **$0** (Free Supabase / Stripe test).
+
+| Probe on `tucioqipfejqqqtuakdi` | Result |
+| --- | --- |
+| `stripe_connect_context` / `save_stripe_connect_account` / `record_stripe_kyc` | REST **404** PGRST202 |
+| Edge `create-stripe-account` | **404** function not found |
+| Local source | Migration `20261021120000_connect_account_context.sql` + mobile Connect UI present |
+
+**Owner next:** apply Connect migration (+ MINOR-01 / VERIFY-02 / custodial prereqs if missing)
+on staging → Edge secret `STRIPE_SECRET_KEY=sk_test_…` →
+`supabase functions deploy create-stripe-account --project-ref tucioqipfejqqqtuakdi` → reply
+ready for CONNECT/QA walkthrough. Payouts remain **503**. Lane A full Google signup still
+owner browser UNRUN (popup smoke already PASS).
+
+## APP-TEST-A Google prep — 2026-11-12 UTC
+
+Owner asked for help with lane **A** (Google). Scope: refresh operator guide against the
+**actual** Cloud Agent env and re-probe Auth. No Google Cloud project, OAuth client, or
+Supabase provider toggle was performed by the agent (owner dashboard only). Wave 0 spend: **$0**.
+
+| Check (pre-enable) | Result |
+| --- | --- |
+| `EXPO_PUBLIC_SUPABASE_URL` | `https://tucioqipfejqqqtuakdi.supabase.co` (staging / preview) |
+| `GET /auth/v1/settings` | HTTP 200; **`google: false`**, `email: true`, `disable_signup: false` |
+| `GET /auth/v1/authorize?provider=google` | HTTP 400 `Unsupported provider: provider is not enabled` |
+| Docs | ONBOARDING checklist + TESTER_SCRIPT + STATE §0/§4 + WORK_QUEUE row A updated for staging callback + `8081` returns |
+
+## APP-TEST-A Google enabled smoke — 2026-11-12 UTC
+
+Owner enabled Google on staging and confirmed. Agent re-probed and ran Soft-Wall popup smoke on
+Expo web `http://127.0.0.1:8081` (tip base `fac733e` + this docs branch). Wave 0: **$0**.
+No client secret was shared with the agent.
+
+| Check | Result |
+| --- | --- |
+| `GET /auth/v1/settings` | **`google: true`**, `email: true` |
+| `GET /auth/v1/authorize?provider=google&redirect_to=http://127.0.0.1:8081/auth/callback` | **302** → `accounts.google.com` (client id redacted in evidence) |
+| Guest Soft-Wall (Upload) | Sheet shows **Continue with Google**; bank-free copy present |
+| Google popup | Opens `accounts.google.com`, title “Sign in - Google Accounts”; no `redirect_uri_mismatch` |
+| Cancel / close popup | SoftWall remains; **Continue with Google** still tappable |
+| New Google signup + birth confirm + resume | **UNRUN** (needs owner Testing-audience account in a real browser) |
+| Returning Google + native `alasports://` | **UNRUN** |
+
+Screenshots: `/opt/cursor/artifacts/app-test-a-google-softwall.png` (and oauth popup capture when taken).
+Claims released for provider-on + Soft-Wall popup/cancel only — not full account acceptance.
+
 ## APP-TEST-01 execution — 2026-10-21 UTC
 
 Owner said to execute the current-app test sequence and confirmed Google OAuth setup is not
