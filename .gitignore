@@ -75,3 +75,4 @@ __pycache__/
 *.tar.age.*
 infrastructure/**/*.env
 infrastructure/**/upstream/
+web-desktop-card-feed-*.png
