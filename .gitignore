@@ -76,3 +76,4 @@ __pycache__/
 infrastructure/**/*.env
 infrastructure/**/upstream/
 web-desktop-card-feed-*.png
+.fixtures/

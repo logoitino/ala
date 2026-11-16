@@ -111,6 +111,21 @@ execution and remaining gaps: [LOCAL-02](../agents/LOCAL-02.md).
 3. On a current build, account creation uses birth month/year and the existing age rules;
    ordinary sign-in does not repeat the completed check. Use synthetic dates for the focused rehearsal below.
 
+## APP-TEST-C — Expo web Highlight smoke — 2026-11-12 UTC
+
+Executed on `main` `fac733e` against development Supabase via Playwright on Expo web
+(`127.0.0.1:8081`). Fixtures under gitignored `.fixtures/ala-sports-test-media-lane-c/`.
+Full receipt: [COORD-01 APP-TEST-C](../agents/COORD-01.md#app-test-c-web-smoke--2026-11-12-utc).
+
+| Check | Result |
+| --- | --- |
+| 8s pick → Details (`· 8s`) → caption + athlete → rights → Publish | **PASS** — Storage 200, `reels` 201 (`357605a8-…`) |
+| Home playback of published clip | **PASS** — caption on feed; video `readyState=4`, duration 8s, playing |
+| 46s over-limit | **PARTIAL** — not accepted into Details; Alert string not captured on web |
+| Google (lane A) / Connect bank (lane B) / native iOS·Android | **UNRUN** (owner / device) |
+
+Wave 0: this web smoke is **$0**. Do not treat as device or public-beta acceptance.
+
 ## APP-TEST-01 — local execution, partial checks — 2026-10-21 UTC
 
 The owner confirmed Google OAuth setup is **not completed**. Successful Google signup/sign-in

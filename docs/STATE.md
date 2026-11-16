@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 17:15 MST · WEB-DESKTOP #54+#55 on `main`. APP-TEST efficient path: C web PASS · gift Edge PASS · A popup PASS · B owner SQL/Edge. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-15 · APP-TEST A (#36) + B (#37) on `main`; C merge-fix after. Efficient path: C web PASS · gift Edge PASS · A popup PASS · B owner SQL/Edge. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -36,8 +36,8 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 | --- | --- | --- |
 | **C. Highlights** | Web **PASS**: 8s pick→publish→playback (`fac733e`); 46s/oversize stayed out of Details. PR [#35](https://github.com/logoitino/ala/pull/35) | Optional: density EAS APK/IPA on a phone; photo-story later |
 | **Gift (money)** | Demo Fan session **OK**; Jordan Blake **Give $5** reachable; Edge `create-payment-intent` mints + Stripe test confirm **`succeeded`** $5 (`pm_card_visa`, livemode false = **$0**). Web PaymentSheet is stubbed by design. | Expo Go / preview: Give → `4242` once (client `tips` insert + sheet UX). No new secret needed for checkout Edge. |
-| **A. Google** | Provider **on**; Soft-Wall → Google popup **PASS**; cancel/retry **PASS**. PR [#36](https://github.com/logoitino/ala/pull/36) | One Test-users Gmail signup on Metro web (birth + Upload resume) |
-| **B. Test bank** | Staging Connect RPCs + `create-stripe-account` Edge **404**. Checkout Edge already has `sk_test_`. PR [#37](https://github.com/logoitino/ala/pull/37) | Apply Connect SQL → deploy `create-stripe-account` (reuse existing test secret) |
+| **A. Google** | Provider **on**; Soft-Wall → Google popup **PASS**; cancel/retry **PASS**. PR [#36](https://github.com/logoitino/ala/pull/36) **merged** | One Test-users Gmail signup on Metro web (birth + Upload resume) |
+| **B. Test bank** | Staging Connect RPCs + `create-stripe-account` Edge **404**. Checkout Edge already has `sk_test_`. PR [#37](https://github.com/logoitino/ala/pull/37) **merged** | Apply Connect SQL → deploy `create-stripe-account` (reuse existing test secret) |
 
 **Fastest fully-tested loop (Wave 0 · $0):** Demo Fan → Upload 8s (**done**) → gift charge (**Edge PASS**) → native PaymentSheet `4242` on phone → (optional) Google signup → only then bank SQL/Edge. Skip Exit until A–C + gift have receipts.
 
@@ -176,6 +176,13 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-15 — APP-TEST A + B merged; C merge-fix
+
+- [#36](https://github.com/logoitino/ala/pull/36) Google Soft-Wall prep and [#37](https://github.com/logoitino/ala/pull/37)
+  Connect bank prep landed on `main` after WEB-DESKTOP. [#35](https://github.com/logoitino/ala/pull/35) C
+  rebases STATE/WORK_QUEUE onto that tip (web 8s smoke already PASS).
+- **About to spend:** **$0**. Owner still: Testing-audience Google signup; Connect SQL/Edge; native `4242`.
 
 ### 2026-11-15 — WEB-DESKTOP card feed data:map currency
 
@@ -353,6 +360,10 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
   `EXPO_PUBLIC_APP_ENV` is not production so trivia can be tried without SQL.
 - Regenerated `DATA_MAP.md` + `supportTopology.json` for the new Home/HQ → trivia-demo screen edges
   (`pnpm data:map:check` green).
+### 2026-11-12 — APP-TEST-C web smoke (8s Highlight)
+
+Lane C on Expo web (`http://127.0.0.1:8081`, tip `fac733e`, development project): Demo Fan signed in → Upload → Highlight → 8s synthetic MP4 accepted → caption + Jordan Blake tag → rights ack → Publish. Storage `reels/…/1794518535903.mp4` **200**, `reels` insert **201** (`357605a8-…`), Home showed caption, `<video>` playing `readyState=4` duration 8s. 46s fixture did **not** enter Details (reject path). Sport tags unavailable on this project (publish without sport OK). `reels_feed` select with `sport` still **400** (hosted schema drift; fallback without `sport` works). Native iOS/Android media, oversize, photo story, and cleanup SQL remain open. Receipt: [COORD-01](agents/COORD-01.md#app-test-c-web-smoke--2026-11-12-utc). Screenshots: `/opt/cursor/artifacts/app-test-c-playback-8s.png`, `app-test-c-46s-reject.png`.
+
 
 ### 2026-11-12 — APP-TEST gift charge smoke (no Exit · $0)
 

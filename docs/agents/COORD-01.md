@@ -291,6 +291,32 @@ the existing APP-TEST-01 owners; this is not their completion or release approva
 | `docs/ONBOARDING.md` | `b2524465f3508e542bc6c168de7e93ab2e0c01899077f5ce4d8c36b74357be28` |
 | `docs/engineering/TESTER_SCRIPT.md` | `1d2f73909f7c34b016b6e7e18f512edd661d05f1b4834f17ac2ae2e3a3a9e4d0` |
 
+## APP-TEST-C web smoke — 2026-11-12 UTC
+
+Cloud Agent on `main` tip `fac733e` (post density #34). Lane **C only** — Expo web at
+`http://127.0.0.1:8081` against the development Supabase project. No Google OAuth, Connect SQL,
+Edge deploy, cleanup SQL, or native device run. Wave 0 spend: Metro/web smoke **$0**.
+
+| Step | Observed | Status |
+| --- | --- | --- |
+| Synthetic fixtures | `/workspace/.fixtures/ala-sports-test-media-lane-c/` (gitignored): 8s + 46s MP4s, 10 story JPEGs, padded >8MiB 8s clip; `ffprobe` 8s/46s | Prepared |
+| Sign-in | Existing Demo Fan session (`profiles` user `4ee7be1a-…`) | PASS (email path; Google still owner-gated) |
+| Pick 8s Highlight | Library → Camera Roll → `synthetic-video-8s.mp4`; Details showed `synthetic-video-8s.mp4 · 8s`. Web `expo-image-picker` throws `removeChild` LogBox after pick (known web quirk); dismiss and continue | PASS with LogBox noise |
+| Details → Review | Caption typed via key events (`APP-TEST-C synthetic 8s highlight`); athlete Jordan Blake `#21`; Game Day; rights combined checkbox | PASS |
+| Publish | Storage POST `…/reels/4ee7be1a-…/1794518535903.mp4` **200**; `POST /reels` **201** id `357605a8-de27-4e8b-ab30-b20ab151246c` | PASS |
+| Playback | Home caption visible; `<video>` `readyState=4`, `duration=8`, `paused=false`; `record_reel_view` **200**. Screenshot `/opt/cursor/artifacts/app-test-c-playback-8s.png` | PASS |
+| 46s reject | `synthetic-video-46s.mp4` did **not** advance to Details; stayed on Choose / Camera Roll. Browser `Alert.alert` copy not captured (auto-dismiss / LogBox). Screenshot `/opt/cursor/artifacts/app-test-c-46s-reject.png` | PARTIAL (draft rejected; Alert text UNRUN) |
+| Sport tags | Alert: “No active sport tags are available. You can publish without a sport tag.” | Noted (project config) |
+| `reels_feed` + `sport` | GET with `sport` column **400**; fallback without `sport` **200** | Hosted schema drift (known; not fixed this turn) |
+
+**Still UNRUN for lane C:** iOS/Android pickers and native playback; oversize (>8MiB) reject UI;
+photo-story path; interrupted publish; hosted cleanup SQL; physical Storage cleanup ownership.
+Lanes **A** (Google) and **B** (Connect bank) remain owner-blocked.
+
+Executor: Cursor Cloud Agent. No app source change in this receipt — docs + `.gitignore`
+`.fixtures/` only. Claims released for the web 8s path above; not a public-release or native
+acceptance.
+
 ## Current app roadmap and whole-team refresh — 2026-10-21 UTC
 
 Owner requested a roadmap check and whole-team update after current-app testing preparation.
