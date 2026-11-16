@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-16 · APP-TEST gift web **PASS** (Give $5 → Stripe Payment Element `4242` → `tips` + Mālo toast). C/A docs on `main`; B still owner SQL/Edge. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-16 · FEED-ENDLESS Phase 0 audit written (pool=1 playable; no refill/cycle). APP-TEST gift web PASS on `main`. B still owner SQL/Edge. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,13 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-16 — FEED-ENDLESS Phase 0 audit (no design yet)
+
+- [FEED-ENDLESS-AUDIT.md](agents/FEED-ENDLESS-AUDIT.md): staging `reels_feed` playable **1**;
+  no `onEndReached`/cycle; FEED-01 prefs already on `main` (`d6d7426`); §0 line-count/Mac
+  diffs recorded; Phase 1 design held for FACILITATOR.
+- **About to spend:** **$0**.
 
 ### 2026-11-16 — APP-TEST gift web Give → 4242 PASS ($0)
 
