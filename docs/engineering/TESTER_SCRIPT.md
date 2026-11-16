@@ -245,24 +245,29 @@ STATE/COORD-01; this procedure does not close hosted SQL, policy, provider, push
 
 ## Google setup acceptance — browser first, then native
 
-**Prepared 2026-10-21; successful Google signup/sign-in and native return UNRUN.** The actual
-read-only development Auth settings request returned HTTP 200 around **03:00 UTC**: Google
-disabled, Email enabled, signup not disabled. The owner has not supplied Google OAuth credentials.
-This observation does not verify redirect allowlists or successful email signup. Follow the
-concrete [Google operator setup](../ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21)
-before trying Google; preparing this script changed no hosted settings.
+**Prepared 2026-10-21; successful Google signup/sign-in and native return UNRUN.**
+**2026-11-12 staging enable:** Auth settings **`google: true`** on `tucioqipfejqqqtuakdi`;
+authorize **302** to Google; Soft-Wall **Continue with Google** opens Google Accounts popup;
+cancel/close leaves SoftWall retry (**PASS** for provider + popup). Full new/returning Google
+account + birth confirm + resume and native return remain **UNRUN**. Follow
+[Google operator setup](../ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21)
+and [COORD-01 receipt](../agents/COORD-01.md#app-test-a-google-enabled-smoke--2026-11-12-utc).
 
-1. Verify the saved development provider reports Google enabled after operator setup. The Web
-   client's Google redirect is `https://ulfapgtabidorgwfjvwz.supabase.co/auth/v1/callback`;
-   Supabase must separately allow `http://localhost:8086/auth/callback`. Keep credentials and
-   returned callback tokens out of evidence. Google setup requires no service-role or Stripe key.
+1. After operator setup, verify Auth settings on the **same** project as `EXPO_PUBLIC_SUPABASE_URL`
+   report Google enabled. Staging Web-client redirect:
+   `https://tucioqipfejqqqtuakdi.supabase.co/auth/v1/callback` (development historical:
+   `https://ulfapgtabidorgwfjvwz.supabase.co/auth/v1/callback`). Supabase must also allow the exact
+   app return (`http://localhost:8086/auth/callback` and, for Cloud Agent web,
+   `http://127.0.0.1:8081/auth/callback` + `http://localhost:8081/auth/callback`). Keep credentials
+   and callback tokens out of evidence. No service-role or Stripe key required.
 2. Start the current browser preview with Node 24 on PATH:
 
    ```bash
    BROWSER=none pnpm --filter @tapuai/mobile exec expo start --web --localhost --port 8086
+   # or port 8081 / http://127.0.0.1:8081 when that is the allowlisted origin
    ```
 
-   Open `http://localhost:8086` and allow the Google popup for that origin. Record the build/origin;
+   Open that origin and allow the Google popup. Record the build/origin;
    an already signed-in browser session is not evidence of a new Google signup.
 3. With a Google account allowed by the development testing audience, test **Create an account**
    and **Sign in** separately. New accounts require the existing birth month/year check, create a

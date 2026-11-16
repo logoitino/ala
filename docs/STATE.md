@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-15 16:40 MST · WEB-DESKTOP card feed FINISHED + data:map currency for CI. Owner merges #54 then #55.
+**Last updated:** 2026-11-15 17:10 MST · WEB-DESKTOP #54+#55 on `main`. APP-TEST **A** Google enabled (Soft-Wall popup PASS; full signup UNRUN). Next: land A/B/C PRs + remaining smoke. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -33,7 +33,7 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 
 | Lane | Ready locally | Blocked on owner / provider |
 | --- | --- | --- |
-| **A. Google account** | Guide in [ONBOARDING](ONBOARDING.md#prepare-google-sign-in-for-development--2026-10-21); callback repair landed | Google Cloud OAuth + enable Supabase Google on development; then AUTH/QA record signup/return/cancel/resume |
+| **A. Google account** | Staging `tucioqipfejqqqtuakdi`: Auth **`google: true`** (2026-11-12); Soft-Wall Upload → Continue with Google → `accounts.google.com` popup (no mismatch); cancel/close keeps SoftWall retry. Receipt [COORD-01](agents/COORD-01.md#app-test-a-google-enabled-smoke--2026-11-12-utc) | Owner completes one Testing-audience Google signup + return + birth confirm + resume in a real browser; native `alasports://` = DEVICE_QA |
 | **B. Stripe test bank** | Adult/guardian Connect UI + guarded Terms local; Connect SQL written | Reviewed SQL/Edge apply; service-role for local bank fallback; KYC evidence still unwired; payouts stay 503 |
 | **C. Short Highlights** | Duration/size guards + synthetic fixtures | Hosted Storage/cleanup SQL as needed; real pick/upload/playback on web/iOS/Android |
 
@@ -48,7 +48,7 @@ Lanes D–F (public-beta blockers, Legal-first telemetry, feel/a11y) stay sequen
 | | Enable webhook tip crediting; live money; minors-facing consent to real families |
 
 ### Staging smoke (test only)
-Project `ala-sports-staging`. Preview EAS builds; test card `4242…`. Account sheet includes `demo@tapuai.app` until production env. Google still off — use email until lane A. Script: [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) · [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md). Confirm which project the build points at.
+Project `ala-sports-staging`. Preview EAS builds; test card `4242…`. Account sheet includes `demo@tapuai.app` until production env. Google **enabled** on staging Auth (`google: true`); Soft-Wall popup PASS — full Testing-audience signup still owner. Script: [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) · [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md). Confirm which project the build points at.
 
 ### Prove green before editing
 `pnpm check` (Node 24). Merge gates vs reports: [REVIEWER_START_HERE.md](REVIEWER_START_HERE.md).
@@ -351,6 +351,21 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
   `EXPO_PUBLIC_APP_ENV` is not production so trivia can be tried without SQL.
 - Regenerated `DATA_MAP.md` + `supportTopology.json` for the new Home/HQ → trivia-demo screen edges
   (`pnpm data:map:check` green).
+
+### 2026-11-12 — APP-TEST-A Google enabled + Soft-Wall popup smoke
+
+Owner enabled Google on staging `tucioqipfejqqqtuakdi` (Wave 0 **$0**). Recheck:
+`/auth/v1/settings` → **`google: true`**; authorize → **302** to `accounts.google.com`.
+Expo web Soft-Wall (Upload as guest): **Continue with Google** opens Google sign-in popup
+(title “Sign in - Google Accounts”); no `redirect_uri_mismatch`; closing popup leaves SoftWall
+retry. Full new/returning Google account + birth confirm + action resume still **UNRUN**
+(needs owner Testing-audience login). Screenshots:
+`/opt/cursor/artifacts/app-test-a-google-softwall.png`. Receipt:
+[COORD-01](agents/COORD-01.md#app-test-a-google-enabled-smoke--2026-11-12-utc).
+
+### 2026-11-12 — APP-TEST-A Google prep (pre-enable)
+
+Guide refreshed for staging callbacks + `8081` returns before owner enabled the provider.
 
 ### 2026-11-10 — Density EAS preview FINISHED ($0 Free)
 

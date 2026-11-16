@@ -145,80 +145,92 @@ Admin oversight: the main Expo `/admin/product` contains Features, Profile, Sign
 
 ### Prepare Google sign-in for development — 2026-10-21
 
-These are operator instructions for the existing development Supabase project,
-`ulfapgtabidorgwfjvwz`. **No Google Cloud or Supabase setting was changed by preparing them.**
-The read-only check above shows Google disabled; redirect allowlists remain unverified.
-Google account access requires the owner to create/configure OAuth credentials before the
-browser and native acceptance checks can run. Google setup does not need a Supabase service-role
-key; the separate local bank fallback still lacks that private key.
+**Rechecked 2026-11-12 (America/Denver):** the Cloud Agent’s `apps/mobile/.env.local` points at
+**staging** project `tucioqipfejqqqtuakdi` (`EXPO_PUBLIC_APP_ENV=preview`). Anonymous Auth
+`/auth/v1/settings` reports **`google: false`** (Email on, signup allowed). Authorize probe:
+`Unsupported provider: provider is not enabled`. Development project `ulfapgtabidorgwfjvwz`
+remains the historical Google-guide target; enable Google on **whichever project the running
+app’s `EXPO_PUBLIC_SUPABASE_URL` names**. **No Google Cloud or Supabase setting was changed by
+writing or refreshing this guide.** Google setup does not need a Supabase service-role key.
 
-Keep the three URLs in their respective settings:
+#### Owner checklist (Wave 0 — **$0**; Google Cloud OAuth clients are free)
 
-| Setting | Exact value for this development rehearsal |
-| --- | --- |
-| Google OAuth Web client → Authorized redirect URI | `https://ulfapgtabidorgwfjvwz.supabase.co/auth/v1/callback` |
-| Supabase Auth → Redirect URLs, local browser | `http://localhost:8086/auth/callback` |
-| Supabase Auth → Redirect URLs, native development client | `alasports://auth/callback` |
+Do these in order. **Do not paste the client secret into chat, git, Expo env, logs, or screenshots**
+— only into Supabase → Authentication → Google.
 
-The Google callback returns to Supabase, which then returns to the app using `authRedirectUri()`.
-Use the same `localhost` hostname, port and `/auth/callback` path throughout browser testing.
-Additional build/host returns need their own exact allowlist entry after checking the generated URI.
+1. **Pick the Supabase project** that matches the app you will test (read
+   `EXPO_PUBLIC_SUPABASE_URL` in `apps/mobile/.env.local`). Today’s agent env = **staging**
+   `tucioqipfejqqqtuakdi`. If you intend development instead, switch the env URL/anon key first.
+2. **Google Cloud Console** — sign in, pick or create a Cloud project (separate from Supabase).
+   Use these console pages (pick whichever loads for your account):
+   - Clients (create Web app here): https://console.cloud.google.com/auth/clients
+   - Create client directly: https://console.cloud.google.com/auth/clients/create
+   - Classic Credentials fallback: https://console.cloud.google.com/apis/credentials
+   - Branding / consent (if Clients asks you to register the app first):
+     https://console.cloud.google.com/auth/branding  
+     or https://console.cloud.google.com/apis/credentials/consent  
+   If a link 404s, open https://console.cloud.google.com/ → select the project in the top bar →
+   search **Clients** or **Credentials**.
+3. **Consent / branding:** app name **Tapua'i Sports**; your real support email. Audience
+   **External** + **Testing**; add every tester Gmail under **Test users**. Scopes: `openid`,
+   `email`, `profile`. Do not publish yet.
+4. **Create OAuth client → Web application** (e.g. `Tapua'i Sports staging Supabase`). Under
+   **Authorized redirect URIs**, add **only** the Supabase Auth callback for that project
+   (table below). Leave Authorized JavaScript origins empty for this Supabase redirect flow.
+   Save. Copy **Client ID** + **Client secret** privately (secret is shown once).
+5. **Supabase Dashboard** (same project) → **Authentication → Providers → Google** → paste
+   Client ID + secret → **Enable** → Save.
+6. **Authentication → URL Configuration → Redirect URLs** → add every app return you will use
+   (table below). Keep Site URL as-is; the app always sends `redirectTo`.
+7. Tell the agent (or run locally): “Google enabled on `<project-ref>`.” Then re-run Auth
+   settings / Soft-Wall **Continue with Google** checks in
+   [TESTER_SCRIPT](engineering/TESTER_SCRIPT.md#google-setup-acceptance--browser-first-then-native).
 
-1. Sign into [Google Cloud Console](https://console.cloud.google.com/) as the intended project
-   owner. Select or create the Google Cloud project used for development OAuth; it is separate
-   from the existing Supabase project. Open **Google Auth Platform** (or the OAuth consent/client
-   pages under **APIs & Services**, depending on the console layout).
-2. Complete the OAuth branding/consent setup: use **Tapua'i Sports** as the app name and the
-   owner's real support/developer contact. For personal Google accounts, choose **External**
-   with **Testing** audience and add each intended tester under **Test users**. Use standard
-   sign-in scopes (`openid`, `email`, `profile`). Keep the audience limited to this development
-   rehearsal; publishing or broader Google verification is a separate step.
-3. Create an OAuth client with type **Web application**, for example **Tapua'i Sports development
-   Supabase**. Under **Authorized redirect URIs**, add the exact Supabase callback in the table.
-   The current app uses Supabase's browser redirect flow; JavaScript origins are not needed for
-   this flow. Save the client and keep its client ID and client secret private during handoff.
-4. Open the development project's Supabase Dashboard → **Authentication → Providers / Sign In**
-   → **Google**. Enter that Web client's ID and secret, enable Google, then save. Keep the secret
-   in the provider settings; it does not belong in Expo public variables, `.env.local`, source
-   control, logs, chat or screenshots. If retaining a downloaded OAuth credential file, store it
-   outside the repository with private permissions. It is separate from Stripe server configuration.
-5. Open **Authentication → URL Configuration → Redirect URLs** and add the two exact app returns
-   in the table. Retain the intended Site URL for the development project; this app explicitly
-   supplies its callback as `redirectTo` and must not rely on Site URL fallback. Record the saved
-   callback/allowlist values without recording the client secret or returned credentials.
-6. With Node 24 on PATH and the development public Supabase URL/anon key in the existing mobile
-   env file, start the browser preview from the repository root:
+#### Exact URLs (match the project you enabled)
 
-   ```bash
-   node --version # must show v24.x
-   BROWSER=none pnpm --filter @tapuai/mobile exec expo start --web --localhost --port 8086
-   ```
+| Setting | Staging (current agent `.env.local`) | Development (historical guide) |
+| --- | --- | --- |
+| Google OAuth Web client → Authorized redirect URI | `https://tucioqipfejqqqtuakdi.supabase.co/auth/v1/callback` | `https://ulfapgtabidorgwfjvwz.supabase.co/auth/v1/callback` |
+| Supabase Redirect URLs — local browser (port 8086) | `http://localhost:8086/auth/callback` | `http://localhost:8086/auth/callback` |
+| Supabase Redirect URLs — Cloud Agent / `127.0.0.1` web (port 8081) | `http://127.0.0.1:8081/auth/callback` **and** `http://localhost:8081/auth/callback` | same host/port pair if you use that origin |
+| Supabase Redirect URLs — native scheme | `alasports://auth/callback` | `alasports://auth/callback` |
 
-   Open `http://localhost:8086` manually and allow the sign-in popup for that origin. If the port
-   is occupied, resolve the conflict before using a different origin; update and verify its exact
-   callback allowlist if changing ports. Do not source missing bank credentials for this auth check.
-   Expo web checkout uses Stripe.js Payment Element (same `create-payment-intent` as native) when
-   `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` is set — test card `4242…`. Desktop layouts use a phone-width
-   column; see [WEB_APP_PARITY.md](engineering/design/WEB_APP_PARITY.md).
-7. Recheck development Auth settings through the configured app: Google should now report enabled.
-   That setting alone is not a successful sign-in receipt. Run the
-   [browser Google checks](engineering/TESTER_SCRIPT.md#google-setup-acceptance--browser-first-then-native),
-   including a new account, returning account, cancellation and interrupted-action recovery.
-   Record the current build, date, origin, observed result and redacted evidence.
-8. Separately install a current native development client with the `alasports` scheme and run
-   the native callback checks. The same Web OAuth client is used by this browser-based Supabase
-   flow. Verify the actual generated return for that binary. Browser success does not accept
-   iOS/Android return handling, and an Expo Go return may differ from a development client's scheme.
+The Google callback returns to **Supabase**, which then returns to the app via `authRedirectUri()`.
+Use the **same hostname + port + `/auth/callback`** you open in the browser. Extra hosts need
+their own allowlist row. Open that origin manually and allow the sign-in popup. If the port is
+occupied, resolve the conflict before using a different origin; update and verify its exact
+callback allowlist if changing ports. Do not source missing bank credentials for this auth check.
+Expo web checkout uses Stripe.js Payment Element (same `create-payment-intent` as native) when
+`EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` is set — test card `4242…`. Wide web uses the three-panel
+desktop shell when that branch is on `main`; see [WEB-DESKTOP-01](agents/WEB-DESKTOP-01.md) and
+[WEB_APP_PARITY.md](engineering/design/WEB_APP_PARITY.md).
 
-If setup fails, check the setting named by the error:
+Provider-enabled alone is **not** a signup receipt. Run the
+[browser Google checks](engineering/TESTER_SCRIPT.md#google-setup-acceptance--browser-first-then-native)
+(new account, returning, cancel, resume) and record build/date/origin/result. Native `alasports://`
+return is a separate DEVICE_QA pass (Expo Go may differ from a development client).
+
+#### Local browser after enable
+
+```bash
+node --version # must show v24.x
+BROWSER=none pnpm --filter @tapuai/mobile exec expo start --web --localhost --port 8086
+# Cloud Agent often uses --port 8081 and http://127.0.0.1:8081 — allowlist that origin too.
+```
+
+Open that origin, allow the Google popup, then run new-account / returning / cancel / resume
+checks. Provider-enabled alone is **not** a signup receipt. Native `alasports://` return is a
+separate DEVICE_QA pass.
+
+If setup fails:
 
 | Symptom | Check |
 | --- | --- |
-| Google remains disabled / provider not enabled | Saved Google provider enablement and the intended development project. |
-| Google `redirect_uri_mismatch` | Web OAuth client uses the exact **Supabase** callback above. |
-| Google testing access denied | Correct Google account is allowed in the configured testing audience. |
-| App returns to the wrong host or callback is refused | Supabase allows the actual app origin/port/path or native scheme generated for this build. |
-| Popup blocked or cancelled | Allow popups for the local origin, retry, and verify the interrupted draft remains. |
+| Google remains disabled / `provider is not enabled` | Enabled Google on the **same** project as `EXPO_PUBLIC_SUPABASE_URL`. |
+| Google `redirect_uri_mismatch` | Web OAuth client uses the exact **Supabase** `/auth/v1/callback` for that project. |
+| Google testing access denied | Tester Gmail is on the OAuth **Test users** list. |
+| App callback refused / wrong host | Supabase Redirect URLs include the exact origin you opened (`localhost` ≠ `127.0.0.1`). |
+| Popup blocked or cancelled | Allow popups; draft/intent should remain for retry. |
 
 References: [Supabase Google Auth](https://supabase.com/docs/guides/auth/social-login/auth-google)
 and [Google OAuth Web flow](https://developers.google.com/identity/protocols/oauth2/web-server).
