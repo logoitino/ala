@@ -12,7 +12,8 @@ import {
   View,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useFanSheetMotion } from '@/hooks/useFanSheetMotion';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
@@ -29,10 +30,11 @@ import { COMPLIANCE_ACCOUNT } from '@/data/legal';
 import { DEMO_FAN_EMAIL, DEMO_FAN_PASSWORD, demoFanSignInAvailable, signUpBirthProblem, softWallEmailGates, type BirthMonth } from '@/lib/auth';
 import { AGE_GATE_REFUSAL, isAgeGatePaused, pauseAgeGate } from '@/lib/minors';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { FOCAL } from '@/theme/motion';
 import { DISPLAY_TEXT, TYPE, figtree } from '@/theme/fonts';
 
-const SHEET_TRAVEL = 480;
+/** Soft-Wall is taller than a menu sheet — keep travel past the dock. */
+const SOFT_WALL_TRAVEL = 480;
 
 type AuthBusy = 'apple' | 'google' | 'magic' | 'demo' | 'password' | 'signup' | null;
 
@@ -63,8 +65,7 @@ export function SoftWallModal() {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const wasVisible = useRef(false);
-  const translateY = useSharedValue(SHEET_TRAVEL);
-  const backdropOpacity = useSharedValue(0);
+  const { sheetStyle, backdropStyle, playOpen, playClose } = useFanSheetMotion(SOFT_WALL_TRAVEL);
 
   useEffect(() => {
     if (!visible) {
@@ -78,27 +79,20 @@ export function SoftWallModal() {
     }
   }, [visible]);
 
-  // Mirrors ProfileMenuSheet's slide-up spring, but also has to animate closed when
-  // SoftWallContext clears itself the instant a session lands (see close() callers in
-  // SoftWallContext) — not just when the fan taps "Keep browsing" — so we track the prior
-  // visibility in a ref instead of relying on a manual dismiss() being the only way out.
+  // SoftWallContext clears `visible` the instant a session lands — animate closed then, not
+  // only when the fan taps "Keep browsing".
   useEffect(() => {
     if (visible) {
       wasVisible.current = true;
       setOpen(true);
-      translateY.value = withSpring(0, SPRING_CARD);
-      backdropOpacity.value = withTiming(1, { duration: 200 });
-    } else if (wasVisible.current) {
-      wasVisible.current = false;
-      translateY.value = withTiming(SHEET_TRAVEL, { duration: 180 });
-      backdropOpacity.value = withTiming(0, { duration: 160 });
-      const timer = setTimeout(() => setOpen(false), 180);
-      return () => clearTimeout(timer);
+      playOpen();
+      return;
     }
-  }, [visible, backdropOpacity, translateY]);
-
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
+    if (wasVisible.current) {
+      wasVisible.current = false;
+      playClose(() => setOpen(false));
+    }
+  }, [playClose, playOpen, visible]);
 
   if (!open && !visible) return null;
 
@@ -168,7 +162,16 @@ export function SoftWallModal() {
         setMessage('Check your email for the magic link. Keep this open, or unlock again after you sign in.');
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not sign in.');
+      const message = caught instanceof Error ? caught.message : 'Could not sign in.';
+      setError(message);
+      // Lane A while Google is still off on the project: open Create so email + birth month are one scroll away.
+      if (kind === 'google' && /Google sign-in is turned off/i.test(message) && mode !== 'create') {
+        setMode('create');
+        void isAgeGatePaused().then((paused) => {
+          setAgePaused(paused);
+          if (paused) setError(AGE_GATE_REFUSAL);
+        });
+      }
     } finally {
       running.current = false;
       setBusy(null);
@@ -200,7 +203,8 @@ export function SoftWallModal() {
           <SheetHandle onDismiss={busy ? undefined : dismiss} />
             <ScrollView
               keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
               contentContainerStyle={styles.sheetInner}
             >
               <BrandMark size={28} />
@@ -236,7 +240,9 @@ export function SoftWallModal() {
                     <Text style={styles.googleLabel}>Continue with Google</Text>
                   )}
                 </AnimatedButton>
-                <Text style={styles.demoHint}>Google works for new and existing accounts.</Text>
+                <Text style={styles.demoHint}>
+                  Google works for new and existing accounts when the project has it on. If it is off, use email below.
+                </Text>
                 <View style={styles.reassure}>
                   <Ionicons name="lock-closed-outline" size={16} color={colors.primary} />
                   <Text style={styles.reassureLabel}>No bank details are needed to create your profile.</Text>

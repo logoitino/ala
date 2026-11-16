@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { randomUUID } from 'expo-crypto';
 import { useAuth } from '@/context/AuthContext';
 import { claimTimedSportQuizInvitation, eraseTimedSportQuizHistory, fetchTimedSportQuiz, fetchTimedSportQuizHistory, saveTimedSportQuizPreferences, skipTimedSportQuiz } from '@/lib/sportQuiz';
+import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { TIMED_QUIZ_NOTICE_VERSION, type TimedQuizSnapshot, type TimedQuizHistoryPage, type TimedQuizPreferencesInput, type TimedQuizReceipt } from '@shared/timedSportQuiz';
 export type SportQuizBusy = 'preferences' | 'invitation' | 'skip' | 'erase' | null;
 type Pending = {
@@ -75,9 +76,13 @@ export function useSportQuiz() {
         }
         scope.suppressed = scope.offRequested || snapshot.preferences.invitation_mode === 'off';
     }
-    catch {
-        if (current() && sequence === scope.read)
-            scope.error = 'Sport Pop Quiz is unavailable. Refresh to check availability.';
+    catch (error) {
+        if (current() && sequence === scope.read) {
+            // Keep the missing-migration signal so the quiz page can offer the local demo / apply packet.
+            scope.error = error instanceof Error && error.message === NOT_SWITCHED_ON
+                ? NOT_SWITCHED_ON
+                : 'Sport Pop Quiz is unavailable. Refresh to check availability.';
+        }
     }
     finally {
         if (current() && sequence === scope.read) {

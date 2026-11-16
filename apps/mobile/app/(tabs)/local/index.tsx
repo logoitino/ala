@@ -448,7 +448,7 @@ export default function LocalTab() {
               {live.layouts.topBoosters ? <>
               <Text accessibilityRole="header" style={styles.sectionTitle}>Top Aura Boosters</Text>
               <Text style={styles.hubCopy}>
-                Top Aura Boosters — Slate Silver through Celestial Prism. Tap a card to peek the profile.
+                Tap a card to peek the profile.
               </Text>
               <ScrollFxItem variant="rise">
                 <TopAuraBoosters hideTitle />

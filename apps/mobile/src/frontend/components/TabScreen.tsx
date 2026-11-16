@@ -34,8 +34,8 @@ export function TabScreen({ children, style, dark = false }: TabScreenProps) {
       style={[styles.root, { backgroundColor: dark ? colors.night : live.theme.background }, style, { paddingBottom: dark ? 0 : dockHeight }]}
     >
       <Animated.View
-        entering={reduce ? FadeIn.duration(80) : FadeInDown.duration(240)}
-        exiting={FadeOut.duration(140)}
+        entering={reduce ? FadeIn.duration(80) : FadeInDown.duration(160)}
+        exiting={FadeOut.duration(100)}
         style={styles.scene}
       >
         <FeatureBoundary feature={supportFeatureForPath(pathname)} resetKey={pathname}>{children}</FeatureBoundary>

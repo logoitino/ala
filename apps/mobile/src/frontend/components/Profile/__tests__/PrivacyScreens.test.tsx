@@ -92,8 +92,10 @@ describe('PrivacySettingsSheet', () => {
     mockRecordBirthMonth.mockResolvedValue('ok');
     await render(<PrivacySettingsSheet visible onClose={jest.fn()} />);
     expect(await screen.findByLabelText('Friend requests: Anyone can send')).toBeDisabled();
-    await fireEvent.press(screen.getByLabelText('Birth month: Mar'));
-    await fireEvent.changeText(screen.getByLabelText('Birth year'), '2001');
+    await fireEvent.press(screen.getByLabelText('Choose birth month'));
+    await fireEvent.press(screen.getByLabelText('Mar'));
+    await fireEvent.press(screen.getByLabelText('Choose birth year'));
+    await fireEvent.press(screen.getByLabelText('2001'));
     await fireEvent.press(screen.getByLabelText('Save birth month and year'));
     await waitFor(() => expect(mockRecordBirthMonth).toHaveBeenCalledWith(2001, 3));
   });

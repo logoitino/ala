@@ -123,6 +123,30 @@ unchanged; hierarchy is checked, not rewritten. Exact final checks and claim rel
 integrated by root in [COORD-01](COORD-01.md). These assignments do not establish pinned-model
 execution or a continuous delivery service.
 
+## WEB-DESKTOP-01 — Fan desktop web layout (**FINISHED** on branch) — 2026-11-15
+
+Finish: [WEB-DESKTOP-01-finish.md](../engineering/evidence/WEB-DESKTOP-01-finish.md) · PR [#54](https://github.com/logoitino/ala/pull/54).
+
+| Next | Owner | Blocked on |
+| --- | --- | --- |
+| Merge PR #54 | FACILITATOR | CI green on finish commit |
+| Optional post-merge visual | VISUAL_QA | Mac browser at 1920/1280/820 |
+
+Return to APP-TEST-01 A–C as the active app priority.
+
+## FEED-01 — Highlights interest feed (Phase 1 FINISHED; Phase 2 blocked) — 2026-11-14
+
+**Phase 1 FINISHED** ([FEED-01-phase1-finished.md](../engineering/evidence/FEED-01-phase1-finished.md)):
+code on `main`, SQL applied, smoke A–E PASS. `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` stays **OFF**.
+
+| Next | Owner | Blocked on |
+| --- | --- | --- |
+| Merge evidence PR #51 | Owner | CI green; agent cannot merge |
+| Send counsel note | Owner / LEGAL | [FEED-01-counsel-send.md](../engineering/evidence/FEED-01-counsel-send.md) |
+| Enable Phase 2 flag + smoke | Owner authorizes → HIGHLIGHTS / DEVICE_QA | Written counsel answers (a)–(d); [FEED-01-phase2-unlock.md](../engineering/evidence/FEED-01-phase2-unlock.md) |
+
+Do not start Phase 2 without the unlock checklist. Return to APP-TEST-01 A–C as the active app priority.
+
 ## APP-TEST-01 — Current app testing priorities — 2026-10-21 UTC
 
 **2026-11-04 owner priority:** App readiness is the active engineering queue (lanes **A → B → C**

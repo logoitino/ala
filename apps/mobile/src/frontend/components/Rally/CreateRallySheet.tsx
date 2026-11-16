@@ -65,7 +65,7 @@ export function CreateRallySheet({ visible, playerId, athleteName, onClose, onCr
   };
 
   return (
-    <Modal animationType="slide" transparent visible={visible} onRequestClose={busy ? undefined : onClose}>
+    <Modal animationType="fade" transparent visible={visible} onRequestClose={busy ? undefined : onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.backdrop}>
         <View style={frame.dock}>
           <View style={[styles.sheet, frame.card]}>

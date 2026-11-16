@@ -1,25 +1,38 @@
 /**
- * Birth year must stay editable while incomplete — parent `year: null` used to wipe each keystroke.
+ * Birth month / year use compact dropdown scroll menus — selecting a month updates the draft without a twelve-pill grid.
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { BirthMonthField } from '@/components/Auth/BirthMonthField';
 
 describe('BirthMonthField', () => {
-  it('keeps partial year digits visible while the parent year is still null', async () => {
+  it('opens a month scroll menu and reports the chosen month', async () => {
     const onChange = jest.fn();
-    const view = await render(<BirthMonthField value={{ year: null, month: 6 }} onChange={onChange} />);
+    await render(<BirthMonthField value={{ year: null, month: null }} onChange={onChange} />);
 
-    fireEvent.changeText(screen.getByLabelText('Birth year'), '2');
-    expect(onChange).toHaveBeenLastCalledWith({ year: null, month: 6 });
-    await waitFor(() => expect(screen.getByLabelText('Birth year').props.value).toBe('2'));
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Choose birth month'));
+    });
+    await waitFor(() => expect(screen.getByLabelText('Birth month list')).toBeTruthy());
 
-    // Parent still has year: null (incomplete) — same draft must not wipe digits.
-    await view.rerender(<BirthMonthField value={{ year: null, month: 6 }} onChange={onChange} />);
-    expect(screen.getByLabelText('Birth year').props.value).toBe('2');
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Jun'));
+    });
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith({ year: null, month: 6 }));
+  });
 
-    fireEvent.changeText(screen.getByLabelText('Birth year'), '2010');
-    expect(onChange).toHaveBeenLastCalledWith({ year: 2010, month: 6 });
-    await waitFor(() => expect(screen.getByLabelText('Birth year').props.value).toBe('2010'));
+  it('opens a year scroll menu and reports the chosen year', async () => {
+    const onChange = jest.fn();
+    await render(<BirthMonthField value={{ year: null, month: 6 }} onChange={onChange} />);
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('Choose birth year'));
+    });
+    await waitFor(() => expect(screen.getByLabelText('Birth year list')).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('2010'));
+    });
+    await waitFor(() => expect(onChange).toHaveBeenCalledWith({ year: 2010, month: 6 }));
   });
 });

@@ -27,7 +27,14 @@ import { GIFT_HELD_NOTICE } from '@/data/verification';
 import { displayValue, type Player } from '@/data/players';
 import type { TipEntry, TipOrigin } from '@/lib/finance';
 import { fetchPayoutAllowed } from '@/lib/payoutGate';
-import { FOCAL, SPRING_BOUNCE, SPRING_SHEET } from '@/theme/motion';
+import {
+  FOCAL,
+  SHEET_BACKDROP_IN_MS,
+  SHEET_BACKDROP_OUT_MS,
+  SHEET_DISMISS_MS,
+  SPRING_BOUNCE,
+  SPRING_SHEET,
+} from '@/theme/motion';
 import { DISPLAY_TEXT } from '@/theme/fonts';
 
 type TipSheetModalProps = {
@@ -115,7 +122,10 @@ export function MaloTipModal({
       dim.value = 0;
       const frame = requestAnimationFrame(() => {
         translateY.value = withSpring(0, SPRING_SHEET);
-        dim.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
+        dim.value = withTiming(1, {
+          duration: SHEET_BACKDROP_IN_MS,
+          easing: Easing.out(Easing.cubic),
+        });
       });
       return () => cancelAnimationFrame(frame);
     }
@@ -124,10 +134,10 @@ export function MaloTipModal({
     // another reel) — still slide the sheet away instead of snapping it out of existence.
     if (open && !closingRef.current) {
       closingRef.current = true;
-      dim.value = withTiming(0, { duration: 160 });
+      dim.value = withTiming(0, { duration: SHEET_BACKDROP_OUT_MS });
       translateY.value = withTiming(
         SHEET_OFF,
-        { duration: 200, easing: Easing.in(Easing.cubic) },
+        { duration: SHEET_DISMISS_MS, easing: Easing.in(Easing.cubic) },
         (finished) => {
           if (finished) runOnJS(setOpen)(false);
         },
@@ -155,10 +165,10 @@ export function MaloTipModal({
   const dismiss = () => {
     if (busyRef.current || busy || closingRef.current || !open) return;
     closingRef.current = true;
-    dim.value = withTiming(0, { duration: 180 });
+    dim.value = withTiming(0, { duration: SHEET_BACKDROP_OUT_MS });
     translateY.value = withTiming(
       SHEET_OFF,
-      { duration: 220, easing: Easing.in(Easing.cubic) },
+      { duration: SHEET_DISMISS_MS, easing: Easing.in(Easing.cubic) },
       (finished) => {
         if (finished) {
           runOnJS(setOpen)(false);

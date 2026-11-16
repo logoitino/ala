@@ -42,7 +42,13 @@ import {
   type SchoolTeam,
 } from '@/data/teams';
 import { activeSportNames } from '@/data/sports';
-import { SPRING_CARD } from '@/theme/motion';
+import {
+  SHEET_BACKDROP_IN_MS,
+  SHEET_BACKDROP_OUT_MS,
+  SHEET_DISMISS_MS,
+  SPRING_CARD,
+  SPRING_SHEET,
+} from '@/theme/motion';
 import { useLegalAck } from '@/hooks/useLegalAck';
 
 const SHEET_OFF = 720;
@@ -147,8 +153,11 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
     translateY.value = SHEET_OFF;
     dim.value = 0;
     const frame = requestAnimationFrame(() => {
-      translateY.value = withSpring(0, SPRING_CARD);
-      dim.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
+      translateY.value = withSpring(0, SPRING_SHEET);
+      dim.value = withTiming(1, {
+        duration: SHEET_BACKDROP_IN_MS,
+        easing: Easing.out(Easing.cubic),
+      });
     });
     return () => cancelAnimationFrame(frame);
   }, [dim, translateY, visible]);
@@ -160,10 +169,14 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
 
   const dismiss = () => {
     if (!open || applying) return;
-    dim.value = withTiming(0, { duration: 180 });
-    translateY.value = withTiming(SHEET_OFF, { duration: 220, easing: Easing.in(Easing.cubic) }, (finished) => {
-      if (finished) runOnJS(finishClose)();
-    });
+    dim.value = withTiming(0, { duration: SHEET_BACKDROP_OUT_MS });
+    translateY.value = withTiming(
+      SHEET_OFF,
+      { duration: SHEET_DISMISS_MS, easing: Easing.in(Easing.cubic) },
+      (finished) => {
+        if (finished) runOnJS(finishClose)();
+      },
+    );
   };
 
   const onSelectView = (next: 'fan' | 'athlete') => {
