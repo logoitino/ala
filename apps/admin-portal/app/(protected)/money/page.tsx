@@ -146,6 +146,29 @@ export default async function MoneyPage() {
         <Link href="/manage#billing" className="font-bold text-[var(--jade)] underline">View the Finance handoff.</Link>
       </p>
 
+      <section aria-labelledby="checkout-rails" className="mb-8 max-w-3xl rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-4 shadow-[var(--shadow-card)]">
+        <h2 id="checkout-rails" className="text-base font-extrabold text-[var(--ink)]">
+          Checkout rails (oversight)
+        </h2>
+        <ul className="mt-2 space-y-2 text-sm leading-6 text-[var(--ink-soft)]">
+          <li>
+            <span className="font-extrabold text-[var(--ink)]">Gifts</span> stay Stripe with a zero platform cut on every
+            surface. Optional Tip Tapua&apos;i and fee cover remain behind the published Features flag.
+          </li>
+          <li>
+            <span className="font-extrabold text-[var(--ink)]">Exclusive / Vault</span> books a{' '}
+            <span className="font-extrabold text-[var(--ink)]">20% Tapua&apos;i / 80% athlete</span> split when charged.
+            Expo web uses Stripe.js Payment Element. Production iOS and Android block Stripe Exclusive until App Store IAP
+            / Google Play Billing ship — Android is not freer than Apple for in-app digital unlocks.
+          </li>
+          <li>
+            Flags and Connect stay in Expo{' '}
+            <code className="rounded bg-[var(--jade-soft)] px-1.5">/admin/features</code> and{' '}
+            <code className="rounded bg-[var(--jade-soft)] px-1.5">/admin/money</code>. This page never starts a charge.
+          </li>
+        </ul>
+      </section>
+
       <SectionHeading level={2} title="Ledger totals" hint="company_revenue_logs · all time · test mode" />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile

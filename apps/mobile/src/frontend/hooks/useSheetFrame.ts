@@ -1,8 +1,9 @@
 /** Shared fan-sheet geometry; safe-area clearance stays independent from decorative menu chrome. */
-import { useWindowDimensions, type ViewStyle } from 'react-native';
+import { type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { cardShadow, colors, MENU_METRICS, space } from '@/constants/theme';
+import { useAppViewportWidth } from '@/hooks/useAppViewport';
 
 /** Widest a fan popup grows. Wider browsers center this card instead of stretching it. */
 const SHEET_MAX = 440;
@@ -22,11 +23,12 @@ export type SheetFrame = {
 
 /**
  * @purpose Shared frame for fan bottom sheets so menus line up on an iPhone SE, a Pro Max, and a wide browser.
+ * Uses the app viewport width (phone column on Expo web desktop), not the full browser window.
  * @returns `dock` for the wrapper under the sheet, and `card` to spread onto the sheet after its color styles.
- * @sideEffects None. Reads the window size and the safe area.
+ * @sideEffects None. Reads the app viewport size and the safe area.
  */
 export function useSheetFrame(): SheetFrame {
-  const { width } = useWindowDimensions();
+  const width = useAppViewportWidth();
   const insets = useSafeAreaInsets();
   const compact = width < 360;
   const side = width >= SHEET_MAX + 32 ? (width - SHEET_MAX) / 2 : compact ? 10 : space.sm;

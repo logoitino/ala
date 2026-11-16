@@ -7,14 +7,14 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 
 | Measure | Count |
 | --- | --- |
-| Tables | 125 |
+| Tables | 126 |
 | Views | 3 |
 | Storage buckets | 6 |
 | Feature switches read by the fan app | 42 of 42 |
 | Database functions | 613 (253 used by hand, 63 trigger functions) |
-| Tables reached by at least one screen or server route | 125 of 128 |
-| Code files that read or write the database | 84 |
-| Exported symbols nothing imports | 47 (0 proposed for archive, 47 kept on purpose) |
+| Tables reached by at least one screen or server route | 126 of 129 |
+| Code files that read or write the database | 85 |
+| Exported symbols nothing imports | 46 (0 proposed for archive, 46 kept on purpose) |
 | Operational data exports | 15 |
 | Rule failures | 0 |
 
@@ -37,7 +37,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `DONATION_THANKS` | `donation_thanks` | 3 |
 | `DRIP` | `shop_orders`, `shop_products` | 0 |
 | `FILMER_REWARDS` | `filmer_props`, `filmer_rewards` | 4 |
-| `HIGHLIGHTS` | `beyond_admin_events`, `beyond_media`, `beyond_posts`, `beyond_reports`, `beyond_settings`, `beyond_submission_quota`, `challenge_athlete_settings`, `challenge_badges`, `challenge_mutes`, `challenge_nudges`, `challenge_response_quota`, `challenge_responses`, `reel_hype_votes`, `reels`, `safety_label_events`, `saved_reels`, `reels_feed` | 58 |
+| `HIGHLIGHTS` | `beyond_admin_events`, `beyond_media`, `beyond_posts`, `beyond_reports`, `beyond_settings`, `beyond_submission_quota`, `challenge_athlete_settings`, `challenge_badges`, `challenge_mutes`, `challenge_nudges`, `challenge_response_quota`, `challenge_responses`, `reel_hype_votes`, `reels`, `safety_label_events`, `saved_reels`, `user_feed_prefs`, `reels_feed` | 58 |
 | `INCIDENT_TRIAGE` | `support_reviews` | 1 |
 | `LEDGER` | `company_revenue_logs`, `stripe_webhook_events`, `tips` | 7 |
 | `LOCAL` | `games` | 3 |
@@ -704,7 +704,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `ROSTERS` · Athlete roster that fans tag and give to.
 
 - Written by: `@/lib/adminCatalog.ts`, `@/lib/boosterPortal.ts`, `@/lib/hype.ts`, `@/lib/payments.ts`, `@/lib/vault.ts`; database functions: `add_user_aura`, `admin_approve_player_consent`, `admin_set_player_guardian`, `increment_backer_count`, `increment_player_hype`, `parent_set_player_consent` +1 more
-- Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/athleteStats.ts`, `@/lib/bookkeeping.ts`, `@/lib/guestGames.ts`, `@/lib/localSearch.ts` +4 more; database functions: `admin_add_athlete_game_log`, `admin_challenge_post_counts`, `admin_decide_payout_override`, `admin_payee_overview`, `admin_record_payee_check`, `admin_upsert_athlete_career_stats` +36 more
+- Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/athleteStats.ts`, `@/lib/bookkeeping.ts`, `@/lib/crew.ts`, `@/lib/guestGames.ts` +5 more; database functions: `admin_add_athlete_game_log`, `admin_challenge_post_counts`, `admin_decide_payout_override`, `admin_payee_overview`, `admin_record_payee_check`, `admin_upsert_athlete_career_stats` +36 more
 - Triggers: `players_payee_supersede → payee_changes_supersede`
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +60 more
 
@@ -954,7 +954,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `quiz_group_ensure_set`
 - Read by: —; database functions: `quiz_admin_snapshot`, `quiz_round_pick`
 - Removed by: `quiz_admin_retention`, `quiz_erase_history`
-- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/beyond`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_groups`
 
@@ -982,7 +982,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `quiz_admin_life_snapshot`, `quiz_level`, `quiz_life_progress`
 - Removed by: `quiz_erase_history`
 - Triggers: `quiz_level_guard → quiz_guard_level`, `quiz_level_truncate_guard → quiz_guard_truncate`
-- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/beyond`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_life_chapters`
 
@@ -991,7 +991,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `quiz_admin_life_chapter`
 - Read by: —; database functions: `quiz_admin_import`, `quiz_admin_life_snapshot`, `quiz_admin_question`, `quiz_admin_refill`, `quiz_admin_snapshot`, `quiz_guard_question` +6 more
 - Triggers: `quiz_life_chapter_guard → quiz_guard_life_chapter`
-- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/beyond`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_preferences`
 
@@ -1025,7 +1025,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `quiz_admin_retention`, `quiz_report`
 - Read by: —; database functions: `quiz_admin_needs_look`, `quiz_open_reports`
 - Removed by: `quiz_admin_retention`, `quiz_erase_history`
-- Screens: `/admin`, `/admin/sport-quiz`, `/dev/trivia-preview`, `/sport-quiz`
+- Screens: `/`, `/admin`, `/admin/sport-quiz`, `/beyond`, `/booster`, `/dev/trivia-preview`, `/operator`, `/parent`, `/sponsor`, `/sport-quiz`
 
 ### `sport_quiz_requests`
 
@@ -1144,7 +1144,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/services/TelemetryManager.ts`; database functions: —
 - Read by: `@/lib/admin.ts`; database functions: `get_admin_platform_metrics`, `get_admin_reports`
 - Removed by: `@/lib/admin.ts`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +55 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
 
 ### `tips`
 
@@ -1164,6 +1164,14 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Removed by: `unblock_user`
 - Triggers: `user_blocks_end_links → user_blocks_end_guardian_links`, `quiz_groups_block → quiz_groups_on_block`, `quiz_facts_block → quiz_facts_on_block`
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
+
+### `user_feed_prefs`
+
+**Owner:** `HIGHLIGHTS` · FEED-01 owner Highlights picks (sports/schools/category lean/personalization toggle). Used only to order that owner's Home feed. Deleted with the account. Never shared for ads or third-party ranking.
+
+- Written by: `@/lib/feedPrefs.ts`; database functions: —
+- Read by: `@/lib/feedPrefs.ts`; database functions: —
+- Screens: `/`, `/profile`
 
 ### `verification_requests`
 
@@ -1222,13 +1230,13 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 
 | Switch | Read by |
 | --- | --- |
-| `tabs.home` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/UI/FanTabBar.tsx` |
+| `tabs.home` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.beyond` | `apps/mobile/app/(tabs)/beyond.tsx`, `apps/mobile/app/(tabs)/index.tsx`, `@/components/Reels/HomeFeedSwitch.tsx`, `@/context/UploadSheetContext.tsx` |
 | `tabs.local` | `apps/mobile/app/(tabs)/local/index.tsx`, `@/components/Reels/HomeFeedSwitch.tsx` |
-| `tabs.activity` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/activity.tsx`, `@/components/UI/FanTabBar.tsx` |
-| `tabs.spotlight` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/spotlight.tsx`, `@/components/UI/FanTabBar.tsx` |
-| `tabs.drip` | `apps/mobile/app/(tabs)/drip.tsx`, `apps/mobile/app/(tabs)/profile.tsx` |
-| `tabs.profile` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/UI/FanTabBar.tsx` |
+| `tabs.activity` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/activity.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
+| `tabs.spotlight` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/spotlight.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
+| `tabs.drip` | `apps/mobile/app/(tabs)/drip.tsx`, `apps/mobile/app/(tabs)/profile.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/Common/DesktopRightRail.tsx` |
+| `tabs.profile` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.upload` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Reels/HomeFeedEmpty.tsx`, `@/components/UI/FanTabBar.tsx`, `@/components/UI/PlayNavBar.tsx` |
 | `buttons.seki` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.aura` | `@/components/Reels/ReelActionOverlay.tsx` |
@@ -1897,7 +1905,6 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | `@/components/UI/Kit.tsx` | `KitProgress` | keep | Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete — new/touched screens use Kit. |
 | `@/data/contentRights.ts` | `REPORTS_BEFORE_HIDE` | keep | Mirrors the SQL rule (three distinct reporters hide a clip) so copy and docs have one constant. |
 | `@/data/finance.ts` | `BOOSTER_OPERATOR_SHARE_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |
-| `@/data/finance.ts` | `VAULT_ATHLETE_SHARE_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |
 | `@/data/finance.ts` | `MERCH_PAYOUT_BPS` | keep | Split constant kept in lockstep with SQL company_revenue_bps and PRODUCT_FACTS. |
 | `@/data/finance.ts` | `splitRevenueCents` | keep | Canonical split arithmetic mirrored by SQL record_company_revenue; reference for COMMERCE and CONTROLLER. |
 | `@/data/finance.ts` | `platformBpsForSource` | keep | Tested split lookup kept with the split constants. |

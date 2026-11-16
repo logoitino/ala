@@ -315,7 +315,7 @@ export function SponsorshipModal({
                 onPress={checkout}
                 contentStyle={[styles.pay, busy && styles.payOff]}
               >
-                <Text style={styles.payLabel}>{busy ? 'Opening PaymentSheet…' : 'Complete Sponsorship'}</Text>
+                <Text style={styles.payLabel}>{busy ? 'Opening checkout…' : 'Complete Sponsorship'}</Text>
                 {busy ? null : (
                   <Text style={styles.payMeta}>
                     {tier.name} · {formatSponsorDollars(tier.dollars)}

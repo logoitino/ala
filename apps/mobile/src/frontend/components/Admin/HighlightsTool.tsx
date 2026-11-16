@@ -12,6 +12,7 @@ import {
   AdminPills,
   AdminRow,
 } from '@/components/Admin/AdminChrome';
+import { FeedInterestPanel } from '@/components/Admin/FeedInterestPanel';
 import { WorkoutChallengesPanel } from '@/components/Admin/WorkoutChallengesPanel';
 import { BeyondGamePanel } from '@/components/Admin/BeyondGamePanel';
 import { HighlightSportPanel } from '@/components/Admin/HighlightSportPanel';
@@ -180,6 +181,7 @@ export function HighlightsTool() {
           </AdminRow>
         ))
       )}
+      <FeedInterestPanel />
       <SafetyLabelPanel />
       <WorkoutChallengesPanel />
       <BeyondGamePanel />

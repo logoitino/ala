@@ -141,7 +141,7 @@ export function HighlightPickerModal({ visible, onClose, onPicked }: HighlightPi
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       presentationStyle="pageSheet"
       onRequestClose={() => {
         if (!optimizing) onClose();

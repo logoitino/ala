@@ -26,6 +26,7 @@ import { UploadSheetProvider } from '@/context/UploadSheetContext';
 import { colors, isLightCanvas } from '@/constants/theme';
 import { FONT_FILES } from '@/theme/fonts';
 import { telemetry } from '@/services/TelemetryManager';
+import { WebAppShell } from '@/components/Common/WebAppShell';
 import { StripeProvider } from '@/lib/stripe';
 import { APPLE_PAY_MERCHANT_ID } from '@/lib/walletPay';
 import '@/services/OfflineQueue';
@@ -52,40 +53,42 @@ function RuntimeApp() {
     <>
       <SupportRuntimeObserver />
       <StatusBar style={light ? 'dark' : 'light'} />
-      <View style={[styles.root, { backgroundColor: live.theme.background }]}>
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: live.theme.surface },
-            headerShadowVisible: false,
-            headerTintColor: live.theme.jade,
-            headerTitleStyle: { fontWeight: '700', color: live.theme.text },
-            contentStyle: { backgroundColor: live.theme.background },
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(guest)" options={{ headerShown: false }} />
-          <Stack.Screen name="(fan)" options={{ headerShown: false }} />
-          <Stack.Screen name="(athlete)" options={{ headerShown: false }} />
-          <Stack.Screen name="(parent)" options={{ headerShown: false }} />
-          <Stack.Screen name="operator" options={{ headerShown: false }} />
-          <Stack.Screen name="(booster)" options={{ headerShown: false }} />
-          <Stack.Screen name="(sponsor)" options={{ headerShown: false }} />
-          <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/callback" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen name="gift/[handle]" options={{ title: 'Share & Give ⚡' }} />
-          <Stack.Screen name="school-confirm" options={{ title: 'Confirm athletes' }} />
-          <Stack.Screen name="sport-quiz" options={{ headerShown: false }} />
-          <Stack.Screen name="fan-zone" options={{ headerShown: false }} />
-          {/* Dev-only QUIZ-04 demo page; the route itself redirects to Home in production builds. */}
-          <Stack.Screen name="dev/trivia-preview" options={{ headerShown: false }} />
-        </Stack>
-        <StudioPreviewBar />
-        <BackedCelebration />
-        <AuraToast />
-        <SoftWallModal />
-        <AgeConfirmModal />
-        <WelcomeOverlay />
-      </View>
+      <WebAppShell backgroundColor={live.theme.background}>
+        <View style={[styles.root, { backgroundColor: live.theme.background }]}>
+          <Stack
+            screenOptions={{
+              headerStyle: { backgroundColor: live.theme.surface },
+              headerShadowVisible: false,
+              headerTintColor: live.theme.jade,
+              headerTitleStyle: { fontWeight: '700', color: live.theme.text },
+              contentStyle: { backgroundColor: live.theme.background },
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(guest)" options={{ headerShown: false }} />
+            <Stack.Screen name="(fan)" options={{ headerShown: false }} />
+            <Stack.Screen name="(athlete)" options={{ headerShown: false }} />
+            <Stack.Screen name="(parent)" options={{ headerShown: false }} />
+            <Stack.Screen name="operator" options={{ headerShown: false }} />
+            <Stack.Screen name="(booster)" options={{ headerShown: false }} />
+            <Stack.Screen name="(sponsor)" options={{ headerShown: false }} />
+            <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+            <Stack.Screen name="auth/callback" options={{ headerShown: false, presentation: 'modal' }} />
+            <Stack.Screen name="gift/[handle]" options={{ title: 'Share & Give ⚡' }} />
+            <Stack.Screen name="school-confirm" options={{ title: 'Confirm athletes' }} />
+            <Stack.Screen name="sport-quiz" options={{ headerShown: false }} />
+            <Stack.Screen name="fan-zone" options={{ headerShown: false }} />
+            {/* Dev-only QUIZ-04 demo page; the route itself redirects to Home in production builds. */}
+            <Stack.Screen name="dev/trivia-preview" options={{ headerShown: false }} />
+          </Stack>
+          <StudioPreviewBar />
+          <BackedCelebration />
+          <AuraToast />
+          <SoftWallModal />
+          <AgeConfirmModal />
+          <WelcomeOverlay />
+        </View>
+      </WebAppShell>
     </>
   );
 }

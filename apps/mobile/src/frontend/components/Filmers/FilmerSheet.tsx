@@ -67,7 +67,7 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
       <View style={styles.root}>
         <Pressable haptic="none" style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         <View style={frame.dock}>
-        <SheetRise style={[styles.sheet, frame.card]}>
+        <SheetRise active={visible} style={[styles.sheet, frame.card]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={onClose} />
           <Text style={styles.title}>🎥 Filmed by {filmerName}</Text>

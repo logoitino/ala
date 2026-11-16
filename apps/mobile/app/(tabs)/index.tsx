@@ -12,6 +12,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DesktopHighlightFeed } from '@/components/Reels/DesktopHighlightFeed';
 import { HomeCampaignCopy } from '@/components/Reels/HomeCampaignCopy';
 import { HomeFeedEmpty } from '@/components/Reels/HomeFeedEmpty';
 import { HomeFeedSwitch } from '@/components/Reels/HomeFeedSwitch';
@@ -35,6 +36,8 @@ import { useSoftWall } from '@/context/SoftWallContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useFanDockHeight } from '@/context/FanNavigationContext';
 import { FOCAL, SPRING_SHEET } from '@/theme/motion';
+import { FeedPicksSheet } from '@/components/Reels/FeedPicksSheet';
+import { useWebDesktopMode } from '@/hooks/useAppViewport';
 import {
   HIGHLIGHT_CLIPS,
   HIGHLIGHT_FEED_BEYOND,
@@ -42,12 +45,17 @@ import {
   homePagerClips,
   isBeyondHighlight,
   isSekiHighlight,
+  measureHomeFeedTop,
   pinFeedOrder,
   rankHomeFeed,
+  rankHomeFeedWithReasons,
+  whyThisClipLine,
+  type FeedReasonCode,
   type HighlightClip,
   type HighlightFeedFilter,
 } from '@/data/highlights';
 import { useActiveSpotlight } from '@/hooks/useActiveSpotlight';
+import { useFeedPrefs } from '@/hooks/useFeedPrefs';
 import { adjacentStoryClips, prefetchStoryPhotos } from '@/hooks/useStoryPhotos';
 import { useFanTipHistory } from '@/hooks/useFanTipHistory';
 import { useLiveGame } from '@/hooks/useLiveGame';
@@ -57,7 +65,7 @@ import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { isAuraUuid } from '@/lib/aura';
 import { fetchSquadAthleteIds } from '@/lib/crew';
 import { playerFromReel, readHiddenReelIds, reelHiddenForUser, reelToClip } from '@/lib/reels';
-import { guestBrowseNeedsAccount } from '@/data/guestBrowse';
+import { decideGuestDesktopPlay, guestBrowseNeedsAccount } from '@/data/guestBrowse';
 import { userProfileHref } from '@/lib/navigation';
 import type { Player, Reel } from '@/types/database';
 
@@ -71,7 +79,7 @@ const HOME_PILL: { id: HighlightFeedFilter; label: string } = { id: 'home', labe
 const BEYOND_PILL: { id: HighlightFeedFilter; label: string } = { id: 'beyond', label: HIGHLIGHT_FEED_BEYOND };
 
 /**
- * @purpose Full-screen Home feed: Home mix, a Beyond switch (workout + service Highlights, with a link to the Beyond the Game page for fan posts), clip + athlete search, and a Local jump. All and Seki stay off the bar until a later pass. Exclusive mute/Aura gestures, live score banner, donation sheet, Player of the Week spotlight. A guest can watch the opened Highlight and two more swipes, then the account sheet. Pages ride `ReelPage` for card-deck depth on vertical paging and swipe left / right to peek the athlete who owns the clip.
+ * @purpose Full-screen Home feed: Home mix, a Beyond switch (workout + service Highlights, with a link to the Beyond the Game page for fan posts), clip + athlete search, and a Local jump. All and Seki stay off the bar until a later pass. Exclusive mute/Aura gestures, live score banner, donation sheet, Player of the Week spotlight. A guest can watch the opened Highlight and two more swipes, then the account sheet. Pages ride `ReelPage` for card-deck depth on vertical paging and swipe left / right to peek the athlete who owns the clip. On Expo web ≥820px, the Lovable-outline card feed (`DesktopHighlightFeed`) replaces the phone pager; native and phone web stay unchanged.
  * @sideEffects `useReels` fetch; `crew_follows` for Home ranking; `clearVideoCacheAsync` on mount; `get_active_spotlight_award` launch popup; `MaloTipModal` PaymentSheet; hide list after Report; Reanimated scroll handler feeds the pager depth math.
  */
 export default function HighlightsTab() {
@@ -79,9 +87,14 @@ export default function HighlightsTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const dockHeight = useFanDockHeight();
+  const desktopMode = useWebDesktopMode();
+  const useDesktopCards = Platform.OS === 'web' && desktopMode !== 'mobile';
   const listRef = useRef<FlatList<FeedItem>>(null);
   const guestSeen = useRef(new Set<string>());
   const guestAllowedIndex = useRef(0);
+  /** Last free desktop clip id for guests (mirrors guestAllowedIndex on the phone pager). */
+  const guestAllowedClipId = useRef<string | null>(null);
+  const [desktopPlayClipId, setDesktopPlayClipId] = useState<string | null>(null);
   const { user, profile, loading: authLoading, isGuest } = useAuth();
   const { live: runtime } = useAppRuntime();
   const { requireAuth, visible: accountSheetOpen } = useSoftWall();
@@ -89,6 +102,7 @@ export default function HighlightsTab() {
   const { players, applyBackerCount } = useRoster();
   const { reels, refresh, setReels, applyReelHype, applyReelTips } = useReels();
   const { receipts } = useFanTipHistory();
+  const feedPrefs = useFeedPrefs();
   const liveGame = useLiveGame();
   const liveGameId = liveGame.gameId;
   const { noteScrollPct, trackFeature } = useSurfaceUsage('home');
@@ -188,9 +202,35 @@ export default function HighlightsTab() {
     () => ({
       crewIds,
       school: profile?.team?.name?.trim() || '',
+      prefs: isGuest ? null : feedPrefs.prefs,
+      implicit: isGuest ? null : feedPrefs.implicit,
     }),
-    [crewIds, profile?.team?.name],
+    [crewIds, feedPrefs.implicit, feedPrefs.prefs, isGuest, profile?.team?.name],
   );
+
+  const pickSportOptions = useMemo(() => {
+    const out: string[] = [];
+    for (const item of clips) {
+      const sport = item.clip.sport?.trim();
+      if (!sport) continue;
+      if (out.some((row) => row.toLowerCase() === sport.toLowerCase())) continue;
+      out.push(sport);
+    }
+    return out;
+  }, [clips]);
+
+  const pickSchoolOptions = useMemo(() => {
+    const out: string[] = [];
+    const own = profile?.team?.name?.trim();
+    if (own) out.push(own);
+    for (const item of clips) {
+      const school = (item.player?.school_name || item.clip.school || '').trim();
+      if (!school) continue;
+      if (out.some((row) => row.toLowerCase() === school.toLowerCase())) continue;
+      out.push(school);
+    }
+    return out;
+  }, [clips, profile?.team?.name]);
 
   // Rank when the set of clips, the pill, the viewer's context or a pull-to-refresh changes — never
   // on a hype tap. Ranking and the Seki filter read hype counts, so re-ranking per tap moved the
@@ -199,19 +239,36 @@ export default function HighlightsTab() {
   clipsRef.current = clips;
   const clipIdsKey = useMemo(() => clips.map((item) => item.clip.id).join('|'), [clips]);
   const [rankEpoch, setRankEpoch] = useState(0);
-  const feedOrder = useMemo(() => {
+  const homeRanked = useMemo(() => {
     const current = clipsRef.current;
-    const ranked =
-      feedFilter === 'seki'
-        ? current.filter((item) => isSekiHighlight(item.clip))
-        : feedFilter === 'beyond'
-          ? current.filter((item) => isBeyondHighlight(item.clip))
-          : feedFilter === 'home'
-          ? rankHomeFeed(current, homeContext)
-          : current;
-    return ranked.map((item) => item.clip.id);
+    if (feedFilter !== 'home') return null;
+    const ranked = rankHomeFeedWithReasons(current, homeContext);
+    if (__DEV__) {
+      // Phase 0 local measurement only — never ships to users / never leaves the device.
+      // eslint-disable-next-line no-console
+      console.log('[FEED-01 Phase 0]', measureHomeFeedTop(ranked.map((row) => row.item), homeContext));
+    }
+    return ranked;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `clips` is read through the ref on purpose.
   }, [clipIdsKey, feedFilter, homeContext, rankEpoch]);
+  const feedReasons = useMemo(() => {
+    if (!homeRanked || isGuest) return new Map<string, FeedReasonCode[]>();
+    return new Map(homeRanked.map((row) => [row.item.clip.id, row.reasons]));
+  }, [homeRanked, isGuest]);
+  const feedOrder = useMemo(() => {
+    const current = clipsRef.current;
+    if (feedFilter === 'seki') {
+      return current.filter((item) => isSekiHighlight(item.clip)).map((item) => item.clip.id);
+    }
+    if (feedFilter === 'beyond') {
+      return current.filter((item) => isBeyondHighlight(item.clip)).map((item) => item.clip.id);
+    }
+    if (feedFilter === 'home' && homeRanked) {
+      return homeRanked.map((row) => row.item.clip.id);
+    }
+    return current.map((item) => item.clip.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `clips` is read through the ref on purpose.
+  }, [clipIdsKey, feedFilter, homeRanked, rankEpoch]);
   const feed = useMemo(() => pinFeedOrder(feedOrder, clips), [clips, feedOrder]);
 
   /** Pill badges: "All 24" / "Seki 8" reads as a promise about what is behind the tab. */
@@ -271,8 +328,11 @@ export default function HighlightsTab() {
   useEffect(() => {
     if (!isGuest) {
       guestSeen.current.clear();
+      guestAllowedClipId.current = null;
       return;
     }
+    // Desktop card opens are gated in requestDesktopPlay; phone pager uses activeIndex.
+    if (useDesktopCards) return;
     const clipId = feed[activeIndex]?.clip.id;
     if (!clipId) return;
     guestSeen.current.add(clipId);
@@ -296,7 +356,33 @@ export default function HighlightsTab() {
         listRef.current?.scrollToOffset({ offset: pageHeight * back, animated: true });
       }
     });
-  }, [accountSheetOpen, activeIndex, feed, isGuest, pageHeight, requireAuth]);
+  }, [accountSheetOpen, activeIndex, feed, isGuest, pageHeight, requireAuth, useDesktopCards]);
+
+  const requestDesktopPlay = useCallback(
+    (clipId: string) => {
+      if (!isGuest) {
+        setDesktopPlayClipId(clipId);
+        return;
+      }
+      const decision = decideGuestDesktopPlay(
+        guestSeen.current,
+        clipId,
+        guestAllowedClipId.current,
+      );
+      if (decision.allow) {
+        guestAllowedClipId.current = decision.nextAllowedClipId;
+        setDesktopPlayClipId(clipId);
+        return;
+      }
+      if (!accountSheetOpen) {
+        requireAuth({
+          kind: 'browse',
+          resume: () => undefined,
+        });
+      }
+    },
+    [accountSheetOpen, isGuest, requireAuth],
+  );
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ index?: number | null }> }) => {
@@ -414,25 +500,34 @@ export default function HighlightsTab() {
         if (athleteName && item.clip.athleteName.toLowerCase() === athleteName) return true;
         return false;
       };
-      const index = feed.findIndex(matches);
-      if (index >= 0) {
-        setActiveIndex(index);
-        const offset = pageHeight * index;
-        requestAnimationFrame(() => {
-          try {
-            listRef.current?.scrollToIndex({ index, animated: true });
-          } catch {
-            listRef.current?.scrollToOffset({ offset, animated: true });
-          }
-        });
-        return;
-      }
-      // Home already includes every clip. Land it there if this page was on another mix.
-      const unfiltered = clips.find(matches);
-      if (unfiltered) {
-        setPendingClipId(unfiltered.clip.id);
-        setFeedFilter('home');
-        return;
+      if (useDesktopCards) {
+        const row = feed.find(matches) ?? clips.find(matches);
+        if (row) {
+          setFeedFilter('home');
+          requestDesktopPlay(row.clip.id);
+          return;
+        }
+      } else {
+        const index = feed.findIndex(matches);
+        if (index >= 0) {
+          setActiveIndex(index);
+          const offset = pageHeight * index;
+          requestAnimationFrame(() => {
+            try {
+              listRef.current?.scrollToIndex({ index, animated: true });
+            } catch {
+              listRef.current?.scrollToOffset({ offset, animated: true });
+            }
+          });
+          return;
+        }
+        // Home already includes every clip. Land it there if this page was on another mix.
+        const unfiltered = clips.find(matches);
+        if (unfiltered) {
+          setPendingClipId(unfiltered.clip.id);
+          setFeedFilter('home');
+          return;
+        }
       }
       // No clip in the feed at all: fall back to the athlete's profile, same as the
       // Spotlight tab's own onWatch chain.
@@ -445,10 +540,12 @@ export default function HighlightsTab() {
       clips,
       feed,
       pageHeight,
+      requestDesktopPlay,
       router,
       spotlight.award?.player?.id,
       spotlight.award?.player?.name,
       spotlight.award?.player_id,
+      useDesktopCards,
     ],
   );
 
@@ -484,6 +581,86 @@ export default function HighlightsTab() {
           ? 'Your Home mix is quiet. Find an athlete with search, then follow their story in Crew.'
           : 'Your Home mix is quiet. New Highlights from athletes you follow will appear here.'
         : runtime.copy.homeEmpty;
+
+  if (useDesktopCards) {
+    return (
+      <TabScreen>
+        {!cacheReady || !clientFeed ? (
+          <View style={styles.boot}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : (
+          <DesktopHighlightFeed
+            feed={feed}
+            feedReasons={feedReasons}
+            sportOptions={pickSportOptions}
+            emptyCopy={emptyCopy}
+            isGuest={isGuest}
+            refreshing={refreshing}
+            onRefresh={() => void onPullRefresh()}
+            tippedIds={tippedIds}
+            tipPlayer={tipPlayer}
+            onReelHypeChange={applyReelHype}
+            tipTarget={tipTarget}
+            onCloseTip={() => setTipTarget(null)}
+            playClipId={desktopPlayClipId}
+            onPlayClip={requestDesktopPlay}
+            onClosePlay={() => setDesktopPlayClipId(null)}
+            onHideClip={(reelId) => {
+              hideClip(reelId);
+              setDesktopPlayClipId((current) => (current === reelId ? null : current));
+            }}
+            onBacked={(playerId, nextCount) => {
+              applyBackerCount(playerId, nextCount);
+            }}
+            onTipped={(reelId, amountCents) => {
+              applyReelTips(reelId, amountCents);
+              setLocalTipped((current) =>
+                current.includes(reelId) ? current : [reelId, ...current],
+              );
+            }}
+          />
+        )}
+        {!isGuest ? (
+          <FeedPicksSheet
+            visible={feedPrefs.promptOpen}
+            prefs={{
+              ...feedPrefs.prefs,
+              schools:
+                feedPrefs.prefs.schools.length > 0
+                  ? feedPrefs.prefs.schools
+                  : profile?.team?.name?.trim()
+                    ? [profile.team.name.trim()]
+                    : [],
+            }}
+            sportOptions={pickSportOptions}
+            schoolOptions={pickSchoolOptions}
+            busy={feedPrefs.loading}
+            error={feedPrefs.error}
+            allowSkip
+            onClose={() => void feedPrefs.skipPrompt()}
+            onSkip={() => void feedPrefs.skipPrompt()}
+            onSave={(next) => feedPrefs.save(next)}
+          />
+        ) : null}
+        <SpotlightModal
+          award={spotlight.award}
+          visible={cacheReady && spotlight.visible}
+          onDismiss={() => {
+            void spotlight.dismiss();
+          }}
+          onSupport={(player, reelId) => {
+            afterSpotlightHide(() => {
+              void tipPlayer(player, reelId);
+            });
+          }}
+          onWatch={(reelId, playerId) => {
+            afterSpotlightHide(() => jumpToSpotlightClip(reelId, playerId));
+          }}
+        />
+      </TabScreen>
+    );
+  }
 
   return (
     <TabScreen dark>
@@ -583,12 +760,43 @@ export default function HighlightsTab() {
                     onOpenProfile={openProfile}
                     onReelHypeChange={applyReelHype}
                     onHide={hideClip}
+                    whyThisClip={
+                      isGuest || feedFilter !== 'home'
+                        ? null
+                        : whyThisClipLine(feedReasons.get(item.clip.id) ?? [], {
+                            athleteName: item.player?.name ?? item.clip.athleteName,
+                            sport: item.clip.sport,
+                            school: item.player?.school_name ?? item.clip.school,
+                          })
+                    }
                   />
                 </ReelPage>
               );
             }}
           />
         )}
+        {!isGuest ? (
+          <FeedPicksSheet
+            visible={feedPrefs.promptOpen}
+            prefs={{
+              ...feedPrefs.prefs,
+              schools:
+                feedPrefs.prefs.schools.length > 0
+                  ? feedPrefs.prefs.schools
+                  : profile?.team?.name?.trim()
+                    ? [profile.team.name.trim()]
+                    : [],
+            }}
+            sportOptions={pickSportOptions}
+            schoolOptions={pickSchoolOptions}
+            busy={feedPrefs.loading}
+            error={feedPrefs.error}
+            allowSkip
+            onClose={() => void feedPrefs.skipPrompt()}
+            onSkip={() => void feedPrefs.skipPrompt()}
+            onSave={(next) => feedPrefs.save(next)}
+          />
+        ) : null}
         <View
           pointerEvents="box-none"
           style={[styles.topChrome, { paddingTop: Math.max(insets.top, 8) }]}

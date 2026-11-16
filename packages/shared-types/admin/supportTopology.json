@@ -3441,6 +3441,7 @@
         "apps/mobile/src/frontend/lib/adminCatalog.ts",
         "apps/mobile/src/frontend/lib/athleteStats.ts",
         "apps/mobile/src/frontend/lib/bookkeeping.ts",
+        "apps/mobile/src/frontend/lib/crew.ts",
         "apps/mobile/src/frontend/lib/guestGames.ts",
         "apps/mobile/src/frontend/lib/localSearch.ts",
         "apps/mobile/src/frontend/lib/operator.ts",
@@ -5158,9 +5159,15 @@
       ],
       "triggers": [],
       "screens": [
+        "/",
         "/admin",
         "/admin/sport-quiz",
+        "/beyond",
+        "/booster",
         "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/sponsor",
         "/sport-quiz"
       ]
     },
@@ -5272,9 +5279,15 @@
         "quiz_level_truncate_guard → quiz_guard_truncate"
       ],
       "screens": [
+        "/",
         "/admin",
         "/admin/sport-quiz",
+        "/beyond",
+        "/booster",
         "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/sponsor",
         "/sport-quiz"
       ]
     },
@@ -5307,9 +5320,15 @@
         "quiz_life_chapter_guard → quiz_guard_life_chapter"
       ],
       "screens": [
+        "/",
         "/admin",
         "/admin/sport-quiz",
+        "/beyond",
+        "/booster",
         "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/sponsor",
         "/sport-quiz"
       ]
     },
@@ -5485,9 +5504,15 @@
       ],
       "triggers": [],
       "screens": [
+        "/",
         "/admin",
         "/admin/sport-quiz",
+        "/beyond",
+        "/booster",
         "/dev/trivia-preview",
+        "/operator",
+        "/parent",
+        "/sponsor",
         "/sport-quiz"
       ]
     },
@@ -6205,6 +6230,7 @@
         "/admin/trends",
         "/admin/wishlist",
         "/athlete",
+        "/beyond",
         "/booster",
         "/dev/trivia-preview",
         "/drip",
@@ -6401,6 +6427,26 @@
         "/sport-quiz",
         "/spotlight",
         "/user/[id]"
+      ]
+    },
+    {
+      "name": "user_feed_prefs",
+      "kind": "table",
+      "owner": "HIGHLIGHTS",
+      "purpose": "FEED-01 owner Highlights picks (sports/schools/category lean/personalization toggle). Used only to order that owner's Home feed. Deleted with the account. Never shared for ads or third-party ranking.",
+      "writers": [
+        "apps/mobile/src/frontend/lib/feedPrefs.ts"
+      ],
+      "readers": [
+        "apps/mobile/src/frontend/lib/feedPrefs.ts"
+      ],
+      "sqlWriters": [],
+      "sqlReaders": [],
+      "removers": [],
+      "triggers": [],
+      "screens": [
+        "/",
+        "/profile"
       ]
     },
     {
@@ -16070,6 +16116,7 @@
       "path": "tabs.home",
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx"
       ]
     },
@@ -16100,6 +16147,7 @@
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
         "apps/mobile/app/(tabs)/activity.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx"
       ]
     },
@@ -16110,6 +16158,7 @@
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
         "apps/mobile/app/(tabs)/spotlight.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx"
       ]
     },
@@ -16119,7 +16168,9 @@
       "path": "tabs.drip",
       "readers": [
         "apps/mobile/app/(tabs)/drip.tsx",
-        "apps/mobile/app/(tabs)/profile.tsx"
+        "apps/mobile/app/(tabs)/profile.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx"
       ]
     },
     {
@@ -16128,6 +16179,7 @@
       "path": "tabs.profile",
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx"
       ]
     },

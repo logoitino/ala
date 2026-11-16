@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-12 · APP-TEST efficient path (no Exit): C web PASS · gift charge PASS · A popup PASS · B owner SQL/Edge. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-15 17:15 MST · WEB-DESKTOP #54+#55 on `main`. APP-TEST efficient path: C web PASS · gift Edge PASS · A popup PASS · B owner SQL/Edge. Webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -50,7 +50,7 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 | | Enable webhook tip crediting; live money; minors-facing consent to real families |
 
 ### Staging smoke (test only)
-Project `ala-sports-staging` (`tucioqipfejqqqtuakdi`). Preview EAS builds; test card `4242…`. Account sheet includes `demo@tapuai.app` until production env. **Google provider is on** (full signup receipt still open) — Demo Fan email works today. Script: [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) · [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md).
+Project `ala-sports-staging` (`tucioqipfejqqqtuakdi`). Preview EAS builds; test card `4242…`. Account sheet includes `demo@tapuai.app` until production env. Google **enabled** (`google: true`); Soft-Wall popup PASS — full Testing-audience signup still owner. Demo Fan email works today. Script: [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) · [STAGING_RUNBOOK.md](engineering/STAGING_RUNBOOK.md). Confirm which project the build points at.
 
 ### Prove green before editing
 `pnpm check` (Node 24). Merge gates vs reports: [REVIEWER_START_HERE.md](REVIEWER_START_HERE.md).
@@ -176,6 +176,183 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-15 — WEB-DESKTOP card feed data:map currency
+
+- Regenerated `DATA_MAP.md` + `supportTopology.json` after Crew shortcuts (`fetchCrewShortcuts`).
+- **About to spend:** **$0**.
+
+### 2026-11-15 — WEB-DESKTOP card feed FINISHED
+
+- Real Crew shortcuts on left rail (`fetchCrewShortcuts`); Playwright smoke 1920/820/390 in
+  `docs/engineering/evidence/web-desktop-card-feed/`. PR [#55](https://github.com/logoitino/ala/pull/55)
+  owner merges #54 then #55.
+- **About to spend:** **$0**.
+
+### 2026-11-15 — WEB-DESKTOP card feed CI currency
+
+- `pnpm ip:sync` / exit map acknowledge / `security:infra` after card-feed source touch. Prior:
+  typed FeedReasonCode in DesktopHighlightFeed tests; `highlights-jump` stubs desktop feed
+  (NetInfo). PR #55.
+- **About to spend:** **$0**.
+
+### 2026-11-15 — WEB-DESKTOP card feed Codex review fixes
+
+- Guest three-Highlight browse on desktop card opens (`decideGuestDesktopPlay`); playback gift
+  updates use reel/athlete ids from `ReelViewModal`; Spotlight Watch opens `playClipId`; report
+  hide forwards to Home. PR [#55](https://github.com/logoitino/ala/pull/55).
+- **About to spend:** **$0**. Wave 0 unchanged.
+
+### 2026-11-15 — WEB-DESKTOP Lovable-outline card feed
+
+- Expo web ≥820: Home uses `DesktopHighlightFeed` (scroll cards, sport pills, Cheer→Seki,
+  Send a gift Soft-Wall) instead of the phone vertical pager. Native / phone web unchanged.
+  Brand mark on `DesktopLeftRail`. Branch `cursor/web-desktop-card-feed-9a86` stacks on shell #54.
+- **About to spend:** **$0** (docs/tests only). Lovable stays reference (W4); no new credits this pass.
+
+### 2026-11-15 — WEB-DESKTOP-01 FINISHED
+
+- Receipt: [WEB-DESKTOP-01-finish.md](engineering/evidence/WEB-DESKTOP-01-finish.md). Shell + Lovable
+  reference + width after-table + guest smoke (1920 rails, Local nav, 390 dock). CI follow-up:
+  `data:map`, `ip:sync`, `exit:map --acknowledge`, `security:infra`. Owner merges
+  [#54](https://github.com/logoitino/ala/pull/54).
+- **About to spend:** Lovable **3 credits** (not in ROADMAP Wave 0). Else **$0**.
+  Note: Exit source-release artifact upload may warn if GitHub Actions free storage quota is full.
+
+### 2026-11-15 — WEB-DESKTOP three-panel Expo web shell
+
+- W1–W4 approved; Lovable [Tapua'i Web Desktop](https://lovable.dev/projects/55b66713-1e11-484e-a8a9-7520ad55b7eb)
+  (3 credits, reference). `WebAppShell` three-panel / tablet drawer; 1920 waste **78% → 25%**.
+
+### 2026-11-15 — WEB-DESKTOP Phase 0 audit + Phase 1 design
+
+- Audit: [WEB-DESKTOP-AUDIT.md](agents/WEB-DESKTOP-AUDIT.md); design: [WEB-DESKTOP-01.md](agents/WEB-DESKTOP-01.md).
+  Before: phone column 430px. Screenshots `docs/agents/web-desktop-audit/before-*.png`.
+
+### 2026-11-14 — FEED-01 Phase 1 FINISHED
+
+- Receipt: `docs/engineering/evidence/FEED-01-phase1-finished.md`. Product on `main` + SQL + smoke A–E; no further Phase 1 engineering. Phase 2 flag stays OFF.
+- Owner admin left: merge evidence [#51](https://github.com/logoitino/ala/pull/51); send counsel note. Optional Demo Fan `reported_by` hygiene SQL in smoke §D ($0).
+- **About to spend:** $0. Counsel email outside product spend. Do not enable Phase 2 without unlock checklist.
+
+### 2026-11-14 — FEED-01 Phase 2 unlock packet (flag still OFF)
+
+- `FEED-01-phase2-unlock.md` + WORK_QUEUE FEED-01 row; flag-off Jest 11 passed; Demo Fan Personal feed restored ON.
+
+### 2026-11-14 — FEED-01 Phase 1 engineering COMPLETE
+
+- Smoke A–E PASS; go-live engineering-complete. Evidence under `docs/engineering/evidence/FEED-01-*` and `feed-01-signed-in-smoke/`.
+
+### 2026-11-14 — Expo web WebAppShell hydration fix
+
+- `WebAppShell` / `useAppViewportWidth` wait until after mount before branching to the desktop phone column, so SSR HTML matches the first client paint (`useWindowDimensions` mismatch).
+- **About to spend:** $0. Reload Expo web to verify the red hydration overlay is gone, then resume FEED-01 signed-in smoke.
+
+### 2026-11-14 — FEED-01 picks sheet scroll menus
+
+- `FeedPicksSheet`: sports/schools are vertical scroll menus with live “n of 3” summaries; category lean is a horizontal rail (matches Suggestion / Report Daylight menus). No pill wrap grid.
+- **About to spend:** $0 (Wave 0 presentation). Hosted SQL already applied; device feel still DEVICE_QA.
+
+### 2026-11-14 — FEED-01 interest-based Highlights Home feed
+
+- Migration `user_feed_prefs` (owner-only RLS + Closed accounts when MINOR-01 present; hosted applied 2026-11-14).
+- First-run + Settings → Highlights picks; Personal feed toggle; prefs broadcast so Home refreshes after Settings.
+- `rankHomeFeed` prefs bonuses; money never ranks; Phase 2/3 env-gated **including AsyncStorage collectors**.
+- Admin: `/admin/highlights` `FeedInterestPanel` + coverage `home_feed_interest` (presentation-only exemption removed).
+- CI follow-up: regenerate `database.generated.ts` for `user_feed_prefs`; fix ReelCard tracker meta expectations; mock Highlights settings in profile quiz test; register `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS` in infrastructure.json; acknowledge build-layers after migration inventory; mock SoftWall sheet motion so Jest does not exit 1 on torn-down rAF.
+- Phase 0: Wave 0 seeded feed has 5 clips — too small (`docs/engineering/evidence/FEED-01-phase0.md`).
+- Phase 1 local smoke (`docs/engineering/evidence/FEED-01-phase1-smoke.md`): Jest 4 suites / 17 tests passed on Node 22.23.4 (picks sheet render, personalization-off newest-first, `tapuai.hiddenReels` hide). Signed-in web/device journey not run. Metro was not started (earlier Expo web heap abort; about 2.6 Gi available).
+- Go-live packet (`docs/engineering/evidence/FEED-01-go-live.md`): Phase 1 engineering **COMPLETE** (SQL + smoke A–E). Stack on `main` via [#47](https://github.com/logoitino/ala/pull/47). Counsel Privacy send still open (not accepted policy); Phase 2 OFF.
+- **About to spend:** SQL apply was **$0**. Preview build **$0** until Expo free quota runs out. Supabase Free may pause (Pro ~$25/mo). Live Stripe keys are not this wave.
+
+### 2026-11-13 — Local Daylight polish (boosters, report, live)
+
+- **Top Aura Boosters:** compact sponsor-style cards (avatar + name + pts + one badge); shorter hub lede.
+- **Suggestion / Report sheets:** scroll menus instead of dense pill grids; shorter copy.
+- **Live matchups:** `GameCard` and `LiveMatchBanner` stay on Daylight surface (ember LIVE pill only — no night card).
+- Dark scheme deferred. Skipped Lovable agent (workspace credits; price not in Wave 0 ROADMAP).
+- **About to spend:** $0 (Wave 0 presentation). Device feel still APP-TEST / DEVICE_QA.
+
+### 2026-11-13 — App fluidity (menus, sheets, tabs, scroll)
+
+- Shared `useFanSheetMotion` + sheet timing tokens (`SHEET_DISMISS_MS` / `SPRING_SHEET`; Easing stays in hooks for Jest).
+- **Profile menu** slides away, then hides the native Modal; nested Soft-Wall / Legal wait for `onDismiss` (Android fallback timer).
+- Soft-Wall, Legal, Suggestion, Share QR, Verify, Edit profile: same `useFanSheetMotion` open/close (Reduce Motion branch).
+- Upload / Reel more / Filmer / Report / My sports: `animationType="none"` + `SheetRise active={visible}`.
+- Highlight picker / Operator roster: fade page sheets (no double OS slide). Local search overlay: `SPRING_SHEET` + Reduce Motion.
+- Role switcher, Drip Product, Tip sheet: `SPRING_SHEET` travel + shared dismiss/backdrop ms tokens.
+- Fan tabs: navigator fade removed; `TabScreen` enter 160ms so switches do not double-flash.
+- Privacy / Notifications / Delete account / Rally / Challenge sheets: fade instead of slide.
+- `ScrollFxItem` skips mount spring when Reduce Motion is on.
+- **About to spend:** $0 (Wave 0 presentation). Device feel still needs APP-TEST / DEVICE_QA.
+
+### 2026-11-13 — Next admin portal: Control map + feature accountability
+
+- Read-only Product **Control map** (`/coverage`) from shared `PORTAL_COVERAGE_SURFACES`; Product
+  overview lists the full **Expo desk directory** (`EXPO_DESKS`). Writes stay in Expo `/admin`.
+- Revenue **Checkout rails** note: gifts 0% cut; Vault 20/80; web Stripe vs native store billing.
+- Health unapplied catalog probes **notifications** (`get_admin_notification_health`).
+- Expo `adminCoverage` adds **web** surface (shell, gift/Exclusive Payment Element, store rails).
+- Feature-admin: enroll **WEB-01** + **VAULT-RAILS-01** (planned); QUIZ-01 marked historical /
+  superseded by QUIZ-02+. Workflow requires same-turn portal desk/coverage updates.
+- `pnpm portal:test` is part of `pnpm check`. **About to spend:** $0 (Wave 0 docs/portal only).
+
+### 2026-11-13 — Expo web Phase 1 (Stripe.js + desktop shell)
+
+- Web app = same Expo Router app (`pnpm` / `expo start --web`), not a Lovable fork. Plan:
+  [WEB_APP_PARITY.md](engineering/design/WEB_APP_PARITY.md).
+- **Web Stripe checkout:** `@stripe/stripe-js` Payment Element host mirrors PaymentSheet for
+  gifts / Exclusive / Drip / booster (`lib/stripe.web.ts`, `WebPaymentSheetHost`). Test card `4242`.
+- **Desktop shell:** wide viewports get a phone-width column (`WebAppShell`) so dock/Highlights stay usable.
+- Exclusive rails: web Stripe + books 20/80; production iOS/Android still block Stripe Exclusive until
+  IAP / Play Billing. Hosted `tapuai.app` deploy still owner/ops. Upload/auth polish = later phases.
+- Follow-up from web-gap pass: busy CTAs say “Opening checkout…” (not PaymentSheet); TROUBLESHOOTING §6
+  no longer calls web Stripe a stub; test-card hint hidden when `EXPO_PUBLIC_APP_ENV=production`.
+- Codex on #42: lock web Payment Element dismiss while confirm is pending; sheets/grids use
+  `useAppViewportWidth` (phone column) instead of full browser width.
+- CI: claim `@stripe/stripe-js` + `@stripe/react-stripe-js` on the Stripe infra service (source-release).
+- **About to spend:** $0 (Wave 0). Budget unchanged; hosting later is owner spend.
+
+### 2026-11-13 — Vault Exclusive platform rails (web cut; native store billing)
+
+- Books Exclusive split stays **20% Tapua'i / 80% athlete** (`VAULT_PLATFORM_CUT_BPS`); fan Vault
+  card + athlete Lock Vault copy disclose it.
+- Platform gate (`data/storeCommerce.ts` + `lib/exclusiveCheckout.ts`): preview/test native Stripe;
+  production iOS/Android unavailable until store billing; web now uses Payment Element (Phase 1 above).
+- **Android is not freer than Apple** for in-app digital Vault. StoreKit/Play Billing **not built**.
+- Call sites: profile, public `/user/[id]`, ReelCard.
+- CI fix: removed stale `exportsTriage` for `VAULT_ATHLETE_SHARE_BPS` (now used by `storeCommerce`).
+- CI fix: `pnpm ip:sync` refreshed `docs/legal/IP_COUNSEL_PACKET.md` so source-release verify
+  does not mutate inventory mid-check.
+
+### 2026-11-12 — SoftWall Google-off opens Create (APP-TEST lane A)
+
+- When Continue with Google fails with “turned off on the server”, SoftWall switches to **Create an
+  account** so email + birth month/year are ready without a second tap. Hint copy no longer implies
+  Google is always live. PR [#39](https://github.com/logoitino/ala/pull/39) CI was already green;
+  this continues the no-Exit test path. Owner still enables Google OAuth on the project for lane A.
+
+### 2026-11-12 — Account birth pickers, delete-account request, compact menus
+
+- `BirthMonthField`: twelve-month pill grid → compact Month/Year dropdown scroll lists (works inside
+  SoftWall without a nested Modal). Age card + Privacy reuse it.
+- Profile Settings: **Delete account** opens `DeleteAccountSheet` — records `[account-deletion-request]`
+  via Feedback, then signs out. Honest copy: staff finishes wipe; gift/books rows may be kept (P1-01
+  auto-erasure still open). Lovable MCP needs Desktop auth; density from LOVABLE_UI_UX_PLAN ($0).
+- `ProfileMenuSheet` / `PrivacySettingsSheet`: tighter row/type density; touch targets stay ≥44.
+- CI typecheck fix: `StyleSheet.absoluteFill` (RN 0.88) + typed Feedback mock on the delete-account test.
+
+### 2026-11-12 — Claim-school scroll, vibrant Local polls, quiz demo path
+
+- `VerifyAthleteModal`: sheet content now scrolls under `maxHeight` (claim school was clipped).
+- `CheerPollCard` (Local): brighter rivalry chrome — jade home / cyan away / ember LIVE (Lovable
+  Friday Night Lights tokens). Lovable MCP needs Desktop auth in this cloud agent; design applied
+  in-repo from [LOVABLE_UI_UX_PLAN](engineering/design/LOVABLE_UI_UX_PLAN.md) ($0).
+- Quiz: staging still missing `quiz_snapshot` (owner [TRIVIA_STAGING_APPLY](engineering/TRIVIA_STAGING_APPLY.md)).
+  Home / HQ / `/sport-quiz` now surface “not switched on” and offer `/dev/trivia-preview` when
+  `EXPO_PUBLIC_APP_ENV` is not production so trivia can be tried without SQL.
+- Regenerated `DATA_MAP.md` + `supportTopology.json` for the new Home/HQ → trivia-demo screen edges
+  (`pnpm data:map:check` green).
 
 ### 2026-11-12 — APP-TEST gift charge smoke (no Exit · $0)
 
@@ -1651,6 +1828,11 @@ Do not re-diagnose these. Fix them or leave them.
    optional tip for Tapua'i at checkout (default No tip, never pre-selected). Built; SQL recorded applied to staging on 2026-09-30, not development.
    Still open: counsel on App Store 3.2.1(vii), which appears to require 100% for non-IAP gifts —
    fallback is `MALO_PLATFORM_CUT_BPS` = 0 with the tip kept (LEGAL row L).
+   - **Exclusive / Vault store rails (owner 2026-11-13, engineering working model):** **Web**
+     Exclusive uses Stripe.js with the existing **20/80** books split (Phase 1 local). Production
+     **iOS** Exclusive must use App Store IAP (not Stripe in-app). Production **Android** Exclusive
+     must use Google Play Billing — **Android is not exempt**. StoreKit / Play Billing **not built**.
+     Counsel must review before store listing claims or live money. Hosted web deploy is owner/ops.
 
 10. **Athlete verification and fake highlights** — `docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md`.
     **Decided 2026-09-29:** gifts are held until verified and the athlete sees that in the app; the

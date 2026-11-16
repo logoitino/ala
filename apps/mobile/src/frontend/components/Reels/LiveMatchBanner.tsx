@@ -18,7 +18,7 @@ import Animated, {
 
 import { SportIcon } from '@/components/UI/SportIcon';
 import { SwipeableBannerWrapper } from '@/components/Common/SwipeableBannerWrapper';
-import { colors, palette, radii } from '@/constants/theme';
+import { cardShadow, colors, radii } from '@/constants/theme';
 import { gameScore, gameScoreboardStatus, gameTeamName } from '@/components/Local/gamePresentation';
 import { useLiveGame } from '@/hooks/useLiveGame';
 import { useSportConfigs } from '@/hooks/useSportConfigs';
@@ -169,7 +169,7 @@ export function LiveMatchBanner({
         >
           <View style={styles.badge}>
             <View style={styles.metaRow}>
-              <SportIcon sport={game.sport} color={colors.glow} size={16} />
+              <SportIcon sport={game.sport} color={colors.primary} size={16} />
               <View style={styles.liveChip}>
                 <Animated.View style={[styles.pulse, !isLive && styles.pulseIdle, pulseStyle]} />
                 <Text style={[styles.liveLabel, !isLive && styles.idleLabel]}>{status.label}</Text>
@@ -245,14 +245,15 @@ const styles = StyleSheet.create({
   badge: {
     alignSelf: 'stretch',
     width: '100%',
-    backgroundColor: colors.videoScrim,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.45)',
+    borderColor: colors.border,
     paddingHorizontal: 10,
     paddingRight: 36,
     paddingVertical: 8,
     gap: 4,
+    ...cardShadow,
   },
   metaRow: {
     flexDirection: 'row',
@@ -272,7 +273,7 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.ember,
   },
   pulseIdle: {
-    backgroundColor: colors.onVideoMuted,
+    backgroundColor: colors.textMuted,
   },
   liveLabel: {
     color: FOCAL.ember,
@@ -280,12 +281,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1,
   },
-  idleLabel: { color: colors.onVideoMuted },
+  idleLabel: { color: colors.textMuted },
   scoreboard: { gap: 4, width: '100%' },
   teamRow: { flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%' },
   quarter: {
     flexShrink: 1,
-    color: colors.onVideoMuted,
+    color: colors.textMuted,
     fontSize: 12,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
   matchup: {
     flex: 1,
     minWidth: 0,
-    color: colors.onVideo,
+    color: colors.text,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '800',
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     minWidth: 36,
     textAlign: 'right',
-    color: colors.onVideo,
+    color: colors.text,
     fontSize: 20,
     lineHeight: 24,
     fontVariant: ['tabular-nums'],
@@ -311,7 +312,7 @@ const styles = StyleSheet.create({
   toast: {
     alignSelf: 'stretch',
     alignItems: 'center',
-    backgroundColor: palette.midnightObsidian,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: colors.primary,
@@ -319,6 +320,7 @@ const styles = StyleSheet.create({
     paddingRight: 36,
     paddingVertical: 12,
     gap: 2,
+    ...cardShadow,
   },
   toastTitle: {
     color: colors.primary,
@@ -328,7 +330,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   toastDetail: {
-    color: colors.onVideo,
+    color: colors.text,
     fontSize: 13,
     fontWeight: '700',
     textAlign: 'center',

@@ -1,6 +1,6 @@
 {
-  "planVersion": "6012398c89ff",
-  "contentHash": "6012398c89ffc4eeaf5e24d3e92bd48c7401e29b90e7e701b6549050a31f0cb7",
+  "planVersion": "212176c4fb37",
+  "contentHash": "212176c4fb37fec6b3ad9ef394021f2c626ba968a48204fccec7ba409ba6f902",
   "signals": {
     "edgeFunctions": [
       "create-payment-intent",
@@ -29,8 +29,8 @@
       "game_events",
       "games"
     ],
-    "latestMigration": "20261022152000_no_cut_gifts_optional_tips.sql",
-    "migrationsCount": 57,
+    "latestMigration": "20261114010000_user_feed_prefs.sql",
+    "migrationsCount": 58,
     "easProfiles": [
       "development",
       "preview",
@@ -43,5 +43,5 @@
     ],
     "agentCount": 116
   },
-  "at": "2026-11-03T22:12:32.727Z"
+  "at": "2026-11-14T04:04:07.540Z"
 }

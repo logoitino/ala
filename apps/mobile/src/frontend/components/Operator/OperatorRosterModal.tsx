@@ -36,7 +36,7 @@ export function OperatorRosterModal({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       presentationStyle="pageSheet"
       onRequestClose={() => {
         if (!busy) onClose();

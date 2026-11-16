@@ -72,6 +72,7 @@ import { useAthleteSubscription } from '@/hooks/useAthleteSubscription';
 import { useGameEventBroadcast } from '@/hooks/useGameEventBroadcast';
 import { useSavedReel } from '@/hooks/useSavedReel';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
+import { beginExclusiveUnlock } from '@/lib/exclusiveCheckout';
 import { addUserAura, auraBadgeLabel, auraTierForPoints, emitPlayerAura, emitProfileAura, resolveAuraPoints } from '@/lib/aura';
 import { hypeFromPlayer } from '@/lib/hype';
 import { formatGameEventHeadline } from '@/lib/operator';
@@ -117,6 +118,7 @@ function ReelCardImpl({
   onOpenProfile,
   onReelHypeChange,
   onHide,
+  whyThisClip = null,
   surface = 'home',
 }: ReelCardProps) {
   const insets = useSafeAreaInsets();
@@ -442,6 +444,8 @@ function ReelCardImpl({
       if (reason !== 'coach_level') {
         await hideReelLocally(clip.id);
         onHide?.(clip.id);
+        const { rememberFeedHideAthlete } = await import('@/lib/feedPrefs');
+        await rememberFeedHideAthlete(clip.playerId ?? player?.id);
       }
       telemetry.trackIssue('report', surface);
       celebration?.showToast(reason === 'coach_level' ? 'Sent to reviewers. This Highlight stays up.' : 'Highlight hidden 🚩');
@@ -454,7 +458,7 @@ function ReelCardImpl({
     } finally {
       setReporting(false);
     }
-  }, [celebration, clip.id, onHide, reporting, surface, user?.id]);
+  }, [celebration, clip.id, clip.playerId, onHide, player?.id, reporting, surface, user?.id]);
 
   const unlockVault = useCallback(() => {
     if (unlocking) return;
@@ -463,22 +467,14 @@ function ReelCardImpl({
       onOpenProfile?.();
       return;
     }
-    // Soft-Wall first: a stashed resume may close over a pre-login startCheckout; live session
-    // resolution in useTipCheckout / useAthleteSubscription.grant still writes fan_id + the pass.
-    requireAuth({
-      kind: 'exclusive',
-      athleteName: player.name,
-      athleteId: player.id,
-      resume: () => {
-        void startCheckout({
-          player,
-          tipAmount: live.catalog.exclusiveDollars,
-          coverFees: false,
-          auraPoints: live.catalog.exclusiveAura,
-          skipBacker: true,
-          onPaid: grant,
-        });
-      },
+    // Soft-Wall + platform rail: production iOS/Android block Stripe Exclusive; web/test keep PaymentSheet.
+    beginExclusiveUnlock({
+      player,
+      tipAmount: live.catalog.exclusiveDollars,
+      auraPoints: live.catalog.exclusiveAura,
+      requireAuth,
+      startCheckout,
+      onPaid: grant,
     });
   }, [grant, live.catalog.exclusiveAura, live.catalog.exclusiveDollars, onOpenProfile, player, requireAuth, startCheckout, surface, unlocking]);
 
@@ -558,6 +554,11 @@ function ReelCardImpl({
     Boolean(user?.id),
     photoStory ? storyLoaded && isFocused && !locked : playing && isFocused && !locked,
     photoStory ? VIEW_PLAY_MS : viewThresholdMs(playing ? durationSec : null),
+    {
+      athleteId: clip.playerId ?? player?.id,
+      school: schoolName || clip.school,
+      sport: clip.sport,
+    },
   );
 
   return (
@@ -635,7 +636,7 @@ function ReelCardImpl({
               style={({ pressed }) => [styles.unlockBtn, pressed && styles.pressed, unlocking && styles.disabled]}
             >
               <Text style={styles.unlockLabel}>
-                {unlocking ? 'Opening PaymentSheet…' : vaultUnlockLabel(live.catalog.exclusiveDollars)}
+                {unlocking ? 'Opening checkout…' : vaultUnlockLabel(live.catalog.exclusiveDollars)}
               </Text>
             </Pressable>
           </View>
@@ -710,6 +711,7 @@ function ReelCardImpl({
           position={player?.position}
           caption={clip.tag}
           storyNote={storyNote}
+          whyThisClip={whyThisClip}
           withAccounts={withAccounts}
           filmedBy={clip.filmedBy}
           onOpenFilmer={clip.filmedBy && clip.uploadedBy ? () => setFilmerOpen(true) : undefined}
@@ -778,7 +780,20 @@ function ReelCardImpl({
         }}
         onToggleSave={() => {
           telemetry.trackFeature('save', surface);
-          void toggleSave();
+          void (async () => {
+            const next = !saved;
+            await toggleSave();
+            if (next && user?.id) {
+              const { rememberFeedSaveTouch } = await import('@/lib/feedPrefs');
+              await rememberFeedSaveTouch({
+                clipId: clip.id,
+                athleteId: clip.playerId ?? player?.id,
+                school: schoolName || clip.school,
+                sport: clip.sport,
+                atMs: Date.now(),
+              });
+            }
+          })();
         }}
         onReport={() => {
           setMoreOpen(false);

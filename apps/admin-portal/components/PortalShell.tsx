@@ -1,12 +1,13 @@
 /**
  * Shell for every page of the read-only Next admin portal: a dark left sidebar (2026-11-04 design refresh from the
  * Lovable reference, replacing the 2026-10-12 top tabs by owner request) with the brand, the six sections, the
- * Product desks nested under Product, the Analytics and Departments utility links and Sign out; then the page
- * title and the shared primitives (StatCard, Panel, SectionHeading, Badge, BarRow, FlagStatusList). Exports and
- * props stay stable (Panel `level`, shell `presentation`/`heading`), because Trends, Revenue, Analytics and the
- * product desks import them. Every route, label, subtitle and aria-current rule from the top-tab shell carries
- * over unchanged. Below `lg` the sidebar becomes a top bar whose nav scrolls sideways, so nothing hides behind a
- * menu button and backward keyboard navigation never lands under a fixed header.
+ * Product desks nested under Product (Overview, Control map, Features, Profile, Sign-in, People), the Analytics
+ * and Departments utility links and Sign out; then the page title and the shared primitives (StatCard, Panel,
+ * SectionHeading, Badge, BarRow, FlagStatusList). Exports and props stay stable (Panel `level`, shell
+ * `presentation`/`heading`), because Trends, Revenue, Analytics and the product desks import them. Every route,
+ * label, subtitle and aria-current rule from the top-tab shell carries over unchanged. Below `lg` the sidebar
+ * becomes a top bar whose nav scrolls sideways, so nothing hides behind a menu button and backward keyboard
+ * navigation never lands under a fixed header.
  * Contrast: sidebar ink #D5DED9 on #0E1315 is 13.9:1; the active neon #2EE59D is 11.6:1, with a 3px neon bar as
  * the non-text indicator. Main content keeps the light report tokens (jade 5.6:1 on canvas).
  * FlagStatusList wraps long flag names and hints rather than cutting them off (W3-PORTAL), and every heading
@@ -32,7 +33,8 @@ export type PortalHref =
   | '/features'
   | '/profile'
   | '/auth'
-  | '/people';
+  | '/people'
+  | '/coverage';
 
 const TABS: { href: PortalHref; label: string; match: PortalHref[]; icon: string }[] = [
   { href: '/', label: 'Home', match: ['/'], icon: 'M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5' },
@@ -40,11 +42,12 @@ const TABS: { href: PortalHref; label: string; match: PortalHref[]; icon: string
   { href: '/audience', label: 'Audience', match: ['/audience'], icon: 'M16 19v-1a4 4 0 0 0-8 0v1M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7 8v-1a3 3 0 0 0-2-2.8M17 5.2a3 3 0 0 1 0 5.6' },
   { href: '/money', label: 'Revenue', match: ['/money'], icon: 'M12 3v18M16.5 7.5c0-1.7-2-3-4.5-3s-4.5 1.3-4.5 3 2 2.6 4.5 3 4.5 1.3 4.5 3-2 3-4.5 3-4.5-1.3-4.5-3' },
   { href: '/operations', label: 'Health', match: ['/operations'], icon: 'M3 12h4l3-8 4 16 3-8h4' },
-  { href: '/product', label: 'Product', match: ['/product', '/features', '/profile', '/auth', '/people'], icon: 'M4 7l8-4 8 4-8 4-8-4Zm0 5 8 4 8-4M4 17l8 4 8-4' },
+  { href: '/product', label: 'Product', match: ['/product', '/features', '/profile', '/auth', '/people', '/coverage'], icon: 'M4 7l8-4 8 4-8 4-8-4Zm0 5 8 4 8-4M4 17l8 4 8-4' },
 ];
 
 const PRODUCT_LINKS: { href: PortalHref; label: string }[] = [
   { href: '/product', label: 'Overview' },
+  { href: '/coverage', label: 'Control map' },
   { href: '/features', label: 'Features' },
   { href: '/profile', label: 'Profile' },
   { href: '/auth', label: 'Sign-in' },
@@ -60,6 +63,7 @@ const TITLES: Record<PortalHref, string> = {
   '/manage': 'Departments',
   '/analytics': 'Analytics',
   '/product': 'Product',
+  '/coverage': 'Control map',
   '/features': 'Features',
   '/profile': 'Profile',
   '/auth': 'Sign-in',
@@ -79,7 +83,8 @@ const SUBTITLES: Record<PortalHref, string> = {
   '/operations': 'Time on tabs, taps, what breaks, and which menus are on.',
   '/manage': 'Billing, Marketing, Support, API, and IT on one read-only page.',
   '/analytics': 'Dashboards and the measure catalog. Every number names its source.',
-  '/product': 'Menus, profile, sign-in, and people. Changes stay in Expo /admin.',
+  '/product': 'Menus, profile, sign-in, people, and the Control map. Changes stay in Expo /admin.',
+  '/coverage': 'Fan surfaces and Expo desks that own them. Live control counts stay in Expo /admin/product/coverage.',
   '/features': 'Which menus are on. Changes stay in Expo /admin.',
   '/profile': 'What the profile screen is allowed to show.',
   '/auth': 'Which actions ask a guest to create an account.',

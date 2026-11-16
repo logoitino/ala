@@ -1,40 +1,36 @@
 /**
  * Desk links use the shared open report dividers so Product follows Home's format.
  * Product tab (`/product`). A meter of menus switched on per flag group, from the published
- * runtime flags Health already reads, then four equal links into the read-only product desks.
+ * runtime flags Health already reads, then product desks, Control map, and the shared Expo desk
+ * directory so agents keep oversight aligned when desks ship.
  * Unread flags show "—", never "all on". Switches are changed only in Expo /admin.
  * @sideEffects `app_runtime_config` SELECT (published flags) via `fetchPortalRuntime`.
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { ExpoDeskPath } from '@/components/ExpoDeskPath';
 import { Meter } from '@/components/charts';
 import { PortalShell, SectionHeading } from '@/components/PortalShell';
 import { formatCount } from '@/lib/dashboard';
 import { menuSplits } from '@/lib/operations';
 import { fetchPortalRuntime } from '@/lib/softWall';
+import { EXPO_DESKS, EXPO_DESK_GROUPS } from '@tapuai/shared-types/admin/expoDeskDirectory';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = { title: 'Product' };
 
 const LINKS = [
+  { href: '/coverage', title: 'Control map', detail: 'Fan surfaces and the Expo desks that own them.' },
   { href: '/features', title: 'Features', detail: 'Which menus are on. Changes stay in Expo /admin.' },
   { href: '/profile', title: 'Profile', detail: 'What the profile screen is allowed to show.' },
   { href: '/auth', title: 'Sign-in', detail: 'Which actions ask a guest to create an account.' },
   { href: '/people', title: 'People', detail: 'Who has a profile. Granting access stays in Expo /admin.' },
 ] as const;
 
-/** Desks that stay in Expo. Health probes the ones whose database update can still be missing. */
-const EXPO_DESKS = [
-  { path: '/admin/sport-quiz', title: 'Trivia', detail: 'Rounds, Life Playbook, and IQ questions. A right answer adds 5 Aura on the phone. If the Aura card does not move, that write failed.' },
-  { path: '/admin/fan-zone', title: 'Fan Zone', detail: 'Campaigns, private entries, and free ballots.' },
-  { path: '/admin/highlights', title: 'Highlights', detail: 'Beyond contributions, challenge invites, and the coach-level label.' },
-  { path: '/admin/support', title: 'Engineering Support', detail: 'Syntax, logic, and glitches. Health counts the open ones. Review stays here.' },
-] as const;
-
 /**
- * @purpose Product tab: menus on per group, then the four product desks.
+ * @purpose Product tab: menus on per group, portal desks, then the Expo desk directory.
  */
 export default async function ProductPage() {
   const runtime = await fetchPortalRuntime();
@@ -96,16 +92,33 @@ export default async function ProductPage() {
       </section>
 
       <section aria-labelledby="expo-desks" className="mt-10">
-        <SectionHeading id="expo-desks" level={2} title="Expo desks" hint="Not hosted in this portal" />
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {EXPO_DESKS.map((item) => (
-            <li key={item.path} className="border-b border-[var(--border)] py-5">
-              <p className="text-base font-extrabold">{item.title}</p>
-              <p className="mt-1 text-sm leading-5 text-[var(--ink-soft)]">{item.detail}</p>
-              <p className="mt-2 text-sm font-extrabold text-[var(--jade)]">{item.path}</p>
-            </li>
-          ))}
-        </ul>
+        <SectionHeading
+          id="expo-desks"
+          level={2}
+          title="Expo desks"
+          hint={`${EXPO_DESKS.length} desks · not hosted in this portal`}
+        />
+        <p className="mb-4 max-w-3xl text-sm leading-6 text-[var(--ink-soft)]">
+          Every write stays in Expo. This directory is the accountability list agents update when a desk ships.
+        </p>
+        {EXPO_DESK_GROUPS.map((group) => {
+          const desks = EXPO_DESKS.filter((desk) => desk.group === group.id);
+          if (desks.length === 0) return null;
+          return (
+            <div key={group.id} className="mb-8">
+              <h3 className="text-sm font-extrabold tracking-wide text-[var(--text-muted)] uppercase">{group.label}</h3>
+              <ul className="mt-2 grid gap-3 sm:grid-cols-2">
+                {desks.map((item) => (
+                  <li key={item.path} className="border-b border-[var(--border)] py-4">
+                    <p className="text-base font-extrabold">{item.title}</p>
+                    <p className="mt-1 text-sm leading-5 text-[var(--ink-soft)]">{item.detail}</p>
+                    <ExpoDeskPath path={item.path} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
       </section>
     </PortalShell>
   );

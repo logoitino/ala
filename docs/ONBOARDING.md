@@ -197,7 +197,18 @@ Do these in order. **Do not paste the client secret into chat, git, Expo env, lo
 
 The Google callback returns to **Supabase**, which then returns to the app via `authRedirectUri()`.
 Use the **same hostname + port + `/auth/callback`** you open in the browser. Extra hosts need
-their own allowlist row.
+their own allowlist row. Open that origin manually and allow the sign-in popup. If the port is
+occupied, resolve the conflict before using a different origin; update and verify its exact
+callback allowlist if changing ports. Do not source missing bank credentials for this auth check.
+Expo web checkout uses Stripe.js Payment Element (same `create-payment-intent` as native) when
+`EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY` is set — test card `4242…`. Wide web uses the three-panel
+desktop shell when that branch is on `main`; see [WEB-DESKTOP-01](agents/WEB-DESKTOP-01.md) and
+[WEB_APP_PARITY.md](engineering/design/WEB_APP_PARITY.md).
+
+Provider-enabled alone is **not** a signup receipt. Run the
+[browser Google checks](engineering/TESTER_SCRIPT.md#google-setup-acceptance--browser-first-then-native)
+(new account, returning, cancel, resume) and record build/date/origin/result. Native `alasports://`
+return is a separate DEVICE_QA pass (Expo Go may differ from a development client).
 
 #### Local browser after enable
 

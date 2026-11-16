@@ -9,3 +9,4 @@ export * from './chartScale';
 export * from './measureColors';
 export * from './eventLabels';
 export * from './revenueModel';
+export * from './expoDeskDirectory';

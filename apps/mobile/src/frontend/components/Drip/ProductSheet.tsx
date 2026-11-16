@@ -33,7 +33,15 @@ import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { recordDripOrder } from '@/lib/finance';
 import { resolveSessionUserId } from '@/lib/sessionToken';
 import { telemetry } from '@/services/TelemetryManager';
-import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
+import {
+  FOCAL,
+  SHEET_BACKDROP_IN_MS,
+  SHEET_BACKDROP_OUT_MS,
+  SHEET_DISMISS_MS,
+  SPRING_BOUNCE,
+  SPRING_CARD,
+  SPRING_SHEET,
+} from '@/theme/motion';
 
 const SHEET_OFF = 720;
 
@@ -106,8 +114,11 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
     contentScale.value = 0.92;
     contentOpacity.value = 0;
     const frame = requestAnimationFrame(() => {
-      translateY.value = withSpring(0, SPRING_CARD);
-      dim.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
+      translateY.value = withSpring(0, SPRING_SHEET);
+      dim.value = withTiming(1, {
+        duration: SHEET_BACKDROP_IN_MS,
+        easing: Easing.out(Easing.cubic),
+      });
       contentScale.value = withSpring(1, SPRING_CARD);
       contentOpacity.value = withTiming(1, { duration: 260, easing: Easing.out(Easing.cubic) });
     });
@@ -135,10 +146,14 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
 
   const dismiss = (force = false) => {
     if ((!force && busy) || !open) return;
-    dim.value = withTiming(0, { duration: 180 });
-    translateY.value = withTiming(SHEET_OFF, { duration: 220, easing: Easing.in(Easing.cubic) }, (finished) => {
-      if (finished) runOnJS(finishClose)();
-    });
+    dim.value = withTiming(0, { duration: SHEET_BACKDROP_OUT_MS });
+    translateY.value = withTiming(
+      SHEET_OFF,
+      { duration: SHEET_DISMISS_MS, easing: Easing.in(Easing.cubic) },
+      (finished) => {
+        if (finished) runOnJS(finishClose)();
+      },
+    );
   };
 
   const totalCents = display ? display.priceCents * qty : 0;
@@ -315,7 +330,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
                 onPress={buy}
                 contentStyle={[styles.buy, busy && styles.buyOff]}
               >
-                <Text style={styles.buyLabel}>{busy ? 'Opening PaymentSheet…' : buyLabel}</Text>
+                <Text style={styles.buyLabel}>{busy ? 'Opening checkout…' : buyLabel}</Text>
               </AnimatedButton>
             </Animated.View>
           ) : null}
