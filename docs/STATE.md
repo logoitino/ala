@@ -181,7 +181,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 - [FEED-ENDLESS-AUDIT.md](agents/FEED-ENDLESS-AUDIT.md): staging `reels_feed` playable **1**;
   no `onEndReached`/cycle; FEED-01 prefs already on `main` (`d6d7426`); §0 line-count/Mac
-  diffs recorded; Phase 1 design held for FACILITATOR.
+  diffs recorded; Phase 1 design held for FACILITATOR. Indexed in `docs/README.md` (Codex P1).
 - **About to spend:** **$0**.
 
 ### 2026-11-16 — APP-TEST gift web Give → 4242 PASS ($0)
