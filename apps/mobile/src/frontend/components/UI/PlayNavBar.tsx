@@ -14,6 +14,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { colors } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type Slot = {
   key: string;
@@ -63,7 +64,7 @@ export function PlayNavBar({ onBeforeLeave }: { onBeforeLeave?: () => void }) {
   const tab = (slot: Slot) => (
     <Pressable key={slot.key} accessibilityRole="button" accessibilityLabel={slot.label} onPress={() => go(slot.href)} style={styles.hit}>
       <Ionicons name={slot.icon} size={20} color={colors.textMuted} />
-      <Text style={styles.label} numberOfLines={1}>{slot.label}</Text>
+      <Text style={styles.label}>{slot.label}</Text>
     </Pressable>
   );
   return (
@@ -83,9 +84,10 @@ export function PlayNavBar({ onBeforeLeave }: { onBeforeLeave?: () => void }) {
 
 const styles = StyleSheet.create({
   wrap: { width: '100%', borderTopWidth: 1, borderTopColor: colors.border },
-  bar: { flexDirection: 'row', alignItems: 'flex-end', minHeight: 58, paddingHorizontal: 4, paddingTop: 4 },
-  hit: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 2, paddingTop: 6 },
-  label: { fontSize: 11, fontWeight: '800', color: colors.textMuted, textAlign: 'center' },
+  bar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', minHeight: 58, paddingHorizontal: 4, paddingTop: 4 },
+  hit: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto', minWidth: 44, minHeight: 52, alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: 2, paddingVertical: 6 },
+  // Whole destinations wrap to another row when scaled labels need space; actions stay pinned.
+  label: { ...TYPE.caption, ...figtree('700'), maxWidth: '100%', flexShrink: 1, color: colors.textMuted, textAlign: 'center' },
   fabHit: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
   fab: { width: 44, height: 44, borderRadius: 22, backgroundColor: FOCAL.jadeInk, alignItems: 'center', justifyContent: 'center' },
 });

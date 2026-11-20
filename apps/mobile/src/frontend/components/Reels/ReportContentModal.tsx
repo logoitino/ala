@@ -1,7 +1,7 @@
 /** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { BlurView } from 'expo-blur';
 import { useEffect, useState } from 'react';
-import { Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
@@ -12,6 +12,7 @@ import { colors, MENU_METRICS } from '@/constants/theme';
 import { REPORT_REASONS, type ReportReasonId } from '@/data/contentRights';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { FOCAL } from '@/theme/motion';
+import { DISPLAY_TEXT, TYPE, figtree } from '@/theme/fonts';
 
 type ReportContentModalProps = {
   visible: boolean;
@@ -39,6 +40,7 @@ export function ReportContentModal({
   onConfirm,
 }: ReportContentModalProps) {
   const frame = useSheetFrame();
+  const { height } = useWindowDimensions();
   const who = athleteName?.trim() ? `@${athleteName.trim()}` : 'this highlight';
   const [reason, setReason] = useState<Exclude<ReportReasonId, 'unspecified'> | null>(null);
 
@@ -61,11 +63,12 @@ export function ReportContentModal({
           <View style={styles.dim} />
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-        <SheetRise active={visible} style={[styles.sheet, frame.card]}>
+        <SheetRise active={visible} style={[styles.sheet, frame.card, { maxHeight: height * 0.85 }]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={submitting ? undefined : onClose} />
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.content} nestedScrollEnabled>
           <Text style={styles.kicker}>Safety</Text>
-          <Text style={styles.title}>Report / Hide</Text>
+          <Text accessibilityRole="header" style={styles.title}>Report / Hide</Text>
           <Text style={styles.body}>
             Hide {who} from your feed. Pick a reason, then confirm.
           </Text>
@@ -95,6 +98,7 @@ export function ReportContentModal({
                 </Pressable>
               );
             })}
+          </ScrollView>
           </ScrollView>
           <View style={styles.actions}>
             <AnimatedButton
@@ -144,28 +148,30 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 8,
   },
+  // Required context stays visible in the scrollable body; confirm/cancel stay reachable.
+  scroll: { flexGrow: 0, flexShrink: 1 },
+  content: { gap: 8 },
   kicker: {
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 20,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...DISPLAY_TEXT,
   },
   body: {
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('400'),
   },
   menuLabel: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     marginTop: 2,
   },
   reasonMenu: {
@@ -179,12 +185,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   reason: {
-    minHeight: 42,
+    minHeight: MENU_METRICS.touchTarget,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
     paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   reasonOn: {
     backgroundColor: FOCAL.mistJade,
@@ -192,16 +199,16 @@ const styles = StyleSheet.create({
   reasonLabel: {
     flex: 1,
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
   },
   reasonLabelOn: {
     color: FOCAL.jadeInk,
   },
   reasonCheck: {
     color: FOCAL.jadeInk,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
   },
   actions: {
     gap: 8,
@@ -209,6 +216,8 @@ const styles = StyleSheet.create({
   },
   reportBtn: {
     minHeight: 48,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.danger,
     alignItems: 'center',
@@ -216,19 +225,21 @@ const styles = StyleSheet.create({
   },
   reportLabel: {
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
+    flexShrink: 1,
+    textAlign: 'center',
   },
   cancelBtn: {
-    minHeight: 40,
+    minHeight: MENU_METRICS.touchTarget,
     borderRadius: MENU_METRICS.controlRadius,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelLabel: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
   },
   busy: {
     opacity: 0.7,

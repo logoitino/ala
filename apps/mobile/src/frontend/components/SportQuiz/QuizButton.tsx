@@ -3,13 +3,14 @@
  * QUIZ-04 fun presentation (2026-10-15): a springy squish on press and a bounce on release (Reanimated, UI thread).
  * With Reduce Motion, or outside the trivia screen's effects provider, the button keeps the plain dimmed press.
  * The animation is presentation only: `onPress` fires on the normal press, never after an animation.
+ * UX-12 keeps labels readable and wrapping while reducing oversized answer-button padding.
  */
 import { Pressable, StyleSheet, Text } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { colors, KIT } from '@/constants/theme';
 import { SPRING_BOUNCE } from '@/theme/motion';
 import { useQuizFx } from './QuizFx';
-import { figtree } from '@/theme/fonts';
+import { figtree, TYPE } from '@/theme/fonts';
 
 /** @purpose A 44-point action with an explicit disabled state and readable Daylight colours. */
 export function QuizButton({ label, onPress, disabled = false, quiet = false, big = false, selected, hint, fill = false, onVideo = false }: {
@@ -33,14 +34,14 @@ export function QuizButton({ label, onPress, disabled = false, quiet = false, bi
   </Animated.View>;
 }
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
-  button: { minHeight: 48, padding: 12, borderRadius: KIT.controlRadius, backgroundColor: colors.primary, justifyContent: 'center', ...KIT.shadowSoft },
+  fill: { flex: 1, minWidth: 0 },
+  button: { minHeight: 48, paddingHorizontal: 12, paddingVertical: 10, borderRadius: KIT.controlRadius, backgroundColor: colors.primary, justifyContent: 'center', ...KIT.shadowSoft },
   quiet: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, shadowOpacity: 0, elevation: 0, boxShadow: 'none' },
   videoQuiet: { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(247,246,242,0.32)' },
   selected: { borderWidth: 2, borderColor: colors.primary, backgroundColor: colors.accentSoft },
-  big: { minHeight: 72, alignItems: 'center' },
+  big: { minHeight: 52, alignItems: 'center' },
   fillBtn: { paddingHorizontal: 8, paddingVertical: 8 },
-  label: { ...figtree('700'), color: colors.onAccent, fontSize: 16, textAlign: 'center' }, quietLabel: { color: colors.text }, videoQuietLabel: { color: '#F7F6F2' }, selectedLabel: { color: colors.text },
-  fillLabel: { textAlign: 'center', fontSize: 13, lineHeight: 16 },
-  bigLabel: { fontSize: 22, fontWeight: '700' }, dim: { opacity: 0.55 },
+  label: { ...TYPE.button, ...figtree('700'), color: colors.onAccent, textAlign: 'center', flexShrink: 1 }, quietLabel: { color: colors.text }, videoQuietLabel: { color: '#F7F6F2' }, selectedLabel: { color: colors.text },
+  fillLabel: { textAlign: 'center' },
+  bigLabel: { ...TYPE.section }, dim: { opacity: 0.55 },
 });

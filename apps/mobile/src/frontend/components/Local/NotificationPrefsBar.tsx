@@ -1,10 +1,11 @@
-/** Game-day alert preference chips; uses the shared Calm Island chip look (ink when selected, red stays for LIVE only). */
+/** Game-day alert preference chips; UX-12 keeps labels readable and every target44pt; uses the shared Calm Island chip look (ink when selected, red stays for LIVE only). */
 import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
 import { NOTIFICATION_PREFS, type NotificationPref } from '@/data/players';
 import { FOCAL } from '@/theme/motion';
+import { figtree, TYPE } from '@/theme/fonts';
 
 type NotificationPrefsBarProps = {
   value: NotificationPref;
@@ -49,8 +50,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   title: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     color: FOCAL.goldInk,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -66,6 +67,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingHorizontal: 10,
     paddingVertical: 6,
+    minHeight: 44,
+    justifyContent: 'center',
+    maxWidth: '100%',
     backgroundColor: colors.surface,
   },
   chipSelected: {
@@ -73,8 +77,8 @@ const styles = StyleSheet.create({
     borderColor: FOCAL.ink,
   },
   chipLabel: {
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
     color: colors.text,
   },
   chipLabelSelected: {

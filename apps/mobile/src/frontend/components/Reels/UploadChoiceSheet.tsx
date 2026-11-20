@@ -15,7 +15,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
-import { TYPE, figtree } from '@/theme/fonts';
+import { DISPLAY_TEXT, TYPE, figtree } from '@/theme/fonts';
 import { FOCAL } from '@/theme/motion';
 
 type UploadChoiceSheetProps = {
@@ -79,10 +79,10 @@ export function UploadChoiceSheet({ visible, onHighlight, onBeyond, onClose }: U
                 <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
               </AnimatedButton>
 
+            </ScrollView>
               <AnimatedButton accessibilityLabel="Cancel" haptic="light" onPress={onClose} contentStyle={styles.cancel}>
                 <Text style={styles.cancelLabel}>Cancel</Text>
               </AnimatedButton>
-            </ScrollView>
           </SheetRise>
         </View>
       </View>
@@ -94,12 +94,12 @@ const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
   dim: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(7,10,12,0.45)' },
   sheet: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, gap: 8 },
-  scroll: { flexShrink: 1 },
+  scroll: { flexGrow: 0, flexShrink: 1 },
   content: { gap: 8, paddingBottom: 2 },
-  title: { ...figtree('800'), color: colors.text, ...TYPE.title },
-  intro: { color: colors.textMuted, ...TYPE.body, marginBottom: 4 },
+  title: { ...DISPLAY_TEXT, color: colors.text, ...TYPE.title },
+  intro: { ...figtree('400'), color: colors.textMuted, ...TYPE.body, marginBottom: 4 },
   option: {
-    minHeight: MENU_METRICS.touchTarget + 20,
+    minHeight: MENU_METRICS.touchTarget,
     borderRadius: MENU_METRICS.cardRadius,
     backgroundColor: colors.background,
     borderWidth: 1,
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  icon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistJade },
+  icon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistJade },
   copy: { flex: 1, minWidth: 0, gap: 3 },
   optionTitle: { ...figtree('800'), color: colors.text, ...TYPE.section },
   optionBody: { ...figtree('600'), color: colors.textMuted, ...TYPE.body },

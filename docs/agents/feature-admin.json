@@ -2283,6 +2283,75 @@
         "admin": null,
         "app": null
       }
+    },
+    {
+      "id": "UX-12",
+      "title": "Readable panels and fluid mobile spacing",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-20T21:10:02Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Adjust existing text hierarchy, spacing, decorative icons and responsive layout on Highlights, Local, trivia and popup menus; retain touch targets and all notices/actions. No data, business behavior, writes, permissions, collection or reporting duty.",
+        "reviewedBy": "Independent outside Codex offline_queue_review preimplementation review; registered acceptance pending"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/sport-quiz",
+        "paths": [
+          "apps/mobile/src/frontend/theme/fonts.ts",
+          "apps/mobile/src/frontend/components/UI/Kit.tsx",
+          "apps/mobile/src/frontend/components/UI/MenuChrome.tsx",
+          "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx",
+          "apps/mobile/src/frontend/components/Reels/ReelMoreSheet.tsx",
+          "apps/mobile/src/frontend/components/Reels/UploadChoiceSheet.tsx",
+          "apps/mobile/src/frontend/components/Reels/ReportContentModal.tsx",
+          "apps/mobile/src/frontend/components/Local/GameCard.tsx",
+          "apps/mobile/src/frontend/components/Local/CheerPollCard.tsx",
+          "apps/mobile/src/frontend/components/Local/LocalHubMenu.tsx",
+          "apps/mobile/src/frontend/components/Local/SponsorRailCard.tsx",
+          "apps/mobile/src/frontend/components/Local/NotificationPrefsBar.tsx",
+          "apps/mobile/src/frontend/components/Local/TopAuraBoosters.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/QuizButton.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizRound.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizPreparation.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizScreen.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/QuizProgress.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/QuizFx.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizAllowances.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/SportQuizLevel.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LearnSportCard.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LifePlaybookCard.tsx",
+          "apps/mobile/src/frontend/components/SportQuiz/LifePlaybookHome.tsx",
+          "apps/mobile/src/frontend/components/UI/PlayNavBar.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-20T21:10:03Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-12.md",
+              "command": "Read-only preimplementation exemption/notice/touch-target review by outside Codex offline_queue_review",
+              "result": "Presentation-only scope accepted with typography-cascade and44pt controls constraints; native and registered acceptance pending."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-20T21:39:19Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-12.md",
+              "command": "bash ../ala-check.sh; offline Expo ios/android export; Browser Bridge real-component synthetic flows and320/390/landscape200%CSS-text captures; independent source review",
+              "result": "Full gate PASS:286 mobile suites/2706tests,121portaltests and all guards; both Hermes exports PASS;5-question demo completed, menu callbacks/gating/scroll and final viewport checks PASS. Native device/motion/DynamicType and measured Instagram parity remain unverified."
+            }
+          ]
+        }
+      }
     }
   ]
 }

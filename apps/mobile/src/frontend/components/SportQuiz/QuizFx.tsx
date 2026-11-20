@@ -17,6 +17,7 @@ import { useQuizSound } from '@/hooks/useQuizSound';
 import type { QuizCue } from '@/lib/quizSound';
 import { FOCAL, SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 import { colors, radii } from '@/constants/theme';
+import { DISPLAY_TEXT, figtree, TYPE } from '@/theme/fonts';
 import { levelUpLine } from './quizCheers';
 
 type QuizFx = {
@@ -139,7 +140,7 @@ export function LevelUpCelebration({ label }: { label: string }) {
     useEffect(() => { if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility?.(line); }, [line]);
     return <View style={{ gap: 8 }}>
         <CheerStage text={line} tone="level" burst="big"/>
-        <Text accessibilityLiveRegion="polite">{`You reached ${label}. Levels never go down.`}</Text>
+        <Text accessibilityLiveRegion="polite" style={styles.body}>{`You reached ${label}. Levels never go down.`}</Text>
     </View>;
 }
 /** @purpose "Sound on / Sound off" switch, saved on this device. On phones it controls trivia vibrations for now. */
@@ -153,14 +154,15 @@ export function QuizSoundToggle() {
 }
 
 const styles = StyleSheet.create({
-    stage: { minHeight: 76, borderRadius: radii.lg, borderWidth: 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 12 },
-    stageCompact: { minHeight: 52, paddingVertical: 8, paddingHorizontal: 12 },
-    kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
+    stage: { minHeight: 56, borderRadius: radii.lg, borderWidth: 1, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 10 },
+    stageCompact: { minHeight: 44, paddingVertical: 8, paddingHorizontal: 10 },
+    kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1, maxWidth: '100%' },
     emoji: { fontSize: 26 },
     emojiCompact: { fontSize: 18 },
-    kicker: { fontSize: 26, fontWeight: '900', letterSpacing: 0.4 },
-    kickerCompact: { fontSize: 18, lineHeight: 22, flexShrink: 1 },
-    toggle: { minHeight: 44, paddingHorizontal: 12, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' },
-    toggleLabel: { color: colors.text, fontSize: 16, fontWeight: '600' },
+    kicker: { ...TYPE.title, ...DISPLAY_TEXT, flexShrink: 1 },
+    kickerCompact: { ...TYPE.section },
+    toggle: { minHeight: 44, paddingHorizontal: 10, paddingVertical: 8, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center', maxWidth: '100%' },
+    toggleLabel: { ...TYPE.button, ...figtree('600'), color: colors.text },
+    body: { ...TYPE.body, ...figtree(), color: colors.text },
     pressed: { opacity: 0.7 },
 });

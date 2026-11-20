@@ -5,6 +5,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const accents = {
   jade: { ink: FOCAL.jadeInk, wash: FOCAL.mistJade },
@@ -42,8 +43,8 @@ const styles = StyleSheet.create({
   steps: { flexDirection: 'row', gap: 6, paddingBottom: 8 },
   step: { flex: 1, minHeight: 32, paddingHorizontal: 6, paddingVertical: 5, borderRadius: MENU_METRICS.controlRadius, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   stepActive: { backgroundColor: colors.accentSoft, borderColor: colors.primary },
-  number: { fontSize: 11, fontWeight: '800', color: colors.textMuted },
+  number: { ...TYPE.caption, ...figtree('800'), color: colors.textMuted },
   numberActive: { color: colors.primary },
-  stepLabel: { flexShrink: 1, fontSize: 11, fontWeight: '700', color: colors.textMuted },
+  stepLabel: { flexShrink: 1, ...TYPE.caption, ...figtree('700'), color: colors.textMuted },
   stepLabelActive: { color: colors.primary },
 });

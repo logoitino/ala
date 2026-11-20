@@ -1,7 +1,7 @@
 <!-- Current shared UI source coverage is separate from dated rendered/native acceptance. -->
 # Menu and page style coverage
 
-**Current source alignment:** 2026-11-04 · Whole-app [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md) (`UI/Kit`, Daylight + night moments, jade/gold/ember). UX-10 per-tab violet accents and the 2026-10-12 portal underline-tab chrome are superseded where they conflict; UX-06/Calm Island history retained below. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
+**Current source alignment:** 2026-11-20 — [UX-12](../agents/UX-12.md) type/spacing pass · 2026-11-04 · Whole-app [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md) (`UI/Kit`, Daylight + night moments, jade/gold/ember). UX-10 per-tab violet accents and the 2026-10-12 portal underline-tab chrome are superseded where they conflict; UX-06/Calm Island history retained below. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
 `ACCESSIBILITY`, `DEVICE_QA` review; `DOCUMENTATION` keeps this map current.
 
 This is a source inventory of shared presentation coverage. It is not a rendered-device audit.
@@ -10,12 +10,18 @@ surfaces. A shared primitive can update many consumers without each file needing
 
 Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATUS.md); actual documentation/coordination claims and checks: [COORD-01](../agents/COORD-01.md#whole-team-refresh--2026-10-15-americadenver). The 107-role briefing is assignment coverage, not execution or human delivery. The [UI checkpoint](design/UI_UX_FIGMA_POLISH.md) separates the original empty Figma draft, later colour file, local source and rendered evidence.
 
+## UX-12 current source and verification scope
+
+Highlights rail uses a56pt minimum column with44pt action targets instead of a68pt column; upload-choice decorative icon discs32pt instead of40pt. Reel More, Report and Upload choice bodies are bounded scroll regions with reachable dismissal. Local sponsor/booster avatars are32pt; names and poll vote labels wrap; booster peek uses48pt decoration and a fixed Close. Trivia uses readable brand type with smaller celebrations/progress and lighter cards; timer, consent, answer and Reduce Motion logic are unchanged. Pinned play navigation uses the same destinations; whole buttons wrap at enlarged text without shrinking labels. Shared TYPE raises body13/18→14/20, section15/20→16/21, caption11/15→12/16 and title20/24→20/26.
+
+This supersedes the older density-pass typography figures for touched/shared consumers. It does not change the approved palette, required notices or existing product navigation. Actual browser fixture captures and independent outside review are recorded in UX-12; real native Dynamic Type/motion and measured Instagram parity are separate unverified checks. Payment/consent behavior is covered by existing functional gates, not a new device/payment claim.
+
 ## Shared API and design rules
 
 | API | Purpose |
 | --- | --- |
-| `UI/Kit.tsx` + `constants/theme.ts` → `KIT` | Whole-app action kit (owner 2026-11-04, [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md)): KitButton variants, KitChip, KitBadge, LivePill, KitProgress; control 14 / card 16 / sheet 24 radii |
-| `constants/theme.ts` → `MENU_METRICS` | Sheet 28px, card 20px, control 16px radius; 44px touch-target reference |
+| `UI/Kit.tsx` + `constants/theme.ts` → `KIT` | Whole-app action kit (owner 2026-11-04, [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md)): KitButton variants, KitChip, KitBadge, LivePill, KitProgress; control12 / card14 / sheet20 radii (current source); all button sizes44pt minimum; labels wrap and badges grow with text |
+| `constants/theme.ts` → `MENU_METRICS` | Sheet20px, card14px, control12px radius (current source); 44px touch-target reference |
 | `UI/MenuChrome.tsx` → `MenuBackdrop({ accent? })` | Non-interactive single soft wash for popup sheets (no dot accents since 2026-10-15); hidden from assistive technology. Tab pages (`TabScreen`, `ScreenShell`) no longer draw it. |
 | `UI/MenuChrome.tsx` → `MenuStepIndicator({ labels, current })` | Named, non-clickable step chips; one-based current stage announced to assistive technology |
 | `hooks/useSheetFrame.ts` | Centered sheets up to 440px, compact gutters, home-indicator clearance, common radius/border/shadow |

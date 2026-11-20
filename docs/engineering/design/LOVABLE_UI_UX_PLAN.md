@@ -4,6 +4,7 @@
 **Status:** adopted 2026-11-04 by the owner ("my wish is that the whole app follows that now").
 **Density tighten (2026-11-08):** [DENSITY_AUDIT.md](./DENSITY_AUDIT.md) — same jade brand and
 layout, ~12% tighter `space` / `TYPE` / sheet radii; `touchTarget` stays 44; gift/checkout sheets out of scope.
+**Readability revision (2026-11-20):** [UX-12](../../agents/UX-12.md) raises body14/20, section16/21 and caption12/16, while reducing decorative/panel bulk. This supersedes the Nov8 type figures for shared/touched mobile consumers; palette, brand faces and44pt targets remain.
 **Reference prototype:** Lovable project *Friday Night Lights*
 (<https://lovable.dev/projects/99b55089-c2b2-4609-a647-bd877e62ffa4>). It is a front-end-only web
 mockup with sample data; it is a **design reference, not source**. Real screens keep their own data,

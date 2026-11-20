@@ -1,5 +1,6 @@
 /**
  * Compact Local discovery scoreboard: the entire card opens the game; a small arrow marks that action.
+ * UX-12: readable name/body hierarchy with smaller decorative tiles and the same content-led card.
  * Neutral letter tiles identify teams without pretending to be approved school crests.
  * Booster logos display through `mediaUri` (legacy full URL or `sb:` reference, SCALE-02); no logo shows initials.
  * Live and scheduled share the same Daylight surface; live only adds an ember LIVE pill (no night card).
@@ -15,6 +16,7 @@ import { cardShadow, colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme'
 import { initialsForBusiness } from '@/data/sponsorships';
 import { mediaUri } from '@/lib/media';
 import { FOCAL } from '@/theme/motion';
+import { figtree, TYPE } from '@/theme/fonts';
 import type { Game, Sponsorship } from '@/types/database';
 
 type GameCardProps = {
@@ -157,8 +159,8 @@ const styles = StyleSheet.create({
   },
   sport: {
     color: colors.primary,
-    fontSize: 12,
-    fontWeight: '900',
+    ...TYPE.caption,
+    ...figtree('900'),
     letterSpacing: 1,
     textTransform: 'uppercase',
     flexShrink: 1,
@@ -173,43 +175,43 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.mistSlate,
   },
   statusLive: { backgroundColor: FOCAL.ember },
-  statusText: { color: colors.textMuted, fontSize: 12, fontWeight: '800' },
+  statusText: { color: colors.textMuted, ...TYPE.caption, ...figtree('800') },
   statusLiveText: { color: '#FFFFFF', letterSpacing: 0.4 },
   gameDetail: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     fontVariant: ['tabular-nums'],
   },
   scoreboard: { gap: 8 },
   teamRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
   monogram: {
-    width: 30,
-    height: 30,
+    width: 28,
+    height: 28,
     borderRadius: radii.sm,
     backgroundColor: FOCAL.mistSlate,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  monogramLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '900' },
+  monogramLabel: { color: colors.textMuted, ...TYPE.body, ...figtree('900') },
   // Large scores must wrap before they squeeze the team name into single-letter lines.
   teamIdentity: { flex: 1, minWidth: 100, gap: 2 },
-  side: { color: colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
-  teamName: { color: colors.text, fontSize: 13, fontWeight: '900', flexShrink: 1 },
-  school: { color: colors.textMuted, fontSize: 11 },
+  side: { color: colors.textMuted, ...TYPE.caption, ...figtree('700'), textTransform: 'uppercase', letterSpacing: 0.4 },
+  teamName: { color: colors.text, ...TYPE.section, ...figtree('900'), flexShrink: 1 },
+  school: { color: colors.textMuted, ...TYPE.caption, ...figtree('400') },
   score: { ...SCOREBOARD_DIGITS, color: colors.text, fontSize: 28, textAlign: 'right', marginLeft: 'auto', maxWidth: '100%' },
   fieldLayer: { ...StyleSheet.absoluteFill, borderRadius: radii.lg, overflow: 'hidden' },
   scoreDivider: { height: 1, backgroundColor: colors.border },
-  venue: { color: colors.textMuted, fontSize: 12, flex: 1 },
+  venue: { color: colors.textMuted, ...TYPE.caption, ...figtree('500'), flex: 1 },
   venueRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
   },
-  ctaArrow: { color: FOCAL.jadeInk, fontSize: 17, fontWeight: '800' },
+  ctaArrow: { color: FOCAL.jadeInk, fontSize: 17, ...figtree('800') },
   sponsorRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
-  sponsorCaption: { color: colors.textMuted, fontSize: 11, fontWeight: '700', marginRight: 2 },
+  sponsorCaption: { color: colors.textMuted, ...TYPE.caption, ...figtree('700'), marginRight: 2 },
   sponsorLogo: {
     width: 28,
     height: 28,
@@ -222,5 +224,5 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   sponsorImage: { width: 28, height: 28 },
-  sponsorInitials: { color: FOCAL.goldInk, fontSize: 9, fontWeight: '800' },
+  sponsorInitials: { color: FOCAL.goldInk, fontSize: 9, ...figtree('800') },
 });

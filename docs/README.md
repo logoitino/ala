@@ -29,6 +29,7 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 
 | Document | What it answers |
 | --- | --- |
+| [UX-12](agents/UX-12.md) | Readable panels, compact decorative icons, wrapping text and popup spacing; actual local evidence and device/reference limits. |
 | [APP-REPAIR-01](agents/APP-REPAIR-01.md) | Native readiness setup, offline reconnect preservation, actual regression/source review and separate undo/account-attribution findings. |
 | [Gift/tip rollout](engineering/GIFT_TIP_ROLLOUT.md) | Prerequisite chain, coordinated checkout rollout, zero-cut containment and unverified provider/native gates. |
 | [Gift rollout preflight](engineering/evidence/GIFT_ROLLOUT_PREFLIGHT.md) | Source bindings and actual bounded local/hosted read-only observations. |

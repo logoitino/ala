@@ -7,6 +7,7 @@ import { Text, View, type TextInstance } from 'react-native';
 import type { TimedQuizSnapshot } from '@shared/timedSportQuiz';
 import type { LifeSnapshot } from '@shared/lifePlaybook';
 import { colors, radii } from '@/constants/theme';
+import { figtree, TYPE } from '@/theme/fonts';
 
 export type AllowanceState = 'ready' | 'played' | 'skipped' | 'none_left' | 'unavailable';
 const WORDS: Record<AllowanceState, string> = {
@@ -39,8 +40,8 @@ function Row({ name, state }: { name: string; state: AllowanceState }) {
     // Wraps onto two lines at large text sizes instead of clipping.
     return <View accessible accessibilityLabel={`${name}: ${words}`} style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: 12, rowGap: 4, minHeight: 44,
         alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}>
-        <Text style={{ flexShrink: 1, fontSize: 16, fontWeight: '600', color: colors.text }}>{name}</Text>
-        <Text style={{ flexShrink: 1, color: colors.text }}>{state === 'ready' ? `● ${words}` : `○ ${words}`}</Text>
+        <Text style={{ ...TYPE.body, ...figtree('600'), flexShrink: 1, color: colors.text }}>{name}</Text>
+        <Text style={{ ...TYPE.body, ...figtree(), flexShrink: 1, color: colors.text }}>{state === 'ready' ? `● ${words}` : `○ ${words}`}</Text>
     </View>;
 }
 
@@ -48,11 +49,11 @@ function Row({ name, state }: { name: string; state: AllowanceState }) {
  * the screen return a screen reader here after "Back to this week's rounds". */
 export function SportQuizAllowances({ snapshot, life, headerRef }: { snapshot: TimedQuizSnapshot; life: LifeSnapshot | null; headerRef?: RefObject<TextInstance | null> }) {
     return <View style={{ gap: 8 }}>
-        <Text ref={headerRef} accessibilityRole="header">This week</Text>
-        <Text>Each kind of round has its own spot this week. Group play never uses up your own round.</Text>
+        <Text ref={headerRef} accessibilityRole="header" style={{ ...TYPE.section, ...figtree('700'), color: colors.text }}>This week</Text>
+        <Text style={{ ...TYPE.body, ...figtree(), color: colors.text }}>Each kind of round has its own spot this week. Group play never uses up your own round.</Text>
         <Row name="Your round" state={personalAllowance(snapshot)}/>
         <Row name="Group round" state={groupAllowance(snapshot)}/>
         {life ? <Row name="Life Playbook round" state={lifeAllowance(life)}/> : null}
-        <Text style={{ color: colors.textMuted }}>Play when you like. Missing a week never costs you anything.</Text>
+        <Text style={{ ...TYPE.body, ...figtree(), color: colors.textMuted }}>Play when you like. Missing a week never costs you anything.</Text>
     </View>;
 }

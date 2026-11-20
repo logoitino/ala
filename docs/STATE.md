@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-20 — APP-REPAIR-01 actor-owned replay/fan-state repair: full local gate and iOS/Android exports PASS; device/hosted acceptance pending. B still owner SQL/Edge; webhook tip crediting stays **off**.
+**Last updated:** 2026-11-20 — UX-12 readable panels/spacing: full local gate, browser flows and iOS/Android exports PASS; APP-REPAIR-01 remains locally verified. Device/hosted acceptance pending. B still owner SQL/Edge; webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -35,7 +35,7 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 | Lane | Evidence now | Your next click (owner) |
 | --- | --- | --- |
 | **C. Highlights** | Web **PASS**: 8s pick→publish→playback (`fac733e`); 46s/oversize stayed out of Details. PR [#35](https://github.com/logoitino/ala/pull/35) **merged** | Optional: density EAS APK/IPA on a phone; photo-story later |
-| **Gift (money)** | Web **PASS** 2026-11-16: Demo Fan → Jordan Blake **Give $5** → Stripe.js Payment Element card `4242` → Pay → Mālo toast + `tips` row `b1478f4d-…` / PI `pi_3UcXUP4jAsjtyL0Z0SeSCLDw` (livemode false = **$0**). Prior Edge mint + `pm_card_visa` confirm also PASS. | Optional native preview PaymentSheet (Expo Go lacks Stripe modules). No new secret. |
+| **Gift (money)** | Web **PASS** 2026-11-16: Demo Fan → Jordan Blake **Give $5** → Stripe.js Payment Element card `4242` → Pay → Mālo toast + `tips` row `b1478f4d-…` / PI `pi_3UcXUP4jAsjtyL0Z0SeSCLDw` (livemode false = **$0**). Prior Edge mint + `pm_card_visa` confirm also PASS. | Optional native preview PaymentSheet (Expo Go payment support unverified). No new secret. |
 | **A. Google** | Provider **on**; Soft-Wall → Google popup **PASS**; cancel/retry **PASS**. PR [#36](https://github.com/logoitino/ala/pull/36) **merged** | One Test-users Gmail signup on Metro web (birth + Upload resume) |
 | **B. Test bank** | Staging Connect RPCs + `create-stripe-account` Edge **404** (rechecked 2026-11-16). Checkout Edge already has `sk_test_`. PR [#37](https://github.com/logoitino/ala/pull/37) **merged** | Apply Connect SQL → deploy `create-stripe-account` (reuse existing test secret) |
 
@@ -176,6 +176,11 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-20 — Readable panels and mobile spacing (UX-12)
+
+- Body14/20, section16/21 and caption12/16 improve readability; brand fonts/colours retained. Local names wrap, icons/avatars are smaller; quiz celebrations/cards take less space. Popup bodies scroll with reachable dismissal; shared actions retain44pt targets and badges grow with text.
+- Presentation-only exemption reviewed before code by independent outside Codex. Full gate PASS:286 mobile suites/2706tests,121portaltests; final iOS/Android Hermes exports PASS. Synthetic browser flows and320/390/landscape/200%text checked, including five-question completion and wrapping pinned navigation. No native Dynamic Type, device motion or direct Instagram benchmark claim. [UX-12](agents/UX-12.md) records actual evidence and limitations. **About to spend: $0.**
 
 ### 2026-11-20 — Account-owned replay and fan-state repair (APP-REPAIR-01)
 

@@ -1,9 +1,10 @@
 /** Compact Local cheer cards retain their legal notice, full team names and existing vote authority.
+ * UX-12: names wrap, scaled text can stack choices, and smaller decorative dots free room for copy.
  * Vibrant Daylight rivalry chrome (Lovable Friday Night Lights): jade home, cyan away, ember LIVE.
  * @sideEffects Existing useCheerPoll votes, usage telemetry and haptic feedback.
  */
 import { useEffect, useRef, useState } from 'react';
-import { type GestureResponderEvent, StyleSheet, Text, View } from 'react-native';
+import { type GestureResponderEvent, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 
@@ -14,6 +15,7 @@ import { useSoftWall } from '@/context/SoftWallContext';
 import { useCheerPoll, type CheerSide } from '@/hooks/useCheerPoll';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { DISPLAY_TEXT, figtree, TYPE } from '@/theme/fonts';
 
 type CheerPollCardProps = {
   slug?: string;
@@ -177,8 +179,10 @@ function TeamVoteButton({
   onDropFloat: (id: number) => void;
   onPress: (event: GestureResponderEvent) => void;
 }) {
+  const { fontScale } = useWindowDimensions();
   return (
-    <View style={styles.actionFlex}>
+    // Large native text gets the whole row rather than squeezing the team name beside its percentage.
+    <View style={[styles.actionFlex, fontScale > 1.3 && styles.actionFull]}>
       {floats
         .filter((item) => item.side === side)
         .map((item) => (
@@ -199,7 +203,7 @@ function TeamVoteButton({
         <View style={[styles.teamDot, side === 'home' ? styles.teamDotHome : styles.teamDotAway, selected && styles.teamDotChosen]}>
           <View pointerEvents="none" style={styles.teamDotGloss} />
         </View>
-        <Text style={[styles.teamBtnLabel, selected && (side === 'home' ? styles.homeLabelOn : styles.awayLabelOn)]} numberOfLines={1}>
+        <Text style={[styles.teamBtnLabel, selected && (side === 'home' ? styles.homeLabelOn : styles.awayLabelOn)]}>
           {label}
         </Text>
         <Text style={[side === 'home' ? styles.homePct : styles.awayPct, leading && styles.pctLeading]}>{pct}%</Text>
@@ -244,7 +248,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: FOCAL.islandCyan,
     padding: 12,
     gap: 8,
@@ -264,13 +268,14 @@ const styles = StyleSheet.create({
   top: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    flexWrap: 'wrap',
+    gap: 6,
     marginTop: 4,
   },
   kicker: {
     color: FOCAL.jadeInk,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.7,
     textTransform: 'uppercase',
   },
@@ -293,38 +298,38 @@ const styles = StyleSheet.create({
   },
   liveLabel: {
     color: FOCAL.emberInk,
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
   },
   title: {
     color: colors.text,
-    fontSize: 17,
-    fontWeight: '900',
+    ...TYPE.title,
+    ...DISPLAY_TEXT,
     letterSpacing: -0.2,
   },
   matchup: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   homeName: {
     color: FOCAL.jadeInk,
-    fontWeight: '900',
+    ...figtree('900'),
   },
   awayName: {
     color: FOCAL.cyanInk,
-    fontWeight: '900',
+    ...figtree('900'),
   },
-  // Policy line: smaller than before but never clamped or muted into the background.
+  // Required policy stays fully visible at the same readable size as the matchup copy.
   policy: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   track: {
     flexDirection: 'row',
-    height: 12,
+    height: 8,
     borderRadius: 999,
     overflow: 'hidden',
     backgroundColor: FOCAL.mistViolet,
@@ -332,11 +337,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   homeFill: {
-    height: 12,
+    height: 8,
     backgroundColor: FOCAL.neonJade,
   },
   awayFill: {
-    height: 12,
+    height: 8,
     backgroundColor: FOCAL.islandCyan,
   },
   homePct: {
@@ -355,16 +360,21 @@ const styles = StyleSheet.create({
   voteCount: {
     marginLeft: 'auto',
     color: FOCAL.violetInk,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   actions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
     overflow: 'visible',
   },
+  // 140pt minimum stacks the choices on a 320pt phone; wider phones keep the compact pair.
+  actionFull: { flexBasis: '100%' },
   actionFlex: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 140,
+    minWidth: 140,
     overflow: 'visible',
   },
   teamBtn: {
@@ -377,12 +387,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
-    gap: 8,
+    paddingVertical: 8,
+    gap: 6,
   },
   teamDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     overflow: 'hidden',
   },
   teamDotHome: {
@@ -425,10 +436,11 @@ const styles = StyleSheet.create({
   },
   teamBtnLabel: {
     color: colors.text,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
     textAlign: 'center',
-    flexShrink: 1,
+    flex: 1,
+    minWidth: 0,
   },
   homeLabelOn: {
     color: FOCAL.jadeInk,
@@ -442,7 +454,7 @@ const styles = StyleSheet.create({
     zIndex: 4,
     textAlign: 'center',
     fontSize: 13,
-    fontWeight: '800',
+    ...figtree('800'),
   },
   floatHome: {
     color: FOCAL.jadeInk,

@@ -21,6 +21,7 @@ import type { TimedQuizResult } from '@shared/timedSportQuiz';
 import type { QuizCue } from '@/lib/quizSound';
 import { colors, radii } from '@/constants/theme';
 import { FOCAL, JADE_BORDER_GLOW } from '@/theme/motion';
+import { DISPLAY_TEXT, figtree, TYPE } from '@/theme/fonts';
 import { CardShine } from '@/components/Effects/CardShine';
 import { QuizButton } from './QuizButton';
 import { CheerStage, InviteBounce, PopIn, Wiggle, useQuizFx } from './QuizFx';
@@ -125,17 +126,17 @@ export function SportQuizRound({ round, busy, reports = null, auraUserId = null 
             {/* Screen-reader only: the visible counter above already shows the time, so the milestone is not drawn twice. */}
             <Text accessibilityLiveRegion="polite" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}>{note ?? ''}</Text>
             {trueFalse
-                ? <View style={{ flexDirection: 'row', gap: 12 }}>{live.question.options.map((option, index) => <PopIn key={`${item?.position}-${index}`} delay={80 + index * 70} style={{ flex: 1 }}>
+                ? <View style={{ flexDirection: 'row', gap: 8 }}>{live.question.options.map((option, index) => <PopIn key={`${item?.position}-${index}`} delay={80 + index * 70} style={{ flex: 1, minWidth: 0 }}>
                     <QuizButton big label={option} selected={round.pendingAnswer?.option === index} disabled={busy || !!round.pendingAnswer} onPress={() => pick(index)}/></PopIn>)}</View>
                 : live.question.options.map((option, index) => <PopIn key={`${item?.position}-${index}`} delay={80 + index * 70}>
                     <QuizButton big label={`Answer ${index + 1}: ${option}`} selected={round.pendingAnswer?.option === index} disabled={busy || !!round.pendingAnswer} onPress={() => pick(index)}/></PopIn>)}
-            {round.pendingAnswer?.uncertain ? <><Text>{`You picked: ${live.question.options[round.pendingAnswer.option]}. We couldn’t confirm it yet.`}</Text><QuizButton label="Retry this answer" disabled={busy} onPress={() => { if (round.pendingAnswer)
+            {round.pendingAnswer?.uncertain ? <><Text style={styles.body}>{`You picked: ${live.question.options[round.pendingAnswer.option]}. We couldn’t confirm it yet.`}</Text><QuizButton label="Retry this answer" disabled={busy} onPress={() => { if (round.pendingAnswer)
                 void round.answer(round.pendingAnswer.option); }}/></> : null}
         </View>;
     }
     if (round.closing) return <View style={{ gap: 8 }}>
         {whistle ? <CheerStage text={TIME_UP_CHEER} tone="whistle"/> : null}
-        <Text accessibilityRole="header">Time’s up</Text><Text accessibilityLiveRegion="polite">Checking the answer…</Text>
+        <Text accessibilityRole="header" style={styles.section}>Time’s up</Text><Text accessibilityLiveRegion="polite" style={styles.body}>Checking the answer…</Text>
     </View>;
     if (between) {
         const last = between.position >= between.planned;
@@ -148,22 +149,22 @@ export function SportQuizRound({ round, busy, reports = null, auraUserId = null 
             <QuestionDots planned={between.planned} done={between.position}/>
             {fact ? <FunFactHeader question={between.question}/> : null}
             {shown ? <RevealBanner reveal={shown} sport={fact ? null : between.question?.sport} seed={between.position}/> : null}
-            {between.question && !gone ? <Text style={{ color: colors.textMuted }}>{between.question.prompt}</Text> : null}
+            {between.question && !gone ? <Text style={styles.note}>{between.question.prompt}</Text> : null}
             <Wiggle active={shown === 'notQuite'}>
-                <Text accessibilityLiveRegion="polite" style={{ fontSize: 18, fontWeight: '600', color: colors.text }}>{verdict(between.result)}</Text>
+                <Text accessibilityLiveRegion="polite" style={styles.section}>{verdict(between.result)}</Text>
             </Wiggle>
-            {shown === 'correct' ? <Text>5 Aura added to your card.</Text> : null}
+            {shown === 'correct' ? <Text style={styles.body}>5 Aura added to your card.</Text> : null}
             {/* The right answer is highlighted with a border and a check mark (not colour alone); it glows after a right answer. */}
             {hasAnswer ? <View testID={shown === 'correct' ? 'quiz-answer-glow' : undefined} style={[styles.answerChip, shown === 'correct' && JADE_BORDER_GLOW]}>
                 <Text aria-hidden style={styles.answerCheck}>✓</Text>
                 <Text style={styles.answerText}>{`Answer: ${between.question!.options[between.result!.correct_option]}`}</Text>
             </View> : null}
-            {between.result && !gone ? <PopIn delay={140} from="right" style={styles.factCard}><Text>{between.result.explanation}</Text></PopIn> : null}
+            {between.result && !gone ? <PopIn delay={140} from="right" style={styles.factCard}><Text style={styles.body}>{between.result.explanation}</Text></PopIn> : null}
             {fact && !gone ? <FunFactAthleteCard card={between.result?.fun_fact}/> : null}
             {!gone && between.result && between.result.item_status !== 'void' && reportable(between.question, reports) ? <QuestionReportLink question={between.question} reports={reports!}/> : null}
-            <Text style={{ color: colors.textMuted }}>Tap Next when you’re ready. The round waits about two minutes. Leaving this page now ends the round.</Text>
+            <Text style={styles.note}>Tap Next when you’re ready. The round waits about two minutes. Leaving this page now ends the round.</Text>
             <InviteBounce><QuizButton label={last ? 'See my round' : 'Next'} disabled={busy} onPress={() => { void round.next(); }}/></InviteBounce>
-            {round.pendingNext?.uncertain ? <Text>Next wasn’t confirmed yet. Tapping Next again sends the same request.</Text> : null}
+            {round.pendingNext?.uncertain ? <Text style={styles.body}>Next wasn’t confirmed yet. Tapping Next again sends the same request.</Text> : null}
         </PopIn>;
     }
     return null;
@@ -193,18 +194,18 @@ export function SportQuizRoundSummary({ round, reports = null, nextWeekLine = 'T
         <View style={styles.summaryHero}>
             <View style={styles.summaryCopy}>
                 {celebrate ? <CheerStage text={roundCheerFor(learned)} tone="round" burst="small" compact/> : null}
-                {learned === 0 ? <Text>{ZERO_FACTS_LINE}</Text> : null}
+                {learned === 0 ? <Text style={styles.body}>{ZERO_FACTS_LINE}</Text> : null}
             </View>
             {celebrate ? <FactsCountUp to={learned} compact/> : null}
         </View>
-        {ended ? <Text>A round ends if you leave this page (even during an explanation), hide the app, wait too long at an explanation or tap End round. Questions you didn’t see are saved for another week.</Text> : null}
-        {round.shortRound ? <Text>{`This round had ${plural(round.planned ?? entries.length, 'question')} because that’s all the new ones we have for this topic right now. We never repeat a question.`}</Text> : null}
-        {outcome === 'pool_exhausted' ? <Text>That’s every new question we have for this topic right now, so the round stopped early.</Text> : null}
-        {outcome === 'week_closed' ? <Text>The trivia week is ending, so the round stopped here.</Text> : null}
+        {ended ? <Text style={styles.body}>A round ends if you leave this page (even during an explanation), hide the app, wait too long at an explanation or tap End round. Questions you didn’t see are saved for another week.</Text> : null}
+        {round.shortRound ? <Text style={styles.body}>{`This round had ${plural(round.planned ?? entries.length, 'question')} because that’s all the new ones we have for this topic right now. We never repeat a question.`}</Text> : null}
+        {outcome === 'pool_exhausted' ? <Text style={styles.body}>That’s every new question we have for this topic right now, so the round stopped early.</Text> : null}
+        {outcome === 'week_closed' ? <Text style={styles.body}>The trivia week is ending, so the round stopped here.</Text> : null}
         {celebrate ? <PopIn from="pop" delay={200} style={styles.badgeCard}>
             {fx.still ? null : <CardShine loopMs={3400} width={60} tint="rgba(255,215,0,0.35)"/>}
             <View style={styles.badgeTitleRow}><Text aria-hidden style={styles.badgeEmoji}>🏅</Text><Text style={styles.badgeTitle}>Trivia Explorer badge</Text></View>
-            <Text>Right or wrong, every answered round earns the same private Trivia Explorer badge. Only you see this summary.</Text>
+            <Text style={styles.body}>Right or wrong, every answered round earns the same private Trivia Explorer badge. Only you see this summary.</Text>
         </PopIn> : null}
         {entries.map((entry, index) => {
             const gone = factUnavailable(entry.result);
@@ -214,7 +215,7 @@ export function SportQuizRoundSummary({ round, reports = null, nextWeekLine = 'T
             return <PopIn key={entry.position} delay={260 + index * 40} style={[styles.qCard, tone]}>
                 <Text style={[styles.qTitle, chip]}>{`Question ${entry.position}: ${gone ? 'not available' : entry.result.answered_option === null ? 'not answered' : entry.result.item_status === 'void' ? 'corrected' : entry.result.was_correct ? 'right' : 'not quite'}`}</Text>
                 {fact && !gone ? <FunFactHeader question={entry.question}/> : null}
-                {gone ? <Text>{FUN_FACT_UNAVAILABLE}</Text> : <>
+                {gone ? <Text style={styles.body}>{FUN_FACT_UNAVAILABLE}</Text> : <>
                     {entry.question ? <Text style={styles.qPrompt}>{entry.question.prompt}</Text> : null}
                     <Text style={styles.qExplain}>{entry.result.explanation}</Text>
                     {fact ? <FunFactAthleteCard card={entry.result.fun_fact}/> : null}
@@ -226,39 +227,42 @@ export function SportQuizRoundSummary({ round, reports = null, nextWeekLine = 'T
 }
 
 const styles = StyleSheet.create({
-    progress: { color: FOCAL.violetInk, fontSize: 15, fontWeight: '800', letterSpacing: 0.4 },
-    questionCard: { gap: 8, padding: 18, borderRadius: 20, borderWidth: 3, borderColor: FOCAL.electricViolet, backgroundColor: FOCAL.electricGold },
-    sport: { color: FOCAL.violetInk, fontSize: 13, fontWeight: '800', letterSpacing: 0.8 },
-    prompt: { fontSize: 26, fontWeight: '900', color: FOCAL.ink, lineHeight: 32 },
-    clock: { fontSize: 18, fontWeight: '800', color: FOCAL.violetInk },
-    warmClock: { color: FOCAL.goldInk, fontWeight: '900', fontSize: 18 },
-    answerChip: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: radii.md, borderWidth: 2, borderColor: FOCAL.jadeInk, backgroundColor: FOCAL.mistJade },
-    answerCheck: { fontSize: 18, fontWeight: '900', color: FOCAL.jadeInk },
-    answerText: { flexShrink: 1, fontSize: 16, fontWeight: '700', color: colors.text },
+    body: { ...TYPE.body, ...figtree(), color: colors.text },
+    note: { ...TYPE.body, ...figtree(), color: colors.textMuted },
+    section: { ...TYPE.section, ...figtree('600'), color: colors.text },
+    progress: { ...TYPE.button, ...figtree('700'), color: FOCAL.violetInk },
+    questionCard: { gap: 6, padding: 12, borderRadius: 20, borderWidth: 2, borderColor: FOCAL.electricViolet, backgroundColor: FOCAL.electricGold },
+    sport: { ...TYPE.caption, ...figtree('800'), color: FOCAL.violetInk, letterSpacing: 0.4 },
+    prompt: { ...TYPE.title, ...DISPLAY_TEXT, color: FOCAL.ink },
+    clock: { ...TYPE.section, ...figtree('800'), color: FOCAL.violetInk, fontVariant: ['tabular-nums'] },
+    warmClock: { ...TYPE.section, ...figtree('900'), color: FOCAL.goldInk, fontVariant: ['tabular-nums'] },
+    answerChip: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: radii.md, borderWidth: 1, borderColor: FOCAL.jadeInk, backgroundColor: FOCAL.mistJade },
+    answerCheck: { ...TYPE.section, ...figtree('900'), color: FOCAL.jadeInk },
+    answerText: { ...TYPE.body, ...figtree('700'), flexShrink: 1, color: colors.text },
     factCard: { padding: 12, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-    summary: { gap: 6 },
+    summary: { gap: 8 },
     summaryTop: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
-    summaryTitle: { fontSize: 20, fontWeight: '900', color: FOCAL.violetInk },
-    summaryHero: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    summaryCopy: { flex: 1, gap: 4, minWidth: 0 },
-    learned: { fontSize: 15, fontWeight: '800', color: FOCAL.jadeInk },
-    nextWeek: { fontSize: 14, fontWeight: '700', color: FOCAL.violetInk, lineHeight: 18 },
-    qCard: { gap: 2, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 14, borderWidth: 2 },
+    summaryTitle: { ...TYPE.title, ...DISPLAY_TEXT, color: FOCAL.violetInk },
+    summaryHero: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+    summaryCopy: { flex: 1, flexBasis: 160, gap: 4, minWidth: 0 },
+    learned: { ...TYPE.body, ...figtree('800'), color: FOCAL.jadeInk },
+    nextWeek: { ...TYPE.body, ...figtree('600'), color: FOCAL.violetInk },
+    qCard: { gap: 4, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 14, borderWidth: 1 },
     qRight: { backgroundColor: FOCAL.mistJade, borderColor: FOCAL.neonJade },
     qMiss: { backgroundColor: FOCAL.mistGold, borderColor: FOCAL.electricGold },
     qOpen: { backgroundColor: FOCAL.mistCyan, borderColor: FOCAL.islandCyan },
     qVoid: { backgroundColor: FOCAL.mistViolet, borderColor: FOCAL.electricViolet },
     qGone: { backgroundColor: FOCAL.mistSlate, borderColor: colors.border },
-    qTitle: { alignSelf: 'flex-start', overflow: 'hidden', fontSize: 13, fontWeight: '800', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
+    qTitle: { ...TYPE.caption, ...figtree('800'), alignSelf: 'flex-start', maxWidth: '100%', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
     chipRight: { backgroundColor: FOCAL.neonJade, color: FOCAL.ink },
     chipMiss: { backgroundColor: FOCAL.electricGold, color: FOCAL.ink },
     chipOpen: { backgroundColor: FOCAL.islandCyan, color: FOCAL.ink },
     chipVoid: { backgroundColor: FOCAL.electricViolet, color: '#F7F6F2' },
     chipGone: { backgroundColor: FOCAL.mistSlate, color: colors.text },
-    qPrompt: { color: FOCAL.ink, fontSize: 13, lineHeight: 16 },
-    qExplain: { color: colors.text, fontSize: 12, lineHeight: 15 },
-    badgeCard: { gap: 2, paddingVertical: 8, paddingHorizontal: 10, borderRadius: radii.lg, borderWidth: 2, borderColor: FOCAL.electricGold, backgroundColor: FOCAL.mistGold, overflow: 'hidden' },
+    qPrompt: { ...TYPE.body, ...figtree('600'), color: FOCAL.ink },
+    qExplain: { ...TYPE.body, ...figtree(), color: colors.text },
+    badgeCard: { gap: 6, paddingVertical: 8, paddingHorizontal: 10, borderRadius: radii.lg, borderWidth: 1, borderColor: FOCAL.electricGold, backgroundColor: FOCAL.mistGold, overflow: 'hidden' },
     badgeTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     badgeEmoji: { fontSize: 22 },
-    badgeTitle: { fontSize: 18, fontWeight: '800', color: FOCAL.goldInk },
+    badgeTitle: { ...TYPE.section, ...figtree('800'), color: FOCAL.goldInk, flexShrink: 1 },
 });
