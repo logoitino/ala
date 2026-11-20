@@ -8,6 +8,15 @@ import type { Session } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Profile } from '@/types/database';
 import { AuthProvider, useAuth } from '../AuthContext';
+import { offlineQueue } from '@/services/OfflineQueue';
+
+jest.mock('@react-native-community/netinfo', () => ({
+  __esModule: true,
+  default: {
+    addEventListener: jest.fn(() => jest.fn()),
+    fetch: jest.fn(async () => ({ type: 'unknown', isConnected: false, isInternetReachable: null, details: null })),
+  },
+}));
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -104,6 +113,21 @@ beforeEach(async () => {
   mockEnsureFanProfile.mockResolvedValue(undefined);
   mockReadOnboarding.mockResolvedValue(null);
   mockFetchTeam.mockResolvedValue(null);
+});
+
+it('binds replay ownership before a pending profile load and invalidates it at provider cleanup', async () => {
+  const view = await start();
+  const actor = offlineQueue.captureActor('A')!;
+  expect(actor.isCurrent()).toBe(true);
+  const pending = deferred<{ data: Profile | null }>();
+  queueRead('B', pending.promise);
+  await changeUser('B');
+  expect(actor.isCurrent()).toBe(false);
+  const incoming = offlineQueue.captureActor('B')!;
+  expect(incoming.isCurrent()).toBe(true);
+  await view.unmount();
+  expect(incoming.isCurrent()).toBe(false);
+  await act(async () => pending.resolve({ data: mockProfileFor('B') }));
 });
 
 it('clears the outgoing profile before rendering an incoming account whose profile is pending', async () => {

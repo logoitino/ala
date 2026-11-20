@@ -787,7 +787,7 @@ Next desks: `/` Home (`PORTAL`) · `/analytics` Analytics (`ANALYST`) · `/repor
 
 ## Shared rules for every call
 
-1. Expo SDK **57** docs before new APIs.
+1. Expo SDK **58** docs before new APIs (current dependency/AGENTS.md contract).
 2. JSDoc on new hooks, network helpers, and complex components (`@purpose` / `@param` / `@returns` / `@sideEffects`).
 3. Schema or architecture in the same turn: `docs/engineering/SYSTEM_OVERVIEW.md` · `docs/engineering/SCHEMA.md` · `CHANGELOG.md` as required by `.cursor/rules/documentation.mdc`.
 4. Folder law: routes only in `apps/mobile/app/`; UI in `src/frontend/components/`; no new `GameContext`.

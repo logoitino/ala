@@ -12,7 +12,8 @@ import { useSoftWall } from '@/context/SoftWallContext';
 import type { HighlightClip } from '@/data/highlights';
 import { isPhotoStory } from '@/data/highlights';
 import type { Player } from '@/types/database';
-import { bumpReelHype, clearReelHype, type ReelHype } from '@/lib/reels';
+import { bumpReelHype, clearReelHype, isReelUuid, type ReelHype } from '@/lib/reels';
+import { createOfflineActorClient } from '@/lib/offlineActor';
 import { clearReelVote, loadReelVotes, markReelVote } from '@/lib/reelVotes';
 import { offlineQueue } from '@/services/OfflineQueue';
 import { telemetry } from '@/services/TelemetryManager';
@@ -80,6 +81,9 @@ export function DesktopHighlightCard({
   }, [clip.id, user?.id]);
 
   const runCheer = useCallback(async () => {
+    // Soft-Wall resume is an authorized new tap; capture its resolved actor before any await.
+    const actor = offlineQueue.captureActor();
+    const actionUserId = actor?.userId ?? null;
     telemetry.trackFeature('hype.seki', 'home');
     const previous: ReelHype = {
       seki_count: sekiCount,
@@ -93,17 +97,21 @@ export function DesktopHighlightCard({
       setSekiCount(next);
       const optimistic = { ...previous, seki_count: next };
       onReelHypeChange?.(clip.id, optimistic);
-      void clearReelVote(clip.id, 'seki', user?.id);
+      void clearReelVote(clip.id, 'seki', actionUserId);
       try {
+        if (!actor || !isReelUuid(clip.id)) return;
+        if (await offlineQueue.dropPendingHype(clip.id, 'seki', actor)) return;
         if (!(await offlineQueue.isOnline())) {
-          await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind: 'seki' });
+          await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind: 'seki' }, actor);
           return;
         }
-        const server = await clearReelHype(clip.id, 'seki', previous);
+        const client = await createOfflineActorClient(actor);
+        const server = await clearReelHype(clip.id, 'seki', previous, client);
+        if (!actor.isCurrent()) return;
         onReelHypeChange?.(clip.id, server);
         setSekiCount(server.seki_count);
       } catch {
-        await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind: 'seki' });
+        await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind: 'seki' }, actor);
       }
       return;
     }
@@ -113,25 +121,28 @@ export function DesktopHighlightCard({
     setSekiCount(next);
     const optimistic = { ...previous, seki_count: next };
     onReelHypeChange?.(clip.id, optimistic);
-    void markReelVote(clip.id, 'seki', user?.id);
+    void markReelVote(clip.id, 'seki', actionUserId);
     const payload = {
       type: 'aura_hype' as const,
       reelId: clip.id,
       kind: 'seki' as const,
       grantAura: false,
       auraPoints: 0,
-      userId: user?.id,
+      userId: actionUserId,
     };
     try {
+      if (!actor || !isReelUuid(clip.id)) return;
       if (!(await offlineQueue.isOnline())) {
-        await offlineQueue.enqueue(payload);
+        await offlineQueue.enqueue(payload, actor);
         return;
       }
-      const server = await bumpReelHype(clip.id, 'seki', previous);
+      const client = await createOfflineActorClient(actor);
+      const server = await bumpReelHype(clip.id, 'seki', previous, client);
+      if (!actor.isCurrent()) return;
       onReelHypeChange?.(clip.id, server);
       setSekiCount(server.seki_count);
     } catch {
-      await offlineQueue.enqueue(payload);
+      await offlineQueue.enqueue(payload, actor);
     }
   }, [
     cheered,

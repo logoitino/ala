@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-16 · FEED-ENDLESS Phase 0 audit written (pool=1 playable; no refill/cycle). APP-TEST gift web PASS on `main`. B still owner SQL/Edge. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-20 — APP-REPAIR-01 actor-owned replay/fan-state repair: full local gate and iOS/Android exports PASS; device/hosted acceptance pending. B still owner SQL/Edge; webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,14 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-20 — Account-owned replay and fan-state repair (APP-REPAIR-01)
+
+- Reconnect preserves new/replaced actions and cancelled intent. Structured network errors retain retryable rows; issued hype undo persists actor-owned compensation. Cold-start flush triggers are locked after shared hydration; actor changes coalesce one follow-up.
+- Auth resolves ownership before awaits. Existing helpers receive a captured matching-token client; active-owner replay, replacement and undo never adopt another account's or a legacy queue's intent. No new backend table/RPC/permission/provider. Aura multi-hop outcomes remain non-atomic.
+- Bookmark view/mutation freshness and account-keyed cheer choices reject stale state. QA masks old account frames, shows current-account rows plus held counts and retains explicit all-device discard. Privacy/infrastructure/architecture contracts reconciled; TEAMS stale SDK57 reminder aligned with current SDK58/AGENTS.
+- Actual outside Codex final independent review: **7 suites / 94 tests passed**. Full quality gate PASS with the separate Documents source-cache state: **286 mobile suites / 2706 tests**, 121 portal tests, both typechecks and all root guards. Fresh Android/iOS Hermes exports PASS. Registered owner/model execution, hosted and physical-device acceptance are not claimed.
+- Corrected native-payment fallback guidance to development/preview builds; Expo Go payment behavior remains unverified. Dependencies/public preview config and separate private source cache for this Documents checkout are restored; old removed-checkout snapshots preserved. [APP-REPAIR-01](agents/APP-REPAIR-01.md) records evidence/limitations. **About to spend: $0.**
 
 ### 2026-11-16 — FEED-ENDLESS Phase 0 audit (no design yet)
 
@@ -1768,6 +1776,7 @@ Do not re-diagnose these. Fix them or leave them.
 
 | Thing | State |
 | --- | --- |
+| Offline action replay review (2026-11-20) | Actor/reconnect/undo/caller repair independently reviewed (94 focused tests); full local gate and fresh iOS/Android exports passed. Physical-device/hosted/registered owner acceptance remain in [APP-REPAIR-01](agents/APP-REPAIR-01.md). Legacy queues stay held; local data has no new timed retention/erasure integration. |
 | Dev ↔ staging parity (2026-10-22) | Read-only checks via the Supabase plugin. Staging now matches development for photo stories, reels owner folder, Books, DATA-01, function hardening, guardian scope, avatars, PRIV-01, tag approval, MINOR-01, VERIFY-02 and the Rallies guest fix. Development also has reel account tags (`20261002160000`; staging catch-up replayed, waiting on the owner's apply, workstream 4), engineering support, admin-report bigint, family share, Fan Zone, Beyond, trivia and IQ (feature freeze: not pushed to staging). Coach-level `20261017090000` is on development since 2026-10-22 (workstream 4); staging waits for Beyond. Details: [STAGING_DATABASE_CATCHUP](engineering/STAGING_DATABASE_CATCHUP.md). |
 | Account tags: staging catch-up and blocked-tag fix not applied (2026-10-22) | Replayed, not applied. Staging needs `20261002160000` plus privacy's search and the Closed accounts policy (never the file alone: it would put back the full-name search); both projects need `20261022150000`. A session hook refuses creating security definer functions through the Supabase plugin, so the owner runs them in each SQL Editor: staging gets `node scripts/replay/account-tags-replay.mjs <pglite dist> --print-staging-sql` then `20261022150000`, development gets `20261022150000`. Afterwards, the function/grant/policy fingerprint query in the replay should match across both projects. |
 | Orphan public tables with RLS off (advisor 2026-10-20) | **Closed 2026-10-22 on development** (`20261022090000`): `school_teams` and `app_feature_flags` existed only there, unused by any code, open to anon read/write. RLS on, client grants revoked; staging never had them. Replay 7/7. |

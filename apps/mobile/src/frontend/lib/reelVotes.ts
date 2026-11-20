@@ -119,8 +119,8 @@ export async function clearReelVote(
  * @param kind Hype kind the fan tapped.
  * @sideEffects `increment_reel_hype` RPC (one vote per fan per kind, deduped in the database).
  */
-export async function sendReelHype(reelId: string, kind: PlayReactionId): Promise<{ error: RpcError }> {
-  const { error } = await untypedRpc('increment_reel_hype', { target_reel_id: reelId, hype_kind: kind });
+export async function sendReelHype(reelId: string, kind: PlayReactionId, client = supabase): Promise<{ error: RpcError }> {
+  const { error } = await untypedRpc('increment_reel_hype', { target_reel_id: reelId, hype_kind: kind }, client);
   return { error };
 }
 
@@ -130,7 +130,7 @@ export async function sendReelHype(reelId: string, kind: PlayReactionId): Promis
  * @param kind Hype kind the fan tapped again.
  * @sideEffects `clear_reel_hype` RPC.
  */
-export async function withdrawReelHype(reelId: string, kind: PlayReactionId): Promise<{ error: RpcError }> {
-  const { error } = await untypedRpc('clear_reel_hype', { target_reel_id: reelId, hype_kind: kind });
+export async function withdrawReelHype(reelId: string, kind: PlayReactionId, client = supabase): Promise<{ error: RpcError }> {
+  const { error } = await untypedRpc('clear_reel_hype', { target_reel_id: reelId, hype_kind: kind }, client);
   return { error };
 }

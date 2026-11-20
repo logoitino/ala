@@ -11,9 +11,9 @@ This packet contains source fingerprints and supplied investigation notes. It is
 
 ## 1. Current source and open work
 
-- Inventory SHA-256: `1f207a28a8706040efd9d7d8874f355943de1fd39c07a6a4f286d5717de8388d`
+- Inventory SHA-256: `6a6eb319ffbebb792c2b84ce295ee66a9ce11a74fde890ec08605a5710a031aa`
 - Register SHA-256: `86a11d86b776757dd362bc03cdfc5c8e88d1c7a862e65db85ba00dd7c6073a71`
-- Safe source/manifest files monitored: 1154. Git-tracked and non-ignored untracked source; excluded files require separate human review.
+- Safe source/manifest files monitored: 1161. Git-tracked and non-ignored untracked source; excluded files require separate human review.
 - Investigation candidates: 3; missing engineering reviews: 3; stale engineering reviews: 0.
 - Rights categories awaiting counsel review: 7.
 - Supplied filing receipts: 0. Receipt entries require independent verification; no legal status is inferred.
@@ -23,7 +23,7 @@ A changed inventory requires Documentation/feature-owner review for new capabili
 
 | Monitored area | Files |
 | --- | --- |
-| apps/ | 987 |
+| apps/ | 994 |
 | packages/ | 35 |
 | supabase/ | 129 |
 
@@ -35,7 +35,7 @@ These candidates are questions to investigate. None has an established novelty, 
 
 **Feature owner:** HIGHLIGHTS with ACCOUNT\_TAGS / PRIVACY\_ENGINEERING
 
-Candidate source SHA-256: `652c40b5ec82bf5adc74720c51db80ed18e9f245b13cec0f976eb5e72d2154c6`
+Candidate source SHA-256: `ce640e918ed2d2f171c24ead9f1f055927180eaa5c89cb8435bc397e7b3fb8e6`
 
 **Review state:** No engineering review supplied.
 
@@ -53,7 +53,7 @@ Candidate source SHA-256: `652c40b5ec82bf5adc74720c51db80ed18e9f245b13cec0f976eb
 
 | Source / reading reference | SHA-256 |
 | --- | --- |
-| [apps/mobile/src/frontend/lib/reels.ts](../../apps/mobile/src/frontend/lib/reels.ts) | `4da5c804dfec788fc750f8851b6be6f4907f6400662efd649b3956c487cf52bd` |
+| [apps/mobile/src/frontend/lib/reels.ts](../../apps/mobile/src/frontend/lib/reels.ts) | `f91de6f931ebcaeeb390cb460da3ae9f2eb3f3a0bd5f3a7e7920895d64d81eb2` |
 | [apps/mobile/src/frontend/lib/privacy.ts](../../apps/mobile/src/frontend/lib/privacy.ts) | `ae53d3bab4f2e9c458a1d9296a75692f8c2c049c8c549f81b26cea559c31fd02` |
 | [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `d1729a7ee7de8e3258e35363e7955977d32d73210a6ceb91d57921ed1f172c86` |
 | [docs/engineering/design/PROFILE\_PRIVACY\_DESIGN.md](../../docs/engineering/design/PROFILE_PRIVACY_DESIGN.md) | `2cd42389d6492030f1bf9ff40f47c1b085cdf01bc6ebc7f0cecdf17bdabe8168` |

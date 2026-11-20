@@ -22,6 +22,7 @@ import { resolveVideoMediaUrl } from '@/lib/media';
 import { mediaStorage, type MediaStorageAdapter } from '@/lib/mediaStorage';
 import { supportSignals } from '@/services/SupportSignalManager';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { untypedRpc } from '@/lib/rpc';
 import { uploadHighlight } from '@/services/MediaUploadService';
 import type { Player, Reel, ReelWithPlayer } from '@/types/database';
 
@@ -450,7 +451,7 @@ function parseReelHype(data: unknown, fallback: ReelHype): ReelHype {
  * @returns Server row when the RPC lands; duplicate votes (or an RPC error) return the unchanged counts.
  * @sideEffects `increment_reel_hype` RPC (inserts `reel_hype_votes` for `auth.uid()`).
  */
-export async function bumpReelHype(reelId: string, kind: PlayReactionId, current: ReelHype): Promise<ReelHype> {
+export async function bumpReelHype(reelId: string, kind: PlayReactionId, current: ReelHype, client = supabase): Promise<ReelHype> {
   const optimistic: ReelHype = {
     ...current,
     seki_count: kind === 'seki' ? current.seki_count + 1 : current.seki_count,
@@ -460,10 +461,10 @@ export async function bumpReelHype(reelId: string, kind: PlayReactionId, current
 
   if (!isSupabaseConfigured || !isReelUuid(reelId)) return optimistic;
 
-  const { data, error } = await supabase.rpc('increment_reel_hype', {
+  const { data, error } = await untypedRpc('increment_reel_hype', {
     target_reel_id: reelId,
     hype_kind: kind,
-  });
+  }, client);
 
   if (error) {
     // 2026-09 audit (reels RLS tightening): `increment_reel_hype` is the source of truth for hype
@@ -486,7 +487,7 @@ export async function bumpReelHype(reelId: string, kind: PlayReactionId, current
  * @returns Server row when a vote was deleted; `current` when nothing changed.
  * @sideEffects `clear_reel_hype` RPC (deletes `reel_hype_votes` for `auth.uid()` and steps the counter down).
  */
-export async function clearReelHype(reelId: string, kind: PlayReactionId, current: ReelHype): Promise<ReelHype> {
+export async function clearReelHype(reelId: string, kind: PlayReactionId, current: ReelHype, client = supabase): Promise<ReelHype> {
   const optimistic: ReelHype = {
     ...current,
     seki_count: kind === 'seki' ? Math.max(0, current.seki_count - 1) : current.seki_count,
@@ -496,10 +497,10 @@ export async function clearReelHype(reelId: string, kind: PlayReactionId, curren
 
   if (!isSupabaseConfigured || !isReelUuid(reelId)) return optimistic;
 
-  const { data, error } = await supabase.rpc('clear_reel_hype', {
+  const { data, error } = await untypedRpc('clear_reel_hype', {
     target_reel_id: reelId,
     hype_kind: kind,
-  });
+  }, client);
 
   if (error) return current;
 
@@ -615,16 +616,16 @@ export function reelHiddenForUser(
  * @param reason Report reason. Older databases that only have the one-argument RPC store it as unspecified.
  * @sideEffects `report_reel(target_reel_id, report_reason)` (security definer). Seeded `hl-*` ids are no-ops.
  */
-export async function reportReelRemote(reelId: string, reason: ReportReasonId = 'unspecified'): Promise<void> {
+export async function reportReelRemote(reelId: string, reason: ReportReasonId = 'unspecified', client = supabase): Promise<void> {
   if (!isSupabaseConfigured || !isReelUuid(reelId)) return;
-  const withReason = await supabase.rpc('report_reel', {
+  const withReason = await untypedRpc('report_reel', {
     target_reel_id: reelId,
     report_reason: reason,
-  });
+  }, client);
   if (!withReason.error) return;
   const message = withReason.error.message ?? '';
   if (!/report_reason|Could not find the function|PGRST202/i.test(message)) throw withReason.error;
-  const { error } = await supabase.rpc('report_reel', { target_reel_id: reelId });
+  const { error } = await untypedRpc('report_reel', { target_reel_id: reelId }, client);
   if (error) throw error;
 }
 

@@ -1,6 +1,8 @@
 <!-- Current-app priorities distinguish implemented source from provider/device acceptance and retain historical phase evidence. -->
 # Tapua'i — Fix → Test-Prep → Advance → Team-Test Roadmap
 
+**2026-11-20 native readiness follow-up:** [APP-REPAIR-01](../agents/APP-REPAIR-01.md) locally repairs reconnect loss, issued-reaction undo, actor attribution, startup replay and bookmark/cheer freshness. Final independent outside Codex review passed 94 focused tests. Full local gate passed (286 suites/2706 tests, 121 portal tests); fresh iOS/Android Hermes exports passed. Physical-device/provider/registered owner acceptance remains pending. Existing public config and a checkout-bound private source cache are restored. Website hosting is deferred at the owner's request; APP-TEST and release priorities remain.
+
 **2026-10-22 current team/release work order:** [COORD-02](../agents/COORD-02.md),
 [counsel packet](../legal/GIFT_RELEASE_COUNSEL_PACKET.md) and [rollout runbook](../engineering/GIFT_TIP_ROLLOUT.md).
 All old donation-everywhere/10%-fee instructions below are superseded history. New personal

@@ -41,6 +41,7 @@ import { deriveRoles, isAdminAccess, isUserRole, ROLE_HOME, addUserRoleRemote, p
 import { recordMyBirthMonth } from '@/lib/minors';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { subscribeProfileAura } from '@/lib/aura';
+import { offlineQueue } from '@/services/OfflineQueue';
 import {
   fetchSchoolTeam,
   readAthleteOnboarding,
@@ -154,6 +155,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const epoch = ++sessionEpoch.current;
     ++profileLoad.current;
     sessionRef.current = nextSession;
+    // Queue ownership follows Auth immediately, before profile/network awaits or UI publication.
+    offlineQueue.setActor(nextSession?.user.id ?? null);
     if (changedOwner) {
       ++accountEpoch.current;
       setProfile(null);
@@ -252,6 +255,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return () => {
         active = false;
         mounted.current = false;
+        offlineQueue.suspendActor();
         ++sessionEpoch.current;
         ++accountEpoch.current;
         ++profileLoad.current;
@@ -278,6 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
       mounted.current = false;
+      offlineQueue.suspendActor();
       ++sessionEpoch.current;
       ++accountEpoch.current;
       ++profileLoad.current;

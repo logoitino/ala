@@ -283,7 +283,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `cast_cheer_vote`
 - Read by: —; database functions: —
-- Screens: `/`, `/admin/qa`, `/local`, `/profile`, `/spotlight`, `/user/[id]`
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +49 more
 - Exception: noReader — Read only inside cast_cheer_vote (the stored side for this account); clients have no access and no screen needs it.
 
 ### `cheer_polls`
@@ -292,7 +292,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/adminCatalog.ts`; database functions: `cast_cheer_vote`, `upsert_cheer_poll`
 - Read by: `@/lib/adminCatalog.ts`, `@/lib/cheerPoll.ts`; database functions: `cast_cheer_vote`, `get_admin_reports`, `upsert_cheer_poll`
-- Screens: `/`, `/admin`, `/admin/analytics`, `/admin/audience`, `/admin/departments`, `/admin/health`, `/admin/polls`, `/admin/product`, `/admin/product/coverage`, `/admin/product/features` +18 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
 
 ### `company_revenue_logs`
 
@@ -327,7 +327,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `admin_decide_payout_override`, `admin_set_custodial_terms`, `guardian_setup_custodial`, `record_stripe_kyc`, `save_stripe_connect_account`
 - Read by: `@/lib/admin.ts`; database functions: `admin_request_payout_override`, `athlete_handover_date`, `athlete_payout_status`, `get_custodial_summary`, `payee_for_player`, `report_reel` +2 more
 - Triggers: `custodial_payout_flags_guard → guard_payout_flags`, `custodial_payee_supersede → payee_changes_supersede`
-- Screens: `/`, `/activity`, `/admin/athletes`, `/admin/moderation`, `/admin/people`, `/admin/qa`, `/admin/spotlight`, `/api/create-stripe-account+api`, `/gift/[handle]`, `/local` +5 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +51 more
 
 ### `custodial_withdrawals`
 
@@ -750,7 +750,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `increment_reel_hype`
 - Read by: `@/lib/reelVotes.ts`; database functions: `get_admin_reports`, `get_leaderboards`, `get_top_filmers`
 - Removed by: `clear_reel_hype`
-- Screens: `/`, `/admin`, `/admin/analytics`, `/admin/audience`, `/admin/departments`, `/admin/health`, `/admin/product`, `/admin/product/coverage`, `/admin/product/features`, `/admin/product/people` +16 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
 
 ### `reel_photos`
 
@@ -767,7 +767,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `report_reel`
 - Read by: `@/lib/admin.ts`; database functions: `coach_label_desk`
-- Screens: `/`, `/admin/highlights`, `/admin/moderation`, `/admin/qa`, `/admin/spotlight`, `/local`, `/profile`, `/spotlight`, `/user/[id]`
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +49 more
 
 ### `reel_tag_rejections`
 
@@ -812,7 +812,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/lib/savedReels.ts`; database functions: —
 - Read by: `@/lib/savedReels.ts`; database functions: `get_admin_reports`
 - Removed by: `@/lib/savedReels.ts`
-- Screens: `/`, `/admin`, `/admin/analytics`, `/admin/audience`, `/admin/departments`, `/admin/health`, `/admin/product`, `/admin/product/coverage`, `/admin/product/features`, `/admin/product/people` +16 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
 
 ### `school_confirmers`
 
@@ -1068,7 +1068,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/admin.ts`; database functions: `publish_spotlight_award`, `sync_spotlight_period`, `unlock_spotlight_period`
 - Read by: `@/lib/admin.ts`, `@/lib/spotlight.ts`; database functions: `get_active_spotlight_award`, `get_admin_reports`, `sync_spotlight_period`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/boosters`, `/admin/departments`, `/admin/drip`, `/admin/games` +34 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
 
 ### `stripe_webhook_events`
 
@@ -1217,12 +1217,12 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 | Bucket | Owner | Purpose | Uploaded by | Read by | Screens |
 | --- | --- | --- | --- | --- | --- |
-| `avatars` | `PROFILE` | Profile pictures and booster/sponsor logos. | `@/lib/sponsorships.ts`, `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/lib/sponsorships.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +51 more |
+| `avatars` | `PROFILE` | Profile pictures and booster/sponsor logos. | `@/lib/sponsorships.ts`, `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/lib/sponsorships.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +53 more |
 | `beyond_game` | `UPLOAD` | Private reviewed fan media only: immutable <auth-user>/<post>/<media>.jpg|mp4, reserved before upload, exact audience/actor/closure/block checks andSDK-requested60s signed URLs. Removed bytes inaccessible to users; current open admins have narrow read/delete cleanup access until confirmed physical deletion. | — | — | `/admin/highlights`, `/beyond` |
 | `fan_zone` | `UPLOAD` | Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal. | `apps/mobile/src/backend/api/fanZoneMedia.ts`, `@/lib/fanZone.ts` | `apps/mobile/src/backend/services/fanZoneMedia.ts` | `/`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/beyond`, `/booster` +4 more |
-| `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +51 more |
-| `reel_vault` | `VAULT` | Private Vault clips; authorized one-hour signing through lib/media.ts/mediaStorage.ts. Upload never requests a public URL or a public fallback. Existing paths/entitlement rules are unchanged; source adapter tests do not prove hosted policy/removal parity. | `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +51 more |
-| `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). Existing paths/rights/row metadata are unchanged by the 2026-10-21 replaceable media transport; public URL readers allow canonical public buckets only. | `@/lib/photoStoryCleanup.ts`, `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/lib/photoStories.ts`, `@/lib/photoStoryCleanup.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +51 more |
+| `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +53 more |
+| `reel_vault` | `VAULT` | Private Vault clips; authorized one-hour signing through lib/media.ts/mediaStorage.ts. Upload never requests a public URL or a public fallback. Existing paths/entitlement rules are unchanged; source adapter tests do not prove hosted policy/removal parity. | `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +53 more |
+| `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). Existing paths/rights/row metadata are unchanged by the 2026-10-21 replaceable media transport; public URL readers allow canonical public buckets only. | `@/lib/photoStoryCleanup.ts`, `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/lib/photoStories.ts`, `@/lib/photoStoryCleanup.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +53 more |
 
 ## Feature switches
 

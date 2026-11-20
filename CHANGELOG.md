@@ -1,4 +1,13 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-20 — Offline actions and fan state stay with their account
+
+- Replaying queued reactions, saves and reports preserves actions added or replaced while a request is pending. Cancelled pending actions stay removed instead of replaying or reappearing after a network failure.
+- Account switches hold the previous account's actions. Replay uses that account's captured session; guests' local reactions never become a later sign-in's actions. Older queues without recorded ownership remain held.
+- Undo during queued reaction replay retains a compensating clear, and structured SDK network errors remain retryable. Startup triggers cannot replay a hydrated action twice.
+- Bookmark state ignores stale reads and handlers; cheer selections are stored per account. QA shows current-account actions and held counts, rejects stale account views and keeps explicit device-wide discard available.
+- Native-payment fallback guidance recommends a development client or preview build. Expo Go payment behavior still needs device verification.
+- Local repair and regression evidence: [APP-REPAIR-01](docs/agents/APP-REPAIR-01.md). Device/hosted acceptance remains pending; this entry is not a deployed release.
+
 ## 2026-11-15 — WEB-DESKTOP Lovable-outline card feed FINISHED
 
 - Expo web ≥820 Home center: scrollable Highlight cards (sport pills, Why this clip, Cheer / Send a gift) matching the Lovable desktop outline with live data.

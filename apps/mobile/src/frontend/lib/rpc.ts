@@ -15,8 +15,8 @@ export type RpcError = { code?: string; message?: string } | null;
  *   `supabase.rpc` must stay bound to the client: stored in a variable and called on its own it loses `this` and every
  *   call throws (found 2026-10-14 by a test using the real client; tests with arrow-function mocks hid it).
  */
-export function untypedRpc<T = unknown>(fn: string, args: Record<string, unknown> = {}): Promise<{ data: T; error: RpcError }> {
-  const rpc = supabase.rpc.bind(supabase) as unknown as (name: string, params: Record<string, unknown>) => Promise<{ data: T; error: RpcError }>;
+export function untypedRpc<T = unknown>(fn: string, args: Record<string, unknown> = {}, client = supabase): Promise<{ data: T; error: RpcError }> {
+  const rpc = client.rpc.bind(client) as unknown as (name: string, params: Record<string, unknown>) => Promise<{ data: T; error: RpcError }>;
   return rpc(fn, args);
 }
 

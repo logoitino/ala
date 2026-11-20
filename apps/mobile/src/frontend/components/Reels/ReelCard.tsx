@@ -12,6 +12,7 @@
  */
 
 import { fetchReelAccountTags } from '@/lib/accountTags';
+import { createOfflineActorClient, isOfflineActorChanged } from '@/lib/offlineActor';
 import { useIsFocused } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Platform, Share, Text, View, type ViewInstance } from 'react-native';
@@ -294,6 +295,7 @@ function ReelCardImpl({
   const releaseHype = useCallback(
     (kind: PlayReactionId) => {
       if (!votesRef.current[kind]) return;
+      const actor = offlineQueue.captureActor(user?.id ?? null);
       votesTouchedRef.current.add(kind);
       const token = hypeGenRef.current[kind] + 1;
       hypeGenRef.current[kind] = token;
@@ -315,14 +317,17 @@ function ReelCardImpl({
       hypeInFlightRef.current += 1;
       void (async () => {
         try {
-          if (await offlineQueue.dropPendingHype(clip.id, kind)) return;
-          if (!user?.id) return;
+          if (!actor || !isReelUuid(clip.id)) return;
+          if (await offlineQueue.dropPendingHype(clip.id, kind, actor)) return;
+          if (!actor.isCurrent() || hypeGenRef.current[kind] !== token || votesRef.current[kind]) return;
           if (!(await offlineQueue.isOnline())) {
-            await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind });
+            await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind }, actor);
             return;
           }
           try {
-            const server = await clearReelHype(clip.id, kind, previous);
+            const client = await createOfflineActorClient(actor);
+            const server = await clearReelHype(clip.id, kind, previous, client);
+            if (!actor.isCurrent()) return;
             // A newer tap superseded this one — keep the optimistic value it wrote.
             if (hypeGenRef.current[kind] !== token) return;
             if (votesRef.current[kind]) return;
@@ -335,7 +340,7 @@ function ReelCardImpl({
             setReelHype(server);
             onReelHypeChange?.(clip.id, server);
           } catch {
-            await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind });
+            await offlineQueue.enqueue({ type: 'hype_clear', reelId: clip.id, kind }, actor);
           }
         } finally {
           settleHype();
@@ -352,6 +357,7 @@ function ReelCardImpl({
         if (!fromDoubleTap) releaseHype(kind);
         return;
       }
+      const actor = offlineQueue.captureActor(user?.id ?? null);
       telemetry.trackFeature(`hype.${kind}`, surface);
       votesTouchedRef.current.add(kind);
       const token = hypeGenRef.current[kind] + 1;
@@ -383,12 +389,16 @@ function ReelCardImpl({
           userId: user?.id,
         };
         try {
+          // Guest/seeded reactions remain local and never become a later account's mutation.
+          if (!actor || !isReelUuid(clip.id)) return;
           if (!(await offlineQueue.isOnline())) {
-            await offlineQueue.enqueue(payload);
+            await offlineQueue.enqueue(payload, actor);
             return;
           }
           try {
-            const server = await bumpReelHype(clip.id, kind, previous);
+            const client = await createOfflineActorClient(actor);
+            const server = await bumpReelHype(clip.id, kind, previous, client);
+            if (!actor.isCurrent()) return;
             // A newer tap (including an un-vote) superseded this one. Applying the stale
             // server row here is what made the count jump back up after clearing.
             if (hypeGenRef.current[kind] !== token) return;
@@ -401,7 +411,8 @@ function ReelCardImpl({
             setReelHype(server);
             onReelHypeChange?.(clip.id, server);
             if (fromDoubleTap && user?.id && auraPoints > 0) {
-              const award = await addUserAura(user.id, auraPoints);
+              const award = await addUserAura(user.id, auraPoints, client);
+              if (!actor.isCurrent()) return;
               if (award.profile_aura_points != null) emitProfileAura(user.id, award.profile_aura_points);
               if (award.player_aura_points != null) emitPlayerAura(user.id, award.player_aura_points);
               if (award.profile_aura_points == null && award.player_aura_points == null && award.aura_points) {
@@ -409,7 +420,7 @@ function ReelCardImpl({
               }
             }
           } catch {
-            await offlineQueue.enqueue(payload);
+            await offlineQueue.enqueue(payload, actor);
           }
         } finally {
           settleHype();
@@ -439,6 +450,7 @@ function ReelCardImpl({
 
   const confirmReport = useCallback(async (reason: Exclude<ReportReasonId, 'unspecified'>) => {
     if (reporting) return;
+    const actor = offlineQueue.captureActor(user?.id ?? null);
     setReporting(true);
     try {
       if (reason !== 'coach_level') {
@@ -450,11 +462,14 @@ function ReelCardImpl({
       telemetry.trackIssue('report', surface);
       celebration?.showToast(reason === 'coach_level' ? 'Sent to reviewers. This Highlight stays up.' : 'Highlight hidden 🚩');
       setReportOpen(false);
-      if (user?.id && isReelUuid(clip.id)) {
-        await offlineQueue.runOrEnqueue({ type: 'report_reel', reelId: clip.id, reason }, () =>
-          reportReelRemote(clip.id, reason),
-        );
+      if (actor && isReelUuid(clip.id)) {
+        await offlineQueue.runOrEnqueue({ type: 'report_reel', reelId: clip.id, reason }, async () => {
+          const client = await createOfflineActorClient(actor);
+          await reportReelRemote(clip.id, reason, client);
+        }, actor);
       }
+    } catch (error) {
+      if (!isOfflineActorChanged(error)) throw error;
     } finally {
       setReporting(false);
     }

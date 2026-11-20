@@ -5,6 +5,14 @@ import { dismissTelemetryIncident, fetchAdminTelemetryDigest } from '@/lib/admin
 import { offlineQueue } from '@/services/OfflineQueue';
 import { telemetry } from '@/services/TelemetryManager';
 
+let mockAccountEpoch = 0;
+const mockAccountChecks = new Map<number, () => boolean>();
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => {
+  const epoch = mockAccountEpoch;
+  if (!mockAccountChecks.has(epoch)) mockAccountChecks.set(epoch, () => epoch === mockAccountEpoch);
+  return { isSessionCurrent: mockAccountChecks.get(epoch) };
+} }));
+
 jest.mock('expo-router', () => ({
   useFocusEffect: (callback: () => void) => require('react').useEffect(callback, [callback]),
 }));
@@ -27,7 +35,7 @@ jest.mock('@/components/Admin/AdminChrome', () => {
   };
 });
 jest.mock('@/lib/admin', () => ({ fetchAdminTelemetryDigest: jest.fn(), dismissTelemetryIncident: jest.fn() }));
-jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: { snapshot: jest.fn(), getIsConnected: jest.fn(), flush: jest.fn(), discardAll: jest.fn() } }));
+jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: { snapshot: jest.fn(), getHeldCount: jest.fn(), getIsConnected: jest.fn(), flush: jest.fn(), discardAll: jest.fn() } }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { getHealth: jest.fn(() => ({
   phase: 'unknown', queued: 0, inFlight: 0, capacity: 120, batchSize: 15, timeoutMs: 10000,
   accepted: 0, delivered: 0, dropped: 0, uncertain: 0, lastFailure: null,
@@ -44,10 +52,12 @@ const deferred = <T,>() => {
 };
 
 beforeEach(() => {
+  mockAccountEpoch = 0;
   jest.clearAllMocks();
   jest.mocked(fetchAdminTelemetryDigest).mockReset().mockResolvedValue(digest as never);
   jest.mocked(dismissTelemetryIncident).mockReset().mockResolvedValue(undefined);
   jest.mocked(offlineQueue.snapshot).mockReset().mockResolvedValue([action] as never);
+  jest.mocked(offlineQueue.getHeldCount).mockReset().mockResolvedValue(0);
   jest.mocked(offlineQueue.getIsConnected).mockReturnValue(true);
   jest.mocked(offlineQueue.flush).mockReset().mockResolvedValue(undefined);
   jest.mocked(offlineQueue.discardAll).mockReset().mockResolvedValue(undefined);
@@ -104,7 +114,7 @@ it('reports a replay attempt honestly when actions remain in the device queue', 
   await render(<QaTool />);
   await fireEvent.press(screen.getByRole('button', { name: 'Flush now' }));
   expect(screen.queryByText('Offline queue flushed.')).toBeNull();
-  expect(screen.getByText('Replay checked: 1 action remains on this device.')).toBeTruthy();
+  expect(screen.getByText('Replay checked: 1 action remains for this account.')).toBeTruthy();
 });
 
 it('shows local delivery uncertainty without presenting it as fleet health', async () => {
@@ -161,4 +171,40 @@ it('names clear and unsave actions accurately in the repair queue', async () => 
   expect(screen.getByText('Clear seki · fixture-')).toBeTruthy();
   expect(screen.getByText('Unsave clip · fixture-')).toBeTruthy();
   expect(screen.queryByText('Report · fixture-')).toBeNull();
+});
+
+it('reports held rows without targets and keeps device discard available when this account has none', async () => {
+  jest.mocked(offlineQueue.snapshot).mockResolvedValue([]);
+  jest.mocked(offlineQueue.getHeldCount).mockResolvedValue(2);
+  await render(<QaTool />);
+  expect(screen.getByText('Nothing queued for this account.')).toBeTruthy();
+  expect(screen.getByText('Held actions')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Flush now' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Discard queue' })).toBeEnabled();
+  await fireEvent.press(screen.getByRole('button', { name: 'Discard queue' }));
+  expect(offlineQueue.discardAll).toHaveBeenCalledTimes(1);
+  expect(screen.queryByText('Held actions')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Discard queue' })).toBeDisabled();
+});
+
+it('masks previously rendered account rows immediately when the account changes', async () => {
+  const view = await render(<QaTool />);
+  expect(screen.getByText('Save clip · fixture-')).toBeTruthy();
+  const incoming = deferred<typeof action[]>();
+  jest.mocked(offlineQueue.snapshot).mockReturnValueOnce(incoming.promise);
+  mockAccountEpoch++;
+  await view.rerender(<QaTool />);
+  expect(screen.queryByText('Save clip · fixture-')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Discard queue' })).toBeDisabled();
+  await act(async () => incoming.resolve([]));
+});
+
+it('rejects outgoing account rows returned after the desk changes account', async () => {
+  const outgoing = deferred<typeof action[]>();
+  jest.mocked(offlineQueue.snapshot).mockReturnValueOnce(outgoing.promise);
+  const view = await render(<QaTool />);
+  mockAccountEpoch++;
+  await view.rerender(<QaTool />);
+  await act(async () => outgoing.resolve([action]));
+  expect(screen.queryByText('Save clip · fixture-')).toBeNull();
 });

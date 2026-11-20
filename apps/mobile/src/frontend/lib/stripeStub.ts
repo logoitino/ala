@@ -1,5 +1,5 @@
 /**
- * Stripe stand-in for platforms without the native SDK (web, Expo Go without the module).
+ * Stripe stand-in for runtimes resolving the base `stripe.ts`; native/web platform modules choose their own SDK.
  * Mirrors the few `@stripe/stripe-react-native` exports the app uses so imports resolve everywhere; the payment
  * sheet calls return a "Canceled" error carrying NATIVE_STRIPE_UNAVAILABLE_MESSAGE. Picked up via `lib/stripe.ts`.
  */
@@ -7,7 +7,7 @@
 import { type ReactNode } from 'react';
 
 export const NATIVE_STRIPE_UNAVAILABLE_MESSAGE =
-  'Please use Expo Go on iOS or Android to test native Stripe payments.';
+  'Use a development client or preview build on iOS or Android to test native Stripe payments.';
 
 export const isStripeNativeSupported = false;
 
