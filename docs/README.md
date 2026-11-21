@@ -166,6 +166,8 @@ location (tracked in [CODE_ORGANIZATION_PLAN.md](engineering/CODE_ORGANIZATION_P
 | --- | --- |
 | [TEAMS.md](agents/TEAMS.md) | Department call sheet: who owns which screens and files, now / next / later. |
 | [TEAM_HIERARCHY.md](agents/TEAM_HIERARCHY.md) | Org chart of departments and agents. |
+| [VAULT-01.md](agents/VAULT-01.md) | Vault value ladder, wording, money-back arithmetic and owner decisions V1–V6 (approved 2026-11-15). Not built. |
+| [VAULT-AUDIT.md](agents/VAULT-AUDIT.md) | Audit behind VAULT-01: what a Vault holds today, the pass payment path, fee math and hosted state. |
 | [DETECT-01.md](agents/DETECT-01.md) | Engineering Support setup, file claims, detection gaps and actual verification. |
 | [COORD-01.md](agents/COORD-01.md) | Actual Documentation and team-coordination assignments, checks, results and continuity limits. |
 | [TEAM_STATUS.md](agents/TEAM_STATUS.md) | Current whole-team briefing, complete role coverage, gaps and next owners. |
