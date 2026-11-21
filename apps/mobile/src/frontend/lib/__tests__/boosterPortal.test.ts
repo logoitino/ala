@@ -1,3 +1,4 @@
+/** Booster helper errors retain their messages through stored-row confirmation queries. */
 import {
   fetchBoosterVerificationQueue,
   insertBoosterRoster,
@@ -25,9 +26,9 @@ describe('boosterPortal', () => {
 
   it('normalizes roster and jersey write failures', async () => {
     mockFrom
-      .mockReturnValueOnce({ insert: async () => ({ error: { message: 'insert blocked' } }) })
+      .mockReturnValueOnce({ insert: () => ({ select: async () => ({ error: { message: 'insert blocked' } }) }) })
       .mockReturnValueOnce({
-        update: () => ({ eq: async () => ({ error: { message: 'update blocked' } }) }),
+        update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ error: { message: 'update blocked' } }) }) }) }),
       });
 
     await expect(insertBoosterRoster([{

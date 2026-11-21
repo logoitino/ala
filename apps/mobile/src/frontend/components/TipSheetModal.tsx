@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * The gift popup keeps its header, Close and checkout navigation visible around short pages.
  * Pending family payouts show the existing held notice; Stripe presentation locks every exit.
  * @sideEffects Reads athlete_payout_allowed; child checkout records test gifts through Stripe.
@@ -35,7 +35,7 @@ import {
   SPRING_BOUNCE,
   SPRING_SHEET,
 } from '@/theme/motion';
-import { DISPLAY_TEXT } from '@/theme/fonts';
+import { DISPLAY_TEXT, TYPE, figtree } from '@/theme/fonts';
 
 type TipSheetModalProps = {
   player: Player | null;
@@ -272,25 +272,25 @@ const styles = StyleSheet.create({
   },
   title: {
     ...DISPLAY_TEXT,
-    fontSize: 22,
+    ...TYPE.title,
     color: colors.text,
     letterSpacing: -0.5,
   },
-  successTitle: {
+  successTitle: { ...figtree('400'),
     color: colors.deepGreen,
-    fontSize: 18,
+    ...TYPE.title,
     letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
     color: colors.textMuted,
   },
   heldNotice: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
     color: colors.gold,
     backgroundColor: colors.goldSoft,
     borderRadius: radii.md,
@@ -304,11 +304,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   closeLabel: {
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.deepGreen,
   },
-  closeDisabled: {
+  closeDisabled: { minHeight: 44,
     opacity: 0.45,
   },
 });

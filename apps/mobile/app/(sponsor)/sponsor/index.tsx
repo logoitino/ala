@@ -1,9 +1,9 @@
 /**
  * Sponsor HQ: create and list sideline / rivalry sponsor banners (title, rivalry name) shown on game day.
- * Reads and writes go through `lib/sponsorAds.ts`; failures show Retry instead of an empty list.
+ * Reads and writes use the initiating Auth lifetime through `lib/sponsorAds.ts`; old completions cannot refetch or alert in an incoming HQ.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { Stack } from 'expo-router';
@@ -16,12 +16,22 @@ import { ScreenShell } from '@/components/ScreenShell';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, KIT } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useAuth } from '@/context/AuthContext';
+import { assertCurrent, createOfflineActorClient } from '@/lib/offlineActor';
+import { offlineQueue } from '@/services/OfflineQueue';
 import { telemetry } from '@/services/TelemetryManager';
 import { createSponsorAd, fetchSponsorAds, setSponsorAdActive } from '@/lib/sponsorAds';
 import type { SponsorAd } from '@/types/database';
 
 export default function SponsorHomeScreen() {
   const { live } = useAppRuntime();
+  const { user, isSessionCurrent } = useAuth();
+  const owner = user?.id ?? null;
+  const lifetime = useRef({ owner, guard: isSessionCurrent, active: false, read: 0, busy: false });
+  if (lifetime.current.owner !== owner || lifetime.current.guard !== isSessionCurrent) lifetime.current = { owner, guard: isSessionCurrent, active: false, read: 0, busy: false };
+  const scope = lifetime.current;
+  const current = useCallback(() => lifetime.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
+  useEffect(() => { scope.active = true; return () => { scope.active = false; ++scope.read; }; }, [scope]);
   const [ads, setAds] = useState<SponsorAd[]>([]);
   const [title, setTitle] = useState('Friday Lights presented by Alpine Credit Union');
   const [rivalry, setRivalry] = useState('Westlake vs Lone Peak');
@@ -30,52 +40,84 @@ export default function SponsorHomeScreen() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadAds = useCallback(async () => {
+    if (!current()) return;
+    const revision = ++scope.read;
+    const actor = owner ? offlineQueue.captureActor(owner) : null;
+    if (!actor) { setAds([]); setLoadError(null); setLoading(false); return; }
+    const accepted = () => current() && actor.isCurrent() && revision === scope.read;
     setLoading(true);
     setLoadError(null);
-    const result = await fetchSponsorAds();
-    setAds(result.ads);
-    setLoadError(result.error);
-    setLoading(false);
-  }, []);
+    try {
+      const client = await createOfflineActorClient(actor);
+      if (!accepted()) return;
+      assertCurrent(actor);
+      const result = await fetchSponsorAds(client);
+      if (!accepted()) return;
+      setAds(result.ads); setLoadError(result.error);
+    } catch {
+      if (accepted()) { setAds([]); setLoadError('Could not load live placements. Try again.'); }
+    } finally { if (accepted()) setLoading(false); }
+  }, [current, owner, scope]);
 
   useEffect(() => {
     void loadAds();
   }, [loadAds]);
 
   const saveAd = async (placement: string) => {
-    if (busy) return;
-    setBusy(true);
+    if (!current() || scope.busy || !owner) return;
+    const actor = offlineQueue.captureActor(owner);
+    if (!actor) return;
+    const accepted = () => current() && actor.isCurrent();
+    scope.busy = true; setBusy(true);
     try {
+      const client = await createOfflineActorClient(actor);
+      if (!accepted()) return;
+      assertCurrent(actor);
       telemetry.trackFeature(placement === 'rivalry-banner' ? 'sponsor_rivalry' : 'sponsor_sideline', 'sponsor');
       const result = await createSponsorAd({
         title,
         placement,
         rivalry: rivalry || null,
-      });
+      }, client);
+      if (!accepted()) return;
       if (!result.ok) {
         Alert.alert('Couldn’t save ad', result.message);
         return;
       }
       void loadAds();
+    } catch {
+      if (accepted()) Alert.alert('Couldn’t save ad', 'Could not save the placement. Refresh before trying again.');
     } finally {
-      setBusy(false);
+      scope.busy = false;
+      if (accepted()) setBusy(false);
     }
   };
 
   const toggleAd = async (ad: SponsorAd) => {
-    if (busy) return;
-    setBusy(true);
+    if (!current() || scope.busy || !owner) return;
+    const actor = offlineQueue.captureActor(owner);
+    if (!actor) return;
+    const accepted = () => current() && actor.isCurrent();
+    scope.busy = true; setBusy(true); ++scope.read;
     try {
-      const result = await setSponsorAdActive(ad.id, !ad.is_active);
+      const client = await createOfflineActorClient(actor);
+      if (!accepted()) return;
+      assertCurrent(actor);
+      const result = await setSponsorAdActive(ad.id, !ad.is_active, client);
+      if (!accepted()) return;
       if (!result.ok) {
         Alert.alert('Update failed', result.message);
         return;
       }
-      setAds((current) =>
-        current.map((item) => (item.id === ad.id ? { ...item, is_active: !item.is_active } : item)),
+      ++scope.read;
+      setAds((rows) =>
+        accepted() ? rows.map((item) => (item.id === ad.id ? { ...item, is_active: !ad.is_active } : item)) : rows,
       );
+    } catch {
+      if (accepted()) Alert.alert('Update failed', 'Could not save the placement status.');
     } finally {
-      setBusy(false);
+      scope.busy = false;
+      if (accepted()) { setBusy(false); setLoading(false); }
     }
   };
 

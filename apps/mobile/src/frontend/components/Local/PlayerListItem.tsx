@@ -1,5 +1,6 @@
 /**
  * One athlete row in Local lists: jersey number, name, team, and a favorite star. Tapping opens the athlete.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +10,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { displayValue, type Player } from '@/data/players';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type PlayerListItemProps = {
   player: Player;
@@ -57,7 +59,7 @@ export function PlayerListItem({
         >
           <Ionicons
             name={favorited ? 'star' : 'star-outline'}
-            size={22}
+            size={18}
             color={favorited ? FOCAL.ember : colors.textMuted}
           />
         </Pressable>
@@ -74,24 +76,26 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1.5,
     borderColor: FOCAL.electricGold,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    gap: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    gap: 8,
     ...cardShadow,
   },
   main: {
+    flexWrap: 'wrap',
+    minHeight: 44,
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 8,
     minWidth: 0,
   },
   cardPressed: {
     opacity: 0.92,
   },
   jerseyBadge: {
-    minWidth: 56,
-    height: 56,
+    minWidth: 40,
+    minHeight: 40,
     borderRadius: radii.md,
     backgroundColor: FOCAL.goldInk,
     alignItems: 'center',
@@ -99,8 +103,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   jerseyNumber: {
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     color: '#FFFFFF',
   },
   info: {
@@ -109,34 +113,39 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   name: {
-    fontSize: 17,
-    fontWeight: '700',
+    ...TYPE.section,
+    ...figtree('700'),
     color: colors.text,
   },
-  position: {
-    fontSize: 14,
+  position: { ...figtree('400'),
+    ...TYPE.body,
     color: colors.textMuted,
   },
   views: {
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: FOCAL.goldInk,
   },
   backers: {
+    flexShrink: 1,
+    maxWidth: '100%',
     alignItems: 'flex-end',
     gap: 2,
   },
   backersCount: {
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     color: FOCAL.emberInk,
   },
   backersLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
     color: colors.textMuted,
   },
   favoriteButton: {
-    paddingLeft: 4,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

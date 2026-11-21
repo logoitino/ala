@@ -7,9 +7,12 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { resolveBackendConnection } from '../../../packages/shared-types/backendConnection.ts';
+import { createAuthPublicationScope } from '../../../packages/shared-types/admin/authPublication.ts';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const ts = createRequire(path.join(root, 'apps/mobile/package.json'))('typescript');
+const { parseCookieHeader, serializeCookieHeader, stringFromBase64URL } =
+  createRequire(path.join(root, 'apps/admin-portal/package.json'))('@supabase/ssr');
 const files = {
   mobile: 'apps/mobile/src/frontend/lib/supabase.ts',
   browser: 'apps/admin-portal/lib/supabase.ts',
@@ -51,7 +54,9 @@ function load(which, environment = env(), options = {}) {
     setItem: (key, value) => { storage.set(key, value); }, removeItem: key => { storage.delete(key); } };
   const mocks = {
     '@tapuai/shared-types/backendConnection': { resolveBackendConnection },
-    '@supabase/ssr': { createBrowserClient: sdk, createServerClient: sdk },
+    '@tapuai/shared-types/admin/authPublication': { createAuthPublicationScope },
+    '@supabase/ssr': { createBrowserClient: sdk, createServerClient: sdk,
+      parseCookieHeader, serializeCookieHeader, stringFromBase64URL },
     '@supabase/supabase-js': { createClient: sdk },
     'react-native': { Platform: { OS: options.platform ?? 'ios' } },
     'react-native-url-polyfill/auto': {},
@@ -66,7 +71,8 @@ function load(which, environment = env(), options = {}) {
       }, adminMfaHref: next => `/login/mfa?next=${encodeURIComponent(next)}` },
   };
   const module = { exports: {} };
-  const context = { module, exports: module.exports, process: { env: { ...environment } }, URL,
+  const context = { module, exports: module.exports, process: { env: { ...environment } }, URL, Headers, Request, Response,
+    fetch: async () => { throw new Error('Unexpected network request in portability fixture'); },
     console: { warn: value => warnings.push(String(value)) },
     require: name => { if (!(name in mocks)) throw new Error(`Unexpected dependency ${name}`); return mocks[name]; } };
   if (options.window) context.window = { localStorage: webStorage };
@@ -132,20 +138,32 @@ test('missing or invalid inputs never pass a rejected origin/secret into an SDK 
 test('mobile retains native persistence, browser storage and isolated nonrefreshing web SSR storage', async () => {
   const native = load('mobile');
   const nativeAuth = native.calls[0].config.auth;
-  assert.equal(nativeAuth.storage, native.nativeStorage);
+  await nativeAuth.storage.setItem('session', 'synthetic-native');
+  assert.equal(await native.nativeStorage.getItem('session'), 'synthetic-native');
+  await native.nativeStorage.setItem('session', 'synthetic-native-updated');
+  assert.equal(await nativeAuth.storage.getItem('session'), 'synthetic-native-updated');
+  let current = true;
+  await assert.rejects(native.api.authPublication.run('synthetic-scoped-token',
+    () => { if (!current) throw new Error('The account changed.'); },
+    () => { current = false; return nativeAuth.storage.setItem('session', JSON.stringify({ access_token: 'synthetic-scoped-token' })); }),
+    /account changed/i);
+  assert.equal(await native.nativeStorage.getItem('session'), 'synthetic-native-updated');
+  await nativeAuth.storage.removeItem('session');
+  assert.equal(await native.nativeStorage.getItem('session'), null);
   assert.equal(nativeAuth.persistSession, true); assert.equal(nativeAuth.autoRefreshToken, true);
   assert.equal(nativeAuth.detectSessionInUrl, false);
   const topics = [native.api.nextRealtimeTopic('same'), native.api.nextRealtimeTopic('same')];
   assert.notEqual(topics[0], topics[1]);
   const web = load('mobile', env(), { platform: 'web', window: true });
   const browserStorage = web.calls[0].config.auth.storage;
-  browserStorage.setItem('session', 'synthetic'); assert.equal(browserStorage.getItem('session'), 'synthetic');
-  browserStorage.removeItem('session'); assert.equal(browserStorage.getItem('session'), null);
+  await browserStorage.setItem('session', 'synthetic'); assert.equal(await browserStorage.getItem('session'), 'synthetic');
+  await browserStorage.removeItem('session'); assert.equal(await browserStorage.getItem('session'), null);
   const ssr = load('mobile', env(), { platform: 'web' });
   const ssrAuth = ssr.calls[0].config.auth;
   assert.equal(ssrAuth.persistSession, false); assert.equal(ssrAuth.autoRefreshToken, false);
-  ssrAuth.storage.setItem('session', 'synthetic'); assert.equal(ssrAuth.storage.getItem('session'), 'synthetic');
-  assert.equal(load('mobile', env(), { platform: 'web' }).calls[0].config.auth.storage.getItem('session'), null);
+  await ssrAuth.storage.setItem('session', 'synthetic'); assert.equal(await ssrAuth.storage.getItem('session'), 'synthetic');
+  assert.equal(await load('mobile', env(), { platform: 'web' }).calls[0].config.auth.storage.getItem('session'), null);
+  await ssrAuth.storage.removeItem('session'); assert.equal(await ssrAuth.storage.getItem('session'), null);
 });
 
 test('server client and callback preserve request cookie reads, refresh writes and code exchange', async () => {

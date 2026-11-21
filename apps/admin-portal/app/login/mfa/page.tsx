@@ -30,7 +30,7 @@ export default async function AdminMfaPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--canvas)] px-6 py-10">
-      <AdminMfaForm mode={session.mfaStep} next={next} email={session.email} />
+      <AdminMfaForm key={session.userId} userId={session.userId} mode={session.mfaStep} next={next} email={session.email} />
     </div>
   );
 }

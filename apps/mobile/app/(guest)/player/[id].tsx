@@ -1,11 +1,12 @@
 /**
  * Public athlete detail for guests (no sign-in): loads one player by id and shows the donor badge, hype counts
  * and basic details through `lib/roster`. Give opens Soft-Wall then TipCheckout (same gate as `/user/[id]`).
+ * Reads and retained hype/gift callbacks belong to one route lifetime, so old work cannot replace the next player.
  * @sideEffects Player lookup through roster and hype hydration through lib/hype; Soft-Wall for Give.
  */
 
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -31,33 +32,50 @@ export default function PlayerProfileScreen() {
   const playerId = Array.isArray(id) ? id[0] : id;
   const { requireAuth } = useSoftWall();
 
-  const [player, setPlayer] = useState<Player | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [giveOpen, setGiveOpen] = useState(false);
+  const lifetime = useRef({ playerId, generation: 0 });
+  if (lifetime.current.playerId !== playerId) lifetime.current = { playerId, generation: lifetime.current.generation + 1 };
+  const generation = lifetime.current.generation;
+  const mounted = useRef(false), read = useRef(0);
+  const [frame, setFrame] = useState<{ generation: number; player: Player | null; loading: boolean; error: string | null }>({ generation, player: null, loading: true, error: null });
+  const shown = frame.generation === generation ? frame : { generation, player: null, loading: true, error: null };
+  const { player, loading, error } = shown;
+  const [giveGeneration, setGiveGeneration] = useState<number | null>(null);
+  const giveOpen = giveGeneration === generation;
+  const currentRoute = () => mounted.current && lifetime.current.generation === generation;
+  const setCurrentPlayer = (update: (current: Player) => Player) => {
+    if (!currentRoute() || !player) return;
+    setFrame(previous => previous.generation === generation && previous.player?.id === player.id
+      ? { ...previous, player: update(previous.player) } : previous);
+  };
+
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; ++read.current; }; }, []);
 
   const fetchPlayer = useCallback(async () => {
+    if (!mounted.current || lifetime.current.generation !== generation) return;
+    const request = ++read.current;
+    const current = () => mounted.current && lifetime.current.generation === generation && read.current === request;
+    const publish = (nextPlayer: Player | null, nextError: string | null) => {
+      if (current()) setFrame({ generation, player: nextPlayer, error: nextError, loading: false });
+    };
     if (!playerId) {
-      setPlayer(null);
-      setError('Missing player id.');
-      setLoading(false);
+      publish(null, 'Missing player id.');
       return;
     }
 
-    setLoading(true);
-    setError(null);
-
-    const { player: nextPlayer, error: queryError } = await fetchGuestPlayer(playerId);
-    if (queryError || !nextPlayer) {
-      setPlayer(null);
-      setError(queryError ?? 'Player not found.');
-      setLoading(false);
-      return;
+    setFrame({ generation, player: null, loading: true, error: null });
+    try {
+      const { player: nextPlayer, error: queryError } = await fetchGuestPlayer(playerId);
+      if (!current()) return;
+      if (queryError || !nextPlayer || nextPlayer.id !== playerId) {
+        publish(null, queryError ?? 'Player not found.');
+        return;
+      }
+      const hydrated = await hydratePlayerHype(nextPlayer);
+      publish(hydrated, null);
+    } catch {
+      publish(null, 'Could not load player. Please try again.');
     }
-
-    setPlayer(await hydratePlayerHype(nextPlayer));
-    setLoading(false);
-  }, [playerId]);
+  }, [generation, playerId]);
 
   useEffect(() => {
     void fetchPlayer();
@@ -114,9 +132,8 @@ export default function PlayerProfileScreen() {
           hype={hypeFromPlayer(player)}
           interactive
           onBump={(kind: PlayReactionId) => {
-            void bumpPlayerHype(player, kind).then((hype) =>
-              setPlayer((current) => (current ? { ...current, ...hype } : current)),
-            );
+            if (!currentRoute()) return;
+            void bumpPlayerHype(player, kind).then((hype) => setCurrentPlayer(current => ({ ...current, ...hype }))).catch(() => undefined);
           }}
         />
 
@@ -130,14 +147,15 @@ export default function PlayerProfileScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={maloAthleteCta(player.name)}
-            onPress={() =>
+            onPress={() => {
+              if (!currentRoute()) return;
               requireAuth({
                 kind: 'malo',
                 athleteName: player.name,
                 athleteId: player.id,
-                resume: () => setGiveOpen(true),
-              })
-            }
+                resume: () => { if (currentRoute()) setGiveGeneration(generation); },
+              });
+            }}
             style={({ pressed }) => [styles.giveButton, pressed && styles.pressed]}
           >
             <Text style={styles.giveLabel}>{maloAthleteCta(player.name)}</Text>
@@ -147,9 +165,7 @@ export default function PlayerProfileScreen() {
             player={player}
             origin="profile"
             entry="in_app"
-            onBacked={(nextCount) =>
-              setPlayer((current) => (current ? { ...current, backer_count: nextCount } : current))
-            }
+            onBacked={(nextCount) => setCurrentPlayer(current => ({ ...current, backer_count: nextCount }))}
           />
         )}
 

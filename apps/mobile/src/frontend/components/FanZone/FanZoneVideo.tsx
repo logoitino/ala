@@ -1,6 +1,7 @@
 /**
  * Exact private fan-video preview; only caller-authorized Open begins a reviewed media lifetime.
  * @sideEffects Authorized media load/abort/blob release, one uncached Expo player, and focus/AppState cleanup.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -8,6 +9,7 @@ import { useIsFocused } from 'expo-router';
 import { VideoView, useVideoPlayer, type VideoPlayerStatus, type VideoSource } from 'expo-video';
 import { colors, radii } from '@/constants/theme';
 import { loadFanZoneVideo } from '@/lib/fanZoneMedia';
+import { TYPE, figtree } from '@/theme/fonts';
 export type FanZoneVideoProps = {
   entryId: string; revision: number; reviewKey: string; open: boolean;
   onOpen: () => void; onClose: () => void; onReady: (reviewKey: string, ready: boolean) => void; label?: string;
@@ -107,5 +109,5 @@ function ExactPlayer({ source, reviewKey, onReady, onFailure }: { source: VideoS
 }
 const styles = StyleSheet.create({ container: { gap: 8 }, button: { minHeight: 44, padding: 12, borderRadius: radii.md,
   borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, justifyContent: 'center' },
-  buttonText: { color: colors.text, fontSize: 15, fontWeight: '600' }, copy: { color: colors.textMuted, fontSize: 14, lineHeight: 20 },
+  buttonText: { color: colors.text, ...TYPE.body, ...figtree('600') }, copy: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
   video: { width: '100%', height: 240, backgroundColor: colors.background } });

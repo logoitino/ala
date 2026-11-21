@@ -15,6 +15,7 @@ import { LOCAL_FILTERS } from '@/data/regions';
 import { SPONSOR_TIERS } from '@/data/sponsorships';
 import { ATHLETE_CLASS_YEARS } from '@/data/teams';
 import { DAYLIGHT_THEME } from '@/constants/theme';
+import type { OfflineActorClient } from '@/lib/offlineActor';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { APP_RUNTIME_FLAG_GROUPS } from '@tapuai/shared-types';
 
@@ -823,7 +824,7 @@ function parseBundle(raw: Record<string, unknown> | null): AppRuntimeBundle {
  * @purpose Load draft + published chrome for the admin Features desk.
  * @sideEffects `app_runtime_config` SELECT.
  */
-export async function fetchAppRuntimeBundle(): Promise<AppRuntimeBundle> {
+export async function fetchAppRuntimeBundle(client: OfflineActorClient = supabase): Promise<AppRuntimeBundle> {
   const empty: AppRuntimeBundle = {
     draft: cloneAppRuntime(DEFAULT_APP_RUNTIME),
     published: cloneAppRuntime(DEFAULT_APP_RUNTIME),
@@ -831,8 +832,14 @@ export async function fetchAppRuntimeBundle(): Promise<AppRuntimeBundle> {
     updatedAt: null,
   };
   if (!isSupabaseConfigured) return empty;
-  const { data, error } = await supabase.from('app_runtime_config').select('draft, published, published_at, updated_at').eq('id', 'default').maybeSingle();
-  if (error || !data) return empty;
+  const query = client.from('app_runtime_config').select('draft, published, published_at, updated_at').eq('id', 'default').maybeSingle();
+  // A departed actor is a lifetime refusal, not a retryable read in a publication fallback.
+  if (client !== supabase) query.retry(false);
+  const { data, error } = await query;
+  if (error || !data) {
+    if (client !== supabase) throw new Error(error?.message || 'Could not confirm the app runtime draft.');
+    return empty;
+  }
   return parseBundle(data as Record<string, unknown>);
 }
 
@@ -840,21 +847,22 @@ export async function fetchAppRuntimeBundle(): Promise<AppRuntimeBundle> {
  * @purpose Write the Features draft. Fans still see `published` until Publish to app.
  * @sideEffects `patch_app_runtime_draft` RPC; table UPDATE fallback.
  */
-export async function saveAppRuntimeDraft(draft: AppRuntimeConfig): Promise<AppRuntimeBundle> {
+export async function saveAppRuntimeDraft(draft: AppRuntimeConfig, client: OfflineActorClient = supabase): Promise<AppRuntimeBundle> {
   if (!isSupabaseConfigured) {
     // Offline previews preserve legacy chrome behavior, but a draft grants no money authority.
     const published = setRuntimeFlag(draft, 'buttons.MONETIZATION_TIPS_ENABLED', false);
     return { draft, published, publishedAt: null, updatedAt: new Date().toISOString() };
   }
-  const { data, error } = await supabase.rpc('patch_app_runtime_draft', { next_draft: draft });
+  const { data, error } = await client.rpc('patch_app_runtime_draft', { next_draft: draft });
   if (!error && data && typeof data === 'object') return parseBundle(data as Record<string, unknown>);
-  const { data: updated, error: updateError } = await supabase
+  if (!error || !['PGRST202', '42883'].includes(error.code)) throw new Error(error?.message || 'Could not confirm the runtime draft save.');
+  const { data: updated, error: updateError } = await client
     .from('app_runtime_config')
     .update({ draft, updated_at: new Date().toISOString() })
     .eq('id', 'default')
     .select('draft, published, published_at, updated_at')
     .single();
-  if (updateError) throw new Error(error?.message || updateError.message);
+  if (updateError) throw new Error(updateError.message);
   return parseBundle(updated as Record<string, unknown>);
 }
 
@@ -862,15 +870,16 @@ export async function saveAppRuntimeDraft(draft: AppRuntimeConfig): Promise<AppR
  * @purpose Copy draft onto published so the fan app chrome updates.
  * @sideEffects `publish_app_runtime` RPC; table UPDATE fallback.
  */
-export async function publishAppRuntime(): Promise<AppRuntimeBundle> {
+export async function publishAppRuntime(client: OfflineActorClient = supabase): Promise<AppRuntimeBundle> {
   if (!isSupabaseConfigured) {
     const draft = cloneAppRuntime(DEFAULT_APP_RUNTIME);
     return { draft, published: draft, publishedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   }
-  const { data, error } = await supabase.rpc('publish_app_runtime');
+  const { data, error } = await client.rpc('publish_app_runtime');
   if (!error && data && typeof data === 'object') return parseBundle(data as Record<string, unknown>);
-  const current = await fetchAppRuntimeBundle();
-  const { data: updated, error: updateError } = await supabase
+  if (!error || !['PGRST202', '42883'].includes(error.code)) throw new Error(error?.message || 'Could not confirm runtime publication.');
+  const current = await fetchAppRuntimeBundle(client);
+  const { data: updated, error: updateError } = await client
     .from('app_runtime_config')
     .update({
       published: current.draft,
@@ -880,14 +889,14 @@ export async function publishAppRuntime(): Promise<AppRuntimeBundle> {
     .eq('id', 'default')
     .select('draft, published, published_at, updated_at')
     .single();
-  if (updateError) throw new Error(error?.message || updateError.message);
+  if (updateError) throw new Error(updateError.message);
   return parseBundle(updated as Record<string, unknown>);
 }
 
 /**
  * @purpose Throw away unpublished chrome and restore the live map.
  */
-export async function discardAppRuntimeDraft(): Promise<AppRuntimeBundle> {
-  const current = await fetchAppRuntimeBundle();
-  return saveAppRuntimeDraft(current.published);
+export async function discardAppRuntimeDraft(client: OfflineActorClient = supabase): Promise<AppRuntimeBundle> {
+  const current = await fetchAppRuntimeBundle(client);
+  return saveAppRuntimeDraft(current.published, client);
 }

@@ -1,4 +1,4 @@
-/** QUIZ-05 athlete "Share a fun fact" (design §6.3, §6.4, §6.7, §6.13; §6 overrides §1–§5).
+/** UX-13 readable shared type preserves every action and required notice. QUIZ-05 athlete "Share a fun fact" (design §6.3, §6.4, §6.7, §6.13; §6 overrides §1–§5).
  * Used in the athlete's own Edit profile sheet and as the optional last step after claiming an athlete roster. The
  * server decides everything: who may share (athletes with a recorded 13+ age), the switch, the six preset prompts and
  * the curated pre-game meal list, the text filter, the guardian step for under-16s and the admin check. This screen:
@@ -24,6 +24,7 @@ import {
   type FunFact, type FunFactCounts, type FunFactMine, type FunFactOwnerStatus, type FunFactPromptKey,
 } from '@/lib/freshQuestions';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export const FUN_FACT_INTRO = 'Share a fun fact? Pick up to 3. An admin checks each one, and a parent or guardian approves if you’re under 16. Only people your privacy settings allow will see it. Remove one any time.';
 /** Plain status words; never colour alone. Withdrawn and removed facts are not listed. */
@@ -199,23 +200,23 @@ export function FunFactShare({ variant = 'settings', onSkip, onHidden }: {
 
 const styles = StyleSheet.create({
   wrap: { gap: 10, padding: 14, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  title: { fontSize: 17, fontWeight: '800', color: colors.text },
-  copy: { fontSize: 14, lineHeight: 20, color: colors.textMuted },
-  section: { fontSize: 14, fontWeight: '800', color: colors.text },
+  title: { ...TYPE.section, ...figtree('800'), color: colors.text },
+  copy: { ...figtree('400'), ...TYPE.body,  color: colors.textMuted },
+  section: { ...TYPE.body, ...figtree('800'), color: colors.text },
   fact: { gap: 6, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border },
-  factPrompt: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
-  factAnswer: { fontSize: 16, fontWeight: '700', color: colors.text },
-  status: { fontSize: 14, fontWeight: '700', color: colors.primary },
+  factPrompt: { ...TYPE.caption, ...figtree('700'), color: colors.textMuted },
+  factAnswer: { ...TYPE.body, ...figtree('700'), color: colors.text },
+  status: { ...TYPE.body, ...figtree('700'), color: colors.primary },
   add: { gap: 8 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   choice: { minHeight: 44, paddingHorizontal: 12, borderRadius: 22, borderWidth: 1, borderColor: colors.border, justifyContent: 'center' },
-  choiceOn: { borderWidth: 2, borderColor: colors.text, backgroundColor: FOCAL.mistJade },
-  choiceLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
+  choiceOn: { minHeight: 44, borderWidth: 2, borderColor: colors.text, backgroundColor: FOCAL.mistJade },
+  choiceLabel: { ...TYPE.body, ...figtree('700'), color: colors.text },
   choiceLabelOn: { color: colors.primary },
   dim: { opacity: 0.5 },
-  input: { minHeight: 48, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, fontSize: 16, color: colors.text, backgroundColor: colors.background },
-  hint: { fontSize: 12, color: colors.textMuted },
-  problem: { fontSize: 14, fontWeight: '600', color: colors.danger },
-  notice: { fontSize: 14, fontWeight: '600', color: colors.text },
+  input: { ...figtree('400'), minHeight: 48, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, ...TYPE.body, color: colors.text, backgroundColor: colors.background },
+  hint: { ...figtree('400'), ...TYPE.caption, color: colors.textMuted },
+  problem: { ...TYPE.body, ...figtree('600'), color: colors.danger },
+  notice: { ...TYPE.body, ...figtree('600'), color: colors.text },
   offscreen: { position: 'absolute', width: 1, height: 1, opacity: 0 },
 });

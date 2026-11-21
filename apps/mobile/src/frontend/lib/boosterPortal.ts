@@ -1,5 +1,5 @@
 /**
- * Booster HQ data: the athlete-verification queue and bulk roster (CSV) inserts. Used by app/(booster).
+ * Booster HQ data uses an optional initiating-account client; writes report success only for confirmed stored rows.
  */
 
 import { supabase } from '@/lib/supabase';
@@ -21,12 +21,12 @@ export type PortalWriteResult = { ok: true } | { ok: false; message: string };
  * @returns Queue rows plus a friendly failure message.
  * @sideEffects `verification_requests` SELECT.
  */
-export async function fetchBoosterVerificationQueue(): Promise<{
+export async function fetchBoosterVerificationQueue(client = supabase): Promise<{
   rows: VerificationRequest[];
   error: string | null;
 }> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('verification_requests')
       .select('*')
       .order('full_name', { ascending: true });
@@ -42,25 +42,29 @@ export async function fetchBoosterVerificationQueue(): Promise<{
  * @param rows Parsed roster rows.
  * @sideEffects `players` INSERT.
  */
-export async function insertBoosterRoster(rows: BoosterRosterInput[]): Promise<PortalWriteResult> {
-  const { error } = await supabase.from('players').insert(rows);
-  return error ? { ok: false, message: error.message } : { ok: true };
+export async function insertBoosterRoster(rows: BoosterRosterInput[], client = supabase): Promise<PortalWriteResult> {
+  const { data, error } = await client.from('players').insert(rows).select('id');
+  if (error) return { ok: false, message: error.message };
+  return Array.isArray(data) && data.length === rows.length && data.every(row => typeof row.id === 'string')
+    ? { ok: true } : { ok: false, message: 'Roster insertion was not confirmed. Refresh before trying again.' };
 }
 
 /**
  * @purpose Correct one athlete's jersey from Booster HQ.
  * @sideEffects `players` UPDATE.
  */
-export async function updateBoosterJersey(playerId: string, jerseyNumber: number): Promise<PortalWriteResult> {
-  const { error } = await supabase.from('players').update({ jersey_number: jerseyNumber }).eq('id', playerId);
-  return error ? { ok: false, message: error.message } : { ok: true };
+export async function updateBoosterJersey(playerId: string, jerseyNumber: number, client = supabase): Promise<PortalWriteResult> {
+  const { data, error } = await client.from('players').update({ jersey_number: jerseyNumber }).eq('id', playerId).select('id,jersey_number').single();
+  if (error) return { ok: false, message: error.message };
+  return data?.id === playerId && data.jersey_number === jerseyNumber ? { ok: true } : { ok: false, message: 'Jersey update was not confirmed.' };
 }
 
 /**
  * @purpose Record a Booster verification-queue decision.
  * @sideEffects `verification_requests` UPDATE.
  */
-export async function setBoosterVerification(id: string, status: string): Promise<PortalWriteResult> {
-  const { error } = await supabase.from('verification_requests').update({ status }).eq('id', id);
-  return error ? { ok: false, message: error.message } : { ok: true };
+export async function setBoosterVerification(id: string, status: string, client = supabase): Promise<PortalWriteResult> {
+  const { data, error } = await client.from('verification_requests').update({ status }).eq('id', id).select('id,status').single();
+  if (error) return { ok: false, message: error.message };
+  return data?.id === id && data.status === status ? { ok: true } : { ok: false, message: 'Verification update was not confirmed.' };
 }

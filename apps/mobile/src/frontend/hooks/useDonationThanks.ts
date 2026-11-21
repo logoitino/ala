@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+/** UX-13 frames private donor/athlete thank-yous by Auth lifetime and binds decisions so outgoing work cannot revive or change another account’s gifts. */
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
+import { assertCurrent, createOfflineActorClient } from '@/lib/offlineActor';
+import { offlineQueue } from '@/services/OfflineQueue';
 import {
   fetchDonationsToThank,
   fetchMyDonationThanksResult,
@@ -18,33 +21,66 @@ import {
  * @sideEffects `get_donations_to_thank`, `thank_donation`.
  */
 export function useDonationsToThank(playerId: string | null | undefined) {
-  const [rows, setRows] = useState<DonationToThank[]>([]);
-  const [loading, setLoading] = useState(Boolean(playerId));
-
+  const { user, isSessionCurrent } = useAuth();
+  const userId = user?.id ?? null;
+  const holder = useRef({ userId, playerId, guard: isSessionCurrent, active: false, read: 0, flights: new Set<string>() });
+  if (holder.current.userId !== userId || holder.current.playerId !== playerId || holder.current.guard !== isSessionCurrent) {
+    holder.current = { userId, playerId, guard: isSessionCurrent, active: false, read: 0, flights: new Set<string>() };
+  }
+  const scope = holder.current;
+  const current = useCallback(() => holder.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
+  useEffect(() => { scope.active = true; return () => { scope.active = false; ++scope.read; scope.flights.clear(); }; }, [scope]);
+  const [frame, setFrame] = useState<{ owner: typeof scope; rows: DonationToThank[]; loading: boolean } | null>(null);
+  const shown = frame?.owner === scope && current() ? frame : null;
   const refresh = useCallback(async () => {
-    if (!playerId) {
-      setRows([]);
-      setLoading(false);
-      return;
+    if (!current()) return;
+    const read = ++scope.read;
+    const actor = userId ? offlineQueue.captureActor(userId) : null;
+    const accepted = () => current() && read === scope.read && Boolean(actor?.isCurrent());
+    if (!userId || !playerId) { setFrame({ owner: scope, rows: [], loading: false }); return; }
+    if (!actor) return;
+    setFrame(previous => ({ owner: scope, rows: previous?.owner === scope ? previous.rows : [], loading: true }));
+    try {
+      const rows = await fetchDonationsToThank(playerId);
+      if (accepted()) setFrame({ owner: scope, rows, loading: false });
+    } catch {
+      if (accepted()) setFrame({ owner: scope, rows: [], loading: false });
     }
-    setLoading(true);
-    setRows(await fetchDonationsToThank(playerId));
-    setLoading(false);
-  }, [playerId]);
+  }, [current, scope, playerId, userId]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
   const thank = useCallback(async (tipId: string, key: ThanksKey): Promise<ThankResult> => {
-    const result = await thankDonation(tipId, key);
-    if (result.ok) {
-      setRows((prev) => prev.map((row) => (row.tipId === tipId ? { ...row, thankedKey: key } : row)));
+    const changed: ThankResult = { ok: false, message: 'Your account or athlete changed. Reopen the thank-you list.' };
+    if (!current() || !userId || !playerId) return changed;
+    const captured = offlineQueue.captureActor(userId);
+    if (!captured) return changed;
+    const actor = { userId: captured.userId, isCurrent: () => current() && captured.isCurrent() };
+    if (scope.flights.has(tipId)) return { ok: false, message: 'This thank-you is already being sent.' };
+    scope.flights.add(tipId);
+    ++scope.read;
+    try {
+      const client = await createOfflineActorClient(actor);
+      if (!current()) return changed;
+      assertCurrent(actor);
+      const result = await thankDonation(tipId, key, client);
+      if (!current() || !actor.isCurrent()) return changed;
+      // A read issued before confirmation must not put the row back into an unthanked state.
+      ++scope.read;
+      setFrame(previous => previous?.owner === scope ? { owner: scope, loading: false,
+        rows: result.ok ? previous.rows.map(row => row.tipId === tipId ? { ...row, thankedKey: key } : row) : previous.rows } : previous);
+      return result;
+    } catch {
+      if (current() && actor.isCurrent()) setFrame(previous => previous?.owner === scope ? { ...previous, loading: false } : previous);
+      return current() && actor.isCurrent() ? { ok: false, message: 'Could not send the thank-you.' } : changed;
+    } finally {
+      scope.flights.delete(tipId);
     }
-    return result;
-  }, []);
+  }, [current, scope, userId, playerId]);
 
-  return { rows, loading, refresh, thank };
+  return { rows: shown?.rows ?? [], loading: shown?.loading ?? Boolean(userId && playerId), refresh, thank };
 }
 
 /**
@@ -52,31 +88,32 @@ export function useDonationsToThank(playerId: string | null | undefined) {
  * @sideEffects `get_my_donation_thanks` once signed in.
  */
 export function useMyDonationThanks() {
-  const { user } = useAuth();
+  const { user, isSessionCurrent } = useAuth();
   const userId = user?.id ?? null;
-  const [rows, setRows] = useState<ThanksReceived[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const holder = useRef({ userId, guard: isSessionCurrent, active: false, read: 0 });
+  if (holder.current.userId !== userId || holder.current.guard !== isSessionCurrent) {
+    holder.current = { userId, guard: isSessionCurrent, active: false, read: 0 };
+  }
+  const scope = holder.current;
+  const current = useCallback(() => holder.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
+  useEffect(() => { scope.active = true; return () => { scope.active = false; ++scope.read; }; }, [scope]);
+  const [frame, setFrame] = useState<{ owner: typeof scope; rows: ThanksReceived[]; loading: boolean; error: string | null } | null>(null);
+  const shown = frame?.owner === scope && current() ? frame : null;
   const refresh = useCallback(async () => {
-    if (!userId) {
-      setRows([]);
-      setError(null);
-      return;
-    }
-    setLoading(true);
+    if (!current()) return;
+    const read = ++scope.read;
+    const actor = userId ? offlineQueue.captureActor(userId) : null;
+    const accepted = () => current() && read === scope.read && (!userId || Boolean(actor?.isCurrent()));
+    if (!userId) { setFrame({ owner: scope, rows: [], loading: false, error: null }); return; }
+    if (!actor) return;
+    setFrame(previous => ({ owner: scope, rows: previous?.owner === scope ? previous.rows : [], loading: true, error: null }));
     try {
       const result = await fetchMyDonationThanksResult();
-      setRows(result.rows);
-      setError(result.error);
-    } finally {
-      setLoading(false);
+      if (accepted()) setFrame({ owner: scope, rows: result.rows, loading: false, error: result.error });
+    } catch {
+      if (accepted()) setFrame({ owner: scope, rows: [], loading: false, error: 'We could not load athlete thank-yous. Check your connection and try again.' });
     }
-  }, [userId]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  return { rows, loading, error, refresh };
+  }, [current, scope, userId]);
+  useEffect(() => { void refresh(); }, [refresh]);
+  return { rows: shown?.rows ?? [], loading: shown?.loading ?? Boolean(userId), error: shown?.error ?? null, refresh };
 }

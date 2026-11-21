@@ -1,4 +1,6 @@
-/** Compact Spotlight award rows keep readable names, award-gold field lines and jersey patches. */
+/** Compact Spotlight award rows keep readable names, award-gold field lines and jersey patches.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
@@ -12,6 +14,7 @@ import { auraBadgeLabel, auraTierForPoints, resolveAuraPoints } from '@/lib/aura
 import { spotlightBadgeLabel, spotlightWindowLabel } from '@/lib/spotlight';
 import { FOCAL } from '@/theme/motion';
 import type { SpotlightAward } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type SpotlightAwardCardProps = {
   award: SpotlightAward;
@@ -70,13 +73,13 @@ export function SpotlightAwardCard({ award, featured = false, onPress }: Spotlig
         </View>
       ) : null}
       <View style={styles.copy}>
-        <Text style={[styles.kicker, featured && styles.kickerFeatured]} numberOfLines={1}>
+        <Text style={[styles.kicker, featured && styles.kickerFeatured]}>
           {label}
         </Text>
-        <Text style={styles.name} numberOfLines={1}>
+        <Text style={styles.name}>
           {name}
         </Text>
-        <Text style={styles.headline} numberOfLines={2}>
+        <Text style={styles.headline}>
           {award.headline}
         </Text>
         <Text style={[styles.tier, { color: tier.ink }]}>{auraBadgeLabel(tier)}</Text>
@@ -124,9 +127,10 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   portrait: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    minWidth: 40,
+    minHeight: 40,
+    padding: 4,
+    borderRadius: 20,
     borderWidth: 2.5,
     backgroundColor: colors.surface,
     alignItems: 'center',
@@ -146,7 +150,7 @@ const styles = StyleSheet.create({
   crown: {
     position: 'absolute',
     top: -6,
-    left: 46,
+    left: 38,
     width: 26,
     height: 26,
     borderRadius: 13,
@@ -167,8 +171,8 @@ const styles = StyleSheet.create({
     }),
   },
   initials: {
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     letterSpacing: 0.6,
   },
   copy: {
@@ -178,8 +182,8 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: FOCAL.goldInk,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.5,
   },
   kickerFeatured: {
@@ -187,16 +191,16 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   headline: {
     color: FOCAL.goldInk,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   tier: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
 });

@@ -1,3 +1,4 @@
+/** UX-13 OperationsBoard.tsx preserves existing actions with readable spacing/type. */
 'use client';
 
 /**
@@ -98,7 +99,7 @@ export function OperationsBoard({ lenses }: { lenses: OperationsLens[] }) {
               tabIndex={on ? 0 : -1}
               onClick={() => setActive(item.id)}
               onKeyDown={onKeyDown}
-              className={`inline-flex min-h-10 items-center justify-center gap-2 border-b-2 px-3 text-sm font-extrabold ${
+              className={`inline-flex min-h-11 items-center justify-center gap-2 border-b-2 px-3 text-sm font-extrabold ${
                 on
                   ? 'border-[var(--jade)] text-[var(--jade)]'
                   : 'border-transparent text-[var(--ink-soft)] hover:border-[var(--border)] hover:text-[var(--ink)]'

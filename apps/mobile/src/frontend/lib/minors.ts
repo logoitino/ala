@@ -2,7 +2,8 @@
  * Minor accounts (MINOR-01): birth month and year, guardian links and the signed consent, supervision and under-16
  * approvals, and the admin desk's minor tools. Every rule lives in the database (`20261014110000_minor_accounts.sql`);
  * this file calls those functions and names things for the screens. Design: docs/engineering/design/MINOR_ACCOUNTS_DESIGN.md.
- * Birth month and year never go to telemetry.
+ * Birth month and year never go to telemetry. Auth can supply its originating account's bound client for the
+ * birth update, so a pending age card cannot borrow an incoming session (UX-13).
  * QUIZ-05: the summary's "fun facts shared" count (null on servers without it) and plain event lines for fun-fact
  * approvals (`change: 'fun_fact'`), which are decided in the guardian panel's fun-fact list, not the generic requests.
  * @sideEffects Database functions through `callRpc`; AsyncStorage for the under-13 device pause.
@@ -12,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GUARDIAN_CONSENT_SHA256, GUARDIAN_CONSENT_VERSION } from '@/data/guardianConsent';
 import { parsePrivacy, privacyPayload, type PrivacySettings } from '@/lib/privacy';
 import { callRpc } from '@/lib/rpc';
+import { supabase } from '@/lib/supabase';
 
 export type AgeBand = 'under_13' | 'teen_13_15' | 'teen_16_17' | 'adult' | 'not_given' | 'unknown';
 export type ApprovalKey = 'account_public' | 'friend_requests_everyone';
@@ -76,8 +78,8 @@ export async function isAgeGatePaused(now: number = Date.now()): Promise<boolean
 }
 
 /** @purpose Record (or correct to a younger age) your birth month and year. 'blocked' means the account is closed. */
-export async function recordMyBirthMonth(year: number, month: number): Promise<'ok' | 'blocked'> {
-  const raw = await callRpc<Record<string, unknown> | null>('set_my_birth_month', { birth_y: year, birth_m: month });
+export async function recordMyBirthMonth(year: number, month: number, client = supabase): Promise<'ok' | 'blocked'> {
+  const raw = await callRpc<Record<string, unknown> | null>('set_my_birth_month', { birth_y: year, birth_m: month }, client);
   return raw?.status === 'blocked' ? 'blocked' : 'ok';
 }
 

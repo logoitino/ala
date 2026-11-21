@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ScreenShell } from '@/components/ScreenShell';
@@ -21,21 +21,30 @@ import {
 export default function SchoolConfirmScreen() {
   const { t: raw } = useLocalSearchParams<{ t?: string | string[] }>();
   const token = (Array.isArray(raw) ? raw[0] : raw) ?? '';
+  // A staff link is the credential. Changing it remounts all queue/signature/decision state together.
+  return <SchoolConfirmBody key={token} token={token} />;
+}
+
+function SchoolConfirmBody({ token }: { token: string }) {
   const [queue, setQueue] = useState<ConfirmationQueue | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [signature, setSignature] = useState('');
   const [done, setDone] = useState<{ name: string; approved: boolean }[]>([]);
+  const active = useRef(true);
+  const revision = useRef(0);
+  useEffect(() => { active.current = true; return () => { active.current = false; ++revision.current; }; }, []);
 
   const load = useCallback(async () => {
+    const request = ++revision.current;
     setLoading(true);
     try {
-      setQueue(await fetchConfirmationQueue(token));
-      setError(null);
+      const next = await fetchConfirmationQueue(token);
+      if (active.current && revision.current === request) { setQueue(next); setError(null); }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not open this link.');
+      if (active.current && revision.current === request) setError(err instanceof Error ? err.message : 'Could not open this link.');
     } finally {
-      setLoading(false);
+      if (active.current && revision.current === request) setLoading(false);
     }
   }, [token]);
 
@@ -45,7 +54,7 @@ export default function SchoolConfirmScreen() {
 
   const decide = async (requestId: string, name: string, approve: boolean, meetCode: string): Promise<ConfirmResult> => {
     const result = await confirmAthlete({ token, requestId, approve, meetCode, signature });
-    if (result.ok) {
+    if (result.ok && active.current) {
       setDone((prev) => [{ name, approved: result.status === 'approved' }, ...prev]);
       setQueue((prev) => (prev ? { ...prev, requests: prev.requests.filter((r) => r.id !== requestId) } : prev));
     }

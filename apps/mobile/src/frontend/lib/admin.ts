@@ -8,6 +8,7 @@
 
 import { athleteOrGuardianReported, queueReasonLabel } from '@/data/contentRights';
 import type { AdminNavHref } from '@/lib/adminNav';
+import type { OfflineActorClient } from '@/lib/offlineActor';
 import { parseSpotlightAward, utcWeekStart } from '@/lib/spotlight';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { Player, ReelWithPlayer, SpotlightAward } from '@/types/database';
@@ -110,7 +111,7 @@ export async function fetchAdminSpotlightAwards(): Promise<SpotlightAward[]> {
  * @purpose Publish Player of the Week / Month from the admin form.
  * @sideEffects `publish_spotlight_award` RPC; `spotlight_awards` INSERT fallback.
  */
-export async function publishSpotlightAward(input: PublishSpotlightInput): Promise<SpotlightAward> {
+export async function publishSpotlightAward(input: PublishSpotlightInput, client: OfflineActorClient = supabase): Promise<SpotlightAward> {
   const headline = input.headline.trim();
   if (!input.playerId) throw new Error('Select an athlete.');
   if (!headline) throw new Error('Add a performance headline.');
@@ -118,7 +119,7 @@ export async function publishSpotlightAward(input: PublishSpotlightInput): Promi
   if (input.endDate < input.startDate) throw new Error('End date must be on or after start date.');
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
 
-  const { data, error } = await supabase.rpc('publish_spotlight_award', {
+  const { data, error } = await client.rpc('publish_spotlight_award', {
     target_player_id: input.playerId,
     award_headline: headline,
     period_kind: input.periodKind,
@@ -136,7 +137,11 @@ export async function publishSpotlightAward(input: PublishSpotlightInput): Promi
     if (parsed) return parsed;
   }
 
-  const { data: inserted, error: insertError } = await supabase
+  // Only a missing legacy function permits the existing table fallback. Permission/freeze/transport refusals remain terminal.
+  if (!error || !['PGRST202', '42883'].includes(error.code)) {
+    throw new Error(error?.message || 'Could not publish this Spotlight award.');
+  }
+  const { data: inserted, error: insertError } = await client
     .from('spotlight_awards')
     .insert({
       award_type: input.periodKind,
@@ -147,7 +152,7 @@ export async function publishSpotlightAward(input: PublishSpotlightInput): Promi
     })
     .select('*')
     .single();
-  if (insertError) throw new Error(error?.message || insertError.message);
+  if (insertError) throw new Error(insertError.message);
   const parsed = parseSpotlightAward(inserted);
   if (!parsed) throw new Error('Could not publish this Spotlight award.');
   return parsed;
@@ -388,9 +393,9 @@ export async function fetchAdminFlags(withTelemetry = false): Promise<AdminFlagR
  * @param action `dismiss` clears `is_flagged`; `remove` sets `is_removed`.
  * @sideEffects `moderate_flagged_reel` RPC (admin-only; SECURITY DEFINER).
  */
-export async function moderateFlaggedReel(reelId: string, action: 'dismiss' | 'remove'): Promise<void> {
+export async function moderateFlaggedReel(reelId: string, action: 'dismiss' | 'remove', client: OfflineActorClient = supabase): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-  const { error } = await supabase.rpc('moderate_flagged_reel', {
+  const { error } = await client.rpc('moderate_flagged_reel', {
     target_reel_id: reelId,
     moderation_action: action,
   });
@@ -405,9 +410,11 @@ export async function moderateFlaggedReel(reelId: string, action: 'dismiss' | 'r
  * @purpose Dismiss a telemetry incident row from the moderation table.
  * @sideEffects `telemetry_logs` DELETE (authenticated).
  */
-export async function dismissTelemetryIncident(logId: string): Promise<void> {
-  if (!isSupabaseConfigured || !logId) return;
-  await supabase.from('telemetry_logs').delete().eq('id', logId);
+export async function dismissTelemetryIncident(logId: string, client: OfflineActorClient = supabase): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  if (!logId) throw new Error('Select a telemetry incident.');
+  const { error } = await client.from('telemetry_logs').delete().eq('id', logId);
+  if (error) throw new Error(error.message);
 }
 
 /**

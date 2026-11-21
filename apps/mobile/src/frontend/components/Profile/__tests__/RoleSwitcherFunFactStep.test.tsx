@@ -10,7 +10,7 @@ import { RoleSwitcherModal } from '@/components/Profile/RoleSwitcherModal';
 import type { FunFactMine } from '@shared/freshQuestions';
 
 const team = { id: 'team-1', name: 'Kahuku High', mascot: 'Red Raiders', level: 'high_school' as const, division: 'High School', region: 'HI' };
-const mockAuth = { activeRole: 'fan' as const, isAthlete: false, profile: { team: null }, setActiveRole: jest.fn(), completeAthleteOnboarding: jest.fn(async () => {}) };
+const mockAuth = { activeRole: 'fan' as const, isAthlete: false, user: { id: 'owner-a' }, isSessionCurrent: () => true, profile: { id: 'owner-a', team: null }, setActiveRole: jest.fn(), completeAthleteOnboarding: jest.fn(async () => {}) };
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => mockAuth }));
 const mockToast = jest.fn();
 jest.mock('@/context/CelebrationContext', () => ({ useCelebration: () => ({ showToast: mockToast }) }));
@@ -37,7 +37,7 @@ const mine = (over: Partial<FunFactMine> = {}): FunFactMine => ({ contract_versi
   prompts: [{ key: 'hype_song', label: 'Hype song', answers: null }], facts: [], ...over });
 
 beforeEach(() => {
-  jest.clearAllMocks(); mockClient.calls = []; mockAuth.isAthlete = false;
+  jest.clearAllMocks(); mockClient.calls = []; mockAuth.isAthlete = false; mockAuth.profile.id='owner-a'; mockAuth.user.id='owner-a'; mockAuth.isSessionCurrent=()=>true; mockAuth.completeAthleteOnboarding.mockReset().mockResolvedValue(undefined);
   mockClient.handler = (fn) => fn === 'quiz_fact_mine' ? mine() : null;
   // The test Reanimated mock never runs animation callbacks; run the close callback so dismiss finishes.
   // The shared test mock hands out a new shared value every render, which would re-run the sheet's open effect (and
@@ -98,4 +98,21 @@ it('an existing athlete saving a roster never sees the step', async () => {
   await fireEvent.press(screen.getByLabelText('Save athlete roster'));
   await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   expect(mockClient.calls).toEqual([]);
+});
+
+it('a refused roster write stays open with friendly feedback and never shows the fun-fact step', async () => {
+  mockAuth.completeAthleteOnboarding.mockRejectedValue(new Error('backend refused claim'));
+  const onClose=jest.fn(); await render(<RoleSwitcherModal visible onClose={onClose}/>); await claim();
+  expect(screen.getByText("Couldn't save your roster. Please try again.")).toBeTruthy();
+  expect(mockToast).not.toHaveBeenCalledWith(expect.stringContaining('School claimed'));
+  expect(screen.queryByText('Share a fun fact?')).toBeNull(); expect(onClose).not.toHaveBeenCalled();
+});
+it('an expired initiating account suppresses a late successful claim', async () => {
+  let release!: () => void; let current=true; mockAuth.isSessionCurrent=()=>current;
+  mockAuth.completeAthleteOnboarding.mockImplementation(()=>new Promise<void>(done=>{release=done;}));
+  const onClose=jest.fn(); const view=await render(<RoleSwitcherModal visible onClose={onClose}/>); await claim();
+  current=false; mockAuth.isSessionCurrent=()=>true; mockAuth.profile.id='owner-b'; mockAuth.user.id='owner-b';
+  await view.rerender(<RoleSwitcherModal visible onClose={onClose}/>); await act(async()=>release());
+  expect(mockToast).not.toHaveBeenCalledWith(expect.stringContaining('School claimed'));
+  expect(screen.queryByText('Share a fun fact?')).toBeNull(); expect(onClose).not.toHaveBeenCalled();
 });

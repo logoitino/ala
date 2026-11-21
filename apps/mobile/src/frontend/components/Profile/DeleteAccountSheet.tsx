@@ -1,7 +1,7 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Profile → Delete account (P1-01 request surface). Starts an account-deletion request without claiming automated
  * erasure: counsel still owns what gift/ledger rows must be kept. Records the request in admin Feedback, then signs
- * the person out so the device leaves the account. Destructive auto-wipe stays WORK_QUEUE P1-01.
+ * only the initiating account out so the device leaves the account. Destructive auto-wipe stays WORK_QUEUE P1-01.
  */
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -13,8 +13,10 @@ import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { colors, KIT, MENU_METRICS } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
+import { assertCurrent, createOfflineActorClient } from '@/lib/offlineActor';
+import { offlineQueue } from '@/services/OfflineQueue';
 import { submitAppFeedback } from '@/lib/feedback';
-import { TYPE } from '@/theme/fonts';
+import { TYPE, figtree } from '@/theme/fonts';
 import { FOCAL } from '@/theme/motion';
 
 const REQUEST_PREFIX = '[account-deletion-request]';
@@ -55,14 +57,21 @@ export function DeleteAccountSheet({ visible, onClose }: { visible: boolean; onC
     setBusy(true);
     setError(null);
     try {
+      const actor = offlineQueue.captureActor(user?.id);
+      if (!actor) throw new Error('Sign in again before requesting account deletion.');
+      const client = await createOfflineActorClient(actor);
+      assertCurrent(actor);
       const who = profile?.username || profile?.full_name?.trim() || user?.id || 'signed-in account';
       await submitAppFeedback(
         `${REQUEST_PREFIX} Please delete my Tapua'i account (${who}). I understand gift and bookkeeping records may be kept where the law requires.`,
         'other',
         'profile',
+        client,
       );
+      assertCurrent(actor);
       setDone(true);
       await signOut();
+      if (offlineQueue.captureActor()) throw new Error('Account changed. Reopen this action.');
       onClose();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not send the deletion request.');
@@ -142,8 +151,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.1,
     textTransform: 'uppercase',
     color: FOCAL.ember,
@@ -151,10 +160,10 @@ const styles = StyleSheet.create({
   title: { ...TYPE.title, color: colors.text, letterSpacing: -0.3 },
   scroll: { maxHeight: 180 },
   scrollInner: { gap: 8, paddingBottom: 4 },
-  body: { ...TYPE.body, color: colors.text, fontWeight: '600' },
+  body: { ...TYPE.body, color: colors.text, ...figtree('600') },
   bodyMuted: { ...TYPE.caption, color: colors.textMuted, lineHeight: 17 },
-  error: { ...TYPE.caption, color: colors.danger, fontWeight: '700' },
-  notice: { ...TYPE.caption, color: FOCAL.jadeInk, fontWeight: '700' },
+  error: { ...TYPE.caption, color: colors.danger, ...figtree('700') },
+  notice: { ...TYPE.caption, color: FOCAL.jadeInk, ...figtree('700') },
   spinner: { marginTop: -4 },
   cancel: {
     minHeight: MENU_METRICS.touchTarget,
@@ -162,5 +171,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: KIT.controlRadius,
   },
-  cancelLabel: { fontSize: 14, fontWeight: '700', color: colors.textMuted },
+  cancelLabel: { ...TYPE.body, ...figtree('700'), color: colors.textMuted },
 });

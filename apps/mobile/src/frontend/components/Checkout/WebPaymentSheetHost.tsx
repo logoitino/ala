@@ -1,11 +1,11 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Web-only Stripe Payment Element host. Mirrors native PaymentSheet present/cancel for Expo web.
  * Mounted under the web StripeProvider; never imported from native entry points.
  * Dismissal is locked while `confirmPayment` is in flight so a backdrop/Escape cancel cannot
  * drop a successful charge before tips / Exclusive grant run.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 import { Elements, PaymentElement, useElements, useStripe as useStripeJs } from '@stripe/react-stripe-js';
 import type { Stripe } from '@stripe/stripe-js';
 
@@ -15,6 +15,7 @@ import {
   type WebPaymentSheetResult,
 } from '@/lib/webPaymentSheetBridge';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type SheetState = {
   clientSecret: string;
@@ -39,6 +40,7 @@ function WebPaymentSheetForm({
   onClose: (result: WebPaymentSheetResult) => void;
   onBusyChange: (busy: boolean) => void;
 }) {
+  const { height: windowHeight } = useWindowDimensions();
   const stripe = useStripeJs();
   const elements = useElements();
   const [busy, setBusy] = useState(false);
@@ -80,7 +82,7 @@ function WebPaymentSheetForm({
   };
 
   return (
-    <View style={styles.sheet} accessibilityRole="summary">
+    <View style={[styles.sheet, { maxHeight: windowHeight * 0.85 }]} accessibilityRole="summary"><ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent}>
       <Text style={styles.kicker}>{merchantDisplayName}</Text>
       <Text style={styles.title}>Secure checkout</Text>
       {process.env.EXPO_PUBLIC_APP_ENV !== 'production' ? (
@@ -101,6 +103,7 @@ function WebPaymentSheetForm({
       >
         <Text style={styles.payLabel}>{busy ? 'Processing…' : 'Pay now'}</Text>
       </Pressable>
+      </ScrollView>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Cancel payment"
@@ -192,6 +195,8 @@ export function WebPaymentSheetHost({ stripe }: WebPaymentSheetHostProps) {
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flexGrow: 0, flexShrink: 1 },
+  bodyContent: { gap: 10 },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 20, 0.55)',
@@ -211,20 +216,20 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 22,
-    fontWeight: '900',
+    ...TYPE.title,
+    ...figtree('900'),
   },
   hint: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     marginBottom: 4,
   },
   elementWrap: {
@@ -233,8 +238,8 @@ const styles = StyleSheet.create({
   },
   error: {
     color: colors.danger,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   payBtn: {
     minHeight: 48,
@@ -244,13 +249,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 8,
   },
-  payBtnDisabled: {
+  payBtnDisabled: { minHeight: 44,
     opacity: 0.55,
   },
   payLabel: {
     color: colors.night,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   cancelBtn: {
     minHeight: 44,
@@ -259,7 +264,7 @@ const styles = StyleSheet.create({
   },
   cancelLabel: {
     color: colors.textMuted,
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
 });

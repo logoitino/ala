@@ -1,4 +1,4 @@
-/** Profile Stats uses the athlete's exact sport playbook for published career rows and measurables. Missing values
+/** UX-13 readable shared type preserves every action and required notice. Profile Stats uses the athlete's exact sport playbook for published career rows and measurables. Missing values
  * stay as dashes; an unrelated caller playbook must never relabel another sport's stored numbers. */
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -14,6 +14,7 @@ import {
   type SportStatSource,
 } from '@/data/sports';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type AthleteStatsTabProps = {
   stats: AthleteStatsBundle;
@@ -130,9 +131,9 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.primary,
-    fontSize: 12,
+    ...TYPE.caption,
     flexShrink: 1,
-    fontWeight: '800',
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
@@ -154,17 +155,17 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     color: colors.primary,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   metricLabel: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   statTile: { flexGrow: 1, flexBasis: '44%', minWidth: 100, padding: 10, gap: 3, borderRadius: radii.md, backgroundColor: FOCAL.mistJade, borderTopWidth: 3, borderTopColor: colors.border },
-  statValue: { color: colors.primary, fontSize: 24, fontWeight: '900' },
-  statLabel: { color: colors.primary, fontSize: 12, fontWeight: '800' },
+  statValue: { color: colors.primary, ...TYPE.title, ...figtree('900') },
+  statLabel: { color: colors.primary, ...TYPE.caption, ...figtree('800') },
   tableHead: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -188,21 +189,21 @@ const styles = StyleSheet.create({
   },
   logDate: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   logStat: {
     color: FOCAL.jadeInk,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   logOpp: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
-  empty: {
+  empty: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
+    ...TYPE.body,
   },
 });

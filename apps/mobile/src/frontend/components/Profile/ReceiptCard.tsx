@@ -1,4 +1,4 @@
-/** Personal-gift receipt, including the tax notice; legacy receipt fields keep their API names. */
+/** UX-13 readable shared type preserves every action and required notice. Personal-gift receipt, including the tax notice; legacy receipt fields keep their API names. */
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
@@ -8,6 +8,7 @@ import { colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { tipChannelLabel } from '@/lib/finance';
 import { SPRING_CARD } from '@/theme/motion';
 import type { FanTipReceipt } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type ReceiptCardProps = {
   receipt: FanTipReceipt;
@@ -145,8 +146,8 @@ const styles = StyleSheet.create({
   },
   initials: {
     color: colors.primary,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     letterSpacing: 0.4,
   },
   identity: {
@@ -155,18 +156,18 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   school: {
     color: colors.primary,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   stamp: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
   ledgerRow: {
     flexDirection: 'row',
@@ -174,11 +175,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 10,
   },
-  malo: {
+  malo: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     flex: 1,
     color: colors.text,
-    fontSize: 20,
+    ...TYPE.title,
   },
   auraBadge: {
     backgroundColor: colors.accentSoft,
@@ -190,8 +191,8 @@ const styles = StyleSheet.create({
   },
   auraBadgeLabel: {
     color: colors.primary,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   viewReel: {
     minHeight: 44,
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
   },
   viewReelLabel: {
     color: colors.primary,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
 });

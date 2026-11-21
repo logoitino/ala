@@ -1,4 +1,6 @@
+/** Failed caption/Vault writes stay failures; account-bound Vault dispatch preserves current ownership. */
 /** Highlights retains recorded sport repairs in its existing editor; metadata and historical tags remain separate. */
+import { offlineQueue } from '@/services/OfflineQueue';
 import { useCallback, useMemo, useState } from 'react';
 import {  useFocusEffect, useRouter } from 'expo-router';
 
@@ -92,8 +94,10 @@ export function HighlightsTool() {
     try {
       await work();
       await refresh();
+      return true;
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not update this clip.');
+      return false;
     } finally {
       setBusyId(null);
     }
@@ -101,8 +105,7 @@ export function HighlightsTool() {
 
   const saveMeta = async () => {
     if (!selected) return;
-    await act(selected.id, () => patchHighlight(selected.id, { title, category }));
-    setMessage('Caption saved. Home and Profile will show it.');
+    if (await act(selected.id, () => patchHighlight(selected.id, { title, category }))) setMessage('Caption saved. Home and Profile will show it.');
   };
 
   return (
@@ -142,7 +145,7 @@ export function HighlightsTool() {
           <AdminBtn
             label={selected.is_vault_only ? 'Move to public feed' : 'Move to Vault'}
             disabled={busyId === selected.id}
-            onPress={() => void act(selected.id, async () => { await toggleReelVaultStatus(selected.id, selected.is_vault_only); })}
+            onPress={() => { const actor = offlineQueue.captureActor(); if (!actor) return; void act(selected.id, async () => { await toggleReelVaultStatus(selected.id, selected.is_vault_only, actor); }); }}
           />
           <HighlightSportPanel reelId={selected.id} />
           <AdminBtn label="Close" onPress={() => setSelected(null)} />

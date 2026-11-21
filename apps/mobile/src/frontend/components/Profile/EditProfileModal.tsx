@@ -1,21 +1,11 @@
-/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
+/** UX-13 readable shared type preserves every action and required notice. UX-13 save failures remain visible and late results never close another account frame. Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
  * QUIZ-05: athletes also see "Share a fun fact?" here (FunFactShare saves on its own; it hides itself when the server
  * says this account can't share or fun facts are off). My sports saves its own confirmed atomic draft. */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated from 'react-native-reanimated';
 
@@ -34,6 +24,7 @@ import { FunFactShare } from '@/components/Profile/FunFactShare';
 import { MySportsModal } from '@/components/Profile/MySportsModal';
 import { useAthleteSports } from '@/hooks/useAthleteSports';
 import type { AthleteSportsSnapshot } from '@/lib/athleteSports';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const EDIT_PROFILE_TRAVEL = 520;
 const BIO_MAX = 500;
@@ -75,7 +66,18 @@ type EditProfileModalProps = {
  */
 export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSaved }: EditProfileModalProps) {
   const frame = useSheetFrame();
-  const { profile, updateProfile, isAthlete } = useAuth();
+  const { height: windowHeight } = useWindowDimensions();
+  const { profile, user, isSessionCurrent, updateProfile, isAthlete } = useAuth();
+  // Preserve the initiating account and modal frame through awaits and delayed close animations.
+  const mounted = useRef(true);
+  const ownerId = user?.id ?? profile?.id ?? null;
+  const authFrame = useRef({ ownerId, visible, guard: isSessionCurrent });
+  if (authFrame.current.ownerId !== ownerId || authFrame.current.visible !== visible || authFrame.current.guard !== isSessionCurrent) {
+    authFrame.current = { ownerId, visible, guard: isSessionCurrent };
+  }
+  const [saveError, setSaveError] = useState<string | null>(null);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => { setSaveError(null); setSaving(false); }, [ownerId, visible, isSessionCurrent]);
   const sports = useAthleteSports(profile?.id, isAthlete && visible);
   const [sportsOpen, setSportsOpen] = useState(false);
   const initialized = useRef<string | null>(null);
@@ -108,9 +110,10 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSave
 
   if (!open && !visible) return null;
 
-  const dismiss = () => {
+  const dismiss = (requestGuard?: unknown) => {
     if (saving) return;
     playClose(() => {
+      if (typeof requestGuard === 'function' && !requestGuard()) return;
       setOpen(false);
       onClose();
     });
@@ -122,6 +125,10 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSave
       showToast(RESERVED_BADGE_MARKS_ERROR);
       return;
     }
+    const requestFrame = authFrame.current;
+    const isCurrent = () => mounted.current && requestFrame === authFrame.current && requestFrame.visible && (requestFrame.guard?.() ?? true);
+    if (!isCurrent()) return;
+    setSaveError(null);
     setSaving(true);
     try {
       const cleanedSocial = Object.fromEntries(
@@ -136,10 +143,13 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSave
         social_links: cleanedSocial,
         ...(privacyReady ? {} : { profile_visibility: visibility }),
       });
+      if (!isCurrent()) return;
       showToast('Profile updated ✅');
-      dismiss();
+      dismiss(isCurrent);
+    } catch {
+      if (isCurrent()) setSaveError("Couldn't save your profile. Please try again.");
     } finally {
-      setSaving(false);
+      if (isCurrent()) setSaving(false);
     }
   };
 
@@ -151,9 +161,9 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSave
             <BlurView intensity={40} tint="dark" pointerEvents="none" style={StyleSheet.absoluteFill} />
           </Animated.View>
         </Pressable>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={{ flexShrink: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View pointerEvents="box-none" style={frame.dock}>
-          <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+          <Animated.View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }, sheetStyle]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
             <View style={styles.handle} />
@@ -276,6 +286,7 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSave
               </>}
             </ScrollView>
 
+            {saveError ? <Text accessibilityLiveRegion="polite" style={styles.saveError}>{saveError}</Text> : null}
             <AnimatedButton
               accessibilityLabel="Save profile"
               disabled={saving}
@@ -300,6 +311,7 @@ export function EditProfileModal({ visible, onClose, onOpenPrivacy, onSportsSave
 }
 
 const styles = StyleSheet.create({
+  saveError: { ...figtree('400'), color: colors.text, ...TYPE.body,  },
   root: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -321,15 +333,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.1,
     textTransform: 'uppercase',
     color: colors.primary,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     color: colors.text,
     letterSpacing: -0.3,
   },
@@ -341,8 +353,8 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   fieldLabel: {
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     color: colors.text,
     marginTop: 8,
   },
@@ -353,8 +365,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   charCount: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: colors.textMuted,
   },
   input: {
@@ -364,8 +376,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.background,
     paddingHorizontal: 14,
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.text,
   },
   bioInput: {
@@ -374,30 +386,30 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: colors.text,
     marginTop: 14,
   },
   sectionHint: {
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
     color: colors.textMuted,
-    lineHeight: 17,
+
     marginBottom: 4,
   },
   socialRow: {
     gap: 4,
   },
   socialLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: colors.textMuted,
   },
   socialInput: {
     minHeight: 42,
   },
-  visRow: {
+  visRow: { minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -411,13 +423,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   visLabel: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.text,
   },
   visHint: {
-    fontSize: 11,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
     color: colors.textMuted,
   },
   visPill: {
@@ -436,8 +448,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   visPillLabel: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     color: colors.textMuted,
   },
   visPillLabelOn: {
@@ -451,21 +463,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 6,
   },
-  submitOff: {
+  submitOff: { minHeight: 44,
     opacity: 0.6,
   },
   submitLabel: {
     color: colors.onAccent,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
-  close: {
+  close: { minHeight: 44,
     alignItems: 'center',
     paddingVertical: 8,
   },
   closeLabel: {
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.textMuted,
   },
 });

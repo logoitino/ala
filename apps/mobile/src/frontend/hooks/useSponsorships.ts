@@ -1,5 +1,5 @@
 /**
- * Local Team Boosters: loads active sponsorships (a demo rail when there are none) and records new ones. The database
+ * Account-bound paid Local Team Boosters: loads active sponsorships (a demo rail when there are none) and records new ones. The database
  * and Storage calls (including the logo upload) live in `lib/sponsorships`.
  * @sideEffects `sponsorships` read and insert through lib/.
  */
@@ -7,6 +7,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
+import { assertCurrent } from '@/lib/offlineActor';
+import type { PaymentActor } from '@/lib/payments';
 import { useAuth } from '@/context/AuthContext';
 import { DEMO_SPONSORSHIPS, sponsorTierById } from '@/data/sponsorships';
 import { fetchActiveSponsorships, insertSponsorship } from '@/lib/sponsorships';
@@ -57,10 +59,11 @@ export function useSponsorships() {
   );
 
   const recordSponsorship = useCallback(
-    async ({ businessName, logoUrl, schoolTeam, tier }: RecordSponsorshipInput) => {
+    async ({ businessName, logoUrl, schoolTeam, tier }: RecordSponsorshipInput, payment?: PaymentActor) => {
+      if (payment) assertCurrent(payment.actor);
       const pack = sponsorTierById(tier);
       const payload = {
-        sponsor_user_id: user?.id ?? null,
+        sponsor_user_id: payment?.actor.userId ?? user?.id ?? null,
         business_name: businessName.trim(),
         logo_url: logoUrl.trim(),
         school_team: schoolTeam.trim(),
@@ -83,18 +86,9 @@ export function useSponsorships() {
         return;
       }
 
-      const saved = await insertSponsorship(payload);
-      if (!saved.ok) {
-        setRows((current) => [
-          {
-            id: `local-${Date.now()}`,
-            ...payload,
-            created_at: new Date().toISOString(),
-          },
-          ...current.filter((row) => !row.id.startsWith('demo-')),
-        ]);
-        return;
-      }
+      const saved = await insertSponsorship(payload, payment?.client);
+      if (payment) assertCurrent(payment.actor);
+      if (!saved.ok) throw new Error('Your sponsorship payment went through, but its record could not be saved. Contact support before paying again.');
       const parsed = saved.sponsorship;
       if (parsed) {
         setRows((current) => [parsed, ...current.filter((row) => row.id !== parsed.id && !row.id.startsWith('demo-'))]);

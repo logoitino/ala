@@ -1,11 +1,12 @@
 /**
- * The Crew: follow an athlete, see Crew and Squad counts, and whether the follow is mutual ("Teammates").
+ * Account-bound Crew writes refuse a departed owner before each HTTP request. The Crew: follow an athlete, see Crew and Squad counts, and whether the follow is mutual ("Teammates").
  * Crew alerts (DATA-01-F2): the queue `set_reel_flash_unlock` fills is read on Activity and cleared by the fan.
  * @sideEffects `get_crew_graph` and `toggle_crew_follow` RPCs; `crew_push_queue` SELECT (own rows); `clear_my_crew_alerts` RPC.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { assertCurrent, OfflineActorChangedError, createOfflineActorClient, isOfflineActorChanged, type OfflineActor } from '@/lib/offlineActor';
 import { FLASH_UNLOCK_HOURS } from '@/data/exclusive';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { isMissingFunction } from '@/lib/dbErrors';
@@ -55,7 +56,7 @@ function parseGraph(raw: unknown): CrewGraph | null {
  * @returns Graph counts. Missing table/RPC falls back to local follow flags.
  * @sideEffects `get_crew_graph` RPC; `crew_follows` SELECT fallback; AsyncStorage `tapuai.crewFollow.*`.
  */
-export async function fetchCrewGraph(athleteId: string, userId?: string | null): Promise<CrewGraph> {
+export async function fetchCrewGraph(athleteId: string, userId?: string | null, client = supabase): Promise<CrewGraph> {
   const localFollow = (await AsyncStorage.getItem(followKey(athleteId, userId))) === '1';
   const fallback: CrewGraph = {
     ...emptyGraph(),
@@ -64,16 +65,17 @@ export async function fetchCrewGraph(athleteId: string, userId?: string | null):
   };
   if (!isSupabaseConfigured || !isUuid(athleteId)) return fallback;
 
-  const { data, error } = await supabase.rpc('get_crew_graph', { target_athlete_id: athleteId });
+  const { data, error } = await client.rpc('get_crew_graph', { target_athlete_id: athleteId });
   const parsed = parseGraph(data);
   if (!error && parsed) {
     await AsyncStorage.setItem(followKey(athleteId, userId), parsed.following ? '1' : '0');
     return parsed;
   }
 
-  if (!userId) return fallback;
+  if (client !== supabase && isOfflineActorChanged(error)) throw error;
+  if (!isMissingFunction(error) || !userId) return fallback;
 
-  const mine = await supabase
+  const mine = await client
     .from('crew_follows')
     .select('athlete_id')
     .eq('follower_id', userId)
@@ -81,7 +83,7 @@ export async function fetchCrewGraph(athleteId: string, userId?: string | null):
     .maybeSingle();
   if (mine.error) return fallback;
 
-  const crew = await supabase.from('crew_follows').select('follower_id', { count: 'exact', head: true }).eq('athlete_id', athleteId);
+  const crew = await client.from('crew_follows').select('follower_id', { count: 'exact', head: true }).eq('athlete_id', athleteId);
   const following = Boolean(mine.data);
   await AsyncStorage.setItem(followKey(athleteId, userId), following ? '1' : '0');
   return {
@@ -104,40 +106,42 @@ export async function setCrewFollow(
   athleteId: string,
   userId: string,
   join: boolean,
+  actor?: OfflineActor,
 ): Promise<CrewGraph> {
-  await AsyncStorage.setItem(followKey(athleteId, userId), join ? '1' : '0');
+  if (actor) {
+    assertCurrent(actor);
+    if (actor.userId !== userId) throw new Error('Crew account changed.');
+  }
   if (!isSupabaseConfigured || !isUuid(athleteId)) {
+    await AsyncStorage.setItem(followKey(athleteId, userId), join ? '1' : '0');
+    if (actor) assertCurrent(actor);
     return { crew_count: join ? 1 : 0, squad_count: 0, following: join, mutual: false };
   }
-
-  const { data, error } = await supabase.rpc('toggle_crew_follow', {
+  const client = actor ? await createOfflineActorClient(actor) : supabase;
+  if (actor) assertCurrent(actor);
+  const { data, error } = await client.rpc('toggle_crew_follow', {
     target_athlete_id: athleteId,
     should_join: join,
   });
+  if (actor) assertCurrent(actor);
   const parsed = parseGraph(data);
   if (!error && parsed) {
     await AsyncStorage.setItem(followKey(athleteId, userId), parsed.following ? '1' : '0');
+    if (actor) assertCurrent(actor);
     return parsed;
   }
-
+  if (!isMissingFunction(error)) throw new Error(error?.message || 'Crew follow was not confirmed.');
   if (join) {
-    const { error: insertError } = await supabase.from('crew_follows').insert({
-      follower_id: userId,
-      athlete_id: athleteId,
-    });
-    if (insertError && !/duplicate|unique/i.test(insertError.message)) {
-      throw insertError;
-    }
+    const { error: insertError } = await client.from('crew_follows').insert({ follower_id: userId, athlete_id: athleteId });
+    if (insertError && insertError.code !== '23505') throw insertError;
   } else {
-    const { error: deleteError } = await supabase
-      .from('crew_follows')
-      .delete()
-      .eq('follower_id', userId)
-      .eq('athlete_id', athleteId);
+    const { error: deleteError } = await client.from('crew_follows').delete().eq('follower_id', userId).eq('athlete_id', athleteId);
     if (deleteError) throw deleteError;
   }
-
-  return fetchCrewGraph(athleteId, userId);
+  if (actor) assertCurrent(actor);
+  const graph = await fetchCrewGraph(athleteId, userId, client);
+  if (actor) assertCurrent(actor);
+  return graph;
 }
 
 /**
@@ -146,9 +150,13 @@ export async function setCrewFollow(
  * @returns `players.id` list. Empty for guests.
  * @sideEffects `crew_follows` SELECT.
  */
-export async function fetchSquadAthleteIds(userId?: string | null): Promise<string[]> {
+export async function fetchSquadAthleteIds(userId?: string | null, actor?: OfflineActor): Promise<string[]> {
   if (!userId || !isSupabaseConfigured) return [];
-  const { data, error } = await supabase.from('crew_follows').select('athlete_id').eq('follower_id', userId);
+  if (actor) { assertCurrent(actor); if (actor.userId !== userId) throw new OfflineActorChangedError(); }
+  const client = actor ? await createOfflineActorClient(actor) : supabase;
+  if (actor) assertCurrent(actor);
+  const { data, error } = await client.from('crew_follows').select('athlete_id').eq('follower_id', userId);
+  if (actor) assertCurrent(actor);
   if (error || !data) return [];
   return data.map((row) => row.athlete_id).filter(Boolean);
 }
@@ -196,13 +204,16 @@ function plusHoursIso(hours: number): string {
  * @returns `flash_unlock_until` plus how many Crew rows were queued.
  * @sideEffects `set_reel_flash_unlock` RPC; `reels.flash_unlock_until` UPDATE fallback; RPC inserts `crew_push_queue`.
  */
-export async function setReelFlashUnlock(reelId: string): Promise<FlashUnlockResult> {
+export async function setReelFlashUnlock(reelId: string, actor?: OfflineActor): Promise<FlashUnlockResult> {
   const fallbackUntil = plusHoursIso(FLASH_UNLOCK_HOURS);
   if (!isSupabaseConfigured || !isUuid(reelId)) {
     return { flash_unlock_until: fallbackUntil, notified_count: 0 };
   }
 
-  const { data, error } = await supabase.rpc('set_reel_flash_unlock', { target_reel_id: reelId });
+  const client = actor ? await createOfflineActorClient(actor) : supabase;
+  if (actor) assertCurrent(actor);
+  const { data, error } = await client.rpc('set_reel_flash_unlock', { target_reel_id: reelId });
+  if (actor) assertCurrent(actor);
   if (!error && data && typeof data === 'object') {
     const row = data as Record<string, unknown>;
     const until =
@@ -216,10 +227,12 @@ export async function setReelFlashUnlock(reelId: string): Promise<FlashUnlockRes
     };
   }
 
-  const { error: updateError } = await supabase
+  if (!isMissingFunction(error)) throw new Error(error?.message || 'Flash Unlock was not confirmed.');
+  const { error: updateError } = await client
     .from('reels')
     .update({ flash_unlock_until: fallbackUntil })
     .eq('id', reelId);
+  if (actor) assertCurrent(actor);
   if (updateError) throw updateError;
   return { flash_unlock_until: fallbackUntil, notified_count: 0 };
 }

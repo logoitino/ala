@@ -1,6 +1,8 @@
 /** Profile sports-goal Rally card shows the existing gift target, status and preset thank-you.
  * Guardian approval, eligibility and payment review stay in the current hooks and checkout flow.
- * @sideEffects Rally reads/actions, gift checkout and published Share through existing helpers. */
+ * @sideEffects Rally reads/actions, gift checkout and published Share through existing helpers.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -33,6 +35,7 @@ import {
 import { telemetry } from '@/services/TelemetryManager';
 import { SPRING_CARD } from '@/theme/motion';
 import { MoreText } from '@/components/UI/MoreText';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type ClipChoice = { id: string; title: string };
 
@@ -327,28 +330,28 @@ const styles = StyleSheet.create({
   },
   kicker: {
     flexShrink: 1,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.1,
     textTransform: 'uppercase',
     color: colors.deepGreen,
   },
   status: {
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: colors.textMuted,
   },
   statusFilled: {
     color: colors.deepGreen,
   },
   title: {
-    fontSize: 17,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
     color: colors.text,
   },
-  story: {
-    fontSize: 14,
-    lineHeight: 20,
+  story: { ...figtree('400'),
+    ...TYPE.body,
+
     color: colors.textMuted,
   },
   track: {
@@ -368,14 +371,14 @@ const styles = StyleSheet.create({
     gap: 8,
     justifyContent: 'space-between',
   },
-  amount: {
+  amount: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
-    fontSize: 15,
+    ...TYPE.body,
     color: colors.text,
   },
   donors: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     color: colors.textMuted,
   },
   thanks: {
@@ -385,13 +388,13 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   thanksText: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.text,
   },
   link: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
     color: colors.deepGreen,
   },
   linkHit: { minHeight: 44, justifyContent: 'center' },
@@ -414,8 +417,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   primaryText: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: '#FFFFFF',
   },
   secondary: {
@@ -429,21 +432,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   secondaryText: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: colors.deepGreen,
   },
   manage: {
     gap: 8,
   },
   manageLabel: {
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
     color: colors.text,
   },
-  manageHint: {
-    fontSize: 12,
-    lineHeight: 17,
+  manageHint: { ...figtree('400'),
+    ...TYPE.caption,
+
     color: colors.textMuted,
   },
   thanksBlock: {
@@ -469,8 +472,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
   },
   clipText: {
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: colors.text,
   },
   textButton: {
@@ -480,8 +483,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   textButtonLabel: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
     color: colors.textMuted,
   },
   dim: {

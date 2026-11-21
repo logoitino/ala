@@ -2,6 +2,7 @@
  * Optional account mentions on the Highlight upload sheet. The selected athlete still
  * decides who receives a gift. At most three accounts.
  * @sideEffects `search_taggable_accounts`.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import { useEffect, useState } from 'react';
@@ -10,6 +11,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { searchTaggableAccounts, type AccountTagHit } from '@/lib/accountTags';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const MAX_TAGS = 3;
 
@@ -95,8 +97,8 @@ export function AccountTagField({
 
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
-  label: { fontSize: 13, fontWeight: '800', color: colors.text },
-  hint: { fontSize: 12, lineHeight: 17, color: colors.textMuted },
+  label: { ...TYPE.button, ...figtree('800'), color: colors.text },
+  hint: { ...figtree('400'), ...TYPE.caption,  color: colors.textMuted },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     minHeight: 44,
@@ -107,16 +109,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  chipLabel: { color: colors.deepGreen, fontSize: 13, fontWeight: '800' },
-  input: {
+  chipLabel: { color: colors.deepGreen, ...TYPE.button, ...figtree('800') },
+  input: { ...figtree('400'),
     minHeight: 44,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: 12,
     color: colors.text,
-    fontSize: 15,
+    ...TYPE.body,
   },
   hit: { minHeight: 44, justifyContent: 'center', paddingVertical: 8 },
-  hitLabel: { fontSize: 15, fontWeight: '700', color: colors.text },
+  hitLabel: { ...TYPE.body, ...figtree('700'), color: colors.text },
 });

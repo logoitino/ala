@@ -1,7 +1,7 @@
 /**
- * Exclusive-pass subscription state for one athlete: cache, refresh, and Soft-Wall-safe grant.
+ * Actor-bound paid Exclusive-pass subscription state for one athlete: cache, refresh, and Soft-Wall-safe grant.
  * Used by Vault unlock on Highlights and Profile Subscribe; grant must read the live session so a
- * pre-login Soft-Wall resume still inserts `subscriptions`.
+ * pre-login Soft-Wall resume still inserts `subscriptions`; private pass state is masked on owner/athlete change.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +9,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 
 import { useAuth } from '@/context/AuthContext';
+import { assertCurrent, createOfflineActorClient } from '@/lib/offlineActor';
+import { offlineQueue } from '@/services/OfflineQueue';
+import type { PaymentActor } from '@/lib/payments';
 import { resolveSessionUserId } from '@/lib/sessionToken';
 import { fetchActiveSubscription, insertSubscription, isPlayerUuid } from '@/lib/subscriptions';
 import { isSupabaseConfigured } from '@/lib/supabase';
@@ -24,47 +27,45 @@ function storageKey(playerId: string, userId?: string | null) {
  * @sideEffects Queries `subscriptions` by `subscriber_id` + `athlete_id`; AsyncStorage cache; insert on grant. Soft-Wall resume resolves the subscriber from the live session.
  */
 export function useAthleteSubscription(playerId: string | undefined) {
-  const { user } = useAuth();
-  const [subscribed, setSubscribed] = useState(false);
-  const [loading, setLoading] = useState(Boolean(playerId));
+  const { user, isSessionCurrent } = useAuth();
+  const identity = `${user?.id ?? 'guest'}/${playerId ?? ''}`;
+  const lifetime = useRef({ identity, guard: isSessionCurrent, generation: 0 });
+  if (lifetime.current.identity !== identity || lifetime.current.guard !== isSessionCurrent) lifetime.current = { identity, guard: isSessionCurrent, generation: lifetime.current.generation + 1 };
+  const generation = lifetime.current.generation;
+  const playerIdRef = useRef(playerId);
+  playerIdRef.current = playerId;
+  const [view, setView] = useState({ generation, subscribed: false, loading: Boolean(playerId) });
   const userIdRef = useRef<string | null>(user?.id ?? null);
   userIdRef.current = user?.id ?? null;
+  const subscribed = view.generation === generation && view.subscribed;
+  const loading = view.generation === generation ? view.loading : Boolean(playerId);
 
   const refresh = useCallback(async () => {
-    if (!playerId) {
-      setSubscribed(false);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
+    if (lifetime.current.identity !== identity || lifetime.current.guard !== isSessionCurrent) return;
+    const capturedGeneration = lifetime.current.generation;
+    const actor = user?.id ? offlineQueue.captureActor(user.id) : null;
+    const current = () => lifetime.current.generation === capturedGeneration && (!actor || actor.isCurrent());
+    const publish = (active: boolean, pending = false) => {
+      if (current()) setView({ generation: capturedGeneration, subscribed: active, loading: pending });
+    };
+    if (!playerId) { publish(false); return; }
+    publish(false, true);
     try {
       if (user?.id && isSupabaseConfigured && isPlayerUuid(playerId)) {
         const { active, failed } = await fetchActiveSubscription(user.id, playerId);
-
-        if (!failed && active) {
-          setSubscribed(true);
-          await AsyncStorage.setItem(storageKey(playerId, user.id), '1');
-          setLoading(false);
-          return;
-        }
-
-        if (!failed && !active) {
-          const local = await AsyncStorage.getItem(storageKey(playerId, user.id));
-          setSubscribed(local === '1');
-          setLoading(false);
+        if (!current()) return;
+        if (!failed) {
+          // A successful server read wins over a previously cached pass (including revocations).
+          if (active) await AsyncStorage.setItem(storageKey(playerId, user.id), '1');
+          else await AsyncStorage.removeItem(storageKey(playerId, user.id));
+          publish(active);
           return;
         }
       }
-
       const local = await AsyncStorage.getItem(storageKey(playerId, user?.id));
-      setSubscribed(local === '1');
-    } catch {
-      setSubscribed(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [playerId, user?.id]);
+      publish(local === '1');
+    } catch { publish(false); }
+  }, [identity, isSessionCurrent, playerId, user?.id]);
 
   useEffect(() => {
     void refresh();
@@ -84,20 +85,28 @@ export function useAthleteSubscription(playerId: string | undefined) {
    * @returns `true` when the pass is recorded (or unlocked locally without a server check);
    * `false` when the insert was refused so Soft-Wall exclusive checkout can skip the unlock toast.
    */
-  const grant = useCallback(async (): Promise<boolean> => {
-    if (!playerId) return false;
+  const grant = useCallback(async (payment?: PaymentActor): Promise<boolean> => {
+    if (!playerId || playerIdRef.current !== playerId) return false;
+    const capturedGeneration = lifetime.current.generation;
+    const stillHere = () => lifetime.current.generation === capturedGeneration;
 
-    const subscriberId = await resolveSessionUserId(userIdRef.current);
+    const actor = payment?.actor ?? offlineQueue.captureActor();
+    if (payment) assertCurrent(payment.actor);
+    const subscriberId = actor?.userId ?? await resolveSessionUserId(userIdRef.current);
+    if (actor) assertCurrent(actor);
 
     // No server-side check is possible here (guest, Supabase not configured, or a non-UUID
     // placeholder id) — nothing to gate on, so unlock locally as before.
     if (!subscriberId || !isSupabaseConfigured || !isPlayerUuid(playerId)) {
-      setSubscribed(true);
+      if (!stillHere()) return false;
+      setView({ generation: capturedGeneration, subscribed: true, loading: false });
       await AsyncStorage.setItem(storageKey(playerId, subscriberId), '1');
       return true;
     }
 
-    const { ok } = await insertSubscription(subscriberId, playerId);
+    const { ok } = await insertSubscription(subscriberId, playerId, payment?.client ?? (actor ? await createOfflineActorClient(actor) : undefined));
+    if (actor) assertCurrent(actor);
+    if (!stillHere()) return false;
 
     if (!ok) {
       // A genuine rejection (frozen athlete via RLS, network failure, etc.) — do NOT unlock
@@ -111,9 +120,11 @@ export function useAthleteSubscription(playerId: string | undefined) {
     }
 
     // Saved, or already subscribed (`23505` duplicate key) — both count as success.
-    setSubscribed(true);
+    if (!stillHere()) return false;
+    setView({ generation: capturedGeneration, subscribed: true, loading: false });
     await AsyncStorage.setItem(storageKey(playerId, subscriberId), '1');
-    return true;
+    if (actor) assertCurrent(actor);
+    return stillHere();
   }, [playerId]);
   return { subscribed, grant, loading, refresh };
 }

@@ -1,5 +1,5 @@
 /** Home keeps pager/media geometry synchronized when its overlay dock and viewport resize. */
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import HighlightsTab from '../index';
 import { FlatList } from 'react-native';
@@ -26,6 +26,12 @@ jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: { rpc
  */
 
 const mockPush = jest.fn();
+const mockSquad = jest.fn<Promise<string[]>, [string | undefined]>(async () => []);
+const mockRankContexts: Array<{ crewIds: Set<string> }> = [];
+jest.mock('@/data/highlights', () => {
+  const actual = jest.requireActual('@/data/highlights');
+  return { ...actual, rankHomeFeed: (...args: unknown[]) => { mockRankContexts.push(args[1] as { crewIds: Set<string> }); return actual.rankHomeFeed(...args); }, rankHomeFeedWithReasons: (...args: unknown[]) => { mockRankContexts.push(args[1] as { crewIds: Set<string> }); return actual.rankHomeFeedWithReasons(...args); } };
+});
 
 // A spotlight award the individual tests reshape before rendering.
 const mockSpotlight: {
@@ -174,7 +180,7 @@ jest.mock('@/hooks/useFanTipHistory', () => ({ useFanTipHistory: () => mockTipHi
 jest.mock('@/hooks/useLiveGame', () => ({ useLiveGame: () => mockLiveGame }));
 jest.mock('@/hooks/useSurfaceUsage', () => ({ useSurfaceUsage: () => mockSurfaceUsage }));
 jest.mock('@/hooks/useActiveSpotlight', () => ({ useActiveSpotlight: () => mockSpotlight }));
-jest.mock('@/lib/crew', () => ({ fetchSquadAthleteIds: jest.fn(async () => []) }));
+jest.mock('@/lib/crew', () => ({ fetchSquadAthleteIds: (id: string | undefined) => mockSquad(id) }));
 jest.mock('@/lib/reels', () => ({
   ...jest.requireActual('@/lib/reels'),
   readHiddenReelIds: jest.fn(async () => []),
@@ -202,7 +208,7 @@ function collectLayoutHosts(node: unknown, out: HostNode[] = []): HostNode[] {
 }
 
 async function mountTab() {
-  await render(<HighlightsTab />);
+  const view = await render(<HighlightsTab />);
   const layoutHosts = collectLayoutHosts(screen.root);
   expect(layoutHosts.length).toBeGreaterThan(0);
   for (const host of layoutHosts) {
@@ -211,10 +217,13 @@ async function mountTab() {
   await waitFor(() => expect(pill('Home')).toBeTruthy());
   expect(screen.queryByRole('tab', { name: /^All,/ })).toBeNull();
   expect(screen.queryByRole('tab', { name: /^Seki,/ })).toBeNull();
+  return view;
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockAuth = { user: null, profile: null, loading: false, isGuest: true };
+  mockRealDiscovery = false; mockSquad.mockReset().mockResolvedValue([]); mockRankContexts.length = 0;
   (mockRuntime.live.tabs as Record<string, boolean>).beyond = false;
   mockSpotlight.award = null;
   mockSpotlight.visible = false;
@@ -320,4 +329,32 @@ it('keeps full media height and clears caption/peek by the measured dock, then r
  expect(pager.props.getItemLayout!(pager.props.data!,1)).toEqual({length:640,offset:640,index:1});
  scroll.mockRestore();
  renderPager.mockRestore();
+});
+
+it('masks outgoing Crew immediately while the incoming account read is pending', async () => {
+  mockAuth = { user: { id: 'auth-a' }, profile: null, loading: false, isGuest: false };
+  mockSquad.mockResolvedValueOnce(['athlete-a']).mockImplementationOnce(() => new Promise(() => undefined));
+  const view = await mountTab();
+  await waitFor(() => expect(mockRankContexts.at(-1)?.crewIds.has('athlete-a')).toBe(true));
+  mockAuth = { user: { id: 'auth-b' }, profile: null, loading: false, isGuest: false };
+  await view.rerender(<HighlightsTab />);
+  expect(mockRankContexts.at(-1)?.crewIds.size).toBe(0);
+});
+
+it('ignores an outgoing pull-refresh Crew result after the account changes', async () => {
+  let finish!: (ids: string[]) => void;
+  mockAuth = { user: { id: 'auth-a' }, profile: null, loading: false, isGuest: false };
+  mockSquad.mockResolvedValueOnce(['athlete-a']).mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }))
+    .mockImplementationOnce(() => new Promise(() => undefined));
+  const pagerRender = jest.spyOn(FlatList.prototype, 'render');
+  const view = await mountTab();
+  await waitFor(() => expect(mockRankContexts.at(-1)?.crewIds.has('athlete-a')).toBe(true));
+  const pager = pagerRender.mock.contexts.at(-1) as FlatList;
+  await act(async () => { pager.props.refreshControl!.props.onRefresh(); });
+  await waitFor(() => expect(mockSquad).toHaveBeenCalledTimes(2));
+  mockAuth = { user: { id: 'auth-b' }, profile: null, loading: false, isGuest: false };
+  await view.rerender(<HighlightsTab />);
+  await act(async () => { finish(['outgoing-refresh']); });
+  expect(mockRankContexts.at(-1)?.crewIds.has('outgoing-refresh')).toBe(false);
+  pagerRender.mockRestore();
 });

@@ -1,0 +1,57 @@
+import { act, render, screen } from '@testing-library/react-native';
+import Scorekeeper from '../../../../../app/operator/[gameId]';
+let mockGameId='A';let mockLive=true;let mockAuth:any;let mockHome:any;let mockClock:any;let mockPeriods:Record<string,()=>void>={};const mockScore=jest.fn();const mockQuarter=jest.fn();const mockRead=jest.fn();const mockClient=jest.fn();
+const game=(id:string)=>({id,home_team:'Home '+id,away_team:'Away '+id,home_score:0,away_score:0,clock:'0:02',quarter:'Q1',is_clock_running:false,sport:'Rugby'});
+const mockConfig=()=>({scoring:[{id:'goal',label:'Goal',eventType:'Goal',points:1}],callouts:[],periods:['Q1','Q2'],periodLabel:'Quarter',usesClock:true,clockSeconds:120,sport:'Rugby',emoji:'ball'});
+jest.mock('expo-router',()=>({useRouter:()=>({replace:jest.fn()}),useLocalSearchParams:()=>({gameId:mockGameId}),Redirect:()=>null}));
+jest.mock('@/context/AuthContext',()=>({useAuth:()=>mockAuth}));
+jest.mock('@/services/OfflineQueue',()=>({offlineQueue:{captureActor:()=>({userId:mockAuth.user.id,isCurrent:()=>mockLive})}}));
+jest.mock('@/lib/supabase',()=>({isSupabaseConfigured:true}));
+jest.mock('@/lib/offlineActor',()=>({...jest.requireActual('@/lib/offlineActor'),createOfflineActorClient:(...a:unknown[])=>mockClient(...a)}));
+jest.mock('@/hooks/useSportConfigs',()=>({useSportConfigs:()=>({configFor:mockConfig})}));
+jest.mock('@/components/ScreenShell',()=>({ScreenShell:({children}:any)=>children}));
+jest.mock('@/components/Operator/ScoreColumn',()=>({ScoreColumn:(props:any)=>{if(props.label==='HOME')mockHome=props;const{Text}=jest.requireActual('react-native');return require('react').createElement(Text,null,props.team)}}));
+jest.mock('@/components/Operator/OperatorRosterModal',()=>({OperatorRosterModal:()=>null}));
+jest.mock('@/components/Operator/CalloutButton',()=>({CalloutButton:()=>null}));
+jest.mock('@/components/UI/AnimatedPressable',()=>({AnimatedPressable:(props:any)=>{mockClock=props;return null}}));
+jest.mock('@/components/UI/HapticPressable',()=>({HapticPressable:(props:any)=>{if(props.accessibilityLabel?.startsWith('Set quarter '))mockPeriods[props.accessibilityLabel]=props.onPress;return require('react').createElement(jest.requireActual('react-native').Pressable,props)}}));
+jest.mock('@/lib/operator',()=>({hasOperatorClaim:async()=>true,clockSeconds:()=>2,fetchOperatorGame:(id:string)=>mockRead(id),fetchOperatorPlayers:async()=>({players:[],error:null}),subscribeOperatorGame:()=>()=>{},openGameEventsBroadcaster:()=>null,rosterForScoringSide:()=>[],updateGameScore:(...a:unknown[])=>mockScore(...a),updateOperatorQuarter:(...a:unknown[])=>mockQuarter(...a)}));
+function pending<T>(){let resolve!:(v:T)=>void;const promise=new Promise<T>(r=>resolve=r);return{promise,resolve}}
+beforeEach(()=>{mockGameId='A';mockLive=true;mockAuth={user:{id:'owner-A'},profile:{user_id:'owner-A'},isSessionCurrent:()=>mockLive};mockHome=undefined;mockClock=undefined;mockPeriods={};mockScore.mockReset().mockResolvedValue(game('A'));mockQuarter.mockReset().mockResolvedValue(game('A'));mockRead.mockReset().mockImplementation(async(id)=>({game:game(id),error:null}));mockClient.mockReset().mockResolvedValue('bound-A')});
+it('one synchronous flight covers score, clock, and period callbacks',async()=>{const later=pending<any>();mockScore.mockReturnValue(later.promise);await render(<Scorekeeper/>);await screen.findByText('Home A');await act(async()=>{mockHome.onBump(1);mockHome.onBump(1);mockClock.onPress();mockPeriods['Set quarter Q2']()});expect(mockScore).toHaveBeenCalledTimes(1);expect(mockQuarter).not.toHaveBeenCalled();await act(async()=>later.resolve(game('A')))});
+it('blocks a delayed mutation client when its actor leaves',async()=>{await render(<Scorekeeper/>);await screen.findByText('Home A');const later=pending<unknown>();mockClient.mockReturnValue(later.promise);await act(async()=>mockHome.onBump(1));mockLive=false;await act(async()=>later.resolve('bound-A'));expect(mockScore).not.toHaveBeenCalled()});
+it('a late A game read cannot overwrite the B route',async()=>{const earlier=pending<any>();mockRead.mockReturnValueOnce(earlier.promise);const view=await render(<Scorekeeper/>);mockGameId='B';await view.rerender(<Scorekeeper/>);await screen.findByText('Home B');await act(async()=>earlier.resolve({game:game('A'),error:null}));expect(screen.queryByText('Home A')).toBeNull();expect(screen.getByText('Home B')).toBeTruthy()});
+
+it('clock expiry waits for the active score write and sends one stop', async () => {
+  jest.useFakeTimers();
+  const later = pending<any>();
+  mockRead.mockResolvedValue({ game: { ...game('A'), is_clock_running: true }, error: null });
+  mockScore.mockReturnValueOnce(later.promise);
+  await render(<Scorekeeper />); await screen.findByText('Home A');
+  await act(async () => mockHome.onBump(1));
+  await act(async () => jest.advanceTimersByTime(2000));
+  expect(mockScore).toHaveBeenCalledTimes(1);
+  await act(async () => later.resolve(game('A')));
+  expect(mockScore).toHaveBeenCalledTimes(2);
+  expect(mockScore.mock.calls[1]).toEqual([expect.objectContaining({ game: expect.objectContaining({ id: 'A' }), clockRunning: false, clock: '0:00' }), 'bound-A']);
+  await act(async () => jest.advanceTimersByTime(3000));
+  expect(mockScore).toHaveBeenCalledTimes(2);
+  jest.useRealTimers();
+});
+it('an outgoing score write does not block the new game or stop its clock', async () => {
+  jest.useFakeTimers();
+  const later = pending<any>();
+  mockRead.mockImplementation(async id => ({ game: { ...game(id), is_clock_running: id === 'A' }, error: null }));
+  mockScore.mockReturnValueOnce(later.promise);
+  const view = await render(<Scorekeeper />); await screen.findByText('Home A');
+  await act(async () => mockHome.onBump(1));
+  await act(async () => jest.advanceTimersByTime(2000));
+  mockScore.mockResolvedValue(game('B'));
+  mockGameId = 'B'; await view.rerender(<Scorekeeper />); await screen.findByText('Home B');
+  await act(async () => mockHome.onBump(1));
+  expect(mockScore).toHaveBeenCalledTimes(2);
+  expect(mockScore.mock.calls[1][0].game.id).toBe('B');
+  await act(async () => later.resolve(game('A')));
+  expect(mockScore).toHaveBeenCalledTimes(2); expect(screen.queryByText('Home A')).toBeNull();
+  jest.useRealTimers();
+});

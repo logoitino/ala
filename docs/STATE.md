@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-20 — UX-12 readable panels/spacing: full local gate, browser flows and iOS/Android exports PASS; APP-REPAIR-01 remains locally verified. Device/hosted acceptance pending. B still owner SQL/Edge; webhook tip crediting stays **off**.
+**Last updated:** 2026-11-20 — UX-13 whole-app source/menu review complete locally: font/panel spacing and reproduced account/checkout/admin/operator/guardian repairs;314 suites/2915 tests,156portaltests and current native exports pass. Full checkout-bound repository gate PASS. Hosted/device/registered acceptance remains open; B still owner SQL/Edge; webhook tip crediting stays **off**.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,13 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-20 — Whole-app menus and function sweep (UX-13, local source checkpoint)
+
+- Current source review reconciles724 modules/107 routes/9,039 AST function-like nodes and43 direct native Modal hosts/44 sites; every current module hash has review evidence.140 presentation decisions extend readable brand fonts, smaller decoration,44pt actions, wrapping and bounded scroll bodies across fan/profile/admin/operator/guardian surfaces. Required notices, actual navigation, consent and money policy remain.
+- Confirmed account/receipt/activity/Crew/Vault/checkout/runtime/MFA/operator/school/guardian flow repairs have source and actual regression evidence. Delayed scoped MFA errors cannot remove an incoming account; ordinary Auth/signout remains tested. Direct-call baseline drops Auth6→4 and checkout1→0; no expanded exemption or infrastructure/service/schema change.
+- Final coverage314 suites/2,915 tests passes:4,858/6,729 instrumented functions72.19%;156portaltests, both typechecks and latest iOS/Android Hermes exports pass.18 browser captures at narrow/enlarged-text/landscape dimensions pass tested geometry; this is not native Dynamic Type or every-function/provider execution. Full checkout-bound gate PASS, including all root/data/docs/copy/comments/feature/agent/portability/security/layers/exit checks. Portability24 and infrastructure security22 tests pass; source-cache readyToCutOver remains false. Owner approved retaining generated Exit acknowledgments/baseline; no release approval is inferred. [UX-13](agents/UX-13.md) records proofs, failures and limits.
+- Drip selected size has no authoritative order/fulfillment field in the existing contract: routed to COMMERCE with CHECKOUT/DATA_GOVERNANCE, no speculative schema/charge metadata. Native/provider/registered acceptance remains separate; website hosting is deferred. **About to spend: $0.**
 
 ### 2026-11-20 — Readable panels and mobile spacing (UX-12)
 
@@ -1781,6 +1788,7 @@ Do not re-diagnose these. Fix them or leave them.
 
 | Thing | State |
 | --- | --- |
+| Drip selected-size fulfillment contract (UX-13 source review) | Existing ProductSheet selects a size, while payment/order payload and shop_orders have no authoritative size/variant field. COMMERCE → ENGINEERING with CHECKOUT/DATA_GOVERNANCE must define/test the contract before schema or charge changes. This is a source gap, not a tested provider fulfillment failure. [UX-13](agents/UX-13.md) records the follow-up; no hosted/schema change was made. |
 | Offline action replay review (2026-11-20) | Actor/reconnect/undo/caller repair independently reviewed (94 focused tests); full local gate and fresh iOS/Android exports passed. Physical-device/hosted/registered owner acceptance remain in [APP-REPAIR-01](agents/APP-REPAIR-01.md). Legacy queues stay held; local data has no new timed retention/erasure integration. |
 | Dev ↔ staging parity (2026-10-22) | Read-only checks via the Supabase plugin. Staging now matches development for photo stories, reels owner folder, Books, DATA-01, function hardening, guardian scope, avatars, PRIV-01, tag approval, MINOR-01, VERIFY-02 and the Rallies guest fix. Development also has reel account tags (`20261002160000`; staging catch-up replayed, waiting on the owner's apply, workstream 4), engineering support, admin-report bigint, family share, Fan Zone, Beyond, trivia and IQ (feature freeze: not pushed to staging). Coach-level `20261017090000` is on development since 2026-10-22 (workstream 4); staging waits for Beyond. Details: [STAGING_DATABASE_CATCHUP](engineering/STAGING_DATABASE_CATCHUP.md). |
 | Account tags: staging catch-up and blocked-tag fix not applied (2026-10-22) | Replayed, not applied. Staging needs `20261002160000` plus privacy's search and the Closed accounts policy (never the file alone: it would put back the full-name search); both projects need `20261022150000`. A session hook refuses creating security definer functions through the Supabase plugin, so the owner runs them in each SQL Editor: staging gets `node scripts/replay/account-tags-replay.mjs <pglite dist> --print-staging-sql` then `20261022150000`, development gets `20261022150000`. Afterwards, the function/grant/policy fingerprint query in the replay should match across both projects. |

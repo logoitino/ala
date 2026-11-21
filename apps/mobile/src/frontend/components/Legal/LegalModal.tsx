@@ -1,6 +1,8 @@
-/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
+/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View , useWindowDimensions} from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Checkbox } from 'expo-checkbox';
 import Animated from 'react-native-reanimated';
@@ -16,6 +18,7 @@ import { LEGAL_ACK_LABEL, LEGAL_MENU_LABEL, LEGAL_SECTIONS, LEGAL_TERMS_VERSION 
 import { useLegalAck } from '@/hooks/useLegalAck';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const LEGAL_TRAVEL = 460;
 
@@ -79,6 +82,7 @@ export function LegalAckToggle({ checked, onCheckedChange, onOpenTerms, disabled
  */
 export function LegalModal({ visible, onClose, requireAck = false }: LegalModalProps) {
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const { accepted, accept } = useLegalAck();
   const [open, setOpen] = useState(false);
   const [checked, setChecked] = useState(false);
@@ -125,27 +129,27 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
           </Animated.View>
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-        <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+        <Animated.View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }, sheetStyle]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
           <Text style={styles.kicker}>Legal</Text>
           <Text style={styles.title}>{LEGAL_MENU_LABEL}</Text>
           <Text style={styles.lede}>
             Prototype summary (v{LEGAL_TERMS_VERSION}). This is not legal advice and is not a claim that Tapua'i is
             approved NIL.
           </Text>
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
+
             {LEGAL_SECTIONS.map((section) => (
               <View key={section.id} style={styles.section}>
                 <Text style={styles.sectionTitle}>{section.title}</Text>
                 <Text style={styles.sectionBody}>{section.body}</Text>
               </View>
             ))}
-          </ScrollView>
           {requireAck ? (
             <LegalAckToggle
               checked={checked || accepted}
@@ -156,6 +160,7 @@ export function LegalModal({ visible, onClose, requireAck = false }: LegalModalP
               disabled={accepted}
             />
           ) : null}
+          </ScrollView>
           <AnimatedButton
             accessibilityLabel={requireAck ? 'Agree and close' : 'Close legal terms'}
             disabled={requireAck && !(checked || accepted)}
@@ -186,30 +191,30 @@ const styles = StyleSheet.create({
   sheet: {
     backgroundColor: colors.surface,
     gap: 10,
-    maxHeight: '82%',
+
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.1,
     textTransform: 'uppercase',
     color: FOCAL.goldInk,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     color: colors.text,
     letterSpacing: -0.3,
   },
   lede: {
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
+    ...TYPE.body,
+    ...figtree('600'),
+
     color: colors.textMuted,
   },
   scroll: {
     flexGrow: 0,
-    maxHeight: 420,
+    flexShrink: 1,
   },
   scrollContent: {
     gap: 12,
@@ -224,14 +229,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
     color: colors.text,
   },
   sectionBody: {
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 20,
+    ...TYPE.body,
+    ...figtree('600'),
+
     color: colors.textMuted,
   },
   doneBtn: {
@@ -246,8 +251,8 @@ const styles = StyleSheet.create({
   },
   doneLabel: {
     color: colors.onAccent,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   ackCard: {
     borderWidth: 1.5,
@@ -258,6 +263,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ackRow: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
@@ -267,17 +273,19 @@ const styles = StyleSheet.create({
   },
   ackLabel: {
     flex: 1,
-    fontSize: 13,
-    fontWeight: '700',
-    lineHeight: 18,
+    ...TYPE.button,
+    ...figtree('700'),
+
     color: colors.text,
   },
   readLink: {
+    minHeight: 44,
+    justifyContent: 'center',
     paddingLeft: 28,
   },
   readLinkLabel: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
     color: colors.primary,
   },
 });

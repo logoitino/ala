@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Gift checkout's optional Stripe processing coverage uses the configured estimate, never a Tapua'i fee.
  * The monetization flag must be literal true; turning it off removes this control, and selections default off.
  */
@@ -10,6 +10,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type FeeCheckboxProps = {
   playerName: string;
@@ -50,7 +51,7 @@ export function FeeCheckbox({ playerName, checked, disabled = false, onChange }:
 }
 
 const styles = StyleSheet.create({
-  row: {
+  row: { minHeight: 44,
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
@@ -64,9 +65,9 @@ const styles = StyleSheet.create({
   copy: {
     flex: 1,
   },
-  label: {
-    fontSize: 14,
-    lineHeight: 20,
+  label: { ...figtree('400'),
+    ...TYPE.body,
+
     color: colors.text,
   },
 });

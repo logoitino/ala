@@ -108,7 +108,7 @@ export type CompanyRevenueSummary = {
 };
 
 /**
- * @purpose Persist a paid Drip order so merch volume hits the company revenue ledger.
+ * @purpose Persist an actor-bound paid Drip order, surfacing denied records instead of celebrating them so merch volume hits the company revenue ledger.
  * @param input Product slug, Stripe cents, qty, optional buyer.
  * @sideEffects `shop_orders` INSERT (trigger writes `company_revenue_logs`).
  */
@@ -117,16 +117,17 @@ export async function recordDripOrder(input: {
   amountCents: number;
   qty: number;
   buyerId?: string | null;
-}): Promise<void> {
+}, client = supabase): Promise<void> {
   if (!isSupabaseConfigured) return;
   const amount = Math.max(0, Math.round(input.amountCents));
   if (!input.productId || amount <= 0) return;
-  await supabase.from('shop_orders').insert({
+  const { error } = await client.from('shop_orders').insert({
     product_id: input.productId,
     buyer_id: input.buyerId ?? null,
     amount_cents: amount,
     qty: Math.max(1, Math.round(input.qty) || 1),
   });
+  if (error) throw error;
 }
 
 /**

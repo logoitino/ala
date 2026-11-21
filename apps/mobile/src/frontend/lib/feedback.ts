@@ -91,16 +91,17 @@ export function parseAppFeedback(raw: unknown): AppFeedback | null {
 }
 
 /**
- * @purpose Fan suggestion / bug / look note for the admin improvement queue.
+ * @purpose Account-bound existing fan request or suggestion / bug / look note for the admin improvement queue.
  * @sideEffects `submit_app_feedback`.
  */
 export async function submitAppFeedback(
   body: string,
   kind: AppFeedbackKind = 'suggestion',
   surface: AppFeedbackSurface = 'other',
+  client = supabase,
 ): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-  const { error } = await supabase.rpc('submit_app_feedback', {
+  const { error } = await client.rpc('submit_app_feedback', {
     p_body: body.trim(),
     p_kind: kind,
     p_surface: surface,

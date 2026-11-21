@@ -1,5 +1,7 @@
 /** Compact Drip rack card on a white surface (2026-11 Lovable refresh: ember stays for LIVE/danger only) preserving catalog copy, price and earned Aura.
- * The whole tile opens ProductSheet; checkout and purchase disclosures stay in that existing sheet. */
+ * The whole tile opens ProductSheet; checkout and purchase disclosures stay in that existing sheet.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -12,6 +14,7 @@ import {
   type DripItem,
 } from '@/data/shop';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const ICONS: Record<DripItem['icon'], keyof typeof Ionicons.glyphMap> = {
   shirt: 'shirt-outline',
@@ -120,12 +123,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
   },
   badgeLabel: {
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
-  priceLabel: {
+  priceLabel: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
-    fontSize: 13,
+    ...TYPE.button,
     color: colors.text,
   },
   auraLabel: {
@@ -133,19 +136,19 @@ const styles = StyleSheet.create({
   },
   kind: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   name: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
-  blurb: {
+  blurb: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
+    ...TYPE.body,
+
   },
 });

@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable controls preserve all consent, money and operator actions.
  * Expo admin report header: brand, main report tabs, Manage desks directory with lens / group filters and
  * desk search, Publish to app and account actions (split out of AdminChrome.tsx for R4-03; behaviour unchanged).
  * Render it inside a page's ScrollView (`AdminPage` does), never in AdminShell, so enlarged text and focus can scroll it.
@@ -23,6 +23,7 @@ import {
   type AdminNavGroupId, type AdminNavHref, type AdminNavItem,
 } from '@/lib/admin';
 import { impactPress } from '@/lib/haptics';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const colors = ADMIN_REPORT_COLORS;
 
@@ -224,10 +225,10 @@ const styles = StyleSheet.create({
   headerContent: { width: '100%', maxWidth: 1680, alignSelf: 'center', paddingVertical: 12, gap: 8 },
   headerBrandRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12 },
   headerBrandHit: { minHeight: 44, minWidth: 142, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headerBrand: { color: colors.text, fontSize: 18, fontWeight: '800' },
-  headerBrandSoft: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
+  headerBrand: { color: colors.text, ...TYPE.title, ...figtree('800') },
+  headerBrandSoft: { color: colors.textMuted, ...TYPE.caption, ...figtree('600') },
   headerActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, flexShrink: 1 },
-  headerDraft: { color: colors.electricGold, fontSize: 13, fontWeight: '600' },
+  headerDraft: { color: colors.electricGold, ...TYPE.body, ...figtree('600') },
   mainReportNav: { flexDirection: 'row', flexWrap: 'wrap', borderBottomWidth: 1, borderBottomColor: colors.border },
   mainReportNavWide: { flexGrow: 1, flexBasis: 600, minWidth: 480 },
   mainReportNavPhone: { width: '100%', flexBasis: '100%' },
@@ -241,8 +242,8 @@ const styles = StyleSheet.create({
   },
   headerLinkOn: { borderBottomColor: colors.jade },
   headerFocus: { borderColor: colors.jade, borderRadius: 4 },
-  headerLinkLabel: { color: colors.textSoft, fontSize: 14, fontWeight: '700', textAlign: 'center', flexShrink: 1 },
-  headerLinkLabelOn: { color: colors.jade, fontWeight: '800' },
+  headerLinkLabel: { color: colors.textSoft, ...TYPE.body, ...figtree('700'), textAlign: 'center', flexShrink: 1 },
+  headerLinkLabelOn: { color: colors.jade, ...figtree('800') },
   manageMenu: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, gap: 8 },
   manageHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 },
   deskFilters: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 28, rowGap: 4 },
@@ -250,19 +251,19 @@ const styles = StyleSheet.create({
   deskFilter: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4, minWidth: 0, maxWidth: '100%', flexShrink: 1 },
   deskFilterStack: { width: '100%' },
   deskFilterControls: { minWidth: 0, flexShrink: 1 },
-  deskFilterLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '700', paddingRight: 8 },
+  deskFilterLabel: { color: colors.textMuted, ...TYPE.caption, ...figtree('700'), paddingRight: 8 },
   deskCopy: { flexGrow: 1, flexShrink: 1, minWidth: 0, gap: 4 },
   deskTitle: { textAlign: 'left' },
-  deskHint: { color: colors.textMuted, fontSize: 12, lineHeight: 19, flexShrink: 1 },
+  deskHint: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  flexShrink: 1 },
   deskSearchRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, flexGrow: 1, flexBasis: 320, minWidth: 0, maxWidth: 520 },
-  deskSearch: { minHeight: 44, minWidth: 0, flexGrow: 1, flexBasis: 180, borderWidth: 1, borderColor: colors.border,
-    borderRadius: 8, paddingHorizontal: 12, color: colors.text, backgroundColor: colors.background, fontSize: 14 },
-  menuLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '800', letterSpacing: 0.7, textTransform: 'uppercase', marginTop: 8 },
+  deskSearch: { ...figtree('400'), minHeight: 44, minWidth: 0, flexGrow: 1, flexBasis: 180, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 8, paddingHorizontal: 12, color: colors.text, backgroundColor: colors.background, ...TYPE.body },
+  menuLabel: { color: colors.textMuted, ...TYPE.caption, ...figtree('800'), letterSpacing: 0.7, textTransform: 'uppercase', marginTop: 8 },
   deskGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   deskLink: { minWidth: 0, minHeight: 64, flexGrow: 1, justifyContent: 'space-between', borderBottomColor: colors.border, borderBottomWidth: 1 },
   error: {
     color: colors.danger,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
 });

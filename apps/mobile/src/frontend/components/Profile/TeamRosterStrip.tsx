@@ -1,4 +1,4 @@
-/** Profile Team pane lists the existing school roster with labeled compact jersey rows.
+/** UX-13 readable shared type preserves every action and required notice. Profile Team pane lists the existing school roster with labeled compact jersey rows.
  * A claim badge remains a separate read from school verification; selecting a row opens that athlete.
  * @sideEffects Reads claimed player ids through the roster library. */
 import { useEffect, useMemo, useState } from 'react';
@@ -11,6 +11,7 @@ import type { Player } from '@/data/players';
 import { fetchClaimedPlayerIds } from '@/lib/roster';
 import { FOCAL } from '@/theme/motion';
 import { JerseyBadge } from '@/components/UI/JerseyBadge';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type TeamRosterStripProps = {
   schoolName: string;
@@ -85,11 +86,11 @@ export function TeamRosterStrip({
                 <JerseyBadge number={player.jersey_number ?? '—'} />
               </View>
               <View style={styles.copy}>
-                <Text style={styles.name} numberOfLines={1}>
+                <Text style={styles.name}>
                   {player.name}
                   {isSelf ? ' · you' : ''}
                 </Text>
-                <Text style={styles.meta} numberOfLines={1}>
+                <Text style={styles.meta}>
                   {player.position || 'Athlete'}
                 </Text>
               </View>
@@ -113,15 +114,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: FOCAL.goldInk,
   },
   lede: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.textMuted,
     marginTop: -4,
   },
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  rowSelf: {
+  rowSelf: { minHeight: 44,
     borderColor: FOCAL.jadeInk,
     backgroundColor: FOCAL.mistJade,
   },
@@ -153,13 +154,13 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   name: {
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: colors.text,
   },
   meta: {
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
     color: colors.textMuted,
   },
   badge: {
@@ -174,8 +175,8 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.mistSlate,
   },
   badgeLabel: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   badgeClaimedLabel: {
     color: FOCAL.jadeInk,

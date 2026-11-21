@@ -1,4 +1,4 @@
-/** Public Profile Vault callout retains the one-time access-pass terms supplied by the published catalog.
+/** UX-13 readable shared type preserves every action and required notice. Public Profile Vault callout retains the one-time access-pass terms supplied by the published catalog.
  * Opening checkout still uses the parent's existing purchase flow and reviewed payment sheet.
  * 2026-11 refresh: dark locked-vault card with a lock tile and the gold unlock action. */
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -9,6 +9,7 @@ import { colors, KIT } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { exclusiveSubscribeLabel, exclusiveVaultCallout } from '@/data/exclusive';
 import { decideExclusiveCheckout } from '@/data/storeCommerce';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type VaultLockedCardProps = {
   busy?: boolean;
@@ -76,22 +77,22 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.onVideo,
-    fontSize: 20,
-    fontWeight: '900',
+    ...TYPE.title,
+    ...figtree('900'),
     letterSpacing: -0.3,
   },
   body: {
     color: colors.onVideoMuted,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
     textAlign: 'center',
   },
   split: {
     color: colors.onVideoMuted,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: '500',
+    ...TYPE.caption,
+
+    ...figtree('500'),
     textAlign: 'center',
     opacity: 0.92,
   },
@@ -110,8 +111,8 @@ const styles = StyleSheet.create({
   },
   buttonLabel: {
     color: colors.night,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
 });

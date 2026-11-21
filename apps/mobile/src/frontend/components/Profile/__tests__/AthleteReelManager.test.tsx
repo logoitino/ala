@@ -2,9 +2,10 @@
  * `AthleteReelManager` (UX-05c): photo stories are public only, so a long-press never opens the Vault /
  * Flash Unlock sheet for one (the database would reject the change); a video still opens it.
  */
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { AthleteReelManager, PHOTO_STORY_PUBLIC_TOAST } from '@/components/Profile/AthleteReelManager';
+import { VAULT_MOVE_TO_VAULT } from '@/data/exclusive';
 import type { HighlightClip } from '@/data/highlights';
 
 const mockToast = jest.fn();
@@ -55,6 +56,15 @@ describe('AthleteReelManager Vault options', () => {
     expect(mockToggle).not.toHaveBeenCalled();
   });
 
+  it('does not announce a Vault change when the write was denied', async () => {
+    const changed = jest.fn();
+    mockToggle.mockRejectedValue(new Error('Denied'));
+    await render(<AthleteReelManager clips={[video]} onVaultChange={changed} />);
+    await fireEvent(screen.getByLabelText('hold v1'), 'longPress');
+    await fireEvent.press(screen.getByLabelText(VAULT_MOVE_TO_VAULT));
+    await waitFor(() => expect(mockToast).toHaveBeenCalledWith('Denied'));
+    expect(changed).not.toHaveBeenCalled();
+  });
   it('still opens the Vault sheet for a video', async () => {
     await render(<AthleteReelManager clips={[story, video]} />);
     await fireEvent(screen.getByLabelText('hold v1'), 'longPress');

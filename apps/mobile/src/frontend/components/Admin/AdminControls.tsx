@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable controls preserve all consent, money and operator actions.
  * Shared Expo admin editor primitives: fields, rows, buttons, panels, notices, pills, metrics, desk links,
  * the Publish to app bar and catalog typeahead (split out of AdminChrome.tsx for R4-03; behaviour unchanged).
  * Readable report inks and 44-point controls carry the approved report design into every write desk.
@@ -14,6 +14,7 @@ import { ADMIN_REPORT_COLORS } from '@/components/Admin/adminReportColors';
 import { radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import type { AdminNavHref } from '@/lib/admin';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const colors = ADMIN_REPORT_COLORS;
 
@@ -365,8 +366,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
@@ -378,8 +379,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     color: colors.text,
     paddingHorizontal: 12,
-    fontSize: 15,
-    fontWeight: '600',
+    ...TYPE.section,
+    ...figtree('600'),
   },
   fieldMulti: {
     minHeight: 72,
@@ -404,13 +405,13 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   rowMeta: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   rowActions: {
     flexDirection: 'row',
@@ -443,8 +444,8 @@ const styles = StyleSheet.create({
   },
   btnLabel: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   btnLabelPrimary: {
     color: '#FFFFFF',
@@ -464,8 +465,8 @@ const styles = StyleSheet.create({
   },
   panelTitle: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '900',
+    ...TYPE.title,
+    ...figtree('900'),
   },
   busy: {
     paddingVertical: 24,
@@ -473,8 +474,8 @@ const styles = StyleSheet.create({
   },
   notice: {
     color: colors.jade,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   noticeDanger: {
     color: colors.danger,
@@ -484,8 +485,8 @@ const styles = StyleSheet.create({
   },
   empty: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     paddingVertical: 8,
   },
   pills: {
@@ -507,16 +508,16 @@ const styles = StyleSheet.create({
   },
   pillLabel: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   pillLabelOn: {
     color: colors.jade,
   },
   section: {
     color: colors.jade,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginTop: 4,
@@ -536,27 +537,27 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     color: colors.jade,
-    fontSize: 28,
-    fontWeight: '800',
+    ...TYPE.display,
+    ...figtree('800'),
   },
   metricLabel: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
   metricHint: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '600',
-    lineHeight: 15,
+    ...TYPE.body,
+    ...figtree('600'),
+
   },
   publishBody: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
+    ...TYPE.body,
+    ...figtree('600'),
+
   },
   suggest: {
     minHeight: 44,
@@ -572,12 +573,12 @@ const styles = StyleSheet.create({
   },
   suggestTitle: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   suggestMeta: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
 });

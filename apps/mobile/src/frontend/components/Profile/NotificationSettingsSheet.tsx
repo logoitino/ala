@@ -1,4 +1,4 @@
-/** Account notification choices belong to the current Auth lifetime; the hook owns confirmed state and writes. */
+/** UX-13 readable shared type preserves every action and required notice. Account notification choices belong to the current Auth lifetime; the hook owns confirmed state and writes. */
 import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { NOTIFICATION_CATEGORIES } from '@tapuai/shared-types/notifications';
 
@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNotificationSettings } from '@/hooks/useNotifications';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** A saved true choice can always be switched off, including while its delivery source is paused. */
 function Choice({ label, checked, disabled, onChange }: {
@@ -108,27 +109,27 @@ export function NotificationSettingsSheet({ visible, onClose }: { visible: boole
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(12,24,18,0.45)' },
   sheet: { backgroundColor: colors.surface, gap: 10 },
-  kicker: { color: FOCAL.goldInk, fontSize: 11, fontWeight: '800', letterSpacing: 1.1, textTransform: 'uppercase' },
-  title: { color: colors.text, fontSize: 22, fontWeight: '800', lineHeight: 28 },
+  kicker: { color: FOCAL.goldInk, ...TYPE.caption, ...figtree('800'), letterSpacing: 1.1, textTransform: 'uppercase' },
+  title: { color: colors.text, ...TYPE.title, ...figtree('800'),  },
   scroll: { flexGrow: 0 },
   body: { paddingBottom: 8, gap: 12 },
   box: { padding: 12, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, gap: 8 },
-  section: { color: colors.text, fontSize: 16, lineHeight: 22, fontWeight: '800' },
-  itemTitle: { color: colors.text, fontSize: 15, lineHeight: 21, fontWeight: '700' },
-  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
-  email: { color: colors.text, fontSize: 14, lineHeight: 20 },
-  error: { color: colors.danger, fontSize: 14, lineHeight: 20 },
-  notice: { color: colors.text, fontSize: 14, lineHeight: 20 },
+  section: { color: colors.text, ...TYPE.body,  ...figtree('800') },
+  itemTitle: { color: colors.text, ...TYPE.body,  ...figtree('700') },
+  hint: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
+  email: { ...figtree('400'), color: colors.text, ...TYPE.body,  },
+  error: { ...figtree('400'), color: colors.danger, ...TYPE.body,  },
+  notice: { ...figtree('400'), color: colors.text, ...TYPE.body,  },
   choiceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   choice: { minHeight: 44, flexGrow: 1, paddingHorizontal: 12, paddingVertical: 10, flexDirection: 'row', alignItems: 'center',
     gap: 12, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.background },
-  choiceOn: { borderColor: colors.text, backgroundColor: FOCAL.mistJade },
-  choiceLabel: { flex: 1, minWidth: 0, color: colors.text, fontSize: 14, lineHeight: 20, fontWeight: '700' },
-  choiceValue: { color: colors.textMuted, fontSize: 13, lineHeight: 19, fontWeight: '700' },
-  disabled: { opacity: 0.5 },
+  choiceOn: { minHeight: 44, borderColor: colors.text, backgroundColor: FOCAL.mistJade },
+  choiceLabel: { flex: 1, minWidth: 0, color: colors.text, ...TYPE.body,  ...figtree('700') },
+  choiceValue: { color: colors.textMuted, ...TYPE.body,  ...figtree('700') },
+  disabled: { minHeight: 44, opacity: 0.5 },
   action: { minHeight: 44, padding: 12, alignItems: 'center', justifyContent: 'center' },
-  actionLabel: { color: colors.primary, fontSize: 14, lineHeight: 20, fontWeight: '700' },
+  actionLabel: { color: colors.primary, ...TYPE.body,  ...figtree('700') },
   save: { minHeight: 48, borderRadius: MENU_METRICS.controlRadius, padding: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
-  saveLabel: { color: colors.onAccent, fontSize: 15, lineHeight: 21, fontWeight: '800' },
+  saveLabel: { color: colors.onAccent, ...TYPE.body,  ...figtree('800') },
   close: { minHeight: 44, padding: 8, alignItems: 'center', justifyContent: 'center' },
 });

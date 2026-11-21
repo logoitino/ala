@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable controls preserve all consent, money and operator actions.
  * Sideline scorer: bottom sheet that lists a team's players so the operator can credit a score or play to one.
  * Locks closing while `busy` so a play is not dropped mid-send.
  */
@@ -11,6 +11,7 @@ import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { displayValue, type Player } from '@/data/players';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type OperatorRosterModalProps = {
   visible: boolean;
@@ -112,13 +113,13 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 24,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
   subtitle: {
     color: colors.textMuted,
-    fontSize: 15,
-    fontWeight: '600',
+    ...TYPE.section,
+    ...figtree('600'),
   },
   close: {
     minHeight: 44,
@@ -130,23 +131,23 @@ const styles = StyleSheet.create({
   },
   closeLabel: {
     color: colors.onAccent,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   list: {
     gap: 8,
     paddingBottom: 16,
   },
-  empty: {
+  empty: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 15,
+    ...TYPE.section,
     textAlign: 'center',
     paddingVertical: 24,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
     minHeight: 64,
     padding: 12,
     borderRadius: MENU_METRICS.controlRadius,
@@ -155,8 +156,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   jersey: {
-    minWidth: 56,
-    height: 48,
+    minWidth: 40,
+    minHeight: 40,
+    paddingVertical: 4,
     borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.primary,
     alignItems: 'center',
@@ -165,8 +167,8 @@ const styles = StyleSheet.create({
   },
   jerseyLabel: {
     color: colors.onAccent,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   copy: {
     flex: 1,
@@ -174,13 +176,13 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   meta: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   pressed: {
     opacity: 0.88,

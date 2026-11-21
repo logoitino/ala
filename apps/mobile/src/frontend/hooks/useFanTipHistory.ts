@@ -2,15 +2,17 @@
  * A signed-in fan's own donation history, with totals (donated, athletes supported, Aura earned).
  * Feeds the Activity tab through `hooks/useActivityFeed`. Reloads whenever the screen regains focus and returns
  * `error` so the screen can offer Retry instead of an empty list. (Code name `tip` = donation.)
+ * UX-13 frames private receipts by the Auth lifetime, masks outgoing amounts immediately, and rejects late reads.
  * @sideEffects Reads the fan's donation rows from Supabase.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
 import { useAuth } from '@/context/AuthContext';
 import { fetchFanTipHistory } from '@/lib/donationHistory';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { offlineQueue } from '@/services/OfflineQueue';
 import type { FanTipReceipt } from '@/types/database';
 
 export type FanTipHistorySummary = {
@@ -34,41 +36,37 @@ function summarize(rows: FanTipReceipt[]): FanTipHistorySummary {
  * @sideEffects `lib/donationHistory.fetchFanTipHistory` (RPC `get_fan_tip_history`, `tips` SELECT fallback).
  */
 export function useFanTipHistory() {
-  const { user } = useAuth();
+  const { user, isSessionCurrent } = useAuth();
   const userId = user?.id ?? null;
-  const [receipts, setReceipts] = useState<FanTipReceipt[]>([]);
-  const [loading, setLoading] = useState(Boolean(userId));
-  const [error, setError] = useState<string | null>(null);
-
+  const holder = useRef({ userId, guard: isSessionCurrent, active: false, read: 0 });
+  if (holder.current.userId !== userId || holder.current.guard !== isSessionCurrent) {
+    holder.current = { userId, guard: isSessionCurrent, active: false, read: 0 };
+  }
+  const scope = holder.current;
+  const current = useCallback(() => holder.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
+  useEffect(() => { scope.active = true; return () => { scope.active = false; ++scope.read; }; }, [scope]);
+  const [frame, setFrame] = useState<{ owner: typeof scope; receipts: FanTipReceipt[]; loading: boolean; error: string | null } | null>(null);
+  const shown = frame?.owner === scope && current() ? frame : null;
+  const receipts = shown?.receipts ?? [];
   const refresh = useCallback(async () => {
+    if (!current()) return;
+    const read = ++scope.read;
+    const actor = userId ? offlineQueue.captureActor(userId) : null;
+    const accepted = () => current() && read === scope.read && (!userId || Boolean(actor?.isCurrent()));
     if (!userId || !isSupabaseConfigured) {
-      setReceipts([]);
-      setError(null);
-      setLoading(false);
+      setFrame({ owner: scope, receipts: [], loading: false, error: null });
       return;
     }
-
-    setLoading(true);
-    const result = await fetchFanTipHistory(userId);
-    setReceipts(result.receipts);
-    setError(result.error);
-    setLoading(false);
-  }, [userId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void refresh();
-    }, [refresh]),
-  );
-
+    if (!actor) return;
+    setFrame(previous => ({ owner: scope, receipts: previous?.owner === scope ? previous.receipts : [], loading: true, error: null }));
+    try {
+      const result = await fetchFanTipHistory(userId);
+      if (accepted()) setFrame({ owner: scope, receipts: result.receipts, loading: false, error: result.error });
+    } catch {
+      if (accepted()) setFrame({ owner: scope, receipts: [], loading: false, error: 'Could not load your gift receipts. Check your connection and try again.' });
+    }
+  }, [current, scope, userId]);
+  useFocusEffect(useCallback(() => { void refresh(); }, [refresh]));
   const summary = useMemo(() => summarize(receipts), [receipts]);
-
-  return {
-    receipts,
-    summary,
-    loading,
-    error,
-    signedIn: Boolean(userId),
-    refresh,
-  };
+  return { receipts, summary, loading: shown?.loading ?? Boolean(userId), error: shown?.error ?? null, signedIn: Boolean(userId), refresh };
 }

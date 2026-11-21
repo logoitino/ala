@@ -1,3 +1,4 @@
+/** UX-13 existing RallyMeter.tsx presentation keeps all actions/notices while aligning readable type. */
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -13,6 +14,7 @@ import { useRally } from '@/hooks/useRally';
 import { rallyProgress, type Rally } from '@/lib/rallies';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Compact Rally progress on a Highlight, so a fan sees the goal while they watch.
@@ -131,21 +133,21 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: FOCAL.electricGold,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   title: {
     flex: 1,
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   amount: {
     color: 'rgba(255,255,255,0.8)',
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
   track: {
     height: 4,

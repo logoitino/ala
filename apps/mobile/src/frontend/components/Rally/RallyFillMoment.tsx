@@ -1,4 +1,5 @@
-import { Modal, Share, StyleSheet, Text, View } from 'react-native';
+/** UX-13 existing RallyFillMoment.tsx presentation keeps all actions/notices while aligning readable type. */
+import { Modal, Share, StyleSheet, Text, View , ScrollView} from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -6,6 +7,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { rallyShareMessage } from '@/lib/shareCard';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const COLORS = [FOCAL.neonJade, FOCAL.electricGold, '#FFFFFF'];
 
@@ -39,7 +41,8 @@ export function RallyFillMoment({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <View style={[styles.root, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
         {visible ? <ConfettiCannon count={140} origin={{ x: 180, y: 0 }} fadeOut colors={COLORS} autoStart /> : null}
-        <Text style={styles.kicker}>Goal reached</Text>
+        <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
+          <Text style={styles.kicker}>Goal reached</Text>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.body}>
           {athleteName}&apos;s community filled this Rally. Thank you for showing up.
@@ -57,7 +60,8 @@ export function RallyFillMoment({
             <Text style={styles.primaryText}>▶ Watch what it paid for</Text>
           </Pressable>
         ) : null}
-        <Pressable accessibilityRole="button" onPress={onClose} style={styles.secondary}>
+        </ScrollView>
+          <Pressable accessibilityRole="button" onPress={onClose} style={styles.secondary}>
           <Text style={styles.secondaryText}>Keep watching</Text>
         </Pressable>
       </View>
@@ -66,6 +70,8 @@ export function RallyFillMoment({
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flexGrow: 0, flexShrink: 1, alignSelf: 'stretch' },
+  bodyContent: { gap: 10, paddingBottom: 4, alignItems: 'center' },
   root: {
     flex: 1,
     alignItems: 'center',
@@ -76,21 +82,21 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: FOCAL.electricGold,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '800',
+    ...TYPE.display,
+    ...figtree('800'),
     textAlign: 'center',
   },
-  body: {
+  body: { ...figtree('400'),
     color: 'rgba(255,255,255,0.82)',
-    fontSize: 16,
-    lineHeight: 22,
+    ...TYPE.body,
+
     textAlign: 'center',
   },
   primary: {
@@ -102,15 +108,17 @@ const styles = StyleSheet.create({
   },
   primaryText: {
     color: colors.deepGreen,
-    fontWeight: '800',
-    fontSize: 16,
+    ...figtree('800'),
+    ...TYPE.body,
   },
   secondary: {
+    minHeight: 44,
+    justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 16,
   },
   secondaryText: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    ...figtree('700'),
   },
 });

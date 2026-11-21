@@ -1,9 +1,12 @@
-/** QUIZ-02 optional, claimed weekly invitation; never automatically starts or resumes a question (QUIZ-03: a round). */
+/** QUIZ-02 optional, claimed weekly invitation; never automatically starts or resumes a question (QUIZ-03: a round).
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { StyleSheet, Text, View } from 'react-native';
 import type { TimedQuizSnapshot } from '@shared/timedSportQuiz';
 import type { SportQuizBusy } from '@/hooks/useSportQuiz';
 import { colors, radii } from '@/constants/theme';
 import { QuizButton } from './QuizButton';
+import { TYPE, figtree } from '@/theme/fonts';
 export type SportQuizInvitationProps = {
     snapshot: TimedQuizSnapshot | null;
     loading: boolean;
@@ -30,9 +33,9 @@ export function SportQuizInvitation({ snapshot, loading, error, busy, onOpen, on
 const styles = StyleSheet.create({
   card: { gap: 8, padding: 12, borderRadius: radii.lg, backgroundColor: colors.accentSoft },
   cardVideo: { backgroundColor: 'rgba(14,19,21,0.92)', borderWidth: 1, borderColor: 'rgba(46,229,157,0.4)' },
-  title: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  title: { color: colors.text, ...TYPE.section, ...figtree('700') },
   titleVideo: { color: colors.onVideo },
-  copy: { color: colors.textMuted, fontSize: 14, lineHeight: 19 },
+  copy: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
   copyVideo: { color: colors.onVideoMuted },
   row: { flexDirection: 'row', gap: 8 },
 });

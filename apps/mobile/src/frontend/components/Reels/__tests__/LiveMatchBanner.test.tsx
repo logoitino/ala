@@ -31,14 +31,14 @@ function snapshot(row: Game): ReturnType<typeof useLiveGame> {
 describe('LiveMatchBanner recorded scoreboard', () => {
   it('pairs real scores with teams, ticks a recorded clock and opens the match', async () => {
     await render(<LiveMatchBanner live={snapshot(game)} />);
-    expect(screen.getByText('North Valley').props.numberOfLines).toBe(1);
-    expect(screen.getByText('South Ridge').props.numberOfLines).toBe(1);
+    expect(screen.getByText('North Valley')).toBeTruthy();
+    expect(screen.getByText('South Ridge')).toBeTruthy();
     expect(screen.getByText('7')).toBeTruthy();
     expect(screen.getByText('0')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: /Live, Q2 · 4:59.*North Valley 7 against South Ridge 0/ }));
     expect(mockPush).toHaveBeenCalledWith(`/local/game/${game.id}`);
   });
-  it('keeps a long school name on one line beside the score', async () => {
+  it('keeps full long team names visible beside recorded scores', async () => {
     await render(
       <LiveMatchBanner
         live={snapshot({
@@ -50,8 +50,8 @@ describe('LiveMatchBanner recorded scoreboard', () => {
         })}
       />,
     );
-    expect(screen.getByText('Westlake Thunder').props.numberOfLines).toBe(1);
-    expect(screen.getByText('Lone Peak Knights').props.numberOfLines).toBe(1);
+    expect(screen.getByText('Westlake Thunder')).toBeTruthy();
+    expect(screen.getByText('Lone Peak Knights')).toBeTruthy();
     expect(screen.getByText('38')).toBeTruthy();
     expect(screen.getByText('10')).toBeTruthy();
   });

@@ -1,4 +1,4 @@
-/** Guardian record setup and per-athlete Stripe test-bank setup remain separate from live payouts. */
+/** UX-13 readable controls preserve all consent, money and operator actions. Guardian record setup and per-athlete Stripe test-bank setup remain separate from live payouts. */
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -17,6 +17,7 @@ import {
 import { formatTipDollars } from '@/lib/reels';
 
 import { WithdrawalHistory } from './WithdrawalHistory';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose A guardian's custodial account for one linked athlete (owner rules 2026-09-29): enter
@@ -271,28 +272,28 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   total: {
     color: colors.text,
-    fontSize: 22,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
-  body: {
+  body: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    ...TYPE.body,
+
   },
   label: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
-  hint: {
+  hint: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
+    ...TYPE.body,
+
   },
   form: {
     gap: 8,
@@ -301,14 +302,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  input: {
+  input: { ...figtree('400'),
     minHeight: 44,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
     color: colors.text,
-    fontSize: 16,
+    ...TYPE.section,
     paddingHorizontal: 12,
   },
   pending: {
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
   },
   chipLabel: {
     color: colors.text,
-    fontWeight: '700',
+    ...figtree('700'),
   },
   chipLabelOn: {
     color: colors.onAccent,
@@ -347,8 +348,8 @@ const styles = StyleSheet.create({
   },
   primaryLabel: {
     color: colors.onAccent,
-    fontWeight: '800',
-    fontSize: 16,
+    ...figtree('800'),
+    ...TYPE.section,
   },
   dim: {
     opacity: 0.5,

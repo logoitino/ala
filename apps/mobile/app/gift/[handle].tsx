@@ -1,7 +1,7 @@
-/** Public QR landing (`/gift/[handle]`): a game-program header and Give for the athlete a family shared. */
+/** Public QR landing (`/gift/[handle]`): a game-program header and Give stay with the chosen handle across delayed sign-in (UX-13). */
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ShareQrModal } from '@/components/Profile/ShareQrModal';
 import { SportField } from '@/components/Effects/SportField';
@@ -16,6 +16,7 @@ import { maloAthleteCta } from '@/data/malo';
 import { SHARE_FUND_CTA } from '@/data/share';
 import { resolveGiftLink, type GiftLink } from '@/lib/giftLink';
 import { userProfileHref } from '@/lib/navigation';
+import { TYPE, figtree, DISPLAY_TEXT } from '@/theme/fonts';
 import { FOCAL } from '@/theme/motion';
 
 /** Position, school (only when the athlete shows it) and sport, skipping whatever the roster does not know. */
@@ -38,38 +39,49 @@ export default function GiftHandleScreen() {
   const { requireAuth } = useSoftWall();
   const { handle: raw } = useLocalSearchParams<{ handle: string }>();
   const handle = Array.isArray(raw) ? raw[0] : raw;
-  const [link, setLink] = useState<GiftLink | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const [shareOpen, setShareOpen] = useState(false);
-  const [donateOpen, setDonateOpen] = useState(false);
+  const scope = useRef({ handle, attempt, epoch: 0, mounted: true });
+  if (scope.current.handle !== handle || scope.current.attempt !== attempt) {
+    scope.current = { handle, attempt, epoch: scope.current.epoch + 1, mounted: true };
+  }
+  const epoch = scope.current.epoch;
+  const current = () => scope.current.mounted && scope.current.epoch === epoch;
+  const [stored, setStored] = useState<{ epoch: number; value: GiftLink } | null>(null);
+  const link = stored?.epoch === epoch ? stored.value : null;
+  const [shareEpoch, setShareEpoch] = useState<number | null>(null);
+  const [donateEpoch, setDonateEpoch] = useState<number | null>(null);
 
   useEffect(() => {
+    scope.current.mounted = true;
+    return () => { scope.current.mounted = false; };
+  }, []);
+  useEffect(() => {
     let cancelled = false;
-    setLink(null);
     void resolveGiftLink(handle).then((next) => {
-      if (!cancelled) setLink(next);
+      if (!cancelled && current()) setStored({ epoch, value: next });
+    }).catch(() => {
+      if (!cancelled && current()) setStored({ epoch, value: { status: 'error', handle: handle ?? '', message: 'Please try again in a moment.' } });
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [handle, attempt]);
+    return () => { cancelled = true; };
+  }, [handle, attempt, epoch]);
 
   const found = link?.status === 'found' ? link : null;
 
   const donate = () => {
-    if (!found) return;
+    if (!found || !current()) return;
     requireAuth({
       kind: 'malo',
       athleteName: found.name,
       athleteId: found.player.id,
-      resume: () => setDonateOpen(true),
+      // A delayed Soft-Wall resume is an intent for this handle, never whichever athlete loads next.
+      resume: () => { if (current()) setDonateEpoch(epoch); },
     });
   };
 
   return (
     <ScreenShell edges={['top', 'bottom', 'left', 'right']}>
       <Stack.Screen options={{ title: SHARE_FUND_CTA, headerShown: true }} />
-      <View style={styles.wrap}>
+      <ScrollView contentContainerStyle={styles.wrap} keyboardShouldPersistTaps="handled">
         {!link ? (
           <ActivityIndicator accessibilityLabel="Loading athlete" color={FOCAL.jadeInk} />
         ) : link.status === 'found' ? (
@@ -109,7 +121,7 @@ export default function GiftHandleScreen() {
             <AnimatedButton
               accessibilityLabel={SHARE_FUND_CTA}
               haptic="selection"
-              onPress={() => setShareOpen(true)}
+              onPress={() => { if (current()) setShareEpoch(epoch); }}
               contentStyle={styles.secondary}
             >
               <Text style={styles.secondaryLabel}>{SHARE_FUND_CTA}</Text>
@@ -132,21 +144,21 @@ export default function GiftHandleScreen() {
             </AnimatedButton>
           </>
         )}
-      </View>
+      </ScrollView>
       {found ? (
         <>
           <MaloTipModal
-            player={donateOpen ? found.player : null}
+            player={donateEpoch === epoch ? found.player : null}
             origin="qr"
             entry="qr_link"
-            onClose={() => setDonateOpen(false)}
+            onClose={() => { if (current()) setDonateEpoch(null); }}
           />
           <ShareQrModal
-            visible={shareOpen}
+            visible={shareEpoch === epoch}
             athleteName={found.name}
             username={found.username}
             playerId={found.player.id}
-            onClose={() => setShareOpen(false)}
+            onClose={() => { if (current()) setShareEpoch(null); }}
           />
         </>
       ) : null}
@@ -156,7 +168,8 @@ export default function GiftHandleScreen() {
 
 const styles = StyleSheet.create({
   wrap: {
-    flex: 1,
+    flexGrow: 1,
+    paddingBottom: 20,
     paddingHorizontal: 22,
     paddingTop: 24,
     gap: 12,
@@ -182,27 +195,26 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   programLine: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...figtree('700'),
+    ...TYPE.body,
     color: colors.textMuted,
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...figtree('800'),
+    ...TYPE.caption,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: FOCAL.goldInk,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
+    ...DISPLAY_TEXT,
+    ...TYPE.display,
     color: colors.text,
     letterSpacing: -0.4,
   },
   body: {
-    fontSize: 16,
-    fontWeight: '600',
-    lineHeight: 22,
+    ...figtree('600'),
+    ...TYPE.section,
     color: colors.textMuted,
   },
   primary: {
@@ -215,8 +227,8 @@ const styles = StyleSheet.create({
   },
   primaryLabel: {
     color: FOCAL.ink,
-    fontSize: 15,
-    fontWeight: '800',
+    ...figtree('800'),
+    ...TYPE.body,
   },
   secondary: {
     minHeight: 48,
@@ -229,7 +241,7 @@ const styles = StyleSheet.create({
   },
   secondaryLabel: {
     color: FOCAL.jadeInk,
-    fontSize: 15,
-    fontWeight: '800',
+    ...figtree('800'),
+    ...TYPE.body,
   },
 });

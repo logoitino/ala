@@ -1,18 +1,8 @@
-/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+/** UX-13 readable shared type preserves every action and required notice. Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated from 'react-native-reanimated';
 
@@ -42,6 +32,7 @@ import {
 import { redeemTeamCode, requestAthleteVerification } from '@/lib/verification';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const VERIFY_TRAVEL = 460;
 
@@ -59,6 +50,7 @@ type VerifyAthleteModalProps = {
  */
 export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps) {
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const { profile, isAthlete, refreshProfile } = useAuth();
   const { showToast } = useCelebration();
   const { accepted: legalAccepted, accept: acceptLegal } = useLegalAck();
@@ -149,7 +141,7 @@ export function VerifyAthleteModal({ visible, onClose }: VerifyAthleteModalProps
           </Pressable>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <View pointerEvents="box-none" style={frame.dock}>
-            <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+            <Animated.View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }, sheetStyle]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
               {/* maxHeight alone clipped legal + submit; ScrollView keeps the claim form reachable on short phones. */}
@@ -290,43 +282,43 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.1,
     textTransform: 'uppercase',
     color: FOCAL.goldInk,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     color: colors.text,
     letterSpacing: -0.3,
   },
   lede: {
-    fontSize: 14,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     color: colors.textMuted,
-    lineHeight: 20,
+
   },
   unlock: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: FOCAL.jadeInk,
   },
   wait: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     color: colors.textMuted,
-    lineHeight: 18,
+
   },
   hint: {
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
     color: FOCAL.goldInk,
   },
   fieldLabel: {
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     color: colors.text,
     marginTop: 4,
   },
@@ -337,14 +329,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.background,
     paddingHorizontal: 14,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     letterSpacing: 0.8,
     color: colors.text,
   },
   error: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: FOCAL.emberInk,
   },
   submit: {
@@ -354,13 +346,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  submitOff: {
+  submitOff: { minHeight: 44,
     opacity: 0.45,
   },
   submitLabel: {
     color: colors.onAccent,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   orDivider: {
     flexDirection: 'row',
@@ -374,19 +366,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   orLabel: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     color: colors.textMuted,
   },
-  requestHit: {
+  requestHit: { minHeight: 44,
     alignItems: 'center',
     paddingVertical: 4,
   },
   requestLabel: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: FOCAL.jadeInk,
     textAlign: 'center',
     textDecorationLine: 'underline',
@@ -395,13 +387,13 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textDecorationLine: 'none',
   },
-  close: {
+  close: { minHeight: 44,
     alignItems: 'center',
     paddingVertical: 8,
   },
   closeLabel: {
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.textMuted,
   },
 });

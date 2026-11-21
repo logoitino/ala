@@ -59,6 +59,8 @@ export async function fetchProfileOversight(): Promise<ProfileOversight> {
       .or('role.eq.athlete,roles.cs.{athlete},active_role.eq.athlete'),
   ]);
 
+  if (runtimeRes.error || claimedRes.error || athleteRes.error || !runtimeRes.data || claimedRes.count === null || athleteRes.count === null) return empty;
+
   const published = (runtimeRes.data?.published ?? {}) as RuntimeBag;
   const profile = published.profile ?? {};
 

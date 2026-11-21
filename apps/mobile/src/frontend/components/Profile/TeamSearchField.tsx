@@ -1,3 +1,4 @@
+/** UX-13 TeamSearchField.tsx keeps existing flow with shared readable type. */
 import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -5,6 +6,7 @@ import { colors, radii } from '@/constants/theme';
 import { formatTeamBadge, formatTeamTitle, type SchoolTeam } from '@/data/teams';
 import { useTeamSearch } from '@/hooks/useTeamSearch';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type TeamSearchFieldProps = {
   query: string;
@@ -87,8 +89,8 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
@@ -99,8 +101,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.background,
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     paddingHorizontal: 12,
   },
   selected: {
@@ -121,13 +123,13 @@ const styles = StyleSheet.create({
   },
   selectedTitle: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   change: {
     color: FOCAL.jadeInk,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   list: {
     borderRadius: radii.md,
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
   spinner: {
     paddingVertical: 10,
   },
-  row: {
+  row: { minHeight: 44,
     paddingHorizontal: 12,
     paddingVertical: 10,
     flexDirection: 'row',
@@ -155,26 +157,26 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   rowCity: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
   badge: {
     color: FOCAL.jadeInk,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   empty: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     padding: 12,
   },
-  pressed: {
+  pressed: { minHeight: 44,
     opacity: 0.88,
   },
 });

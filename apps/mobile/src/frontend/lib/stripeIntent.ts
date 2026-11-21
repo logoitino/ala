@@ -1,4 +1,6 @@
-/** Shared checkout transport; donation declarations distinguish gifts from purchases but never prove settlement. */
+/** Shared checkout transport; donation declarations distinguish gifts from purchases but never prove settlement. Optional actor guards bind Edge and Metro dispatch to the checkout owner. */
+import { assertCurrent } from '@/lib/offlineActor';
+import type { PaymentActor } from '@/lib/payments';
 import { apiUrl } from '@/lib/apiUrl';
 import { isMissingEdgeFunction } from '@/lib/edgeFunction';
 import { requireAccessToken } from '@/lib/sessionToken';
@@ -25,8 +27,9 @@ export async function createPaymentIntent(
   playerId?: string | null,
   platformTipCents = 0,
   donation?: { giftCents: number; coverFees: boolean; platformTipPercent: number },
+  payment?: PaymentActor,
 ): Promise<string> {
-  const accessToken = await requireAccessToken('Sign in to complete payment.');
+  const accessToken = await requireAccessToken('Sign in to complete payment.', payment?.actor);
   const body = {
     amount,
     ...(playerId ? { playerId } : {}),
@@ -34,10 +37,11 @@ export async function createPaymentIntent(
     ...(donation ? { donation } : {}),
   };
 
-  const { data: fnData, error: fnError } = await supabase.functions.invoke('create-payment-intent', {
+  const { data: fnData, error: fnError } = await (payment?.client ?? supabase).functions.invoke('create-payment-intent', {
     body,
     headers: { Authorization: `Bearer ${accessToken}` },
   });
+  if (payment) assertCurrent(payment.actor);
   const fnPayload = (fnData ?? null) as IntentPayload | null;
   if (fnPayload?.clientSecret) return fnPayload.clientSecret;
   if (fnError && !isMissingEdgeFunction(fnError)) {
@@ -46,6 +50,7 @@ export async function createPaymentIntent(
   }
   if (!fnError && fnPayload?.error) throw new Error(fnPayload.error);
 
+  if (payment) assertCurrent(payment.actor);
   const response = await fetch(apiUrl('/api/create-payment-intent'), {
     method: 'POST',
     headers: {
@@ -56,6 +61,7 @@ export async function createPaymentIntent(
   });
 
   const data = (await response.json()) as IntentPayload;
+  if (payment) assertCurrent(payment.actor);
 
   if (!response.ok || !data.clientSecret) {
     throw new Error(data.error ?? 'PaymentIntent did not return a clientSecret.');

@@ -1,3 +1,4 @@
+/** UX-13 lets pending-tag decisions use the initiating account's client without changing server permissions. */
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type {
   PendingPlayerTag,
@@ -85,9 +86,9 @@ export async function fetchPendingPlayerTags(): Promise<PendingPlayerTag[]> {
  * @param action `confirm` keeps the tag; `reject` drops it from Player of the Week scoring.
  * @sideEffects `confirm_reel_player_tag`; may write `profiles.player_id`; refreshes Spotlight leaders.
  */
-export async function confirmReelPlayerTag(reelId: string, action: 'confirm' | 'reject'): Promise<void> {
+export async function confirmReelPlayerTag(reelId: string, action: 'confirm' | 'reject', client = supabase): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-  const { error } = await supabase.rpc('confirm_reel_player_tag', {
+  const { error } = await client.rpc('confirm_reel_player_tag', {
     target_reel_id: reelId,
     tag_action: action,
   });

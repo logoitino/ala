@@ -1,4 +1,12 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-20 — Whole-app flow and panel review
+
+- Normalize typography and reduce oversized decorative icons and empty panel space across Highlights, Local, quizzes, profile menus and related flows. Long panel content can scroll without shrinking the text or losing dismissal controls.
+- Keep private receipts, donor activity, crew and subscription state with the current account. Delayed saves and payment follow-ups cannot update the next account or athlete.
+- Report failed profile, Vault, checkout recording and admin requests accurately; preserve confirmed payment success and existing support guidance.
+- Keep operator claims, scores and clocks with the current game/account; prevent duplicate guardian signing and stale school confirmations. Protect incoming sessions from delayed MFA operations and preserve ordinary sign-out recovery.
+- Review routes, functions and native Modal hosts across the app. Local source, browser and regression evidence is recorded in [UX-13](docs/agents/UX-13.md); device and hosted-provider acceptance remain separate. This is local work, not a deployed release.
+
 ## 2026-11-20 — Readable panels and mobile spacing
 
 - Improve text hierarchy and line spacing without shrinking copy to fit:14pt body,16pt sections,12pt captions, existing Bricolage/Figtree fonts.

@@ -1,9 +1,11 @@
+/** UX-13 existing TagConfirmList.tsx presentation keeps all actions/notices while aligning readable type. */
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AdminBtn, AdminEmpty, AdminNotice, AdminPanel, AdminRow } from '@/components/Admin/AdminChrome';
 import { DashboardPanel } from '@/components/DashboardPanel';
 import { colors } from '@/constants/theme';
 import type { PendingPlayerTag } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type TagConfirmListProps = {
   tags: PendingPlayerTag[];
@@ -102,22 +104,22 @@ const styles = StyleSheet.create({
   },
   hqTitle: {
     color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   hqMeta: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   empty: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   error: {
     color: colors.danger,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
 });

@@ -4,12 +4,14 @@
  * Presentation only — the draft lives in UploadVideoModal and the steps in UploadVideoComposer.
  * Reordering uses buttons, not drag, so it works with VoiceOver / TalkBack: every control is a 44-point target
  * whose spoken label names the photo's position ("Move photo 2 earlier").
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { Image, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { PHOTO_DESCRIPTION_MAX, PHOTO_STORY_MAX_PHOTOS, type HighlightMediaType } from '@/data/highlights';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** A picked photo in the draft. `key` is stable across reorders so inputs keep focus and text. */
 export type DraftStoryPhoto = { key: string; uri: string; width?: number; height?: number; description?: string };
@@ -127,24 +129,24 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   row: { flexDirection: 'row', alignItems: 'center' },
   field: { gap: 8 },
-  label: { fontSize: 14, fontWeight: '800', color: colors.text },
-  hint: { fontSize: 12, lineHeight: 18, color: colors.textMuted },
-  link: { fontSize: 12, lineHeight: 18, fontWeight: '800', color: colors.primary },
+  label: { ...TYPE.button, ...figtree('800'), color: colors.text },
+  hint: { ...figtree('400'), ...TYPE.caption,  color: colors.textMuted },
+  link: { ...TYPE.caption,  ...figtree('800'), color: colors.primary },
   smallButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 },
   segment: { flexDirection: 'row', gap: 6, padding: 4, borderRadius: radii.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   segmentItem: { flex: 1, minHeight: 44, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', borderRadius: radii.pill },
   segmentActive: { backgroundColor: colors.accentSoft },
-  segmentText: { fontSize: 14, fontWeight: '700', color: colors.textMuted },
+  segmentText: { ...TYPE.body, ...figtree('700'), color: colors.textMuted },
   segmentTextActive: { color: colors.primary },
   strip: { gap: 10, paddingVertical: 2 },
   tile: { width: 132, gap: 4, padding: 0, borderRadius: MENU_METRICS.controlRadius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, overflow: 'hidden' },
   tileImage: { width: 132, height: 132, backgroundColor: colors.photoPlaceholder },
-  badge: { position: 'absolute', top: 6, left: 6, minWidth: 24, height: 24, paddingHorizontal: 6, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  badgeText: { color: colors.onAccent, fontSize: 12, fontWeight: '800' },
+  badge: { position: 'absolute', top: 6, left: 6, minWidth: 24, minHeight: 24, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  badgeText: { color: colors.onAccent, ...TYPE.caption, ...figtree('800') },
   iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   dim: { opacity: 0.35 },
   descriptionRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   descriptionThumb: { width: 48, height: 64, borderRadius: 8, backgroundColor: colors.photoPlaceholder },
-  input: { minHeight: 48, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, paddingHorizontal: 12, paddingTop: 12, backgroundColor: colors.surface, color: colors.text, fontSize: 15, textAlignVertical: 'top' },
-  counter: { fontSize: 11, textAlign: 'right', color: colors.textMuted, marginTop: 4 },
+  input: { ...figtree('400'), minHeight: 48, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, paddingHorizontal: 12, paddingTop: 12, backgroundColor: colors.surface, color: colors.text, ...TYPE.body, textAlignVertical: 'top' },
+  counter: { ...figtree('400'), ...TYPE.caption, textAlign: 'right', color: colors.textMuted, marginTop: 4 },
 });

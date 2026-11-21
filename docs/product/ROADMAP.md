@@ -1,6 +1,9 @@
 <!-- Current-app priorities distinguish implemented source from provider/device acceptance and retain historical phase evidence. -->
 # Tapua'i — Fix → Test-Prep → Advance → Team-Test Roadmap
 
+**2026-11-20 whole-app local flow review:** [UX-13](../agents/UX-13.md) reviews all724 runtime modules/107 routes with current source hashes and distinct semantic/test/rendered evidence. Readable fonts, proportionate decoration,44pt actions and bounded popups extend across fan/profile/admin/operator/guardian surfaces. Final mobile coverage run passed314 suites/2915 tests; iOS/Android Hermes exports compile. The complete checkout-bound root gate passes with156 portal tests and both typechecks. Native/provider/registered acceptance remains separate. COMMERCE → ENGINEERING follow-up: define the authoritative Drip size/variant order and fulfillment contract with CHECKOUT/DATA_GOVERNANCE before changing schema or charge metadata; the existing UI-selected size is absent from that contract. No provider fulfillment failure is claimed from source inspection.
+
+
 **2026-11-20 native readiness follow-up:** [APP-REPAIR-01](../agents/APP-REPAIR-01.md) locally repairs reconnect loss, issued-reaction undo, actor attribution, startup replay and bookmark/cheer freshness. Final independent outside Codex review passed 94 focused tests. Full local gate passed (286 suites/2706 tests, 121 portal tests); fresh iOS/Android Hermes exports passed. Physical-device/provider/registered owner acceptance remains pending. Existing public config and a checkout-bound private source cache are restored. Website hosting is deferred at the owner's request; APP-TEST and release priorities remain.
 
 **2026-10-22 current team/release work order:** [COORD-02](../agents/COORD-02.md),

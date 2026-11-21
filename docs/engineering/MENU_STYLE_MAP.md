@@ -1,7 +1,7 @@
 <!-- Current shared UI source coverage is separate from dated rendered/native acceptance. -->
 # Menu and page style coverage
 
-**Current source alignment:** 2026-11-20 — [UX-12](../agents/UX-12.md) type/spacing pass · 2026-11-04 · Whole-app [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md) (`UI/Kit`, Daylight + night moments, jade/gold/ember). UX-10 per-tab violet accents and the 2026-10-12 portal underline-tab chrome are superseded where they conflict; UX-06/Calm Island history retained below. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
+**Current source alignment:** 2026-11-20 — [UX-13](../agents/UX-13.md) whole-app review and [UX-12](../agents/UX-12.md) type/spacing pass · 2026-11-04 · Whole-app [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md) (`UI/Kit`, Daylight + night moments, jade/gold/ember). UX-10 per-tab violet accents and the 2026-10-12 portal underline-tab chrome are superseded where they conflict; UX-06/Calm Island history retained below. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
 `ACCESSIBILITY`, `DEVICE_QA` review; `DOCUMENTATION` keeps this map current.
 
 This is a source inventory of shared presentation coverage. It is not a rendered-device audit.
@@ -9,6 +9,14 @@ Every modal-bearing component is listed, including intentional full-screen video
 surfaces. A shared primitive can update many consumers without each file needing a local edit.
 
 Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATUS.md); actual documentation/coordination claims and checks: [COORD-01](../agents/COORD-01.md#whole-team-refresh--2026-10-15-americadenver). The 107-role briefing is assignment coverage, not execution or human delivery. The [UI checkpoint](design/UI_UX_FIGMA_POLISH.md) separates the original empty Figma draft, later colour file, local source and rendered evidence.
+
+## UX-13 review and implementation scope
+
+All724 runtime modules/107 routes have current source-hash review evidence, including43 direct native Modal hosts/44 sites.140 presentation decisions normalize existing Figtree/Bricolage text hierarchy and spacing across Highlights, Local, trivia, challenges, rallies, profile/account, checkout, admin, operator, verification and guardian panels. Smaller decoration leaves readable text and44pt actions; names/labels wrap and long content scrolls within bounded cards. Required rights, consent, fee and safety text remains explicit. ScreenShell's appropriate existing geometry was retained.
+
+Actual local browser fixtures supply18 captures of eight current menus at390×844 and320×568/doubled CSS text, plus short-landscape Legal and Coach move. Captured controls meet44pt minima without horizontal or non-scrollable text clipping. Synthetic Upload Highlight and Coach Close callbacks passed; provider/payment/guardian submissions were not executed. The fixture route is removed. Final mobile314-suite/2,915-test coverage,156portaltests, current Hermes exports and independent ordinary-flow reviews are recorded in [UX-13](../agents/UX-13.md).
+
+These source/fixture/regression results do not measure Instagram parity, native Dynamic Type, physical-device focus/motion, or real provider delivery. Whole-file review depth, AST function inventory and instrumented execution72.19% remain distinct. Original failed/unsupported invocations and the routed Drip size/variant fulfillment-contract gap are retained in the handoff.
 
 ## UX-12 current source and verification scope
 
@@ -41,14 +49,16 @@ keyboard fit and screen-reader behavior require device evidence.
 
 ## Modal component inventory
 
-31 modal-bearing source components, including native/web QR variants. Upload step chips and
-wash are rendered by its child `UploadVideoComposer`; donation steps live in child `TipCheckout`.
+Reconciled direct native Modal inventory: **43 source modules / 44 Modal sites** at the UX-13 baseline. The broader inventory also tracks 62 modules referencing modal/sheet/overlay components; those wrappers are reviewed with their callers. `AthleteProfileView` is an indirect consumer, not an additional native Modal host. Counts include deliberate full-screen video, web payments and menu chrome; source review does not prove native fit.
 
 | Component under `components/` | Source coverage | Notes |
 | --- | --- | --- |
 | `Auth/AgeConfirmModal.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
 | `Auth/SoftWallModal.tsx` | `useFanSheetMotion` + shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
 | `BackedCelebration.tsx` | shared 440px sheet frame | Existing donation celebration chrome remains; shared frame geometry. |
+| `Challenges/ChallengeSettingsSheet.tsx` | shared sheet frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
+| `Checkout/WebPaymentSheetHost.tsx` | feature-specific panel/frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
+| `Common/WebAppShell.tsx` | feature-specific panel/frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
 | `Drip/ProductSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Feedback/SuggestionSheet.tsx` | shared 440px sheet frame; kind horizontal scroll + where vertical scroll menu | Feature actions/validation retained; native fit unverified. |
 | `Filmers/FilmerSheet.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
@@ -58,10 +68,15 @@ wash are rendered by its child `UploadVideoComposer`; donation steps live in chi
 | `Onboarding/WelcomeOverlay.tsx` | shared 440px sheet frame, accent wash | Feature actions/validation retained; native fit unverified. |
 | `Operator/OperatorRosterModal.tsx` | accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Operator/PINClaimModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
-| `Profile/AthleteProfileView.tsx` | shared 440px sheet frame | Aura collectible keeps tier chrome; shared frame geometry. |
 | `Profile/AthleteReelManager.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
+| `Profile/AuraCardFlipModal.tsx` | shared sheet frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
+| `Profile/DeleteAccountSheet.tsx` | feature-specific panel/frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
 | `Profile/EditProfileModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
+| `Profile/HighlightsFeedSettingsSheet.tsx` | feature-specific panel/frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
 | `Profile/LockerRoomWishlist.tsx` | shared 440px sheet frame | Existing tier/goal chrome retains its purpose; shared frame geometry. |
+| `Profile/MySportsModal.tsx` | shared sheet frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
+| `Profile/NotificationSettingsSheet.tsx` | shared sheet frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
+| `Profile/PrivacySettingsSheet.tsx` | feature-specific panel/frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
 | `Profile/ProfileMenuSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Profile/RoleSwitcherModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Profile/ShareQrModal.tsx` | shared 440px sheet frame | Dark QR card retains scannability/contrast; shared frame only. |
@@ -69,15 +84,19 @@ wash are rendered by its child `UploadVideoComposer`; donation steps live in chi
 | `Profile/VerifyAthleteModal.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Rally/CreateRallySheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Rally/RallyFillMoment.tsx` | custom full-screen layout | Full-screen goal celebration retains dark high contrast. Share this Rally is the primary button. |
+| `Reels/CoachLevelBadge.tsx` | shared sheet frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
+| `Reels/FeedPicksSheet.tsx` | jade wash; sports/schools vertical scroll menus + category horizontal rail (FEED-01) | Replaces pill wrap grids; 44pt rows; native fit unverified. |
 | `Reels/HighlightPickerModal.tsx` | accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Reels/ReelMoreSheet.tsx` | shared 440px sheet frame, accent wash, shared metrics | Feature actions/validation retained; native fit unverified. |
 | `Reels/ReelViewModal.tsx` | custom full-screen layout | Full-screen video viewer remains Midnight; playback controls stay visible. |
 | `Reels/ReportContentModal.tsx` | shared 440px sheet frame; reason vertical scroll menu | Feature actions/validation retained; native fit unverified. |
-| `Reels/FeedPicksSheet.tsx` | jade wash; sports/schools vertical scroll menus + category horizontal rail (FEED-01) | Replaces pill wrap grids; 44pt rows; native fit unverified. |
+| `Reels/UploadChoiceSheet.tsx` | shared sheet frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
 | `Reels/UploadVideoModal.tsx` | custom full-screen layout | Feature actions/validation retained; native fit unverified. |
+| `SportQuiz/QuestionReport.tsx` | shared sheet frame | Included in whole-app source/function review; rendered and native evidence tracked separately. |
 | `Spotlight/SpotlightModal.tsx` | custom full-screen layout | Full-screen award/video reveal; Midnight video contrast retained. |
 | `TipSheetModal.tsx` | shared 440px sheet frame | Feature actions/validation retained; native fit unverified. |
 | `Verification/SchoolCrest.tsx` | accent wash, shared metrics | Proof sheet receives shared accents; crest colors remain school-owned. |
+
 ## Additional shared consumers
 
 `Reels/UploadChoiceSheet.tsx` (2026-10-16): the Upload ＋ chooser uses the shared sheet chrome (`useSheetFrame`, `SheetRise`, `SheetHandle`, one jade `MenuBackdrop` wash) with two full-width options and Cancel; it only chooses which existing composer opens. UX-07 caps it to90% of the current window, scrolls tall text/options/Cancel and leaves its44-point Close handle outside that scroll. Bounded current-component web320x640 CSS-text-scaling/callback review passed; native safe-area/Dynamic Type checks remain separate.

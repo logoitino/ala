@@ -52,14 +52,15 @@ export default async function SoftWallAuthPage() {
 
   return (
     <PortalShell active="/auth">
+      {!oversight.configured ? <p role="status" className="mb-4 rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)]">Live sign-in status is unavailable. Check the public Supabase configuration and retry.</p> : null}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Give Soft Wall" value={oversight.maloLive ? 'Armed' : 'Paused'} hint="Give buttons, Features desk" tone={oversight.maloLive ? 'ok' : 'warn'} />
-        <StatCard label="Crew Soft Wall" value={oversight.crewLive ? 'Armed' : 'Paused'} hint="Crew buttons, Features desk" tone={oversight.crewLive ? 'ok' : 'warn'} />
+        <StatCard label="Give Soft Wall" value={!oversight.configured ? 'Unavailable' : oversight.maloLive ? 'Armed' : 'Paused'} hint="Give buttons, Features desk" tone={!oversight.configured ? 'neutral' : oversight.maloLive ? 'ok' : 'warn'} />
+        <StatCard label="Crew Soft Wall" value={!oversight.configured ? 'Unavailable' : oversight.crewLive ? 'Armed' : 'Paused'} hint="Crew buttons, Features desk" tone={!oversight.configured ? 'neutral' : oversight.crewLive ? 'ok' : 'warn'} />
         <StatCard
           label="Gear goal Soft Wall"
-          value={oversight.wishlistLive ? 'Armed' : 'Paused'}
+          value={!oversight.configured ? 'Unavailable' : oversight.wishlistLive ? 'Armed' : 'Paused'}
           hint="Gear goal layout, Features desk"
-          tone={oversight.wishlistLive ? 'ok' : 'warn'}
+          tone={!oversight.configured ? 'neutral' : oversight.wishlistLive ? 'ok' : 'warn'}
         />
       </div>
 
@@ -120,7 +121,7 @@ export default async function SoftWallAuthPage() {
           </Keys>
           <p className="mt-3 text-sm leading-6 text-[var(--ink-soft)]">
             Last Publish to app:{' '}
-            {oversight.publishedAt ? new Date(oversight.publishedAt).toLocaleString() : 'Never / unknown'}. Toggle
+            {!oversight.configured ? 'Unavailable' : oversight.publishedAt ? new Date(oversight.publishedAt).toLocaleString() : 'Never / unknown'}. Toggle
             Soft-Wall related flags on the Features desk, then Publish.
           </p>
         </Panel>

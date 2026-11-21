@@ -27,7 +27,8 @@ export function isOfflineActorChanged(error: unknown): boolean {
     && 'message' in error && typeof error.message === 'string' && error.message.includes(ACCOUNT_CHANGED));
 }
 
-function assertCurrent(actor: OfflineActor): void {
+/** @purpose Refuse stale account work before dispatch and before publishing its result. */
+export function assertCurrent(actor: OfflineActor): void {
   if (!actor.userId || !actor.isCurrent()) throw new OfflineActorChangedError();
 }
 

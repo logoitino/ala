@@ -2,6 +2,7 @@
  * The empty Home feed message and, on the Beyond switch, its Share a clip / Open Beyond the Game actions
  * (split out of app/(tabs)/index.tsx for R4-03; behaviour unchanged). The route still owns the copy choice,
  * the centred `boot` wrapper and the upload sheet; this file only renders what it is handed.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -12,6 +13,7 @@ import { colors } from '@/constants/theme';
 import type { HighlightFeedFilter } from '@/data/highlights';
 import type { AppRuntimeConfig } from '@/lib/runtime';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Tell the fan why the Home / Beyond feed is empty and, on Beyond, offer the two ways forward.
@@ -57,9 +59,9 @@ export function HomeFeedEmpty({
 const styles = StyleSheet.create({
   empty: {
     color: colors.onVideo,
-    fontSize: 13,
-    lineHeight: 22,
-    fontWeight: '700',
+    ...TYPE.body,
+
+    ...figtree('700'),
     textAlign: 'center',
   },
   emptyActions: {
@@ -78,8 +80,8 @@ const styles = StyleSheet.create({
   },
   emptyPrimaryLabel: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
   },
   emptySecondary: {
     minHeight: 44,
@@ -91,7 +93,7 @@ const styles = StyleSheet.create({
   },
   emptySecondaryLabel: {
     color: colors.onVideo,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
   },
 });

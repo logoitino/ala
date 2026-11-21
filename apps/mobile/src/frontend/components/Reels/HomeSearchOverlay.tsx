@@ -1,4 +1,6 @@
-/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
+/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -21,6 +23,7 @@ import type { HighlightClip } from '@/data/highlights';
 import type { LocalSearchHit } from '@/types/database';
 import { SPRING_CARD } from '@/theme/motion';
 import type { Player } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type SearchKind = 'all' | 'highlight' | 'athlete';
 
@@ -214,10 +217,10 @@ export function HomeSearchOverlay({
                     <View pointerEvents="none" style={styles.rowIconGloss} />
                   </View>
                   <View style={styles.rowCopy}>
-                    <Text style={styles.rowTitle} numberOfLines={1}>
+                    <Text style={styles.rowTitle}>
                       {hit.title}
                     </Text>
-                    <Text style={styles.rowMeta} numberOfLines={1}>
+                    <Text style={styles.rowMeta}>
                       {hit.kind === 'highlight' ? 'Highlight' : 'Athlete'} · {hit.subtitle}
                     </Text>
                   </View>
@@ -252,8 +255,8 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
@@ -263,6 +266,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   recentChip: {
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
@@ -271,13 +276,13 @@ const styles = StyleSheet.create({
   },
   recentLabel: {
     color: colors.text,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   empty: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     paddingVertical: 12,
   },
   row: {
@@ -318,12 +323,12 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   rowMeta: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
 });

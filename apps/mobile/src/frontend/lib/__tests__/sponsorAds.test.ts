@@ -1,3 +1,4 @@
+/** Sponsor helper outcomes require confirmed insertion while access refusals preserve their message. */
 import { createSponsorAd, fetchSponsorAds, setSponsorAdActive } from '@/lib/sponsorAds';
 
 const mockFrom = jest.fn();
@@ -21,8 +22,8 @@ describe('sponsorAds', () => {
 
   it('returns stable write results for create and toggle', async () => {
     mockFrom
-      .mockReturnValueOnce({ insert: async () => ({ error: null }) })
-      .mockReturnValueOnce({ update: () => ({ eq: async () => ({ error: { message: 'denied' } }) }) });
+      .mockReturnValueOnce({ insert: () => ({ select: () => ({ single: async () => ({ data: { id: 'ad-1' }, error: null }) }) }) })
+      .mockReturnValueOnce({ update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ error: { message: 'denied' } }) }) }) }) });
 
     await expect(createSponsorAd({
       title: 'Friday Lights',

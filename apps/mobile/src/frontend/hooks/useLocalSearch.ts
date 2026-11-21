@@ -1,7 +1,7 @@
 /**
  * Debounced search for the Local tab (athletes, schools, games) plus the "recent searches" list.
  * `useLocalSearch` queries `lib/localSearch` after a short pause in typing; `useRecentLocalSearches` keeps the last few
- * searches in AsyncStorage on the device.
+ * searches in AsyncStorage on the device. Every query change invalidates pending results, including clear.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -28,6 +28,7 @@ export function useLocalSearch(searchQuery: string, kind: LocalSearchKind) {
   const seq = useRef(0);
 
   useEffect(() => {
+    const requestId = ++seq.current;
     const needle = searchQuery.trim();
     if (needle.length <= 1 || !isSupabaseConfigured) {
       setHits([]);
@@ -35,20 +36,24 @@ export function useLocalSearch(searchQuery: string, kind: LocalSearchKind) {
       return;
     }
 
-    const requestId = seq.current + 1;
-    seq.current = requestId;
     setLoading(true);
     const timer = setTimeout(() => {
       void (async () => {
-        const rows = await searchLocalEntities(needle, kind);
-        if (seq.current !== requestId) return;
-        setHits(rows);
-        setLoading(false);
+        try {
+          const rows = await searchLocalEntities(needle, kind);
+          if (seq.current !== requestId) return;
+          setHits(rows);
+        } catch {
+          if (seq.current === requestId) setHits([]);
+        } finally {
+          if (seq.current === requestId) setLoading(false);
+        }
       })();
     }, DEBOUNCE_MS);
 
     return () => {
       clearTimeout(timer);
+      if (seq.current === requestId) ++seq.current;
     };
   }, [kind, searchQuery]);
 

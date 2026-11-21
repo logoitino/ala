@@ -1,6 +1,7 @@
+/** UX-13 existing SpotlightModal.tsx presentation keeps all actions/notices while aligning readable type. */
 import { useVideoPlayer, VideoView, type VideoPlayer } from 'expo-video';
 import { useEffect } from 'react';
-import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, StyleSheet, Text, View, ScrollView } from 'react-native';
 import Reanimated, {
   useAnimatedStyle,
   useSharedValue,
@@ -26,6 +27,7 @@ import {
 import { FOCAL, JADE_BORDER_GLOW, SPRING_CARD } from '@/theme/motion';
 import type { Player, SpotlightAward } from '@/types/database';
 import { JerseyBadge } from '@/components/UI/JerseyBadge';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type SpotlightModalProps = {
   award: SpotlightAward | null;
@@ -151,6 +153,7 @@ function SpotlightBody({
             sheetStyle,
           ]}
         >
+          <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent}>
           <View style={styles.badgeWrap}>
             <Reanimated.View
               pointerEvents="none"
@@ -196,6 +199,7 @@ function SpotlightBody({
             ) : null}
           </View>
 
+          </ScrollView>
           <View style={styles.actions}>
             <AnimatedButton
               accessibilityLabel={SPOTLIGHT_TIP_LABEL}
@@ -259,6 +263,8 @@ function SpotlightVideo({ uri }: { uri: string }) {
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flex: 1, minHeight: 0 },
+  bodyContent: { flexGrow: 1, justifyContent: 'space-evenly', gap: 16, paddingBottom: 12 },
   root: {
     flex: 1,
     backgroundColor: FOCAL.videoBase,
@@ -310,8 +316,8 @@ const styles = StyleSheet.create({
   },
   badgeLabel: {
     color: FOCAL.neonJade,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
     textAlign: 'center',
   },
@@ -320,16 +326,16 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   portraitWrap: {
-    width: 148,
-    height: 148,
+    minWidth: 104,
+    minHeight: 104,
     alignItems: 'center',
     justifyContent: 'center',
   },
   portraitGlow: {
     position: 'absolute',
-    width: 148,
-    height: 148,
-    borderRadius: 74,
+    minWidth: 104,
+    minHeight: 104,
+    borderRadius: 52,
     ...Platform.select({
       ios: {
         shadowOffset: { width: 0, height: 0 },
@@ -341,9 +347,9 @@ const styles = StyleSheet.create({
     }),
   },
   portraitRing: {
-    width: 128,
-    height: 128,
-    borderRadius: 64,
+    minWidth: 92,
+    minHeight: 92,
+    borderRadius: 46,
     borderWidth: 3,
     alignItems: 'center',
     justifyContent: 'center',
@@ -359,9 +365,10 @@ const styles = StyleSheet.create({
     }),
   },
   portraitInner: {
-    width: 114,
-    height: 114,
-    borderRadius: 57,
+    padding: 6,
+    minWidth: 80,
+    minHeight: 80,
+    borderRadius: 40,
     borderWidth: 1.5,
     backgroundColor: colors.videoSurface,
     alignItems: 'center',
@@ -379,8 +386,8 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-18deg' }],
   },
   initials: {
-    fontSize: 30,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     letterSpacing: 1,
   },
   jerseyChip: {
@@ -389,8 +396,8 @@ const styles = StyleSheet.create({
     bottom: 6,
   },
   tierChip: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.4,
     borderWidth: 1,
     borderRadius: 999,
@@ -400,20 +407,20 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.onVideo,
-    fontSize: 24,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     textAlign: 'center',
   },
   headline: {
     color: FOCAL.electricGold,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
   shotBy: {
     color: colors.onVideoMuted,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     textAlign: 'center',
   },
   actions: {
@@ -435,8 +442,8 @@ const styles = StyleSheet.create({
   },
   primaryLabel: {
     color: FOCAL.ink,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
   },
   secondary: {
     minHeight: 48,
@@ -450,8 +457,8 @@ const styles = StyleSheet.create({
   },
   secondaryLabel: {
     color: colors.onVideo,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
   },
   dismiss: {
     minHeight: 44,
@@ -461,7 +468,7 @@ const styles = StyleSheet.create({
   },
   dismissLabel: {
     color: colors.onVideoMuted,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
   },
 });

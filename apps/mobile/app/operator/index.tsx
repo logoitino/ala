@@ -5,7 +5,7 @@
 
 import * as Location from 'expo-location';
 import { Stack, type Href, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -36,12 +36,29 @@ import {
   saveOperatorCheckIn,
   subscribeOperatorGames,
 } from '@/lib/operator';
+import { assertCurrent, createOfflineActorClient, OfflineActorChangedError, type OfflineActor } from '@/lib/offlineActor';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { offlineQueue } from '@/services/OfflineQueue';
 import type { Game } from '@/types/database';
 
 export default function OperatorPortalScreen() {
   const router = useRouter();
   const { live } = useAppRuntime();
-  const { profile } = useAuth();
+  const { profile, user, isSessionCurrent } = useAuth();
+  const ownerId = user?.id ?? profile?.user_id ?? null;
+  const holder = useRef({ ownerId, guard: isSessionCurrent, active: true, read: 0 });
+  if (holder.current.ownerId !== ownerId || holder.current.guard !== isSessionCurrent) holder.current = { ownerId, guard: isSessionCurrent, active: true, read: 0 };
+  const scope = holder.current;
+  const current = useCallback(() => holder.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
+  const claimFlight = useRef<object | null>(null);
+  const gpsFlight = useRef<object | null>(null);
+  const capture = (): OfflineActor => {
+    if (!current()) throw new OfflineActorChangedError();
+    const actor = offlineQueue.captureActor(ownerId);
+    if (!actor && isSupabaseConfigured) throw new OfflineActorChangedError();
+    return { userId: actor?.userId ?? 'local-preview', isCurrent: () => current() && (actor?.isCurrent() ?? !isSupabaseConfigured) };
+  };
+  const clientFor = async (actor: OfflineActor) => { assertCurrent(actor); const client = isSupabaseConfigured ? await createOfflineActorClient(actor) : undefined; assertCurrent(actor); return client; };
   const pending = usePendingPlayerTags();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,62 +74,58 @@ export default function OperatorPortalScreen() {
   );
 
   const fetchGames = useCallback(async (showSpinner = true) => {
+    const request = ++scope.read;
     if (showSpinner) setLoading(true);
     setError(null);
-    const result = await fetchOperatorGames();
-    setGames(result.games);
-    setError(result.error);
-    if (result.games.length === 0) {
-      console.error('[operator] Active games list is empty after fetch.');
-    }
-    setLoading(false);
-  }, []);
-
+    try {
+      const actor = capture();
+      const result = await fetchOperatorGames(await clientFor(actor));
+      if (!actor.isCurrent() || scope.read !== request) return;
+      setGames(result.games); setError(result.error);
+    } catch (caught) {
+      if (current() && scope.read === request) { setGames([]); setError(caught instanceof Error ? caught.message : 'Could not load active games.'); }
+    } finally { if (current() && scope.read === request) setLoading(false); }
+  }, [current, scope]);
   const refresh = useCallback(() => fetchGames(true), [fetchGames]);
-
   useEffect(() => {
+    scope.active = true; claimFlight.current = null; gpsFlight.current = null;
+    setGames([]); setSelectedGameId(null); setCheckIn('Not checked in'); setClaiming(false); setCheckingIn(false);
     void fetchGames();
-    return subscribeOperatorGames(() => {
-      void fetchGames(false);
-    });
-  }, [fetchGames]);
+    const unsubscribe = subscribeOperatorGames(() => { if (current()) void fetchGames(false); });
+    return () => { scope.active = false; ++scope.read; unsubscribe(); };
+  }, [current, scope, fetchGames]);
 
   const claimGame = async () => {
-    if (!selectedGame) return;
+    if (!selectedGame || claimFlight.current) return;
+    const actor = capture(); const operation = {}; claimFlight.current = operation;
     setClaiming(true);
     try {
       telemetry.trackFeature('operator_claim', 'operator');
-      await claimOperatorGame(selectedGame.id, profile?.id);
-      const id = selectedGame.id;
-      setSelectedGameId(null);
-      router.push(`/operator/${id}` as Href);
+      const client = await clientFor(actor);
+      await claimOperatorGame(selectedGame.id, profile?.id, client, actor);
+      assertCurrent(actor);
+      const id = selectedGame.id; setSelectedGameId(null); router.push(`/operator/${id}` as Href);
     } finally {
-      setClaiming(false);
+      if (claimFlight.current === operation) { claimFlight.current = null; if (actor.isCurrent()) setClaiming(false); }
     }
   };
 
   const gpsCheckIn = async () => {
-    if (checkingIn) return;
-    setCheckingIn(true);
+    if (gpsFlight.current || !current()) return;
+    let actor: OfflineActor | undefined;
+    const operation = {}; gpsFlight.current = operation; setCheckingIn(true);
     try {
+      actor = capture();
       telemetry.trackFeature('operator_checkin', 'operator');
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (permission.status !== 'granted') {
-        Alert.alert('Location needed', 'Enable location to check in at the field.');
-        return;
-      }
-
-      const position = await Location.getCurrentPositionAsync({});
-      const label = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
-      const result = await saveOperatorCheckIn(position.coords.latitude, position.coords.longitude);
-      if (!result.ok) {
-        Alert.alert('Check-in not saved', result.message);
-        return;
-      }
-      setCheckIn(`Checked in at ${label}`);
-    } finally {
-      setCheckingIn(false);
-    }
+      const permission = await Location.requestForegroundPermissionsAsync(); assertCurrent(actor);
+      if (permission.status !== 'granted') { Alert.alert('Location needed', 'Enable location to check in at the field.'); return; }
+      const position = await Location.getCurrentPositionAsync({}); assertCurrent(actor);
+      const result = await saveOperatorCheckIn(position.coords.latitude, position.coords.longitude, await clientFor(actor)); assertCurrent(actor);
+      if (!result.ok) { Alert.alert('Check-in not saved', result.message); return; }
+      const label = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`; setCheckIn(`Checked in at ${label}`);
+    } catch (caught) {
+      if (current() && (!actor || actor.isCurrent())) Alert.alert('Check-in not saved', caught instanceof Error ? caught.message : 'Could not check in. Try again.');
+    } finally { if (gpsFlight.current === operation) { gpsFlight.current = null; if (current()) setCheckingIn(false); } }
   };
 
   return (
@@ -239,7 +252,7 @@ export default function OperatorPortalScreen() {
         game={selectedGame}
         claiming={claiming}
         onClose={() => setSelectedGameId(null)}
-        onUnlock={() => void claimGame()}
+        onUnlock={claimGame}
       />
     </ScreenShell>
   );

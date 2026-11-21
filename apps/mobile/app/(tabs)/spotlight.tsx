@@ -1,5 +1,5 @@
-/** UX-07: Spotlight presents published athlete recognition without declaring a pending board empty. */
-import { useCallback, useMemo, useState } from 'react';
+/** UX-07: Spotlight presents published athlete recognition without declaring a pending board empty; UX-13 close delays cannot navigate after leaving the route. */
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
@@ -21,6 +21,7 @@ import { MaloTipModal } from '@/components/TipSheetModal';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, space } from '@/constants/theme';
 import { TYPE } from '@/theme/fonts';
+import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { displayValue } from '@/data/players';
@@ -40,6 +41,24 @@ import type { Player, SpotlightAward } from '@/types/database';
  */
 export default function SpotlightTab() {
   const router = useRouter();
+  const { isSessionCurrent } = useAuth();
+  const navigation = useRef<{ mounted: boolean; generation: number; timer: ReturnType<typeof setTimeout> | null }>({ mounted: true, generation: 0, timer: null });
+  const cancelNavigation = useCallback(() => {
+    navigation.current.generation += 1;
+    if (navigation.current.timer) clearTimeout(navigation.current.timer);
+    navigation.current.timer = null;
+  }, []);
+  const current = () => navigation.current.mounted && (!isSessionCurrent || isSessionCurrent());
+  const afterClose = (work: () => void, delay: number) => {
+    cancelNavigation(); const generation = navigation.current.generation;
+    navigation.current.timer = setTimeout(() => {
+      if (current() && navigation.current.generation === generation) work();
+    }, delay);
+  };
+  useEffect(() => {
+    navigation.current.mounted = true;
+    return () => { navigation.current.mounted = false; cancelNavigation(); };
+  }, [cancelNavigation, isSessionCurrent]);
   const { live } = useAppRuntime();
   const { requireAuth } = useSoftWall();
   const { players, applyBackerCount } = useRoster();
@@ -106,6 +125,7 @@ export default function SpotlightTab() {
         {featured ? (
           <ScrollFxItem variant="zoom" exitFade={false}>
             <SpotlightAwardCard featured award={featured} onPress={() => {
+              cancelNavigation();
               trackFeature('spotlight_card');
               setSelected(featured);
             }} />
@@ -143,7 +163,8 @@ export default function SpotlightTab() {
             {rest.map((award, index) => (
               <ScrollFxItem key={award.id} index={index + 1} variant="tilt">
                 <SpotlightAwardCard award={award} onPress={() => {
-                  trackFeature('spotlight_card');
+                  cancelNavigation();
+              trackFeature('spotlight_card');
                   setSelected(award);
                 }} />
               </ScrollFxItem>
@@ -155,20 +176,24 @@ export default function SpotlightTab() {
         award={selected}
         visible={Boolean(selected)}
         replay
-        onDismiss={() => setSelected(null)}
+        onDismiss={() => { cancelNavigation(); setSelected(null); }}
         onSupport={(player, reelId) => {
+          const generation = navigation.current.generation;
           requireAuth({
             kind: 'malo',
             athleteName: player.name,
             athleteId: player.id,
             resume: () => {
+              if (!current() || navigation.current.generation !== generation) return;
               trackFeature('malo');
               setSelected(null);
-              setTimeout(() => setTipTarget({ player, reelId }), 320);
+              afterClose(() => setTipTarget({ player, reelId }), 320);
             },
           });
         }}
         onWatch={(reelId, playerId) => {
+          if (!current()) return;
+          cancelNavigation();
           const award = selected;
           setSelected(null);
           const videoUrl = award?.video_url?.trim();
@@ -188,10 +213,10 @@ export default function SpotlightTab() {
             return;
           }
           if (id) {
-            setTimeout(() => router.push(userProfileHref(id)), 280);
+            afterClose(() => router.push(userProfileHref(id)), 280);
             return;
           }
-          setTimeout(() => router.push('/'), 280);
+          afterClose(() => router.push('/'), 280);
         }}
       />
       <ReelViewModal

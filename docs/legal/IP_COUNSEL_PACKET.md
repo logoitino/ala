@@ -11,9 +11,9 @@ This packet contains source fingerprints and supplied investigation notes. It is
 
 ## 1. Current source and open work
 
-- Inventory SHA-256: `217459bd00850652f817ef06d765aab5ca9fb48dd4fb164251a70973b92958f2`
+- Inventory SHA-256: `3a4ffbb114972cc91f498cd9080059eaf9cee026509b7e7bf24220c7c84a8658`
 - Register SHA-256: `86a11d86b776757dd362bc03cdfc5c8e88d1c7a862e65db85ba00dd7c6073a71`
-- Safe source/manifest files monitored: 1161. Git-tracked and non-ignored untracked source; excluded files require separate human review.
+- Safe source/manifest files monitored: 1195. Git-tracked and non-ignored untracked source; excluded files require separate human review.
 - Investigation candidates: 3; missing engineering reviews: 3; stale engineering reviews: 0.
 - Rights categories awaiting counsel review: 7.
 - Supplied filing receipts: 0. Receipt entries require independent verification; no legal status is inferred.
@@ -23,8 +23,8 @@ A changed inventory requires Documentation/feature-owner review for new capabili
 
 | Monitored area | Files |
 | --- | --- |
-| apps/ | 994 |
-| packages/ | 35 |
+| apps/ | 1027 |
+| packages/ | 36 |
 | supabase/ | 129 |
 
 ## 2. Technical investigation disclosures
@@ -35,7 +35,7 @@ These candidates are questions to investigate. None has an established novelty, 
 
 **Feature owner:** HIGHLIGHTS with ACCOUNT\_TAGS / PRIVACY\_ENGINEERING
 
-Candidate source SHA-256: `ce640e918ed2d2f171c24ead9f1f055927180eaa5c89cb8435bc397e7b3fb8e6`
+Candidate source SHA-256: `e0c7b6002fdc3f2697002a9d65951a3ba649a1834b975958ee86d80936a12feb`
 
 **Review state:** No engineering review supplied.
 
@@ -53,7 +53,7 @@ Candidate source SHA-256: `ce640e918ed2d2f171c24ead9f1f055927180eaa5c89cb8435bc3
 
 | Source / reading reference | SHA-256 |
 | --- | --- |
-| [apps/mobile/src/frontend/lib/reels.ts](../../apps/mobile/src/frontend/lib/reels.ts) | `f91de6f931ebcaeeb390cb460da3ae9f2eb3f3a0bd5f3a7e7920895d64d81eb2` |
+| [apps/mobile/src/frontend/lib/reels.ts](../../apps/mobile/src/frontend/lib/reels.ts) | `8cdf541f4538a2efc934d25a948656ec3b0e5a2f2b5695d16174279b8a73759a` |
 | [apps/mobile/src/frontend/lib/privacy.ts](../../apps/mobile/src/frontend/lib/privacy.ts) | `ae53d3bab4f2e9c458a1d9296a75692f8c2c049c8c549f81b26cea559c31fd02` |
 | [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `d1729a7ee7de8e3258e35363e7955977d32d73210a6ceb91d57921ed1f172c86` |
 | [docs/engineering/design/PROFILE\_PRIVACY\_DESIGN.md](../../docs/engineering/design/PROFILE_PRIVACY_DESIGN.md) | `2cd42389d6492030f1bf9ff40f47c1b085cdf01bc6ebc7f0cecdf17bdabe8168` |
@@ -73,7 +73,7 @@ No records supplied.
 
 **Feature owner:** VAULT / STORAGE with RLS\_SECURITY
 
-Candidate source SHA-256: `8c4c37f2325a3286f26b66ef5f846b2c2bbc0d83b8aefa8b758022d71e97db1e`
+Candidate source SHA-256: `338c762b9c7dda9885a830bdd8e1886ed4cb7dbe84e39202e12e21f858e6fa64`
 
 **Review state:** No engineering review supplied.
 
@@ -91,7 +91,7 @@ Candidate source SHA-256: `8c4c37f2325a3286f26b66ef5f846b2c2bbc0d83b8aefa8b75802
 
 | Source / reading reference | SHA-256 |
 | --- | --- |
-| [apps/mobile/src/frontend/lib/vault.ts](../../apps/mobile/src/frontend/lib/vault.ts) | `e037ac3f9d373c371bf55fcdae8f313267fb28e358fc7e13967c79207bebe35a` |
+| [apps/mobile/src/frontend/lib/vault.ts](../../apps/mobile/src/frontend/lib/vault.ts) | `402a1127c45c891ef29dd0dcce00074f8d65cded765692becd40ce291a769dcf` |
 | [apps/mobile/src/frontend/lib/media.ts](../../apps/mobile/src/frontend/lib/media.ts) | `e187e7d37869ff21a9257b66f82651cd4d004d01151d676061b4cb50dd348d41` |
 | [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `d1729a7ee7de8e3258e35363e7955977d32d73210a6ceb91d57921ed1f172c86` |
 | [docs/engineering/design/MEDIA\_SERVICE\_PLAN.md](../../docs/engineering/design/MEDIA_SERVICE_PLAN.md) | `84f083e341edd1fccd10dcf9cc77e52b69800cc388d7cf8ac6ea4fa0a567789f` |

@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Friend and block controls on someone else's profile (PRIV-01): Add friend / Requested / Accept / Friends, and Block or
  * Unblock behind a confirmation. Also the "This profile is private" note a non-friend sees on a private account. The
  * relationship comes from the database (`get_public_profiles` → `viewer_relation`); a blocked person sees a guest's
@@ -21,6 +21,7 @@ import {
   unblockUser,
 } from '@/lib/privacy';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type State = 'none' | 'requested' | 'incoming' | 'friends' | 'blocked';
 
@@ -122,9 +123,9 @@ const styles = StyleSheet.create({
   wrap: { gap: 8, marginTop: 8 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   button: { minHeight: 44, maxWidth: '100%', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: FOCAL.mistJade, justifyContent: 'center' },
-  buttonOn: { backgroundColor: colors.text, borderColor: colors.text },
-  label: { fontSize: 13, fontWeight: '700', color: colors.text },
+  buttonOn: { minHeight: 44, backgroundColor: colors.text, borderColor: colors.text },
+  label: { ...TYPE.body, ...figtree('700'), color: colors.text },
   labelOn: { color: colors.onAccent },
-  private: { fontSize: 13, color: colors.textMuted },
-  message: { fontSize: 13, color: colors.danger },
+  private: { ...figtree('400'), ...TYPE.body, color: colors.textMuted },
+  message: { ...figtree('400'), ...TYPE.body, color: colors.danger },
 });

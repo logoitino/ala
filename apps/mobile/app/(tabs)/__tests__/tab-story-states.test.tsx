@@ -1,5 +1,5 @@
 /** UX-07 route-state tests: truthful pending/filter states retain existing auth, admin and navigation boundaries. SDK58 shared fan presentation reads the route pathname from this boundary. */
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { ActivityItem } from '@/hooks/useActivityFeed';
 import type { DripItem } from '@/data/shop';
 import { cloneAppRuntime, DEFAULT_APP_RUNTIME } from '@/lib/runtime';
@@ -10,6 +10,7 @@ import LocalTab from '../local';
 import BeyondTab from '../beyond';
 
 const mockPush = jest.fn();
+let mockSpotlightActions: { onWatch: (reelId: string | null, playerId?: string) => void } | null = null;
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
 const mockSetParams = jest.fn();
@@ -61,7 +62,7 @@ jest.mock('@/components/Effects/ScrollFx', () => {
   return { ScrollFxItem: View, ScrollFxParallax: View, ScrollFxScrollView: ScrollView };
 });
 jest.mock('@/components/Spotlight/SpotlightAwardCard', () => ({ SpotlightAwardCard: () => null }));
-jest.mock('@/components/Spotlight/SpotlightModal', () => ({ SpotlightModal: () => null }));
+jest.mock('@/components/Spotlight/SpotlightModal', () => ({ SpotlightModal: (props: typeof mockSpotlightActions) => { mockSpotlightActions = props; return null; } }));
 jest.mock('@/components/Spotlight/LeaderboardsBoard', () => ({ LeaderboardsBoard: () => null }));
 jest.mock('@/components/Reels/ReelViewModal', () => ({ ReelViewModal: () => null }));
 jest.mock('@/components/TipSheetModal', () => ({ MaloTipModal: () => null }));
@@ -229,4 +230,23 @@ it.each([
   expect(screen.getByText(title)).toBeTruthy();
   expect(screen.queryByText('Composer requested')).toBeNull();
   expect(mockRefresh).not.toHaveBeenCalled();
+});
+
+it('does not navigate from a dismissed Spotlight route after its close delay', async () => {
+  jest.useFakeTimers();
+  try {
+    const view = await render(<SpotlightTab />);
+    await act(async () => { mockSpotlightActions!.onWatch(null); });
+    await view.unmount();
+    await act(async () => { jest.advanceTimersByTime(400); });
+    expect(mockPush).not.toHaveBeenCalled();
+  } finally { jest.useRealTimers(); }
+});
+it('retains the current Spotlight fallback destination after its close delay', async () => {
+  jest.useFakeTimers();
+  try {
+    await render(<SpotlightTab />);
+    await act(async () => { mockSpotlightActions!.onWatch(null); jest.advanceTimersByTime(400); });
+    expect(mockPush).toHaveBeenCalledWith('/');
+  } finally { jest.useRealTimers(); }
 });

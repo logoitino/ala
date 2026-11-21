@@ -1,0 +1,20 @@
+import { act, render, screen } from '@testing-library/react-native';
+import Scorer from '../../../../../app/operator/scorer';
+let mockControls:any;let mockScores:any;let mockLive=true;let mockAuth:any;const mockInsert=jest.fn();const mockPatch=jest.fn();const mockClient=jest.fn();
+const game={id:'game-A',home_team:'Synthetic Home',away_team:'Synthetic Away',home_score:0,away_score:0,sport:'Rugby'};const player={id:'player-A',name:'Synthetic Player'};
+const mockConfig=()=>({scoring:[{id:'goal',label:'Goal',eventType:'Goal',points:1}],callouts:[{eventType:'Goal'}],periods:['Q1','Q2'],periodLabel:'Quarter'});
+jest.mock('expo-router',()=>({Stack:{Screen:()=>null}}));
+jest.mock('@/context/AuthContext',()=>({useAuth:()=>mockAuth}));
+jest.mock('@/services/OfflineQueue',()=>({offlineQueue:{captureActor:()=>({userId:mockAuth.user.id,isCurrent:()=>mockLive})}}));
+jest.mock('@/lib/supabase',()=>({isSupabaseConfigured:true}));
+jest.mock('@/lib/offlineActor',()=>({...jest.requireActual('@/lib/offlineActor'),createOfflineActorClient:(...a:unknown[])=>mockClient(...a)}));
+jest.mock('@/hooks/useSportConfigs',()=>({useSportConfigs:()=>({configFor:mockConfig})}));
+jest.mock('@/components/ScreenShell',()=>({ScreenShell:({children}:any)=>children}));
+jest.mock('@/components/Operator/ScorerControls',()=>({ScorerControls:(props:any)=>{mockControls=props;return require('react').createElement(jest.requireActual('react-native').Text,null,'Scorer ready')}}));
+jest.mock('@/components/Operator/GameScoreControls',()=>({GameScoreControls:(props:any)=>{mockScores=props;return null}}));
+jest.mock('@/lib/operator',()=>({fetchScorerGames:async()=>({games:[game],error:null}),fetchOperatorPlayers:async()=>({players:[player],error:null}),subscribeScorerGames:()=>()=>{},insertScorerPlayEvent:(...a:unknown[])=>mockInsert(...a),patchScorerGame:(...a:unknown[])=>mockPatch(...a)}));
+function pending<T>(){let resolve!:(v:T)=>void;const promise=new Promise<T>(r=>resolve=r);return{promise,resolve}}
+beforeEach(()=>{mockLive=true;mockAuth={user:{id:'A'},isSessionCurrent:()=>mockLive};mockInsert.mockReset().mockResolvedValue(null);mockPatch.mockReset().mockResolvedValue(null);mockClient.mockReset().mockResolvedValue('bound-A')});
+it('keeps one synchronous mutation across play and score actions',async()=>{const later=pending<null>();mockInsert.mockReturnValue(later.promise);await render(<Scorer/>);await screen.findByText('Scorer ready');await act(async()=>{mockControls.onAction('Goal',player);mockControls.onAction('Goal',player);mockScores.onAddPoints(1)});expect(mockInsert).toHaveBeenCalledTimes(1);expect(mockPatch).not.toHaveBeenCalled();await act(async()=>later.resolve(null));expect(mockInsert).toHaveBeenCalledWith('Goal',player,'game-A','bound-A')});
+it('recovers busy controls after a thrown play insert',async()=>{mockInsert.mockRejectedValue(new Error('Synthetic play failed'));await render(<Scorer/>);await screen.findByText('Scorer ready');await act(async()=>mockControls.onAction('Goal',player));expect(await screen.findByText('Synthetic play failed')).toBeTruthy();expect(mockControls.sending).toBe(false)});
+it('refuses play transport when actor leaves during client setup',async()=>{await render(<Scorer/>);await screen.findByText('Scorer ready');const later=pending<unknown>();mockClient.mockReturnValue(later.promise);await act(async()=>mockControls.onAction('Goal',player));mockLive=false;await act(async()=>later.resolve('bound-A'));expect(mockInsert).not.toHaveBeenCalled()});

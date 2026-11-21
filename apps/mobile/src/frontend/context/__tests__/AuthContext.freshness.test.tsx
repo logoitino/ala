@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Profile } from '@/types/database';
 import { AuthProvider, useAuth } from '../AuthContext';
 import { offlineQueue } from '@/services/OfflineQueue';
+import { authPublication } from '@/lib/supabase';
 
 jest.mock('@react-native-community/netinfo', () => ({
   __esModule: true,
@@ -46,11 +47,18 @@ const mockReadOnboarding = jest.fn();
 const mockFetchTeam = jest.fn();
 const mockPasswordSignIn = jest.fn();
 const mockCompleteRedirect = jest.fn();
+const mockSignOutRemote = jest.fn();
+const mockConfirmAge = jest.fn();
+const mockRecordBirth = jest.fn();
+const mockSaveOnboarding = jest.fn();
+const mockProfileUpdate = jest.fn();
+const mockRoleUpdate = jest.fn();
 const mockProfileReads = new Map<string, Array<Promise<{ data: Profile | null }>>>();
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ replace: jest.fn() }) }));
 jest.mock('@/lib/supabase', () => ({
   isSupabaseConfigured: true,
+  authPublication: jest.requireActual('@tapuai/shared-types/admin/authPublication').createAuthPublicationScope(),
   supabase: {
     auth: {
       getSession: () => mockGetSession(),
@@ -60,11 +68,12 @@ jest.mock('@/lib/supabase', () => ({
       },
     },
     from: () => ({
+      update: (patch: unknown) => ({ eq: (_column: string, id: string) => mockProfileUpdate(id, patch) }),
       select: () => ({ eq: (_column: string, id: string) => ({
         maybeSingle: () => mockProfileReads.get(id)?.shift() ?? Promise.resolve({ data: mockProfileFor(id) }),
       }) }),
     }),
-    rpc: () => Promise.resolve({ data: null, error: null }),
+    rpc: (...args: unknown[]) => mockRoleUpdate(...args),
   },
 }));
 jest.mock('@/lib/auth', () => ({
@@ -74,13 +83,22 @@ jest.mock('@/lib/auth', () => ({
   completeAuthRedirect: () => mockCompleteRedirect(),
   isNewAuthUser: () => false,
   signInWithEmailPassword: (...args: unknown[]) => mockPasswordSignIn(...args),
-  signOutRemote: () => Promise.resolve(),
+  signOutRemote: () => mockSignOutRemote(),
+  confirmAge13Plus: (...args: unknown[]) => mockConfirmAge(...args),
 }));
 jest.mock('@/lib/teams', () => ({
   readAthleteOnboarding: () => mockReadOnboarding(),
   fetchSchoolTeam: (id: string) => mockFetchTeam(id),
+  saveAthleteOnboardingRemote: (...args: unknown[]) => mockSaveOnboarding(...args),
 }));
-jest.mock('@/lib/minors', () => ({ recordMyBirthMonth: jest.fn() }));
+jest.mock('@/lib/minors', () => ({ recordMyBirthMonth: (...args: unknown[]) => mockRecordBirth(...args) }));
+jest.mock('@/lib/offlineActor', () => {
+  const real = jest.requireActual('@/lib/offlineActor');
+  return { ...real, createOfflineActorClient: async (actor: { userId: string; isCurrent: () => boolean }) => {
+    real.assertCurrent(actor);
+    return jest.requireMock('@/lib/supabase').supabase;
+  } };
+});
 jest.mock('@/lib/aura', () => ({ subscribeProfileAura: () => jest.fn() }));
 
 let api: ReturnType<typeof useAuth>;
@@ -113,6 +131,12 @@ beforeEach(async () => {
   mockEnsureFanProfile.mockResolvedValue(undefined);
   mockReadOnboarding.mockResolvedValue(null);
   mockFetchTeam.mockResolvedValue(null);
+  mockSignOutRemote.mockResolvedValue(undefined);
+  mockConfirmAge.mockResolvedValue(undefined);
+  mockRecordBirth.mockResolvedValue('ok');
+  mockSaveOnboarding.mockResolvedValue(undefined);
+  mockProfileUpdate.mockResolvedValue({ data: null, error: null });
+  mockRoleUpdate.mockResolvedValue({ data: null, error: null });
 });
 
 it('binds replay ownership before a pending profile load and invalidates it at provider cleanup', async () => {
@@ -259,6 +283,37 @@ it('keeps the current profile visible during a same-owner session refresh', asyn
   expect(api.profile?.full_name).toBe('updated');
 });
 
+it('ignores an outgoing scoped Auth notification before it can replace the incoming account', async () => {
+  await start('B');
+  mockEnsureFanProfile.mockClear();
+  let current = true;
+  await expect(authPublication.run('token-A', () => {
+    if (!current) throw new Error('Account changed');
+  }, async () => {
+    current = false;
+    await act(async () => { mockAuthListener('SIGNED_IN', sessionFor('A')); });
+  })).rejects.toThrow('Account changed');
+  expect(api.user?.id).toBe('B');
+  expect(api.profile?.user_id).toBe('B');
+  expect(mockEnsureFanProfile).not.toHaveBeenCalled();
+  expect(offlineQueue.captureActor('B')?.isCurrent()).toBe(true);
+});
+
+it('accepts a current scoped token refresh and ordinary sign-out without changing the owner lifetime', async () => {
+  await start();
+  const lifetime = api.isSessionCurrent;
+  const refreshed = { ...sessionFor('A'), access_token: 'refreshed-A' };
+  await authPublication.run(refreshed.access_token, () => undefined, async () => {
+    await act(async () => { mockAuthListener('TOKEN_REFRESHED', refreshed); });
+  });
+  expect(api.session?.access_token).toBe('refreshed-A');
+  expect(api.isSessionCurrent).toBe(lifetime);
+  await act(async () => { mockAuthListener('SIGNED_OUT', null); });
+  expect(api.user).toBeNull();
+  expect(api.profile).toBeNull();
+  expect(lifetime?.()).toBe(false);
+});
+
 it('clears account role overrides while keeping the explicit Studio preview', async () => {
   await start();
   await act(async () => { await api.previewAsRole('operator'); await api.addUserRole('athlete'); });
@@ -313,4 +368,189 @@ it('preserves the account guard through a same-owner token refresh', async () =>
   expect(guard?.()).toBe(true);
   expect(api.isSessionCurrent).toBe(guard);
   expect(api.session?.access_token).toBe('refreshed-A');
+});
+
+
+it('refuses a retained edit callback before it changes the incoming profile or writes', async () => {
+  await start();
+  const oldEdit = api.updateProfile;
+  await changeUser('B');
+  await act(async () => { await expect(oldEdit({ full_name: 'A edit' })).rejects.toThrow(/account changed/); });
+  expect(api.profile?.full_name).toBe('B');
+  expect(mockProfileUpdate).not.toHaveBeenCalled();
+});
+
+it('refuses retained role callbacks across A to B to A without restoring obsolete capabilities', async () => {
+  await start();
+  const oldAdd = api.addUserRole;
+  const oldActive = api.setActiveRole;
+  await changeUser('B'); await changeUser('A');
+  await act(async () => {
+    await expect(oldAdd('athlete')).rejects.toThrow(/account changed/);
+    await expect(oldActive('athlete')).rejects.toThrow(/account changed/);
+  });
+  expect(api.isAthlete).toBe(false);
+  expect(api.activeRole).toBe('fan');
+  expect(mockRoleUpdate).not.toHaveBeenCalled();
+  expect(mockProfileUpdate).not.toHaveBeenCalled();
+});
+
+it('does not publish a deferred age confirmation into an incoming account', async () => {
+  await start();
+  const pending = deferred<void>();
+  mockConfirmAge.mockReturnValueOnce(pending.promise);
+  let task!: Promise<void>;
+  await act(async () => { task = api.confirmAge13Plus(); });
+  queueRead('B', Promise.resolve({ data: { ...mockProfileFor('B'), age_confirmed_13_plus: false } }));
+  await changeUser('B');
+  await act(async () => pending.resolve(undefined));
+  await task;
+  expect(api.profile?.age_confirmed_13_plus).toBe(false);
+});
+
+it('returns a deferred under-13 block for A without signing out incoming B', async () => {
+  await start();
+  const pending = deferred<'blocked'>();
+  mockRecordBirth.mockReturnValueOnce(pending.promise);
+  let task!: Promise<'ok' | 'blocked'>;
+  await act(async () => { task = api.recordBirthMonth(2020, 2); });
+  await changeUser('B');
+  await act(async () => pending.resolve('blocked'));
+  expect(await task).toBe('blocked');
+  expect(api.user?.id).toBe('B');
+  expect(mockSignOutRemote).not.toHaveBeenCalled();
+});
+
+it('does not publish A birth month into B after a deferred successful birth update', async () => {
+  await start();
+  const pending = deferred<'ok'>();
+  mockRecordBirth.mockReturnValueOnce(pending.promise);
+  let task!: Promise<'ok' | 'blocked'>;
+  await act(async () => { task = api.recordBirthMonth(1990, 7); });
+  await changeUser('B');
+  await act(async () => pending.resolve('ok'));
+  expect(await task).toBe('ok');
+  expect(api.profile?.birth_year).toBeUndefined();
+});
+
+it('does not merge a deferred role grant into B or continue A onboarding as B', async () => {
+  await start();
+  const pending = deferred<{ data: string[]; error: null }>();
+  mockRoleUpdate.mockReturnValueOnce(pending.promise);
+  const onboard = { team: { id: 'school-A', name: 'School A', division: 'varsity' }, sport: 'rugby', jersey: '', position: '', classYear: '' } as Parameters<typeof api.completeAthleteOnboarding>[0];
+  let task!: Promise<void>;
+  await act(async () => { task = api.completeAthleteOnboarding(onboard); });
+  await changeUser('B');
+  await act(async () => pending.resolve({ data: ['fan', 'athlete'], error: null }));
+  await task;
+  expect(api.isAthlete).toBe(false);
+  expect(api.profile?.school_id).toBeNull();
+  expect(mockSaveOnboarding).not.toHaveBeenCalled();
+});
+
+it('does not publish deferred onboarding into B after its A role step completed', async () => {
+  await start();
+  const pending = deferred<void>();
+  mockSaveOnboarding.mockReturnValueOnce(pending.promise);
+  const onboard = { team: { id: 'school-A', name: 'School A', division: 'varsity' }, sport: 'rugby', jersey: '', position: '', classYear: '' } as Parameters<typeof api.completeAthleteOnboarding>[0];
+  let task!: Promise<void>;
+  await act(async () => { task = api.completeAthleteOnboarding(onboard); });
+  await changeUser('B');
+  await act(async () => pending.resolve(undefined));
+  await task;
+  expect(api.profile?.school_id).toBeNull();
+  expect(api.profile?.team).toBeUndefined();
+});
+
+it('keeps a valid mutation alive through same-owner token refresh and still signs out a blocked current minor', async () => {
+  await start();
+  const pending = deferred<'ok'>();
+  mockRecordBirth.mockReturnValueOnce(pending.promise);
+  let task!: Promise<'ok' | 'blocked'>;
+  await act(async () => { task = api.recordBirthMonth(1990, 7); });
+  await changeUser('A');
+  await act(async () => pending.resolve('ok'));
+  expect(await task).toBe('ok');
+  expect(api.profile?.birth_year).toBe(1990);
+  mockRecordBirth.mockResolvedValueOnce('blocked');
+  await act(async () => { expect(await api.recordBirthMonth(2020, 2)).toBe('blocked'); });
+  expect(api.user).toBeNull();
+  expect(mockSignOutRemote).toHaveBeenCalledTimes(1);
+});
+
+it('ignores a retained birth-prompt dismissal instead of hiding B prompt', async () => {
+  await start();
+  const oldDismiss = api.dismissBirthPrompt;
+  queueRead('B', Promise.resolve({ data: { ...mockProfileFor('B'), birth_year: null, age_check_required: false } }));
+  await changeUser('B');
+  await act(async () => oldDismiss());
+  expect(api.birthPrompt).toBe('optional');
+  expect(await AsyncStorage.getItem('tapuai.birthPrompt.snoozedUntil.A')).toBeNull();
+});
+
+
+it('refuses retained age, birth and onboarding callbacks before any new-account mutation', async () => {
+  await start();
+  const oldAge = api.confirmAge13Plus;
+  const oldBirth = api.recordBirthMonth;
+  const oldOnboard = api.completeAthleteOnboarding;
+  await changeUser('B');
+  await act(async () => {
+    await expect(oldAge()).rejects.toThrow(/account changed/);
+    await expect(oldBirth(1990, 7)).rejects.toThrow(/account changed/);
+    await expect(oldOnboard({} as Parameters<typeof oldOnboard>[0])).rejects.toThrow(/account changed/);
+  });
+  expect(api.profile?.full_name).toBe('B');
+  expect(api.isAthlete).toBe(false);
+  expect(mockConfirmAge).not.toHaveBeenCalled();
+  expect(mockRecordBirth).not.toHaveBeenCalled();
+  expect(mockSaveOnboarding).not.toHaveBeenCalled();
+});
+
+it('refuses an outgoing account retained signOut callback without ending B session', async () => {
+  await start();
+  const oldSignOut = api.signOut;
+  await changeUser('B');
+  await act(async () => { await expect(oldSignOut()).rejects.toThrow(/account changed/); });
+  expect(api.user?.id).toBe('B');
+  expect(mockSignOutRemote).not.toHaveBeenCalled();
+});
+
+it('does not clear B when a signOut already issued by A settles after the switch', async () => {
+  await start();
+  const pending = deferred<void>();
+  mockSignOutRemote.mockReturnValueOnce(pending.promise);
+  let task!: Promise<void>;
+  await act(async () => { task = api.signOut(); });
+  await changeUser('B');
+  await act(async () => pending.resolve(undefined));
+  await task;
+  expect(api.user?.id).toBe('B');
+  expect(api.profile?.user_id).toBe('B');
+  expect(mockSignOutRemote).toHaveBeenCalledTimes(1);
+});
+
+it('preserves current-account edit, role selection, age and explicit signOut behavior', async () => {
+  await start();
+  await act(async () => { await api.updateProfile({ full_name: 'Updated A' }); await api.addUserRole('athlete'); });
+  expect(api.profile?.full_name).toBe('Updated A');
+  expect(api.isAthlete).toBe(true);
+  await act(async () => { await api.setActiveRole('fan'); await api.confirmAge13Plus(); });
+  expect(api.activeRole).toBe('fan');
+  expect(mockProfileUpdate.mock.calls).toEqual([
+    ['A', { full_name: 'Updated A' }], ['A', { active_role: 'fan' }],
+  ]);
+  expect(mockConfirmAge.mock.calls[0][0]).toBe('A');
+  await act(async () => { await api.signOut(); });
+  expect(api.user).toBeNull();
+  expect(api.profile).toBeNull();
+  expect(mockSignOutRemote).toHaveBeenCalledTimes(1);
+});
+
+
+it('does not publish a denied current-owner profile edit as saved', async () => {
+  await start();
+  mockProfileUpdate.mockResolvedValueOnce({ data: null, error: { code: '42501', message: 'Permission denied' } });
+  await act(async () => { await expect(api.updateProfile({ full_name: 'Denied name' })).rejects.toMatchObject({ message: 'Permission denied' }); });
+  expect(api.profile?.full_name).toBe('A');
 });

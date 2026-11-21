@@ -40,6 +40,9 @@ describe('canDropMaloOnHighlight', () => {
     expect(canDropMaloOnHighlight(clip, fakePlayer('p1'))).toBe(false);
   });
 
+  it('blocks a stale resolved recipient that differs from the clip’s confirmed athlete', () => {
+    expect(canDropMaloOnHighlight(fakeClip({ playerId: 'p1', tagStatus: 'confirmed' }), fakePlayer('p2'))).toBe(false);
+  });
   it('allows Malo once the tag is confirmed', () => {
     const clip = fakeClip({ playerId: 'p1', tagStatus: 'confirmed' });
     expect(canDropMaloOnHighlight(clip, fakePlayer('p1'))).toBe(true);

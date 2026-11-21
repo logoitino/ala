@@ -3,7 +3,9 @@
  * (Apple / Google / Magic Link), the fan-or-athlete switch, and the owner "Studio unlock".
  * Everything else asks this context before gating a feature (`useAuth`). Profile edits write `profiles`;
  * role, verification and player link are server-owned and cannot be set from here. Profile reads
- * belong to one session lifetime: a delayed refresh cannot publish into an incoming account.
+ * belong to one session lifetime: delayed refreshes and mutations cannot publish into an incoming account.
+ * Auth profile/role/birth/onboarding writes capture that lifetime and use its bound transport (UX-13);
+ * outgoing scoped session notifications are refused before they can install another account.
  * @sideEffects Supabase Auth session, `profiles` reads / writes, AsyncStorage guest markers.
  */
 
@@ -39,9 +41,10 @@ import {
 } from '@/lib/auth';
 import { deriveRoles, isAdminAccess, isUserRole, ROLE_HOME, addUserRoleRemote, parseRoles } from '@/lib/roles';
 import { recordMyBirthMonth } from '@/lib/minors';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { authPublication, isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { subscribeProfileAura } from '@/lib/aura';
 import { offlineQueue } from '@/services/OfflineQueue';
+import { assertCurrent, createOfflineActorClient, OfflineActorChangedError, type OfflineActor } from '@/lib/offlineActor';
 import {
   fetchSchoolTeam,
   readAthleteOnboarding,
@@ -108,7 +111,7 @@ type AuthContextValue = {
   addUserRole: (role: UserRole) => Promise<void>;
   completeAthleteOnboarding: (onboard: AthleteOnboarding) => Promise<void>;
   /** Patches the signed-in fan's own `profiles` row (Edit Profile sheet: name, username, bio,
-   * social links, visibility toggles). Optimistic local update, then a remote write. */
+   * social links, visibility toggles). A configured remote write must succeed before local publication. */
   updateProfile: (patch: ProfileEditPatch) => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
   signInWithApple: () => Promise<void>;
@@ -188,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (next?.school_id) {
       next.team = await fetchSchoolTeam(next.school_id);
     } else {
-      const local = await readAthleteOnboarding();
+      const local = await readAthleteOnboarding(userId);
       if (next && local?.team) next.team = local.team;
     }
     if (!isCurrentLoad()) return null;
@@ -264,6 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!active) return;
+      if (authPublication && !authPublication.isCurrent(nextSession?.access_token)) return;
       void hydrateSession(nextSession).catch(() => undefined);
     });
 
@@ -346,6 +350,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mounted.current && renderedAccountEpoch === accountEpoch.current
   ), [renderedAccountEpoch]);
 
+  // Capture the rendered account lifetime before any await; retained callbacks cannot adopt a new owner.
+  const captureMutationActor = useCallback((): OfflineActor | null => {
+    if (!isSessionCurrent()) throw new OfflineActorChangedError();
+    const userId = session?.user.id;
+    if (!userId) return null;
+    return { userId, isCurrent: () => isSessionCurrent() && sessionRef.current?.user.id === userId };
+  }, [isSessionCurrent, session?.user.id]);
+
   const signInWithApple = useCallback(async () => {
     const epoch = sessionEpoch.current;
     const next = await appleSignIn();
@@ -389,6 +401,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [hydrateSession]);
 
   const signOut = useCallback(async () => {
+    captureMutationActor();
     const epoch = sessionEpoch.current;
     await signOutRemote();
     // A SIGNED_OUT event may already have cleared this owner; do not clear a newer sign-in.
@@ -399,7 +412,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setActiveRoleOverride(null);
     setRole('fan');
     await AsyncStorage.setItem(DEV_ROLE_KEY, 'fan');
-  }, [installSession]);
+  }, [captureMutationActor, installSession]);
 
   const roles = useMemo(() => {
     const merged = [...parseRoles(profile?.roles), ...extraRoles];
@@ -436,25 +449,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ? birthPrompt === 'required'
     : Boolean(session?.user && profile && profile.age_confirmed_13_plus !== true && isNewAuthUser(session.user));
   const dismissBirthPrompt = useCallback(() => {
+    if (!isSessionCurrent()) return;
     setBirthPromptDismissed(true);
     if (userIdForPrompt) void AsyncStorage.setItem(birthPromptKey(userIdForPrompt), String(Date.now() + BIRTH_PROMPT_SNOOZE_MS));
-  }, [userIdForPrompt]);
+  }, [isSessionCurrent, userIdForPrompt]);
 
   const confirmAge13Plus = useCallback(async () => {
-    if (!session?.user.id) return;
-    await confirmAge13PlusRemote(session.user.id);
-    setProfile((current) => (current ? { ...current, age_confirmed_13_plus: true } : current));
-  }, [session?.user.id]);
+    const actor = captureMutationActor();
+    if (!actor) return;
+    const client = isSupabaseConfigured ? await createOfflineActorClient(actor) : undefined;
+    assertCurrent(actor);
+    await confirmAge13PlusRemote(actor.userId, client);
+    setProfile((current) => (actor.isCurrent() && current?.user_id === actor.userId ? { ...current, age_confirmed_13_plus: true } : current));
+  }, [captureMutationActor]);
 
   const recordBirthMonth = useCallback(async (year: number, month: number) => {
-    const outcome = await recordMyBirthMonth(year, month);
+    const actor = captureMutationActor();
+    if (!actor) throw new OfflineActorChangedError();
+    const client = isSupabaseConfigured ? await createOfflineActorClient(actor) : undefined;
+    assertCurrent(actor);
+    const outcome = await recordMyBirthMonth(year, month, client);
     if (outcome === 'blocked') {
-      await signOut();
+      // Preserve the issued account's server outcome, but never sign out an incoming account.
+      if (actor.isCurrent()) await signOut();
       return outcome;
     }
-    setProfile((current) => (current ? { ...current, birth_year: year, birth_month: month, age_confirmed_13_plus: true } : current));
+    setProfile((current) => (actor.isCurrent() && current?.user_id === actor.userId ? { ...current, birth_year: year, birth_month: month, age_confirmed_13_plus: true } : current));
     return outcome;
-  }, [signOut]);
+  }, [captureMutationActor, signOut]);
   const canReceiveTips = isAthlete;
   const activeRole: 'fan' | 'athlete' = useMemo(() => {
     if (!isAthlete) return 'fan';
@@ -467,10 +489,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const addUserRole = useCallback(
     async (newRole: UserRole) => {
-      setExtraRoles((current) => (current.includes(newRole) ? current : [...current, newRole]));
+      const actor = captureMutationActor();
+      const currentAccount = actor?.isCurrent ?? isSessionCurrent;
+      setExtraRoles((current) => (!currentAccount() || current.includes(newRole) ? current : [...current, newRole]));
       if (newRole === 'athlete') setActiveRoleOverride('athlete');
       setProfile((current) => {
-        if (!current) return current;
+        if (!currentAccount() || !current || current.user_id !== actor?.userId) return current;
         const nextRoles = Array.from(new Set([...parseRoles(current.roles), newRole, 'fan']));
         return {
           ...current,
@@ -480,10 +504,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           active_role: newRole === 'athlete' ? 'athlete' : current.active_role,
         };
       });
-      const remote = await addUserRoleRemote(newRole);
+      if (!actor || !isSupabaseConfigured) return;
+      const client = await createOfflineActorClient(actor);
+      assertCurrent(actor);
+      const remote = await addUserRoleRemote(newRole, client);
+      if (!actor.isCurrent()) return;
       if (remote && remote.length > 0) {
         setProfile((current) =>
-          current
+          actor.isCurrent() && current?.user_id === actor.userId
             ? {
                 ...current,
                 roles: remote,
@@ -493,18 +521,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               }
             : current,
         );
-        await loadProfile(session?.user.id);
+        await loadProfile(actor.userId);
       }
     },
-    [loadProfile, session?.user.id],
+    [captureMutationActor, isSessionCurrent, loadProfile],
   );
 
   const completeAthleteOnboarding = useCallback(
     async (onboard: AthleteOnboarding) => {
+      const actor = captureMutationActor();
       await addUserRole('athlete');
-      await saveAthleteOnboardingRemote(session?.user.id, onboard);
+      if (!(actor?.isCurrent() ?? isSessionCurrent())) return;
+      await saveAthleteOnboardingRemote(actor?.userId, onboard, actor ?? undefined);
       setProfile((current) =>
-        current
+        actor?.isCurrent() && current?.user_id === actor.userId
           ? {
               ...current,
               school_id: onboard.team.id,
@@ -518,26 +548,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           : current,
       );
     },
-    [addUserRole, session?.user.id],
+    [addUserRole, captureMutationActor, isSessionCurrent],
   );
 
   const setActiveRole = useCallback(
     async (nextRole: 'fan' | 'athlete') => {
+      const actor = captureMutationActor();
       setActiveRoleOverride(nextRole);
-      setProfile((current) => (current ? { ...current, active_role: nextRole } : current));
-      if (!session?.user.id || !isSupabaseConfigured) return;
-      await supabase.from('profiles').update({ active_role: nextRole }).eq('user_id', session.user.id);
+      setProfile((current) => (actor?.isCurrent() && current?.user_id === actor.userId ? { ...current, active_role: nextRole } : current));
+      if (!actor || !isSupabaseConfigured) return;
+      const client = await createOfflineActorClient(actor);
+      assertCurrent(actor);
+      await client.from('profiles').update({ active_role: nextRole }).eq('user_id', actor.userId);
     },
-    [session?.user.id],
+    [captureMutationActor],
   );
 
   const updateProfile = useCallback(
     async (patch: ProfileEditPatch) => {
-      setProfile((current) => (current ? { ...current, ...patch } : current));
-      if (!session?.user.id || !isSupabaseConfigured) return;
-      await supabase.from('profiles').update(patch).eq('user_id', session.user.id);
+      const actor = captureMutationActor();
+      if (!actor || !isSupabaseConfigured) return;
+      const client = await createOfflineActorClient(actor);
+      assertCurrent(actor);
+      const { error } = await client.from('profiles').update(patch).eq('user_id', actor.userId);
+      if (error) throw error;
+      setProfile((current) => (actor.isCurrent() && current?.user_id === actor.userId ? { ...current, ...patch } : current));
     },
-    [session?.user.id],
+    [captureMutationActor],
   );
 
   const value = useMemo<AuthContextValue>(

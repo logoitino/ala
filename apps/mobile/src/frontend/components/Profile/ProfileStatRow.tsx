@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * The count row under the athlete hero: Seki, Riding, Crew and Squad, with the Join control at the end of the row
  * and the pulsing Teammates badge for a mutual follow (split out of AthleteProfileView.tsx for R4-03; behaviour unchanged).
  * The parent passes peak Seki / Flex; Crew and Squad come from `useCrew`, and Join goes through the soft wall.
@@ -31,6 +31,7 @@ import { useCrew } from '@/hooks/useCrew';
 import { formatCompactCount } from '@/lib/hype';
 import type { Player } from '@/types/database';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Seki, Riding, Crew, and Squad as separate counts on one compact line. Join sits at the end of the row.
@@ -203,39 +204,39 @@ const styles = StyleSheet.create({
     gap: 0,
     minWidth: 0,
   },
-  statValue: {
+  statValue: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
-    fontSize: 17,
-    lineHeight: 20,
+    ...TYPE.body,
+
   },
   statLabel: {
     color: colors.text,
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     textAlign: 'center',
   },
   joinCell: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // 30pt visible + hitSlop 8 keeps the 44pt touch target.
+  // Fixed44pt icon target keeps the15pt visual mark compact.
   joinIcon: {
-    width: 30,
-    height: 30,
+    width: 44,
+    height: 44,
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: FOCAL.jadeInk,
   },
-  joinIconOn: {
+  joinIconOn: { minHeight: 44,
     backgroundColor: FOCAL.mistJade,
     borderWidth: 1.5,
     borderColor: FOCAL.jadeInk,
   },
   squadHint: {
     color: colors.textMuted,
-    fontSize: 10,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     textAlign: 'center',
   },
   crewBlock: {
@@ -261,13 +262,13 @@ const styles = StyleSheet.create({
   },
   crewValue: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   crewLabel: {
     color: FOCAL.goldInk,
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     textAlign: 'center',
   },
   crewDivider: {
@@ -290,8 +291,8 @@ const styles = StyleSheet.create({
   },
   joinCrewLabel: {
     color: colors.primary,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   inCrew: {
     backgroundColor: 'transparent',
@@ -333,11 +334,11 @@ const styles = StyleSheet.create({
   },
   teammatesLabel: {
     color: FOCAL.emberInk,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     letterSpacing: 0.3,
   },
-  teammatesLabelCompact: {
-    fontSize: 12,
+  teammatesLabelCompact: { ...figtree('400'),
+    ...TYPE.caption,
   },
 });

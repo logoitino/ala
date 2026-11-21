@@ -1,8 +1,8 @@
-/** My sports keeps independent credentials and one manually chosen primary in a revision-checked draft.
+/** UX-13 readable shared type preserves every action and required notice. My sports keeps independent credentials and one manually chosen primary in a revision-checked draft.
  * Back and failed saves retain edits; only the SDK's confirmed atomic snapshot acknowledges a save.
  * @sideEffects School directory search, participation save RPC and guarded Auth profile refresh. */
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetRise } from '@/components/UI/SheetRise';
@@ -13,6 +13,7 @@ import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useStoredSportChoices } from '@/hooks/useStoredSportChoices';
 import { saveAthleteSports, type AthleteSportEntry, type AthleteSportsSnapshot } from '@/lib/athleteSports';
 import { searchSchoolsAndTeams } from '@/lib/teams';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type Props = { visible: boolean; profileId: string; snapshot: AthleteSportsSnapshot | null; onClose: () => void;
   onSaved: (snapshot: AthleteSportsSnapshot) => void; onReload?: () => void };
@@ -28,6 +29,7 @@ export function MySportsModal(props: Props) {
 }
 function MySportsDraft({ visible, profileId, snapshot, onClose, onSaved, onReload }: Props) {
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const { user, refreshProfile, isSessionCurrent } = useAuth();
   const { sportNames, status: catalogStatus, reload: reloadSportChoices } = useStoredSportChoices(visible);
   const [draft, setDraft] = useState<AthleteSportsSnapshot | null>(() => snapshot?.profileId === profileId ? clone(snapshot) : null);
@@ -101,7 +103,7 @@ function MySportsDraft({ visible, profileId, snapshot, onClose, onSaved, onReloa
       : sportNames.length === 0 ? 'No active sports are available to add. Existing sport details stay here.' : null;
   return <Modal visible transparent animationType="none" onRequestClose={back}>
     <View style={styles.root}><KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={frame.dock}>
-      <SheetRise active={visible} style={[styles.sheet, frame.card]}><MenuBackdrop accent="jade" />
+      <SheetRise active={visible} style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }]}><MenuBackdrop accent="jade" />
         <View style={styles.heading}><Pressable accessibilityRole="button" accessibilityLabel="Back" disabled={saving} onPress={back} style={styles.button}><Text style={styles.link}>Back</Text></Pressable>
           <Text accessibilityRole="header" style={styles.title}>{schoolSport ? `${schoolSport} school / team` : adding ? 'Add a sport' : 'My sports'}</Text></View>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
@@ -149,12 +151,12 @@ const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.backdrop },
   sheet: { backgroundColor: colors.surface, borderRadius: MENU_METRICS.sheetRadius, overflow: 'hidden', maxHeight: '78%' },
   heading: { flexDirection: 'row', alignItems: 'center', padding: 10, gap: 8 },
-  title: { flex: 1, fontSize: 18, fontWeight: '800', color: colors.text },
+  title: { flex: 1, ...TYPE.title, ...figtree('800'), color: colors.text },
   body: { padding: 14, gap: 10 }, entry: { borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 10, gap: 4 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   button: { minHeight: 44, padding: 10, justifyContent: 'center', borderRadius: 12 },
-  label: { color: colors.text, fontSize: 13, fontWeight: '700' }, link: { color: colors.primary, fontSize: 13, fontWeight: '700' },
-  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 18 }, error: { color: colors.danger, fontSize: 13, lineHeight: 18 },
+  label: { color: colors.text, ...TYPE.body, ...figtree('700') }, link: { color: colors.primary, ...TYPE.body, ...figtree('700') },
+  hint: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  }, error: { ...figtree('400'), color: colors.danger, ...TYPE.body,  },
   input: { minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, color: colors.text },
-  footer: { padding: 10, gap: 6 }, save: { backgroundColor: colors.primary, alignItems: 'center' }, saveLabel: { color: colors.onAccent, fontSize: 14, fontWeight: '800' },
+  footer: { padding: 10, gap: 6 }, save: { minHeight: 44, backgroundColor: colors.primary, alignItems: 'center' }, saveLabel: { color: colors.onAccent, ...TYPE.body, ...figtree('800') },
 });

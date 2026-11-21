@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable controls preserve all consent, money and operator actions.
  * Admin portal sign-in form (`/login`): Supabase Auth email + password or a magic link. Only proves a real
  * session; the admin check runs afterwards in `app/(protected)/layout.tsx`. Two always-mounted live regions:
  * `role="alert"` for failures, `role="status"` for progress and the magic-link note (never one region that
@@ -10,6 +10,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
+import { safeNextPath } from '@/lib/adminMfa';
 import { getSupabaseBrowserClient, isAdminPortalConfigured } from '@/lib/supabase';
 
 type Mode = 'password' | 'magic-link';
@@ -24,7 +25,7 @@ type Mode = 'password' | 'magic-link';
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get('next') || '/';
+  const next = safeNextPath(searchParams.get('next'));
 
   const [mode, setMode] = useState<Mode>('password');
   const [email, setEmail] = useState('');
@@ -75,7 +76,7 @@ export function LoginForm() {
       style={{ boxShadow: '0 1px 3px rgba(16,22,26,0.06), 0 8px 32px rgba(16,22,26,0.08)' }}
     >
       <div className="bg-[var(--sidebar-bg)] px-6 py-5">
-        <p className="text-[10px] font-extrabold tracking-[0.24em] text-emerald-400/80 uppercase">Tapua&apos;i</p>
+        <p className="text-[12px] font-extrabold tracking-[0.24em] text-emerald-400/80 uppercase">Tapua&apos;i</p>
         <h1 className="mt-0.5 text-xl font-extrabold tracking-tight text-white">Admin Portal</h1>
       </div>
       <div className="p-6">
@@ -99,8 +100,8 @@ export function LoginForm() {
                 aria-pressed={mode === 'password'}
                 className={
                   mode === 'password'
-                    ? 'rounded-full bg-[var(--jade)] px-3 py-1.5 text-xs font-bold text-white'
-                    : 'rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-bold text-[var(--ink-soft)]'
+                    ? 'min-h-11 rounded-full bg-[var(--jade)] px-3 py-1.5 text-xs font-bold text-white'
+                    : 'min-h-11 rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-bold text-[var(--ink-soft)]'
                 }
               >
                 Password
@@ -111,8 +112,8 @@ export function LoginForm() {
                 aria-pressed={mode === 'magic-link'}
                 className={
                   mode === 'magic-link'
-                    ? 'rounded-full bg-[var(--jade)] px-3 py-1.5 text-xs font-bold text-white'
-                    : 'rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-bold text-[var(--ink-soft)]'
+                    ? 'min-h-11 rounded-full bg-[var(--jade)] px-3 py-1.5 text-xs font-bold text-white'
+                    : 'min-h-11 rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-bold text-[var(--ink-soft)]'
                 }
               >
                 Magic link
@@ -128,7 +129,7 @@ export function LoginForm() {
                   autoComplete="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus-visible:border-[var(--jade)]"
+                  className="min-h-11 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus-visible:border-[var(--jade)]"
                   placeholder="you@tapuai.app"
                 />
               </label>
@@ -170,7 +171,7 @@ export function LoginForm() {
               <button
                 type="submit"
                 disabled={busy}
-                className="w-full rounded-full bg-[var(--jade)] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-40"
+                className="min-h-11 w-full rounded-full bg-[var(--jade)] px-4 py-2.5 text-sm font-extrabold text-white disabled:opacity-40"
               >
                 {busy ? 'Signing in…' : mode === 'password' ? 'Sign in' : 'Send magic link'}
               </button>

@@ -1,4 +1,5 @@
-/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
+/** Vault refusal stays visible and account-bound. Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
+import { offlineQueue } from '@/services/OfflineQueue';
 import { useCallback, useMemo, useState } from 'react';
 import { AthleteRecordsPanel } from '@/components/Admin/AthleteRecordsPanel';
 import { Alert } from 'react-native';
@@ -293,7 +294,13 @@ export function AthletesTool() {
             <AdminBtn label="Edit" onPress={() => load(player)} />
             <AdminBtn
               label={player.vault_locked === false ? 'Lock Vault' : 'Open Vault'}
-              onPress={() => void setPlayerVaultLocked(player.id, player.vault_locked === false).then(() => refresh())}
+              onPress={() => {
+                const actor = offlineQueue.captureActor();
+                if (!actor) return;
+                void setPlayerVaultLocked(player.id, player.vault_locked === false, actor)
+                  .then(() => { if (actor.isCurrent()) return refresh(); })
+                  .catch((error: unknown) => { if (actor.isCurrent()) setMessage(error instanceof Error ? error.message : 'Vault change was not saved.'); });
+              }}
             />
             <AdminBtn
               label="Link guardian"

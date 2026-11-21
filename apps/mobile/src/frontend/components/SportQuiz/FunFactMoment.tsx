@@ -8,6 +8,7 @@
  *   with no card) and for one the athlete removed (history shows the server's "Removed by the athlete").
  * Effects reuse QuizFx `PopIn` (a plain fade with Reduce Motion). Nothing here waits before Next.
  * @sideEffects `get_public_profiles` (one read per card) through lib/privacy.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -16,6 +17,7 @@ import { getPublicProfiles } from '@/lib/privacy';
 import { colors, radii } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
 import { PopIn } from './QuizFx';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export const FUN_FACT_UNAVAILABLE = 'This fun fact isn’t available anymore.';
 /** The server's wording when the athlete removed a fun fact (shown as sent, in history). */
@@ -92,14 +94,14 @@ const styles = StyleSheet.create({
     header: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6,
         borderRadius: radii.md, borderWidth: 2, borderColor: FOCAL.electricViolet, backgroundColor: FOCAL.mistViolet },
     headerEmoji: { fontSize: 18 },
-    headerText: { fontSize: 17, fontWeight: '800', color: FOCAL.violetInk },
+    headerText: { flexShrink: 1, ...TYPE.body, ...figtree('800'), color: FOCAL.violetInk },
     card: { padding: 12, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
     cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    avatar: { width: 52, height: 52, borderRadius: 26 },
-    initials: { alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistViolet, borderWidth: 1, borderColor: FOCAL.electricViolet },
-    initialsText: { fontSize: 18, fontWeight: '800', color: FOCAL.violetInk },
+    avatar: { width: 40, height: 40, borderRadius: 20 },
+    initials: { width: undefined, height: undefined, minWidth: 40, minHeight: 40, padding: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistViolet, borderWidth: 1, borderColor: FOCAL.electricViolet },
+    initialsText: { ...TYPE.title, ...figtree('800'), color: FOCAL.violetInk },
     cardText: { flexShrink: 1, gap: 2 },
-    cardName: { fontSize: 17, fontWeight: '800', color: colors.text },
-    cardSport: { fontSize: 14, color: colors.textMuted },
-    cardNote: { fontSize: 13, color: colors.textMuted },
+    cardName: { ...TYPE.section, ...figtree('800'), color: colors.text },
+    cardSport: { ...figtree('400'), ...TYPE.body, color: colors.textMuted },
+    cardNote: { ...figtree('400'), ...TYPE.body, color: colors.textMuted },
 });

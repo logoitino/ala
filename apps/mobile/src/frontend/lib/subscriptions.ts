@@ -87,8 +87,8 @@ export async function fetchActiveSubscription(
  *   (frozen athlete via RLS, network, missing table).
  * @sideEffects `subscriptions` INSERT.
  */
-export async function insertSubscription(subscriberId: string, athleteId: string): Promise<{ ok: boolean }> {
-  const { error } = await supabase.from('subscriptions').insert({
+export async function insertSubscription(subscriberId: string, athleteId: string, client = supabase): Promise<{ ok: boolean }> {
+  const { error } = await client.from('subscriptions').insert({
     subscriber_id: subscriberId,
     athlete_id: athleteId,
     status: 'active',

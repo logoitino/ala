@@ -3,6 +3,7 @@
  * (split out of app/(tabs)/index.tsx for R4-03; behaviour unchanged). The route keeps the filter state, the pill
  * layout measurements and the indicator animation, so hook order in the route is unchanged; this file renders them.
  * Local is a destination, not a filter, so it navigates instead of switching the feed.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import type { RefObject } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -16,6 +17,7 @@ import { colors } from '@/constants/theme';
 import type { HighlightFeedFilter } from '@/data/highlights';
 import type { AppRuntimeConfig } from '@/lib/runtime';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Render the Home feed switch and Local jump from the route's state.
@@ -145,8 +147,8 @@ const styles = StyleSheet.create({
   },
   feedPillCount: {
     color: colors.onVideoMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     opacity: 0.75,
   },
   feedPillCountOn: {
@@ -173,8 +175,8 @@ const styles = StyleSheet.create({
   },
   feedPillLabel: {
     color: colors.onVideoMuted,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
     flexShrink: 1,
   },
   feedPillLabelOn: {

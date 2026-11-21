@@ -1,8 +1,10 @@
+/** UX-13 existing ThanksPicker.tsx presentation keeps all actions/notices while aligning readable type. */
 import { StyleSheet, Text, View } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { THANKS_MESSAGES, type ThanksKey } from '@/lib/donationThanks';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type ThanksPickerProps = {
   busy?: boolean;
@@ -43,6 +45,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   option: {
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -51,20 +55,22 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   optionText: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.text,
   },
   dim: {
     opacity: 0.5,
   },
   cancel: {
+    minHeight: 44,
+    justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 6,
   },
   cancelText: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.textMuted,
   },
 });

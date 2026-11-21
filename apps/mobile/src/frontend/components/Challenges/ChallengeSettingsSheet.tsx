@@ -1,12 +1,16 @@
-/** Account sheet for workout-challenge mute, private badges, and the owner's data export. */
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+/** Account sheet for workout-challenge mute, private badges, and the owner's data export.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
+import { Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { colors } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
 import { ChallengeSettings } from './ChallengeSettings';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Workout challenges live in Account settings, off the profile scroll.
@@ -16,21 +20,23 @@ import { ChallengeSettings } from './ChallengeSettings';
  * @sideEffects Challenge settings read and write only while the sheet is open.
  */
 export function ChallengeSettingsSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={styles.root}>
-        <View style={styles.sheet}>
+        <View style={frame.dock}><View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={onClose} />
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>
           <Text style={styles.kicker}>Account</Text>
           <Text style={styles.title}>Workout challenges</Text>
-          <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>
             <ChallengeSettings active={visible} />
           </ScrollView>
           <Pressable accessibilityRole="button" accessibilityLabel="Close workout challenges" onPress={onClose} style={styles.close}>
             <Text style={styles.closeLabel}>Close</Text>
           </Pressable>
-        </View>
+        </View></View>
       </View>
     </Modal>
   );
@@ -39,7 +45,7 @@ export function ChallengeSettingsSheet({ visible, onClose }: { visible: boolean;
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(12, 24, 18, 0.45)' },
   sheet: {
-    maxHeight: '88%',
+
     backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -48,15 +54,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.1,
     textTransform: 'uppercase',
     color: FOCAL.goldInk,
   },
-  title: { fontSize: 22, fontWeight: '800', color: colors.text, letterSpacing: -0.3 },
-  scroll: { flexGrow: 0 },
+  title: { ...TYPE.title, ...figtree('800'), color: colors.text, letterSpacing: -0.3 },
+  scroll: { flexGrow: 0, flexShrink: 1 },
   body: { paddingBottom: 8, gap: 8 },
   close: { alignItems: 'center', minHeight: 44, justifyContent: 'center' },
-  closeLabel: { fontSize: 15, fontWeight: '700', color: colors.textMuted },
+  closeLabel: { ...TYPE.body, ...figtree('700'), color: colors.textMuted },
 });

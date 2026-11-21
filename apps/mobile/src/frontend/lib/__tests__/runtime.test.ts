@@ -68,7 +68,7 @@ it('keeps offline draft ON/live OFF without changing unrelated preview flags', a
 it('keeps the configured direct-table fallback draft-only', async () => {
   mockConfigured = true;
   const draft = setRuntimeFlag(DEFAULT_APP_RUNTIME, FLAG, true);
-  mockRpc.mockResolvedValue({ data: null, error: { message: 'missing draft RPC' } });
+  mockRpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'missing draft RPC' } });
   mockSingle.mockResolvedValue({ data: { draft, published: DEFAULT_APP_RUNTIME, published_at: null }, error: null });
   const result = await saveAppRuntimeDraft(draft);
   expect(mockUpdate).toHaveBeenCalledWith({ draft, updated_at: expect.any(String) });

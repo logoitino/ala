@@ -2,6 +2,7 @@
  * A live game play in the Local feed: who made it and what happened, with a hype tap for that athlete.
  * `resolveEventPlayer` picks the athlete a play event belongs to; `onBacked` reports the new count after a tap.
  * @sideEffects The first select of each kind calls `bumpPlayerHype`. A second tap clears it and does not add another point.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -41,6 +42,7 @@ import {
 import type { GameEventWithPlayer } from '@/types/database';
 import { HYPE_FX } from '@/theme/hypeFx';
 import { FOCAL, SPRING_BOUNCE, SPRING_SHEET } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type PlayCardProps = {
   event: GameEventWithPlayer;
@@ -212,15 +214,15 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
             }}
             style={styles.nameHit}
           >
-            <Text style={styles.name} numberOfLines={1}>
+            <Text style={styles.name}>
               {displayValue(player?.name, 'Unknown player')}
             </Text>
           </Pressable>
-          <Text style={[styles.play, tagText[tone]]} numberOfLines={1}>
+          <Text style={[styles.play, tagText[tone]]}>
             {playTitle}
           </Text>
           {stat ? (
-            <Text style={styles.stat} numberOfLines={1}>
+            <Text style={styles.stat}>
               {stat}
             </Text>
           ) : null}
@@ -234,7 +236,7 @@ export function PlayCard({ event, onBacked, onOpenAthlete }: PlayCardProps) {
           style={styles.chevronHit}
         >
           <Animated.View style={chevronStyle}>
-            <Ionicons name="chevron-down" size={28} color={FOCAL.goldInk} />
+            <Ionicons name="chevron-down" size={18} color={FOCAL.goldInk} />
           </Animated.View>
         </Pressable>
       </View>
@@ -343,13 +345,13 @@ const styles = StyleSheet.create({
   jerseyHash: {
     color: colors.onAccent,
     fontSize: 10,
-    fontWeight: '800',
+    ...figtree('800'),
     marginBottom: -4,
   },
   jerseyNumber: {
     color: colors.onAccent,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     letterSpacing: -0.4,
   },
   identity: {
@@ -358,23 +360,25 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   nameHit: {
+    minHeight: 44,
+    justifyContent: 'center',
     alignSelf: 'flex-start',
     maxWidth: '100%',
   },
   name: {
-    fontSize: 17,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
     color: colors.text,
     letterSpacing: -0.3,
   },
   play: {
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     letterSpacing: -0.2,
   },
   stat: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     color: colors.textMuted,
   },
   chevronHit: {
@@ -400,19 +404,19 @@ const styles = StyleSheet.create({
   },
   tagLabel: {
     color: colors.onAccent,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.2,
   },
   headline: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
     color: colors.text,
   },
   celebrate: {
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     color: colors.textMuted,
   },
   donate: {
@@ -425,8 +429,8 @@ const styles = StyleSheet.create({
   },
   donateLabel: {
     color: colors.onAccent,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   donateBack: {
     minHeight: 44,
@@ -435,8 +439,8 @@ const styles = StyleSheet.create({
   },
   donateBackLabel: {
     color: FOCAL.jadeInk,
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   reactions: {
     flexDirection: 'row',
@@ -469,20 +473,20 @@ const styles = StyleSheet.create({
   },
   tooltipLabel: {
     color: colors.onAccent,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   reactionEmoji: {
     fontSize: 16,
   },
   reactionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: colors.text,
   },
   reactionCount: {
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     color: colors.accent,
   },
 });

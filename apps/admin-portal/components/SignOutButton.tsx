@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { getSupabaseBrowserClient } from '@/lib/supabase';
 
@@ -9,21 +9,28 @@ import { getSupabaseBrowserClient } from '@/lib/supabase';
  * @purpose Sign out of the Next admin portal's Supabase Auth session (cookie-backed, so this also clears what
  *   `middleware.ts` / Server Component loaders see) and return to `/login`. `tone="sidebar"` is the dark-nav style.
  */
-export function SignOutButton({ tone = 'light' }: { tone?: 'light' | 'sidebar' }) {
+export function SignOutButton({ tone = 'light', onBeforeSignOut }: { tone?: 'light' | 'sidebar'; onBeforeSignOut?: () => void }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+  const flight = useRef(false);
 
   const signOut = async () => {
+    if (flight.current) return;
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
-    setBusy(true);
-    await supabase.auth.signOut();
-    router.replace('/login');
-    router.refresh();
+    flight.current = true; setBusy(true); setFailure(null);
+    try {
+      onBeforeSignOut?.();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      router.replace('/login'); router.refresh();
+    } catch (error) { setFailure(error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : 'Sign-out did not finish. Try again.'); }
+    finally { flight.current = false; setBusy(false); }
   };
 
   return (
-    <button
+    <><button
       type="button"
       disabled={busy}
       onClick={() => void signOut()}
@@ -34,6 +41,6 @@ export function SignOutButton({ tone = 'light' }: { tone?: 'light' | 'sidebar' }
       }
     >
       {busy ? 'Signing out…' : 'Sign out'}
-    </button>
+    </button>{failure ? <p role="alert" className="mt-2 text-xs text-[var(--gold)]">{failure}</p> : null}</>
   );
 }

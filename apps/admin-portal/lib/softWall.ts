@@ -72,6 +72,8 @@ export async function fetchSoftWallOversight(): Promise<SoftWallOversight> {
       .gte('created_at', weekAgo),
   ]);
 
+  if (runtimeRes.error || fanCountRes.error || recentFansRes.error || !runtimeRes.data || fanCountRes.count === null || recentFansRes.count === null) return empty;
+
   const published = (runtimeRes.data?.published ?? {}) as RuntimeBag;
   const draft = (runtimeRes.data?.draft ?? {}) as RuntimeBag;
 

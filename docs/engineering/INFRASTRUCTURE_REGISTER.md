@@ -51,7 +51,7 @@ Local libraries (no outside service): 52. App configuration variables: `NODE_ENV
 | `storage.*` references in SQL | 137 | Storage policies and bucket rules |
 | Realtime references in SQL / client channels | 28 / 12 | Live updates to replace on another host |
 | Realtime publication tables | 4 | `app_runtime_config`, `cheer_polls`, `game_events`, `games` |
-| Direct Supabase calls outside `lib/` | 35 in 14 files | Places a provider change must touch; may only shrink (`app:data-boundaries`) |
+| Direct Supabase calls outside `lib/` | 32 in 14 files | Places a provider change must touch; may only shrink (`app:data-boundaries`) |
 | Direct Supabase calls in Expo routes | 0 | Same rule, route files |
 
 ## Builds, updates and CI

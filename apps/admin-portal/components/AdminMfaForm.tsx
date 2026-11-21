@@ -7,13 +7,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { SignOutButton } from '@/components/SignOutButton';
 import { mfaErrorText, normalizeTotpCode } from '@/lib/adminMfa';
 import { startTotpSetup, verifiedTotpFactorId, verifyTotpCode, type TotpSetup } from '@/lib/adminMfaClient';
+import { authPublication, getSupabaseBrowserClient } from '@/lib/supabase';
 
 type Props = {
+  /** Validated account supplied by the server; client Auth changes end this form's lifetime. */
+  userId: string;
   /** `enroll`: no verified authenticator yet. `verify`: one exists. */
   mode: 'enroll' | 'verify';
   /** Same-site path to open after the code is accepted (already passed through `safeNextPath`). */
@@ -25,75 +28,85 @@ type Props = {
  * @purpose The accessible enroll / verify form. On success it replaces the page with `next` and refreshes, so the
  *   server reads the new `aal2` cookie.
  */
-export function AdminMfaForm({ mode, next, email }: Props) {
+export function AdminMfaForm({ mode, next, email, userId }: Props) {
   const router = useRouter();
   const codeRef = useRef<HTMLInputElement>(null);
-
-  const [setup, setSetup] = useState<TotpSetup | null>(null);
-  const [factorId, setFactorId] = useState<string | null>(null);
-  const [code, setCode] = useState('');
-  const [busy, setBusy] = useState<'setup' | 'verify' | 'load' | null>(mode === 'verify' ? 'load' : null);
-  const [failure, setFailure] = useState<string | null>(null);
+  const scope = useRef({ userId, epoch: 0, live: true, mounted: true });
+  const flight = useRef<object | null>(null);
+  if (scope.current.userId !== userId) {
+    scope.current = { ...scope.current, userId, epoch: scope.current.epoch + 1, live: true };
+    flight.current = null;
+  }
+  const epoch = scope.current.epoch;
+  const current = useCallback(() => scope.current.mounted && scope.current.live && scope.current.epoch === epoch, [epoch]);
+  const actor = { userId, isCurrent: current };
+  type FormState = { epoch: number; setup: TotpSetup | null; factorId: string | null; code: string; busy: 'setup' | 'verify' | 'load' | null; failure: string | null };
+  const empty: FormState = { epoch, setup: null, factorId: null, code: '', busy: mode === 'verify' ? 'load' : null, failure: null };
+  const [stored, setStored] = useState<FormState>(empty);
+  const value = stored.epoch === epoch && current() ? stored : { ...empty, busy: null, failure: current() ? null : 'The account changed. Sign in again to continue.' };
+  const { setup, factorId, code, busy, failure } = value;
+  const update = useCallback((patch: Partial<FormState>) => {
+    if (!current()) return;
+    setStored((previous) => ({ ...(previous.epoch === epoch ? previous : { epoch, setup: null, factorId: null, code: '', busy: null, failure: null }), ...patch, epoch }));
+  }, [current, epoch]);
+  const invalidate = useCallback(() => {
+    scope.current.live = false; flight.current = null;
+    setStored({ epoch, setup: null, factorId: null, code: '', busy: null, failure: null });
+  }, [epoch]);
 
   useEffect(() => {
-    if (mode !== 'verify') return;
+    scope.current.mounted = true;
+    const supabase = getSupabaseBrowserClient();
+    const listener = supabase?.auth.onAuthStateChange((_event, session) => {
+      if (!authPublication.isCurrent(session?.access_token)) return;
+      if (scope.current.epoch === epoch && session?.user.id !== userId) invalidate();
+    });
+    supabase?.auth.getSession().then(({ data, error }) => {
+      if (current() && (error || data.session?.user.id !== userId)) invalidate();
+    }).catch(() => { if (current()) invalidate(); });
+    return () => { listener?.data.subscription.unsubscribe(); scope.current.mounted = false; flight.current = null; };
+  }, [userId, epoch, current, invalidate]);
+
+  useEffect(() => {
+    if (mode !== 'verify' || !current()) return;
     let live = true;
-    verifiedTotpFactorId()
-      .then((id) => {
-        if (!live) return;
-        setFactorId(id);
-        if (!id) setFailure('No authenticator app is set up on this account. Reload the page to set one up.');
-      })
-      .catch((caught: unknown) => {
-        if (live) setFailure(mfaErrorText(caught));
-      })
-      .finally(() => {
-        if (live) setBusy(null);
-      });
-    return () => {
-      live = false;
-    };
-  }, [mode]);
+    verifiedTotpFactorId(actor).then((id) => {
+      if (live) update({ factorId: id, failure: id ? null : 'No authenticator app is set up on this account. Reload the page to set one up.' });
+    }).catch((caught: unknown) => { if (live) update({ failure: mfaErrorText(caught) }); })
+      .finally(() => { if (live) update({ busy: null }); });
+    return () => { live = false; };
+  }, [mode, userId, epoch, current, update]);
 
-  useEffect(() => {
-    if (setup || (mode === 'verify' && factorId)) codeRef.current?.focus();
-  }, [setup, factorId, mode]);
+  useEffect(() => { if (setup || (mode === 'verify' && factorId)) codeRef.current?.focus(); }, [setup, factorId, mode]);
 
   const beginSetup = async () => {
-    setBusy('setup');
-    setFailure(null);
+    if (!current() || flight.current) return;
+    const operation = {}; flight.current = operation;
+    update({ busy: 'setup', failure: null });
     try {
-      const started = await startTotpSetup();
-      setSetup(started);
-      setFactorId(started.factorId);
-    } catch (caught) {
-      setFailure(mfaErrorText(caught));
-    } finally {
-      setBusy(null);
-    }
+      const started = await startTotpSetup(actor);
+      if (flight.current === operation) update({ setup: started, factorId: started.factorId });
+    } catch (caught) { if (flight.current === operation) update({ failure: mfaErrorText(caught) }); }
+    finally { if (flight.current === operation) { flight.current = null; update({ busy: null }); } }
   };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!current() || flight.current) return;
     const digits = normalizeTotpCode(code);
-    if (!digits) {
-      setFailure('Enter the 6 digits from your authenticator app.');
-      codeRef.current?.focus();
-      return;
-    }
+    if (!digits) { update({ failure: 'Enter the 6 digits from your authenticator app.' }); codeRef.current?.focus(); return; }
     if (!factorId) return;
-    setBusy('verify');
-    setFailure(null);
+    const operation = {}; flight.current = operation;
+    update({ busy: 'verify', failure: null });
     try {
-      await verifyTotpCode(factorId, digits);
-      router.replace(next);
-      router.refresh();
+      await verifyTotpCode(factorId, digits, actor);
+      if (!current() || flight.current !== operation) return;
+      router.replace(next); router.refresh();
     } catch (caught) {
-      setFailure(mfaErrorText(caught));
-      setCode('');
-      codeRef.current?.focus();
-      setBusy(null);
-    }
+      if (current() && flight.current === operation) {
+        update({ failure: mfaErrorText(caught), code: '' }); codeRef.current?.focus();
+      }
+    } finally { if (flight.current === operation) { flight.current = null; update({ busy: null }); } }
   };
 
   const showCodeForm = mode === 'verify' ? Boolean(factorId) : Boolean(setup);
@@ -114,7 +127,7 @@ export function AdminMfaForm({ mode, next, email }: Props) {
           {mode === 'enroll'
             ? 'Admin desks need a second step. Set up an authenticator app once, then enter its code each time you sign in.'
             : 'Enter the 6-digit code from your authenticator app.'}
-          {email ? (
+          {email && current() ? (
             <>
               {' '}
               Signed in as <span className="font-bold text-[var(--ink)]">{email}</span>.
@@ -122,7 +135,7 @@ export function AdminMfaForm({ mode, next, email }: Props) {
           ) : null}
         </p>
 
-        {mode === 'enroll' && !setup ? (
+        {mode === 'enroll' && !setup && current() ? (
           <button
             type="button"
             onClick={() => void beginSetup()}
@@ -171,7 +184,7 @@ export function AdminMfaForm({ mode, next, email }: Props) {
               maxLength={9}
               required
               value={code}
-              onChange={(event) => setCode(event.target.value)}
+              onChange={(event) => update({ code: event.target.value })}
               aria-describedby="mfa-code-hint"
               className="w-full rounded-xl border border-[var(--border)] px-3 py-2 font-mono text-lg tracking-[0.3em] focus-visible:border-[var(--jade)]"
               placeholder="123456"
@@ -202,7 +215,7 @@ export function AdminMfaForm({ mode, next, email }: Props) {
         </div>
 
         <div className="mt-5 flex justify-center">
-          <SignOutButton />
+          <SignOutButton onBeforeSignOut={invalidate} />
         </div>
       </div>
     </div>

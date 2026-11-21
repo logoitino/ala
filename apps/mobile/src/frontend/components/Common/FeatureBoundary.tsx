@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * DETECT-02 feature render containment. Navigation outside the boundary remains usable;
  * private error details never enter its fallback or capture. No automatic render retry,
  * and money/access features stay failed until the owner explicitly replaces their scope.
@@ -8,6 +8,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SUPPORT_FEATURES, type SupportFeature } from '@tapuai/shared-types/admin/engineeringSupport';
 import { colors, MENU_METRICS, space } from '@/constants/theme';
 import { supportSignals, type ClientSupportCapture } from '@/services/SupportSignalManager';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export type FeatureBoundaryProps = {
   feature: SupportFeature; children: ReactNode; resetKey?: string | number;
@@ -77,8 +78,8 @@ export class FeatureBoundary extends React.Component<FeatureBoundaryProps, State
 
 const styles = StyleSheet.create({
   fallback: { padding: space.lg, gap: space.sm, backgroundColor: colors.surface, borderRadius: MENU_METRICS.cardRadius },
-  heading: { color: colors.text, fontSize: 18, fontWeight: '700' },
-  copy: { color: colors.textMuted, fontSize: 16, lineHeight: 23 },
+  heading: { color: colors.text, ...TYPE.title, ...figtree('700') },
+  copy: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
   retry: { minHeight: MENU_METRICS.touchTarget, paddingHorizontal: space.md, paddingVertical: space.sm, alignSelf: 'flex-start', justifyContent: 'center', borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.accentSoft },
-  retryText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
+  retryText: { color: colors.primary, ...TYPE.body, ...figtree('700') },
 });

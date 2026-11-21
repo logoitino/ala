@@ -1,4 +1,4 @@
-/** Floating fan dock overlays full-height Highlights while every label/control stays opaque.
+/** UX-13 readable shared type preserves every action and required notice. Floating fan dock overlays full-height Highlights while every label/control stays opaque.
  * Report the complete wrap height so captions and normal fan screens clear safe foot and enlarged labels.
  * 2026-11 Lovable standard: same floating shape and translucent backdrop; tabs read like the sample —
  * larger icons that fill when active, jade active ink, Figtree labels, no tinted box behind the active tab.
@@ -18,7 +18,7 @@ import { useFanDockSoftened, useFanNavigation, useMeasureFanDock } from '@/conte
 import { useReduceTransparency } from '@/hooks/useReduceTransparency';
 import { useReduceMotion } from '@/hooks/useReduceMotion';
 import { impactPress } from '@/lib/haptics';
-import { figtree } from '@/theme/fonts';
+import { figtree, TYPE } from '@/theme/fonts';
 import { FOCAL, SPRING_BOUNCE, SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
 
 const TAB_META: Record<string, { label: string; accessibilityLabel?: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap }> =
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  tabHit: {
+  tabHit: { minHeight: 44,
     flex: 1,
     minWidth: 0,
     opacity: 1,
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     ...figtree('600'),
-    fontSize: 10,
+    ...TYPE.caption,
     letterSpacing: -0.1,
     textAlign: 'center',
     flexShrink: 1,

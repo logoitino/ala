@@ -4,6 +4,7 @@
  * Only Aura plays a burst; Seki swaps its emoji briefly; Flex lights up.
  * A Seki play and a Flex ride pop in above the caption, then tuck into icons. An arrow opens them again.
  * Selecting springs the chip up a little. Clearing dips it, then the fill drains.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -544,16 +545,16 @@ const styles = StyleSheet.create({
   },
   athleteName: {
     color: colors.onVideo,
-    fontSize: 18,
+    ...TYPE.title,
     flexShrink: 1,
-    fontWeight: '900',
+    ...figtree('900'),
     letterSpacing: -0.4,
   },
   rosterDetails: {
     color: colors.onVideo,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: '800',
+    ...TYPE.caption,
+
+    ...figtree('800'),
     letterSpacing: 0.5,
     textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 0, height: 1 },
@@ -562,12 +563,12 @@ const styles = StyleSheet.create({
   tagChip: { alignSelf: 'flex-start', marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, borderWidth: 1 },
   tagChipApproved: { backgroundColor: 'rgba(0,115,60,0.92)', borderColor: 'rgba(0,115,60,0.92)' },
   tagChipPending: { backgroundColor: 'rgba(0,0,0,0.35)', borderColor: 'rgba(243,251,247,0.7)', borderStyle: 'dashed' },
-  tagChipLabel: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
+  tagChipLabel: { color: '#FFFFFF', ...TYPE.caption, ...figtree('800') },
   tagChipLabelPending: { color: 'rgba(243,251,247,0.9)' },
   school: {
     color: 'rgba(243,251,247,0.82)',
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -575,8 +576,8 @@ const styles = StyleSheet.create({
   whyHit: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', maxWidth: '92%' },
   whyLine: {
     color: 'rgba(243,251,247,0.72)',
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -584,8 +585,8 @@ const styles = StyleSheet.create({
   filmerHit: { minHeight: 44, justifyContent: 'center' },
   filmedBy: {
     color: 'rgba(243,251,247,0.82)',
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -595,7 +596,7 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
     color: colors.onVideo,
     ...TYPE.body,
-    fontWeight: '600',
+    ...figtree('600'),
     backgroundColor: colors.videoScrimSoft,
     borderRadius: 10,
     paddingHorizontal: 10,
@@ -638,8 +639,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -10,
     zIndex: 5,
-    fontSize: 15,
-    fontWeight: '900',
+    ...TYPE.body,
+    ...figtree('900'),
     letterSpacing: 0.5,
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
@@ -700,7 +701,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 2,
   },
-  reactCount: {
+  reactCount: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     color: colors.onVideo,
     ...TYPE.caption,
@@ -730,7 +731,7 @@ const styles = StyleSheet.create({
     ...figtree('800'),
     textAlign: 'center',
   },
-  maloTotal: {
+  maloTotal: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     color: FOCAL.videoBase,
     ...TYPE.caption,

@@ -1,5 +1,7 @@
 /** Profile Filmer recognition card shows confirmed clip credit and the existing upload invitation.
- * Badge tiers and earned Aura stay separate from athlete donations and school verification. */
+ * Badge tiers and earned Aura stay separate from athlete donations and school verification.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -8,6 +10,7 @@ import { filmerTier, nextFilmerTierHint, type FilmerStats } from '@/lib/filmers'
 import { formatCompactCount } from '@/lib/hype';
 import { FOCAL } from '@/theme/motion';
 import { MoreText } from '@/components/UI/MoreText';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type FilmerCardProps = {
   stats: FilmerStats | null;
@@ -94,20 +97,20 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
-  lede: {
+  lede: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
+    ...TYPE.body,
+
   },
   tierChip: {
     backgroundColor: colors.primary,
@@ -117,8 +120,8 @@ const styles = StyleSheet.create({
   },
   tierLabel: {
     color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   stats: {
     flexDirection: 'row',
@@ -129,25 +132,25 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  statValue: {
+  statValue: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     color: colors.text,
-    fontSize: 16,
+    ...TYPE.body,
   },
   statLabel: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     textAlign: 'center',
   },
   aura: {
     color: FOCAL.jadeInk,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
-  hint: {
+  hint: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 12,
+    ...TYPE.caption,
   },
   cta: {
     alignSelf: 'flex-start',
@@ -160,7 +163,7 @@ const styles = StyleSheet.create({
   },
   ctaLabel: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
   },
 });

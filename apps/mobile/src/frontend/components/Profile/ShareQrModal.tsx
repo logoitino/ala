@@ -1,6 +1,6 @@
-/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
+/** UX-13 readable shared type preserves every action and required notice. Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Platform, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Platform, StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
@@ -34,6 +34,7 @@ import {
 } from '@/lib/share';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type ShareQrModalProps = {
   visible: boolean;
@@ -59,6 +60,7 @@ type QrSvgRef = {
  */
 export function ShareQrModal({ visible, onClose, athleteName, username, playerId }: ShareQrModalProps) {
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const celebration = useOptionalCelebration();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<'save' | 'copy' | 'share' | null>(null);
@@ -133,7 +135,8 @@ export function ShareQrModal({ visible, onClose, athleteName, username, playerId
           </Reanimated.View>
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-        <Reanimated.View style={[styles.sheet, frame.card, sheetStyle]}>
+        <Reanimated.View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }, sheetStyle]}>
+          <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent}>
           <Text style={styles.kicker}>Family flyer</Text>
           <Text style={styles.title}>{SHARE_QR_TITLE}</Text>
           <Text style={styles.subtitle}>{shareQrSubtitle(target.athleteName)}</Text>
@@ -156,7 +159,7 @@ export function ShareQrModal({ visible, onClose, athleteName, username, playerId
               </View>
             </View>
           </View>
-          <Text style={styles.url} numberOfLines={2}>
+          <Text style={styles.url}>
             {target.url}
           </Text>
 
@@ -229,6 +232,7 @@ export function ShareQrModal({ visible, onClose, athleteName, username, playerId
             )}
           </AnimatedButton>
 
+          </ScrollView>
           <Pressable accessibilityRole="button" onPress={dismiss} style={styles.close}>
             <Text style={styles.closeLabel}>Close</Text>
           </Pressable>
@@ -240,6 +244,8 @@ export function ShareQrModal({ visible, onClose, athleteName, username, playerId
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flexGrow: 0, flexShrink: 1, minHeight: 0, alignSelf: 'stretch' },
+  bodyContent: { gap: 10, paddingBottom: 4 },
   root: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -255,22 +261,22 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0,230,118,0.35)',
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: FOCAL.neonJade,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     color: '#FFFFFF',
     letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
+    ...TYPE.body,
+    ...figtree('600'),
+
     color: 'rgba(243,250,246,0.78)',
   },
   qrStage: {
@@ -309,8 +315,8 @@ const styles = StyleSheet.create({
   },
   url: {
     alignSelf: 'center',
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: FOCAL.neonJade,
     textAlign: 'center',
   },
@@ -321,36 +327,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
-  actionPrimary: {
+  actionPrimary: { minHeight: 44,
     backgroundColor: FOCAL.neonJade,
   },
-  actionGhost: {
+  actionGhost: { minHeight: 44,
     borderWidth: 1.5,
     borderColor: FOCAL.neonJade,
     backgroundColor: 'rgba(0,230,118,0.08)',
   },
-  actionOff: {
+  actionOff: { minHeight: 44,
     opacity: 0.5,
   },
   actionPrimaryLabel: {
     color: FOCAL.ink,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
   actionGhostLabel: {
     color: FOCAL.neonJade,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
-  close: {
+  close: { minHeight: 44,
     alignItems: 'center',
     paddingVertical: 8,
   },
   closeLabel: {
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: 'rgba(243,250,246,0.62)',
   },
 });

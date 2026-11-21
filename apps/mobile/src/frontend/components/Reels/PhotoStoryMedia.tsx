@@ -5,6 +5,7 @@
  * Uses React Native `Image` (expo-image is not installed). Screen readers change photos with the adjustable
  * increment / decrement actions; web gets Previous / Next buttons because a mouse cannot swipe a pager.
  * @sideEffects `useStoryPhotos` (reads `reel_photos_feed` while `active`).
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -30,6 +31,7 @@ import { colors, radii } from '@/constants/theme';
 import type { HighlightClip, StoryPhoto } from '@/data/highlights';
 import { useStoryPhotos } from '@/hooks/useStoryPhotos';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export type PhotoStoryMediaProps = {
   clip: HighlightClip;
@@ -288,8 +290,8 @@ const styles = StyleSheet.create({
   },
   missingLabel: {
     color: colors.onVideoMuted,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
     textAlign: 'center',
   },
   notice: {
@@ -302,8 +304,8 @@ const styles = StyleSheet.create({
   },
   noticeLabel: {
     color: colors.onVideo,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   // Top-right keeps the chip clear of the category / Flash chips (top-left) and the bottom copy + rail.
   indicators: {
@@ -323,8 +325,8 @@ const styles = StyleSheet.create({
   },
   counterLabel: {
     color: colors.onVideo,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.4,
     fontVariant: ['tabular-nums'],
   },

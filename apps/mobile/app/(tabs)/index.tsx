@@ -1,5 +1,6 @@
 /**
  * Athlete discovery fills the shell behind the floating dock, with measured unobstructed chrome.
+ * UX-13: private Crew/gift markers, refreshes and delayed navigation stay within the account lifetime.
  * Pager, media, snap and resized active offsets use one page height; single-video ownership stays intact.
  * R4-03 split (behaviour unchanged): the empty feed, campaign copy and pill row render from `components/Reels/`
  * (`HomeFeedEmpty`, `HomeCampaignCopy`, `HomeFeedSwitch`); this route keeps every hook, state and callback.
@@ -63,6 +64,7 @@ import { useReels } from '@/hooks/useReels';
 import { useRoster } from '@/hooks/useRoster';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { isAuraUuid } from '@/lib/aura';
+import { offlineQueue } from '@/services/OfflineQueue';
 import { fetchSquadAthleteIds } from '@/lib/crew';
 import { playerFromReel, readHiddenReelIds, reelHiddenForUser, reelToClip } from '@/lib/reels';
 import { decideGuestDesktopPlay, guestBrowseNeedsAccount } from '@/data/guestBrowse';
@@ -95,7 +97,23 @@ export default function HighlightsTab() {
   /** Last free desktop clip id for guests (mirrors guestAllowedIndex on the phone pager). */
   const guestAllowedClipId = useRef<string | null>(null);
   const [desktopPlayClipId, setDesktopPlayClipId] = useState<string | null>(null);
-  const { user, profile, loading: authLoading, isGuest } = useAuth();
+  const { user, profile, loading: authLoading, isGuest, isSessionCurrent } = useAuth();
+  const accountScope = useRef({ userId: user?.id, guard: isSessionCurrent, epoch: 0, mounted: true });
+  if (accountScope.current.userId !== user?.id || accountScope.current.guard !== isSessionCurrent) {
+    accountScope.current = { userId: user?.id, guard: isSessionCurrent, epoch: accountScope.current.epoch + 1, mounted: true };
+  }
+  const accountEpoch = accountScope.current.epoch;
+  const accountCurrent = useCallback(() => accountScope.current.mounted && accountScope.current.epoch === accountEpoch
+    && (!isSessionCurrent || isSessionCurrent()), [accountEpoch, isSessionCurrent]);
+  const delayedNavigation = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshFlight = useRef<number | null>(null);
+  useEffect(() => {
+    accountScope.current.mounted = true; refreshFlight.current = null;
+    return () => {
+      accountScope.current.mounted = false;
+      if (delayedNavigation.current) clearTimeout(delayedNavigation.current);
+    };
+  }, [accountEpoch]);
   const { live: runtime } = useAppRuntime();
   const { requireAuth, visible: accountSheetOpen } = useSoftWall();
   const { subscribeUploaded, openUpload } = useUploadSheet();
@@ -113,7 +131,9 @@ export default function HighlightsTab() {
   const activePage = useRef(0);
   activePage.current = activeIndex;
   const previousHeight = useRef(0);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshState, setRefreshState] = useState({ epoch: accountEpoch, value: false });
+  const refreshing = refreshState.epoch === accountEpoch && refreshState.value;
+  const setRefreshing = (value: boolean) => { if (accountCurrent()) setRefreshState({ epoch: accountEpoch, value }); };
   const [cacheReady, setCacheReady] = useState(false);
   // Web server render and the first browser paint share this shell. The feed mounts after that.
   const [clientFeed, setClientFeed] = useState(Platform.OS !== 'web');
@@ -133,8 +153,14 @@ export default function HighlightsTab() {
   const [pendingClipId, setPendingClipId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [crewIds, setCrewIds] = useState<Set<string>>(() => new Set());
-  const [localTipped, setLocalTipped] = useState<string[]>([]);
+  const [crewState, setCrewState] = useState<{ epoch: number; ids: Set<string> }>({ epoch: accountEpoch, ids: new Set() });
+  const crewIds = useMemo(() => crewState.epoch === accountEpoch ? crewState.ids : new Set<string>(), [crewState, accountEpoch]);
+  const setCrewIds = (ids: Set<string>) => { if (accountCurrent()) setCrewState({ epoch: accountEpoch, ids }); };
+  const [tippedState, setTippedState] = useState<{ epoch: number; ids: string[] }>({ epoch: accountEpoch, ids: [] });
+  const localTipped = useMemo(() => tippedState.epoch === accountEpoch ? tippedState.ids : [], [tippedState, accountEpoch]);
+  const setLocalTipped = (update: (ids: string[]) => string[]) => {
+    if (accountCurrent()) setTippedState((previous) => ({ epoch: accountEpoch, ids: update(previous.epoch === accountEpoch ? previous.ids : []) }));
+  };
   const [peekOpen, setPeekOpen] = useState(false);
   const pagerY = useSharedValue(0);
   const feedLayouts = useRef<Partial<Record<HighlightFeedFilter, { x: number; width: number }>>>({});
@@ -172,13 +198,14 @@ export default function HighlightsTab() {
 
   useEffect(() => {
     let active = true;
-    void fetchSquadAthleteIds(user?.id).then((ids) => {
-      if (active) setCrewIds(new Set(ids));
-    });
+    const actor = offlineQueue.captureActor();
+    void fetchSquadAthleteIds(user?.id, actor ?? undefined).then((ids) => {
+      if (active && accountCurrent()) setCrewIds(new Set(ids));
+    }).catch(() => { if (active && accountCurrent()) setCrewIds(new Set()); });
     return () => {
       active = false;
     };
-  }, [user?.id]);
+  }, [user?.id, accountEpoch, accountCurrent]);
 
   const clips = useMemo<FeedItem[]>(() => {
     const uploaded = reels.map((reel) => {
@@ -554,20 +581,28 @@ export default function HighlightsTab() {
     (next?: () => void) => {
       void dismissSpotlight();
       if (!next) return;
-      setTimeout(next, 320);
+      if (delayedNavigation.current) clearTimeout(delayedNavigation.current);
+      delayedNavigation.current = setTimeout(() => { if (accountCurrent()) next(); }, 320);
     },
-    [dismissSpotlight],
+    [dismissSpotlight, accountCurrent],
   );
 
   const onPullRefresh = async () => {
+    if (!accountCurrent() || refreshFlight.current === accountEpoch) return;
+    const actor = offlineQueue.captureActor();
+    refreshFlight.current = accountEpoch;
     setRefreshing(true);
     try {
       await refresh();
-      const ids = await fetchSquadAthleteIds(user?.id);
+      if (!accountCurrent()) return;
+      const ids = await fetchSquadAthleteIds(user?.id, actor ?? undefined);
+      if (!accountCurrent()) return;
       setCrewIds(new Set(ids));
-      setRankEpoch((current) => current + 1);
+      setRankEpoch((value) => value + 1);
+    } catch (error) {
+      if (accountCurrent()) console.warn('Home refresh could not finish.', error instanceof Error ? error.message : 'Request failed');
     } finally {
-      setRefreshing(false);
+      if (accountCurrent()) { refreshFlight.current = null; setRefreshing(false); }
     }
   };
 

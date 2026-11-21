@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Short personal-gift pages shared by the fan popup and inline athlete cards.
  * Amount selection never pays: givers review the exact allocation before the deliberate final action.
  * The Amount page opens with the small owner-approved brand line (TAGLINE_HEADLINE); later pages stay plain.
@@ -18,7 +18,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { useScreenMountTime } from '@/hooks/useScreenMountTime';
 import type { TipEntry, TipOrigin } from '@/lib/finance';
-import { DISPLAY_TEXT, figtree } from '@/theme/fonts';
+import { DISPLAY_TEXT, figtree, TYPE } from '@/theme/fonts';
 
 type TipCheckoutProps = {
   player: Player; compact?: boolean; hideHeader?: boolean;
@@ -207,24 +207,24 @@ export function TipCheckout({ player, compact = false, hideHeader = false, embed
 const styles = StyleSheet.create({
   section: { gap: 12, flexShrink: 1 }, compact: { marginTop: 4 }, embedded: { flex: 1, minHeight: 0 },
   body: { flexShrink: 1 }, embeddedBody: { flex: 1, minHeight: 0 }, bodyContent: { gap: 14, paddingBottom: 8 },
-  title: { fontSize: 22, fontWeight: '800', color: colors.text, letterSpacing: -0.4 },
+  title: { ...TYPE.title, ...figtree('800'), color: colors.text, letterSpacing: -0.4 },
   hero: { gap: 6, backgroundColor: colors.background, borderRadius: MENU_METRICS.cardRadius, padding: 16 },
-  tagline: { fontSize: 12, lineHeight: 17, fontWeight: '700', color: colors.textMuted, textAlign: 'center' },
-  kicker: { fontSize: 11, letterSpacing: 1.1, fontWeight: '800', color: colors.deepGreen },
-  pageTitle: { ...DISPLAY_TEXT, fontSize: 24, color: colors.text, letterSpacing: -0.6 },
-  split: { fontSize: 13, lineHeight: 19, fontWeight: '800', color: colors.text },
-  copy: { fontSize: 13, lineHeight: 19, color: colors.textMuted, fontWeight: '600' },
-  auraHint: { fontSize: 12, lineHeight: 18, fontWeight: '700', color: colors.primary },
-  total: { ...SCOREBOARD_DIGITS, fontSize: 44, color: colors.text },
+  tagline: { ...TYPE.caption,  ...figtree('700'), color: colors.textMuted, textAlign: 'center' },
+  kicker: { ...TYPE.caption, letterSpacing: 1.1, ...figtree('800'), color: colors.deepGreen },
+  pageTitle: { ...DISPLAY_TEXT, ...TYPE.title, color: colors.text, letterSpacing: -0.6 },
+  split: { ...TYPE.body,  ...figtree('800'), color: colors.text },
+  copy: { ...TYPE.body,  color: colors.textMuted, ...figtree('600') },
+  auraHint: { ...TYPE.caption,  ...figtree('700'), color: colors.primary },
+  total: { ...figtree('400'), ...SCOREBOARD_DIGITS, ...TYPE.title, color: colors.text },
   tipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, customBlock: { gap: 8 },
-  input: { minHeight: 48, borderRadius: MENU_METRICS.controlRadius, borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.surface, color: colors.text, fontSize: 20, fontWeight: '800', paddingHorizontal: 14 },
+  input: { minHeight: 48, borderRadius: MENU_METRICS.controlRadius, borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.surface, color: colors.text, ...TYPE.title, ...figtree('800'), paddingHorizontal: 14 },
   tipBlock: { gap: 10, padding: 14, backgroundColor: colors.background, borderRadius: MENU_METRICS.cardRadius, borderWidth: 1, borderColor: colors.border },
-  tipTitle: { fontSize: 14, fontWeight: '800', color: colors.text }, tipChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  tipTitle: { ...TYPE.body, ...figtree('800'), color: colors.text }, tipChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tipChip: { flexGrow: 1, minWidth: 60, minHeight: 44, borderRadius: radii.pill, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
-  tipChipOn: { borderColor: colors.text, backgroundColor: colors.text }, tipChipText: { fontSize: 14, fontWeight: '700', color: colors.text }, tipChipTextOn: { color: colors.background },
-  breakdown: { fontSize: 13, lineHeight: 19, fontWeight: '700', color: colors.text }, disclaimer: { fontSize: 12, lineHeight: 18, fontWeight: '500', color: colors.textMuted },
+  tipChipOn: { minHeight: 44, borderColor: colors.text, backgroundColor: colors.text }, tipChipText: { ...TYPE.body, ...figtree('700'), color: colors.text }, tipChipTextOn: { color: colors.background },
+  breakdown: { ...TYPE.body,  ...figtree('700'), color: colors.text }, disclaimer: { ...TYPE.caption,  ...figtree('500'), color: colors.textMuted },
   testNotice: { backgroundColor: KIT.warnSoft, padding: 12, borderRadius: MENU_METRICS.controlRadius },
   footer: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 12, borderTopWidth: 1, borderColor: colors.border },
-  back: { minHeight: 52, justifyContent: 'center', paddingHorizontal: 18, borderRadius: KIT.controlRadius, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, backText: { fontSize: 15, fontWeight: '800', color: colors.text },
-  next: { flex: 1, minHeight: 52, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: KIT.controlRadius, backgroundColor: colors.primary, paddingHorizontal: 14, ...KIT.shadowSoft }, nextText: { ...figtree('700'), color: colors.onAccent, fontSize: 16 }, disabled: { opacity: 0.45 },
+  back: { minHeight: 52, justifyContent: 'center', paddingHorizontal: 18, borderRadius: KIT.controlRadius, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, backText: { ...TYPE.body, ...figtree('800'), color: colors.text },
+  next: { flex: 1, minHeight: 52, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: KIT.controlRadius, backgroundColor: colors.primary, paddingHorizontal: 14, ...KIT.shadowSoft }, nextText: { ...figtree('700'), color: colors.onAccent, ...TYPE.body }, disabled: { minHeight: 44, opacity: 0.45 },
 });

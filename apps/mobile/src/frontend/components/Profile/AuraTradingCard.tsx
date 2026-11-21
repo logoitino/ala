@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * The Aura trading card: identity and sport-stats faces, tier colours and glow, school crest, role badges and
  * the flip control. Tier palette and thresholds come from `lib/aura.ts`.
  */
@@ -39,6 +39,7 @@ import type { SchoolBadge } from '@/lib/schoolBadge';
 import type { UserRole } from '@/types/database';
 import { FOCAL, SPRING_FLIP } from '@/theme/motion';
 import { JerseyBadge } from '@/components/UI/JerseyBadge';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const TICK = 16;
 const PERSPECTIVE = 1000;
@@ -623,8 +624,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   tierBadgeLabel: {
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.3,
   },
   identity: {
@@ -667,8 +668,8 @@ const styles = StyleSheet.create({
     top: -5,
   },
   initials: {
-    fontSize: 22,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     letterSpacing: 1,
   },
   copy: {
@@ -678,13 +679,13 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
   handle: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   roleRow: {
     flexDirection: 'row',
@@ -704,13 +705,13 @@ const styles = StyleSheet.create({
   teamLine: {
     flexShrink: 1,
     color: colors.text,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   divisionBadge: {
     color: FOCAL.jadeInk,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   roleTag: {
     alignSelf: 'flex-start',
@@ -720,8 +721,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   roleTagLabel: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
@@ -738,12 +739,12 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     color: colors.text,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   progressHint: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   track: {
     height: 8,
@@ -759,8 +760,8 @@ const styles = StyleSheet.create({
   backKicker: {
     flexShrink: 1,
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
@@ -782,8 +783,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   statValue: {
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   statHot: {
     borderWidth: 1,
@@ -792,8 +793,8 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     color: colors.textMuted,
-    fontSize: 10,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     textAlign: 'center',
   },
   statLabelHot: {
@@ -801,16 +802,16 @@ const styles = StyleSheet.create({
   },
   bioLabel: {
     color: colors.textMuted,
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   bio: {
     color: colors.text,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
   },
   badgeRow: {
     flexDirection: 'row',
@@ -835,8 +836,8 @@ const styles = StyleSheet.create({
   },
   earnedLabel: {
     color: colors.text,
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   earnedLabelOff: {
     color: colors.textMuted,
@@ -861,8 +862,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   faceToggleLabel: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     letterSpacing: 0.2,
   },
   verifyBtn: {
@@ -876,7 +877,7 @@ const styles = StyleSheet.create({
   },
   verifyLabel: {
     color: FOCAL.jadeInk,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
 });

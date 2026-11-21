@@ -1,4 +1,4 @@
-/** Private Profile and Parent HQ gift list retains the family-account amounts and preset-only thanks.
+/** UX-13 readable shared type preserves every action and required notice. Private Profile and Parent HQ gift list retains the family-account amounts and preset-only thanks.
  * Compact rows must preserve every gift origin and amount disclosure.
  * @sideEffects Reads received gifts and submits the selected thank-you through existing hooks. */
 import { useMemo, useState } from 'react';
@@ -13,6 +13,7 @@ import { useReceivedMalo } from '@/hooks/useReceivedMalo';
 import { thanksText, type ThanksKey } from '@/lib/donationThanks';
 import { tipChannelLabel } from '@/lib/finance';
 import { receivedLines } from '@/lib/custodial';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Private list (athlete's own profile, and Parent HQ) of each donation received and where it
@@ -109,29 +110,29 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: colors.deepGreen,
   },
   total: {
-    fontSize: 20,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     color: colors.text,
   },
-  lede: {
-    fontSize: 13,
-    lineHeight: 18,
+  lede: { ...figtree('400'),
+    ...TYPE.body,
+
     color: colors.textMuted,
   },
-  empty: {
-    fontSize: 14,
+  empty: { ...figtree('400'),
+    ...TYPE.body,
     color: colors.textMuted,
   },
   nudge: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: colors.deepGreen,
   },
   item: {
@@ -148,8 +149,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   thanked: {
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: colors.textMuted,
   },
   thankButton: {
@@ -163,8 +164,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   thankLabel: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: colors.deepGreen,
   },
   identity: {
@@ -172,17 +173,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   name: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.text,
   },
-  meta: {
-    fontSize: 12,
+  meta: { ...figtree('400'),
+    ...TYPE.caption,
     color: colors.textMuted,
   },
   amount: {
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: colors.deepGreen,
   },
 });

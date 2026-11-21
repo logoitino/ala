@@ -1,6 +1,8 @@
-/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
+/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
@@ -16,6 +18,7 @@ import {
   type Rally,
   type RallyDraft,
 } from '@/lib/rallies';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type CreateRallySheetProps = {
   visible: boolean;
@@ -34,6 +37,7 @@ const EMPTY: RallyDraft = { title: '', story: '', costKind: 'season', targetDoll
  */
 export function CreateRallySheet({ visible, playerId, athleteName, onClose, onCreated }: CreateRallySheetProps) {
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const [draft, setDraft] = useState<RallyDraft>(EMPTY);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +72,7 @@ export function CreateRallySheet({ visible, playerId, athleteName, onClose, onCr
     <Modal animationType="fade" transparent visible={visible} onRequestClose={busy ? undefined : onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.backdrop}>
         <View style={frame.dock}>
-          <View style={[styles.sheet, frame.card]}>
+          <View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }]}>
             <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={busy ? undefined : onClose} />
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
@@ -177,25 +181,25 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    maxHeight: '92%',
+
   },
   body: {
     gap: 10,
     paddingBottom: 12,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     color: colors.text,
   },
-  lede: {
-    fontSize: 14,
-    lineHeight: 20,
+  lede: { ...figtree('400'),
+    ...TYPE.body,
+
     color: colors.textMuted,
   },
   label: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
     color: colors.text,
     marginTop: 4,
   },
@@ -205,6 +209,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   kind: {
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: radii.pill,
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -216,21 +222,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
   },
   kindText: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.textMuted,
   },
   kindTextOn: {
     color: colors.deepGreen,
   },
-  input: {
+  input: { ...figtree('400'),
     minHeight: 46,
     borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1.5,
     borderColor: colors.border,
     backgroundColor: colors.background,
     color: colors.text,
-    fontSize: 16,
+    ...TYPE.body,
     paddingHorizontal: 12,
   },
   story: {
@@ -238,14 +244,14 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     textAlignVertical: 'top',
   },
-  note: {
-    fontSize: 12,
-    lineHeight: 18,
+  note: { ...figtree('400'),
+    ...TYPE.caption,
+
     color: colors.textMuted,
   },
   error: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.danger,
   },
   primary: {
@@ -256,20 +262,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   primaryText: {
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: '#FFFFFF',
   },
   dim: {
     opacity: 0.5,
   },
   cancel: {
+    minHeight: 44,
+    justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 10,
   },
   cancelText: {
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.deepGreen,
   },
 });

@@ -3,10 +3,12 @@
  * then slides to a tab on the left so the Highlight stays visible. Play opens the quiz; Not now hides it.
  * Availability is refreshed by the app. This card only invites the player.
  * @sideEffects A local timer and a width animation. Play is a callback from discovery.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const CARD = 292;
 const HANG = 64;
@@ -25,6 +27,7 @@ export function TriviaSideNotice({
   onPlay: () => void;
   onDismiss: () => void;
 }) {
+  const { height: windowHeight } = useWindowDimensions();
   const width = useRef(new Animated.Value(CARD)).current;
   const [open, setOpen] = useState(true);
   const [held, setHeld] = useState(false);
@@ -67,6 +70,7 @@ export function TriviaSideNotice({
           accessibilityElementsHidden={!open}
           importantForAccessibility={open ? 'auto' : 'no-hide-descendants'}
         >
+          <ScrollView style={{ maxHeight: windowHeight * 0.48, flexGrow: 0 }} contentContainerStyle={styles.panelContent}>
           <Text style={styles.kicker}>Trivia</Text>
           <Text style={styles.title}>Pop Quiz</Text>
           <Text style={styles.copy}>{`${subject} You learn a fact either way.`}</Text>
@@ -76,6 +80,7 @@ export function TriviaSideNotice({
           <Pressable accessibilityRole="button" accessibilityLabel="Not now" onPress={onDismiss} style={styles.later}>
             <Text style={styles.laterLabel}>Not now</Text>
           </Pressable>
+          </ScrollView>
         </View>
       </View>
     </Animated.View>
@@ -85,6 +90,7 @@ export function TriviaSideNotice({
 const styles = StyleSheet.create({
   clip: { overflow: 'hidden', borderTopRightRadius: 18, borderBottomRightRadius: 18 },
   row: { width: CARD, flexDirection: 'row', alignItems: 'stretch' },
+  panelContent: { gap: 8 },
   panel: {
     width: CARD - HANG,
     gap: 8,
@@ -99,9 +105,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderColor: FOCAL.islandCyan,
   },
-  kicker: { color: FOCAL.violetInk, fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
-  title: { color: FOCAL.ink, fontSize: 22, fontWeight: '900' },
-  copy: { color: FOCAL.ink, fontSize: 14, lineHeight: 19 },
+  kicker: { color: FOCAL.violetInk, ...TYPE.caption, ...figtree('800'), letterSpacing: 1.2 },
+  title: { color: FOCAL.ink, ...TYPE.title, ...figtree('900') },
+  copy: { ...figtree('400'), color: FOCAL.ink, ...TYPE.body,  },
   play: {
     minHeight: 44,
     borderRadius: 12,
@@ -110,9 +116,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
-  playLabel: { color: FOCAL.ink, fontSize: 16, fontWeight: '800' },
+  playLabel: { color: FOCAL.ink, ...TYPE.body, ...figtree('800') },
   later: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  laterLabel: { color: FOCAL.ink, fontSize: 15, fontWeight: '700' },
+  laterLabel: { color: FOCAL.ink, ...TYPE.body, ...figtree('700') },
   tab: {
     width: HANG,
     minHeight: 148,
@@ -125,5 +131,5 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 18,
   },
   tabMark: { fontSize: 18 },
-  tabWord: { color: '#FFFFFF', fontSize: 13, fontWeight: '900', lineHeight: 16, textAlign: 'center' },
+  tabWord: { color: '#FFFFFF', ...TYPE.body, ...figtree('900'),  textAlign: 'center' },
 });

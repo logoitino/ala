@@ -1,4 +1,4 @@
-/** Own Profile Vault control shows the current published lock rule and preserves its explanatory copy.
+/** UX-13 readable shared type preserves every action and required notice. Own Profile Vault control shows the current published lock rule and preserves its explanatory copy.
  * The parent owns the save and busy state; this card only requests the selected existing lock action. */
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -13,6 +13,7 @@ import {
 } from '@/data/exclusive';
 import { exclusiveAthleteSplitHint } from '@/data/storeCommerce';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type VaultLockCardProps = {
   locked: boolean;
@@ -62,19 +63,19 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: FOCAL.emberInk,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   body: {
     color: colors.text,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
   },
-  meta: {
+  meta: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
+    ...TYPE.body,
+
   },
   btn: {
     minHeight: 48,
@@ -85,13 +86,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginTop: 4,
   },
-  busy: {
+  busy: { minHeight: 44,
     opacity: 0.55,
   },
   btnLabel: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
 });

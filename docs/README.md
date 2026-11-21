@@ -271,3 +271,5 @@ with these files.
 | [GIFT_CHECKOUT_STRINGS](engineering/evidence/GIFT_CHECKOUT_STRINGS.md) | Before/after source string table stacked on the no-cut model |
 | [GIFT_CHECKOUT_RESIDUALS](engineering/evidence/GIFT_CHECKOUT_RESIDUALS.md) | Current accounted raw donat* matches and explicit exceptions |
 | [TIP_MODEL_REPORT](engineering/evidence/TIP_MODEL_REPORT.md) | Computation inventory, exact split-change size, flag tests and settlement limits |
+
+- [UX-13 whole-app menu/function coverage](agents/UX-13.md) — complete local source/menu review, spacing and ordinary flow repairs; current-source tests/rendered evidence stay distinct from device/provider acceptance.

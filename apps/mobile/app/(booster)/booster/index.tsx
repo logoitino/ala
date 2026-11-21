@@ -1,10 +1,11 @@
 /**
  * Booster HQ: bulk-add a roster by pasting CSV (name, jersey_number, position, school_name) and set an
  * athlete's verification status. `parseRosterCsv` is deliberately forgiving: it skips a header row and blank lines.
+ * Reads and awaited/retained actions use the initiating Auth lifetime; an outgoing HQ cannot alert or refetch for B.
  * @sideEffects Inserts players; updates verification status; telemetry `booster_csv` / `booster_verify`.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { Stack } from 'expo-router';
@@ -17,6 +18,9 @@ import { ScreenShell } from '@/components/ScreenShell';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { colors, KIT, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
+import { useAuth } from '@/context/AuthContext';
+import { assertCurrent, createOfflineActorClient } from '@/lib/offlineActor';
+import { offlineQueue } from '@/services/OfflineQueue';
 import { telemetry } from '@/services/TelemetryManager';
 import { displayValue } from '@/data/players';
 import { useRoster } from '@/hooks/useRoster';
@@ -50,6 +54,13 @@ function parseRosterCsv(raw: string) {
 
 export default function BoosterHomeScreen() {
   const { live } = useAppRuntime();
+  const { user, isSessionCurrent } = useAuth();
+  const owner = user?.id ?? null;
+  const lifetime = useRef({ owner, guard: isSessionCurrent, active: false, read: 0, busy: false });
+  if (lifetime.current.owner !== owner || lifetime.current.guard !== isSessionCurrent) lifetime.current = { owner, guard: isSessionCurrent, active: false, read: 0, busy: false };
+  const scope = lifetime.current;
+  const current = useCallback(() => lifetime.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
+  useEffect(() => { scope.active = true; return () => { scope.active = false; ++scope.read; }; }, [scope]);
   const { players, loading: rosterLoading, error: rosterError, refresh, setPlayers } = useRoster();
   const [csv, setCsv] = useState('name,jersey_number,position,school_name\nJane Doe,12,WR,Westlake High');
   const [queue, setQueue] = useState<VerificationRequest[]>([]);
@@ -58,66 +69,105 @@ export default function BoosterHomeScreen() {
   const [busy, setBusy] = useState(false);
 
   const loadQueue = useCallback(async () => {
+    if (!current()) return;
+    const revision = ++scope.read;
+    const actor = owner ? offlineQueue.captureActor(owner) : null;
+    if (!actor) { setQueue([]); setQueueError(null); setQueueLoading(false); return; }
+    const accepted = () => current() && actor.isCurrent() && revision === scope.read;
     setQueueLoading(true);
     setQueueError(null);
-    const result = await fetchBoosterVerificationQueue();
-    setQueue(result.rows);
-    setQueueError(result.error);
-    setQueueLoading(false);
-  }, []);
+    try {
+      const client = await createOfflineActorClient(actor);
+      if (!accepted()) return;
+      assertCurrent(actor);
+      const result = await fetchBoosterVerificationQueue(client);
+      if (!accepted()) return;
+      setQueue(result.rows); setQueueError(result.error);
+    } catch {
+      if (accepted()) { setQueue([]); setQueueError('Could not load verification requests. Try again.'); }
+    } finally { if (accepted()) setQueueLoading(false); }
+  }, [current, owner, scope]);
 
   useEffect(() => {
     void loadQueue();
   }, [loadQueue]);
 
   const uploadCsv = async () => {
-    if (busy) return;
+    if (!current() || scope.busy || !owner) return;
+    const actor = offlineQueue.captureActor(owner);
+    if (!actor) return;
+    const accepted = () => current() && actor.isCurrent();
     const rows = parseRosterCsv(csv);
     if (rows.length === 0) {
       Alert.alert('CSV empty', 'Add at least one player row.');
       return;
     }
-    setBusy(true);
+    scope.busy = true; setBusy(true);
     try {
+      const client = await createOfflineActorClient(actor);
+      if (!accepted()) return;
+      assertCurrent(actor);
       telemetry.trackFeature('booster_csv', 'booster');
-      const result = await insertBoosterRoster(rows);
+      const result = await insertBoosterRoster(rows, client);
+      if (!accepted()) return;
       if (!result.ok) {
         Alert.alert('Upload failed', result.message);
         return;
       }
       Alert.alert('Roster updated', `Inserted ${rows.length} player${rows.length === 1 ? '' : 's'}.`);
       void refresh();
+    } catch {
+      if (accepted()) Alert.alert('Upload failed', 'Could not save the roster. Refresh before trying again.');
     } finally {
-      setBusy(false);
+      scope.busy = false;
+      if (accepted()) setBusy(false);
     }
   };
 
   const updateJersey = async (playerId: string, jersey: string) => {
+    if (!current() || !owner) return;
+    const actor = offlineQueue.captureActor(owner);
+    if (!actor) return;
+    const accepted = () => current() && actor.isCurrent();
     const jersey_number = Number(jersey);
     if (!Number.isInteger(jersey_number)) return;
-    const result = await updateBoosterJersey(playerId, jersey_number);
-    if (!result.ok) {
-      Alert.alert('Jersey update failed', result.message);
-      return;
+    try {
+      const client = await createOfflineActorClient(actor);
+      if (!accepted()) return;
+      assertCurrent(actor);
+      const result = await updateBoosterJersey(playerId, jersey_number, client);
+      if (!accepted()) return;
+      if (!result.ok) { Alert.alert('Jersey update failed', result.message); return; }
+      setPlayers((rows) => accepted() ? rows.map((player) => (player.id === playerId ? { ...player, jersey_number } : player)) : rows);
+    } catch {
+      if (accepted()) Alert.alert('Jersey update failed', 'Could not save the jersey number.');
     }
-    setPlayers((current) =>
-      current.map((player) => (player.id === playerId ? { ...player, jersey_number } : player)),
-    );
   };
 
   const verify = async (id: string, status: string) => {
-    if (busy) return;
-    setBusy(true);
+    if (!current() || scope.busy || !owner) return;
+    const actor = offlineQueue.captureActor(owner);
+    if (!actor) return;
+    const accepted = () => current() && actor.isCurrent();
+    scope.busy = true; setBusy(true); ++scope.read;
     try {
+      const client = await createOfflineActorClient(actor);
+      if (!accepted()) return;
+      assertCurrent(actor);
       telemetry.trackFeature('booster_verify', 'booster');
-      const result = await setBoosterVerification(id, status);
+      const result = await setBoosterVerification(id, status, client);
+      if (!accepted()) return;
       if (!result.ok) {
         Alert.alert('Verification failed', result.message);
         return;
       }
-      setQueue((current) => current.map((item) => (item.id === id ? { ...item, status } : item)));
+      ++scope.read;
+      setQueue((rows) => accepted() ? rows.map((item) => (item.id === id ? { ...item, status } : item)) : rows);
+    } catch {
+      if (accepted()) Alert.alert('Verification failed', 'Could not save verification.');
     } finally {
-      setBusy(false);
+      scope.busy = false;
+      if (accepted()) { setBusy(false); setQueueLoading(false); }
     }
   };
 
