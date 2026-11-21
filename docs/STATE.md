@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-20 — UX-13 whole-app source/menu review complete locally: font/panel spacing and reproduced account/checkout/admin/operator/guardian repairs;314 suites/2915 tests,156portaltests and current native exports pass. Full checkout-bound repository gate PASS. Hosted/device/registered acceptance remains open; B still owner SQL/Edge; webhook tip crediting stays **off**.
+**Last updated:** 2026-11-20 · Mobile spacing PR typecheck fix (fetch mocks) + CHECK-01 rebase. FEED-ENDLESS Phase 0 + APP-TEST gift on `main`.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-20 — Mobile spacing CI: cast fetch mocks for typecheck
+
+- `globalThis.fetch = mock as typeof fetch` in actor/mutation tests so Node 24 /
+  DOM `URL | RequestInfo` overloads typecheck. Merged latest `main` (VAULT-01).
+- **About to spend:** **$0**.
 
 ### 2026-11-20 — Whole-app menus and function sweep (UX-13, local source checkpoint)
 

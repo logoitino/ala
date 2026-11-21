@@ -18,7 +18,7 @@ beforeEach(() => {
   process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://hq-actor.invalid'; process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'public-test-key';
   jest.mocked(supabase.auth.getSession).mockResolvedValue({ data: { session: { user: { id: A }, access_token: 'synthetic-token-A' } }, error: null } as never);
   mockGlobalWrite.mockResolvedValue({ data: null, error: null });
-  http = jest.fn(async () => new Response(JSON.stringify({ id: A, user_id: A, full_name: 'Athlete A', jersey_number: 7, status: 'verified', is_active: false }), { headers: { 'Content-Type': 'application/json' } })); globalThis.fetch = http;
+  http = jest.fn(async () => new Response(JSON.stringify({ id: A, user_id: A, full_name: 'Athlete A', jersey_number: 7, status: 'verified', is_active: false }), { headers: { 'Content-Type': 'application/json' } })); globalThis.fetch = http as typeof fetch;
 });
 afterEach(() => { globalThis.fetch = oldFetch; if (oldUrl === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_URL; else process.env.EXPO_PUBLIC_SUPABASE_URL = oldUrl; if (oldKey === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY; else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = oldKey; });
 it('uses one captured client for all existing HQ mutation kinds', async () => {

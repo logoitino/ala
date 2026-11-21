@@ -58,7 +58,7 @@ beforeEach(async () => {
   jest.mocked(supabase.auth.getSession).mockReset().mockResolvedValue(session() as never);
   jest.mocked(NetInfo.fetch).mockResolvedValue({ type: 'unknown', isConnected: false, isInternetReachable: null, details: null } as NetInfoState);
   transport = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>(async () => response());
-  globalThis.fetch = transport;
+  globalThis.fetch = transport as typeof fetch;
   await AsyncStorage.clear();
 });
 

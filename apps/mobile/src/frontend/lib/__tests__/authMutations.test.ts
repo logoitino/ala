@@ -44,7 +44,7 @@ beforeEach(async () => {
   jest.mocked(supabase.rpc).mockReset().mockResolvedValue({ data: null, error: null } as never);
   jest.mocked(supabase.from).mockReset().mockImplementation(() => { throw new Error('Global mutation client was used'); });
   transport = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>(async () => response(null));
-  globalThis.fetch = transport;
+  globalThis.fetch = transport as typeof fetch;
   await AsyncStorage.clear();
   jest.mocked(AsyncStorage.setItem).mockClear();
 });
