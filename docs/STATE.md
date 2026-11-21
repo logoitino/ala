@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-20 · CHECK-01 rebased onto main for merge. FEED-ENDLESS Phase 0 + APP-TEST gift on `main`. B still owner SQL/Edge.
+**Last updated:** 2026-11-20 · CHECK-01 rebased onto main (+VAULT-01). Mobile spacing typecheck fix in flight. FEED-ENDLESS Phase 0 + APP-TEST gift on `main`.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
