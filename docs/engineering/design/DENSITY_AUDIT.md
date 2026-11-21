@@ -4,6 +4,8 @@
 **Branch tip snapshot:** `6f82649` (before this pass).  
 **Goal:** ~10–15% denser type/padding; same jade brand, same layout, same 44pt touch targets; body ≥13pt.
 
+**Later revision (2026-11-20):** [UX-12](../../agents/UX-12.md) supersedes this historical type scale: body14/20, section16/21, caption12/16 and title20/26. Panel/icon spacing saves space while readable copy and44pt targets stay. The Nov8 tables below remain dated history, not current type defaults.
+
 ## 1. Reference comparison (honesty note)
 
 This cloud agent cannot open Instagram or another social app on a physical phone to measure pixels side by side. Numbers below are **from Tapua'i source styles** (Phase 1). The owner’s ~10–15% oversize estimate is treated as the target reduction and matches common Instagram ranges (feed body ~13–14pt, compact dock ~49pt). Do **not** treat the “reference” column as measured Instagram pixels.

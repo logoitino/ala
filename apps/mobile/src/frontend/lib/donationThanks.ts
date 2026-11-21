@@ -1,4 +1,4 @@
-/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
+/** Existing athlete support screen/helper: private thank-you decisions can use the initiating account’s bound client; gift identifiers and financial behavior stay unchanged. */
 import { isAuraUuid } from '@/lib/aura';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { isMissingFunction } from '@/lib/dbErrors';
@@ -143,10 +143,10 @@ export type ThankResult = { ok: true } | { ok: false; message: string };
  * @purpose Send one preset thank-you to the donor of `tipId`. Once per donation.
  * @sideEffects `thank_donation` RPC.
  */
-export async function thankDonation(tipId: string, key: ThanksKey): Promise<ThankResult> {
+export async function thankDonation(tipId: string, key: ThanksKey, client = supabase): Promise<ThankResult> {
   if (!isAuraUuid(tipId) || !isSupabaseConfigured) return { ok: false, message: 'Thank-yous open once this gift is saved.' };
   try {
-    const { error } = await supabase.rpc('thank_donation', { target_tip_id: tipId, message_key: key });
+    const { error } = await client.rpc('thank_donation', { target_tip_id: tipId, message_key: key });
     if (error) return { ok: false, message: error.message || 'Could not send the thank-you.' };
     return { ok: true };
   } catch {

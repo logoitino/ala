@@ -1,3 +1,4 @@
+/** UX-13 existing AuraToast.tsx presentation keeps all actions/notices while aligning readable type. */
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -16,6 +17,7 @@ import { CardShine } from '@/components/Effects/CardShine';
 import { useCelebration } from '@/context/CelebrationContext';
 import { radii } from '@/constants/theme';
 import { FOCAL, SPRING_BOUNCE } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Top-of-screen toast for Aura grants, exclusive unlocks, and short notices.
@@ -67,6 +69,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toast: {
+    maxWidth: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -89,9 +92,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   label: {
+    flexShrink: 1,
+    minWidth: 0,
     color: FOCAL.ink,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
     textAlign: 'center',
   },
 });

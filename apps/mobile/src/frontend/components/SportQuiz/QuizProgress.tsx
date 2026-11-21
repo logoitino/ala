@@ -13,6 +13,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { FOCAL, SPRING_BOUNCE } from '@/theme/motion';
 import { colors } from '@/constants/theme';
+import { DISPLAY_TEXT, figtree, TYPE } from '@/theme/fonts';
 import { useQuizFx } from './QuizFx';
 
 const DECOR = { 'aria-hidden': true, importantForAccessibility: 'no-hide-descendants', pointerEvents: 'none' } as const;
@@ -101,20 +102,21 @@ export function FactsCountUp({ to, compact = false }: { to: number; compact?: bo
 
 const styles = StyleSheet.create({
     dots: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-    dot: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+    dot: { minWidth: 28, minHeight: 28, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
     dotDone: { backgroundColor: FOCAL.jadeInk, borderColor: FOCAL.jadeInk },
-    dotCurrent: { backgroundColor: FOCAL.jadeInk, borderColor: FOCAL.electricGold, borderWidth: 3 },
-    dotLabel: { fontSize: 13, fontWeight: '800', color: colors.textMuted },
+    dotCurrent: { backgroundColor: FOCAL.jadeInk, borderColor: FOCAL.electricGold, borderWidth: 2 },
+    dotLabel: { ...TYPE.caption, ...figtree('800'), color: colors.textMuted },
     dotLabelOn: { color: '#FFFFFF' },
     timerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     clock: { fontSize: 20 },
-    track: { flex: 1, height: 12, borderRadius: 6, backgroundColor: FOCAL.mistSlate, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+    track: { flex: 1, height: 8, borderRadius: 4, backgroundColor: FOCAL.mistSlate, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
     trackWarm: { borderColor: FOCAL.goldInk, backgroundColor: FOCAL.mistGold },
-    fill: { height: '100%', borderRadius: 6 },
+    fill: { height: '100%', borderRadius: 4 },
     medalWrap: { alignItems: 'center' },
-    medal: { width: 96, height: 96, borderRadius: 48, borderWidth: 4, borderColor: FOCAL.electricGold, backgroundColor: FOCAL.mistGold, alignItems: 'center', justifyContent: 'center' },
-    medalCompact: { width: 72, height: 72, borderRadius: 36 },
-    medalNumber: { fontSize: 36, fontWeight: '900', color: FOCAL.goldInk },
-    medalNumberCompact: { fontSize: 26 },
-    medalCaption: { fontSize: 13, fontWeight: '700', color: FOCAL.goldInk },
+    // Minimums keep the medal compact; scaled numbers and captions can expand instead of clipping.
+    medal: { minWidth: 72, minHeight: 72, padding: 10, borderRadius: 36, borderWidth: 2, borderColor: FOCAL.electricGold, backgroundColor: FOCAL.mistGold, alignItems: 'center', justifyContent: 'center' },
+    medalCompact: { minWidth: 60, minHeight: 60, padding: 8 },
+    medalNumber: { ...TYPE.display, ...DISPLAY_TEXT, color: FOCAL.goldInk, fontVariant: ['tabular-nums'] },
+    medalNumberCompact: { ...TYPE.title },
+    medalCaption: { ...TYPE.caption, ...figtree('700'), color: FOCAL.goldInk },
 });

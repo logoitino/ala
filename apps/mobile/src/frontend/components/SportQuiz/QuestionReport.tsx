@@ -7,15 +7,18 @@
  * The link appears only for questions from a QUIZ-05 server (they carry `shuffled`), so an older server never offers a
  * report it cannot take.
  * @sideEffects `quiz_report` through lib/freshQuestions; an iOS announcement for the confirmation.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Modal, Platform, Pressable, StyleSheet, Text, View , ScrollView, useWindowDimensions} from 'react-native';
 import type { TimedQuizQuestion } from '@shared/timedSportQuiz';
 import { reportTriviaQuestion, TRIVIA_QUESTION_REPORT_LABELS, type TriviaQuestionReportReason } from '@/lib/freshQuestions';
 import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { colors, radii } from '@/constants/theme';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { QuizButton } from './QuizButton';
 import { isFunFact } from './FunFactMoment';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** How a report went, in the words the sheet shows. 'sending' is in flight. */
 export type ReportState = 'sending' | 'reported' | 'already' | 'limit' | 'paused' | 'closed' | 'unavailable' | 'failed';
@@ -62,6 +65,8 @@ export function reportable(question: TimedQuizQuestion | null | undefined, repor
 /** @purpose The quiet link under a revealed question and the reasons sheet it opens. */
 export function QuestionReportLink({ question, reports }: { question: TimedQuizQuestion; reports: QuestionReports }) {
     const [open, setOpen] = useState(false);
+    const frame = useSheetFrame();
+    const { height: windowHeight } = useWindowDimensions();
     const state = reports.stateFor(question.id);
     const fact = isFunFact(question);
     const reasons: TriviaQuestionReportReason[] = fact ? ['wrong_answer', 'confusing', 'not_okay', 'private'] : ['wrong_answer', 'confusing', 'not_okay'];
@@ -77,27 +82,31 @@ export function QuestionReportLink({ question, reports }: { question: TimedQuizQ
         </Pressable>
         <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
             <View style={styles.backdrop}>
-                <View style={styles.sheet} accessibilityViewIsModal>
-                    <Text accessibilityRole="header" style={styles.title}>Report a problem with this question</Text>
+                <View style={frame.dock}><View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }]} accessibilityViewIsModal>
+                    <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
+          <Text accessibilityRole="header" style={styles.title}>Report a problem with this question</Text>
                     {!done ? <Text style={styles.hint}>Pick one reason. Your round keeps going.</Text> : null}
                     {!done ? reasons.map(reason => <QuizButton key={reason} quiet label={TRIVIA_QUESTION_REPORT_LABELS[reason]} disabled={state === 'sending'}
                         onPress={() => { void reports.send(question.id, reason); }}/>) : null}
                     {/* Kept mounted so Android reads the outcome as soon as it arrives. */}
                     <Text accessibilityLiveRegion="polite" style={words ? styles.outcome : styles.offscreen}>{state === 'sending' ? 'Sending…' : words ?? ''}</Text>
-                    <QuizButton label={done ? 'Done' : 'Close'} onPress={() => setOpen(false)}/>
-                </View>
+                    </ScrollView>
+          <QuizButton label={done ? 'Done' : 'Close'} onPress={() => setOpen(false)}/>
+                </View></View>
             </View>
         </Modal>
     </View>;
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flexGrow: 0, flexShrink: 1, alignSelf: 'stretch' },
+  bodyContent: { gap: 10, paddingBottom: 4 },
     link: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
-    linkText: { color: colors.textMuted, fontSize: 14, textDecorationLine: 'underline' },
+    linkText: { ...figtree('400'), color: colors.textMuted, ...TYPE.button, textDecorationLine: 'underline' },
     backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' },
     sheet: { gap: 10, padding: 20, paddingBottom: 28, borderTopLeftRadius: radii.lg, borderTopRightRadius: radii.lg, backgroundColor: colors.surface },
-    title: { fontSize: 18, fontWeight: '800', color: colors.text },
-    hint: { fontSize: 14, color: colors.textMuted },
-    outcome: { fontSize: 16, fontWeight: '600', color: colors.text },
+    title: { ...TYPE.title, ...figtree('800'), color: colors.text },
+    hint: { ...figtree('400'), ...TYPE.body, color: colors.textMuted },
+    outcome: { ...TYPE.body, ...figtree('600'), color: colors.text },
     offscreen: { position: 'absolute', width: 1, height: 1, opacity: 0 },
 });

@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * The public athlete page shown at /user/[id]: hero card, Aura trading card, crew and teammate badges, Rally,
  * filmer card, the viewer's "Learn {sport} with {name}" trivia card (QUIZ-03), and direct Highlights / Stats / Goals /
  * Vault / owner Manage navigation. QUIZ-05: the Learn card also receives the athlete's player id (a server-validated
@@ -66,6 +66,7 @@ import { FOCAL } from '@/theme/motion';
 import { ProfileFriendActions } from '@/components/Profile/ProfileFriendActions';
 import { LearnSportCard } from '@/components/SportQuiz/LearnSportCard';
 import { MoreText } from '@/components/UI/MoreText';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export type AthleteProfileTab = 'highlights' | 'stats' | 'goals' | 'vault' | 'team' | 'manage';
 
@@ -475,7 +476,7 @@ export function AthleteProfileView({
           <Ionicons name={({ highlights: 'flash-outline', stats: 'stats-chart-outline', goals: 'gift-outline',
             vault: 'lock-closed-outline', team: 'people-outline', manage: 'settings-outline' } as const)[item.id]}
             size={15} color={tab === item.id ? colors.text : colors.textMuted} />
-          <Text style={[styles.sectionLabel, tab === item.id && styles.sectionLabelOn]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.9}>
+          <Text style={[styles.sectionLabel, tab === item.id && styles.sectionLabelOn]}>
             {item.id === 'highlights' ? 'Highlights' : item.id === 'stats' ? 'Stats' : item.id === 'vault' ? 'Vault' : item.label}
           </Text>
         </AnimatedButton>)}
@@ -608,8 +609,8 @@ export function AthleteProfileView({
 const styles = StyleSheet.create({
   sportPicker: { gap: 6, paddingVertical: 4 }, sportChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   sportChip: { maxWidth: '100%', minHeight: 44, paddingHorizontal: 14, paddingVertical: 6, borderRadius: radii.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', gap: 6, alignItems: 'center' },
-  sportChipOn: { backgroundColor: colors.text, borderColor: colors.text },
-  sportLabel: { color: colors.text, fontSize: 14, fontWeight: '700', flexShrink: 1 }, sportLabelOn: { color: colors.background, fontSize: 13, fontWeight: '700', flexShrink: 1 },
+  sportChipOn: { minHeight: 44, backgroundColor: colors.text, borderColor: colors.text },
+  sportLabel: { color: colors.text, ...TYPE.body, ...figtree('700'), flexShrink: 1 }, sportLabelOn: { color: colors.background, ...TYPE.body, ...figtree('700'), flexShrink: 1 },
   root: {
     gap: 8,
     overflow: 'visible',
@@ -632,21 +633,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     ...cardShadow,
   },
-  storyBio: {
-    fontSize: 14,
-    lineHeight: 20,
+  storyBio: { ...figtree('400'),
+    ...TYPE.body,
+
     color: colors.text,
   },
   highlightSection: {
     gap: space.sm,
   },
-  highlightEmpty: {
+  highlightEmpty: { ...figtree('400'),
     padding: 12,
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    ...TYPE.body,
+
   },
   socialRow: {
     flexDirection: 'row',
@@ -667,8 +668,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   socialChipLabel: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.primary,
   },
   navRow: {
@@ -694,19 +695,19 @@ const styles = StyleSheet.create({
   // One row for every section (icon over label) instead of wrapping Team onto its own line; still 44pt tall.
   // Segmented control (2026-11 Lovable refresh): muted track, the chosen section lifts onto a white pill.
   sectionNav: { flexDirection: 'row', gap: 2, padding: 4, borderRadius: 14, backgroundColor: FOCAL.mistSlate },
-  sectionItem: { flex: 1, minWidth: 0 },
+  sectionItem: { minHeight: 44, flex: 1, minWidth: 0 },
   sectionButton: { minHeight: 44, paddingHorizontal: 2, paddingVertical: 4, borderRadius: radii.sm, flexDirection: 'column', gap: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
-  sectionButtonOn: { backgroundColor: colors.surface, ...cardShadow },
-  sectionLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '800', flexShrink: 1 },
+  sectionButtonOn: { minHeight: 44, backgroundColor: colors.surface, ...cardShadow },
+  sectionLabel: { color: colors.textMuted, ...TYPE.caption, ...figtree('800'), flexShrink: 1 },
   sectionLabelOn: { color: colors.text },
-  donateTagline: { fontSize: 12, lineHeight: 17, fontWeight: '700', color: colors.textMuted },
+  donateTagline: { ...TYPE.caption,  ...figtree('700'), color: colors.textMuted },
   quickActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'stretch' },
   actionRow: { flex: 1, flexDirection: 'row', gap: 8, minWidth: 180 },
   sectionHeading: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   sectionCopy: { flex: 1 },
-  sectionTitle: { fontSize: 18, fontWeight: '900', color: colors.text, letterSpacing: -0.3 },
-  sectionHint: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
-  actionFlex: {
+  sectionTitle: { ...TYPE.title, ...figtree('900'), color: colors.text, letterSpacing: -0.3 },
+  sectionHint: { ...figtree('400'), ...TYPE.body, color: colors.textMuted, marginTop: 3 },
+  actionFlex: { minHeight: 44,
     flex: 1,
   },
   primaryAction: {
@@ -722,11 +723,11 @@ const styles = StyleSheet.create({
   },
   primaryActionLabel: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
-  disabled: {
+  disabled: { minHeight: 44,
     opacity: 0.55,
   },
   shareHit: {
@@ -744,13 +745,13 @@ const styles = StyleSheet.create({
   },
   shareLabel: {
     color: colors.text,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
-  empty: {
+  empty: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 14,
+    ...TYPE.body,
     textAlign: 'center',
     paddingVertical: 18,
   },

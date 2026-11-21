@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Profile identity hero shared by own and public sheets, with a compact sideline-style identity row.
  * Athlete details are optional; community profiles must never inherit a favorite player's credentials.
  * School crests remain server-confirmed and avatar editing stays controlled by the parent sheet.
@@ -23,6 +23,7 @@ import { classYearLabel } from '@/data/teams';
 import { auraBadgeLabel, auraProgressTowardNext, auraTierForPoints } from '@/lib/aura';
 import type { SchoolBadge } from '@/lib/schoolBadge';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type ProfileHeroAvatarProps = {
   name: string;
@@ -292,24 +293,24 @@ const styles = StyleSheet.create({
   compactIdentityRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
   compactAvatarStage: { width: 72, paddingTop: 2, paddingBottom: 8 },
   compactAvatarRing: { width: 72, height: 72, borderRadius: 36 },
-  compactInitials: { fontSize: 24 },
+  compactInitials: { ...figtree('400'), ...TYPE.title },
   compactSchoolBand: { position: 'absolute', top: 8, left: 0, right: 0, height: 52, borderRadius: radii.sm, overflow: 'hidden' },
   compactSchoolCrest: { position: 'absolute', right: -8, bottom: 2 },
   compactIdentity: { flexGrow: 1, flexShrink: 1, flexBasis: 120, minWidth: 0, gap: 3 },
   // Own-hub menu sits on the identity row so Profile does not spend a whole nav bar on the hamburger.
   compactHeaderAction: { alignSelf: 'flex-start', marginLeft: 'auto' },
   compactLeft: { textAlign: 'left', letterSpacing: 0.9 },
-  compactName: { marginTop: 0, fontSize: 22, lineHeight: 27, letterSpacing: -0.4, textAlign: 'left' },
-  compactSchool: { fontSize: 12, textAlign: 'left' },
+  compactName: { ...figtree('400'), marginTop: 0, ...TYPE.title,  letterSpacing: -0.4, textAlign: 'left' },
+  compactSchool: { ...figtree('400'), ...TYPE.caption, textAlign: 'left' },
   compactDetails: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   compactDetail: { maxWidth: '100%', flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: FOCAL.mistJade },
-  compactDetailValue: { color: colors.text, fontSize: 12, fontWeight: '800', flexShrink: 1 },
+  compactDetailValue: { color: colors.text, ...TYPE.caption, ...figtree('800'), flexShrink: 1 },
   compactAuraRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   compactAura: { flexGrow: 1, flexShrink: 1, flexBasis: 120, gap: 5 },
-  compactAuraLabel: { textAlign: 'left', fontWeight: '900' },
+  compactAuraLabel: { textAlign: 'left', ...figtree('900') },
   compactProgressTrack: { width: '100%', maxWidth: undefined, marginTop: 0, height: 6 },
-  compactFlip: { marginTop: 0, paddingHorizontal: 12, paddingVertical: 6, flexShrink: 1 },
-  compactVerify: { alignSelf: 'flex-start', marginTop: 0 },
+  compactFlip: { minHeight: 44, marginTop: 0, paddingHorizontal: 12, paddingVertical: 6, flexShrink: 1 },
+  compactVerify: { minHeight: 44, alignSelf: 'flex-start', marginTop: 0 },
   wrap: {
     alignItems: 'center',
     gap: 8,
@@ -328,8 +329,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     textAlign: 'center',
@@ -354,16 +355,16 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.mistJade,
   },
   detailLabel: {
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: colors.text,
     textAlign: 'center',
   },
   detailValue: {
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: colors.text,
     textAlign: 'center',
   },
@@ -391,8 +392,8 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   schoolConfirmed: {
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: FOCAL.jadeInk,
     textAlign: 'center',
   },
@@ -405,8 +406,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   initials: {
-    fontSize: 42,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     letterSpacing: 1,
   },
   crest: {
@@ -424,22 +425,22 @@ const styles = StyleSheet.create({
   },
   name: {
     marginTop: 10,
-    fontSize: 30,
-    lineHeight: 35,
-    fontWeight: '900',
+    ...TYPE.title,
+
+    ...figtree('900'),
     color: colors.text,
     letterSpacing: -0.3,
     textAlign: 'center',
   },
   school: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.textMuted,
     textAlign: 'center',
   },
   tier: {
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     textAlign: 'center',
   },
   progressTrack: {
@@ -456,8 +457,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   progressHint: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: colors.textMuted,
   },
   flipHit: {
@@ -471,8 +472,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   flipLabel: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   verifyHit: {
     marginTop: 2,
@@ -482,8 +483,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   verifyLabel: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: FOCAL.goldInk,
   },
 });

@@ -36,23 +36,23 @@ export const FONT_FILES = {
 export const DISPLAY_TEXT: TextStyle = { fontFamily: FONT.display, fontWeight: 'normal' };
 
 /**
- * One density type scale (2026-11-08 UI density pass). Roughly 12% tighter than the Nov 5 Lovable
- * sizes so more content fits without restyling the brand. Body stays ≥13pt; captions may sit at 11–12.
+ * Readable mobile type scale (UX-12, 2026-11-20). Compact panels save space through layout,
+ * not undersized copy: body14/20, captions12/16, and clear section headings. Font scaling remains enabled.
  * Spread `{ ...TYPE.body }` (or pick size/lineHeight) — do not invent new per-screen sizes.
  */
 export const TYPE = {
   /** Fan / role screen titles (was ~30–32). */
   display: { fontSize: 26, lineHeight: 30 } as TextStyle,
   /** Compact headings and sheet titles (was ~24). */
-  title: { fontSize: 20, lineHeight: 24 } as TextStyle,
+  title: { fontSize: 20, lineHeight: 26 } as TextStyle,
   /** Section labels and card titles (was ~16). */
-  section: { fontSize: 15, lineHeight: 20 } as TextStyle,
-  /** Primary body copy (was ~14–15). Floor for readable body. */
-  body: { fontSize: 13, lineHeight: 18 } as TextStyle,
-  /** Secondary hints, kickers, meta (was ~12–13). */
-  caption: { fontSize: 11, lineHeight: 15 } as TextStyle,
+  section: { fontSize: 16, lineHeight: 21 } as TextStyle,
+  /** Primary body copy in cards, sheets and notices. */
+  body: { fontSize: 14, lineHeight: 20 } as TextStyle,
+  /** Secondary hints and metadata; never smaller to force a fit. */
+  caption: { fontSize: 12, lineHeight: 16 } as TextStyle,
   /** Button / chip labels (was ~15–16). */
-  button: { fontSize: 14, lineHeight: 18 } as TextStyle,
+  button: { fontSize: 14, lineHeight: 20 } as TextStyle,
 } as const;
 
 /**

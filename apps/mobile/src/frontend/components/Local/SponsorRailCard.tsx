@@ -1,5 +1,6 @@
 /**
  * Compact sponsor card on Local Boosters: logo or initials, full business/school names and tier badge.
+ * UX-12 keeps names readable while reducing logo/padding bulk; content determines height.
  * Reports its x offset so the hub can scroll a searched booster into view
  * (split out of app/(tabs)/local/index.tsx for R4-03; behaviour unchanged).
  */
@@ -11,6 +12,7 @@ import { cardShadow, colors, radii } from '@/constants/theme';
 import { initialsForBusiness, sponsorTierById } from '@/data/sponsorships';
 import { mediaUri } from '@/lib/media';
 import { FOCAL } from '@/theme/motion';
+import { figtree, TYPE } from '@/theme/fonts';
 import type { Sponsorship } from '@/types/database';
 
 export function SponsorRailCard({
@@ -39,7 +41,7 @@ export function SponsorRailCard({
           highlighted ? styles.sponsorCardOn : undefined,
         ]}
       >
-        <View style={styles.sponsorLogo}>
+        <View style={[styles.sponsorLogo, !logo && styles.sponsorInitialsBox]}>
           {logo ? (
             <Image source={{ uri: logo }} resizeMode="cover" style={styles.sponsorLogoImage} />
           ) : (
@@ -65,12 +67,13 @@ export function SponsorRailCard({
 const styles = StyleSheet.create({
   sponsorCard: {
     width: 144,
+    minHeight: 44,
     backgroundColor: FOCAL.mistJade,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 12,
-    gap: 8,
+    padding: 10,
+    gap: 6,
     ...cardShadow,
   },
   sponsorCardGold: {
@@ -86,10 +89,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     elevation: 6,
   },
+  // Initials can grow with text scaling; actual logo images keep their 32pt render size.
   sponsorLogo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    alignSelf: 'flex-start',
+    minWidth: 32,
+    minHeight: 32,
+    borderRadius: 16,
     borderWidth: 1.5,
     borderColor: colors.primary,
     backgroundColor: colors.photoPlaceholder,
@@ -97,24 +102,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
+  sponsorInitialsBox: { padding: 3 },
   sponsorLogoImage: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
   },
   sponsorInitials: {
     color: colors.primary,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   sponsorName: {
     color: colors.text,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   sponsorSchool: {
     color: colors.primary,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   tierBadge: {
     alignSelf: 'flex-start',
@@ -125,7 +131,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   tierBadgeLabel: {
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
 });

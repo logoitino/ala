@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-20 · CHECK-01 CI: refresh IP counsel packet after rebase onto main+VAULT-01.
+**Last updated:** 2026-11-20 · Mobile spacing (#59) rebased onto main after CHECK-01 merge; IP packet refreshed.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -35,7 +35,7 @@ Queue: [WORK_QUEUE APP-TEST-01](agents/WORK_QUEUE.md#app-test-01--current-app-te
 | Lane | Evidence now | Your next click (owner) |
 | --- | --- | --- |
 | **C. Highlights** | Web **PASS**: 8s pick→publish→playback (`fac733e`); 46s/oversize stayed out of Details. PR [#35](https://github.com/logoitino/ala/pull/35) **merged** | Optional: density EAS APK/IPA on a phone; photo-story later |
-| **Gift (money)** | Web **PASS** 2026-11-16: Demo Fan → Jordan Blake **Give $5** → Stripe.js Payment Element card `4242` → Pay → Mālo toast + `tips` row `b1478f4d-…` / PI `pi_3UcXUP4jAsjtyL0Z0SeSCLDw` (livemode false = **$0**). Prior Edge mint + `pm_card_visa` confirm also PASS. | Optional native preview PaymentSheet (Expo Go lacks Stripe modules). No new secret. |
+| **Gift (money)** | Web **PASS** 2026-11-16: Demo Fan → Jordan Blake **Give $5** → Stripe.js Payment Element card `4242` → Pay → Mālo toast + `tips` row `b1478f4d-…` / PI `pi_3UcXUP4jAsjtyL0Z0SeSCLDw` (livemode false = **$0**). Prior Edge mint + `pm_card_visa` confirm also PASS. | Optional native preview PaymentSheet (Expo Go payment support unverified). No new secret. |
 | **A. Google** | Provider **on**; Soft-Wall → Google popup **PASS**; cancel/retry **PASS**. PR [#36](https://github.com/logoitino/ala/pull/36) **merged** | One Test-users Gmail signup on Metro web (birth + Upload resume) |
 | **B. Test bank** | Staging Connect RPCs + `create-stripe-account` Edge **404** (rechecked 2026-11-16). Checkout Edge already has `sk_test_`. PR [#37](https://github.com/logoitino/ala/pull/37) **merged** | Apply Connect SQL → deploy `create-stripe-account` (reuse existing test secret) |
 
@@ -177,13 +177,39 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+### 2026-11-20 — Mobile spacing CI: cast fetch mocks for typecheck
+
+- **Mobile spacing (#59):** `pnpm ip:sync` refreshed `docs/legal/IP_COUNSEL_PACKET.md` inventory SHA so `ip:check` passes in CI.
+- `globalThis.fetch = mock as typeof fetch` in actor/mutation tests so Node 24 /
+  DOM `URL | RequestInfo` overloads typecheck. Merged latest `main` (VAULT-01).
+- **About to spend:** **$0**.
+
+### 2026-11-20 — Whole-app menus and function sweep (UX-13, local source checkpoint)
+
+- Current source review reconciles724 modules/107 routes/9,039 AST function-like nodes and43 direct native Modal hosts/44 sites; every current module hash has review evidence.140 presentation decisions extend readable brand fonts, smaller decoration,44pt actions, wrapping and bounded scroll bodies across fan/profile/admin/operator/guardian surfaces. Required notices, actual navigation, consent and money policy remain.
+- Confirmed account/receipt/activity/Crew/Vault/checkout/runtime/MFA/operator/school/guardian flow repairs have source and actual regression evidence. Delayed scoped MFA errors cannot remove an incoming account; ordinary Auth/signout remains tested. Direct-call baseline drops Auth6→4 and checkout1→0; no expanded exemption or infrastructure/service/schema change.
+- Final coverage314 suites/2,915 tests passes:4,858/6,729 instrumented functions72.19%;156portaltests, both typechecks and latest iOS/Android Hermes exports pass.18 browser captures at narrow/enlarged-text/landscape dimensions pass tested geometry; this is not native Dynamic Type or every-function/provider execution. Full checkout-bound gate PASS, including all root/data/docs/copy/comments/feature/agent/portability/security/layers/exit checks. Portability24 and infrastructure security22 tests pass; source-cache readyToCutOver remains false. Owner approved retaining generated Exit acknowledgments/baseline; no release approval is inferred. [UX-13](agents/UX-13.md) records proofs, failures and limits.
+- Drip selected size has no authoritative order/fulfillment field in the existing contract: routed to COMMERCE with CHECKOUT/DATA_GOVERNANCE, no speculative schema/charge metadata. Native/provider/registered acceptance remains separate; website hosting is deferred. **About to spend: $0.**
+
+### 2026-11-20 — Readable panels and mobile spacing (UX-12)
+
+- Body14/20, section16/21 and caption12/16 improve readability; brand fonts/colours retained. Local names wrap, icons/avatars are smaller; quiz celebrations/cards take less space. Popup bodies scroll with reachable dismissal; shared actions retain44pt targets and badges grow with text.
+- Presentation-only exemption reviewed before code by independent outside Codex. Full gate PASS:286 mobile suites/2706tests,121portaltests; final iOS/Android Hermes exports PASS. Synthetic browser flows and320/390/landscape/200%text checked, including five-question completion and wrapping pinned navigation. No native Dynamic Type, device motion or direct Instagram benchmark claim. [UX-12](agents/UX-12.md) records actual evidence and limitations. **About to spend: $0.**
+
+### 2026-11-20 — Account-owned replay and fan-state repair (APP-REPAIR-01)
+
+- Reconnect preserves new/replaced actions and cancelled intent. Structured network errors retain retryable rows; issued hype undo persists actor-owned compensation. Cold-start flush triggers are locked after shared hydration; actor changes coalesce one follow-up.
+- Auth resolves ownership before awaits. Existing helpers receive a captured matching-token client; active-owner replay, replacement and undo never adopt another account's or a legacy queue's intent. No new backend table/RPC/permission/provider. Aura multi-hop outcomes remain non-atomic.
+- Bookmark view/mutation freshness and account-keyed cheer choices reject stale state. QA masks old account frames, shows current-account rows plus held counts and retains explicit all-device discard. Privacy/infrastructure/architecture contracts reconciled; TEAMS stale SDK57 reminder aligned with current SDK58/AGENTS.
+- Actual outside Codex final independent review: **7 suites / 94 tests passed**. Full quality gate PASS with the separate Documents source-cache state: **286 mobile suites / 2706 tests**, 121 portal tests, both typechecks and all root guards. Fresh Android/iOS Hermes exports PASS. Registered owner/model execution, hosted and physical-device acceptance are not claimed.
+- Corrected native-payment fallback guidance to development/preview builds; Expo Go payment behavior remains unverified. Dependencies/public preview config and separate private source cache for this Documents checkout are restored; old removed-checkout snapshots preserved. [APP-REPAIR-01](agents/APP-REPAIR-01.md) records evidence/limitations. **About to spend: $0.**
+
 ### 2026-11-20 — CHECK-01 rebased onto main
 
 - **CHECK-01 (#52):** `pnpm ip:sync` refreshed inventory SHA after rebase onto `main` (+VAULT-01) so `ip:check` passes.
 - Cross-check protocol / agents:check matrix rebased after WEB-DESKTOP + APP-TEST + FEED-ENDLESS.
   Exit generated maps kept from `main` during conflict resolve.
 - **About to spend:** **$0**.
-
 ### 2026-11-16 — FEED-ENDLESS Phase 0 audit (no design yet)
 
 - [FEED-ENDLESS-AUDIT.md](agents/FEED-ENDLESS-AUDIT.md): staging `reels_feed` playable **1**;
@@ -1775,6 +1801,8 @@ Do not re-diagnose these. Fix them or leave them.
 
 | Thing | State |
 | --- | --- |
+| Drip selected-size fulfillment contract (UX-13 source review) | Existing ProductSheet selects a size, while payment/order payload and shop_orders have no authoritative size/variant field. COMMERCE → ENGINEERING with CHECKOUT/DATA_GOVERNANCE must define/test the contract before schema or charge changes. This is a source gap, not a tested provider fulfillment failure. [UX-13](agents/UX-13.md) records the follow-up; no hosted/schema change was made. |
+| Offline action replay review (2026-11-20) | Actor/reconnect/undo/caller repair independently reviewed (94 focused tests); full local gate and fresh iOS/Android exports passed. Physical-device/hosted/registered owner acceptance remain in [APP-REPAIR-01](agents/APP-REPAIR-01.md). Legacy queues stay held; local data has no new timed retention/erasure integration. |
 | Dev ↔ staging parity (2026-10-22) | Read-only checks via the Supabase plugin. Staging now matches development for photo stories, reels owner folder, Books, DATA-01, function hardening, guardian scope, avatars, PRIV-01, tag approval, MINOR-01, VERIFY-02 and the Rallies guest fix. Development also has reel account tags (`20261002160000`; staging catch-up replayed, waiting on the owner's apply, workstream 4), engineering support, admin-report bigint, family share, Fan Zone, Beyond, trivia and IQ (feature freeze: not pushed to staging). Coach-level `20261017090000` is on development since 2026-10-22 (workstream 4); staging waits for Beyond. Details: [STAGING_DATABASE_CATCHUP](engineering/STAGING_DATABASE_CATCHUP.md). |
 | Account tags: staging catch-up and blocked-tag fix not applied (2026-10-22) | Replayed, not applied. Staging needs `20261002160000` plus privacy's search and the Closed accounts policy (never the file alone: it would put back the full-name search); both projects need `20261022150000`. A session hook refuses creating security definer functions through the Supabase plugin, so the owner runs them in each SQL Editor: staging gets `node scripts/replay/account-tags-replay.mjs <pglite dist> --print-staging-sql` then `20261022150000`, development gets `20261022150000`. Afterwards, the function/grant/policy fingerprint query in the replay should match across both projects. |
 | Orphan public tables with RLS off (advisor 2026-10-20) | **Closed 2026-10-22 on development** (`20261022090000`): `school_teams` and `app_feature_flags` existed only there, unused by any code, open to anon read/write. RLS on, client grants revoked; staging never had them. Replay 7/7. |

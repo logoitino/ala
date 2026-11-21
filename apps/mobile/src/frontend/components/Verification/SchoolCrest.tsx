@@ -1,15 +1,17 @@
-/** School-issued crest and confirmation proof; presentation never confers verification beyond the badge RPC. */
+/** UX-13 readable controls preserve all consent, money and operator actions. School-issued crest and confirmation proof; presentation never confers verification beyond the badge RPC. */
 import { useState } from 'react';
-import { Image, Modal, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { CardShine } from '@/components/Effects/CardShine';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { schoolBadgeColors, schoolMonogram, type SchoolBadge } from '@/lib/schoolBadge';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const SHIELD = 'M50 3 L95 17 V56 C95 85 75 104 50 114 C25 104 5 85 5 56 V17 Z';
 
@@ -106,15 +108,18 @@ export function SchoolBadgeProofSheet({
   onClose: () => void;
 }) {
   const { primary } = schoolBadgeColors(badge);
+  const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const when = confirmedDate(badge.confirmedAt);
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
       <View style={styles.sheetRoot}>
         <Pressable haptic="none" style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
-        <View style={[styles.sheet, { borderTopColor: primary }]}>
+        <View style={[styles.sheet, frame.card, { borderTopColor: primary, maxHeight: windowHeight * 0.85 }]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={onClose} />
-          <SchoolCrestMark badge={badge} size={72} />
+          <ScrollView style={styles.proofScroll} contentContainerStyle={styles.proofBody}>
+          <SchoolCrestMark badge={badge} size={48} />
           <Text style={styles.sheetTitle}>
             {athleteName} is a confirmed {badge.schoolName} athlete
           </Text>
@@ -126,6 +131,7 @@ export function SchoolBadgeProofSheet({
             Only Tapua’i can show this crest, and tapping it always opens this proof. A school logo inside a profile
             photo is not a confirmation.
           </Text>
+          </ScrollView>
           <Pressable accessibilityRole="button" haptic="selection" onPress={onClose} style={styles.sheetButton}>
             <Text style={styles.sheetButtonLabel}>Got it</Text>
           </Pressable>
@@ -153,12 +159,14 @@ export function SchoolHeroBand({ badge }: { badge: SchoolBadge }) {
 }
 
 const styles = StyleSheet.create({
+  proofScroll: { flexGrow: 0, flexShrink: 1, alignSelf: 'stretch' },
+  proofBody: { alignItems: 'center', gap: 10 },
   crestInner: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   monogram: {
-    fontWeight: '900',
+    ...figtree('900'),
     letterSpacing: 0.5,
   },
   shineClip: {
@@ -174,7 +182,7 @@ const styles = StyleSheet.create({
   },
   sealCheck: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    ...figtree('900'),
   },
   sheetRoot: {
     flex: 1,
@@ -196,20 +204,20 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     textAlign: 'center',
   },
-  sheetBody: {
+  sheetBody: { ...figtree('400'),
     color: colors.text,
-    fontSize: 15,
-    lineHeight: 21,
+    ...TYPE.body,
+
     textAlign: 'center',
   },
-  sheetFine: {
+  sheetFine: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
+    ...TYPE.body,
+
     textAlign: 'center',
   },
   sheetButton: {
@@ -223,8 +231,8 @@ const styles = StyleSheet.create({
   },
   sheetButtonLabel: {
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   band: {
     position: 'absolute',

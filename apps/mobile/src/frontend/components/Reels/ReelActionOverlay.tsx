@@ -4,6 +4,7 @@
  * Only Aura plays a burst; Seki swaps its emoji briefly; Flex lights up.
  * A Seki play and a Flex ride pop in above the caption, then tuck into icons. An arrow opens them again.
  * Selecting springs the chip up a little. Clearing dips it, then the fill drains.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -33,6 +34,7 @@ import type { PlayReactionId } from '@/data/players';
 import { maloAthleteCta } from '@/data/malo';
 import { HYPE_FX } from '@/theme/hypeFx';
 import { FOCAL, SPRING_BOUNCE, SPRING_SHEET } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 
 export const REEL_REACTIONS = [
@@ -198,7 +200,7 @@ export function ReelActionOverlay({
           onPress={onOpenMore}
           contentStyle={styles.more}
         >
-          <Ionicons name="ellipsis-horizontal" size={22} color={colors.onVideo} />
+          <Ionicons name="ellipsis-horizontal" size={20} color={colors.onVideo} />
         </AnimatedPressable>
       );
     }
@@ -246,7 +248,7 @@ export function ReelActionOverlay({
           ]}
         >
           <SportIcon sport={sport} color={FOCAL.neonJade} size={18} />
-          <Text style={styles.athleteName} numberOfLines={2}>
+          <Text style={styles.athleteName}>
             {athleteName}
           </Text>
         </Pressable>
@@ -260,7 +262,7 @@ export function ReelActionOverlay({
         ) : null}
         {rosterDetails ? <Text style={styles.rosterDetails} numberOfLines={2}>{rosterDetails}</Text> : null}
         {rail.showSchool && schoolName ? (
-          <Text style={styles.school} numberOfLines={2}>
+          <Text style={styles.school}>
             {schoolName}
           </Text>
         ) : null}
@@ -363,8 +365,8 @@ function HypeHalo({ kind, color }: { kind: PlayReactionId; color: string }) {
             borderRadius: ring.size / 2,
             backgroundColor: color,
             opacity: ring.opacity,
-            top: (60 - ring.size) / 2,
-            left: (60 - ring.size) / 2,
+            top: (48 - ring.size) / 2,
+            left: (48 - ring.size) / 2,
           }}
         />
       ))}
@@ -543,16 +545,16 @@ const styles = StyleSheet.create({
   },
   athleteName: {
     color: colors.onVideo,
-    fontSize: 18,
+    ...TYPE.title,
     flexShrink: 1,
-    fontWeight: '900',
+    ...figtree('900'),
     letterSpacing: -0.4,
   },
   rosterDetails: {
     color: colors.onVideo,
-    fontSize: 12,
-    lineHeight: 17,
-    fontWeight: '800',
+    ...TYPE.caption,
+
+    ...figtree('800'),
     letterSpacing: 0.5,
     textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 0, height: 1 },
@@ -561,12 +563,12 @@ const styles = StyleSheet.create({
   tagChip: { alignSelf: 'flex-start', marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, borderWidth: 1 },
   tagChipApproved: { backgroundColor: 'rgba(0,115,60,0.92)', borderColor: 'rgba(0,115,60,0.92)' },
   tagChipPending: { backgroundColor: 'rgba(0,0,0,0.35)', borderColor: 'rgba(243,251,247,0.7)', borderStyle: 'dashed' },
-  tagChipLabel: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
+  tagChipLabel: { color: '#FFFFFF', ...TYPE.caption, ...figtree('800') },
   tagChipLabelPending: { color: 'rgba(243,251,247,0.9)' },
   school: {
     color: 'rgba(243,251,247,0.82)',
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -574,8 +576,8 @@ const styles = StyleSheet.create({
   whyHit: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', maxWidth: '92%' },
   whyLine: {
     color: 'rgba(243,251,247,0.72)',
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -583,8 +585,8 @@ const styles = StyleSheet.create({
   filmerHit: { minHeight: 44, justifyContent: 'center' },
   filmedBy: {
     color: 'rgba(243,251,247,0.82)',
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -593,9 +595,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     maxWidth: '100%',
     color: colors.onVideo,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     backgroundColor: colors.videoScrimSoft,
     borderRadius: 10,
     paddingHorizontal: 10,
@@ -604,9 +605,8 @@ const styles = StyleSheet.create({
   },
   caption: {
     color: colors.onVideo,
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
+    ...TYPE.body,
+    ...figtree('600'),
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
@@ -614,12 +614,13 @@ const styles = StyleSheet.create({
   rail: {
     gap: 6,
     alignItems: 'center',
-    minWidth: 68,
+    minWidth: 56,
     paddingVertical: 6,
   },
-  railScroll: { maxHeight: '100%', flexGrow: 0, flexShrink: 0, minWidth: 68, maxWidth: '42%' },
+  railScroll: { maxHeight: '100%', flexGrow: 0, flexShrink: 0, minWidth: 56, maxWidth: '42%' },
   chipWrap: {
-    width: 68,
+    minWidth: 56,
+    maxWidth: '100%',
     alignItems: 'center',
     overflow: 'visible',
     zIndex: 2,
@@ -638,31 +639,38 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -10,
     zIndex: 5,
-    fontSize: 15,
-    fontWeight: '900',
+    ...TYPE.body,
+    ...figtree('900'),
     letterSpacing: 0.5,
     textShadowColor: 'rgba(0,0,0,0.55)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
+  // Decorative halo stays small; content grows vertically with accessible text sizing.
   face: {
-    width: 60,
-    height: 60,
+    minWidth: 48,
+    maxWidth: '100%',
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
   haloSlot: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    top: 0,
-    left: 0,
+    width: 48,
+    height: 48,
+    top: '50%',
+    left: '50%',
+    marginTop: -24,
+    marginLeft: -24,
   },
   // Glass rail buttons (2026-11 Lovable refresh): translucent light over the clip, neon when chosen.
   react: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    minWidth: 44,
+    maxWidth: '100%',
+    minHeight: 44,
+    paddingHorizontal: 4,
+    paddingVertical: 3,
+    borderRadius: 22,
     backgroundColor: 'rgba(244,247,245,0.14)',
     borderWidth: 1,
     borderColor: 'rgba(244,247,245,0.22)',
@@ -688,23 +696,27 @@ const styles = StyleSheet.create({
   },
   reactLabel: {
     color: 'rgba(243,251,247,0.88)',
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
+    textAlign: 'center',
     marginTop: 2,
   },
-  reactCount: {
+  reactCount: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     color: colors.onVideo,
-    fontSize: 12,
+    ...TYPE.caption,
+    maxWidth: '100%',
+    textAlign: 'center',
     marginTop: -2,
   },
   reactCountOn: {
     color: FOCAL.ink,
   },
   malo: {
-    minWidth: 52,
-    minHeight: 52,
-    borderRadius: 26,
+    minWidth: 48,
+    minHeight: 48,
+    maxWidth: '100%',
+    borderRadius: 24,
     backgroundColor: colors.onVideo,
     borderWidth: 2,
     borderColor: colors.onVideo,
@@ -715,13 +727,14 @@ const styles = StyleSheet.create({
   },
   maloLabel: {
     color: FOCAL.videoBase,
-    fontSize: 13,
-    fontWeight: '900',
+    ...TYPE.button,
+    ...figtree('800'),
+    textAlign: 'center',
   },
-  maloTotal: {
+  maloTotal: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     color: FOCAL.videoBase,
-    fontSize: 11,
+    ...TYPE.caption,
   },
   maloTipped: {
     backgroundColor: FOCAL.neonJade,
@@ -731,9 +744,11 @@ const styles = StyleSheet.create({
     color: FOCAL.ink,
   },
   more: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    minWidth: 44,
+    minHeight: 44,
+    paddingHorizontal: 4,
+    paddingVertical: 3,
+    borderRadius: 22,
     backgroundColor: 'rgba(244,247,245,0.14)',
     borderWidth: 1,
     borderColor: 'rgba(244,247,245,0.22)',

@@ -3,6 +3,7 @@
  * Home keeps trivia as a side notice and names the subject the server already scheduled. Play and Not now clear that notice until the next week.
  * Beyond keeps Fan Zone. Role homes keep both cards.
  * @sideEffects Read on focus/return/UTC week; explicit quiz Skip, local dismissal and root navigation only. Fan discovery never writes.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState, StyleSheet, Text, View } from 'react-native';
@@ -18,6 +19,7 @@ import { useSportQuiz } from '@/hooks/useSportQuiz';
 import { useFanZone } from '@/hooks/useFanZone';
 import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { triviaPreviewAvailable } from '@/components/SportQuiz/TriviaPreview';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type DiscoverySurface = 'home' | 'hq' | 'beyond';
 /** One Highlight invite per account-week. Play and Not now both write this, so the card stays gone until the next week. */
@@ -203,9 +205,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(46,229,157,0.4)',
   },
-  title: { color: colors.text, fontSize: 14, fontWeight: '700' },
+  title: { color: colors.text, ...TYPE.body, ...figtree('700') },
   titleVideo: { color: colors.onVideo },
-  copy: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
+  copy: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
   copyVideo: { color: colors.onVideoMuted },
   row: { flexDirection: 'row', alignItems: 'stretch', gap: 8 },
 });

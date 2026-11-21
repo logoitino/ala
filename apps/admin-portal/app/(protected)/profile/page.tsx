@@ -32,30 +32,31 @@ export default async function ProfileOversightPage() {
 
   return (
     <PortalShell active="/profile">
+      {!oversight.configured ? <p role="status" className="mb-4 rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)]">Live profile status is unavailable. Check the public Supabase configuration and retry.</p> : null}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Claimed athletes"
-          value={String(oversight.claimedAthletes)}
+          value={oversight.configured ? String(oversight.claimedAthletes) : 'Unavailable'}
           hint="profiles.player_id set (Active Team Roster · Claimed)"
           tone={oversight.claimedAthletes > 0 ? 'ok' : 'neutral'}
         />
         <StatCard
           label="Athlete profiles"
-          value={String(oversight.athleteProfiles)}
+          value={oversight.configured ? String(oversight.athleteProfiles) : 'Unavailable'}
           hint="role / roles / active_role includes athlete"
-          tone="ok"
+          tone={oversight.configured ? 'ok' : 'neutral'}
         />
         <StatCard
           label="Flip Aura card"
-          value={oversight.showCard ? 'Live' : 'Hidden'}
+          value={!oversight.configured ? 'Unavailable' : oversight.showCard ? 'Live' : 'Hidden'}
           hint="profile.showCard · hamburger Flip"
-          tone={oversight.showCard ? 'ok' : 'warn'}
+          tone={!oversight.configured ? 'neutral' : oversight.showCard ? 'ok' : 'warn'}
         />
         <StatCard
           label="Highlights first"
-          value={oversight.statsFirst ? 'Stats first' : 'Collage first'}
+          value={!oversight.configured ? 'Unavailable' : oversight.statsFirst ? 'Stats first' : 'Collage first'}
           hint="profile.statsFirst (default Off = collage)"
-          tone={oversight.statsFirst ? 'warn' : 'ok'}
+          tone={!oversight.configured ? 'neutral' : oversight.statsFirst ? 'warn' : 'ok'}
         />
       </div>
 
@@ -72,7 +73,7 @@ export default async function ProfileOversightPage() {
               className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3 text-sm"
             >
               <span className="font-bold">{row.label}</span>
-              <Badge tone={row.on ? 'ok' : 'warn'}>{row.on ? 'On' : 'Off'}</Badge>
+              <Badge tone={!oversight.configured ? 'neutral' : row.on ? 'ok' : 'warn'}>{!oversight.configured ? 'Unavailable' : row.on ? 'On' : 'Off'}</Badge>
             </div>
           ))}
         </div>
@@ -82,7 +83,7 @@ export default async function ProfileOversightPage() {
         <SectionHeading level={2} title="Profile chrome flags" hint="Live status — toggle from Expo /admin/look" />
         {!runtime.configured ? (
           <p className="rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)]">
-            Supabase env missing.
+            Live profile chrome is unavailable. Check the public Supabase configuration and retry.
           </p>
         ) : (
           <Panel level={3} title="Profile chrome" kicker="Read-only status">

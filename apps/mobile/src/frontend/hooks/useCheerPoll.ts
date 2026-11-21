@@ -11,6 +11,9 @@ import { useFocusEffect } from 'expo-router';
 import { fetchActiveCheerPollCards } from '@/lib/adminCatalog';
 import { castCheerVote, fetchCheerPollRow, subscribeCheerPoll } from '@/lib/cheerPoll';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { createOfflineActorClient, isOfflineActorChanged } from '@/lib/offlineActor';
+import { offlineQueue, shouldQueueOffline } from '@/services/OfflineQueue';
+import { useAuth } from '@/context/AuthContext';
 
 export type CheerSide = 'home' | 'away';
 
@@ -25,8 +28,8 @@ export type CheerPoll = {
 const FALLBACK_HOME = 124;
 const FALLBACK_AWAY = 98;
 
-function voteKey(slug: string) {
-  return `tapuai.cheerVote.${slug}`;
+function voteKey(slug: string, userId: string) {
+  return `tapuai.cheerVote.${userId}.${slug}`;
 }
 
 function parsePoll(row: Record<string, unknown> | null, fallback: CheerPoll): CheerPoll {
@@ -51,6 +54,9 @@ function parsePoll(row: Record<string, unknown> | null, fallback: CheerPoll): Ch
  * @sideEffects Supabase SELECT + Realtime on `cheer_polls`, `cast_cheer_vote` RPC, AsyncStorage `tapuai.cheerVote.{slug}`; OfflineQueue when `NetInfo.isConnected === false`.
  */
 export function useCheerPoll(slug: string, homeLabel: string, awayLabel: string) {
+  const { user } = useAuth();
+  const voteOwner = useRef<string | null>(null);
+  const voteRevision = useRef(0);
   const mountedRef = useRef(true);
   const seed = useMemo<CheerPoll>(
     () => ({
@@ -82,11 +88,17 @@ export function useCheerPoll(slug: string, homeLabel: string, awayLabel: string)
   }, [awayLabel, homeLabel, slug]);
 
   useEffect(() => {
-    void AsyncStorage.getItem(voteKey(slug)).then((value) => {
-      if (!mountedRef.current) return;
+    let current = true;
+    const readRevision = ++voteRevision.current;
+    voteOwner.current = user?.id ?? null;
+    setMyVote(null);
+    if (!user?.id) return;
+    void AsyncStorage.getItem(voteKey(slug, user.id)).then((value) => {
+      if (!current || !mountedRef.current || voteRevision.current !== readRevision) return;
       if (value === 'home' || value === 'away') setMyVote(value);
     });
-  }, [slug]);
+    return () => { current = false; };
+  }, [slug, user?.id]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -107,8 +119,13 @@ export function useCheerPoll(slug: string, homeLabel: string, awayLabel: string)
 
   const vote = useCallback(
     async (side: CheerSide) => {
-      if (myVote === side) return false;
-      const previous = myVote;
+      // Called by Soft-Wall's authorized resume; capture its resolved account synchronously.
+      const actor = offlineQueue.captureActor();
+      if (!actor) return false;
+      const previous = voteOwner.current === actor.userId ? myVote : null;
+      if (previous === side) return false;
+      ++voteRevision.current;
+      voteOwner.current = actor.userId;
 
       setMyVote(side);
       setPoll((current) => {
@@ -120,7 +137,7 @@ export function useCheerPoll(slug: string, homeLabel: string, awayLabel: string)
         else away += 1;
         return { ...current, home_votes: home, away_votes: away };
       });
-      void AsyncStorage.setItem(voteKey(slug), side);
+      void AsyncStorage.setItem(voteKey(slug, actor.userId), side);
 
       if (!isSupabaseConfigured) return true;
 
@@ -132,16 +149,28 @@ export function useCheerPoll(slug: string, homeLabel: string, awayLabel: string)
         homeName: homeLabel,
         awayName: awayLabel,
       };
-      const { offlineQueue, shouldQueueOffline } = await import('@/services/OfflineQueue');
       if (!(await offlineQueue.isOnline())) {
-        await offlineQueue.enqueue(payload);
+        await offlineQueue.enqueue(payload, actor);
         return true;
       }
 
-      const { data, error } = await castCheerVote({ slug, side, previousSide: previous, homeName: homeLabel, awayName: awayLabel });
+      let result;
+      try {
+        const client = await createOfflineActorClient(actor);
+        result = await castCheerVote({ slug, side, previousSide: previous, homeName: homeLabel, awayName: awayLabel }, client);
+      } catch (error) {
+        if (isOfflineActorChanged(error) || !actor.isCurrent()) return true;
+        if (shouldQueueOffline(error instanceof Error ? error : null, offlineQueue.getIsConnected())) {
+          await offlineQueue.enqueue(payload, actor);
+          return true;
+        }
+        throw error;
+      }
+      if (!actor.isCurrent()) return true;
+      const { data, error } = result;
 
       if (error && shouldQueueOffline(error, offlineQueue.getIsConnected())) {
-        await offlineQueue.enqueue(payload);
+        await offlineQueue.enqueue(payload, actor);
         return true;
       }
 

@@ -1,3 +1,4 @@
+/** UX-13 AthleteVerificationCard.tsx preserves existing actions with readable spacing/type. */
 import { StyleSheet, Text, View } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -6,6 +7,7 @@ import { PAYOUT_BIRTH_MONTH_COPY, PAYOUT_GUARDIAN_CONSENT_COPY, PAYOUT_PAYEE_VER
 import { useMyVerification } from '@/hooks/useMyVerification';
 import type { MyPayoutStatus } from '@/lib/payoutGate';
 import type { MyVerification, SchoolCheckCode } from '@/lib/verification';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** "3:42 PM" in the viewer's locale. */
 function clockTime(iso: string): string {
@@ -187,8 +189,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badge: {
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     paddingHorizontal: 10,
@@ -206,35 +208,35 @@ const styles = StyleSheet.create({
   },
   school: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   held: {
     color: colors.text,
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: '600',
+    ...TYPE.section,
+
+    ...figtree('600'),
   },
   unlocked: {
     color: colors.deepGreen,
   },
   stepsTitle: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     marginTop: 4,
   },
-  step: {
+  step: { ...figtree('400'),
     color: colors.text,
-    fontSize: 14,
-    lineHeight: 20,
+    ...TYPE.body,
+
   },
-  body: {
+  body: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    ...TYPE.body,
+
   },
   codeBox: {
     alignItems: 'center',
@@ -246,14 +248,14 @@ const styles = StyleSheet.create({
   },
   code: {
     color: colors.text,
-    fontSize: 40,
-    fontWeight: '800',
+    ...TYPE.display,
+    ...figtree('800'),
     letterSpacing: 8,
     fontVariant: ['tabular-nums'],
   },
-  codeHint: {
+  codeHint: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 12,
+    ...TYPE.body,
   },
   button: {
     borderRadius: radii.pill,
@@ -263,13 +265,13 @@ const styles = StyleSheet.create({
   },
   buttonLabel: {
     color: colors.onAccent,
-    fontWeight: '800',
+    ...figtree('800'),
   },
   dim: {
     opacity: 0.5,
   },
-  error: {
+  error: { ...figtree('400'),
     color: colors.danger,
-    fontSize: 13,
+    ...TYPE.body,
   },
 });

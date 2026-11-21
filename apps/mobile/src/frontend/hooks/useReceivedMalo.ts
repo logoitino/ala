@@ -1,6 +1,9 @@
-import { useCallback, useState } from 'react';
+/** UX-13 keeps private received-gift amounts in one viewer/athlete frame and rejects outgoing reads. */
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
+import { useAuth } from '@/context/AuthContext';
+import { offlineQueue } from '@/services/OfflineQueue';
 import { fetchReceivedMalo } from '@/lib/donationHistory';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { telemetry } from '@/services/TelemetryManager';
@@ -14,42 +17,44 @@ import type { ReceivedMalo } from '@/types/database';
  * @sideEffects RPC `get_received_malo` through `lib/donationHistory`. `telemetry.trackIssue` when that call fails.
  */
 export function useReceivedMalo(playerId: string | null | undefined) {
-  const [rows, setRows] = useState<ReceivedMalo[]>([]);
-  const [loading, setLoading] = useState(Boolean(playerId));
-  const [error, setError] = useState<string | null>(null);
-
+  const { user, isSessionCurrent } = useAuth();
+  const userId = user?.id ?? null;
+  const holder = useRef({ userId, playerId, guard: isSessionCurrent, active: false, read: 0 });
+  if (holder.current.userId !== userId || holder.current.playerId !== playerId || holder.current.guard !== isSessionCurrent) {
+    holder.current = { userId, playerId, guard: isSessionCurrent, active: false, read: 0 };
+  }
+  const scope = holder.current;
+  const current = useCallback(() => holder.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
+  useEffect(() => { scope.active = true; return () => { scope.active = false; ++scope.read; }; }, [scope]);
+  const [frame, setFrame] = useState<{ owner: typeof scope; rows: ReceivedMalo[]; loading: boolean } | null>(null);
+  const shown = frame?.owner === scope && current() ? frame : null;
+  const rows = shown?.rows ?? [];
   const refresh = useCallback(async () => {
-    if (!playerId || !isSupabaseConfigured) {
-      setRows([]);
-      setError(null);
-      setLoading(false);
+    if (!current()) return;
+    const read = ++scope.read;
+    const actor = userId ? offlineQueue.captureActor(userId) : null;
+    const accepted = () => current() && read === scope.read && (!userId || Boolean(actor?.isCurrent()));
+    if (!userId || !playerId || !isSupabaseConfigured) {
+      setFrame({ owner: scope, rows: [], loading: false });
       return;
     }
-    setLoading(true);
-    const received = await fetchReceivedMalo(playerId);
-    if (!received) {
-      // Missing SQL and a failed call both look like an empty ledger. The athlete sees $0, not a database message.
-      telemetry.trackIssue('received_malo_unavailable', 'profile');
-      setRows([]);
-      setError(null);
-      setLoading(false);
-      return;
+    if (!actor) return;
+    setFrame(previous => ({ owner: scope, rows: previous?.owner === scope ? previous.rows : [], loading: true }));
+    try {
+      const received = await fetchReceivedMalo(playerId);
+      if (!accepted()) return;
+      if (!received) telemetry.trackIssue('received_malo_unavailable', 'profile');
+      setFrame({ owner: scope, rows: received ?? [], loading: false });
+    } catch {
+      if (accepted()) {
+        telemetry.trackIssue('received_malo_unavailable', 'profile');
+        setFrame({ owner: scope, rows: [], loading: false });
+      }
     }
-    setError(null);
-    setRows(received);
-    setLoading(false);
-  }, [playerId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void refresh();
-    }, [refresh]),
-  );
-
+  }, [current, playerId, scope, userId]);
+  useFocusEffect(useCallback(() => { void refresh(); }, [refresh]));
   const totalCents = rows.reduce((sum, row) => sum + row.amount_cents, 0);
-  // Known only when every row carries the books' family share (the database has 20261013231000).
   const familyCents = rows.length > 0 && rows.every((row) => row.family_cents != null)
-    ? rows.reduce((sum, row) => sum + (row.family_cents ?? 0), 0)
-    : null;
-  return { rows, totalCents, familyCents, loading, error, refresh };
+    ? rows.reduce((sum, row) => sum + (row.family_cents ?? 0), 0) : null;
+  return { rows, totalCents, familyCents, loading: shown?.loading ?? Boolean(userId && playerId), error: null, refresh };
 }

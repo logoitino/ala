@@ -12,13 +12,22 @@ const mockPresent = jest.fn();
 const mockIntent = jest.fn();
 const mockReelTips = jest.fn();
 jest.mock('@/lib/reels', () => ({ addReelTips: (...args: unknown[]) => mockReelTips(...args), EMPTY_REEL_HYPE: {} }));
+let mockActorCurrent = true;
+const mockActor = { userId: 'fan', isCurrent: () => mockActorCurrent };
+const mockActorClient = { from: () => ({ insert: mockInsert }) };
+jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: { captureActor: () => mockActor } }));
+jest.mock('@/lib/offlineActor', () => ({
+  createOfflineActorClient: async () => mockActorClient,
+  assertCurrent: (actor: { isCurrent: () => boolean }) => { if (!actor.isCurrent()) throw new Error('Account changed'); },
+}));
 let mockTipsEnabled: unknown = false;
 let mockFeeDollars = 1;
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'fan' }, refreshProfile: jest.fn() }) }));
 jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: { buttons: { MONETIZATION_TIPS_ENABLED: mockTipsEnabled }, catalog: { maloFeeDollars: mockFeeDollars, exclusiveAura: 100 } } }) }));
 const mockCelebrateAura = jest.fn();
+const mockCelebrateGift = jest.fn();
 jest.mock('@/context/CelebrationContext', () => ({
-  useOptionalCelebration: () => ({ celebrateAura: mockCelebrateAura, celebrate: jest.fn() }),
+  useOptionalCelebration: () => ({ celebrateAura: mockCelebrateAura, celebrate: mockCelebrateGift }),
 }));
 jest.mock('@/lib/stripe', () => ({ useStripe: () => ({ initPaymentSheet: async () => ({}), presentPaymentSheet: mockPresent }) }));
 jest.mock('@/lib/payments', () => ({ createPaymentIntent: (...args: unknown[]) => mockIntent(...args), incrementBackerCount: (...args: unknown[]) => mockIncrement(...args) }));
@@ -32,7 +41,7 @@ const player = { id: 'athlete', name: 'Ana', backer_count: 1 } as Player;
 describe('checkout payment settlement', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTipsEnabled = false; mockFeeDollars = 1;
+    mockTipsEnabled = false; mockFeeDollars = 1; mockActorCurrent = true;
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     mockIntent.mockResolvedValue('secret');
     mockPresent.mockResolvedValue({});
@@ -40,6 +49,42 @@ describe('checkout payment settlement', () => {
     mockIncrement.mockResolvedValue(2);
   });
   afterEach(() => jest.restoreAllMocks());
+  it('never records, grants or celebrates into an incoming account after Stripe succeeds', async () => {
+    let complete!: (value: unknown) => void;
+    mockPresent.mockImplementation(() => new Promise((resolve) => { complete = resolve; }));
+    const onPaid = jest.fn(), onBacked = jest.fn();
+    const { result } = await renderHook(() => useTipCheckout());
+    let checkout!: Promise<void>;
+    await act(async () => { checkout = result.current.startCheckout({ player, tipAmount: 5, onPaid, onBacked }); });
+    mockActorCurrent = false;
+    await act(async () => { complete({}); await checkout; });
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockIncrement).not.toHaveBeenCalled();
+    expect(onPaid).not.toHaveBeenCalled();
+    expect(onBacked).not.toHaveBeenCalled();
+    expect(mockCelebrateAura).not.toHaveBeenCalled();
+    expect(Alert.alert).toHaveBeenCalledWith('Payment received — follow-up needed', expect.stringContaining('before paying again'));
+  });
+  it('refuses opening PaymentSheet if the initiating account changed while creating the intent', async () => {
+    mockIntent.mockImplementation(async () => { mockActorCurrent = false; return 'secret'; });
+    const { result } = await renderHook(() => useTipCheckout());
+    await act(async () => result.current.startCheckout({ player, tipAmount: 5 }));
+    expect(mockPresent).not.toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+  it('never announces gift success after a denied paid ledger record', async () => {
+    mockInsert.mockResolvedValue({ error: { code: '42501', message: 'denied' } });
+    const { result } = await renderHook(() => useTipCheckout());
+    await act(async () => result.current.startCheckout({ player, tipAmount: 5 }));
+    expect(mockCelebrateGift).not.toHaveBeenCalled();
+    expect(mockCelebrateAura).not.toHaveBeenCalled();
+  });
+  it('refuses a custom purchase success message when paid followup returned false', async () => {
+    const { result } = await renderHook(() => useTipCheckout());
+    await act(async () => result.current.startCheckout({ tipAmount: 5, skipBacker: true, successToast: 'Secured', onPaid: () => false }));
+    expect(mockCelebrateAura).not.toHaveBeenCalled();
+    expect(Alert.alert).toHaveBeenCalledWith('Payment received — follow-up needed', expect.stringContaining('before paying again'));
+  });
   it('signals payment before recording and reports a counter failure as already paid', async () => {
     const onPaid = jest.fn(), onBacked = jest.fn();
     mockInsert.mockImplementation(async () => { expect(onPaid).toHaveBeenCalledTimes(1); return { error: null }; });
@@ -81,7 +126,7 @@ describe('checkout payment settlement', () => {
     const onBacked = jest.fn();
     const { result } = await renderHook(() => useTipCheckout());
     await act(async () => result.current.startCheckout({ player, tipAmount: 5, coverFees: true, platformTipPercent: 10, onBacked }));
-    expect(mockIntent).toHaveBeenCalledWith(650, player.id, 50, { giftCents: 500, coverFees: true, platformTipPercent: 10 });
+    expect(mockIntent).toHaveBeenCalledWith(650, player.id, 50, { giftCents: 500, coverFees: true, platformTipPercent: 10 }, { actor: mockActor, client: mockActorClient });
     expect(mockInsert).toHaveBeenCalledTimes(1);
     expect(mockInsert.mock.calls[0][0]).toEqual(expect.objectContaining({
       amount_cents: 500, cover_fee_cents: 100, platform_tip_cents: 50,
@@ -94,7 +139,7 @@ describe('checkout payment settlement', () => {
     const onPaid = jest.fn();
     const { result } = await renderHook(() => useTipCheckout());
     await act(async () => result.current.startCheckout({ player, tipAmount: 5, skipBacker: true, onPaid }));
-    expect(mockIntent).toHaveBeenCalledWith(500, player.id, 0, undefined);
+    expect(mockIntent).toHaveBeenCalledWith(500, player.id, 0, undefined, { actor: mockActor, client: mockActorClient });
     expect(mockInsert).not.toHaveBeenCalled();
     expect(onPaid).toHaveBeenCalledTimes(1);
   });
@@ -131,7 +176,7 @@ describe('checkout payment settlement', () => {
     mockTipsEnabled = authority;
     const { result } = await renderHook(() => useTipCheckout());
     await act(async () => result.current.startCheckout({ player, tipAmount: 50 }));
-    expect(mockIntent).toHaveBeenCalledWith(5000, player.id, 0, { giftCents: 5000, coverFees: false, platformTipPercent: 0 });
+    expect(mockIntent).toHaveBeenCalledWith(5000, player.id, 0, { giftCents: 5000, coverFees: false, platformTipPercent: 0 }, { actor: mockActor, client: mockActorClient });
     expect(mockInsert.mock.calls[0][0]).toEqual(expect.objectContaining({ amount_cents: 5000, platform_tip_cents: 0, cover_fee_cents: 0 }));
   });
 
@@ -159,9 +204,9 @@ describe('checkout payment settlement', () => {
     const onTipped = jest.fn();
     const { result } = await renderHook(() => useTipCheckout());
     await act(async () => result.current.startCheckout({ player, tipAmount: 5, coverFees: true, platformTipPercent: 10, reelId: 'reel', onTipped }));
-    expect(mockIntent).toHaveBeenCalledWith(650, player.id, 50, { giftCents: 500, coverFees: true, platformTipPercent: 10 });
+    expect(mockIntent).toHaveBeenCalledWith(650, player.id, 50, { giftCents: 500, coverFees: true, platformTipPercent: 10 }, { actor: mockActor, client: mockActorClient });
     expect(onTipped).toHaveBeenCalledWith(500);
-    expect(mockReelTips).toHaveBeenCalledWith('reel', 500, {});
+    expect(mockReelTips).toHaveBeenCalledWith('reel', 500, {}, mockActorClient);
   });
 
   it('requires another review if the shown fee/total differs from current configuration', async () => {

@@ -1,6 +1,7 @@
+/** Paid order recording remains bound to the initiating account; rejected records stay follow-up failures. */
 /** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { BlurView } from 'expo-blur';
 import Animated, {
@@ -27,11 +28,10 @@ import {
   type DripItem,
   type DripSize,
 } from '@/data/shop';
-import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { recordDripOrder } from '@/lib/finance';
-import { resolveSessionUserId } from '@/lib/sessionToken';
+import { assertCurrent } from '@/lib/offlineActor';
 import { telemetry } from '@/services/TelemetryManager';
 import {
   FOCAL,
@@ -42,6 +42,7 @@ import {
   SPRING_CARD,
   SPRING_SHEET,
 } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const SHEET_OFF = 720;
 
@@ -65,7 +66,7 @@ type ProductSheetProps = {
  */
 export function ProductSheet({ item, onClose }: ProductSheetProps) {
   const frame = useSheetFrame();
-  const { user } = useAuth();
+  const { height: windowHeight } = useWindowDimensions();
   const { requireAuth } = useSoftWall();
   const { startCheckout, busy } = useTipCheckout();
   const [open, setOpen] = useState(false);
@@ -206,15 +207,15 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
           skipBacker: true,
           auraPoints: aura,
           successToast: `Drip secured ⚡ +${aura} Aura Points earned!`,
-          onPaid: async () => {
-            // Soft-Wall resume can close over a pre-login `user`; read the live session id.
-            const buyerId = await resolveSessionUserId(user?.id ?? null);
+          onPaid: async ({ actor, client }) => {
+            assertCurrent(actor);
             await recordDripOrder({
               productId: item.id,
               amountCents: totalCents,
               qty,
-              buyerId: buyerId ?? undefined,
-            });
+              buyerId: actor.userId,
+            }, client);
+            assertCurrent(actor);
             dismiss(true);
           },
         });
@@ -237,15 +238,15 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
         </Animated.View>
       </Pressable>
       <View pointerEvents="box-none" style={frame.dock}>
-      <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
-        <Pressable haptic="none" onPress={() => undefined}>
+      <Animated.View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }, sheetStyle]}>
+        <Pressable haptic="none" onPress={() => undefined} style={{ flexShrink: 1 }}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={() => dismiss()} />
           {display ? (
-            <Animated.View style={[styles.content, contentStyle]}>
+            <ScrollView style={{ flexGrow: 0, flexShrink: 1 }} keyboardShouldPersistTaps="handled"><Animated.View style={[styles.content, contentStyle]}>
               <View style={styles.iconWrap}>
                 <View pointerEvents="none" style={styles.iconGloss} />
-                <Ionicons name={ICONS[display.icon]} size={26} color={FOCAL.jadeInk} />
+                <Ionicons name={ICONS[display.icon]} size={18} color={FOCAL.jadeInk} />
               </View>
               <Text style={styles.kicker}>{sizeHint}</Text>
               <Text style={styles.title}>{display.name}</Text>
@@ -332,7 +333,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
               >
                 <Text style={styles.buyLabel}>{busy ? 'Opening checkout…' : buyLabel}</Text>
               </AnimatedButton>
-            </Animated.View>
+            </Animated.View></ScrollView>
           ) : null}
         </Pressable>
       </Animated.View>
@@ -391,8 +392,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconWrap: {
-    width: 52,
-    height: 52,
+    width: 36,
+    height: 36,
     borderRadius: 16,
     backgroundColor: FOCAL.mistGold,
     alignItems: 'center',
@@ -411,27 +412,27 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
-  blurb: {
+  blurb: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
+    ...TYPE.body,
+
   },
   sizeRow: {
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    minHeight: 40,
+    minHeight: 44,
   },
   sizeIndicator: {
     position: 'absolute',
@@ -447,7 +448,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   sizePill: {
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     alignItems: 'center',
@@ -463,8 +464,8 @@ const styles = StyleSheet.create({
   },
   sizeLabel: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   sizeLabelOn: {
     color: colors.onAccent,
@@ -480,13 +481,13 @@ const styles = StyleSheet.create({
   },
   qtyCaption: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   qtyStock: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
   qtyControls: {
     flexDirection: 'row',
@@ -494,8 +495,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   qtyBtn: {
-    width: 40,
-    height: 40,
+    minWidth: 44,
+    minHeight: 44,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.primary,
@@ -508,14 +509,14 @@ const styles = StyleSheet.create({
   },
   qtyGlyph: {
     color: colors.primary,
-    fontSize: 22,
-    fontWeight: '700',
-    lineHeight: 24,
+    ...TYPE.title,
+    ...figtree('700'),
+
   },
   qtyValue: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
     minWidth: 24,
     textAlign: 'center',
   },
@@ -535,13 +536,13 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     color: colors.text,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   summaryValue: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
     letterSpacing: -0.3,
   },
   auraRow: {
@@ -552,8 +553,8 @@ const styles = StyleSheet.create({
   },
   auraCopy: {
     color: colors.primary,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   buy: {
     minHeight: 48,
@@ -567,7 +568,7 @@ const styles = StyleSheet.create({
   },
   buyLabel: {
     color: colors.onAccent,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
 });

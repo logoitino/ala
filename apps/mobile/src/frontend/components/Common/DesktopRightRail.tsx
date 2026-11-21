@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Expo web right rail for WEB-DESKTOP-01: live matchups, Top Aura Boosters, Vault pointer,
  * booster / school entry, Drip peek — real data only; no invented athletes or counts.
  */
@@ -10,7 +10,7 @@ import { useLiveScores } from '@/hooks/useLiveScores';
 import { useAuraBoosters } from '@/hooks/useAuraBoosters';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { colors, space } from '@/constants/theme';
-import { FONT } from '@/theme/fonts';
+import { FONT, TYPE } from '@/theme/fonts';
 import type { Game } from '@/types/database';
 
 function scoreLine(game: Game): string {
@@ -68,7 +68,7 @@ export function DesktopRightRail() {
             accessibilityLabel={`${teamPair(game)}. ${scoreLine(game)}. Open game.`}
             style={styles.row}
           >
-            <Text style={styles.rowMain} numberOfLines={2}>
+            <Text style={styles.rowMain}>
               {teamPair(game)}
             </Text>
             <Text style={styles.rowMeta}>{scoreLine(game)}</Text>
@@ -95,7 +95,7 @@ export function DesktopRightRail() {
         ) : null}
         {topBoosters.map((b, i) => (
           <View key={b.id} style={styles.row}>
-            <Text style={styles.rowMain} numberOfLines={1}>
+            <Text style={styles.rowMain}>
               {i + 1}. {b.full_name}
             </Text>
             <Text style={styles.rowMeta}>{b.aura_points} pts</Text>
@@ -168,9 +168,9 @@ const styles = StyleSheet.create({
   },
   lede: {
     fontFamily: FONT.regular,
-    fontSize: 12,
+    ...TYPE.caption,
     color: colors.textMuted,
-    lineHeight: 16,
+
   },
   panel: {
     borderWidth: StyleSheet.hairlineWidth,
@@ -182,14 +182,14 @@ const styles = StyleSheet.create({
   },
   panelTitle: {
     fontFamily: FONT.bold,
-    fontSize: 14,
+    ...TYPE.body,
     color: colors.text,
   },
   muted: {
     fontFamily: FONT.regular,
-    fontSize: 12,
+    ...TYPE.caption,
     color: colors.textMuted,
-    lineHeight: 16,
+
   },
   row: {
     flexDirection: 'row',
@@ -197,17 +197,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: space.sm,
     paddingVertical: 6,
-    minHeight: 32,
+    minHeight: 44,
   },
   rowMain: {
     flex: 1,
     fontFamily: FONT.medium,
-    fontSize: 13,
+    ...TYPE.body,
     color: colors.text,
   },
   rowMeta: {
     fontFamily: FONT.semibold,
-    fontSize: 12,
+    ...TYPE.caption,
     color: colors.primary,
   },
   linkBtn: {
@@ -217,12 +217,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.primary,
-    minHeight: 32,
+    minHeight: 44,
     justifyContent: 'center',
   },
   linkText: {
     fontFamily: FONT.semibold,
-    fontSize: 13,
+    ...TYPE.body,
     color: colors.primary,
   },
   lockBtn: {
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   lockText: {
     fontFamily: FONT.semibold,
-    fontSize: 13,
+    ...TYPE.body,
     color: colors.surface,
   },
 });

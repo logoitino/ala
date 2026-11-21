@@ -1,3 +1,4 @@
+/** UX-13 existing SearchResultsOverlay.tsx presentation keeps all actions/notices while aligning readable type. */
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -17,6 +18,7 @@ import { colors, radii } from '@/constants/theme';
 import { useLocalSearch, useRecentLocalSearches } from '@/hooks/useLocalSearch';
 import type { LocalSearchHit, LocalSearchKind } from '@/types/database';
 import { SHEET_REDUCED_MS, SPRING_SHEET } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const KIND_PILLS: { id: LocalSearchKind; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -141,7 +143,7 @@ export function SearchResultsOverlay({
           <View style={styles.recentBlock}>
             <View style={styles.recentHead}>
               <Text style={styles.recentLabel}>Recent</Text>
-              <Pressable accessibilityLabel="Clear recent searches" onPress={() => void clearRecent()}>
+              <Pressable style={styles.clearHit} accessibilityLabel="Clear recent searches" onPress={() => void clearRecent()}>
                 <Text style={styles.recentClear}>Clear</Text>
               </Pressable>
             </View>
@@ -159,7 +161,7 @@ export function SearchResultsOverlay({
                   onPress={() => onApplyQuery(item)}
                   contentStyle={styles.recentChip}
                 >
-                  <Text style={styles.recentChipLabel} numberOfLines={1}>
+                  <Text style={styles.recentChipLabel}>
                     {item}
                   </Text>
                 </AnimatedButton>
@@ -201,11 +203,11 @@ export function SearchResultsOverlay({
                   </View>
                   <View style={styles.rowCopy}>
                     <Text style={styles.rowKind}>{kindLabel(hit.entity_type)}</Text>
-                    <Text style={styles.rowTitle} numberOfLines={1}>
+                    <Text style={styles.rowTitle}>
                       {hit.title}
                     </Text>
                     {hit.subtitle ? (
-                      <Text style={styles.rowSub} numberOfLines={1}>
+                      <Text style={styles.rowSub}>
                         {hit.subtitle}
                       </Text>
                     ) : null}
@@ -250,8 +252,8 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.7,
     textTransform: 'uppercase',
   },
@@ -265,22 +267,23 @@ const styles = StyleSheet.create({
   },
   recentLabel: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
+  clearHit: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
   recentClear: {
     color: colors.primary,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   recentRail: {
     gap: 8,
     paddingRight: 8,
   },
   recentChip: {
-    minHeight: 32,
+    minHeight: 44,
     paddingHorizontal: 12,
     borderRadius: 999,
     borderWidth: 1,
@@ -288,12 +291,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    maxWidth: 180,
+    maxWidth: '100%',
   },
   recentChipLabel: {
     color: colors.text,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   results: {
     flex: 1,
@@ -329,20 +332,20 @@ const styles = StyleSheet.create({
   },
   rowKind: {
     color: colors.primary,
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   rowTitle: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   rowSub: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
   empty: {
     paddingVertical: 28,
@@ -351,13 +354,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   emptyCopy: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     textAlign: 'center',
   },
 });

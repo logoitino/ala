@@ -1,6 +1,7 @@
 /**
  * Lovable-outline desktop Highlights center column (WEB-DESKTOP-01 Phase 4): scrollable cards,
  * sport / All pills, Cheer + Send a gift. Phone pager stays on native and narrow web.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -24,7 +25,7 @@ import { useUploadSheet } from '@/context/UploadSheetContext';
 import { whyThisClipLine, type FeedReasonCode, type HighlightClip } from '@/data/highlights';
 import type { ReelHype } from '@/lib/reels';
 import { userProfileHref } from '@/lib/navigation';
-import { FONT } from '@/theme/fonts';
+import { FONT, TYPE } from '@/theme/fonts';
 import type { Player } from '@/types/database';
 
 export type DesktopFeedItem = {
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontFamily: FONT.display,
-    fontSize: 32,
+    ...TYPE.display,
     color: colors.text,
   },
   pills: {
@@ -273,7 +274,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pill: {
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: 14,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
   },
   pillText: {
     fontFamily: FONT.medium,
-    fontSize: 13,
+    ...TYPE.body,
     color: colors.text,
   },
   pillTextOn: {

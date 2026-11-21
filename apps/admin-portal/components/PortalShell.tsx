@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable controls preserve all consent, money and operator actions.
  * Shell for every page of the read-only Next admin portal: a dark left sidebar (2026-11-04 design refresh from the
  * Lovable reference, replacing the 2026-10-12 top tabs by owner request) with the brand, the six sections, the
  * Product desks nested under Product (Overview, Control map, Features, Profile, Sign-in, People), the Analytics
@@ -109,8 +109,8 @@ function navClass(on: boolean) {
 /** Product desks sit indented under Product; the active desk says aria-current="page". */
 function subClass(on: boolean) {
   return on
-    ? 'flex min-h-10 items-center rounded-lg pl-10 pr-3 text-sm font-extrabold text-[var(--sidebar-accent)]'
-    : 'flex min-h-10 items-center rounded-lg pl-10 pr-3 text-sm font-semibold text-[var(--sidebar-ink-muted)] hover:text-white';
+    ? 'flex min-h-11 items-center rounded-lg pl-10 pr-3 text-sm font-extrabold text-[var(--sidebar-accent)]'
+    : 'flex min-h-11 items-center rounded-lg pl-10 pr-3 text-sm font-semibold text-[var(--sidebar-ink-muted)] hover:text-white';
 }
 
 const UTILITY_LINKS: { href: PortalHref; label: string; icon: string }[] = [
@@ -143,19 +143,19 @@ export function PortalShell({ children, active, heading, presentation = 'report'
     <div className="min-h-screen bg-[var(--canvas)] text-[var(--ink)] lg:flex">
       <a
         href="#portal-main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-xl focus:bg-[var(--surface)] focus:px-4 focus:py-2 focus:text-sm focus:font-extrabold focus:text-[var(--jade)] focus:shadow-lg"
+        className="sr-only min-h-11 focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-xl focus:bg-[var(--surface)] focus:px-4 focus:py-2 focus:text-sm focus:font-extrabold focus:text-[var(--jade)] focus:shadow-lg"
       >
         Skip to content
       </a>
       <aside className="bg-[var(--sidebar-bg)] text-[var(--sidebar-ink)] lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:overflow-y-auto">
         <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-5 lg:pt-6 lg:pb-5">
-          <Link href="/" className="flex min-h-10 items-center gap-2.5 rounded-xl pr-2">
+          <Link href="/" className="flex min-h-11 items-center gap-2.5 rounded-xl pr-2">
             {/* Tapua'i app icon (static file in public/brand); decorative, the wordmark names the app. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/tapuai-app-icon.png" alt="" width={36} height={36} className="size-9 rounded-xl shadow-[0_0_18px_rgba(46,229,157,0.35)]" />
             <span className="leading-tight">
               <span className="block font-[family-name:var(--font-bricolage)] text-lg tracking-tight text-white">Tapua&apos;i</span>
-              <span className="block text-[11px] font-bold tracking-[0.12em] text-[var(--sidebar-ink-muted)] uppercase">Admin · read only</span>
+              <span className="block text-[12px] font-bold tracking-[0.12em] text-[var(--sidebar-ink-muted)] uppercase">Admin · read only</span>
             </span>
           </Link>
           <div className="lg:hidden">
@@ -206,7 +206,7 @@ export function PortalShell({ children, active, heading, presentation = 'report'
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className={`flex min-h-10 items-center rounded-lg px-3 text-sm ${link.href === active ? 'bg-[var(--sidebar-active)] font-extrabold text-[var(--sidebar-accent)]' : 'font-semibold text-[var(--sidebar-ink)]'}`}
+                    className={`flex min-h-11 items-center rounded-lg px-3 text-sm ${link.href === active ? 'bg-[var(--sidebar-active)] font-extrabold text-[var(--sidebar-accent)]' : 'font-semibold text-[var(--sidebar-ink)]'}`}
                     aria-current={link.href === active ? 'page' : undefined}
                   >
                     {link.label}
@@ -222,7 +222,7 @@ export function PortalShell({ children, active, heading, presentation = 'report'
       </aside>
       <main id="portal-main" tabIndex={-1} className={`mx-auto w-full min-w-0 flex-1 px-4 pt-6 pb-16 outline-none sm:px-6 sm:pt-8 ${report ? 'portal-report max-w-[1440px] lg:px-10 lg:pt-10' : 'max-w-7xl'}`}>
         {heading !== undefined ? heading : <div className="portal-page-heading mb-8">
-          <p className="text-[11px] font-extrabold tracking-[0.18em] text-[var(--jade)] uppercase">
+          <p className="text-[12px] font-extrabold tracking-[0.18em] text-[var(--jade)] uppercase">
             {productOpen && active !== '/product' ? 'Product' : "Tapua'i admin"}
           </p>
           <h1 className="mt-2 text-3xl leading-tight font-black tracking-tight sm:text-4xl">{TITLES[active]}</h1>
@@ -257,7 +257,7 @@ export function StatCard({
     <div
       className="portal-stat min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]"
     >
-      <p className="text-[11px] font-extrabold tracking-wide text-[var(--text-muted)] uppercase">{label}</p>
+      <p className="text-[12px] font-extrabold tracking-wide text-[var(--text-muted)] uppercase">{label}</p>
       <p className={`mt-2 text-3xl font-black tracking-tight tabular-nums ${accent}`}>{value}</p>
       <p className="mt-1 text-sm leading-5 text-[var(--ink-soft)]">{hint}</p>
     </div>
@@ -291,7 +291,7 @@ export function Panel({
         {/* min-w-0 + break-words: a long heading wraps inside a grid track instead of widening it. */}
         <div className="min-w-0 max-w-full">
           {kicker ? (
-            <p className="text-[11px] font-extrabold tracking-[0.16em] break-words text-[var(--gold)] uppercase">{kicker}</p>
+            <p className="text-[12px] font-extrabold tracking-[0.16em] break-words text-[var(--gold)] uppercase">{kicker}</p>
           ) : null}
           <Heading className="mt-1 text-xl font-extrabold tracking-tight break-words">{title}</Heading>
         </div>

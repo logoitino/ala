@@ -1,6 +1,7 @@
 /**
  * School and team lookup over `schools_and_teams`: autocomplete for the athlete claim, and the school row shown
- * on the trading card. Also saves the athlete claim (team + sport; number, position, class optional).
+ * on the trading card. Saves actor-bound athlete claims and account-keyed local onboarding; configured saves
+ * publish the cache only after the profile write succeeds, preserving earlier valid drafts on denial (UX-13).
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,6 +17,7 @@ import {
 import { orIlike } from '@/lib/postgrestFilter';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { claimAthlete } from '@/lib/verification';
+import { assertCurrent, createOfflineActorClient, OfflineActorChangedError, type OfflineActor } from '@/lib/offlineActor';
 
 export type AthleteOnboarding = {
   team: SchoolTeam;
@@ -120,10 +122,20 @@ export async function fetchSchoolTeam(schoolId: string | null | undefined): Prom
 export async function saveAthleteOnboardingRemote(
   userId: string | null | undefined,
   onboard: AthleteOnboarding,
+  actor?: OfflineActor,
 ): Promise<void> {
-  await AsyncStorage.setItem(ATHLETE_ONBOARDING_KEY, JSON.stringify(onboard));
-  if (!userId || !isSupabaseConfigured) return;
-  await supabase
+  if (actor) {
+    assertCurrent(actor);
+    if (actor.userId !== userId) throw new OfflineActorChangedError();
+  }
+  const client = actor && isSupabaseConfigured ? await createOfflineActorClient(actor) : supabase;
+  if (actor) assertCurrent(actor);
+  if (!userId || !isSupabaseConfigured) {
+    await AsyncStorage.setItem(onboardingKey(userId), JSON.stringify(onboard));
+    if (actor) assertCurrent(actor);
+    return;
+  }
+  const { error: updateError } = await client
     .from('profiles')
     .update({
       school_id: onboard.team.id,
@@ -134,35 +146,45 @@ export async function saveAthleteOnboardingRemote(
       athlete_class_year: onboard.classYear || null,
     })
     .eq('user_id', userId);
+  if (actor) assertCurrent(actor);
+  if (updateError) throw updateError;
+  await AsyncStorage.setItem(onboardingKey(userId), JSON.stringify(onboard));
+  if (actor) assertCurrent(actor);
 
   // The roster link (`profiles.player_id`) is made only when the school confirms. Here we just
   // open the claim with the best name match so the athletic director sees who the student says
   // they are. `claim_athlete` also flags a second account claiming the same athlete.
-  const { data: profileRow } = await supabase
+  const { data: profileRow } = await client
     .from('profiles')
     .select('full_name')
     .eq('user_id', userId)
     .maybeSingle();
+  if (actor) assertCurrent(actor);
   const fullName = typeof profileRow?.full_name === 'string' ? profileRow.full_name.trim() : '';
   let matchId: string | null = null;
   if (fullName) {
-    const { data: match } = await supabase
+    const { data: match } = await client
       .from('players')
       .select('id')
       .ilike('name', fullName)
       .limit(1)
       .maybeSingle();
+    if (actor) assertCurrent(actor);
     matchId = typeof match?.id === 'string' ? match.id : null;
   }
-  await claimAthlete(matchId);
+  await claimAthlete(matchId, undefined, client);
 }
 
+const onboardingKey = (userId?: string | null) => userId ? `${ATHLETE_ONBOARDING_KEY}.${userId}` : ATHLETE_ONBOARDING_KEY;
+
 /**
- * @purpose Restore last onboarding payload when Profile hydrates without a joined team.
+ * @purpose Restore this account's local onboarding payload when Profile hydrates without a joined team.
+ * @sideEffects AsyncStorage read of the owner-keyed draft; ownerless legacy drafts remain guest-only.
  */
-export async function readAthleteOnboarding(): Promise<AthleteOnboarding | null> {
+export async function readAthleteOnboarding(userId?: string | null): Promise<AthleteOnboarding | null> {
   try {
-    const raw = await AsyncStorage.getItem(ATHLETE_ONBOARDING_KEY);
+    // Legacy drafts have no provable owner. Only the guest fallback may read that key.
+    const raw = await AsyncStorage.getItem(onboardingKey(userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as AthleteOnboarding;
     if (!parsed?.team?.id || !parsed.sport) return null;

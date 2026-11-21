@@ -3,6 +3,8 @@
  * account's current state. Since the verification ladder (2026-09-29) none of these can mark anyone verified:
  * they request, and the school's athletic director or coach confirms in person. Server rules live in the migration
  * `20260929120000_athlete_verification_ladder.sql`.
+ * Auth onboarding can supply its originating client to `claimAthlete`, keeping the final claim under the same
+ * account as the preceding profile save (UX-13).
  * @sideEffects Calls the `claim_athlete`, `start_school_check` and `get_my_verification` RPCs.
  */
 
@@ -119,9 +121,9 @@ export async function requestAthleteVerification(notes?: string): Promise<Redeem
  * @returns false when the RPC is not deployed yet (onboarding must not fail on a stale schema).
  * @sideEffects `claim_athlete` RPC.
  */
-export async function claimAthlete(playerId: string | null, notes?: string): Promise<boolean> {
+export async function claimAthlete(playerId: string | null, notes?: string, client = supabase): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
-  const { error } = await supabase.rpc('claim_athlete', {
+  const { error } = await client.rpc('claim_athlete', {
     target_player_id: playerId,
     request_notes: notes?.trim() || null,
   });

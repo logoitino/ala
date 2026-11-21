@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable controls preserve all consent, money and operator actions.
  * One side of the operator scoreboard: team, animated score and the sport's score-step buttons
  * (split out of app/operator/[gameId].tsx for R4-03; behaviour unchanged). Steps come from the game's
  * sport playbook (`/admin/sports`); the screen owns the `update_game_score` call behind `onBump`.
@@ -13,6 +13,7 @@ import { colors, radii } from '@/constants/theme';
 import { displayValue } from '@/data/players';
 import type { SportScoreAction } from '@/data/sports';
 import { SPRING_BOUNCE } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** @purpose One side of the scoreboard. `steps` are the sport's score buttons from `/admin/sports`. */
 export function ScoreColumn({
@@ -109,20 +110,20 @@ const styles = StyleSheet.create({
   },
   scoreTeamLabel: {
     color: colors.primary,
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1,
   },
   scoreTeam: {
     color: colors.text,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     textAlign: 'center',
   },
   score: {
     color: colors.primary,
     fontSize: 40,
-    fontWeight: '800',
+    ...figtree('800'),
     letterSpacing: -1,
   },
   stepCol: {
@@ -144,13 +145,13 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     color: colors.onAccent,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   stepHint: {
     color: colors.onAccent,
-    fontSize: 9,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     opacity: 0.8,
   },
   disabled: {

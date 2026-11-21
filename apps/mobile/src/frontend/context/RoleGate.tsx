@@ -1,5 +1,6 @@
+/** Role authorization preserves same-owner refresh/Studio state and discards HQ children on account lifetime changes. */
 import { Redirect, type Href } from 'expo-router';
-import { type ReactNode } from 'react';
+import { Fragment, type ReactNode, useRef } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useAuth } from '@/context/AuthContext';
@@ -18,9 +19,14 @@ type RoleGateProps = {
  * @sideEffects Expo Router `Redirect` to `ROLE_HOME[role]`.
  */
 export function RoleGate({ allow, children }: RoleGateProps) {
-  const { role, roles, loading } = useAuth();
+  const { role, roles, loading, user, isSessionCurrent } = useAuth();
+  const owner = user?.id ?? null;
+  const lifetime = useRef({ owner, guard: isSessionCurrent, generation: 0 });
+  if (lifetime.current.owner !== owner || lifetime.current.guard !== isSessionCurrent) {
+    lifetime.current = { owner, guard: isSessionCurrent, generation: lifetime.current.generation + 1 };
+  }
 
-  if (loading) {
+  if (loading || (isSessionCurrent && !isSessionCurrent())) {
     return (
       <View style={styles.boot}>
         <ActivityIndicator size="large" color={colors.deepGreen} />
@@ -32,7 +38,7 @@ export function RoleGate({ allow, children }: RoleGateProps) {
     return <Redirect href={ROLE_HOME[role] as Href} />;
   }
 
-  return children;
+  return <Fragment key={lifetime.current.generation}>{children}</Fragment>;
 }
 
 const styles = StyleSheet.create({

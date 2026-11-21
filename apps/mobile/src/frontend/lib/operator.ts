@@ -16,6 +16,7 @@ import {
   playerBelongsToSchool,
   type Player,
 } from '@/data/players';
+import { assertCurrent, isOfflineActorChanged, type OfflineActor, type OfflineActorClient } from '@/lib/offlineActor';
 import { realtimeEq } from '@/lib/postgrestFilter';
 import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
 import type { Game } from '@/types/database';
@@ -27,19 +28,25 @@ export const OPERATOR_LIVE_STATUSES = ['active', 'LIVE', 'IN_PROGRESS'] as const
 const CONFIG_ERROR =
   'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart Expo.';
 
-export async function fetchOperatorGames(): Promise<{ games: Game[]; error: string | null }> {
+/** Schema compatibility retries never downgrade an access or freeze refusal. */
+function missingColumn(error: { code?: string; message: string } | null, column: string): boolean {
+  return Boolean(error && ['PGRST204', '42703'].includes(error.code ?? '') && error.message.toLowerCase().includes(column.toLowerCase()));
+}
+
+export async function fetchOperatorGames(client: OfflineActorClient = supabase): Promise<{ games: Game[]; error: string | null }> {
   if (!isSupabaseConfigured) {
     console.error('[operator] Supabase is not configured; cannot load games.');
     return { games: [], error: CONFIG_ERROR };
   }
 
-  const live = await supabase
+  const live = await client
     .from('games')
     .select('*')
     .in('status', [...OPERATOR_LIVE_STATUSES])
     .order('updated_at', { ascending: false });
 
   if (live.error) {
+    if (!missingColumn(live.error, 'status')) return { games: [], error: live.error.message };
     console.error('[operator] Live-status games query failed', live.error);
   } else if ((live.data?.length ?? 0) > 0) {
     return { games: live.data as Game[], error: null };
@@ -49,13 +56,13 @@ export async function fetchOperatorGames(): Promise<{ games: Game[]; error: stri
     );
   }
 
-  const newestFirst = await supabase
+  const newestFirst = await client
     .from('games')
     .select('*')
     .order('created_at', { ascending: false });
 
-  const all = newestFirst.error
-    ? await supabase.from('games').select('*').order('updated_at', { ascending: false })
+  const all = missingColumn(newestFirst.error, 'created_at')
+    ? await client.from('games').select('*').order('updated_at', { ascending: false })
     : newestFirst;
 
   if (newestFirst.error) {
@@ -87,15 +94,17 @@ export async function fetchOperatorGames(): Promise<{ games: Game[]; error: stri
 export async function saveOperatorCheckIn(
   latitude: number,
   longitude: number,
+  client: OfflineActorClient = supabase,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   if (!isSupabaseConfigured) return { ok: false, message: 'The operator database is not configured.' };
   try {
     // About 1 km is all anyone reads, so exact GPS never leaves the phone; the database rounds again anyway.
     const coarse = (value: number) => Math.round(value * 100) / 100;
-    const { error } = await supabase.from('operator_checkins').insert({ latitude: coarse(latitude), longitude: coarse(longitude) });
+    const { error } = await client.from('operator_checkins').insert({ latitude: coarse(latitude), longitude: coarse(longitude) });
     if (error) return { ok: false, message: error.message || 'Could not save this field check-in.' };
     return { ok: true };
-  } catch {
+  } catch (error) {
+    if (client !== supabase && isOfflineActorChanged(error)) throw error;
     return { ok: false, message: 'Could not save this field check-in.' };
   }
 }
@@ -198,9 +207,11 @@ function unwrapBroadcastBody(raw: unknown, depth = 0): Record<string, unknown> |
 export async function sendGameEventBroadcast(
   gameId: string,
   payload: GameEventBroadcastPayload,
+  client: OfflineActorClient = supabase,
+  actor?: OfflineActor,
 ): Promise<void> {
   if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
-  const channel = supabase.channel(gameEventsChannelName(gameId), {
+  const channel = client.channel(gameEventsChannelName(gameId), {
     config: { broadcast: { ack: true }, private: true },
   });
   try {
@@ -213,13 +224,14 @@ export async function sendGameEventBroadcast(
         }
       });
     });
+    if (actor) assertCurrent(actor);
     await channel.send({
       type: 'broadcast',
       event: GAME_EVENTS_BROADCAST_EVENT,
       payload,
     });
   } finally {
-    void supabase.removeChannel(channel);
+    void client.removeChannel(channel);
   }
 }
 
@@ -233,16 +245,19 @@ export function isOperatorPin(value: string): boolean {
   return value === OPERATOR_TEST_PIN;
 }
 
-export async function claimOperatorGame(gameId: string, profileId?: string | null): Promise<void> {
-  await AsyncStorage.setItem(claimKey(gameId), '1');
-  if (!isSupabaseConfigured || !profileId) return;
-  const { error } = await supabase
-    .from('games')
-    .update({ claimed_by: profileId, updated_at: new Date().toISOString() })
-    .eq('id', gameId);
-  if (error) {
-    console.warn('[operator] claimed_by update skipped', error.message);
+export async function claimOperatorGame(gameId: string, profileId?: string | null, client: OfflineActorClient = supabase, actor?: OfflineActor): Promise<void> {
+  if (actor) assertCurrent(actor);
+  if (isSupabaseConfigured) {
+    if (!profileId) throw new Error('Your operator profile is not ready. Try again.');
+    const { data, error } = await client.from('games')
+      .update({ claimed_by: profileId, updated_at: new Date().toISOString() }).eq('id', gameId).select('id').single();
+    if (actor) assertCurrent(actor);
+    if (error) throw new Error(error.message);
+    if (data?.id !== gameId) throw new Error('Could not confirm the game claim. Try again.');
   }
+  if (actor) assertCurrent(actor);
+  // This keeps the documented local testing PIN policy. It is not a hosted authorization grant.
+  await AsyncStorage.setItem(claimKey(gameId), '1');
 }
 
 export async function hasOperatorClaim(gameId: string): Promise<boolean> {
@@ -267,10 +282,10 @@ export function rosterForScoringSide(
   return matched.length > 0 ? matched : players;
 }
 
-export async function updateOperatorQuarter(gameId: string, quarter: string): Promise<Game> {
+export async function updateOperatorQuarter(gameId: string, quarter: string, client: OfflineActorClient = supabase): Promise<Game> {
   if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('games')
     .update({ quarter, updated_at: new Date().toISOString() })
     .eq('id', gameId)
@@ -288,7 +303,7 @@ export async function updateOperatorScore(args: {
   game: Game;
   side: 'home' | 'away';
   points: number;
-}): Promise<{ game: Game; newScore: number; field: 'home_score' | 'away_score' }> {
+}, client: OfflineActorClient = supabase): Promise<{ game: Game; newScore: number; field: 'home_score' | 'away_score' }> {
   if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
 
   const field = args.side === 'home' ? 'home_score' : 'away_score';
@@ -299,16 +314,16 @@ export async function updateOperatorScore(args: {
       ? { home_score: newScore, updated_at: new Date().toISOString() }
       : { away_score: newScore, updated_at: new Date().toISOString() };
 
-  let { data, error } = await supabase
+  let { data, error } = await client
     .from('games')
     .update(patch)
     .eq('id', args.game.id)
     .select('*')
     .single();
 
-  if (error?.message?.toLowerCase().includes('updated_at')) {
+  if (missingColumn(error, 'updated_at')) {
     const retryPatch = field === 'home_score' ? { home_score: newScore } : { away_score: newScore };
-    const retry = await supabase.from('games').update(retryPatch).eq('id', args.game.id).select('*').single();
+    const retry = await client.from('games').update(retryPatch).eq('id', args.game.id).select('*').single();
     data = retry.data;
     error = retry.error;
   }
@@ -355,12 +370,12 @@ export async function updateGameScore(args: {
   awayDelta?: number;
   clockRunning?: boolean | null;
   clock?: string | null;
-}): Promise<Game> {
+}, client: OfflineActorClient = supabase): Promise<Game> {
   if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
 
   const homeDelta = args.homeDelta ?? 0;
   const awayDelta = args.awayDelta ?? 0;
-  const rpc = await supabase.rpc('update_game_score', {
+  const rpc = await client.rpc('update_game_score', {
     target_game_id: args.game.id,
     home_delta: homeDelta,
     away_delta: awayDelta,
@@ -372,16 +387,19 @@ export async function updateGameScore(args: {
     return applyScorePatch(args.game, rpc.data as Record<string, unknown>);
   }
 
+  if (rpc.error && !['PGRST202', '42883'].includes(rpc.error.code)) throw new Error(rpc.error.message);
+  if (!rpc.error) throw new Error('Could not confirm the saved game score.');
+
   if (homeDelta !== 0 || awayDelta !== 0) {
     const side = homeDelta !== 0 ? 'home' : 'away';
     const points = homeDelta !== 0 ? homeDelta : awayDelta;
-    const scored = await updateOperatorScore({ game: args.game, side, points });
+    const scored = await updateOperatorScore({ game: args.game, side, points }, client);
     let next = scored.game;
     if (args.clockRunning != null || args.clock) {
       next = await persistOperatorClock(next, {
         running: args.clockRunning,
         clock: args.clock,
-      });
+      }, client);
     }
     return next;
   }
@@ -389,7 +407,7 @@ export async function updateGameScore(args: {
   return persistOperatorClock(args.game, {
     running: args.clockRunning,
     clock: args.clock,
-  });
+  }, client);
 }
 
 /**
@@ -399,6 +417,7 @@ export async function updateGameScore(args: {
 export async function persistOperatorClock(
   game: Game,
   patch: { running?: boolean | null; clock?: string | null },
+  client: OfflineActorClient = supabase,
 ): Promise<Game> {
   if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
   const body: { updated_at: string; clock?: string; is_clock_running?: boolean } = {
@@ -407,10 +426,10 @@ export async function persistOperatorClock(
   if (typeof patch.clock === 'string') body.clock = patch.clock;
   if (typeof patch.running === 'boolean') body.is_clock_running = patch.running;
 
-  let { data, error } = await supabase.from('games').update(body).eq('id', game.id).select('*').single();
-  if (error?.message?.toLowerCase().includes('is_clock_running')) {
+  let { data, error } = await client.from('games').update(body).eq('id', game.id).select('*').single();
+  if (missingColumn(error, 'is_clock_running')) {
     const retryBody = { updated_at: body.updated_at, clock: body.clock };
-    const retry = await supabase.from('games').update(retryBody).eq('id', game.id).select('*').single();
+    const retry = await client.from('games').update(retryBody).eq('id', game.id).select('*').single();
     data = retry.data;
     error = retry.error;
   }
@@ -426,7 +445,7 @@ export async function insertOperatorCallout(args: {
   gameId: string;
   callout: OperatorCallout;
   teamName: string;
-}): Promise<string | null> {
+}, client: OfflineActorClient = supabase): Promise<string | null> {
   if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
   const description = `${args.callout.emoji} ${args.callout.label} · ${args.teamName}`;
   const withGame = {
@@ -435,13 +454,13 @@ export async function insertOperatorCallout(args: {
     event_type: args.callout.eventType,
     description,
   };
-  const first = await supabase.from('game_events').insert(withGame).select('id').single();
+  const first = await client.from('game_events').insert(withGame).select('id').single();
   if (!first.error) return (first.data as { id: string } | null)?.id ?? null;
 
-  const missingGameId = /game_id/i.test(first.error.message);
+  const missingGameId = missingColumn(first.error, 'game_id');
   if (!missingGameId) throw new Error(first.error.message);
 
-  const retry = await supabase
+  const retry = await client
     .from('game_events')
     .insert({
       player_id: null,
@@ -459,7 +478,7 @@ export async function insertOperatorEvent(args: {
   player: Player;
   action: OperatorAction;
   teamName: string;
-}): Promise<string | null> {
+}, client: OfflineActorClient = supabase): Promise<string | null> {
   if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
 
   const payload = {
@@ -469,7 +488,7 @@ export async function insertOperatorEvent(args: {
     description: `${displayValue(args.teamName)} ${args.action.label} · #${displayValue(args.player.jersey_number)} ${displayValue(args.player.name)}`,
   };
 
-  const { data, error } = await supabase.from('game_events').insert(payload).select('id').single();
+  const { data, error } = await client.from('game_events').insert(payload).select('id').single();
   if (error) {
     throw new Error(error.message);
   }
@@ -485,8 +504,8 @@ export async function insertOperatorEvent(args: {
  * @returns Players, or an empty list plus the database message when the read fails.
  * @sideEffects Reads `players`.
  */
-export async function fetchOperatorPlayers(): Promise<{ players: Player[]; error: string | null }> {
-  const { data, error } = await supabase.from('players').select('*');
+export async function fetchOperatorPlayers(client: OfflineActorClient = supabase): Promise<{ players: Player[]; error: string | null }> {
+  const { data, error } = await client.from('players').select('*');
   if (error) return { players: [], error: error.message };
   return { players: (data as Player[] | null) ?? [], error: null };
 }
@@ -497,8 +516,8 @@ export async function fetchOperatorPlayers(): Promise<{ players: Player[]; error
  * @returns The game, or null plus a message ("Game not found." when the row is missing).
  * @sideEffects Reads `games`.
  */
-export async function fetchOperatorGame(gameId: string): Promise<{ game: Game | null; error: string | null }> {
-  const { data, error } = await supabase.from('games').select('*').eq('id', gameId).single();
+export async function fetchOperatorGame(gameId: string, client: OfflineActorClient = supabase): Promise<{ game: Game | null; error: string | null }> {
+  const { data, error } = await client.from('games').select('*').eq('id', gameId).single();
   if (error || !data) return { game: null, error: error?.message ?? 'Game not found.' };
   return { game: data as Game, error: null };
 }
@@ -508,8 +527,8 @@ export async function fetchOperatorGame(gameId: string): Promise<{ game: Game | 
  * @returns Games, or an empty list plus the database message when the read fails.
  * @sideEffects Reads `games`.
  */
-export async function fetchScorerGames(): Promise<{ games: Game[]; error: string | null }> {
-  const { data, error } = await supabase
+export async function fetchScorerGames(client: OfflineActorClient = supabase): Promise<{ games: Game[]; error: string | null }> {
+  const { data, error } = await client
     .from('games')
     .select('*')
     .eq('is_active', true)
@@ -526,8 +545,8 @@ export async function fetchScorerGames(): Promise<{ games: Game[]; error: string
  * @returns Null on success, otherwise the database message for the screen.
  * @sideEffects INSERT `game_events`.
  */
-export async function insertScorerPlayEvent(eventType: string, player: Player, gameId?: string): Promise<string | null> {
-  const { error } = await supabase.from('game_events').insert(buildPlayEventPayload(eventType, player, gameId));
+export async function insertScorerPlayEvent(eventType: string, player: Player, gameId?: string, client: OfflineActorClient = supabase): Promise<string | null> {
+  const { error } = await client.from('game_events').insert(buildPlayEventPayload(eventType, player, gameId));
   return error ? error.message : null;
 }
 
@@ -538,8 +557,8 @@ export async function insertScorerPlayEvent(eventType: string, player: Player, g
  * @returns Null on success, otherwise the database message for the screen.
  * @sideEffects UPDATE `games`.
  */
-export async function patchScorerGame(gameId: string, patch: Partial<Game>): Promise<string | null> {
-  const { error } = await supabase
+export async function patchScorerGame(gameId: string, patch: Partial<Game>, client: OfflineActorClient = supabase): Promise<string | null> {
+  const { error } = await client
     .from('games')
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq('id', gameId);
@@ -621,21 +640,21 @@ export type GameEventsBroadcaster = {
 
 /**
  * @purpose Keep the callout channel joined while the scorekeeper is open, so a callout goes out at once instead of
- *   paying for a fresh join each time (`sendGameEventBroadcast` is the slower fallback).
+ *   joining the same private admission namespace as fan receivers and paying for a fresh join each time (`sendGameEventBroadcast` is the slower fallback).
  * @param gameId Active `games.id`.
  * @returns A sender and a close function; null when the database is not configured.
  * @sideEffects Realtime Broadcast channel `game_events_${gameId}`.
  */
-export function openGameEventsBroadcaster(gameId: string): GameEventsBroadcaster | null {
+export function openGameEventsBroadcaster(gameId: string, client: OfflineActorClient = supabase, actor?: OfflineActor): GameEventsBroadcaster | null {
   if (!isSupabaseConfigured) return null;
-  const channel = supabase.channel(gameEventsChannelName(gameId), {
-    config: { broadcast: { ack: true } },
+  const channel = client.channel(gameEventsChannelName(gameId), {
+    config: { broadcast: { ack: true }, private: true },
   });
   channel.subscribe();
   return {
-    send: (payload) => channel.send({ type: 'broadcast', event: GAME_EVENTS_BROADCAST_EVENT, payload }),
+    send: (payload) => { if (actor) assertCurrent(actor); return channel.send({ type: 'broadcast', event: GAME_EVENTS_BROADCAST_EVENT, payload }); },
     close: () => {
-      supabase.removeChannel(channel);
+      client.removeChannel(channel);
     },
   };
 }

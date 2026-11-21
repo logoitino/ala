@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * First fan visit introduces the gift mission on the Lovable welcome layout (2026-11 standard): a slowly
  * drifting wall of highlight photos behind a night gradient, the brand mark, one big headline and two
  * actions (Watch highlights, Sign in). Admin routes keep their own entry flow and leave the fan welcome
@@ -20,7 +20,7 @@ import { useOptionalSoftWall } from '@/context/SoftWallContext';
 import { DONATION_MISSION, TAGLINE_HEADLINE, TAGLINE_LINE } from '@/data/malo';
 import { useReduceMotion } from '@/hooks/useReduceMotion';
 import { ONBOARDING_SEEN_KEY } from '@/lib/auth';
-import { DISPLAY_TEXT, figtree } from '@/theme/fonts';
+import { DISPLAY_TEXT, figtree, TYPE } from '@/theme/fonts';
 
 /** Decorative wall tiles; sport labels only, never a person's name. */
 const TILES: { sport: string; image: ImageSourcePropType }[] = [
@@ -181,13 +181,13 @@ const styles = StyleSheet.create({
   },
   column: { flex: 1, gap: TILE_GAP },
   tile: { height: TILE_HEIGHT, borderRadius: 20, overflow: 'hidden', backgroundColor: '#1A2124' },
-  tileLabel: { ...figtree('700'), position: 'absolute', left: 10, bottom: 8, fontSize: 12, color: colors.onVideo },
+  tileLabel: { ...figtree('700'), position: 'absolute', left: 10, bottom: 8, ...TYPE.caption, color: colors.onVideo },
   content: { flex: 1, justifyContent: 'flex-end', paddingHorizontal: 24, gap: 16 },
-  title: { ...DISPLAY_TEXT, fontSize: 40, lineHeight: 42, color: colors.onVideo, letterSpacing: -1 },
+  title: { ...DISPLAY_TEXT, ...TYPE.display,  color: colors.onVideo, letterSpacing: -1 },
   tagline: { gap: 2 },
-  taglineHeadline: { ...figtree('800'), fontSize: 15, color: colors.glow },
-  taglineLine: { ...figtree('500'), fontSize: 14, lineHeight: 20, color: colors.onVideoMuted },
-  mission: { ...figtree('500'), fontSize: 13, lineHeight: 19, color: colors.onVideoMuted },
+  taglineHeadline: { ...figtree('800'), ...TYPE.body, color: colors.glow },
+  taglineLine: { ...figtree('500'), ...TYPE.body,  color: colors.onVideoMuted },
+  mission: { ...figtree('500'), ...TYPE.body,  color: colors.onVideoMuted },
   actions: { gap: 12 },
-  foot: { ...figtree('500'), fontSize: 14, lineHeight: 20, color: colors.onVideoMuted, textAlign: 'center' },
+  foot: { ...figtree('500'), ...TYPE.body,  color: colors.onVideoMuted, textAlign: 'center' },
 });

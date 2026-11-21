@@ -1,4 +1,4 @@
-/** Role screens read and write through lib clients. The route files no longer call Supabase. */
+/** Role clients keep read/write boundaries and require a returned own-profile row before reporting a saved name. */
 import { updateOwnDisplayName } from '@/lib/auth';
 import { setParentPlayerConsent } from '@/lib/custodial';
 import { fetchRecentTips } from '@/lib/finance';
@@ -22,7 +22,7 @@ function chain(result: unknown) {
   const query: Record<string, unknown> = {
     then: (resolve: (value: unknown) => unknown) => Promise.resolve(result).then(resolve),
   };
-  for (const method of ['select', 'eq', 'order', 'limit', 'maybeSingle', 'update']) {
+  for (const method of ['select', 'eq', 'order', 'limit', 'maybeSingle', 'single', 'update']) {
     query[method] = jest.fn(() => query);
   }
   return query;
@@ -36,7 +36,7 @@ beforeEach(() => {
 it('saves a display name and returns the database message', async () => {
   mockFrom.mockReturnValue(chain({ error: { message: 'denied' } }));
   await expect(updateOwnDisplayName('user-1', 'Sione')).resolves.toBe('denied');
-  mockFrom.mockReturnValue(chain({ error: null }));
+  mockFrom.mockReturnValue(chain({ data: { user_id: 'user-1', full_name: 'Sione' }, error: null }));
   await expect(updateOwnDisplayName('user-1', 'Sione')).resolves.toBeNull();
   await expect(updateOwnDisplayName('user-1', '   ')).resolves.toBe('Sign in to save your name to Profile.');
 });

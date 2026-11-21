@@ -1,20 +1,21 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Settings → Highlights: personal feed toggle + edit picks (FEED-01).
  * Off = newest-first Home with no rankHomeFeed bonuses. Guests never open this sheet.
  * @sideEffects Saves `user_feed_prefs` through `useFeedPrefs`.
  */
 import { useState } from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Switch, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, Modal, StyleSheet, Switch, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 
 import { FeedPicksSheet } from '@/components/Reels/FeedPicksSheet';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { colors } from '@/constants/theme';
 import type { UserFeedPrefs } from '@/data/highlights';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type HighlightsFeedSettingsSheetProps = {
   visible: boolean;
@@ -42,7 +43,8 @@ export function HighlightsFeedSettingsSheet({
   onSave,
   onTogglePersonalization,
 }: HighlightsFeedSettingsSheetProps) {
-  const insets = useSafeAreaInsets();
+  const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const [picksOpen, setPicksOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
 
@@ -51,11 +53,12 @@ export function HighlightsFeedSettingsSheet({
   return (
     <>
       <Modal transparent animationType="fade" visible={visible && !picksOpen} onRequestClose={onClose}>
-        <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <View style={[styles.root, { paddingBottom: 0 }]}>
           <Pressable haptic="none" style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
-          <View style={styles.sheet}>
+          <View style={frame.dock}><View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }]}>
             <MenuBackdrop accent="jade" />
             <SheetHandle onDismiss={onClose} />
+            <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent}>
             <Text style={styles.kicker}>Settings</Text>
             <Text style={styles.title}>Highlights</Text>
             <Text style={styles.body}>
@@ -90,10 +93,11 @@ export function HighlightsFeedSettingsSheet({
               <Text style={styles.editLabel}>Edit sports, schools & lean</Text>
             </AnimatedButton>
             {error ? <Text style={styles.error}>{error}</Text> : null}
+            </ScrollView>
             <AnimatedButton accessibilityLabel="Done" haptic="selection" onPress={onClose} style={styles.done}>
               <Text style={styles.doneLabel}>Done</Text>
             </AnimatedButton>
-          </View>
+          </View></View>
         </View>
       </Modal>
       <FeedPicksSheet
@@ -116,10 +120,12 @@ export function HighlightsFeedSettingsSheet({
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flexGrow: 0, flexShrink: 1, minHeight: 0, alignSelf: 'stretch' },
+  bodyContent: { gap: 10, paddingBottom: 4 },
   root: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(8,16,28,0.45)' },
   backdrop: { ...StyleSheet.absoluteFill },
   sheet: {
-    marginHorizontal: 10,
+
     borderRadius: 24,
     overflow: 'hidden',
     backgroundColor: colors.surface,
@@ -127,17 +133,17 @@ const styles = StyleSheet.create({
   },
   kicker: {
     marginTop: 4,
-    marginHorizontal: 20,
-    color: FOCAL.neonJade,
-    fontSize: 12,
-    fontWeight: '700',
+
+    color: FOCAL.jadeInk,
+    ...TYPE.caption,
+    ...figtree('700'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
-  title: { marginHorizontal: 20, marginTop: 4, color: colors.text, fontSize: 22, fontWeight: '800' },
-  body: { marginHorizontal: 20, marginTop: 6, marginBottom: 12, color: colors.textMuted, fontSize: 14, lineHeight: 20 },
+  title: { marginTop: 4, color: colors.text, ...TYPE.title, ...figtree('800') },
+  body: { ...figtree('400'), marginTop: 6, marginBottom: 12, color: colors.textMuted, ...TYPE.body,  },
   row: {
-    marginHorizontal: 20,
+
     minHeight: 56,
     flexDirection: 'row',
     alignItems: 'center',
@@ -145,10 +151,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   rowCopy: { flex: 1, gap: 2 },
-  rowTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
-  rowHint: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
+  rowTitle: { color: colors.text, ...TYPE.body, ...figtree('700') },
+  rowHint: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
   edit: {
-    marginHorizontal: 20,
+
     marginTop: 8,
     minHeight: 48,
     borderRadius: 14,
@@ -157,10 +163,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  editLabel: { color: colors.text, fontWeight: '700', fontSize: 15 },
-  error: { marginHorizontal: 20, marginTop: 8, color: '#c0392b', fontSize: 13 },
+  editLabel: { color: colors.text, ...figtree('700'), ...TYPE.body },
+  error: { ...figtree('400'), marginTop: 8, color: '#c0392b', ...TYPE.body },
   done: {
-    marginHorizontal: 20,
+
     marginTop: 12,
     minHeight: 48,
     borderRadius: 14,
@@ -168,5 +174,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  doneLabel: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  doneLabel: { color: FOCAL.ink, ...figtree('800'), ...TYPE.body },
 });

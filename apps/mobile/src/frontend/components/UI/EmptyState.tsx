@@ -1,4 +1,4 @@
-/** Readable recovery cards preserve truthful copy and fan/admin action boundaries; compact fan cards retain full text and targets. */
+/** UX-13 readable shared type preserves every action and required notice. Readable recovery cards preserve truthful copy and fan/admin action boundaries; compact fan cards retain full text and targets. */
 import { type Href, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useViewerSport } from '@/hooks/useViewerSport';
 import type { AdminNavHref } from '@/lib/admin';
 import { FOCAL, TAB_ACCENTS } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type EmptyStateProps = {
   kicker?: string;
@@ -91,8 +92,8 @@ export function EmptyState({
 
 const styles = StyleSheet.create({
   compactCard: { padding: 12, gap: 8, borderRadius: 16 },
-  compactTitle: { fontSize: 16 },
-  compactLede: { fontSize: 13, lineHeight: 19 },
+  compactTitle: { ...figtree('400'), ...TYPE.body },
+  compactLede: { ...figtree('400'), ...TYPE.body,  },
   card: {
     alignSelf: 'stretch',
     backgroundColor: FOCAL.mistGold,
@@ -106,23 +107,23 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     textAlign: 'left',
     letterSpacing: -0.2,
   },
   lede: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
     textAlign: 'left',
     maxWidth: 420,
   },
@@ -137,8 +138,8 @@ const styles = StyleSheet.create({
   },
   primaryLabel: {
     color: colors.onAccent,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   admin: {
     minHeight: MENU_METRICS.touchTarget,
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
   },
   adminLabel: {
     color: FOCAL.goldInk,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
 });

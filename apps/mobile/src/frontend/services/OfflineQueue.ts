@@ -9,13 +9,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
 import { AppState, type NativeEventSubscription } from 'react-native';
 
-import { parseReportReason } from '@/data/contentRights';
-import { addUserAura } from '@/lib/aura';
-import { DOUBLE_TAP_AURA_POINTS } from '@/data/highlights';
-import { isReelUuid, reportReelRemote } from '@/lib/reels';
-import { castCheerVote } from '@/lib/cheerPoll';
-import { sendReelHype, withdrawReelHype } from '@/lib/reelVotes';
-import { removeReelBookmark, saveReelBookmark } from '@/lib/savedReels';
+import { dispatchOfflineAction } from '@/lib/offlineActions';
+import { isOfflineActorChanged, OfflineActorChangedError, type OfflineActor } from '@/lib/offlineActor';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import type { PlayReactionId } from '@/data/players';
 
@@ -70,6 +65,8 @@ export type OfflineActionPayload =
 export type OfflineQueuedAction = OfflineActionPayload & {
   id: string;
   created_at: string;
+  /** Originating Auth user, distinct from an Aura award target. Legacy unattributed rows are held. */
+  actorUserId?: string;
 };
 
 function nowIso(): string {
@@ -78,6 +75,14 @@ function nowIso(): string {
 
 function newId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/** Preserve plain SDK error objects as well as thrown Error/string failures. */
+function errorMessage(error: unknown): string {
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return String(error);
 }
 
 /**
@@ -89,55 +94,6 @@ export function shouldQueueOffline(error?: { message?: string } | null, connecte
   if (connected === false) return true;
   const message = error?.message ?? '';
   return /failed to fetch|network request failed|network error|offline|internet|timeout/i.test(message);
-}
-
-async function persistBookmark(action: OfflineBookmarkAction): Promise<void> {
-  if (!isSupabaseConfigured || !isReelUuid(action.reelId)) return;
-  const { error } = action.saved
-    ? await saveReelBookmark(action.userId, action.reelId)
-    : await removeReelBookmark(action.userId, action.reelId);
-  if (error) throw error;
-}
-
-async function persistCheerVote(action: OfflineCheerAction): Promise<void> {
-  if (!isSupabaseConfigured) return;
-  const { error } = await castCheerVote({ slug: action.slug, side: action.side, previousSide: action.previousSide, homeName: action.homeName, awayName: action.awayName });
-  if (error) throw error;
-}
-
-async function persistHypeClear(action: OfflineHypeClearAction): Promise<void> {
-  if (!isReelUuid(action.reelId) || !isSupabaseConfigured) return;
-  const { error } = await withdrawReelHype(action.reelId, action.kind);
-  if (error) throw error;
-}
-
-async function persistAura(action: OfflineAuraAction): Promise<void> {
-  if (!isReelUuid(action.reelId) || !isSupabaseConfigured) return;
-  const { error } = await sendReelHype(action.reelId, action.kind);
-  if (error) throw error;
-  if (action.grantAura && action.userId) {
-    await addUserAura(action.userId, action.auraPoints ?? DOUBLE_TAP_AURA_POINTS);
-  }
-}
-
-async function dispatch(action: OfflineQueuedAction): Promise<void> {
-  if (action.type === 'aura_hype') {
-    await persistAura(action);
-    return;
-  }
-  if (action.type === 'hype_clear') {
-    await persistHypeClear(action);
-    return;
-  }
-  if (action.type === 'cheer_vote') {
-    await persistCheerVote(action);
-    return;
-  }
-  if (action.type === 'bookmark') {
-    await persistBookmark(action);
-    return;
-  }
-  await reportReelRemote(action.reelId, parseReportReason(action.reason));
 }
 
 /**
@@ -152,6 +108,13 @@ export class OfflineQueue {
   private netUnsub: (() => void) | null = null;
   private appSub: NativeEventSubscription | { remove: () => void } | null = null;
   private loaded = false;
+  private inFlight: { action: OfflineQueuedAction; settled: Promise<void> } | null = null;
+  private hydration: Promise<void> | null = null;
+  private writes: Promise<void> = Promise.resolve();
+  private actorUserId: string | null = null;
+  private actorReady = false;
+  private actorGeneration = 0;
+  private requestedReplay = false;
 
   private constructor() {
     void this.hydrate();
@@ -172,6 +135,7 @@ export class OfflineQueue {
 
   /** @purpose Release the network and app-state listeners (tests and hot reload); queued actions stay saved. */
   dispose(): void {
+    this.suspendActor();
     this.netUnsub?.();
     this.netUnsub = null;
     this.appSub?.remove();
@@ -191,6 +155,35 @@ export class OfflineQueue {
     return this.connected;
   }
 
+  /** @purpose Install Auth's resolved owner before async profile work; same-user token refresh retains queued intent. */
+  setActor(userId: string | null): void {
+    const changed = !this.actorReady || this.actorUserId !== userId;
+    if (changed) ++this.actorGeneration;
+    if (changed && this.flushing) this.requestedReplay = true;
+    this.actorReady = true;
+    this.actorUserId = userId;
+    // Start outside the Auth callback so the SDK can finish publishing its matching token.
+    void Promise.resolve().then(() => this.flush()).catch(() => undefined);
+  }
+
+  /** @purpose Invalidate pending UI closures/replay on Auth provider cleanup; stored intent stays owned. */
+  suspendActor(): void {
+    ++this.actorGeneration;
+    this.actorReady = false;
+    this.actorUserId = null;
+  }
+
+  /** @purpose Capture a signed-in account lifetime synchronously before a network/storage await; null never adopts a later login. */
+  captureActor(expectedUserId?: string | null): OfflineActor | null {
+    const userId = this.actorUserId;
+    if (!this.actorReady || !userId || (expectedUserId !== undefined && expectedUserId !== userId)) return null;
+    const generation = this.actorGeneration;
+    return {
+      userId,
+      isCurrent: () => this.actorReady && this.actorUserId === userId && this.actorGeneration === generation,
+    };
+  }
+
   async isOnline(): Promise<boolean> {
     try {
       const state = await NetInfo.fetch();
@@ -201,7 +194,13 @@ export class OfflineQueue {
     }
   }
 
-  private async hydrate() {
+  private hydrate(): Promise<void> {
+    // A single storage read prevents late startup reads overwriting actions added by another caller.
+    this.hydration ??= this.readStoredItems();
+    return this.hydration;
+  }
+
+  private async readStoredItems() {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -221,52 +220,69 @@ export class OfflineQueue {
   }
 
   private async persist() {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(this.items));
+    const snapshot = JSON.stringify(this.items);
+    // Preserve invocation order even if the native storage bridge resolves writes out of order.
+    const write = this.writes.catch(() => undefined).then(() => AsyncStorage.setItem(STORAGE_KEY, snapshot));
+    this.writes = write;
+    await write;
   }
 
   /**
    * @purpose Drop a Seki / Aura / Flex that has not reached the server yet, so an undo does not replay the tap.
-   * @returns True when a queued hype tap was removed.
+   * @returns True when local cancellation or a durable actor-owned compensating clear owns the undo.
    * @sideEffects AsyncStorage `tapuai.offlineQueue`.
    */
-  async dropPendingHype(reelId: string, kind: PlayReactionId): Promise<boolean> {
+  async dropPendingHype(reelId: string, kind: PlayReactionId, actor: OfflineActor | null): Promise<boolean> {
     if (!this.loaded) await this.hydrate();
+    if (!actor?.isCurrent()) return false;
+    const issued = this.inFlight?.action;
+    const settlement = issued?.type === 'aura_hype' && issued.actorUserId === actor.userId && issued.reelId === reelId && issued.kind === kind
+      ? this.inFlight?.settled : null;
+    if (settlement) {
+      // Persist compensation while this actor is authorized, before waiting or switching accounts.
+      this.requestedReplay = true;
+      await this.enqueue({ type: 'hype_clear', reelId, kind }, actor);
+      await settlement.catch(() => undefined);
+      return true;
+    }
     const before = this.items.length;
     this.items = this.items.filter(
-      (row) => !(row.type === 'aura_hype' && row.reelId === reelId && row.kind === kind),
+      (row) => !(row.actorUserId === actor.userId && row.type === 'aura_hype' && row.reelId === reelId && row.kind === kind),
     );
-    if (this.items.length === before) return false;
-    await this.persist();
-    return true;
+    const removed = this.items.length !== before;
+    if (removed) await this.persist();
+    return removed;
   }
 
   /**
    * @purpose Append an optimistic mutation for later RPC replay. Replaces an existing cheer/bookmark/report for the same target.
    */
-  async enqueue(payload: OfflineActionPayload): Promise<void> {
+  async enqueue(payload: OfflineActionPayload, actor: OfflineActor | null): Promise<void> {
     if (!this.loaded) await this.hydrate();
-    const next: OfflineQueuedAction = { ...payload, id: newId(), created_at: nowIso() };
+    if (!actor?.isCurrent()) return;
+    const next: OfflineQueuedAction = { ...payload, id: newId(), created_at: nowIso(), actorUserId: actor.userId };
+    const otherOwner = (row: OfflineQueuedAction) => row.actorUserId !== actor.userId;
     if (payload.type === 'aura_hype') {
       this.items = this.items.filter(
-        (row) => !(row.type === 'hype_clear' && row.reelId === payload.reelId && row.kind === payload.kind),
+        (row) => otherOwner(row) || !(row.type === 'hype_clear' && row.reelId === payload.reelId && row.kind === payload.kind),
       );
     } else if (payload.type === 'hype_clear') {
       this.items = this.items.filter(
         (row) =>
-          !(
+          otherOwner(row) || !(
             (row.type === 'aura_hype' || row.type === 'hype_clear') &&
             row.reelId === payload.reelId &&
             row.kind === payload.kind
           ),
       );
     } else if (payload.type === 'cheer_vote') {
-      this.items = this.items.filter((row) => !(row.type === 'cheer_vote' && row.slug === payload.slug));
+      this.items = this.items.filter((row) => otherOwner(row) || !(row.type === 'cheer_vote' && row.slug === payload.slug));
     } else if (payload.type === 'bookmark') {
       this.items = this.items.filter(
-        (row) => !(row.type === 'bookmark' && row.reelId === payload.reelId && row.userId === payload.userId),
+        (row) => otherOwner(row) || !(row.type === 'bookmark' && row.reelId === payload.reelId && row.userId === payload.userId),
       );
     } else if (payload.type === 'report_reel') {
-      this.items = this.items.filter((row) => !(row.type === 'report_reel' && row.reelId === payload.reelId));
+      this.items = this.items.filter((row) => otherOwner(row) || !(row.type === 'report_reel' && row.reelId === payload.reelId));
     }
     this.items.push(next);
     await this.persist();
@@ -275,19 +291,21 @@ export class OfflineQueue {
   /**
    * @purpose Run `task` when online; otherwise persist `payload`. Network failures also enqueue.
    */
-  async runOrEnqueue(payload: OfflineActionPayload, task: () => Promise<void>): Promise<'ran' | 'queued'> {
+  async runOrEnqueue(payload: OfflineActionPayload, task: () => Promise<void>, actor: OfflineActor): Promise<'ran' | 'queued'> {
     const online = await this.isOnline();
+    if (!actor.isCurrent()) throw new OfflineActorChangedError();
     if (!online) {
-      await this.enqueue(payload);
+      await this.enqueue(payload, actor);
       return 'queued';
     }
     try {
       await task();
       return 'ran';
     } catch (caught) {
-      const message = caught instanceof Error ? caught.message : String(caught);
+      const message = errorMessage(caught);
+      if (isOfflineActorChanged(caught) || !actor.isCurrent()) throw new OfflineActorChangedError();
       if (shouldQueueOffline({ message }, this.connected)) {
-        await this.enqueue(payload);
+        await this.enqueue(payload, actor);
         return 'queued';
       }
       throw caught;
@@ -299,7 +317,13 @@ export class OfflineQueue {
    */
   async snapshot(): Promise<OfflineQueuedAction[]> {
     if (!this.loaded) await this.hydrate();
-    return [...this.items];
+    return this.actorReady && this.actorUserId ? this.items.filter((row) => row.actorUserId === this.actorUserId) : [];
+  }
+
+  /** @purpose Count retained other-account/legacy rows for QA without exposing their targets or identities. */
+  async getHeldCount(): Promise<number> {
+    if (!this.loaded) await this.hydrate();
+    return this.items.filter((row) => !this.actorReady || !this.actorUserId || row.actorUserId !== this.actorUserId).length;
   }
 
   /**
@@ -311,32 +335,45 @@ export class OfflineQueue {
     await this.persist();
   }
 
+  /** @purpose Replay one pending batch without losing newer actions or resurrecting cancelled ones. */
   async flush(): Promise<void> {
     if (this.flushing) return;
     if (!this.loaded) await this.hydrate();
+    // Multiple startup triggers may have shared the same pending hydration read.
+    if (this.flushing) return;
     if (this.connected === false || this.items.length === 0) return;
     if (!isSupabaseConfigured) return;
+    const actor = this.captureActor();
+    if (!actor) return;
 
     this.flushing = true;
     try {
-      const pending = [...this.items];
-      const leftover: OfflineQueuedAction[] = [];
+      const pending = this.items.filter((row) => row.actorUserId === actor.userId);
       for (const action of pending) {
+        if (!actor.isCurrent()) break;
+        // Undo, replacement and Studio reset remain authoritative while another request is in flight.
+        if (!this.items.some((row) => row.id === action.id)) continue;
         try {
-          await dispatch(action);
+          const settled = dispatchOfflineAction(action, actor);
+          this.inFlight = { action, settled };
+          await settled;
         } catch (caught) {
-          const message = caught instanceof Error ? caught.message : String(caught);
-          if (shouldQueueOffline({ message }, this.connected)) {
-            leftover.push(action);
-            leftover.push(...pending.slice(pending.indexOf(action) + 1));
-            break;
-          }
+          const message = errorMessage(caught);
+          if (isOfflineActorChanged(caught) || !actor.isCurrent() || shouldQueueOffline({ message }, this.connected)) break;
+        } finally {
+          this.inFlight = null;
         }
+        // Remove only this completed/refused request; concurrent additions keep their own IDs.
+        this.items = this.items.filter((row) => row.id !== action.id);
       }
-      this.items = leftover;
       await this.persist();
     } finally {
       this.flushing = false;
+      // Coalesce genuine actor transitions and issued-undo compensation, never loop ordinary retries/additions.
+      if (this.requestedReplay) {
+        this.requestedReplay = false;
+        await this.flush();
+      }
     }
   }
 }

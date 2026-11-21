@@ -5,6 +5,7 @@
  * The five sample questions are copied from the reviewed banks (`supabase/content/trivia_starter_bank.json` and
  * `life_playbook_bank.json`) so the page needs no data access.
  * @sideEffects One local 250 ms ticker while a demo question is open (cleared on leave/unmount); sound via QuizFx.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
@@ -20,6 +21,7 @@ import { QuizButton } from './QuizButton';
 import { LevelUpCelebration, QuizFxProvider, QuizSoundToggle } from './QuizFx';
 import { SportQuizRound, SportQuizRoundSummary } from './SportQuizRound';
 import { LifePlaybookHome } from './LifePlaybookHome';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** @purpose The preview exists in local and test builds only; a store build (`EXPO_PUBLIC_APP_ENV=production`) never shows it. */
 export function triviaPreviewAvailable(): boolean {
@@ -142,9 +144,9 @@ export function TriviaPreview() {
         <View style={{ flex: 1, width: '100%', maxWidth: 430, alignSelf: 'center', backgroundColor: inRound ? '#F3E8FF' : '#F6F1FF' }}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 10, gap: 6, paddingBottom: 16 }}>
             <View accessibilityRole="alert" style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: radii.md, borderWidth: 2, borderColor: FOCAL.goldInk, backgroundColor: FOCAL.electricGold }}>
-                <Text style={{ fontWeight: '800', color: FOCAL.ink, fontSize: 13 }}>Demo only: nothing is saved.</Text>
+                <Text style={{ ...figtree('800'), color: FOCAL.ink, ...TYPE.body }}>Demo only: nothing is saved.</Text>
             </View>
-            <Text accessibilityRole="header" style={{ fontSize: 22, fontWeight: '900', color: FOCAL.violetInk }}>Trivia preview</Text>
+            <Text accessibilityRole="header" style={{ ...TYPE.title, ...figtree('900'), color: FOCAL.violetInk }}>Trivia preview</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
                 <QuizButton label="Play a demo round" onPress={() => ask(1, IDLE)}/>
                 <QuizButton label="Show right answer" quiet onPress={() => showEntry(1, 2)}/>
@@ -155,7 +157,7 @@ export function TriviaPreview() {
                 <QuizButton label="Life Playbook cards" quiet onPress={() => go({ ...IDLE, kind: 'life' })}/>
                 <QuizSoundToggle/>
             </ScrollView>
-            {scene.kind === 'idle' ? <Text>Pick a button to see a moment, or play a five-question demo round with a real 30-second clock.</Text> : null}
+            {scene.kind === 'idle' ? <Text style={{ ...figtree('400'), ...TYPE.body }}>Pick a button to see a moment, or play a five-question demo round with a real 30-second clock.</Text> : null}
             <View key={sceneKey} style={{ gap: 8 }}>
                 <SportQuizRound round={round} busy={false}/>
                 {inRound ? <QuizButton label="End round" quiet onPress={() => round.leave('user_end')}/> : null}

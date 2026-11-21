@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable controls preserve all consent, money and operator actions.
  * Card wrapper for every chart in the admin portal chart kit. Renders the figure, the title,
  * a visible one-sentence summary, the plot, and a "Data" disclosure holding every plotted value
  * and the source key. The source always sits inside that disclosure (named "Source" when there
@@ -92,7 +92,7 @@ export function ChartFrame({ title, caption, source, summary, table, headline, e
 function SourceText({ source }: { source: string }) {
   const parts = source.split(/(?<=[.,·{[])/);
   return (
-    <p className="mt-2 min-w-0 font-mono text-[11px] leading-5 break-words text-[var(--text-muted)]">
+    <p className="mt-2 min-w-0 font-mono text-[12px] leading-5 break-words text-[var(--text-muted)]">
       <span className="font-sans font-bold">Source: </span>
       {parts.map((part, index) => (
         <Fragment key={index}>
@@ -108,7 +108,7 @@ function DataTable({ title, table, rows, source }: { title: string; table: Chart
   const label = rows > 0 ? 'Data' : 'Source';
   return (
     <details className="chart-disclosure group w-full min-w-0">
-      <summary className="inline-flex min-h-6 cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-extrabold text-[var(--ink-soft)] select-none hover:bg-[var(--surface-muted)]">
+      <summary className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-extrabold text-[var(--ink-soft)] select-none hover:bg-[var(--surface-muted)]">
         <svg aria-hidden="true" focusable="false" viewBox="0 0 12 12" className="chart-disclosure-icon size-3">
           <path d="M4.5 2.5 8 6l-3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

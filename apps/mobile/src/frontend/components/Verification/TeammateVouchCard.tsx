@@ -1,3 +1,4 @@
+/** UX-13 TeammateVouchCard.tsx preserves existing actions with readable spacing/type. */
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
@@ -5,6 +6,7 @@ import { useFocusEffect } from 'expo-router';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { fetchTeammatesToVouch, vouchForTeammate, type TeammateToVouch } from '@/lib/payoutGate';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose "Teammates waiting" on Activity: a confirmed athlete (school badge, or payouts unlocked) vouches
@@ -114,15 +116,15 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
-  body: {
+  body: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
+    ...TYPE.body,
+
   },
   row: {
     flexDirection: 'row',
@@ -135,12 +137,12 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
-  detail: {
+  detail: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 12,
+    ...TYPE.caption,
   },
   button: {
     borderRadius: radii.pill,
@@ -150,19 +152,19 @@ const styles = StyleSheet.create({
   },
   buttonLabel: {
     color: colors.onAccent,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   done: {
     color: colors.deepGreen,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   dim: {
     opacity: 0.5,
   },
-  error: {
+  error: { ...figtree('400'),
     color: colors.danger,
-    fontSize: 13,
+    ...TYPE.body,
   },
 });

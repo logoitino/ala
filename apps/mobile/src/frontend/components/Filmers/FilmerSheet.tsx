@@ -1,6 +1,8 @@
-/** Filmer appreciation menu uses fan-sheet geometry; props stay nonfinancial and server-owned. */
+/** Filmer appreciation menu uses fan-sheet geometry; props stay nonfinancial and server-owned.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { useEffect, useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, View , useWindowDimensions, ScrollView} from 'react-native';
 
 import { SheetRise } from '@/components/UI/SheetRise';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
@@ -14,6 +16,7 @@ import { useSoftWall } from '@/context/SoftWallContext';
 import { useFilmerStats } from '@/hooks/useFilmerStats';
 import { FILMER_AURA_RULES, giveFilmerProps } from '@/lib/filmers';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type FilmerSheetProps = {
   visible: boolean;
@@ -32,6 +35,7 @@ type FilmerSheetProps = {
  */
 export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, reelId }: FilmerSheetProps) {
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const { user } = useAuth();
   const { requireAuth } = useSoftWall();
   const { stats, refresh } = useFilmerStats(visible ? filmerProfileId : null);
@@ -67,9 +71,10 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
       <View style={styles.root}>
         <Pressable haptic="none" style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         <View style={frame.dock}>
-        <SheetRise active={visible} style={[styles.sheet, frame.card]}>
+        <SheetRise active={visible} style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={onClose} />
+          <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>🎥 Filmed by {filmerName}</Text>
           <Text style={styles.lede}>
             Fans who film help athletes get seen. Gifts always go to the athlete in the clip.
@@ -95,7 +100,8 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
               </Text>
             ))}
           </View>
-        </SheetRise>
+        </ScrollView>
+          </SheetRise>
         </View>
       </View>
     </Modal>
@@ -103,6 +109,8 @@ export function FilmerSheet({ visible, onClose, filmerName, filmerProfileId, ree
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flexGrow: 0, flexShrink: 1, alignSelf: 'stretch' },
+  bodyContent: { gap: 10, paddingBottom: 4 },
   root: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -116,13 +124,13 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
-  lede: {
+  lede: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
+    ...TYPE.body,
+
   },
   props: {
     minHeight: 44,
@@ -139,15 +147,15 @@ const styles = StyleSheet.create({
   },
   propsLabel: {
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   propsLabelSent: {
     color: FOCAL.jadeInk,
   },
-  message: {
+  message: { ...figtree('400'),
     color: colors.text,
-    fontSize: 13,
+    ...TYPE.body,
     textAlign: 'center',
   },
   rules: {
@@ -156,13 +164,13 @@ const styles = StyleSheet.create({
   },
   rulesTitle: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  rule: {
+  rule: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 12,
+    ...TYPE.caption,
   },
 });

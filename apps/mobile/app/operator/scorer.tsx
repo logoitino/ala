@@ -23,12 +23,28 @@ import {
   patchScorerGame,
   subscribeScorerGames,
 } from '@/lib/operator';
+import { useAuth } from '@/context/AuthContext';
+import { offlineQueue } from '@/services/OfflineQueue';
+import { assertCurrent, createOfflineActorClient, OfflineActorChangedError, type OfflineActor, type OfflineActorClient } from '@/lib/offlineActor';
 import { isSupabaseConfigured } from '@/lib/supabase';
 
 const CONFIG_ERROR =
   'Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart Expo.';
 
 export default function ScorerScreen() {
+  const { user, isSessionCurrent } = useAuth();
+  const holder = useRef({ owner: user?.id, guard: isSessionCurrent, active: true, read: 0 });
+  if (holder.current.owner !== user?.id || holder.current.guard !== isSessionCurrent) holder.current = { owner: user?.id, guard: isSessionCurrent, active: true, read: 0 };
+  const scope = holder.current;
+  const current = useCallback(() => holder.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
+  const capture = (): OfflineActor => {
+    const actor = offlineQueue.captureActor(user?.id);
+    if (!actor || !current()) throw new OfflineActorChangedError();
+    return { userId: actor.userId, isCurrent: () => current() && actor.isCurrent() };
+  };
+  const clientFor = async (actor: OfflineActor) => { assertCurrent(actor); const client = await createOfflineActorClient(actor); assertCurrent(actor); return client; };
+  const writeFlight = useRef<object | null>(null);
+  const [dataScope, setDataScope] = useState<typeof scope | null>(null);
   const { configFor } = useSportConfigs();
   const [games, setGames] = useState<Game[]>([]);
   const [selectedGameId, setSelectedGameId] = useState('');
@@ -45,115 +61,68 @@ export default function ScorerScreen() {
   const selectedGame = games.find((game) => game.id === selectedGameId) ?? games[0] ?? null;
   const playbook = configFor(selectedGame?.sport);
 
+  useEffect(() => {
+    scope.active = true;
+    writeFlight.current = null;
+    setSending(false); setSendError(null); setShowSentBanner(false);
+    setGames([]); setPlayers([]); setSelectedGameId(''); setSelectedPlayerId('');
+    return () => { scope.active = false; ++scope.read; if (bannerTimer.current) clearTimeout(bannerTimer.current); };
+  }, [scope]);
+
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    const request = ++scope.read;
+    setLoading(true); setError(null);
+    try {
+      if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
+      const actor = capture(); const client = await clientFor(actor);
+      const [gamesResult, playersResult] = await Promise.all([fetchScorerGames(client), fetchOperatorPlayers(client)]);
+      assertCurrent(actor);
+      if (request !== scope.read) return;
+      if (gamesResult.error || playersResult.error) throw new Error(gamesResult.error ?? playersResult.error ?? 'Could not load scorer tools.');
+      setGames(gamesResult.games); setPlayers(playersResult.players); setDataScope(scope);
+      setSelectedGameId(id => gamesResult.games.some(game => game.id === id) ? id : (gamesResult.games[0]?.id ?? ''));
+      setSelectedPlayerId(id => playersResult.players.some(player => player.id === id) ? id : (playersResult.players[0]?.id ?? ''));
+    } catch (caught) {
+      if (current() && request === scope.read) { setGames([]); setPlayers([]); setError(caught instanceof Error ? caught.message : 'Could not load scorer tools.'); }
+    } finally { if (current() && request === scope.read) setLoading(false); }
+  }, [current, scope]);
 
-    if (!isSupabaseConfigured) {
-      setGames([]);
-      setPlayers([]);
-      setSelectedGameId('');
-      setSelectedPlayerId('');
-      setError(CONFIG_ERROR);
-      setLoading(false);
-      return;
-    }
-
-    const [gamesResult, playersResult] = await Promise.all([fetchScorerGames(), fetchOperatorPlayers()]);
-
-    if (gamesResult.error) {
-      setGames([]);
-      setPlayers([]);
-      setError(gamesResult.error);
-      setLoading(false);
-      return;
-    }
-
-    if (playersResult.error) {
-      setGames(gamesResult.games);
-      setPlayers([]);
-      setError(playersResult.error);
-      setLoading(false);
-      return;
-    }
-
-    const nextGames = gamesResult.games;
-    const nextPlayers = playersResult.players;
-    setGames(nextGames);
-    setPlayers(nextPlayers);
-    setSelectedGameId((current) =>
-      nextGames.some((game) => game.id === current) ? current : (nextGames[0]?.id ?? ''),
-    );
-    setSelectedPlayerId((current) =>
-      nextPlayers.some((player) => player.id === current)
-        ? current
-        : (nextPlayers[0]?.id ?? ''),
-    );
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
-
-  useEffect(
-    () =>
-      subscribeScorerGames((next) => {
-        setGames((current) => {
-          const without = current.filter((game) => game.id !== next.id);
-          if (next.is_active === false) return without;
-          return [next, ...without];
-        });
-      }),
-    [],
-  );
-
-  useEffect(() => {
-    return () => {
-      if (bannerTimer.current) clearTimeout(bannerTimer.current);
-    };
-  }, []);
+  useEffect(() => { void fetchData(); }, [fetchData]);
+  useEffect(() => subscribeScorerGames(next => {
+    if (!current()) return;
+    setGames(games => { const without = games.filter(game => game.id !== next.id); return next.is_active === false ? without : [next, ...without]; });
+  }), [current]);
 
   const flashSentBanner = () => {
+    if (!current()) return;
     setShowSentBanner(true);
     if (bannerTimer.current) clearTimeout(bannerTimer.current);
-    bannerTimer.current = setTimeout(() => setShowSentBanner(false), 2500);
+    bannerTimer.current = setTimeout(() => { if (current()) setShowSentBanner(false); }, 2500);
   };
 
-  const insertPlayEvent = async (action: string, player: Player) => {
-    if (sending) return;
-
-    setSending(true);
-    setSendError(null);
-
-    const insertError = await insertScorerPlayEvent(action, player, selectedGame?.id);
-
-    setSending(false);
-
-    if (insertError) {
-      setSendError(insertError);
-      return;
+  async function write(request: (client: OfflineActorClient) => Promise<string | null>) {
+    if (writeFlight.current || !current() || dataScope !== scope) return;
+    const operation = {}; writeFlight.current = operation;
+    let actor: OfflineActor | undefined;
+    setSending(true); setSendError(null);
+    try {
+      actor = capture(); const client = await clientFor(actor);
+      const failure = await request(client); assertCurrent(actor);
+      if (failure) setSendError(failure); else flashSentBanner();
+    } catch (caught) {
+      if (current() && (!actor || actor.isCurrent())) setSendError(caught instanceof Error ? caught.message : 'Could not save this scorer action.');
+    } finally {
+      if (writeFlight.current === operation) { writeFlight.current = null; if (current()) setSending(false); }
     }
-
-    flashSentBanner();
+  }
+  const insertPlayEvent = (action: string, player: Player) => {
+    const gameId = selectedGame?.id;
+    return write(client => insertScorerPlayEvent(action, player, gameId, client));
   };
-
-  const updateGame = async (patch: Partial<Game>) => {
-    if (!selectedGame || sending) return;
-
-    setSending(true);
-    setSendError(null);
-
-    const updateError = await patchScorerGame(selectedGame.id, patch);
-
-    setSending(false);
-
-    if (updateError) {
-      setSendError(updateError);
-      return;
-    }
-
-    flashSentBanner();
+  const updateGame = (patch: Partial<Game>) => {
+    const gameId = selectedGame?.id;
+    if (!gameId) return;
+    return write(client => patchScorerGame(gameId, patch, client));
   };
 
   const handleAddPoints = (points: number) => {
@@ -181,16 +150,16 @@ export default function ScorerScreen() {
           </Text>
         </View>
 
-        <PlaySentBanner visible={showSentBanner} />
+        <PlaySentBanner visible={current() && dataScope === scope && showSentBanner} />
 
-        {sendError ? (
+        {current() && dataScope === scope && sendError ? (
           <View style={styles.errorBanner}>
             <Text style={styles.errorBannerText}>{sendError}</Text>
           </View>
         ) : null}
 
         <View style={styles.panel}>
-          {loading ? (
+          {!current() || loading || (!error && dataScope !== scope) ? (
             <View style={styles.centered}>
               <ActivityIndicator size="large" color={colors.deepGreen} />
               <Text style={styles.statusText}>Loading scorer tools…</Text>

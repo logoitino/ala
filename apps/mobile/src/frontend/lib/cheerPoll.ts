@@ -11,16 +11,16 @@ import { nextRealtimeTopic, supabase } from '@/lib/supabase';
 export type CheerVote = { slug: string; side: string; previousSide: string | null; homeName?: string | null; awayName?: string | null };
 
 /** @purpose Cast (or move) a vote; returns the database row and error as the caller expects. */
-export async function castCheerVote(vote: CheerVote): Promise<{ data: unknown; error: { code?: string; message?: string } | null }> {
+export async function castCheerVote(vote: CheerVote, client = supabase): Promise<{ data: unknown; error: { code?: string; message?: string } | null }> {
   const first = await untypedRpc('cast_cheer_vote', {
     poll_slug: vote.slug,
     side: vote.side,
     previous_side: vote.previousSide,
     home_name: vote.homeName ?? null,
     away_name: vote.awayName ?? null,
-  });
+  }, client);
   if (!first.error) return first;
-  return untypedRpc('cast_cheer_vote', { poll_slug: vote.slug, side: vote.side, previous_side: vote.previousSide });
+  return untypedRpc('cast_cheer_vote', { poll_slug: vote.slug, side: vote.side, previous_side: vote.previousSide }, client);
 }
 
 /**

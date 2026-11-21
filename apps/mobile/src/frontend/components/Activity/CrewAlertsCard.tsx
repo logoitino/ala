@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Crew alerts on Activity (DATA-01 F2). When an athlete a fan follows opens a Flash unlock, the server
  * queues a Crew alert for that fan; nothing used to read or clear that queue. This card shows the
  * signed-in fan's alerts and clears them, so the queue cannot grow without end. Push delivery is not
@@ -13,6 +13,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { clearMyCrewAlerts, fetchMyCrewAlerts, type CrewAlert } from '@/lib/crew';
 import { userProfileHref } from '@/lib/navigation';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** @purpose The signed-in fan's Crew alerts with a Clear action. */
 export function CrewAlertsCard() {
@@ -65,11 +66,11 @@ export function CrewAlertsCard() {
 
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.border, padding: 12, gap: 10 },
-  kicker: { color: colors.textMuted, fontSize: 12, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
+  kicker: { color: colors.textMuted, ...TYPE.caption, ...figtree('800'), letterSpacing: 0.6, textTransform: 'uppercase' },
   row: { minHeight: 44, justifyContent: 'center', gap: 2 },
-  title: { color: colors.text, fontSize: 14, fontWeight: '700' },
-  body: { color: colors.textMuted, fontSize: 13 },
-  error: { color: colors.danger, fontSize: 13 },
+  title: { color: colors.text, ...TYPE.body, ...figtree('700') },
+  body: { ...figtree('400'), color: colors.textMuted, ...TYPE.body },
+  error: { ...figtree('400'), color: colors.danger, ...TYPE.body },
   clear: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center', paddingHorizontal: 12 },
-  clearText: { color: colors.text, fontSize: 14, fontWeight: '800' },
+  clearText: { color: colors.text, ...TYPE.body, ...figtree('800') },
 });

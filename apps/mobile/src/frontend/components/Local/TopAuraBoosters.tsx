@@ -1,5 +1,6 @@
 /**
  * Compact Local Boosters rail: ranked fans as short sponsor-style cards (avatar, name, pts, one badge).
+ * UX-12 balances readable names with smaller avatars; profile peek scrolls before its fixed Close.
  * Data from `hooks/useAuraBoosters`; tiers and colours from `lib/aura.ts`.
  */
 
@@ -14,6 +15,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
+import { figtree, TYPE } from '@/theme/fonts';
 import { useAuraBoosters } from '@/hooks/useAuraBoosters';
 import { type AuraBooster } from '@/lib/aura';
 
@@ -74,10 +76,10 @@ function AuraBoosterCard({
           <Text style={[styles.initials, { color: tier.ink }]}>{initialsFor(booster.full_name)}</Text>
         </View>
         <View style={styles.meta}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text style={styles.name}>
             {booster.full_name}
           </Text>
-          <Text style={styles.handle} numberOfLines={1}>
+          <Text style={styles.handle}>
             @{booster.username}
           </Text>
           <Text style={[styles.points, { color: tier.ink }]}>
@@ -91,7 +93,7 @@ function AuraBoosterCard({
           <Text style={[styles.rankLabel, { color: rank === 1 ? FOCAL.goldInk : tier.ink }]}>#{rank}</Text>
         </View>
         <View style={[styles.badge, { borderColor: tier.color }]}>
-          <Text style={[styles.badgeLabel, { color: tier.ink }]} numberOfLines={1}>
+          <Text style={[styles.badgeLabel, { color: tier.ink }]}>
             {tier.title}
           </Text>
         </View>
@@ -128,7 +130,7 @@ function BoosterPeek({
 
   return (
     <Modal transparent animationType="fade" visible onRequestClose={onClose}>
-      <View style={[styles.modalRoot, { padding: frame.dock.paddingHorizontal }]}>
+      <View style={[styles.modalRoot, frame.dock, { paddingTop: 12 }]}>
         <Pressable
           haptic="none"
           accessibilityLabel="Dismiss booster profile"
@@ -139,26 +141,28 @@ function BoosterPeek({
           accessibilityRole="summary"
           accessibilityLabel={`${booster.full_name} booster profile`}
           style={[
-            styles.peek,
             frame.card,
+            styles.peek,
             { borderColor: tier.color, backgroundColor: colors.surface, ...auraShadow(tier.color, tier.glow, true) },
             cardStyle,
           ]}
         >
-          <Text style={styles.peekKicker}>Booster profile</Text>
-          <View style={[styles.peekAvatar, { borderColor: tier.color, backgroundColor: tier.face }]}>
-            <Text style={[styles.peekInitials, { color: tier.ink }]}>{initialsFor(booster.full_name)}</Text>
-          </View>
-          <Text style={styles.peekName}>{booster.full_name}</Text>
-          <Text style={styles.peekHandle}>@{booster.username}</Text>
-          <View style={[styles.peekBadge, { borderColor: tier.color, backgroundColor: tier.face }]}>
-            <Text style={[styles.peekBadgeLabel, { color: tier.ink }]}>
-              #{rank} · {tier.title}
+          <ScrollView style={styles.peekScroll} contentContainerStyle={styles.peekContent}>
+            <Text style={styles.peekKicker}>Booster profile</Text>
+            <View style={[styles.peekAvatar, { borderColor: tier.color, backgroundColor: tier.face }]}>
+              <Text style={[styles.peekInitials, { color: tier.ink }]}>{initialsFor(booster.full_name)}</Text>
+            </View>
+            <Text style={styles.peekName}>{booster.full_name}</Text>
+            <Text style={styles.peekHandle}>@{booster.username}</Text>
+            <View style={[styles.peekBadge, { borderColor: tier.color, backgroundColor: tier.face }]}>
+              <Text style={[styles.peekBadgeLabel, { color: tier.ink }]}>
+                #{rank} · {tier.title}
+              </Text>
+            </View>
+            <Text style={[styles.peekPoints, { color: tier.ink }]}>
+              {booster.aura_points.toLocaleString()} Aura pts
             </Text>
-          </View>
-          <Text style={[styles.peekPoints, { color: tier.ink }]}>
-            {booster.aura_points.toLocaleString()} Aura pts
-          </Text>
+          </ScrollView>
           <AnimatedButton accessibilityLabel="Close booster profile" onPress={onClose} contentStyle={styles.peekClose}>
             <Text style={styles.peekCloseLabel}>Close</Text>
           </AnimatedButton>
@@ -211,8 +215,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('700'),
     color: colors.text,
     marginTop: 4,
     paddingHorizontal: 12,
@@ -226,8 +230,9 @@ const styles = StyleSheet.create({
     width: 156,
     borderRadius: radii.lg,
     borderWidth: 1.5,
+    minHeight: 44,
     padding: 10,
-    gap: 8,
+    gap: 6,
     ...cardShadow,
   },
   cardTop: {
@@ -235,18 +240,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  // Minimum bounds preserve the normal compact tile while allowing enlarged initials to breathe.
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    minWidth: 32,
+    minHeight: 32,
+    padding: 3,
+    borderRadius: 10,
     backgroundColor: colors.background,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   initials: {
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('700'),
     letterSpacing: 0.5,
   },
   meta: {
@@ -256,22 +263,23 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.text,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   handle: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('500'),
   },
   points: {
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('700'),
     marginTop: 2,
   },
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 6,
   },
   rank: {
@@ -284,12 +292,14 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   rankLabel: {
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   badge: {
-    flex: 1,
-    minWidth: 0,
+    flexGrow: 1,
+    flexBasis: 80,
+    minWidth: 80,
+    maxWidth: '100%',
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 8,
@@ -297,8 +307,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   badgeLabel: {
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   modalRoot: {
     flex: 1,
@@ -317,57 +327,68 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     zIndex: 2,
     maxWidth: 320,
+    maxHeight: '85%',
     width: '100%',
   },
+  peekScroll: { width: '100%', flexGrow: 0, flexShrink: 1 },
+  peekContent: { alignItems: 'center', gap: 6, paddingBottom: 2 },
   peekKicker: {
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('700'),
     letterSpacing: 0.7,
     textTransform: 'uppercase',
   },
   peekAvatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 16,
+    minWidth: 48,
+    minHeight: 48,
+    padding: 4,
+    borderRadius: 14,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
   },
   peekInitials: {
-    fontSize: 22,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('700'),
     letterSpacing: 1,
   },
   peekName: {
+    maxWidth: '100%',
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('700'),
     textAlign: 'center',
   },
   peekHandle: {
+    maxWidth: '100%',
+    textAlign: 'center',
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('500'),
   },
   peekBadge: {
+    maxWidth: '100%',
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   peekBadgeLabel: {
-    fontSize: 12,
-    fontWeight: '800',
+    textAlign: 'center',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   peekPoints: {
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('700'),
   },
   peekClose: {
     marginTop: 4,
+    alignSelf: 'stretch',
     minHeight: 44,
+    paddingVertical: 8,
     paddingHorizontal: 18,
     borderRadius: radii.md,
     backgroundColor: colors.deepGreen,
@@ -376,7 +397,7 @@ const styles = StyleSheet.create({
   },
   peekCloseLabel: {
     color: colors.onAccent,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('700'),
   },
 });

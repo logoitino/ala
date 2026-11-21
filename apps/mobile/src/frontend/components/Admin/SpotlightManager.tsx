@@ -1,3 +1,4 @@
+/** UX-13 SpotlightManager.tsx preserves existing actions with readable spacing/type. */
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -8,6 +9,7 @@ import { defaultSpotlightWindow, filterAdminAthletes } from '@/lib/admin';
 import { spotlightWindowLabel } from '@/lib/spotlight';
 import { FOCAL } from '@/theme/motion';
 import type { Player, SpotlightAward, SpotlightPeriodKind } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type SpotlightManagerProps = {
   players: Player[];
@@ -182,7 +184,7 @@ export function SpotlightManager({ players, awards, busy, onPublish }: Spotlight
           <Text style={styles.publishLabel}>Publish award</Text>
         )}
       </AnimatedButton>
-      {message ? <Text style={styles.message}>{message}</Text> : null}
+      {message ? <Text accessibilityLiveRegion="polite" style={styles.message}>{message}</Text> : null}
 
       <Text style={styles.subhead}>Recent awards</Text>
       {awards.length === 0 ? (
@@ -212,19 +214,19 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
   lede: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
+    ...TYPE.body,
+    ...figtree('600'),
+
   },
   label: {
     color: FOCAL.jadeInk,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginTop: 6,
@@ -237,8 +239,8 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.backgroundBase,
     color: colors.text,
     paddingHorizontal: 12,
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.section,
+    ...figtree('700'),
   },
   selected: {
     borderRadius: radii.md,
@@ -251,13 +253,13 @@ const styles = StyleSheet.create({
   },
   selectedName: {
     color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   selectedMeta: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
   hit: {
     borderRadius: radii.md,
@@ -270,13 +272,13 @@ const styles = StyleSheet.create({
   },
   hitName: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   hitMeta: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
   periodRow: {
     flexDirection: 'row',
@@ -284,7 +286,7 @@ const styles = StyleSheet.create({
   },
   period: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
@@ -298,8 +300,8 @@ const styles = StyleSheet.create({
   },
   periodLabel: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   periodLabelOn: {
     color: FOCAL.ink,
@@ -322,27 +324,27 @@ const styles = StyleSheet.create({
   },
   publishLabel: {
     color: FOCAL.ink,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   disabled: {
     opacity: 0.6,
   },
   message: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   subhead: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     marginTop: 8,
   },
   empty: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   award: {
     borderTopWidth: 1,
@@ -352,12 +354,12 @@ const styles = StyleSheet.create({
   },
   awardTitle: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   awardMeta: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
   },
 });

@@ -1,7 +1,8 @@
 /**
  * One way to call a database function that is newer than the generated client types: untyped call, a missing
  * migration reads as "not switched on", any other error keeps its message. Shared by the admin controls and the
- * privacy controls so neither keeps its own copy (DATA-01 merge rule).
+ * privacy controls so neither keeps its own copy (DATA-01 merge rule). Optional originating clients preserve
+ * account binding for Auth birth updates without duplicating error mapping (UX-13).
  */
 import { isMissingFunction } from '@/lib/dbErrors';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -15,8 +16,8 @@ export type RpcError = { code?: string; message?: string } | null;
  *   `supabase.rpc` must stay bound to the client: stored in a variable and called on its own it loses `this` and every
  *   call throws (found 2026-10-14 by a test using the real client; tests with arrow-function mocks hid it).
  */
-export function untypedRpc<T = unknown>(fn: string, args: Record<string, unknown> = {}): Promise<{ data: T; error: RpcError }> {
-  const rpc = supabase.rpc.bind(supabase) as unknown as (name: string, params: Record<string, unknown>) => Promise<{ data: T; error: RpcError }>;
+export function untypedRpc<T = unknown>(fn: string, args: Record<string, unknown> = {}, client = supabase): Promise<{ data: T; error: RpcError }> {
+  const rpc = client.rpc.bind(client) as unknown as (name: string, params: Record<string, unknown>) => Promise<{ data: T; error: RpcError }>;
   return rpc(fn, args);
 }
 
@@ -25,9 +26,9 @@ export function untypedRpc<T = unknown>(fn: string, args: Record<string, unknown
  * @param fn Function name.
  * @param args Named arguments exactly as the SQL function declares them.
  */
-export async function callRpc<T = unknown>(fn: string, args: Record<string, unknown> = {}): Promise<T> {
+export async function callRpc<T = unknown>(fn: string, args: Record<string, unknown> = {}, client = supabase): Promise<T> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-  const { data, error } = await untypedRpc<T>(fn, args);
+  const { data, error } = await untypedRpc<T>(fn, args, client);
   if (error) throw new Error(isMissingFunction(error) ? NOT_SWITCHED_ON : error.message || 'That did not work.');
   return data;
 }

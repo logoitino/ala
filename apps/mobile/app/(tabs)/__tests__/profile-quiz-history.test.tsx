@@ -1,5 +1,6 @@
 /** Own profile menu preserves account actions and gives every signed-in role a root private-quiz history route. */
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import type { Player, ReelWithPlayer } from '@/types/database';
 import Profile from '../profile';
 let mockGuest = false;
@@ -67,7 +68,7 @@ jest.mock('@/lib/reels', () => ({ fetchReelsForPlayer: (...args: unknown[]) => m
 beforeEach(() => { mockOwner = 'auth'; mockPlayerId = null; mockRosterPlayers = []; mockSessionGuard = () => true; mockFetchReels.mockReset().mockResolvedValue([]); });
 it.each(['fan', 'athlete', 'parent', 'operator', 'booster', 'sponsor', 'admin'])('%s keeps private history accessible even without an active weekly invitation', async role => {
   mockRole = role; mockGuest = false; mockPush.mockClear();
-  await render(<Profile />);
+  await render(<Profile />, { wrapper: ({ children }) => <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, bottom: 0, right: 0 } }}>{children}</SafeAreaProvider> });
   await fireEvent.press(screen.getByRole('button', { name: 'Open account settings' }));
   await fireEvent.press(screen.getByRole('button', { name: 'Sport Quiz & private history' }));
   expect(mockPush).toHaveBeenCalledWith('/sport-quiz');
@@ -78,7 +79,7 @@ it.each(['fan', 'athlete', 'parent', 'operator', 'booster', 'sponsor', 'admin'])
 });
 it('does not give guest accounts a private history shortcut', async () => {
   mockGuest = true;
-  await render(<Profile />); await fireEvent.press(screen.getByRole('button', { name: 'Open account settings' }));
+  await render(<Profile />, { wrapper: ({ children }) => <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, bottom: 0, right: 0 } }}>{children}</SafeAreaProvider> }); await fireEvent.press(screen.getByRole('button', { name: 'Open account settings' }));
   expect(screen.queryByRole('button', { name: 'Sport Quiz & private history' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Fan Zone' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
@@ -89,7 +90,7 @@ it('clears own Highlights immediately after account/subject changes and ignores 
   const b = { ...a, id: 'athlete-b', name: 'Bea' };
   mockRosterPlayers = [a, b]; mockPlayerId = a.id; mockGuest = false; mockRole = 'athlete';
   mockFetchReels.mockResolvedValueOnce([{ id: 'clip-a', player_id: a.id, players: a, video_url: 'a.mp4' } as ReelWithPlayer]);
-  const view = await render(<Profile />); await act(async () => {});
+  const view = await render(<Profile />, { wrapper: ({ children }) => <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, bottom: 0, right: 0 } }}>{children}</SafeAreaProvider> }); await act(async () => {});
   expect(screen.getByText('Clips: clip-a')).toBeTruthy();
   let resolve!: (rows: ReelWithPlayer[]) => void;
   mockFetchReels.mockReturnValueOnce(new Promise<ReelWithPlayer[]>(done => { resolve = done; }));

@@ -1,4 +1,6 @@
-/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+/** Paid followups stay bound to the initiating account. Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+import { assertCurrent } from '@/lib/offlineActor';
+import type { PaymentActor } from '@/lib/payments';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useState } from 'react';
@@ -37,12 +39,13 @@ import type { RecordSponsorshipInput } from '@/hooks/useSponsorships';
 import { uploadSponsorLogo } from '@/lib/sponsorships';
 import { SPRING_SHEET } from '@/theme/motion';
 import type { SponsorshipTierId } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type SponsorshipModalProps = {
   visible: boolean;
   schoolOptions?: string[];
   onClose: () => void;
-  onSponsored: (input: RecordSponsorshipInput) => Promise<void>;
+  onSponsored: (input: RecordSponsorshipInput, payment?: PaymentActor) => Promise<void>;
 };
 
 const IMAGE_OPTIONS: ImagePicker.ImagePickerOptions = {
@@ -156,14 +159,17 @@ export function SponsorshipModal({
           skipBacker: true,
           auraPoints: tier.auraPoints,
           successToast: `${tier.name} locked 🏆 +${tier.auraPoints.toLocaleString()} Aura`,
-          onPaid: async () => {
-            const storedLogo = logoUrl.trim() ? await uploadSponsorLogo(logoUrl.trim()) : '';
+          onPaid: async (payment) => {
+            assertCurrent(payment.actor);
+            const storedLogo = logoUrl.trim() ? await uploadSponsorLogo(logoUrl.trim(), payment) : '';
+            assertCurrent(payment.actor);
             await onSponsored({
               businessName: name,
               logoUrl: storedLogo,
               schoolTeam: school,
               tier: tier.id,
-            });
+            }, payment);
+            assertCurrent(payment.actor);
             onClose();
           },
         });
@@ -300,7 +306,7 @@ export function SponsorshipModal({
                         }}
                         contentStyle={[styles.schoolChip, selected && styles.schoolChipOn]}
                       >
-                        <Text style={[styles.schoolChipLabel, selected && styles.schoolChipLabelOn]} numberOfLines={1}>
+                        <Text style={[styles.schoolChipLabel, selected && styles.schoolChipLabelOn]}>
                           {school}
                         </Text>
                       </AnimatedButton>
@@ -383,21 +389,21 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 22,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
   blurb: {
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
   },
   form: {
     gap: 10,
@@ -437,8 +443,8 @@ const styles = StyleSheet.create({
   tierName: {
     flex: 1,
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   badge: {
     borderWidth: 1,
@@ -447,23 +453,23 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   badgeLabel: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   tierPrice: {
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   tierPerks: {
     color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: '600',
+    ...TYPE.caption,
+
+    ...figtree('600'),
   },
   fieldLabel: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.4,
     textTransform: 'uppercase',
     marginTop: 4,
@@ -476,8 +482,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     color: colors.text,
     paddingHorizontal: 12,
-    fontSize: 15,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   logoRow: {
     flexDirection: 'row',
@@ -501,15 +507,15 @@ const styles = StyleSheet.create({
   },
   logoInitials: {
     color: colors.primary,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   logoFields: {
     flex: 1,
     gap: 8,
   },
   uploadBtn: {
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: MENU_METRICS.controlRadius,
     borderWidth: 1,
     borderColor: colors.primary,
@@ -518,8 +524,8 @@ const styles = StyleSheet.create({
   },
   uploadLabel: {
     color: colors.primary,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   schoolChips: {
     flexDirection: 'row',
@@ -527,7 +533,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   schoolChip: {
-    minHeight: 34,
+    minHeight: 44,
     paddingHorizontal: 10,
     borderRadius: 999,
     borderWidth: 1,
@@ -535,7 +541,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    maxWidth: 180,
+    maxWidth: '100%',
   },
   schoolChipOn: {
     borderColor: colors.primary,
@@ -543,8 +549,8 @@ const styles = StyleSheet.create({
   },
   schoolChipLabel: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   schoolChipLabelOn: {
     color: colors.primary,
@@ -565,14 +571,14 @@ const styles = StyleSheet.create({
   },
   payLabel: {
     color: colors.onAccent,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
   payMeta: {
     color: colors.onAccent,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     opacity: 0.85,
     textAlign: 'center',
   },
@@ -586,7 +592,7 @@ const styles = StyleSheet.create({
   },
   closeLabel: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
 });

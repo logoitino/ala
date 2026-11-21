@@ -1,4 +1,4 @@
-/** Shared dismissible scoreboards/toasts; preserve separate destination and full-size close buttons. */
+/** UX-13 readable shared type preserves every action and required notice. Shared dismissible scoreboards/toasts; preserve separate destination and full-size close buttons. */
 import { type ReactNode, useCallback, useRef } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -16,6 +16,7 @@ import Animated, {
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors } from '@/constants/theme';
 import { SPRING_CARD } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const DISMISS_Y = -30;
 const OFFSCREEN_Y = -120;
@@ -172,10 +173,10 @@ const styles = StyleSheet.create({
   },
   closeLabel: {
     color: colors.onVideo,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     opacity: 0.85,
-    lineHeight: 26,
+
     width: 26,
     height: 26,
     textAlign: 'center',

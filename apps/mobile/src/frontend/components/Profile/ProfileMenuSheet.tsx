@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Account settings sheet opened from the Profile hamburger (sign in / out, role, receipts, legal). Nested sheets
  * open only after this one has fully dismissed, to avoid overlapping native modals (see STATE.md, 2026-09-29).
  * Rows are grouped into short categories and the list scrolls inside the sheet so long menus stay reachable.
@@ -20,6 +20,7 @@ import { colors, MENU_METRICS } from '@/constants/theme';
 import { useFanSheetMotion } from '@/hooks/useFanSheetMotion';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export type ProfileMenuSectionId = 'account' | 'activity' | 'money' | 'support';
 
@@ -208,15 +209,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.1,
     textTransform: 'uppercase',
     color: FOCAL.goldInk,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
     color: colors.text,
     letterSpacing: -0.3,
     marginBottom: 2,
@@ -229,8 +230,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sectionTitle: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: colors.primary,
@@ -254,25 +255,25 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: colors.text,
   },
   danger: {
     color: FOCAL.ember,
   },
   hint: {
-    fontSize: 11,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
     color: colors.textMuted,
   },
-  close: {
+  close: { minHeight: 44,
     alignItems: 'center',
     paddingVertical: 8,
   },
   closeLabel: {
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.textMuted,
   },
 });

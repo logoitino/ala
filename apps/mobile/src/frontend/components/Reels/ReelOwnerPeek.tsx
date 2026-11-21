@@ -4,6 +4,7 @@
  * Open full profile. The header (tier pill + Close) and the action footer are pinned outside the scroll area, so the
  * primary action is always on screen; identity, the clip row and stats scroll between them. Fetches lazily, only once the panel has opened. `ReelPage` owns the slide and the card shell
  * (rounded light surface); this file owns everything inside it.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -33,6 +34,7 @@ import { FOCAL } from '@/theme/motion';
 import type { UsageSurface } from '@/hooks/useSurfaceUsage';
 import type { ProfilePublic } from '@/types/database';
 import { getPublicProfiles } from '@/lib/privacy';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** Fan who posted the clip. `handle` is null when the account has no username; the name is shown instead. */
 type Poster = { name: string; handle: string | null; avatarUrl: string | null };
@@ -245,7 +247,7 @@ export function ReelOwnerPeek({
               {largeText ? null : (
               <Ionicons name={crew.following ? 'checkmark-circle' : 'flash-outline'} size={16} color={FOCAL.jadeInk} />
             )}
-              <Text style={styles.crewLabel} numberOfLines={2}>
+              <Text style={styles.crewLabel}>
                 {crew.following ? 'In Crew' : 'Join Crew'}
               </Text>
             </AnimatedPressable>
@@ -266,9 +268,6 @@ export function ReelOwnerPeek({
             >
               <Text
                 style={[styles.tipLabel, !maloReady && styles.tipLabelPending]}
-                numberOfLines={2}
-                adjustsFontSizeToFit
-                minimumFontScale={0.7}
               >
                 {maloReady ? 'Give' : 'Tag'}
               </Text>
@@ -287,7 +286,7 @@ export function ReelOwnerPeek({
         onPress={onOpenProfile}
         contentStyle={[styles.openBtn, profilePrimary && styles.openBtnPrimary, !onOpenProfile && styles.disabled]}
       >
-        <Text style={styles.openLabel} numberOfLines={2}>
+        <Text style={styles.openLabel}>
           Open full profile
         </Text>
         <Ionicons name="arrow-forward" size={16} color={profilePrimary ? FOCAL.ink : FOCAL.jadeInk} />
@@ -309,7 +308,6 @@ export function ReelOwnerPeek({
         <View style={[styles.tierPill, { borderColor: tier.color }]}>
           <Text
             style={[styles.tierLabel, { color: tier.ink }]}
-            numberOfLines={2}
             accessibilityLabel={`Tier ${tier.tier}, ${tier.title}`}
           >
             {auraBadgeLabel(tier)}
@@ -369,19 +367,18 @@ export function ReelOwnerPeek({
                 ref={nameRef}
                 accessibilityRole="header"
                 style={[styles.name, compact && styles.nameCompact]}
-                numberOfLines={2}
               >
                 {name}
               </Text>
               {verification === 'verified' && !compact ? <VarsityBadge status="verified" compact /> : null}
             </View>
             {handle ? (
-              <Text style={styles.handle} numberOfLines={1}>
+              <Text style={styles.handle}>
                 @{handle}
               </Text>
             ) : null}
             {meta ? (
-              <Text style={styles.meta} numberOfLines={2} accessibilityLabel={spokenMeta}>
+              <Text style={styles.meta} accessibilityLabel={spokenMeta}>
                 {meta}
               </Text>
             ) : null}
@@ -403,7 +400,7 @@ export function ReelOwnerPeek({
                   <Text style={styles.posterInitials}>{initials(poster.name)}</Text>
                 </View>
               )}
-              <Text style={styles.posterLabel} numberOfLines={2}>
+              <Text style={styles.posterLabel}>
                 Posted by <Text style={styles.posterName}>{posterName}</Text>
               </Text>
             </Animated.View>
@@ -418,13 +415,10 @@ export function ReelOwnerPeek({
                     <>
                       <Text
                         style={[styles.statValue, compact && styles.statValueCompact]}
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                        minimumFontScale={0.5}
                       >
                         {stat.value}
                       </Text>
-                      <Text style={styles.statLabel} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+                      <Text style={styles.statLabel}>
                         {stat.label}
                       </Text>
                     </>
@@ -462,7 +456,7 @@ export function ReelOwnerPeek({
             </View>
             <View style={styles.clipText}>
               <Text style={styles.sectionLabel}>On this clip</Text>
-              <Text style={styles.clipTag} numberOfLines={2}>
+              <Text style={styles.clipTag}>
                 {tag ? `“${tag}”` : kind}
               </Text>
               {tag ? <Text style={styles.clipKind}>{kind}</Text> : null}
@@ -542,8 +536,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.7)',
   },
   tierLabel: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.3,
   },
   // 44-point touch target (MENU_METRICS.touchTarget) around a smaller visible disc.
@@ -611,12 +605,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   initials: {
-    fontSize: 26,
-    fontWeight: '900',
+    ...TYPE.title,
+    ...figtree('900'),
     letterSpacing: 0.5,
   },
-  initialsCompact: {
-    fontSize: 19,
+  initialsCompact: { ...figtree('400'),
+    ...TYPE.title,
   },
   identity: {
     flex: 1,
@@ -632,25 +626,25 @@ const styles = StyleSheet.create({
   name: {
     flexShrink: 1,
     color: FOCAL.ink,
-    fontSize: 18,
-    fontWeight: '900',
+    ...TYPE.title,
+    ...figtree('900'),
     letterSpacing: -0.2,
   },
-  nameCompact: {
-    fontSize: 17,
-    lineHeight: 21,
+  nameCompact: { ...figtree('400'),
+    ...TYPE.section,
+
   },
   // Plain ink, not the tier ink: Island Cyan's ink is near the 4.5:1 line on its own wash (and lower over the corner glow).
   handle: {
     color: FOCAL.ink,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   meta: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
-    lineHeight: 16,
+    ...TYPE.caption,
+    ...figtree('700'),
+
   },
   clipRow: {
     flexDirection: 'row',
@@ -685,21 +679,21 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     color: colors.textMuted,
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   clipTag: {
     color: FOCAL.ink,
-    fontSize: 13,
-    fontWeight: '800',
-    lineHeight: 20,
+    ...TYPE.body,
+    ...figtree('800'),
+
   },
   clipKind: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   posterRow: {
     flexDirection: 'row',
@@ -722,18 +716,18 @@ const styles = StyleSheet.create({
   },
   posterInitials: {
     color: colors.primary,
-    fontSize: 10,
-    fontWeight: '900',
+    ...TYPE.caption,
+    ...figtree('900'),
   },
   posterLabel: {
     flex: 1,
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
   },
   posterName: {
     color: FOCAL.ink,
-    fontWeight: '900',
+    ...figtree('900'),
   },
   stats: {
     gap: 6,
@@ -757,18 +751,18 @@ const styles = StyleSheet.create({
   statCompact: {
     paddingVertical: 4,
   },
-  statValue: {
+  statValue: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     color: FOCAL.ink,
-    fontSize: 18,
+    ...TYPE.title,
   },
-  statValueCompact: {
-    fontSize: 16,
+  statValueCompact: { ...figtree('400'),
+    ...TYPE.body,
   },
   statLabel: {
     color: colors.textMuted,
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.2,
     textTransform: 'uppercase',
   },
@@ -830,8 +824,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     textAlign: 'center',
     color: FOCAL.jadeInk,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
   },
   tipBtn: {
     backgroundColor: FOCAL.neonJade,
@@ -845,8 +839,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     textAlign: 'center',
     color: FOCAL.ink,
-    fontSize: 13,
-    fontWeight: '900',
+    ...TYPE.button,
+    ...figtree('900'),
   },
   tipLabelPending: {
     color: FOCAL.goldInk,
@@ -871,8 +865,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     textAlign: 'center',
     color: FOCAL.ink,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
   },
   pressed: {
     opacity: 0.86,

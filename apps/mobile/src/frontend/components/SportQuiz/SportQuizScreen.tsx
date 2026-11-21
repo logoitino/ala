@@ -32,6 +32,7 @@ import { LIFE_LEVELS, type LifeChapterId, type LifeLevel } from '@shared/lifePla
 import { ROLE_HOME } from '@/lib/roles';
 import { TIMED_QUIZ_NOTICE_VERSION, type TimedQuizTopic } from '@shared/timedSportQuiz';
 import { FOCAL } from '@/theme/motion';
+import { DISPLAY_TEXT, figtree, TYPE } from '@/theme/fonts';
 import { telemetry } from '@/services/TelemetryManager';
 import { useScreenMountTime } from '@/hooks/useScreenMountTime';
 import { QuizButton } from './QuizButton';
@@ -246,38 +247,38 @@ function SportQuizContent({ quiz, initialSport, learnAthlete, autoPlay }: {
     const lifeShown = !groupPageOpen && !life.switchedOff && lifeVisible(life.snapshot);
     const lifeRow = separate && !groupPageOpen && lifeOn(life.snapshot) ? life.snapshot : null;
     const lifeCanStart = idle && !round.ended && !groupPrep && lifeOn(life.snapshot);
-    const lifeNotice = !groupPageOpen ? <Text accessibilityLiveRegion="polite" style={life.notice ? undefined : styles.srOnly}>{life.notice ?? ''}</Text> : null;
+    const lifeNotice = !groupPageOpen ? <Text accessibilityLiveRegion="polite" style={life.notice ? styles.body : styles.srOnly}>{life.notice ?? ''}</Text> : null;
     const leave = () => { invalidatePreparation(); round.leave('left_page'); };
     return <View style={[styles.phone, (inRound || round.pendingStart) && styles.stage]}><ScrollView style={styles.scroll} contentContainerStyle={styles.page}>
  <View style={styles.stageBar}><QuizButton label="Back" quiet onPress={back}/><QuizButton label="Account Home" quiet onPress={home}/><QuizSoundToggle/></View>
  <View style={styles.hero}><Text style={styles.heroKicker}>Trivia</Text><Text ref={titleRef} accessibilityRole="header" style={styles.heroTitle}>Sport Pop Quiz</Text><Text style={styles.heroCopy}>Optional timed trivia · Testing only</Text></View>
  {(inRound || round.pendingStart) ? <SportQuizRound round={round} busy={busy} reports={reports} auraUserId={auth.user?.id ?? null}/> : null}
- {quiz.loading && !s ? <Text>Checking quiz availability…</Text> : null}{!s && !quiz.loading && !quiz.error ? <Text>Trivia is not available for this account. You can keep browsing.</Text> : null}
+ {quiz.loading && !s ? <Text style={styles.body}>Checking quiz availability…</Text> : null}{!s && !quiz.loading && !quiz.error ? <Text style={styles.body}>Trivia is not available for this account. You can keep browsing.</Text> : null}
  {quiz.error ? <Text accessibilityRole="alert" style={styles.alert}>{quiz.error === NOT_SWITCHED_ON
    ? 'Trivia is not switched on for this server yet (quiz SQL not applied).'
-   : quiz.error}</Text> : null}{round.error ? <Text accessibilityRole="alert">{round.error}</Text> : null}
- {life.error && !life.switchedOff ? <Text accessibilityRole="alert">{life.error}</Text> : null}
+   : quiz.error}</Text> : null}{round.error ? <Text accessibilityRole="alert" style={styles.body}>{round.error}</Text> : null}
+ {life.error && !life.switchedOff ? <Text accessibilityRole="alert" style={styles.body}>{life.error}</Text> : null}
  {!s && quiz.error === NOT_SWITCHED_ON && triviaPreviewAvailable() ? (
    <QuizButton label="Try the trivia demo" onPress={() => router.push('/dev/trivia-preview' as Href)} />
  ) : null}
  {!s && quiz.error ? <QuizButton label="Refresh quiz" quiet disabled={busy} onPress={() => { void quiz.refresh(); void life.refresh(); void level.refresh(); }}/> : null}
- {s ? <><Text>{`UTC week starts ${s.week_start}; next week ${s.week_end}.`}</Text>
+ {s ? <><Text style={styles.body}>{`UTC week starts ${s.week_start}; next week ${s.week_end}.`}</Text>
  {separate && idle && s.profile_id ? <SportQuizAllowances snapshot={s} life={lifeRow} headerRef={weekRef}/> : null}
  {idle && s.profile_id ? <SportQuizLevel state={level}/> : null}
- {s.availability !== 'ready' ? <Text>{s.availability === 'paused' ? 'Sport Pop Quiz is paused. Private history remains available.' : s.availability === 'not_enrolled' ? 'Trivia is not available for this account yet.' : 'Trivia is unavailable for this account right now.'}</Text> : null}
+ {s.availability !== 'ready' ? <Text style={styles.body}>{s.availability === 'paused' ? 'Sport Pop Quiz is paused. Private history remains available.' : s.availability === 'not_enrolled' ? 'Trivia is not available for this account yet.' : 'Trivia is unavailable for this account right now.'}</Text> : null}
  {idle && !round.ended && s.availability === 'ready' && !s.week_spent && !groupPrep ? <SportQuizPreparation snapshot={s} busy={busy || quiz.loading} initialSport={initialSport} quickStart={autoPlay && !noticeSaved} onStart={(...args) => { void start(...args); }}/> : null}
  {!inRound && !round.pendingStart ? <QuizButton label="Refresh quiz" quiet disabled={busy} onPress={() => { void quiz.refresh(); void life.refresh(); void level.refresh(); }}/> : null}
  {idle && !round.ended && s.availability === 'ready' && !groupSpent && groupPrep ? <SportQuizPreparation key={groupPrep.groupId} snapshot={s} busy={busy || quiz.loading} group={{ label: groupPrep.label, theme: groupPrep.theme }} onCancel={() => setGroupPrep(null)} onStart={(_topic, _sport, duration) => { void start('sport', null, duration, groupPrep.groupId); }}/> : null}
- {round.pendingStart ? <><Text>We couldn’t confirm Start. You can retry the same choices while this page stays open and before time runs out.</Text><QuizButton label="Retry original Start" disabled={busy} onPress={() => { void round.retryStart(); }}/></> : null}
+ {round.pendingStart ? <><Text style={styles.body}>We couldn’t confirm Start. You can retry the same choices while this page stays open and before time runs out.</Text><QuizButton label="Retry original Start" disabled={busy} onPress={() => { void round.retryStart(); }}/></> : null}
  {inRound || round.pendingStart || s.attempt?.status === 'issued' ? <QuizButton label="End round" quiet disabled={quiz.busy==='erase'} onPress={() => round.leave('user_end')}/> : null}
- {round.unavailableQuestion ? <Text accessibilityRole="alert">This question isn’t available, so the round ended safely. You can keep browsing.</Text> : null}
+ {round.unavailableQuestion ? <Text accessibilityRole="alert" style={styles.body}>This question isn’t available, so the round ended safely. You can keep browsing.</Text> : null}
  {roundSummary ? <SportQuizRoundSummary round={round} reports={reports} nextWeekLine={nextWeekUnlockLine(s.week_start, s.preferences.topic_mode)}/> : null}
  {levelUp && round.ended ? <LevelUpCelebration label={levelUp}/> : null}
  {round.ended && !inRound ? <QuizButton label="Back to this week’s rounds" quiet onPress={() => { invalidatePreparation(); round.dismiss(); setRefocus(r => ({ to: 'week', n: (r?.n ?? 0) + 1 })); void quiz.refresh(); }}/> : null}
- {!inRound && !roundSummary && !round.unavailableQuestion && (round.ended || s.attempt?.status === 'expired' || s.attempt?.status === 'ended' || s.attempt?.status === 'issued') && !timedResult ? <Text>Round ended or unavailable on this view. Leaving the page, hiding the app or tapping End round ends a round, and no question comes back after leaving. You can keep browsing and check private history.</Text> : null}
- {timedResult ? <View style={{ gap: 10 }}><Text accessibilityRole="header">Trivia complete</Text><TimedReveal result={timedResult}/><Text>{timedResult.was_correct ? 'That’s right.' : 'Thanks for learning.'}</Text><Text>{timedResult.explanation}</Text><Text>Right or wrong, you get the same private badge. You’ll find it in your history below.</Text></View> : null}
+ {!inRound && !roundSummary && !round.unavailableQuestion && (round.ended || s.attempt?.status === 'expired' || s.attempt?.status === 'ended' || s.attempt?.status === 'issued') && !timedResult ? <Text style={styles.body}>Round ended or unavailable on this view. Leaving the page, hiding the app or tapping End round ends a round, and no question comes back after leaving. You can keep browsing and check private history.</Text> : null}
+ {timedResult ? <View style={{ gap: 10 }}><Text accessibilityRole="header" style={styles.section}>Trivia complete</Text><TimedReveal result={timedResult}/><Text style={styles.body}>{timedResult.was_correct ? 'That’s right.' : 'Thanks for learning.'}</Text><Text style={styles.body}>{timedResult.explanation}</Text><Text style={styles.body}>Right or wrong, you get the same private badge. You’ll find it in your history below.</Text></View> : null}
  {!round.live && round.pendingAnswer?.uncertain ? <QuizButton label="Check my answer" disabled={busy} onPress={() => { void round.recoverAnswer(); }}/> : null}
- {s.attempt?.status === 'skipped' ? <Text ref={skippedRef}>{separate ? 'You skipped your round this week. Your other rounds aren’t affected. Come back whenever you like.' : 'Skipped for this week. Come back whenever you like.'}</Text> : null}
+ {s.attempt?.status === 'skipped' ? <Text ref={skippedRef} style={styles.body}>{separate ? 'You skipped your round this week. Your other rounds aren’t affected. Come back whenever you like.' : 'Skipped for this week. Come back whenever you like.'}</Text> : null}
  {/* On QUIZ-04 servers Skip spends only the personal round, so the label says so. */}
  {s.availability === 'ready' && !s.week_spent && idle ? <QuizButton label={separate ? 'Skip my round this week' : 'Skip this week'} quiet disabled={busy || quiz.loading} onPress={() => { void quiz.skip().then(done => { if (done) setRefocus(r => ({ to: 'skipped', n: (r?.n ?? 0) + 1 })); }); }}/> : null}
  {groupsVisible && !groupPrep ? (groups.openId
@@ -299,13 +300,15 @@ const styles = StyleSheet.create({
     docked: { paddingBottom: 0 },
     phone: { flex: 1, width: '100%', maxWidth: 430, alignSelf: 'center' },
     scroll: { flex: 1 },
-    page: { padding: 16, gap: 14, paddingBottom: 28 },
-    hero: { gap: 4, padding: 16, borderRadius: 20, backgroundColor: FOCAL.electricGold, borderWidth: 3, borderColor: FOCAL.electricViolet },
-    heroKicker: { color: FOCAL.violetInk, fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
-    heroTitle: { color: FOCAL.ink, fontSize: 32, fontWeight: '900' },
-    heroCopy: { color: FOCAL.ink, fontSize: 15, fontWeight: '700' },
+    page: { padding: 12, gap: 12, paddingBottom: 24 },
+    hero: { gap: 4, padding: 12, borderRadius: 20, backgroundColor: FOCAL.electricGold, borderWidth: 2, borderColor: FOCAL.electricViolet },
+    heroKicker: { ...TYPE.caption, ...figtree('800'), color: FOCAL.violetInk, letterSpacing: 0.6 },
+    heroTitle: { ...TYPE.display, ...DISPLAY_TEXT, color: FOCAL.ink },
+    heroCopy: { ...TYPE.body, ...figtree('600'), color: FOCAL.ink },
     stage: { flex: 1, backgroundColor: '#F3E8FF' },
     stageBar: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
-    alert: { color: FOCAL.ink, fontSize: 16, lineHeight: 22 },
+    body: { ...TYPE.body, ...figtree(), color: FOCAL.ink },
+    section: { ...TYPE.section, ...figtree('700'), color: FOCAL.ink },
+    alert: { ...TYPE.body, ...figtree(), color: FOCAL.ink },
     srOnly: { position: 'absolute', width: 1, height: 1, opacity: 0 },
 });

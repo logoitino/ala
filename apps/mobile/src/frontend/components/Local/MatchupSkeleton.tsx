@@ -1,6 +1,7 @@
 /**
  * Placeholder matchup card shown while Local's live games load
  * (split out of app/(tabs)/local/index.tsx for R4-03; behaviour unchanged).
+ * UX-13 matches the loaded matchup card's compact rhythm to reduce layout jumps.
  */
 
 import { StyleSheet, View } from 'react-native';
@@ -28,8 +29,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
-    gap: 14,
+    padding: 12,
+    gap: 8,
   },
   skeletonChip: {
     width: 72,
@@ -43,9 +44,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   skeletonLogo: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.photoPlaceholder,
   },
   skeletonScore: {
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.photoPlaceholder,
   },
   skeletonCta: {
-    height: 48,
+    height: 24,
     borderRadius: radii.md,
     backgroundColor: colors.photoPlaceholder,
   },

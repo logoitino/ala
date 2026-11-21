@@ -1,4 +1,4 @@
-/** Profile sports-goal rack keeps each gear target, donation progress and Share controls together.
+/** UX-13 readable shared type preserves every action and required notice. Profile sports-goal rack keeps each gear target, donation progress and Share controls together.
  * Existing donation review, fulfilled gear and private upload rules remain in their respective services.
  * @sideEffects Wishlist reads, donation checkout, image linking and haptics through existing helpers. */
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -6,16 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Dimensions,
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Dimensions, Image, Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import Reanimated, {
   useAnimatedStyle,
@@ -53,6 +44,7 @@ import { chipInWishlistItem, fetchWishlistItems } from '@/lib/wishlist';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL, SPRING_CARD } from '@/theme/motion';
 import type { WishlistItem } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const CONFETTI_COLORS = [FOCAL.neonJade, FOCAL.electricGold, '#FFFFFF', colors.primaryMuted];
 
@@ -357,6 +349,7 @@ function GearUnlockedOverlay({
   onClose: () => void;
 }) {
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const [burstKey, setBurstKey] = useState(0);
   const width = Dimensions.get('window').width;
 
@@ -380,7 +373,8 @@ function GearUnlockedOverlay({
             />
           </View>
         ) : null}
-        <View style={[styles.unlockCard, frame.card]}>
+        <View style={[styles.unlockCard, frame.card, { maxHeight: windowHeight * 0.85 }]}>
+          <ScrollView style={styles.unlockScroll} contentContainerStyle={styles.unlockContent}>
           <Text style={styles.unlockKicker}>{WISHLIST_UNLOCKED_TOAST}</Text>
           <Text style={styles.unlockTitle}>{item?.title.toUpperCase()}</Text>
           <Text style={styles.unlockBody}>
@@ -390,6 +384,7 @@ function GearUnlockedOverlay({
             <Text style={styles.unlockBadgeLabel}>{WISHLIST_EQUIPPED_BADGE}</Text>
           </View>
           <Text style={styles.unlockAura}>+{WISHLIST_EQUIP_AURA} Aura to {athleteName} ⚡</Text>
+          </ScrollView>
           <AnimatedButton
             haptic="medium"
             accessibilityLabel="Close gear unlocked"
@@ -405,6 +400,8 @@ function GearUnlockedOverlay({
 }
 
 const styles = StyleSheet.create({
+  unlockScroll: { flexGrow: 0, flexShrink: 1, alignSelf: 'stretch' },
+  unlockContent: { gap: 10, alignItems: 'center' },
   wrap: {
     gap: 10,
   },
@@ -433,22 +430,22 @@ const styles = StyleSheet.create({
   },
   headShareLabel: {
     color: FOCAL.jadeInk,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   title: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   lede: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
-  empty: {
+  empty: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
+    ...TYPE.body,
     paddingVertical: 8,
   },
   row: {
@@ -501,20 +498,20 @@ const styles = StyleSheet.create({
   },
   equippedLabel: {
     color: FOCAL.jadeInk,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
   },
   cardTitle: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
-    lineHeight: 20,
+    ...TYPE.body,
+    ...figtree('800'),
+
   },
   money: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   moneyFunded: {
     color: FOCAL.jadeInk,
@@ -546,8 +543,8 @@ const styles = StyleSheet.create({
   },
   giftLabel: {
     color: FOCAL.jadeInk,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   shareHit: {
     minHeight: 44,
@@ -561,8 +558,8 @@ const styles = StyleSheet.create({
   },
   shareLabel: {
     color: FOCAL.jadeInk,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   chipHit: {
     minHeight: 44,
@@ -572,13 +569,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
-  chipHitBusy: {
+  chipHitBusy: { minHeight: 44,
     opacity: 0.6,
   },
   chipLabel: {
     color: FOCAL.ink,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   overlay: {
     flex: 1,
@@ -596,23 +593,23 @@ const styles = StyleSheet.create({
   },
   unlockKicker: {
     color: FOCAL.electricGold,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     letterSpacing: 1.4,
     textTransform: 'uppercase',
   },
   unlockTitle: {
     color: colors.text,
-    fontSize: 24,
-    lineHeight: 30,
-    fontWeight: '800',
+    ...TYPE.title,
+
+    ...figtree('800'),
     textAlign: 'center',
   },
   unlockBody: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
     textAlign: 'center',
   },
   unlockBadge: {
@@ -625,14 +622,14 @@ const styles = StyleSheet.create({
   },
   unlockBadgeLabel: {
     color: FOCAL.jadeInk,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     letterSpacing: 0.4,
   },
   unlockAura: {
     color: FOCAL.jadeInk,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
   unlockClose: {
@@ -647,7 +644,7 @@ const styles = StyleSheet.create({
   },
   unlockCloseLabel: {
     color: FOCAL.ink,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
 });

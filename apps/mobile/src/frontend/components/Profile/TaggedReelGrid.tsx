@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Profile "Highlights ⚡" poster grid (3 across, newest first) for an athlete's tagged clips and photo stories,
  * opening the paging `ReelViewModal`. Vault tiles blur until the fan subscribes. Photo stories use their cover
  * photo as the poster and show a `📷 5` badge (PHOTO_STORIES_DESIGN.md, "Grids").
@@ -19,6 +19,7 @@ import type { Player } from '@/data/players';
 import { useAppViewportWidth } from '@/hooks/useAppViewport';
 import { hypeFromReel, sortClipsNewestFirst, type ReelHype } from '@/lib/reels';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const COLS = 3;
 const GAP = 2;
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: GAP,
   },
-  tile: {
+  tile: { minHeight: 44,
     backgroundColor: colors.videoSurface,
     overflow: 'hidden',
     justifyContent: 'flex-end',
@@ -306,8 +307,8 @@ const styles = StyleSheet.create({
   },
   lockLabel: {
     color: colors.onVideo,
-    fontSize: 9,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.2,
     textAlign: 'center',
   },
@@ -330,10 +331,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 2,
   },
-  viewsLabel: {
+  viewsLabel: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     color: colors.onVideo,
-    fontSize: 10,
+    ...TYPE.caption,
   },
   seki: {
     position: 'absolute',
@@ -346,8 +347,8 @@ const styles = StyleSheet.create({
   },
   sekiLabel: {
     color: colors.onAccent,
-    fontSize: 9,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
   },
   vaultChip: {
@@ -363,26 +364,26 @@ const styles = StyleSheet.create({
   },
   vaultChipLabel: {
     color: FOCAL.neonJade,
-    fontSize: 9,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.2,
   },
   tag: {
     color: colors.onVideo,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     paddingHorizontal: 6,
     paddingVertical: 6,
     backgroundColor: colors.videoScrim,
     zIndex: 1,
   },
-  empty: {
+  empty: { ...figtree('400'),
     color: colors.onVideoMuted,
-    fontSize: 14,
+    ...TYPE.body,
     paddingVertical: 24,
     textAlign: 'center',
   },
-  pressed: {
+  pressed: { minHeight: 44,
     opacity: 0.88,
   },
 });

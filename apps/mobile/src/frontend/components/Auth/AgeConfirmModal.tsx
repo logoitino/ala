@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * One-time age card. With the minor-accounts update (MINOR-01) it asks for birth month and year: required for an account
  * made after the update (Apple / Google skip the sign-up form), skippable (asked again every three days) for an older account.
  * An under-13 entry closes the account and signs out with the neutral line. Without the update it keeps the 13+ checkbox.
@@ -21,7 +21,7 @@ import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { useAuth } from '@/context/AuthContext';
 import { AGE_GATE_REFUSAL, birthInputError, pauseAgeGate } from '@/lib/minors';
 import { SPRING_CARD } from '@/theme/motion';
-import { DISPLAY_TEXT, TYPE } from '@/theme/fonts';
+import { DISPLAY_TEXT, TYPE, figtree } from '@/theme/fonts';
 
 const AGE_GATE_LABEL = 'I confirm I am 13 years of age or older.';
 
@@ -217,12 +217,12 @@ const styles = StyleSheet.create({
   },
   body: {
     ...TYPE.body,
-    fontWeight: '600',
+    ...figtree('600'),
     color: colors.textMuted,
   },
   error: {
     ...TYPE.body,
-    fontWeight: '700',
+    ...figtree('700'),
     color: colors.danger,
   },
   cta: {
@@ -235,13 +235,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...KIT.shadowSoft,
   },
-  ctaOff: {
+  ctaOff: { minHeight: 44,
     opacity: 0.5,
   },
   ctaLabel: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   later: {
     alignItems: 'center',
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   laterLabel: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
 });

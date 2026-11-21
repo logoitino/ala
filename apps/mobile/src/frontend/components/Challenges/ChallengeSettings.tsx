@@ -1,4 +1,6 @@
-/** Own CHAL-01 settings, private self-report badges and explicit private-data CSV export. */
+/** Own CHAL-01 settings, private self-report badges and explicit private-data CSV export.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { fetchMyChallengeStatus, setChallengeMute, setAllowChallenges, exportMyChallengeData } from '@/lib/challenges';
@@ -7,6 +9,7 @@ import { useChallenges } from '@/hooks/useChallenges';
 import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { colors } from '@/constants/theme';
 import { ChallengeButton, ChallengeFeedback } from './ChallengeControls';
+import { TYPE, figtree } from '@/theme/fonts';
 
 // Explicit own export only. Quote cells and guard spreadsheet formulas; no payload is displayed or persisted here.
 const cell = (value: unknown) => {
@@ -119,12 +122,12 @@ const styles = StyleSheet.create({
   section: { gap: 10 },
   status: {
     color: colors.text,
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: '700',
+    ...TYPE.body,
+
+    ...figtree('700'),
   },
   block: { gap: 6 },
   notes: { gap: 6 },
-  note: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
-  badge: { color: colors.text, fontSize: 15, fontWeight: '800' },
+  note: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
+  badge: { color: colors.text, ...TYPE.body, ...figtree('800') },
 });

@@ -14,6 +14,7 @@ import {
   AdminSectionTitle,
 } from '@/components/Admin/AdminChrome';
 import { colors } from '@/constants/theme';
+import { useAuth } from '@/context/AuthContext';
 import {
   dismissTelemetryIncident,
   fetchAdminTelemetryDigest,
@@ -23,6 +24,12 @@ import { offlineQueue, type OfflineQueuedAction } from '@/services/OfflineQueue'
 import { telemetry, type TelemetryHealthSnapshot } from '@/services/TelemetryManager';
 
 const READ_TIMEOUT_MS = 10_000;
+const noCurrentSession = () => false;
+/** Read current-account rows plus a count of held rows; never disclose another account's pending targets. */
+async function readDeviceQueue() {
+  const [actions, held] = await Promise.all([offlineQueue.snapshot(), offlineQueue.getHeldCount()]);
+  return { actions, held };
+}
 const deliveryText: Record<TelemetryHealthSnapshot['phase'], string> = {
   unknown: 'No delivery has been confirmed in this session.',
   sending: 'A telemetry batch is being sent.',
@@ -87,8 +94,12 @@ function queueLabel(row: OfflineQueuedAction): string {
  * @sideEffects `telemetry_logs` SELECT/DELETE; OfflineQueue snapshot / flush / discard; local health snapshot.
  */
 export function QaTool() {
+  const { isSessionCurrent: checkSession } = useAuth();
+  const isSessionCurrent = checkSession ?? noCurrentSession;
   const [telem, setTelem] = useState<AdminTelemetryDigest | null>(null);
   const [queue, setQueue] = useState<OfflineQueuedAction[]>([]);
+  const [heldCount, setHeldCount] = useState(0);
+  const [queueFrame, setQueueFrame] = useState<{ isCurrent: () => boolean } | null>(null);
   const [queueRead, setQueueRead] = useState(false);
   const [queueLoading, setQueueLoading] = useState(true);
   const [telemLoading, setTelemLoading] = useState(true);
@@ -106,13 +117,16 @@ export function QaTool() {
   const queueAction = useRef(false);
   const incidentAction = useRef<string | null>(null);
 
-  const current = useCallback((run: number) => active.current && generation.current === run, []);
+  const current = useCallback((run: number) => active.current && generation.current === run && isSessionCurrent(), [isSessionCurrent]);
+  const queueReady = queueRead && Boolean(queueFrame?.isCurrent());
+  const visibleQueue = queueReady ? queue : [];
+  const visibleHeldCount = queueReady ? heldCount : 0;
 
   const refresh = useCallback(async () => {
     if (!active.current) return;
     const run = ++generation.current;
     setLoading(true);
-    setError(null); setMessage(null); setTelem(null); setQueue([]); setQueueRead(false);
+    setError(null); setMessage(null); setTelem(null); setQueue([]); setHeldCount(0); setQueueRead(false); setQueueFrame(null);
     setQueueLoading(true); setTelemLoading(true); setQueueError(null); setTelemError(null);
     setOnline(offlineQueue.getIsConnected()); setDelivery(sampleDelivery());
     // Commit each result when it arrives: an unavailable server must not hide readable device state.
@@ -121,13 +135,13 @@ export function QaTool() {
         .then(next => { if (current(run)) { setTelem(next); setTelemError(next.error ?? null); } })
         .catch(caught => { if (current(run)) setTelemError(caught instanceof Error ? caught.message : 'Could not read client events.'); })
         .finally(() => { if (current(run)) setTelemLoading(false); }),
-      readWithTimeout(() => offlineQueue.snapshot(), 'The device queue could not be read within 10 seconds.', 'queue')
-        .then(next => { if (current(run)) { setQueue(next); setQueueRead(true); } })
+      readWithTimeout(readDeviceQueue, 'The device queue could not be read within 10 seconds.', 'queue')
+        .then(next => { if (current(run)) { setQueue(next.actions); setHeldCount(next.held); setQueueRead(true); setQueueFrame({ isCurrent: isSessionCurrent }); } })
         .catch(caught => { if (current(run)) setQueueError(caught instanceof Error ? caught.message : 'Could not read the device queue.'); })
         .finally(() => { if (current(run)) setQueueLoading(false); }),
     ]);
     if (current(run)) setLoading(false);
-  }, [current]);
+  }, [current, isSessionCurrent]);
 
   useFocusEffect(
     useCallback(() => {
@@ -138,7 +152,7 @@ export function QaTool() {
   );
 
   const flushQueue = async () => {
-    if (queueAction.current || !queueRead || !queue.length) return;
+    if (!isSessionCurrent() || queueAction.current || !queueReady || !visibleQueue.length) return;
     queueAction.current = true;
     const run = generation.current;
     setBusy(true);
@@ -146,10 +160,10 @@ export function QaTool() {
     try {
       await offlineQueue.flush();
       if (!current(run)) return;
-      const next = await readWithTimeout(() => offlineQueue.snapshot(), 'The device queue could not be read after replay.', 'queue');
+      const next = await readWithTimeout(readDeviceQueue, 'The device queue could not be read after replay.', 'queue');
       if (!current(run)) return;
-      setQueue(next); setOnline(offlineQueue.getIsConnected()); setDelivery(sampleDelivery());
-      setMessage(`Replay checked: ${next.length} ${next.length === 1 ? 'action remains' : 'actions remain'} on this device.`);
+      setQueue(next.actions); setHeldCount(next.held); setOnline(offlineQueue.getIsConnected()); setDelivery(sampleDelivery());
+      setMessage(`Replay checked: ${next.actions.length} ${next.actions.length === 1 ? 'action remains' : 'actions remain'} for this account.`);
     } catch (caught) {
       if (current(run)) setError(caught instanceof Error ? caught.message : 'Could not check queue replay.');
     } finally {
@@ -159,7 +173,7 @@ export function QaTool() {
   };
 
   const discardQueue = async () => {
-    if (queueAction.current || !queueRead || !queue.length) return;
+    if (!isSessionCurrent() || queueAction.current || !queueReady || visibleQueue.length + visibleHeldCount === 0) return;
     queueAction.current = true;
     const run = generation.current;
     setBusy(true);
@@ -168,6 +182,7 @@ export function QaTool() {
       await offlineQueue.discardAll();
       if (!current(run)) return;
       setQueue([]);
+      setHeldCount(0);
       setMessage('Offline queue cleared on this device.');
     } catch (caught) { if (current(run)) setError(caught instanceof Error ? caught.message : 'Could not discard the queue.'); } finally {
       queueAction.current = false;
@@ -203,13 +218,15 @@ export function QaTool() {
         </Text>
         <AdminNotice text={queueError} tone="danger" />
         {busy && <AdminNotice text="A queue action is pending. Its result has not been confirmed; it will not be repeated from this desk." tone="warn" />}
-        {!queueRead ? <AdminEmpty text={queueLoading ? "Reading this device’s queue…" : "The device queue could not be read."} /> : queue.length === 0 ? (
-          <AdminEmpty text="Nothing queued on this device." />
+        {!queueReady ? <AdminEmpty text={queueLoading ? "Reading this device’s queue…" : "The device queue could not be read."} /> : visibleQueue.length === 0 ? (
+          <AdminEmpty text="Nothing queued for this account." />
         ) : (
-          queue.map((row) => <AdminRow key={row.id} title={queueLabel(row)} meta={row.created_at} />)
+          visibleQueue.map((row) => <AdminRow key={row.id} title={queueLabel(row)} meta={row.created_at} />)
         )}
-        <AdminBtn label={busy ? 'Working…' : 'Flush now'} kind="primary" disabled={busy || !queueRead || queue.length === 0} onPress={() => void flushQueue()} />
-        <AdminBtn label="Discard queue" kind="danger" disabled={busy || !queueRead || queue.length === 0} onPress={() => void discardQueue()} />
+        {visibleHeldCount > 0 && <AdminRow title="Held actions" meta={`${visibleHeldCount} from other accounts or older unattributed queues`} />}
+        <Text style={styles.body}>Replay applies only to the signed-in account's actions. Other accounts and older unattributed actions stay held. Discard queue removes all pending actions stored on this device, including held ones.</Text>
+        <AdminBtn label={busy ? 'Working…' : 'Flush now'} kind="primary" disabled={busy || !queueReady || visibleQueue.length === 0} onPress={() => void flushQueue()} />
+        <AdminBtn label="Discard queue" kind="danger" disabled={busy || !queueReady || visibleQueue.length + visibleHeldCount === 0} onPress={() => void discardQueue()} />
         <AdminNotice text={message} />
       </AdminPanel>
 

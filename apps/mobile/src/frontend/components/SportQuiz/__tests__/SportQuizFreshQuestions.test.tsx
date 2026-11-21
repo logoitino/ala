@@ -4,6 +4,7 @@
  * "Removed by the athlete". Sound is mocked; database replies are synthetic. */
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SportQuizRound, SportQuizRoundSummary } from '@/components/SportQuiz/SportQuizRound';
 import { SportQuizHistory } from '@/components/SportQuiz/SportQuizHistory';
 import { QuizFxProvider } from '@/components/SportQuiz/QuizFx';
@@ -56,7 +57,7 @@ const between = (question: TimedQuizQuestion, result: TimedQuizResult, position 
 /** The screen's wiring: one report state per account, shared by the reveal and the summary. */
 function Harness({ round, summary = false, profileId = 'profile-a' }: { round: TimedQuizRoundState; summary?: boolean; profileId?: string | null }) {
     const reports = useQuestionReports(profileId);
-    return <QuizFxProvider focused>{summary ? <SportQuizRoundSummary round={round} reports={reports}/> : <SportQuizRound round={round} busy={false} reports={reports}/>}</QuizFxProvider>;
+    return <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, right: 0, bottom: 0, left: 0 } }}><QuizFxProvider focused>{summary ? <SportQuizRoundSummary round={round} reports={reports}/> : <SportQuizRound round={round} busy={false} reports={reports}/>}</QuizFxProvider></SafeAreaProvider>;
 }
 const openSheet = async () => { await fireEvent.press(screen.getByRole('button', { name: 'Report a problem with this question' })); };
 

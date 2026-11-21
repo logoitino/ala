@@ -5,6 +5,7 @@
  */
 import type { Player } from '@/types/database';
 import { isMissingFunction } from '@/lib/dbErrors';
+import { isOfflineActorChanged } from '@/lib/offlineActor';
 import { untypedRpc } from '@/lib/rpc';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { FOCAL } from '@/theme/motion';
@@ -171,7 +172,7 @@ function parseAuraAward(data: unknown, fallback: AuraAward): AuraAward {
  * @returns Parsed totals plus `points_added`.
  * @sideEffects `add_user_aura` RPC.
  */
-export async function addUserAura(targetUserId: string, pointsToAdd: number): Promise<AuraAward> {
+export async function addUserAura(targetUserId: string, pointsToAdd: number, client = supabase): Promise<AuraAward> {
   const points_added = Math.max(0, Math.round(pointsToAdd));
   const fallback: AuraAward = {
     aura_points: points_added,
@@ -184,11 +185,13 @@ export async function addUserAura(targetUserId: string, pointsToAdd: number): Pr
     return fallback;
   }
 
-  const { data, error } = await supabase.rpc('add_user_aura', {
+  const { data, error } = await untypedRpc('add_user_aura', {
     target_user_id: targetUserId,
     points_to_add: points_added,
-  });
+  }, client);
 
+  // Keep default award fallback; a guarded request refused before HTTP must retain its queued intent.
+  if (client !== supabase && isOfflineActorChanged(error)) throw error;
   if (error) return fallback;
   return parseAuraAward(data, fallback);
 }

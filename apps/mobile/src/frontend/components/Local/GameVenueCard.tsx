@@ -2,6 +2,7 @@
  * LOCAL-02: public game destination and arrival instructions below the match scoreboard.
  * The Games desk owns corrections. Unknown addresses stay readable; external-map failures never hide the address.
  * @sideEffects Explicit map handoff via gameVenue; fixed telemetry codes only, with no game/address/provider text.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
@@ -10,6 +11,7 @@ import { colors, radii } from '@/constants/theme';
 import { gameDirectionsUrl, openGameDirections } from '@/lib/gameVenue';
 import { TelemetryManager } from '@/services/TelemetryManager';
 import type { Game } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** @purpose Present the actual game venue without inferring the home campus or requesting a fan's location. */
 export function GameVenueCard({ game }: { game: Game }) {
@@ -76,16 +78,16 @@ export function GameVenueCard({ game }: { game: Game }) {
 
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.lg, padding: 12, gap: 4 },
-  heading: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
-  venue: { color: colors.text, fontSize: 16, fontWeight: '800' },
-  school: { color: colors.text, fontSize: 14, fontWeight: '600' },
-  address: { color: colors.text, fontSize: 13, lineHeight: 19 },
+  heading: { color: colors.textMuted, ...TYPE.caption, ...figtree('700') },
+  venue: { color: colors.text, ...TYPE.body, ...figtree('800') },
+  school: { color: colors.text, ...TYPE.body, ...figtree('600') },
+  address: { ...figtree('400'), color: colors.text, ...TYPE.body,  },
   arrival: { gap: 3, marginTop: 4 },
-  noteLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
-  note: { color: colors.text, fontSize: 13, lineHeight: 19 },
-  hint: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
+  noteLabel: { color: colors.textMuted, ...TYPE.caption, ...figtree('700') },
+  note: { ...figtree('400'), color: colors.text, ...TYPE.body,  },
+  hint: { ...figtree('400'), color: colors.textMuted, ...TYPE.caption,  },
   button: { alignSelf: 'flex-start', minHeight: 44, minWidth: 44, paddingHorizontal: 16, paddingVertical: 10, marginTop: 4, borderRadius: radii.md, backgroundColor: colors.deepGreen, justifyContent: 'center' },
-  buttonLabel: { color: colors.onAccent, fontSize: 14, fontWeight: '700' },
+  buttonLabel: { color: colors.onAccent, ...TYPE.button, ...figtree('700') },
   dimmed: { opacity: 0.6 },
-  error: { color: colors.danger, fontSize: 13, lineHeight: 19 },
+  error: { ...figtree('400'), color: colors.danger, ...TYPE.body,  },
 });

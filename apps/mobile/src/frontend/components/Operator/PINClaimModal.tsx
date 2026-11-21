@@ -1,8 +1,9 @@
+/** UX-13 readable type/bounded presentation preserves synchronous flight guards and initiating lifetime checks. */
 /** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useRef, useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
@@ -14,6 +15,7 @@ import { displayValue } from '@/data/players';
 import { isOperatorPin, OPERATOR_TEST_PIN } from '@/lib/operator';
 import { SPRING_BOUNCE, SPRING_CARD } from '@/theme/motion';
 import type { Game } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** How long the success pulse/flash plays before `onUnlock` fires, so the operator sees it land. */
 const SUCCESS_HOLD_MS = 260;
@@ -39,13 +41,23 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const lifetime = useRef({ gameId: game?.id, epoch: 0, mounted: true });
+  const flight = useRef<object | null>(null);
+  if (lifetime.current.gameId !== game?.id) {
+    lifetime.current = { ...lifetime.current, gameId: game?.id, epoch: lifetime.current.epoch + 1 };
+    flight.current = null;
+  }
+  const epoch = lifetime.current.epoch;
+  const current = () => lifetime.current.mounted && lifetime.current.epoch === epoch;
+  useEffect(() => { lifetime.current.mounted = true; return () => { lifetime.current.mounted = false; flight.current = null; }; }, []);
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const shake = useSharedValue(0);
   const successPulse = useSharedValue(1);
   const successFlash = useSharedValue(0);
 
   useEffect(() => {
-    if (!game) {
+    {
       setPin('');
       setError(null);
       setSuccess(false);
@@ -53,7 +65,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
       successPulse.value = 1;
       successFlash.value = 0;
     }
-  }, [game, shake, successFlash, successPulse]);
+  }, [game?.id]);
 
   const shakeStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shake.value }, { scale: successPulse.value }],
@@ -63,7 +75,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
   }));
 
   const tapDigit = (key: (typeof PIN_KEYS)[number]) => {
-    if (!key || claiming || success) return;
+    if (!key || claiming || success || flight.current) return;
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch {
@@ -100,6 +112,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
   };
 
   const submit = async (value: string) => {
+    if (!current() || claiming || flight.current) return;
     if (!game) {
       reject('Select an active game first.');
       return;
@@ -113,21 +126,29 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
     } catch {
       // no-op
     }
+    const operation = {}; flight.current = operation;
     setSuccess(true);
     successPulse.value = withSequence(withSpring(1.16, SPRING_BOUNCE), withSpring(1, SPRING_CARD));
     successFlash.value = withSequence(withTiming(1, { duration: 110 }), withTiming(0, { duration: 220 }));
-    await new Promise((resolve) => setTimeout(resolve, SUCCESS_HOLD_MS));
-    await onUnlock();
+    try {
+      await new Promise((resolve) => setTimeout(resolve, SUCCESS_HOLD_MS));
+      if (!current() || flight.current !== operation) return;
+      await onUnlock();
+    } catch (caught) {
+      if (current() && flight.current === operation) { setSuccess(false); reject(caught instanceof Error ? caught.message : 'Scoring rights were not claimed. Try again.'); }
+    } finally { if (flight.current === operation) flight.current = null; }
   };
+  const dismiss = () => { if (!claiming && !flight.current) onClose(); };
 
   return (
-    <Modal transparent animationType="fade" visible={Boolean(game)} onRequestClose={onClose}>
+    <Modal transparent animationType="fade" visible={Boolean(game)} onRequestClose={dismiss}>
       <View style={styles.root}>
-        <Pressable haptic="none" accessibilityLabel="Dismiss PIN sheet" onPress={onClose} style={styles.backdrop} />
+        <Pressable haptic="none" accessibilityLabel="Dismiss PIN sheet" onPress={dismiss} style={styles.backdrop} />
         <View pointerEvents="box-none" style={frame.dock}>
-        <View style={[styles.sheet, frame.card]} accessibilityRole="summary" accessibilityLabel="Operator PIN keypad">
+        <View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }]} accessibilityRole="summary" accessibilityLabel="Operator PIN keypad">
           <MenuBackdrop accent="jade" />
-          <SheetHandle onDismiss={claiming ? undefined : onClose} />
+          <SheetHandle onDismiss={claiming || success ? undefined : dismiss} />
+          <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent}>
           <Text style={styles.kicker}>Operator PIN</Text>
           <Text style={styles.title}>Unlock control center</Text>
           <Text style={styles.matchup}>
@@ -144,7 +165,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
             </Animated.View>
           </View>
           {error ? (
-            <Text style={styles.error} accessibilityRole="alert">
+            <Text style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="assertive">
               {error}
             </Text>
           ) : (
@@ -173,6 +194,7 @@ export function PINClaimModal({ game, claiming = false, onClose, onUnlock }: PIN
               );
             })}
           </View>
+          </ScrollView>
         </View>
         </View>
       </View>
@@ -202,6 +224,8 @@ function PinDot({ active }: { active: boolean }) {
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flexGrow: 0, flexShrink: 1 },
+  bodyContent: { gap: 10 },
   root: {
     flex: 1,
     minHeight: '100%',
@@ -220,25 +244,25 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 22,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
   matchup: {
     color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
   hint: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   dotsWrap: {
     overflow: 'hidden',
@@ -268,14 +292,14 @@ const styles = StyleSheet.create({
   },
   error: {
     color: colors.danger,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
   muted: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     textAlign: 'center',
   },
   pad: {
@@ -301,7 +325,7 @@ const styles = StyleSheet.create({
   },
   keyLabel: {
     color: colors.text,
-    fontSize: 24,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
 });

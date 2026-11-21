@@ -13,6 +13,8 @@ const mockProfiles = new Map<string, ProfilePublic>();
 const mockSports = new Map<string, AthleteSportsSnapshot>();
 let mockSessionGuard = () => true;
 const mockRenderedNames: string[] = [];
+const mockRequireAuth = jest.fn(), mockStartCheckout = jest.fn();
+let mockProfileActions: { onBacked: (count: number) => void; onDropMalo: () => void };
 jest.mock('@/lib/athleteSports', () => ({ fetchAthleteSports: async (id: string) => mockSports.get(id) ?? null }));
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: jest.fn(), push: jest.fn() }),
@@ -51,12 +53,12 @@ jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ isAthlete: false, 
 jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({
   live: jest.requireActual('@/lib/runtime').DEFAULT_APP_RUNTIME,
 }) }));
-jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: jest.fn() }) }));
+jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: mockRequireAuth }) }));
 jest.mock('@/context/UploadSheetContext', () => ({ useOptionalUploadSheet: () => null }));
 jest.mock('@/hooks/useFilmerStats', () => ({ useFilmerStats: () => ({ stats: null }) }));
 jest.mock('@/hooks/useRoster', () => ({ useRoster: () => ({ players: [], applyBackerCount: jest.fn() }) }));
 jest.mock('@/hooks/useAthleteSubscription', () => ({ useAthleteSubscription: () => ({ subscribed: false, grant: jest.fn() }) }));
-jest.mock('@/hooks/useTipCheckout', () => ({ useTipCheckout: () => ({ startCheckout: jest.fn(), busy: false }) }));
+jest.mock('@/hooks/useTipCheckout', () => ({ useTipCheckout: () => ({ startCheckout: mockStartCheckout, busy: false }) }));
 // Independent media/chrome components are replaced at the route's props boundary; route loading and stats stay real.
 jest.mock('@/components/Effects/ScrollFx', () => ({
   ScrollFxParallax: ({ children }: { children: React.ReactNode }) => children,
@@ -65,13 +67,15 @@ jest.mock('@/components/Effects/ScrollFx', () => ({
 jest.mock('@/components/TabScreen', () => ({ TabScreen: ({ children }: { children: React.ReactNode }) => children }));
 jest.mock('@/components/Filmers/FilmerCard', () => ({ FilmerCard: () => null }));
 jest.mock('@/components/Profile/AthleteProfileView', () => ({ AthleteProfileView: (props: {
-  name: string; schoolVisible?: boolean; teamName?: string; bio?: string; stats: ReturnType<typeof emptyAthleteStats>;
+  name: string; player: Player; onBacked: (count: number) => void; onDropMalo: () => void; schoolVisible?: boolean; teamName?: string; bio?: string; stats: ReturnType<typeof emptyAthleteStats>;
   primarySport?: string; displaySport?: string | null; sportEntries?: AthleteSportsSnapshot['sports']; onDisplaySportChange?: (sport: string | null) => void;
 }) => {
   const { Text, Pressable } = jest.requireActual('react-native');
   mockRenderedNames.push(props.name);
+  mockProfileActions = props;
   return <>
     <Text accessibilityRole="header">{props.name}</Text>
+    <Text>{`Backers: ${props.player.backer_count}`}</Text>
     <Text>{`School visible: ${String(props.schoolVisible)}`}</Text>
     <Text>{`Profile sport: ${props.stats.career.sport}`}</Text>
     <Text>{`Primary sport: ${props.primarySport ?? ''}`}</Text>
@@ -90,7 +94,7 @@ function deferredPlayer() {
   const promise = new Promise<{ data: Player; error: null }>((yes) => { resolve = yes; });
   return { promise, resolve };
 }
-beforeEach(() => { mockRouteId = firstId; mockPlayers.clear(); mockProfiles.clear(); mockSports.clear(); mockRenderedNames.length = 0; mockSessionGuard = () => true; });
+beforeEach(() => { jest.clearAllMocks(); mockRouteId = firstId; mockPlayers.clear(); mockProfiles.clear(); mockSports.clear(); mockRenderedNames.length = 0; mockSessionGuard = () => true; });
 
 it('removes the old athlete immediately while another profile loads in the same route', async () => {
   mockPlayers.set(firstId, Promise.resolve({ data: player(firstId, 'Ana First'), error: null }));
@@ -159,4 +163,19 @@ it('does not paint a committed private view after the viewer returns with a new 
   await view.rerender(<UserAthleteProfileScreen />);
   expect(mockRenderedNames).not.toContain('Ana First');
   expect(screen.queryByRole('header', { name: 'Ana First' })).toBeNull();
+});
+
+it.each(['profile', 'checkout'])('does not apply an old athlete backed count through the %s callback to the next athlete', async callback => {
+  mockPlayers.set(firstId, Promise.resolve({ data: player(firstId, 'Ana First'), error: null }));
+  mockPlayers.set(secondId, Promise.resolve({ data: player(secondId, 'Bea Second'), error: null }));
+  const view = await render(<UserAthleteProfileScreen />); await act(async () => {});
+  let onBacked = mockProfileActions.onBacked;
+  if (callback === 'checkout') {
+    await act(async () => { mockProfileActions.onDropMalo(); mockRequireAuth.mock.calls[0][0].resume(); });
+    onBacked = mockStartCheckout.mock.calls[0][0].onBacked;
+  }
+  mockRouteId = secondId; await view.rerender(<UserAthleteProfileScreen />); await act(async () => {});
+  await act(async () => onBacked(99));
+  expect(screen.getByRole('header', { name: 'Bea Second' })).toBeTruthy();
+  expect(screen.getByText('Backers: 0')).toBeTruthy();
 });

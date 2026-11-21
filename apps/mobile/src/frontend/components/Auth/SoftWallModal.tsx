@@ -1,16 +1,6 @@
-/** Google supports new and existing accounts; bank setup is separate and age rules remain with account confirmation. */
+/** UX-13 readable shared type preserves every action and required notice. Google supports new and existing accounts; bank setup is separate and age rules remain with account confirmation. */
 import { useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated from 'react-native-reanimated';
 import { useFanSheetMotion } from '@/hooks/useFanSheetMotion';
@@ -436,7 +426,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...TYPE.body,
-    fontWeight: '600',
+    ...figtree('600'),
     color: colors.textMuted,
     marginBottom: 2,
   },
@@ -448,14 +438,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 48,
   },
-  appleBtn: { backgroundColor: colors.night },
-  appleLabel: { ...figtree('700'), color: '#FFFFFF', fontSize: 16 },
-  demoBtn: { backgroundColor: FOCAL.goldInk },
-  demoLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  appleBtn: { minHeight: 44, backgroundColor: colors.night },
+  appleLabel: { ...figtree('700'), color: '#FFFFFF', ...TYPE.body },
+  demoBtn: { minHeight: 44, backgroundColor: FOCAL.goldInk },
+  demoLabel: { color: '#FFFFFF', ...TYPE.body, ...figtree('800') },
   demoHint: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
     color: colors.textMuted,
     textAlign: 'center',
   },
@@ -470,42 +460,42 @@ const styles = StyleSheet.create({
   },
   reassureLabel: {
     flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '700',
+    ...TYPE.body,
+
+    ...figtree('700'),
     color: colors.primary,
   },
-  googleBtn: {
+  googleBtn: { minHeight: 44,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  googleLabel: { ...figtree('700'), color: colors.text, fontSize: 16 },
-  magicBtn: { backgroundColor: colors.primary, ...KIT.shadowSoft },
-  magicLabel: { ...figtree('700'), color: '#FFFFFF', fontSize: 16 },
-  secondaryBtn: {
+  googleLabel: { ...figtree('700'), color: colors.text, ...TYPE.body },
+  magicBtn: { minHeight: 44, backgroundColor: colors.primary, ...KIT.shadowSoft },
+  magicLabel: { ...figtree('700'), color: '#FFFFFF', ...TYPE.body },
+  secondaryBtn: { minHeight: 44,
     backgroundColor: colors.accentSoft,
   },
-  secondaryLabel: { ...figtree('700'), color: colors.primary, fontSize: 16 },
+  secondaryLabel: { ...figtree('700'), color: colors.primary, ...TYPE.body },
   orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 4 },
   orLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  orLabel: { color: colors.textMuted, fontWeight: '700', fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase' },
+  orLabel: { color: colors.textMuted, ...figtree('700'), ...TYPE.caption, letterSpacing: 0.6, textTransform: 'uppercase' },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: KIT.controlRadius,
     paddingHorizontal: 16,
     minHeight: 50,
-    fontSize: 16,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     color: colors.text,
     backgroundColor: colors.background,
   },
-  message: { color: colors.primary, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  message: { color: colors.primary, ...figtree('700'), ...TYPE.body,  },
   // emberInk, not the bright ember: error text must clear 4.5:1 on the white sheet.
-  error: { color: colors.danger, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  error: { color: colors.danger, ...figtree('700'), ...TYPE.body,  },
   close: { alignItems: 'center', paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
-  closeLabel: { fontSize: 15, fontWeight: '700', color: colors.textMuted },
-  linkLabel: { fontSize: 15, fontWeight: '800', color: colors.primary },
-  disabled: { opacity: 0.45 },
+  closeLabel: { ...TYPE.body, ...figtree('700'), color: colors.textMuted },
+  linkLabel: { ...TYPE.body, ...figtree('800'), color: colors.primary },
+  disabled: { minHeight: 44, opacity: 0.45 },
 });

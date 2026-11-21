@@ -5,6 +5,8 @@
  * @sideEffects `sponsorships` SELECT and INSERT; Storage upload; reads the signed-in user.
  */
 
+import { assertCurrent, isOfflineActorChanged } from '@/lib/offlineActor';
+import type { PaymentActor } from '@/lib/payments';
 import { AVATARS_BUCKET, bytesFromUri, imageContentType } from '@/services/MediaUploadService';
 import { mediaValueToStore, publicMediaUrl } from '@/lib/media';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -46,14 +48,15 @@ function parseRows(rows: unknown): Sponsorship[] {
 }
 
 /**
- * @purpose Upload a booster logo to Storage `avatars` under `sponsors/{user id}/`.
+ * @purpose Upload an account-bound paid followup or a booster logo to Storage `avatars` under `sponsors/{user id}/`.
  * `game_highlights` only allows video MIME types, and a React Native Blob is `text/plain`.
  * @param localUri Image picker URI.
  * @returns The value to store (public URL today; `sb:avatars/...` once `MEDIA_WRITE_REFERENCES` is on), or the
  *   original URI when Storage is missing.
  * @sideEffects Supabase Storage upload.
  */
-export async function uploadSponsorLogo(localUri: string): Promise<string> {
+export async function uploadSponsorLogo(localUri: string, payment?: PaymentActor): Promise<string> {
+  if (payment) assertCurrent(payment.actor);
   if (!isSupabaseConfigured) return localUri;
   if (/^https?:\/\//i.test(localUri)) return localUri;
   try {
@@ -61,16 +64,21 @@ export async function uploadSponsorLogo(localUri: string): Promise<string> {
     const ext = contentType === 'image/png' ? 'png' : contentType === 'image/webp' ? 'webp' : 'jpg';
     const body = await bytesFromUri(localUri);
     // Own folder: Storage only lets a user overwrite files under sponsors/{their id}/ (20261013230000).
-    const { data: auth } = await supabase.auth.getUser();
+    const { data: auth } = payment ? { data: { user: { id: payment.actor.userId } } } : await supabase.auth.getUser();
+    if (payment) assertCurrent(payment.actor);
     const path = auth.user?.id ? `sponsors/${auth.user.id}/${Date.now()}.${ext}` : `sponsors/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from(AVATARS_BUCKET).upload(path, body, {
+    const { error } = await (payment?.client ?? supabase).storage.from(AVATARS_BUCKET).upload(path, body, {
       contentType,
       upsert: true,
     });
+    if (payment) assertCurrent(payment.actor);
+    if (error && isOfflineActorChanged(error)) throw error;
     if (error) return localUri;
     const publicUrl = publicMediaUrl(AVATARS_BUCKET, path);
     return publicUrl ? mediaValueToStore(AVATARS_BUCKET, path, publicUrl) : localUri;
-  } catch {
+  } catch (error) {
+    if (payment) assertCurrent(payment.actor);
+    if (isOfflineActorChanged(error)) throw error;
     return localUri;
   }
 }
@@ -101,8 +109,10 @@ export async function fetchActiveSponsorships(): Promise<Sponsorship[] | null> {
  */
 export async function insertSponsorship(
   payload: Omit<Sponsorship, 'id' | 'created_at'>,
+  client = supabase,
 ): Promise<{ ok: false } | { ok: true; sponsorship: Sponsorship | null }> {
-  const { data, error } = await supabase.from('sponsorships').insert(payload).select('*').maybeSingle();
+  const { data, error } = await client.from('sponsorships').insert(payload).select('*').maybeSingle();
+  if (client !== supabase && isOfflineActorChanged(error)) throw error;
   if (error || !data) return { ok: false };
   return { ok: true, sponsorship: parseSponsorship(data as Record<string, unknown>) };
 }

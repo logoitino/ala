@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Horizontal pill row, generic over the pill id type, with optional counts. Used by the search overlays, the athlete
  * profile and the role switcher.
  */
@@ -10,6 +10,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { colors } from '@/constants/theme';
 import { FOCAL, SPRING_SHEET } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export type FilterPill<T extends string> = {
   id: T;
@@ -166,17 +167,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     zIndex: 1,
   },
-  pillOn: {
+  pillOn: { minHeight: 44,
     backgroundColor: 'transparent',
     borderColor: 'transparent',
   },
-  pillIdle: {
+  pillIdle: { minHeight: 44,
     backgroundColor: colors.surface,
     borderColor: colors.border,
   },
   label: {
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     color: colors.text,
   },
   labelOn: {

@@ -1,15 +1,17 @@
+/** UX-13 readable type/bounded presentation preserves synchronous flight guards and initiating lifetime checks. */
 /**
  * One student row on the school confirmation form: the athletic director or coach attests they met the student
  * in person and that they are on the roster (`ROSTER_ATTESTATION`). Used by app/school-confirm.tsx.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import type { ConfirmResult, ConfirmationRequest } from '@/lib/schoolConfirm';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export const ROSTER_ATTESTATION = 'I met this student in person and they are on my roster.';
 
@@ -32,19 +34,24 @@ export function SchoolConfirmRow({
   const [attested, setAttested] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const flight = useRef(false);
+  const active = useRef(true);
+  useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
 
   const signed = signature.trim().length >= 3;
   const canConfirm = signed && attested && code.length === 6 && !busy;
 
   const decide = async (approve: boolean) => {
+    if (flight.current || !active.current || !signed || (approve && !canConfirm)) return;
+    flight.current = true;
     setBusy(true);
     setError(null);
-    const result = await onDecide(approve, code);
-    setBusy(false);
-    if (!result.ok) {
-      setError(result.error);
-      setCode('');
-    }
+    try {
+      const result = await onDecide(approve, code);
+      if (active.current && !result.ok) { setError(result.error); setCode(''); }
+    } catch (caught) {
+      if (active.current) { setError(caught instanceof Error ? caught.message : 'Could not save this decision. Try again.'); setCode(''); }
+    } finally { flight.current = false; if (active.current) setBusy(false); }
   };
 
   const decline = () =>
@@ -85,6 +92,7 @@ export function SchoolConfirmRow({
       <Pressable
         accessibilityRole="checkbox"
         accessibilityState={{ checked: attested }}
+        disabled={busy}
         accessibilityLabel={ROSTER_ATTESTATION}
         onPress={() => setAttested((prev) => !prev)}
         style={styles.tickRow}
@@ -94,7 +102,7 @@ export function SchoolConfirmRow({
       </Pressable>
 
       {!signed ? <Text style={styles.details}>Sign with your full name at the top first.</Text> : null}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="assertive">{error}</Text> : null}
 
       <View style={styles.actions}>
         <Pressable
@@ -129,17 +137,17 @@ const styles = StyleSheet.create({
   },
   name: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
-  details: {
+  details: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
+    ...TYPE.body,
   },
   codeState: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   codeReady: {
     color: colors.deepGreen,
@@ -151,31 +159,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     color: colors.text,
-    fontSize: 22,
-    fontWeight: '700',
+    ...TYPE.title,
+    ...figtree('700'),
     letterSpacing: 6,
     textAlign: 'center',
   },
   tickRow: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  tickLabel: {
+  tickLabel: { ...figtree('400'),
     flex: 1,
     color: colors.text,
-    fontSize: 14,
-    lineHeight: 20,
+    ...TYPE.body,
+
   },
-  error: {
+  error: { ...figtree('400'),
     color: colors.danger,
-    fontSize: 13,
+    ...TYPE.body,
   },
   actions: {
     flexDirection: 'row',
     gap: 10,
   },
   button: {
+    minHeight: 44,
+    justifyContent: 'center',
     flex: 1,
     borderRadius: radii.pill,
     paddingVertical: 10,
@@ -187,14 +198,14 @@ const styles = StyleSheet.create({
   },
   declineLabel: {
     color: colors.text,
-    fontWeight: '700',
+    ...figtree('700'),
   },
   confirm: {
     backgroundColor: colors.deepGreen,
   },
   confirmLabel: {
     color: colors.onAccent,
-    fontWeight: '800',
+    ...figtree('800'),
   },
   dim: {
     opacity: 0.5,

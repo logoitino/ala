@@ -1,8 +1,11 @@
-/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
+/** Gift totals use a stable current Auth owner fixture; missing/denied reads preserve visible error and empty-state assertions. */
 import { renderHook, waitFor } from '@testing-library/react-native';
 
 import { useReceivedMalo } from '@/hooks/useReceivedMalo';
 
+const mockAuthGuard = () => true;
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'viewer-current' }, isSessionCurrent: mockAuthGuard }) }));
+jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: { captureActor: (userId: string) => ({ userId, isCurrent: mockAuthGuard }) } }));
 const mockRpc = jest.fn();
 const mockTrackIssue = jest.fn();
 

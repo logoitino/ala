@@ -98,7 +98,7 @@ export function donationBreakdownLine(args: {
 
 /**
  * @purpose True when Highlights Mālo may open PaymentSheet — gift is for the athlete in the play, not the uploader.
- * Pending / rejected tags and untagged clips stay discovery-only until the athlete is confirmed.
+ * Mismatched resolved recipients and pending / rejected tags and untagged clips stay discovery-only until the athlete is confirmed.
  */
 export function canDropMaloOnHighlight(
   clip: Pick<HighlightClip, 'playerId' | 'tagStatus' | 'athleteName'>,
@@ -106,7 +106,7 @@ export function canDropMaloOnHighlight(
 ): boolean {
   if (!player?.id) return false;
   const taggedId = (clip.playerId ?? player.id).trim();
-  if (!taggedId) return false;
+  if (!taggedId || taggedId !== player.id.trim()) return false;
   const status = clip.tagStatus ?? 'confirmed';
   if (status === 'pending' || status === 'rejected') return false;
   return true;

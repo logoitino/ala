@@ -2,16 +2,11 @@
  * Full-screen thank-you moment after a gift succeeds (confetti + card).
  * Driven by `CelebrationContext`: any screen sets a payload, this component, mounted once at the app root,
  * shows it and clears it on dismiss.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Dimensions,
-  Modal,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Dimensions, Modal, StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -22,12 +17,14 @@ import { useCelebration } from '@/context/CelebrationContext';
 import { cardShadow, colors, radii } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { SPRING_FLIP } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const CONFETTI_COLORS = [colors.accent, colors.primary, colors.gold, '#FFFFFF', colors.success];
 
 export function BackedCelebration() {
   const insets = useSafeAreaInsets();
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const { payload, dismiss } = useCelebration();
   const [burstKey, setBurstKey] = useState(0);
   const width = Dimensions.get('window').width;
@@ -86,8 +83,9 @@ export function BackedCelebration() {
           </View>
         ) : null}
 
-        <Animated.View style={[styles.card, frame.card, cardEntranceStyle]}>
+        <Animated.View style={[styles.card, frame.card, { maxHeight: windowHeight * 0.85 }, cardEntranceStyle]}>
           <CardShine loopMs={2400} width={70} tint="rgba(0,230,118,0.35)" />
+          <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.kicker}>MĀLO! GIFT SENT 🚀</Text>
           <Text style={styles.headline}>
             YOU SENT A GIFT TO {payload?.playerName.toUpperCase()}! 🏈
@@ -96,6 +94,7 @@ export function BackedCelebration() {
           {payload?.auraPointsEarned ? (
             <Text style={styles.auraEarned}>+{payload.auraPointsEarned} Aura Points Earned! ⚡</Text>
           ) : null}
+          </ScrollView>
           <AnimatedButton
             accessibilityLabel="Keep watching"
             haptic="medium"
@@ -111,6 +110,8 @@ export function BackedCelebration() {
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flexGrow: 0, flexShrink: 1, alignSelf: 'stretch' },
+  bodyContent: { gap: 10, paddingBottom: 4, alignItems: 'center' },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(11, 61, 46, 0.72)',
@@ -134,8 +135,8 @@ const styles = StyleSheet.create({
   },
   toastLabel: {
     color: colors.onAccent,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
     textAlign: 'center',
   },
   card: {
@@ -146,27 +147,27 @@ const styles = StyleSheet.create({
     ...cardShadow,
   },
   kicker: {
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: colors.accent,
   },
   headline: {
-    fontSize: 26,
-    lineHeight: 32,
-    fontWeight: '800',
+    ...TYPE.display,
+
+    ...figtree('800'),
     color: colors.deepGreen,
     textAlign: 'center',
   },
   backers: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...TYPE.title,
+    ...figtree('700'),
     color: colors.text,
   },
   auraEarned: {
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: colors.primary,
     textAlign: 'center',
   },
@@ -182,8 +183,8 @@ const styles = StyleSheet.create({
   },
   buttonLabel: {
     color: colors.onAccent,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   pressed: {
     opacity: 0.88,

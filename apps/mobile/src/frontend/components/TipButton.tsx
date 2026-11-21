@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * The animated amount button on the gift sheet (preset amounts, custom, selected state).
  * (Code name `Tip` = gift; on-screen words follow docs/product/VOICE.md.)
  */
@@ -18,6 +18,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, KIT, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { auraPointsForTip } from '@/data/players';
 import { SPRING_BOUNCE } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type TipButtonProps = {
   amount?: number;
@@ -90,20 +91,20 @@ export function TipButton({
 }
 
 const styles = StyleSheet.create({
-  hit: {
+  hit: { minHeight: 44,
     flexGrow: 1,
     flexBasis: '47%',
     minWidth: 88,
   },
-  hitWide: {
+  hitWide: { minHeight: 44,
     flexBasis: '100%',
     alignSelf: 'stretch',
   },
-  hitPressed: {
+  hitPressed: { minHeight: 44,
     transform: [{ scale: 0.98 }],
     opacity: 0.92,
   },
-  hitDisabled: {
+  hitDisabled: { minHeight: 44,
     opacity: 0.45,
   },
   button: {
@@ -119,14 +120,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
   },
-  label: {
+  label: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
-    fontSize: 22,
+    ...TYPE.title,
     textAlign: 'center',
   },
   sublabel: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     textAlign: 'center',
   },
 });

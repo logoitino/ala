@@ -1,5 +1,5 @@
 /**
- * Highlights data layer: fetch the feed (tiered ranking) and one athlete's clips, hype votes (`bumpReelHype` /
+ * Actor-bound paid reel followups and Highlights data layer: fetch the feed (tiered ranking) and one athlete's clips, hype votes (`bumpReelHype` /
  * `clearReelHype`), donation totals on a clip, hiding a clip locally, reporting and Vault toggling, playback URL
  * resolution (including Vault signing), deep links, and the "Filmed by" credit. Also pure helpers for the owner-peek drag.
  * Photo stories (PHOTO_STORIES_DESIGN.md) come through the same feed rows with `media_type = 'photo_story'`; their
@@ -11,6 +11,8 @@
  * @sideEffects `reels`, `reel_hype_votes` and related RPCs; AsyncStorage for local hides and the peek hint.
  */
 
+import { assertCurrent, createOfflineActorClient, isOfflineActorChanged, type OfflineActor } from '@/lib/offlineActor';
+import { isMissingColumn, isMissingFunction } from '@/lib/dbErrors';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -22,6 +24,7 @@ import { resolveVideoMediaUrl } from '@/lib/media';
 import { mediaStorage, type MediaStorageAdapter } from '@/lib/mediaStorage';
 import { supportSignals } from '@/services/SupportSignalManager';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { untypedRpc } from '@/lib/rpc';
 import { uploadHighlight } from '@/services/MediaUploadService';
 import type { Player, Reel, ReelWithPlayer } from '@/types/database';
 
@@ -450,7 +453,7 @@ function parseReelHype(data: unknown, fallback: ReelHype): ReelHype {
  * @returns Server row when the RPC lands; duplicate votes (or an RPC error) return the unchanged counts.
  * @sideEffects `increment_reel_hype` RPC (inserts `reel_hype_votes` for `auth.uid()`).
  */
-export async function bumpReelHype(reelId: string, kind: PlayReactionId, current: ReelHype): Promise<ReelHype> {
+export async function bumpReelHype(reelId: string, kind: PlayReactionId, current: ReelHype, client = supabase): Promise<ReelHype> {
   const optimistic: ReelHype = {
     ...current,
     seki_count: kind === 'seki' ? current.seki_count + 1 : current.seki_count,
@@ -460,13 +463,14 @@ export async function bumpReelHype(reelId: string, kind: PlayReactionId, current
 
   if (!isSupabaseConfigured || !isReelUuid(reelId)) return optimistic;
 
-  const { data, error } = await supabase.rpc('increment_reel_hype', {
+  const { data, error } = await untypedRpc('increment_reel_hype', {
     target_reel_id: reelId,
     hype_kind: kind,
-  });
+  }, client);
 
   if (error) {
-    // 2026-09 audit (reels RLS tightening): `increment_reel_hype` is the source of truth for hype
+    if (client !== supabase && isOfflineActorChanged(error)) throw error;
+  // 2026-09 audit (reels RLS tightening): `increment_reel_hype` is the source of truth for hype
     // counters — it also dedupes one tap per signed-in fan via `reel_hype_votes`. A raw client
     // `reels` UPDATE fallback would let anyone spam these counts with no dedupe at all, so hype
     // counters no longer have a raw-UPDATE grant and there is nothing safe to fall back to here.
@@ -486,7 +490,7 @@ export async function bumpReelHype(reelId: string, kind: PlayReactionId, current
  * @returns Server row when a vote was deleted; `current` when nothing changed.
  * @sideEffects `clear_reel_hype` RPC (deletes `reel_hype_votes` for `auth.uid()` and steps the counter down).
  */
-export async function clearReelHype(reelId: string, kind: PlayReactionId, current: ReelHype): Promise<ReelHype> {
+export async function clearReelHype(reelId: string, kind: PlayReactionId, current: ReelHype, client = supabase): Promise<ReelHype> {
   const optimistic: ReelHype = {
     ...current,
     seki_count: kind === 'seki' ? Math.max(0, current.seki_count - 1) : current.seki_count,
@@ -496,10 +500,10 @@ export async function clearReelHype(reelId: string, kind: PlayReactionId, curren
 
   if (!isSupabaseConfigured || !isReelUuid(reelId)) return optimistic;
 
-  const { data, error } = await supabase.rpc('clear_reel_hype', {
+  const { data, error } = await untypedRpc('clear_reel_hype', {
     target_reel_id: reelId,
     hype_kind: kind,
-  });
+  }, client);
 
   if (error) return current;
 
@@ -516,7 +520,7 @@ export async function clearReelHype(reelId: string, kind: PlayReactionId, curren
  * @returns Server total when the RPC lands; the pre-tap total if the RPC errors.
  * @sideEffects `increment_reel_tips` RPC.
  */
-export async function addReelTips(reelId: string, addCents: number, current: ReelHype): Promise<ReelHype> {
+export async function addReelTips(reelId: string, addCents: number, current: ReelHype, client = supabase): Promise<ReelHype> {
   const add = Math.max(0, addCents);
   const optimistic: ReelHype = {
     ...current,
@@ -524,7 +528,7 @@ export async function addReelTips(reelId: string, addCents: number, current: Ree
   };
   if (!isSupabaseConfigured || !isReelUuid(reelId) || add === 0) return optimistic;
 
-  const { data, error } = await supabase.rpc('increment_reel_tips', {
+  const { data, error } = await client.rpc('increment_reel_tips', {
     target_reel_id: reelId,
     add_cents: add,
   });
@@ -533,6 +537,7 @@ export async function addReelTips(reelId: string, addCents: number, current: Ree
     return { ...optimistic, total_tips_cents: data };
   }
 
+  if (client !== supabase && isOfflineActorChanged(error)) throw error;
   // 2026-09 audit (reels RLS tightening): `total_tips_cents` is a displayed aggregate, not the
   // ledger of record (that's `tips`, already inserted by the time this runs) — but it no longer has
   // a raw-UPDATE grant either way, so a failed RPC just leaves the clip's running total unchanged
@@ -615,16 +620,16 @@ export function reelHiddenForUser(
  * @param reason Report reason. Older databases that only have the one-argument RPC store it as unspecified.
  * @sideEffects `report_reel(target_reel_id, report_reason)` (security definer). Seeded `hl-*` ids are no-ops.
  */
-export async function reportReelRemote(reelId: string, reason: ReportReasonId = 'unspecified'): Promise<void> {
+export async function reportReelRemote(reelId: string, reason: ReportReasonId = 'unspecified', client = supabase): Promise<void> {
   if (!isSupabaseConfigured || !isReelUuid(reelId)) return;
-  const withReason = await supabase.rpc('report_reel', {
+  const withReason = await untypedRpc('report_reel', {
     target_reel_id: reelId,
     report_reason: reason,
-  });
+  }, client);
   if (!withReason.error) return;
   const message = withReason.error.message ?? '';
   if (!/report_reason|Could not find the function|PGRST202/i.test(message)) throw withReason.error;
-  const { error } = await supabase.rpc('report_reel', { target_reel_id: reelId });
+  const { error } = await untypedRpc('report_reel', { target_reel_id: reelId }, client);
   if (error) throw error;
 }
 
@@ -635,20 +640,31 @@ export async function reportReelRemote(reelId: string, reason: ReportReasonId = 
  * @returns Next `is_vault_only` value.
  * @sideEffects `toggle_reel_vault_status` RPC; falls back to `reels` UPDATE when the RPC is missing (demo).
  */
-export async function toggleReelVaultStatus(reelId: string, currentlyVault: boolean): Promise<boolean> {
+export async function toggleReelVaultStatus(reelId: string, currentlyVault: boolean, actor?: OfflineActor): Promise<boolean> {
   const nextVault = !currentlyVault;
   if (!isSupabaseConfigured || !isReelUuid(reelId)) return nextVault;
 
-  const { data, error } = await supabase.rpc('toggle_reel_vault_status', { target_reel_id: reelId });
+  const client = actor ? await createOfflineActorClient(actor) : supabase;
+  if (actor) assertCurrent(actor);
+  const { data, error } = await client.rpc('toggle_reel_vault_status', { target_reel_id: reelId });
+  if (actor) assertCurrent(actor);
   if (!error && typeof data === 'boolean') return data;
 
-  const { error: updateError } = await supabase
+  if (!isMissingFunction(error)) {
+    throw new Error(/photo_story_public/i.test(error?.message ?? '') ? 'Photo stories stay on the free public feed.' : error?.message || 'Could not change Vault status.');
+  }
+  const { data: updated, error: updateError } = await client
     .from('reels')
     .update({ is_vault_only: nextVault, is_exclusive: nextVault })
-    .eq('id', reelId);
+    .eq('id', reelId).select('id,is_vault_only').single();
 
-  if (updateError?.message.includes('is_vault_only')) {
-    await supabase.from('reels').update({ is_exclusive: nextVault }).eq('id', reelId);
+  if (actor) assertCurrent(actor);
+  if (isMissingColumn(updateError) && updateError?.message.includes('is_vault_only')) {
+    const { data: legacy, error: legacyError } = await client.from('reels').update({ is_exclusive: nextVault }).eq('id', reelId).select('id,is_exclusive').single();
+    if (actor) assertCurrent(actor);
+    if (legacyError) throw new Error(legacyError.message || 'Could not change Vault status.');
+    if (!legacy || legacy.id !== reelId || typeof legacy.is_exclusive !== 'boolean') throw new Error('Vault status was not confirmed.');
+    return legacy.is_exclusive;
   } else if (updateError) {
     // e.g. reels_photo_story_public_check: a photo story can never be Vault. Surface it instead of
     // reporting a flip that did not happen.
@@ -659,5 +675,6 @@ export async function toggleReelVaultStatus(reelId: string, currentlyVault: bool
     );
   }
 
-  return nextVault;
+  if (!updated || updated.id !== reelId || typeof updated.is_vault_only !== 'boolean') throw new Error('Vault status was not confirmed.');
+  return updated.is_vault_only;
 }

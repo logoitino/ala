@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Mentions waiting on this account. Shown on your own profile. Confirming publishes the name
  * on that Highlight. Declining removes it. Donations are not affected.
  * @sideEffects `get_my_account_tags`, `confirm_account_tag`.
@@ -11,6 +11,7 @@ import { useFocusEffect } from 'expo-router';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { confirmAccountTag, fetchMyAccountTags, type MyAccountTag } from '@/lib/accountTags';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Let the signed-in account accept or decline Highlight mentions.
@@ -73,14 +74,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   kicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: colors.deepGreen,
   },
   row: { gap: 8 },
-  title: { fontSize: 14, fontWeight: '700', color: colors.text },
+  title: { ...TYPE.body, ...figtree('700'), color: colors.text },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   yes: {
     minHeight: 44,
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  yesLabel: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  yesLabel: { color: '#FFFFFF', ...TYPE.body, ...figtree('800') },
   no: {
     minHeight: 44,
     justifyContent: 'center',
@@ -100,5 +101,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  noLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '800' },
+  noLabel: { color: colors.textMuted, ...TYPE.body, ...figtree('800') },
 });

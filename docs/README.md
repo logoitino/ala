@@ -29,6 +29,8 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 
 | Document | What it answers |
 | --- | --- |
+| [UX-12](agents/UX-12.md) | Readable panels, compact decorative icons, wrapping text and popup spacing; actual local evidence and device/reference limits. |
+| [APP-REPAIR-01](agents/APP-REPAIR-01.md) | Native readiness setup, offline reconnect preservation, actual regression/source review and separate undo/account-attribution findings. |
 | [Gift/tip rollout](engineering/GIFT_TIP_ROLLOUT.md) | Prerequisite chain, coordinated checkout rollout, zero-cut containment and unverified provider/native gates. |
 | [Gift rollout preflight](engineering/evidence/GIFT_ROLLOUT_PREFLIGHT.md) | Source bindings and actual bounded local/hosted read-only observations. |
 | [FEED-01 Phase 1 smoke](engineering/evidence/FEED-01-phase1-smoke.md) | Local Jest receipt for Highlights picks, newest-first fallback, and hide. Signed-in device gaps stay open. |
@@ -273,3 +275,5 @@ with these files.
 | [GIFT_CHECKOUT_STRINGS](engineering/evidence/GIFT_CHECKOUT_STRINGS.md) | Before/after source string table stacked on the no-cut model |
 | [GIFT_CHECKOUT_RESIDUALS](engineering/evidence/GIFT_CHECKOUT_RESIDUALS.md) | Current accounted raw donat* matches and explicit exceptions |
 | [TIP_MODEL_REPORT](engineering/evidence/TIP_MODEL_REPORT.md) | Computation inventory, exact split-change size, flag tests and settlement limits |
+
+- [UX-13 whole-app menu/function coverage](agents/UX-13.md) — complete local source/menu review, spacing and ordinary flow repairs; current-source tests/rendered evidence stay distinct from device/provider acceptance.

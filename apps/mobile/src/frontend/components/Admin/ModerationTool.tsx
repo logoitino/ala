@@ -20,8 +20,8 @@ export function ModerationTool() {
       <ModerationTable
         flags={dashboard.flags}
         busyId={dashboard.busyId}
-        onDismiss={(row) => void dashboard.moderate(row, 'dismiss')}
-        onRemove={(row) => void dashboard.moderate(row, 'remove')}
+        onDismiss={(row) => void dashboard.moderate(row, 'dismiss').catch(() => undefined)}
+        onRemove={(row) => void dashboard.moderate(row, 'remove').catch(() => undefined)}
       />
     </AdminPage>
   );

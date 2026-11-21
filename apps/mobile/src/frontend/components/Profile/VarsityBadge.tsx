@@ -1,3 +1,4 @@
+/** UX-13 VarsityBadge.tsx keeps existing flow with shared readable type. */
 import { useEffect } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -19,6 +20,7 @@ import {
   type VerificationStatus,
 } from '@/data/verification';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type VarsityBadgeProps = {
   status: VerificationStatus;
@@ -68,7 +70,7 @@ export function VarsityBadge({ status, schoolClaimed = false, compact = false, i
         <Animated.View pointerEvents="none" style={[styles.verifiedGlow, glowStyle]} />
         <Text style={styles.check}>✓</Text>
         {iconOnly ? null : (
-          <Text style={styles.verifiedLabel} numberOfLines={1}>
+          <Text style={styles.verifiedLabel}>
             {VARSITY_VERIFIED_LABEL}
           </Text>
         )}
@@ -76,7 +78,7 @@ export function VarsityBadge({ status, schoolClaimed = false, compact = false, i
     );
     if (!onPress) return inner;
     return (
-      <Pressable accessibilityRole="button" accessibilityLabel={VARSITY_VERIFIED_LABEL} haptic="selection" onPress={onPress}>
+      <Pressable accessibilityRole="button" accessibilityLabel={VARSITY_VERIFIED_LABEL} haptic="selection" onPress={onPress} style={styles.interactive}>
         {inner}
       </Pressable>
     );
@@ -91,7 +93,7 @@ export function VarsityBadge({ status, schoolClaimed = false, compact = false, i
     );
     if (!onPress) return inner;
     return (
-      <Pressable accessibilityRole="button" accessibilityLabel={VARSITY_PENDING_LABEL} haptic="selection" onPress={onPress}>
+      <Pressable accessibilityRole="button" accessibilityLabel={VARSITY_PENDING_LABEL} haptic="selection" onPress={onPress} style={styles.interactive}>
         {inner}
       </Pressable>
     );
@@ -107,13 +109,14 @@ export function VarsityBadge({ status, schoolClaimed = false, compact = false, i
   );
   if (!onPress) return inner;
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={NOT_VERIFIED_LABEL} haptic="selection" onPress={onPress}>
+    <Pressable accessibilityRole="button" accessibilityLabel={NOT_VERIFIED_LABEL} haptic="selection" onPress={onPress} style={styles.interactive}>
       {inner}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  interactive: { minHeight: 44, minWidth: 44, justifyContent: 'center', maxWidth: '100%', alignSelf: 'flex-start' },
   compact: {
     alignSelf: 'center',
   },
@@ -152,13 +155,13 @@ const styles = StyleSheet.create({
     opacity: 0.18,
   },
   check: {
-    fontSize: 13,
-    fontWeight: '900',
+    ...TYPE.body,
+    ...figtree('900'),
     color: FOCAL.jadeInk,
   },
   verifiedLabel: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.4,
     color: FOCAL.jadeInk,
   },
@@ -173,8 +176,8 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   pendingLabel: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.3,
     color: FOCAL.goldInk,
   },
@@ -189,19 +192,19 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   claimedLabel: {
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.5,
     color: FOCAL.jadeInk,
   },
   notVerified: {
-    fontSize: 11,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: colors.textMuted,
   },
   sub: {
-    fontSize: 10,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
     color: FOCAL.goldInk,
   },
 });

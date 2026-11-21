@@ -38,15 +38,15 @@ const BUTTON_INK: Record<KitButtonVariant, string> = {
 };
 
 const BUTTON_SIZE: Record<KitButtonSize, { box: ViewStyle; label: TextStyle }> = {
-  sm: { box: { minHeight: 36, paddingHorizontal: 10, borderRadius: radii.sm }, label: { ...TYPE.button } },
+  sm: { box: { minHeight: 44, paddingHorizontal: 10, borderRadius: radii.sm }, label: { ...TYPE.button } },
   md: { box: { minHeight: 44, paddingHorizontal: 14, borderRadius: KIT.controlRadius }, label: { ...TYPE.button } },
   lg: { box: { minHeight: 48, paddingHorizontal: 16, borderRadius: KIT.controlRadius }, label: { ...TYPE.section } },
 };
 
 /**
  * @purpose One button for every screen: pick a variant by role (primary action, secondary, quiet ghost link, gold
- *   award/unlock, glass/light over video) instead of styling each Pressable by hand. `md` and `lg` keep the 44pt
- *   touch target; `sm` is only for dense rows that already sit inside a 44pt row.
+ *   award/unlock, glass/light over video) instead of styling each Pressable by hand. All sizes keep the 44pt
+ *   touch target; `sm` saves horizontal space while labels can wrap at larger text sizes.
  */
 export function KitButton({
   label,
@@ -176,28 +176,31 @@ export function KitProgress({ value, dark = false }: { value: number; dark?: boo
 
 const styles = StyleSheet.create({
   block: { alignSelf: 'stretch' },
-  button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  buttonLabel: { ...figtree('700'), letterSpacing: -0.1 },
+  button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 6 },
+  buttonLabel: { ...figtree('700'), letterSpacing: -0.1, flexShrink: 1, textAlign: 'center' },
   disabled: { opacity: 0.4 },
   chip: {
-    minHeight: 36,
-    paddingHorizontal: 14,
+    minHeight: 44,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: radii.pill,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipLabel: { ...figtree('600'), ...TYPE.button },
+  chipLabel: { ...figtree('600'), ...TYPE.button, flexShrink: 1, textAlign: 'center' },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: 5,
-    height: 24,
-    paddingHorizontal: 10,
+    minHeight: 24,
+    maxWidth: '100%',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: radii.pill,
   },
-  badgeLabel: { ...figtree('700'), ...TYPE.caption, letterSpacing: 0.3 },
+  badgeLabel: { ...figtree('700'), ...TYPE.caption, letterSpacing: 0.3, flexShrink: 1 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#FFFFFF' },
   liveLabel: { color: '#FFFFFF' },
   track: { height: 8, borderRadius: radii.pill, overflow: 'hidden' },

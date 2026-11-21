@@ -1,10 +1,13 @@
+/** Vault changes wait for the initiating account’s confirmed server flag before updating this profile. */
 /** Own profile shares the public sports layout and binds clips/sport reads to the current account and linked athlete.
  * Primary artwork is manually chosen; temporary chips never write it. Account settings retain their current-owner boundary. */
+import { offlineQueue } from '@/services/OfflineQueue';
+import type { OfflineActor } from '@/lib/offlineActor';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { type Href, useFocusEffect, useIsFocused, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import { ScrollFxParallax, ScrollFxScrollView } from '@/components/Effects/ScrollFx';
 import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
@@ -89,6 +92,8 @@ export default function MyHubTab() {
   const feedPrefs = useFeedPrefs();
   const [flipOpen, setFlipOpen] = useState(false);
   const [vaultLockBusy, setVaultLockBusy] = useState(false);
+  const vaultLockActor = useRef<OfflineActor | null>(null);
+  useEffect(() => { setVaultLockBusy(false); vaultLockActor.current = null; }, [user?.id]);
   const [localOnboardTeam, setLocalOnboardTeam] = useState<SchoolTeam | null>(null);
 
   const profileOpen = useIsFocused();
@@ -492,9 +497,14 @@ export default function MyHubTab() {
           onBacked={(nextCount) => applyBackerCount(athlete.id, nextCount)}
           onUnlockVault={subscribe}
           onVaultLockChange={(locked) => {
-            applyVaultLocked(athlete.id, locked);
+            const actor = offlineQueue.captureActor(user?.id);
+            if (!actor || vaultLockActor.current?.isCurrent()) return;
+            vaultLockActor.current = actor;
             setVaultLockBusy(true);
-            void setPlayerVaultLocked(athlete.id, locked).finally(() => setVaultLockBusy(false));
+            void setPlayerVaultLocked(athlete.id, locked, actor)
+              .then((stored) => { if (actor.isCurrent()) applyVaultLocked(athlete.id, stored); })
+              .catch((error: unknown) => { if (actor.isCurrent()) Alert.alert('Vault not saved', error instanceof Error ? error.message : 'Try again when your connection is ready.'); })
+              .finally(() => { if (vaultLockActor.current === actor) { vaultLockActor.current = null; if (actor.isCurrent()) setVaultLockBusy(false); } });
           }}
           onVaultChange={(reelId, vaultOnly) => {
             setTaggedRows((current) =>

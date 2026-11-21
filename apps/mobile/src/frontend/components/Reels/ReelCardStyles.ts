@@ -1,5 +1,6 @@
 /**
  * Style sheet for `ReelCard` (split out of ReelCard.tsx for R4-03; behaviour unchanged).
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import { StyleSheet } from 'react-native';
@@ -7,6 +8,7 @@ import { StyleSheet } from 'react-native';
 import { colors, palette, radii } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
 import { OVERLAY_BOTTOM_INSET } from '@/components/Reels/reelCardModel';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export const styles = StyleSheet.create({
   page: {
@@ -27,9 +29,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center', gap: 12, padding: 20, borderRadius: radii.lg,
     backgroundColor: colors.videoScrimSoft,
   },
-  playbackFailureText: { color: colors.onVideo, fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  playbackFailureText: { color: colors.onVideo, ...TYPE.body, ...figtree('700'), textAlign: 'center' },
   playbackRetry: { minWidth: 88, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, borderRadius: 22, backgroundColor: palette.jadeInk },
-  playbackRetryText: { color: colors.onAccent, fontSize: 15, fontWeight: '800' },
+  playbackRetryText: { color: colors.onAccent, ...TYPE.body, ...figtree('800') },
   lockBlur: {
     ...StyleSheet.absoluteFill,
     overflow: 'hidden',
@@ -53,8 +55,8 @@ export const styles = StyleSheet.create({
   },
   vaultBadgeLabel: {
     color: FOCAL.ember,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
     letterSpacing: 0.3,
     textAlign: 'center',
   },
@@ -74,8 +76,8 @@ export const styles = StyleSheet.create({
   },
   unlockLabel: {
     color: FOCAL.ink,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
   scrim: {
@@ -149,8 +151,8 @@ export const styles = StyleSheet.create({
   },
   flashChipLabel: {
     color: FOCAL.neonJade,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.3,
   },
   categoryBadgeServe: {
@@ -164,8 +166,8 @@ export const styles = StyleSheet.create({
   },
   categoryBadgeLabel: {
     color: colors.onVideo,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.4,
   },
   categoryBadgeLabelServe: {
@@ -174,7 +176,7 @@ export const styles = StyleSheet.create({
   loopFlash: {
     marginTop: 6,
     color: FOCAL.electricGold,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
 });

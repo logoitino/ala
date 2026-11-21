@@ -2,6 +2,7 @@
  * Shared, wrapping page hierarchy keeps published Look-desk copy and colors authoritative.
  * UX-08: the viewer's sport (generic field for non-athletes) fades in behind the right side of every heading.
  * UX-10: compact fan headings use a sport mark and an ink-on-mist kicker; role headings keep their sizing.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { StyleSheet, Text, View } from 'react-native';
 import { usePathname } from 'expo-router';
@@ -65,7 +66,7 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
 const styles = StyleSheet.create({
   fanWrap: { gap: 4, paddingTop: 2, paddingBottom: 2 },
   fanTitle: { ...DISPLAY_TEXT, ...TYPE.display, letterSpacing: -0.6 },
-  fanLede: { ...TYPE.body },
+  fanLede: { ...figtree('400'), ...TYPE.body },
   fanKickerBadge: { alignSelf: 'flex-start', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10, maxWidth: '100%' },
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   accentDot: { width: 5, height: 5, borderRadius: 3 },
@@ -95,8 +96,8 @@ const styles = StyleSheet.create({
     color: colors.gold,
     flexShrink: 1,
   },
-  kickerCompact: {
-    fontSize: 10,
+  kickerCompact: { ...figtree('400'),
+    ...TYPE.caption,
     letterSpacing: 0.5,
   },
   title: {
@@ -105,9 +106,9 @@ const styles = StyleSheet.create({
     color: colors.text,
     letterSpacing: -0.6,
   },
-  titleCompact: {
-    fontSize: 22,
-    lineHeight: 26,
+  titleCompact: { ...figtree('400'),
+    ...TYPE.title,
+
     letterSpacing: -0.3,
   },
   underline: {
@@ -119,10 +120,10 @@ const styles = StyleSheet.create({
   },
   lede: {
     ...TYPE.body,
-    fontWeight: '600',
+    ...figtree('600'),
     color: colors.textMuted,
   },
-  ledeCompact: {
+  ledeCompact: { ...figtree('400'),
     ...TYPE.body,
   },
 });

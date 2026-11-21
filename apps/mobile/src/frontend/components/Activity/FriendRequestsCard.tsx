@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Friend requests waiting for you, on Activity (PRIV-01). Accept or decline; the sender is never told about a decline.
  * Shows nothing when there are no requests or the privacy update is not on this database yet.
  * @sideEffects `list_my_friends`, `respond_friend` through `lib/privacy`.
@@ -9,6 +9,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import { fetchMyFriends, respondFriend, type FriendRow } from '@/lib/privacy';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** @purpose Incoming friend requests with Accept / Decline. */
 export function FriendRequestsCard() {
@@ -61,12 +62,12 @@ export function FriendRequestsCard() {
 
 const styles = StyleSheet.create({
   card: { gap: 8, marginTop: 8, padding: 12, borderRadius: radii.lg, backgroundColor: colors.surface },
-  kicker: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, color: colors.textMuted, textTransform: 'uppercase' },
+  kicker: { ...TYPE.caption, ...figtree('800'), letterSpacing: 1.2, color: colors.textMuted, textTransform: 'uppercase' },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  name: { flex: 1, minWidth: 100, fontSize: 14, fontWeight: '700', color: colors.text },
+  name: { flex: 1, minWidth: 100, ...TYPE.body, ...figtree('700'), color: colors.text },
   button: { minHeight: 44, minWidth: 44, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, justifyContent: 'center' },
-  buttonOn: { backgroundColor: colors.text, borderColor: colors.text },
-  label: { fontSize: 13, fontWeight: '700', color: colors.text },
+  buttonOn: { minHeight: 44, backgroundColor: colors.text, borderColor: colors.text },
+  label: { ...TYPE.body, ...figtree('700'), color: colors.text },
   labelOn: { color: colors.onAccent },
-  message: { fontSize: 13, color: colors.text },
+  message: { ...figtree('400'), ...TYPE.body, color: colors.text },
 });

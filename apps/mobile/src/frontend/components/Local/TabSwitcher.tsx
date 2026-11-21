@@ -1,9 +1,12 @@
-/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
+/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { StyleSheet, Text, View } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { radii } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type TabId = 'feed' | 'rosters';
 
@@ -47,6 +50,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tab: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
     flex: 1,
     paddingVertical: 8,
     borderRadius: 10,
@@ -56,8 +62,9 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.goldInk,
   },
   label: {
-    fontSize: 13,
-    fontWeight: '700',
+    textAlign: 'center',
+    ...TYPE.button,
+    ...figtree('700'),
     color: FOCAL.goldInk,
   },
   labelActive: {

@@ -1,4 +1,4 @@
-/** Public profiles commit subject/session-bound reads together. Sport chips use privacy-filtered participation,
+/** Public profiles commit subject/session-bound reads and backed counts to the captured athlete. Sport chips use privacy-filtered participation,
  * recorded Highlight tags and independent Stats while the manually chosen primary field remains stable. */
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -205,7 +205,7 @@ export default function UserAthleteProfileScreen() {
           entry: fromQr ? 'qr_link' : 'in_app',
           onBacked: (nextCount) => {
             applyBackerCount(player.id, nextCount);
-            setPlayer((current) => (current ? { ...current, backer_count: nextCount } : current));
+            setPlayer((current) => (current?.id === player.id ? { ...current, backer_count: nextCount } : current));
           },
         });
       },
@@ -320,7 +320,7 @@ export default function UserAthleteProfileScreen() {
           onHypeChange={applyHype}
           onBacked={(nextCount) => {
             applyBackerCount(player.id, nextCount);
-            setPlayer((current) => (current ? { ...current, backer_count: nextCount } : current));
+            setPlayer((current) => (current?.id === player.id ? { ...current, backer_count: nextCount } : current));
           }}
           onUnlockVault={unlockExclusive}
         />

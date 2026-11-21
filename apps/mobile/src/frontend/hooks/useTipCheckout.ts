@@ -1,9 +1,9 @@
 /**
  * Gift checkout: opens Stripe PaymentSheet (native) or Payment Element (Expo web) for a gift, one-time
- * Exclusive purchase, Drip order or booster sponsorship purchase, then records the result. Gifts retain
+ * Exclusive purchase, Drip order or booster sponsorship purchase, then records the result only for the initiating account lifetime. Gifts retain
  * existing giver/athlete Aura; counsel must review digital consideration.
  * Code names keep `tip` / `malo`; on-screen words follow docs/product/VOICE.md. Native needs a dev or
- * preview build (not Expo Go). Web uses Stripe.js via `lib/stripe.web.ts`.
+ * preview build for verified native testing; Expo Go payment support remains unverified. Web uses Stripe.js via `lib/stripe.web.ts`.
  * @sideEffects Edge Function `create-payment-intent` (Metro route as fallback), Stripe sheet, inserts into `tips`.
  */
 
@@ -21,8 +21,10 @@ import { displayValue, getTipCharge, auraPointsForTip } from '@/data/players';
 import { addUserAura, emitPlayerAura, emitProfileAura } from '@/lib/aura';
 import { paymentIntentIdFromSecret, resolveTipOrigin, type TipEntry, type TipOrigin } from '@/lib/finance';
 import { createPaymentIntent, incrementBackerCount } from '@/lib/payments';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import { resolveSessionUserId } from '@/lib/sessionToken';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { assertCurrent, createOfflineActorClient } from '@/lib/offlineActor';
+import { offlineQueue } from '@/services/OfflineQueue';
+import type { PaymentActor } from '@/lib/payments';
 import { useStripe } from '@/lib/stripe';
 import { supportSignals } from '@/services/SupportSignalManager';
 import { telemetry } from '@/services/TelemetryManager';
@@ -64,7 +66,7 @@ type StartCheckoutArgs = {
    * Return `false` when a follow-up write failed (e.g. exclusive pass insert) so Soft-Wall Vault
    * does not celebrate an unlock the fan did not receive.
    */
-  onPaid?: () => void | boolean | Promise<void | boolean>;
+  onPaid?: (payment: PaymentActor) => void | boolean | Promise<void | boolean>;
 };
 
 /**
@@ -95,10 +97,10 @@ function applyAuraAward(
 /**
  * @purpose Stripe checkout for gifts, exclusive purchase, Drip, or booster sponsorships (native PaymentSheet or web Payment Element). Gifts retain Aura for the giver and the athlete.
  * @returns `{ startCheckout, busy }` — any authenticated user (including verified athletes) may give to a tagged athlete.
- * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a gift (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`, `cover_fee_cents`, `stripe_payment_intent_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`. Fan id is resolved from the live session so Soft-Wall resume still writes `tips.fan_id` and payer Aura.
+ * @sideEffects JWT Stripe PaymentIntent (`Authorization: Bearer` session), optional backer/reel counters, `tips` INSERT on a gift (`origin`, `entry`, `wishlist_item_id`, `source_label`, `platform_tip_cents`, `rally_id`, `cover_fee_cents`, `stripe_payment_intent_id`), `add_user_aura` twice on Mālo (payer-only when `skipBacker`), success haptics, celebration, `refreshProfile`, `TelemetryManager.trackCheckoutLatency`. A synchronous initiating actor capture supports Soft-Wall resume without letting later account changes write `tips.fan_id` and payer Aura.
  */
 export function useTipCheckout() {
-  const { user, refreshProfile } = useAuth();
+  const { refreshProfile } = useAuth();
   const { live } = useAppRuntime();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const celebration = useOptionalCelebration();
@@ -110,8 +112,6 @@ export function useTipCheckout() {
   const feeAmount = live.catalog.maloFeeDollars;
   const exclusiveAuraToast = exclusiveUnlockToast(live.catalog.exclusiveAura);
   // Soft-Wall stashes `resume` before sign-in; read the live id, not a closed-over null.
-  const userIdRef = useRef<string | null>(user?.id ?? null);
-  userIdRef.current = user?.id ?? null;
   const refreshProfileRef = useRef(refreshProfile);
   refreshProfileRef.current = refreshProfile;
 
@@ -176,10 +176,16 @@ export function useTipCheckout() {
       let paymentSucceeded = false;
       const checkoutStartedAt = Date.now();
       try {
+        const actor = offlineQueue.captureActor();
+        if (!actor) throw new Error('Sign in to complete payment.');
+        const client = await createOfflineActorClient(actor);
+        const payment = { actor, client };
+        assertCurrent(actor);
         const intentStartedAt = Date.now();
         // skipBacker marks the existing Vault/Exclusive/Drip/sponsorship purchase paths. It cannot provide gift receipt authority.
         const clientSecret = await createPaymentIntent(amountCents, player?.id ?? null, platformTipCents,
-          !skipBacker && player ? { giftCents: Math.round(tipAmount * 100), coverFees, platformTipPercent } : undefined);
+          !skipBacker && player ? { giftCents: Math.round(tipAmount * 100), coverFees, platformTipPercent } : undefined, payment);
+        assertCurrent(actor);
         telemetry.trackCheckoutLatency('payment_intent', Date.now() - intentStartedAt);
 
         const initStartedAt = Date.now();
@@ -196,6 +202,7 @@ export function useTipCheckout() {
           return;
         }
 
+        assertCurrent(actor);
         const presentStartedAt = Date.now();
         const { error: presentError } = await presentPaymentSheet();
         telemetry.trackCheckoutLatency('present_sheet', Date.now() - presentStartedAt);
@@ -207,10 +214,12 @@ export function useTipCheckout() {
         }
 
         paymentSucceeded = true;
-        const paidFollowUp = await onPaid?.();
-        const followUpOk = paidFollowUp !== false;
+        assertCurrent(actor);
+        const paidFollowUp = await onPaid?.(payment);
+        assertCurrent(actor);
+        if (paidFollowUp === false) throw new Error('Paid follow-up was not recorded.');
 
-        const tipperId = await resolveSessionUserId(userIdRef.current);
+        const tipperId = actor.userId;
         const recipientId = !skipBacker && player?.id ? player.id : null;
 
         // A compliance freeze (or any other insert-denied response) on the `tips` ledger row means
@@ -244,7 +253,8 @@ export function useTipCheckout() {
           };
           // A paid allocation is immutable. Legacy retries that dropped fees, tips or the real
           // payment reference could lose reconciliation/dedupe authority, even for a base gift.
-          const { error: tipError } = await supabase.from('tips').insert({ ...ledger, ...bookkeeping });
+          const { error: tipError } = await client.from('tips').insert({ ...ledger, ...bookkeeping });
+          assertCurrent(actor);
           if (tipError) {
             supportSignals.capture({ feature: 'donation', code: 'data_invalid' });
             tipInsertSucceeded = false;
@@ -252,34 +262,43 @@ export function useTipCheckout() {
               'Gift not recorded',
               'Your payment went through, but we could not record this gift. Contact support before paying again.',
             );
+            return;
           }
         }
 
         let nextCount = player?.backer_count ?? 0;
         if (!skipBacker && player && tipInsertSucceeded) {
-          nextCount = await incrementBackerCount(player);
+          nextCount = await incrementBackerCount(player, client);
+          assertCurrent(actor);
           onBacked?.(nextCount);
           // Gift counters exclude separately added processing coverage and Tapua'i tips.
           onTipped?.(giftCents);
           if (reelId) {
             const { addReelTips, EMPTY_REEL_HYPE } = await import('@/lib/reels');
-            await addReelTips(reelId, giftCents, EMPTY_REEL_HYPE);
+            await addReelTips(reelId, giftCents, EMPTY_REEL_HYPE, client);
           }
+          assertCurrent(actor);
           await bumpMaloDroppedCount();
+          assertCurrent(actor);
         }
 
         if (isSupabaseConfigured && pointsToAdd > 0) {
           if (tipperId) {
-            const tipperAward = await addUserAura(tipperId, pointsToAdd);
+            const tipperAward = await addUserAura(tipperId, pointsToAdd, client);
+            assertCurrent(actor);
             applyAuraAward(tipperId, tipperAward);
           }
           if (recipientId && recipientId !== tipperId && tipInsertSucceeded) {
-            const athleteAward = await addUserAura(recipientId, pointsToAdd);
+            const athleteAward = await addUserAura(recipientId, pointsToAdd, client);
+            assertCurrent(actor);
             applyAuraAward(recipientId, athleteAward);
           }
+          assertCurrent(actor);
           await refreshProfileRef.current();
+          assertCurrent(actor);
         }
 
+        assertCurrent(actor);
         try {
           void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } catch {
@@ -290,7 +309,7 @@ export function useTipCheckout() {
           celebration?.celebrateAura(pointsToAdd, successToast);
         } else if (skipBacker) {
           // Exclusive Vault: only toast unlock when `onPaid`/`grant` recorded the pass.
-          if (followUpOk) celebration?.celebrateAura(pointsToAdd, exclusiveAuraToast);
+          celebration?.celebrateAura(pointsToAdd, exclusiveAuraToast);
         } else {
           celebration?.celebrate({ playerName, backerCount: nextCount, auraPointsEarned: pointsToAdd });
         }

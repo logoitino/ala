@@ -3,6 +3,10 @@
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
+// Auth now binds the queue at its event boundary. Node has no native NetInfo bridge; use its vendor fixture.
+jest.mock('@react-native-community/netinfo', () =>
+  require('@react-native-community/netinfo/jest/netinfo-mock'),
+);
 
 // Dummy Supabase env so importing lib/supabase.ts in a test doesn't warn or
 // try to reach a real project — no test in this suite should ever hit the network.

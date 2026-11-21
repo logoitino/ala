@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Explanatory copy that starts clamped with a "More" / "Less" toggle, so panels stay short and the full message is
  * one tap away (owner 2026-10-21: maximize screen for content). Never use it for policy, money, safety, consent or
  * rights text — those must stay fully visible (COMPLIANCE_*, held notice, 90 / 10, age gate, medical disclaimer).
@@ -11,6 +11,7 @@ import { StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-na
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** Rough characters that fit one compact line on a 390pt phone. */
 const CHARS_PER_LINE = 44;
@@ -57,12 +58,12 @@ const styles = StyleSheet.create({
   wrap: {
     gap: 2,
   },
-  toggle: {
+  toggle: { minHeight: 44,
     alignSelf: 'flex-start',
     paddingVertical: 2,
   },
   toggleLabel: {
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
 });

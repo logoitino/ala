@@ -1,4 +1,4 @@
-/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
+/** UX-13 readable shared type preserves every action and required notice. Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -8,6 +8,7 @@ import { colors, radii } from '@/constants/theme';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const STORAGE_KEY = 'tapuai.slangGuideDismissed';
 
@@ -98,12 +99,12 @@ const styles = StyleSheet.create({
   copy: {
     flex: 1,
     color: colors.text,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '700',
+    ...TYPE.body,
+
+    ...figtree('700'),
   },
   dismiss: {
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: 12,
     borderRadius: radii.sm,
     backgroundColor: FOCAL.goldInk,
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
   },
   dismissLabel: {
     color: colors.onAccent,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
 });

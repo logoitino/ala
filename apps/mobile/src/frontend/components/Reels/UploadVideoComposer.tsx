@@ -8,6 +8,7 @@
  * The sheet does not play the chosen video. A video view inside this page sheet covers the phone
  * when the athlete list opens and closes.
  * The optional sport chooser records an annotation for video or photos; its draft belongs to the parent.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -98,7 +99,7 @@ export function UploadVideoComposer(p: Props) {
       <View style={[styles.thumb, styles.thumbMark]}><Ionicons name="play" size={18} color={colors.primary} /></View>
       <View style={styles.flex}>
         <Text style={styles.label}>Your Highlight ⚡</Text>
-        <Text style={styles.hint} numberOfLines={2}>{p.asset.fileName || 'Selected video'}{p.asset.durationMs ? ` · ${Math.round(p.asset.durationMs / 1000)}s` : ''}</Text>
+        <Text style={styles.hint}>{p.asset.fileName || 'Selected video'}{p.asset.durationMs ? ` · ${Math.round(p.asset.durationMs / 1000)}s` : ''}</Text>
       </View>
       <Pressable accessibilityRole="button" accessibilityLabel="Change video" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}>
         <Text style={styles.link}>Change</Text>
@@ -229,7 +230,7 @@ export function UploadVideoComposer(p: Props) {
               {p.photosAvailable ? <MediaKindSwitch value={p.mediaKind} onChange={p.onMediaKind} disabled={p.uploading} /> : null}
               {isPhotos ? (
                 <>
-                  <View style={styles.hero}><View style={styles.heroBadge}><Ionicons name="images" size={24} color={colors.primary} /></View><Text style={styles.heroTitle}>Tell their story in photos.</Text><Text style={styles.heroHint}>Up to {PHOTO_STORY_MAX_PHOTOS} photos, then put them in order.</Text></View>
+                  <View style={styles.hero}><View style={styles.heroBadge}><Ionicons name="images" size={18} color={colors.primary} /></View><Text style={styles.heroTitle}>Tell their story in photos.</Text><Text style={styles.heroHint}>Up to {PHOTO_STORY_MAX_PHOTOS} photos, then put them in order.</Text></View>
                   {p.photos.length ? (
                     <PhotoStoryStrip photos={p.photos} onMove={p.onMovePhoto} onRemove={p.onRemovePhoto} onAdd={p.onPickPhotos} disabled={p.uploading} />
                   ) : (
@@ -299,11 +300,11 @@ export function UploadVideoComposer(p: Props) {
           ) : (
             <>
               {isPhotos ? (
-                <View style={styles.sourceRow}><Text style={[styles.hint, styles.flex]} numberOfLines={1}>Photo story · {photoCountLabel}</Text><Pressable accessibilityRole="button" accessibilityLabel="Change photos" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}><Text style={styles.link}>Change</Text></Pressable></View>
+                <View style={styles.sourceRow}><Text style={[styles.hint, styles.flex]}>Photo story · {photoCountLabel}</Text><Pressable accessibilityRole="button" accessibilityLabel="Change photos" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}><Text style={styles.link}>Change</Text></Pressable></View>
               ) : (
-                <View style={styles.sourceRow}><Text style={[styles.hint, styles.flex]} numberOfLines={1}>{p.asset?.fileName || 'Selected video'}{p.asset?.durationMs ? ` · ${Math.round(p.asset.durationMs / 1000)}s` : ''}</Text><Pressable accessibilityRole="button" accessibilityLabel="Change video" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}><Text style={styles.link}>Change</Text></Pressable></View>
+                <View style={styles.sourceRow}><Text style={[styles.hint, styles.flex]}>{p.asset?.fileName || 'Selected video'}{p.asset?.durationMs ? ` · ${Math.round(p.asset.durationMs / 1000)}s` : ''}</Text><Pressable accessibilityRole="button" accessibilityLabel="Change video" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}><Text style={styles.link}>Change</Text></Pressable></View>
               )}
-              <View style={styles.summary}><Text style={styles.label} numberOfLines={2}>{p.caption}</Text><Text style={styles.hint}>{p.playerLabel} · {categoryLabel}</Text>
+              <View style={styles.summary}><Text style={styles.label}>{p.caption}</Text><Text style={styles.hint}>{p.playerLabel} · {categoryLabel}</Text>
                 <Text style={styles.hint}>Sport: {p.sport || 'No sport tag'} · {p.gameId ? p.gameLabel : 'No game'} · {p.accountTags.length ? `${p.accountTags.length} mentions` : 'No mentions'}</Text>
                 <Text style={styles.link}>{isPhotos ? 'Public photo story' : p.isExclusive ? 'One-time Exclusive only' : 'Public Highlight'}</Text>
               </View>
@@ -345,26 +346,26 @@ const styles = StyleSheet.create({
   title: { ...figtree('800'), color: colors.text, ...TYPE.title, textAlign: 'center' },
   body: { gap: 10, paddingBottom: 12 },
   hero: { alignItems: 'center', gap: 6, paddingVertical: 2 },
-  heroBadge: { width: 52, height: 52, borderRadius: 18, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
+  heroBadge: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
   spark: { position: 'absolute', right: -4, top: -3, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.goldSoft, alignItems: 'center', justifyContent: 'center' },
   heroTitle: { ...figtree('800'), ...TYPE.title, color: colors.text, textAlign: 'center' },
-  heroHint: { ...TYPE.body, color: colors.textMuted, textAlign: 'center' },
+  heroHint: { ...figtree('400'), ...TYPE.body, color: colors.textMuted, textAlign: 'center' },
   sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  source: { backgroundColor: colors.surface, borderRadius: MENU_METRICS.controlRadius, borderWidth: 1, borderColor: colors.border, padding: 10, alignItems: 'center', gap: 4, minHeight: 88 },
+  source: { backgroundColor: colors.surface, borderRadius: MENU_METRICS.controlRadius, borderWidth: 1, borderColor: colors.border, padding: 10, alignItems: 'center', gap: 4, minHeight: 72 },
   selected: { borderColor: colors.primary, backgroundColor: colors.accentSoft },
   clipCard: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius },
   thumb: { width: 44, height: 58, borderRadius: 7, backgroundColor: colors.photoPlaceholder },
   thumbMark: { alignItems: 'center', justifyContent: 'center' },
   smallButton: { minHeight: MENU_METRICS.touchTarget, justifyContent: 'center', paddingHorizontal: 6 },
   label: { ...figtree('800'), ...TYPE.body, color: colors.text },
-  hint: { ...TYPE.caption, color: colors.textMuted },
+  hint: { ...figtree('400'), ...TYPE.caption, color: colors.textMuted },
   link: { ...figtree('800'), ...TYPE.caption, color: colors.primary },
   field: { gap: 6 },
-  input: { minHeight: MENU_METRICS.touchTarget, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, paddingHorizontal: 10, backgroundColor: colors.surface, color: colors.text, fontSize: 14 },
+  input: { ...figtree('400'), minHeight: MENU_METRICS.touchTarget, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, paddingHorizontal: 10, backgroundColor: colors.surface, color: colors.text, ...TYPE.body },
   caption: { height: 72, paddingTop: 10, textAlignVertical: 'top' },
-  counter: { ...TYPE.caption, textAlign: 'right', color: colors.textMuted, marginTop: -2 },
+  counter: { ...figtree('400'), ...TYPE.caption, textAlign: 'right', color: colors.textMuted, marginTop: -2 },
   select: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: MENU_METRICS.touchTarget, padding: 10, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.surface },
-  selectText: { flex: 1, color: colors.text, ...TYPE.body, fontWeight: '600' },
+  selectText: { flex: 1, color: colors.text, ...TYPE.body, ...figtree('600') },
   option: { minHeight: MENU_METRICS.touchTarget, padding: 10, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.surface, gap: 3 },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   category: { maxWidth: '100%', minHeight: MENU_METRICS.touchTarget, paddingHorizontal: 10, justifyContent: 'center', borderRadius: radii.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
@@ -375,10 +376,10 @@ const styles = StyleSheet.create({
   rightsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: MENU_METRICS.touchTarget },
   checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   checkboxActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  rightsText: { flex: 1, ...TYPE.caption, color: colors.text },
-  error: { color: colors.danger, ...TYPE.body },
+  rightsText: { ...figtree('400'), flex: 1, ...TYPE.caption, color: colors.text },
+  error: { ...figtree('400'), color: colors.danger, ...TYPE.body },
   footer: { gap: 6, paddingTop: 6 },
-  footerHint: { ...TYPE.caption, textAlign: 'center', color: colors.textMuted },
+  footerHint: { ...figtree('400'), ...TYPE.caption, textAlign: 'center', color: colors.textMuted },
   submit: { minHeight: 48, justifyContent: 'center', alignItems: 'center', borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.primary },
   submitText: { ...figtree('800'), color: colors.onAccent, ...TYPE.section },
   disabled: { opacity: 0.45 },

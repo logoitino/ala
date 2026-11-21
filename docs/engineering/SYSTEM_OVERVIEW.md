@@ -1,5 +1,14 @@
 # Tapua'i — System Architecture Overview
 
+**2026-11-20 local APP-REPAIR-01:** Auth resolves queue ownership before asynchronous profile
+work and suspends it on provider cleanup. `OfflineQueue` persists actor-owned existing fan actions;
+`lib/offlineActions` reuses existing domain helpers through `lib/offlineActor`, which captures a
+matching session token in memory and checks the account lifetime immediately before HTTP.
+Other-account/legacy intent stays held; guests' reactions/bookmarks remain local. Existing
+RLS, RPCs, Stripe rules and server services are unchanged. QA exposes current-account rows plus
+held counts and explicit device-wide reset. See [APP-REPAIR-01](../agents/APP-REPAIR-01.md) and
+[local privacy inventory](DATA_PRIVACY_MAP.md); local SDK tests are not hosted/device acceptance.
+
 **2026-10-22 local MONEY-TIPS-01:** individual gifts allocate their full gross to family liability,
 with zero platform gift revenue independently of `MONETIZATION_TIPS_ENABLED` (default OFF).
 Published literal true authorizes optional tips/estimated Stripe coverage; service-issued contexts

@@ -1,5 +1,5 @@
-/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
-import { useEffect, useState } from 'react';
+/** Athlete HQ keeps private hooks and name-save followups on the initiating account lifetime. */
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, type Href, useRouter } from 'expo-router';
@@ -19,6 +19,8 @@ import { useReceivedMalo } from '@/hooks/useReceivedMalo';
 import { tipChannelLabel } from '@/lib/finance';
 import { updateOwnDisplayName } from '@/lib/auth';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { assertCurrent, createOfflineActorClient } from '@/lib/offlineActor';
+import { offlineQueue } from '@/services/OfflineQueue';
 
 /** Training badge names stay as shipped; icons are decorative and progress is not shown until it is measured. */
 const BADGES: { label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -33,7 +35,13 @@ const BADGES: { label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
  */
 export default function AthleteHomeScreen() {
   const router = useRouter();
-  const { profile, refreshProfile, user, isAdmin } = useAuth();
+  const { profile, refreshProfile, user, isAdmin, isSessionCurrent } = useAuth();
+  const owner = user?.id ?? null;
+  const lifetime = useRef({ owner, guard: isSessionCurrent, active: false, saving: false });
+  if (lifetime.current.owner !== owner || lifetime.current.guard !== isSessionCurrent) lifetime.current = { owner, guard: isSessionCurrent, active: false, saving: false };
+  const scope = lifetime.current;
+  const current = useCallback(() => lifetime.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
+  useEffect(() => { scope.active = true; return () => { scope.active = false; }; }, [scope]);
   const pending = usePendingPlayerTags();
   const received = useReceivedMalo(profile?.player_id ?? null);
   const [headline, setHeadline] = useState(profile?.full_name ?? '');
@@ -45,6 +53,7 @@ export default function AthleteHomeScreen() {
   }, [profile?.full_name]);
 
   const saveHeadline = async () => {
+    if (!current() || scope.saving) return;
     const next = headline.trim();
     if (!next) {
       setSaveMsg('Add a display name first.');
@@ -54,16 +63,29 @@ export default function AthleteHomeScreen() {
       setSaveMsg('Sign in to save your name to Profile.');
       return;
     }
+    const actor = offlineQueue.captureActor(user.id);
+    if (!actor) return;
+    const accepted = () => current() && actor.isCurrent();
+    scope.saving = true;
     setSaving(true);
     setSaveMsg(null);
-    const error = await updateOwnDisplayName(user.id, next);
-    if (error) {
-      setSaveMsg(error);
-    } else {
-      await refreshProfile();
-      setSaveMsg('Saved to Profile.');
+    try {
+      const client = await createOfflineActorClient(actor);
+      if (!accepted()) return;
+      assertCurrent(actor);
+      const error = await updateOwnDisplayName(actor.userId, next, client);
+      if (!accepted()) return;
+      if (error) setSaveMsg(error);
+      else {
+        await refreshProfile();
+        if (accepted()) setSaveMsg('Saved to Profile.');
+      }
+    } catch {
+      if (accepted()) setSaveMsg('Could not save your name. Try again.');
+    } finally {
+      scope.saving = false;
+      if (accepted()) setSaving(false);
     }
-    setSaving(false);
   };
 
   const total = received.totalCents;

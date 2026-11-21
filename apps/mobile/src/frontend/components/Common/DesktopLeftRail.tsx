@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Expo web left navigation for the three-panel desktop shell (WEB-DESKTOP-01).
  * Replaces the bottom FanTabBar at ≥820px; collapses labels below 1280 (icons only).
  */
@@ -10,7 +10,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '@/context/AuthContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { colors, space } from '@/constants/theme';
-import { FONT } from '@/theme/fonts';
+import { FONT, TYPE } from '@/theme/fonts';
 import { fetchCrewShortcuts, type CrewShortcut } from '@/lib/crew';
 import { userProfileHref } from '@/lib/navigation';
 import { ROLE_HOME } from '@/lib/roles';
@@ -127,7 +127,7 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
                 color={on ? colors.primary : colors.text}
               />
               {!iconsOnly ? (
-                <Text style={[styles.label, on && styles.labelOn]} numberOfLines={1}>
+                <Text style={[styles.label, on && styles.labelOn]}>
                   {item.label}
                 </Text>
               ) : null}
@@ -148,7 +148,7 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
               >
                 <Ionicons name={row.icon} size={22} color={colors.text} />
                 {!iconsOnly ? (
-                  <Text style={styles.label} numberOfLines={1}>
+                  <Text style={styles.label}>
                     {row.label}
                   </Text>
                 ) : null}
@@ -168,7 +168,7 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
             >
               <Ionicons name="flash-outline" size={22} color={colors.textMuted} />
               {!iconsOnly ? (
-                <Text style={[styles.label, styles.muted]} numberOfLines={2}>
+                <Text style={[styles.label, styles.muted]}>
                   Sign in for Crew
                 </Text>
               ) : null}
@@ -182,7 +182,7 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
             >
               <Ionicons name="flash-outline" size={22} color={colors.textMuted} />
               {!iconsOnly ? (
-                <Text style={[styles.label, styles.muted]} numberOfLines={2}>
+                <Text style={[styles.label, styles.muted]}>
                   Follow athletes to fill Crew
                 </Text>
               ) : null}
@@ -202,7 +202,7 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
                     <Text style={styles.crewInitial}>{initial}</Text>
                   </View>
                   {!iconsOnly ? (
-                    <Text style={styles.label} numberOfLines={1}>
+                    <Text style={styles.label}>
                       {row.name}
                     </Text>
                   ) : null}
@@ -234,13 +234,13 @@ const styles = StyleSheet.create({
     minHeight: 52,
     justifyContent: 'center',
   },
-  brandCompact: {
+  brandCompact: { minHeight: 44,
     alignItems: 'center',
     paddingHorizontal: 0,
   },
   brandName: {
     fontFamily: FONT.display,
-    fontSize: 26,
+    ...TYPE.title,
     color: colors.primary,
   },
   brandMark: {
@@ -262,17 +262,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     minHeight: 44,
   },
-  itemCompact: {
+  itemCompact: { minHeight: 44,
     justifyContent: 'center',
     paddingHorizontal: 0,
   },
-  itemOn: {
+  itemOn: { minHeight: 44,
     backgroundColor: colors.primaryMuted,
   },
   label: {
     flex: 1,
     fontFamily: FONT.semibold,
-    fontSize: 14,
+    ...TYPE.body,
     color: colors.text,
   },
   labelOn: {
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   muted: {
     color: colors.textMuted,
     fontFamily: FONT.regular,
-    fontSize: 12,
+    ...TYPE.caption,
   },
   section: {
     marginTop: space.md,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: FONT.bold,
-    fontSize: 11,
+    ...TYPE.caption,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     color: colors.textMuted,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   },
   crewInitial: {
     fontFamily: FONT.bold,
-    fontSize: 12,
+    ...TYPE.caption,
     color: colors.primary,
   },
 });

@@ -36,6 +36,9 @@ import {
   type OperatorAction,
   type OperatorCallout,
 } from '@/lib/operator';
+import { useAuth } from '@/context/AuthContext';
+import { offlineQueue } from '@/services/OfflineQueue';
+import { assertCurrent, createOfflineActorClient, OfflineActorChangedError, type OfflineActor, type OfflineActorClient } from '@/lib/offlineActor';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import type { Game } from '@/types/database';
 
@@ -51,6 +54,29 @@ export default function OperatorScorekeeperScreen() {
   const router = useRouter();
   const { gameId: rawId } = useLocalSearchParams<{ gameId: string }>();
   const gameId = Array.isArray(rawId) ? rawId[0] : rawId;
+  const { user, isSessionCurrent } = useAuth();
+  const holder = useRef({ owner: user?.id, guard: isSessionCurrent, gameId, active: true, read: 0 });
+  if (holder.current.owner !== user?.id || holder.current.guard !== isSessionCurrent || holder.current.gameId !== gameId) holder.current = { owner: user?.id, guard: isSessionCurrent, gameId, active: true, read: 0 };
+  const scope = holder.current;
+  const current = useCallback(() => holder.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
+  const capture = (): OfflineActor => {
+    const actor = offlineQueue.captureActor(user?.id);
+    if (!actor || !current()) throw new OfflineActorChangedError();
+    return { userId: actor.userId, isCurrent: () => current() && actor.isCurrent() };
+  };
+  const clientFor = async (actor: OfflineActor) => { assertCurrent(actor); const client = await createOfflineActorClient(actor); assertCurrent(actor); return client; };
+  const [dataScope, setDataScope] = useState<typeof scope | null>(null);
+  const admitted = useRef<typeof scope | null>(null);
+  const writeFlight = useRef<object | null>(null);
+  const pendingStop = useRef<typeof scope | null>(null);
+  const rosterRead = useRef(0);
+  useEffect(() => {
+    scope.active = true; writeFlight.current = null; pendingStop.current = null;
+    setSending(false); setSendError(null); setPendingAction(null); setShowSent(false);
+    runningRef.current = false; setRunning(false);
+    if (bannerTimer.current) clearTimeout(bannerTimer.current);
+    return () => { scope.active = false; ++scope.read; ++rosterRead.current; pendingStop.current = null; };
+  }, [scope]);
 
   const { configFor } = useSportConfigs();
   const [allowed, setAllowed] = useState<boolean | null>(null);
@@ -96,93 +122,72 @@ export default function OperatorScorekeeperScreen() {
   ];
 
   useEffect(() => {
-    if (!gameId) {
-      setAllowed(false);
-      return;
-    }
-    void hasOperatorClaim(gameId).then(setAllowed);
-  }, [gameId]);
+    setAllowed(null);
+    void hasOperatorClaim(gameId || '').then((next) => { if (current()) { admitted.current = scope; setAllowed(Boolean(gameId && next)); } }, () => { if (current()) { admitted.current = scope; setAllowed(false); } });
+  }, [current, scope, gameId]);
 
   const loadGame = useCallback(async () => {
-    if (!gameId) {
-      setError('Missing game id.');
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    if (!isSupabaseConfigured) {
-      setError(CONFIG_ERROR);
-      setLoading(false);
-      return;
-    }
-
-    const [gameResult, playersResult] = await Promise.all([fetchOperatorGame(gameId), fetchOperatorPlayers()]);
-
-    if (!gameResult.game) {
-      setGame(null);
-      setError(gameResult.error ?? 'Game not found.');
-      setLoading(false);
-      return;
-    }
-
-    const nextGame = gameResult.game;
-    setGame(nextGame);
-    setPlayers(playersResult.players);
-    const playbook = configFor(nextGame.sport);
-    setRemaining(clockSeconds(nextGame, playbook.clockSeconds));
-    setRunning(Boolean(nextGame.is_clock_running));
-    setSelectedQuarter(nextGame.quarter?.trim() || playbook.periods[0] || '');
-    setLoading(false);
-  }, [configFor, gameId]);
+    const request = ++scope.read;
+    setLoading(true); setError(null);
+    try {
+      if (!gameId) throw new Error('Missing game id.');
+      if (!isSupabaseConfigured) throw new Error(CONFIG_ERROR);
+      const actor = capture(); const client = await clientFor(actor);
+      const [gameResult, playersResult] = await Promise.all([fetchOperatorGame(gameId, client), fetchOperatorPlayers(client)]);
+      assertCurrent(actor);
+      if (scope.read !== request) return;
+      if (!gameResult.game) throw new Error(gameResult.error ?? 'Game not found.');
+      if (playersResult.error) throw new Error(playersResult.error);
+      const nextGame = gameResult.game;
+      setGame(nextGame); setPlayers(playersResult.players); setDataScope(scope);
+      const playbook = configFor(nextGame.sport);
+      const seconds = clockSeconds(nextGame, playbook.clockSeconds);
+      remainingRef.current = seconds; runningRef.current = Boolean(nextGame.is_clock_running);
+      setRemaining(seconds); setRunning(Boolean(nextGame.is_clock_running));
+      setSelectedQuarter(nextGame.quarter?.trim() || playbook.periods[0] || '');
+    } catch (caught) { if (current() && scope.read === request) { setGame(null); setError(caught instanceof Error ? caught.message : 'Could not load this game.'); } }
+    finally { if (current() && scope.read === request) setLoading(false); }
+  }, [configFor, current, scope, gameId]);
 
   useEffect(() => {
-    if (allowed) void loadGame();
-  }, [allowed, loadGame]);
+    if (allowed && admitted.current === scope) void loadGame();
+  }, [allowed, loadGame, scope]);
 
   useEffect(() => {
     if (!gameId || !allowed) return;
     return subscribeOperatorGame(gameId, (next) => {
+      if (!current() || next.id !== gameId) return;
       setGame(next);
       if (!runningRef.current) setRemaining(clockSeconds(next, configFor(next.sport).clockSeconds));
       setRunning(Boolean(next.is_clock_running));
       if (next.quarter?.trim()) setSelectedQuarter(next.quarter.trim());
     });
-  }, [allowed, configFor, gameId]);
+  }, [allowed, configFor, current, gameId]);
 
   useEffect(() => {
-    if (!gameId || !allowed) return;
-    const broadcaster = openGameEventsBroadcaster(gameId);
-    if (!broadcaster) return;
-    broadcastRef.current = broadcaster;
-    return () => {
-      broadcastRef.current = null;
-      broadcaster.close();
-    };
-  }, [allowed, gameId]);
+    if (!gameId || !allowed || admitted.current !== scope) return;
+    let live = true; let broadcaster: GameEventsBroadcaster | null = null;
+    void (async () => {
+      const actor = capture(); const client = await clientFor(actor);
+      if (!live || !actor.isCurrent()) return;
+      broadcaster = openGameEventsBroadcaster(gameId, client, actor); broadcastRef.current = broadcaster;
+    })().catch(() => { /* The guarded transient sender remains available for a current operator. */ });
+    return () => { live = false; broadcastRef.current = null; broadcaster?.close(); };
+  }, [allowed, current, gameId, scope]);
 
   useEffect(() => {
     if (!running) return;
     const tick = setInterval(() => {
-      setRemaining((current) => {
-        const next = Math.max(0, current - 1);
-        if (next === 0) {
-          runningRef.current = false;
-          setRunning(false);
-          const currentGame = gameRef.current;
-          if (currentGame) {
-            void updateGameScore({
-              game: currentGame,
-              clockRunning: false,
-              clock: formatClock(0),
-            }).then(setGame).catch(() => undefined);
-          }
-        }
-        return next;
-      });
+      if (!current()) return;
+      const next = Math.max(0, remainingRef.current - 1); remainingRef.current = next; setRemaining(next);
+      if (next === 0) {
+        runningRef.current = false; setRunning(false);
+        pendingStop.current = scope;
+        if (!writeFlight.current) stopClock();
+      }
     }, 1000);
     return () => clearInterval(tick);
-  }, [running]);
+  }, [current, running, scope]);
 
   useEffect(() => {
     return () => {
@@ -191,144 +196,100 @@ export default function OperatorScorekeeperScreen() {
   }, []);
 
   const flashToast = (message: string) => {
+    if (!current()) return;
     setToast(message);
     setShowSent(true);
     if (bannerTimer.current) clearTimeout(bannerTimer.current);
-    bannerTimer.current = setTimeout(() => setShowSent(false), 2200);
+    bannerTimer.current = setTimeout(() => { if (current()) setShowSent(false); }, 2200);
   };
 
   const pingSuccess = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
   };
 
-  const bumpScore = async (target: 'home' | 'away', points: number) => {
-    const current = gameRef.current;
-    if (!current || sending || points <= 0) return;
-    setSending(true);
-    setSendError(null);
-    const field = target === 'home' ? 'home_score' : 'away_score';
-    setGame({ ...current, [field]: (Number(current[field]) || 0) + points });
+  async function write<T>(request: (client: OfflineActorClient, actor: OfflineActor) => Promise<T>, saved: (result: T) => void, failed?: () => void) {
+    if (writeFlight.current || !current()) return;
+    const operation = {}; writeFlight.current = operation;
+    let actor: OfflineActor | undefined;
+    setSending(true); setSendError(null);
     try {
-      const next = await updateGameScore({
-        game: current,
-        homeDelta: target === 'home' ? points : 0,
-        awayDelta: target === 'away' ? points : 0,
-      });
-      setGame(next);
-      pingSuccess();
-      flashToast(`${target === 'home' ? current.home_team : current.away_team} +${points}`);
+      actor = capture(); const client = await clientFor(actor);
+      const result = await request(client, actor); assertCurrent(actor); saved(result);
     } catch (caught) {
-      setSendError(caught instanceof Error ? caught.message : 'Could not update score.');
-      void loadGame();
+      if (current() && (!actor || actor.isCurrent())) { setSendError(caught instanceof Error ? caught.message : 'Could not save this game action.'); failed?.(); }
     } finally {
-      setSending(false);
+      if (writeFlight.current === operation) {
+        writeFlight.current = null;
+        if (current()) { setSending(false); if (pendingStop.current === scope) stopClock(); }
+      }
     }
+  }
+  function stopClock() {
+    if (pendingStop.current !== scope || writeFlight.current || !current()) return;
+    pendingStop.current = null;
+    const snapshot = gameRef.current;
+    if (!snapshot || snapshot.id !== gameId) return;
+    void write(client => updateGameScore({ game: snapshot, clockRunning: false, clock: formatClock(0) }, client), next => { gameRef.current = next; setGame(next); });
+  }
+  const bumpScore = (target: 'home' | 'away', points: number) => {
+    const snapshot = gameRef.current;
+    if (!snapshot || snapshot.id !== gameId || points <= 0) return;
+    void write(client => updateGameScore({ game: snapshot, homeDelta: target === 'home' ? points : 0, awayDelta: target === 'away' ? points : 0 }, client), next => {
+      gameRef.current = next; setGame(next); pingSuccess(); flashToast(`${target === 'home' ? snapshot.home_team : snapshot.away_team} +${points}`);
+    }, () => void loadGame());
   };
-
-  const toggleClock = async () => {
-    const current = gameRef.current;
-    if (!current) return;
+  const toggleClock = () => {
+    const snapshot = gameRef.current;
+    if (!snapshot || snapshot.id !== gameId) return;
     const nextRunning = !runningRef.current;
-    setRunning(nextRunning);
-    setSendError(null);
-    try {
-      const next = await updateGameScore({
-        game: current,
-        clockRunning: nextRunning,
-        clock: formatClock(remainingRef.current),
-      });
-      setGame(next);
-      flashToast(nextRunning ? 'Clock running' : 'Clock paused');
-    } catch (caught) {
-      setSendError(caught instanceof Error ? caught.message : 'Could not toggle clock.');
-    }
+    void write(client => updateGameScore({ game: snapshot, clockRunning: nextRunning, clock: formatClock(remainingRef.current) }, client), next => {
+      gameRef.current = next; setGame(next); runningRef.current = nextRunning; setRunning(nextRunning); flashToast(nextRunning ? 'Clock running' : 'Clock paused');
+    });
   };
-
-  const broadcast = async (callout: OperatorCallout) => {
-    const current = gameRef.current;
-    if (!current || sending) return;
-    setSending(true);
-    setSendError(null);
-    const team = side === 'home' ? current.home_team : current.away_team;
-    const payload = {
-      type: callout.eventType,
-      timestamp: new Date().toISOString(),
-      team,
-    };
-    pingSuccess();
-    try {
+  const broadcast = (callout: OperatorCallout) => {
+    const snapshot = gameRef.current;
+    if (!snapshot || snapshot.id !== gameId) return;
+    const team = side === 'home' ? snapshot.home_team : snapshot.away_team;
+    void write(async (client, actor) => {
+      const payload = { type: callout.eventType, timestamp: new Date().toISOString(), team };
       const live = broadcastRef.current;
-      if (live) {
-        await live.send(payload);
-      } else {
-        await sendGameEventBroadcast(current.id, payload);
-      }
-      try {
-        await insertOperatorCallout({
-          gameId: current.id,
-          callout,
-          teamName: team,
-        });
-      } catch {
-        // History row is optional; fans already received the Broadcast.
-      }
-      flashToast(`${callout.emoji} ${callout.label}`);
-    } catch (caught) {
-      setSendError(caught instanceof Error ? caught.message : 'Could not broadcast play.');
-    } finally {
-      setSending(false);
-    }
+      if (live) await live.send(payload); else await sendGameEventBroadcast(snapshot.id, payload, client, actor);
+      assertCurrent(actor);
+      try { await insertOperatorCallout({ gameId: snapshot.id, callout, teamName: team }, client); }
+      catch (error) { if (!actor.isCurrent()) throw error; /* History remains best-effort after a delivered Broadcast. */ }
+    }, () => { pingSuccess(); flashToast(`${callout.emoji} ${callout.label}`); });
   };
-
-  const selectQuarter = async (quarter: string) => {
+  const selectQuarter = (quarter: string) => {
     if (!gameId) return;
-    setSelectedQuarter(quarter);
-    setRunning(false);
-    setSendError(null);
-    try {
-      const next = await updateOperatorQuarter(gameId, quarter);
-      setGame(next);
-      flashToast(`${sport.periodLabel} set to ${quarter}`);
-    } catch (caught) {
-      setSendError(caught instanceof Error ? caught.message : `Could not update ${sport.periodLabel.toLowerCase()}.`);
-    }
+    void write(client => updateOperatorQuarter(gameId, quarter, client), next => {
+      gameRef.current = next; setGame(next); setSelectedQuarter(quarter); runningRef.current = false; setRunning(false); flashToast(`${sport.periodLabel} set to ${quarter}`);
+    });
   };
-
   const openRoster = async (action: OperatorAction) => {
-    setPendingAction(action);
-    setSendError(null);
-    if (!isSupabaseConfigured) return;
-    const roster = await fetchOperatorPlayers();
-    if (roster.error) {
-      setSendError(roster.error);
-      return;
-    }
-    setPlayers(roster.players);
+    const read = ++rosterRead.current;
+    setPendingAction(action); setSendError(null);
+    try {
+      const actor = capture(); const client = await clientFor(actor);
+      const roster = await fetchOperatorPlayers(client); assertCurrent(actor);
+      if (read !== rosterRead.current) return;
+      if (roster.error) throw new Error(roster.error);
+      setPlayers(roster.players);
+    } catch (caught) { if (current() && read === rosterRead.current) setSendError(caught instanceof Error ? caught.message : 'Could not load this roster.'); }
   };
-
-  const tagPlayer = async (player: Player) => {
-    if (!game || !pendingAction || sending) return;
+  const tagPlayer = (player: Player) => {
+    if (!game || game.id !== gameId || !pendingAction) return;
     const action = pendingAction;
     const teamName = side === 'home' ? game.home_team || 'Home' : game.away_team || 'Away';
-    setSending(true);
-    setSendError(null);
-    try {
-      await insertOperatorEvent({ gameId: game.id, player, action, teamName });
-      setPendingAction(null);
-      pingSuccess();
-      flashToast(`${action.eventType} · ${displayValue(player.name)}`);
-    } catch (caught) {
-      setSendError(caught instanceof Error ? caught.message : 'Could not log play.');
-    } finally {
-      setSending(false);
-    }
+    void write(client => insertOperatorEvent({ gameId: game.id, player, action, teamName }, client), () => {
+      setPendingAction(null); pingSuccess(); flashToast(`${action.eventType} · ${displayValue(player.name)}`);
+    });
   };
 
-  if (allowed === false) {
+  if (admitted.current === scope && allowed === false) {
     return <Redirect href={'/operator' as Href} />;
   }
 
-  if (allowed === null || loading) {
+  if (admitted.current !== scope || allowed === null || loading || (!error && dataScope !== scope)) {
     return (
       <ScreenShell edges={['top', 'left', 'right']}>
         <View style={styles.centered}>
@@ -396,7 +357,8 @@ export default function OperatorScorekeeperScreen() {
                   haptic="medium"
                   scaleTo={0.96}
                   overshoot={false}
-                  accessibilityLabel={running ? 'Pause clock' : 'Start clock'}
+                  disabled={sending}
+            accessibilityLabel={running ? 'Pause clock' : 'Start clock'}
                   onPress={() => void toggleClock()}
                   contentStyle={[styles.clockToggle, running && styles.clockToggleOn]}
                 >

@@ -1,3 +1,4 @@
+/** UX-13 existing ReelViewModal.tsx presentation keeps all actions/notices while aligning readable type. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Modal, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -15,6 +16,7 @@ import type { HighlightClip } from '@/data/highlights';
 import { adjacentStoryClips, prefetchStoryPhotos } from '@/hooks/useStoryPhotos';
 import type { Player } from '@/data/players';
 import { type ReelHype, readHiddenReelIds } from '@/lib/reels';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type ReelViewModalProps = {
   clips: HighlightClip[];
@@ -294,15 +296,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    minHeight: 40,
+    minHeight: 44,
     paddingHorizontal: 12,
     borderRadius: radii.md,
     backgroundColor: colors.primary,
   },
   closeLabel: {
     color: colors.onAccent,
-    fontWeight: '800',
-    fontSize: 14,
+    ...figtree('800'),
+    ...TYPE.button,
   },
   pressed: {
     opacity: 0.88,

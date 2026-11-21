@@ -1,3 +1,4 @@
+/** UX-13 StudioPreviewBar.tsx preserves existing actions with readable spacing/type. */
 import { StyleSheet, Text, View } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ROLE_LABELS } from '@/lib/roles';
 import { FOCAL } from '@/theme/motion';
 import type { UserRole } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const FAN_SURFACES: UserRole[] = ['guest', 'fan', 'athlete'];
 
@@ -56,13 +58,13 @@ const styles = StyleSheet.create({
   copy: {
     flex: 1,
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
   cta: {
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: 12,
     borderRadius: 999,
     backgroundColor: FOCAL.neonJade,
@@ -71,7 +73,7 @@ const styles = StyleSheet.create({
   },
   ctaLabel: {
     color: FOCAL.ink,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
 });

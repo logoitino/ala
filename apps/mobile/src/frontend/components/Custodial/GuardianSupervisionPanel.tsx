@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable controls preserve all consent, money and operator actions.
  * Parent or guardian supervision (MINOR-01), in Parent HQ and from Profile → Privacy for any adult. Link a teen with the
  * code they share (then sign the consent; the link counts once the teen confirms), see each linked teen's summary
  * (the same one the teen sees), approve or decline an under-16's request, change permissions, withdraw consent or
@@ -37,6 +37,7 @@ import {
   type GuardianMinorRow,
   type Supervision,
 } from '@/lib/minors';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const message = (caught: unknown) => (caught instanceof Error ? caught.message : 'That did not work.');
 type PendingFunFact = GuardianFunFacts['facts'][number];
@@ -128,7 +129,7 @@ function MinorCard({ row, onChanged, funFacts = [], guardianProfileId = null, on
 
   return (
     <View style={styles.minor}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`${row.firstName}, ${row.linkStatus === 'linked' ? 'show summary' : 'status'}`} haptic="selection" onPress={() => setOpen(!open)}>
+      <Pressable style={styles.summaryHit} accessibilityRole="button" accessibilityLabel={`${row.firstName}, ${row.linkStatus === 'linked' ? 'show summary' : 'status'}`} haptic="selection" onPress={() => setOpen(!open)}>
         <Text style={styles.name}>{`${row.firstName}${row.username ? ` · @${row.username}` : ''}`}</Text>
         <Text style={styles.muted}>
           {row.linkStatus === 'waiting_for_teen'
@@ -193,10 +194,11 @@ function MinorCard({ row, onChanged, funFacts = [], guardianProfileId = null, on
       {signing ? (
         <GuardianConsentForm
           teenFirstName={row.firstName}
+          identityKey={row.profileId}
           canAllowDonations={row.canAllowDonations}
           initial={row.myConsent ?? undefined}
           busy={busy}
-          onSign={(consent) => void sign(consent)}
+          onSign={sign}
           onCancel={() => setSigning(false)}
         />
       ) : null}
@@ -293,9 +295,10 @@ export function GuardianSupervisionPanel() {
       {preview ? (
         <GuardianConsentForm
           teenFirstName={preview.firstName}
+          identityKey={code}
           canAllowDonations={preview.canAllowDonations}
           busy={busy}
-          onSign={(consent) => void sign(consent)}
+          onSign={sign}
           onCancel={() => setPreview(null)}
         />
       ) : (
@@ -322,26 +325,27 @@ export function GuardianSupervisionPanel() {
 }
 
 const styles = StyleSheet.create({
+  summaryHit: { minHeight: 44, justifyContent: 'center' },
   card: { gap: 10, padding: 16, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  kicker: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, color: colors.textMuted, textTransform: 'uppercase' },
-  title: { fontSize: 18, fontWeight: '800', color: colors.text },
-  section: { marginTop: 6, fontSize: 15, fontWeight: '800', color: colors.text },
-  muted: { fontSize: 12, lineHeight: 17, color: colors.textMuted },
+  kicker: { ...TYPE.caption, ...figtree('800'), letterSpacing: 1.2, color: colors.textMuted, textTransform: 'uppercase' },
+  title: { ...TYPE.title, ...figtree('800'), color: colors.text },
+  section: { marginTop: 6, ...TYPE.section, ...figtree('800'), color: colors.text },
+  muted: { ...figtree('400'), ...TYPE.body,  color: colors.textMuted },
   minor: { gap: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border },
-  name: { fontSize: 14, fontWeight: '800', color: colors.text },
+  name: { ...TYPE.body, ...figtree('800'), color: colors.text },
   detail: { gap: 10 },
   request: { gap: 6 },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  chip: { minHeight: 36, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, justifyContent: 'center' },
+  chip: { minHeight: 44, paddingHorizontal: 12, borderRadius: 18, borderWidth: 1, borderColor: colors.border, justifyContent: 'center' },
   chipOn: { backgroundColor: colors.text, borderColor: colors.text },
-  chipLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
+  chipLabel: { ...TYPE.body, ...figtree('700'), color: colors.text },
   chipLabelOn: { color: colors.onAccent },
-  input: { minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, fontSize: 16, letterSpacing: 2, color: colors.text },
+  input: { ...figtree('400'), minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, ...TYPE.section, letterSpacing: 2, color: colors.text },
   grow: { flex: 1 },
   action: { minHeight: 44, paddingHorizontal: 16, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
-  actionLabel: { fontSize: 14, fontWeight: '800', color: colors.onAccent },
+  actionLabel: { ...TYPE.body, ...figtree('800'), color: colors.onAccent },
   off: { opacity: 0.5 },
-  note: { fontSize: 13, color: colors.text },
-  factPrompt: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
-  factAnswer: { fontSize: 15, fontWeight: '700', color: colors.text },
+  note: { ...figtree('400'), ...TYPE.body, color: colors.text },
+  factPrompt: { ...TYPE.caption, ...figtree('700'), color: colors.textMuted },
+  factAnswer: { ...TYPE.section, ...figtree('700'), color: colors.text },
 });

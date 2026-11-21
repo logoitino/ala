@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Profile → Privacy (PRIV-01, MINOR-01): public or private account, who sees each profile item, hide from search, who
  * can send friend requests, how tags are reviewed, blocked accounts, and the minor-account pieces: birth month and
  * year, and for 13–17 the parent or guardian link (invite code, confirm, unlink), the consent status, requests waiting
@@ -46,6 +46,7 @@ import {
   type BlockedRow,
   type PrivacySettings,
 } from '@/lib/privacy';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const AUDIENCES: Audience[] = ['everyone', 'friends', 'only_me'];
 
@@ -429,29 +430,29 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)' },
   sheet: { maxHeight: '92%', padding: 16, paddingBottom: 22, borderTopLeftRadius: 20, borderTopRightRadius: 20, backgroundColor: colors.surface, overflow: 'hidden', gap: 6 },
-  kicker: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, color: colors.textMuted, textTransform: 'uppercase' },
-  title: { fontSize: 20, fontWeight: '800', color: colors.text },
+  kicker: { ...TYPE.caption, ...figtree('800'), letterSpacing: 1.2, color: colors.textMuted, textTransform: 'uppercase' },
+  title: { ...TYPE.title, ...figtree('800'), color: colors.text },
   scroll: { flexGrow: 0 },
   scrollContent: { gap: 6, paddingBottom: 10 },
-  section: { marginTop: 10, fontSize: 14, fontWeight: '800', color: colors.text },
+  section: { marginTop: 10, ...TYPE.body, ...figtree('800'), color: colors.text },
   box: { gap: 6, padding: 10, borderRadius: 14, borderWidth: 1, borderColor: colors.border },
   item: { gap: 4, marginTop: 2 },
-  itemLabel: { fontSize: 13, fontWeight: '700', color: colors.text },
-  hint: { fontSize: 11, color: colors.textMuted, lineHeight: 15 },
+  itemLabel: { ...TYPE.body, ...figtree('700'), color: colors.text },
+  hint: { ...figtree('400'), ...TYPE.caption, color: colors.textMuted,  },
   choiceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  choice: { minHeight: 36, paddingHorizontal: 10, borderRadius: 14, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignSelf: 'flex-start' },
-  choiceOn: { backgroundColor: colors.text, borderColor: colors.text },
-  choiceOff: { opacity: 0.4 },
-  choiceLabel: { fontSize: 12, fontWeight: '700', color: colors.text },
+  choice: { minHeight: 44, paddingHorizontal: 10, borderRadius: 14, borderWidth: 1, borderColor: colors.border, justifyContent: 'center', alignSelf: 'flex-start' },
+  choiceOn: { minHeight: 44, backgroundColor: colors.text, borderColor: colors.text },
+  choiceOff: { minHeight: 44, opacity: 0.4 },
+  choiceLabel: { ...TYPE.caption, ...figtree('700'), color: colors.text },
   choiceLabelOn: { color: colors.onAccent },
   blockRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   grow: { flex: 1 },
-  code: { fontSize: 24, fontWeight: '800', letterSpacing: 4, color: colors.text },
-  small: { minHeight: 40, paddingHorizontal: 14, borderRadius: 16, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start', backgroundColor: colors.primary },
-  smallLabel: { fontSize: 13, fontWeight: '800', color: colors.onAccent },
-  error: { fontSize: 12, color: colors.danger },
-  notice: { fontSize: 12, color: colors.text },
+  code: { ...TYPE.title, ...figtree('800'), letterSpacing: 4, color: colors.text },
+  small: { minHeight: 44, paddingHorizontal: 14, borderRadius: 16, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start', backgroundColor: colors.primary },
+  smallLabel: { ...TYPE.body, ...figtree('800'), color: colors.onAccent },
+  error: { ...figtree('400'), ...TYPE.caption, color: colors.danger },
+  notice: { ...figtree('400'), ...TYPE.caption, color: colors.text },
   save: { minHeight: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
-  saveOff: { opacity: 0.5 },
-  saveLabel: { fontSize: 14, fontWeight: '800', color: colors.onAccent },
+  saveOff: { minHeight: 44, opacity: 0.5 },
+  saveLabel: { ...TYPE.body, ...figtree('800'), color: colors.onAccent },
 });

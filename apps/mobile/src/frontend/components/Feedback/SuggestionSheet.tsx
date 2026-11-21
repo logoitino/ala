@@ -1,8 +1,10 @@
-/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership. */
+/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useState } from 'react';
-import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, View , useWindowDimensions} from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated from 'react-native-reanimated';
 
@@ -22,6 +24,7 @@ import { supportSignals } from '@/services/SupportSignalManager';
 import { supportFeatureForPath } from '@/services/supportRuntime';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type SuggestionSheetProps = {
   visible: boolean;
@@ -35,6 +38,7 @@ type SuggestionSheetProps = {
  */
 export function SuggestionSheet({ visible, surface = 'other', onClose }: SuggestionSheetProps) {
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const [body, setBody] = useState('');
   const [kind, setKind] = useState<AppFeedbackKind>('suggestion');
   const [place, setPlace] = useState<AppFeedbackSurface>(surface);
@@ -99,9 +103,10 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
           </Animated.View>
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-        <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+        <Animated.View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }, sheetStyle]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
+          <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.kicker}>Improve Tapua'i</Text>
           <Text style={styles.title}>Send a suggestion</Text>
           <Text style={styles.lede}>Goes to the admin Feedback desk — not a clip report.</Text>
@@ -175,6 +180,7 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
           >
             <Text style={styles.sendLabel}>{busy ? 'Sending…' : 'Send suggestion'}</Text>
           </AnimatedButton>
+          </ScrollView>
           <AnimatedButton haptic="light" accessibilityLabel="Cancel" contentStyle={styles.cancel} onPress={dismiss}>
             <Text style={styles.cancelLabel}>Cancel</Text>
           </AnimatedButton>
@@ -186,6 +192,8 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flexGrow: 0, flexShrink: 1, alignSelf: 'stretch' },
+  bodyContent: { gap: 10, paddingBottom: 4 },
   root: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -202,26 +210,26 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: FOCAL.jadeInk,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 20,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
   lede: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
+    ...TYPE.body,
+    ...figtree('600'),
+
   },
   fieldLabel: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.2,
     marginTop: 2,
   },
@@ -231,7 +239,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   menuChip: {
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: 12,
     borderRadius: 999,
     borderWidth: 1,
@@ -246,8 +254,8 @@ const styles = StyleSheet.create({
   },
   menuChipLabel: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
   },
   menuChipLabelOn: {
     color: FOCAL.jadeInk,
@@ -263,7 +271,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   menuRow: {
-    minHeight: 40,
+    minHeight: 44,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -275,16 +283,16 @@ const styles = StyleSheet.create({
   },
   menuRowLabel: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
   },
   menuRowLabelOn: {
     color: FOCAL.jadeInk,
   },
   menuCheck: {
     color: FOCAL.jadeInk,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   field: {
     minHeight: 88,
@@ -295,8 +303,8 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 15,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     textAlignVertical: 'top',
   },
   send: {
@@ -311,17 +319,17 @@ const styles = StyleSheet.create({
   },
   sendLabel: {
     color: FOCAL.ink,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   cancel: {
-    minHeight: 40,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelLabel: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
   },
 });

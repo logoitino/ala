@@ -1,10 +1,12 @@
 /**
  * Role helpers: narrow a string to a known `UserRole` and decide who may open /admin (`is_admin` or the admin role).
- * Route groups use these through `RoleGate`.
+ * Route groups use these through `RoleGate`. Auth role mutations can supply an account-bound client;
+ * a refused account lifetime must not be swallowed by the historical missing-RPC fallback (UX-13).
  */
 
 import type { UserRole } from '@/types/database';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isOfflineActorChanged } from '@/lib/offlineActor';
 
 export const USER_ROLES: UserRole[] = [
   'guest',
@@ -166,9 +168,10 @@ export function formatCapabilityLine(roles: readonly string[] | null | undefined
  * @returns Updated `roles` text[] from Postgres, or `null` when unauthenticated / RPC missing.
  * @sideEffects Supabase RPC `add_user_role(new_role)`.
  */
-export async function addUserRoleRemote(newRole: UserRole): Promise<UserRole[] | null> {
+export async function addUserRoleRemote(newRole: UserRole, client = supabase): Promise<UserRole[] | null> {
   if (!isSupabaseConfigured) return null;
-  const { data, error } = await supabase.rpc('add_user_role', { new_role: newRole });
+  const { data, error } = await client.rpc('add_user_role', { new_role: newRole });
+  if (client !== supabase && isOfflineActorChanged(error)) throw error;
   if (error || !data) return null;
   return parseRoles(data);
 }

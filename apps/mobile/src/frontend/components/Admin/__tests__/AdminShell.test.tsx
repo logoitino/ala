@@ -2,8 +2,9 @@
 import { render, screen, type RenderResult } from '@testing-library/react-native';
 import { ScrollView, Text } from 'react-native';
 import { AdminShell } from '@/components/Admin/AdminShell';
+import { useState } from 'react';
 
-let mockAuth = { isAdmin: true, loading: false };
+let mockAuth: Record<string, unknown> = { isAdmin: true, loading: false };
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => mockAuth }));
 jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: jest.fn() }) }));
 jest.mock('@/context/AdminLensContext', () => ({
@@ -35,4 +36,14 @@ it('mounts the authorized page without a second header scroll area', async () =>
   expect(screen.getByText('Private desk controls')).toBeTruthy();
   expect(descendants(screen.container).filter((node) => node.type === 'RCTScrollView')).toHaveLength(1);
   expect(screen.queryByText('Admin Portal')).toBeNull();
+});
+
+it('drops outgoing desk local state when Studio stays enabled across accounts', async () => {
+  function Desk() { const [privateOwner] = useState(mockAuth.user); return <Text>{String(privateOwner)}</Text>; }
+  mockAuth = { isAdmin: true, loading: false, user: { id: 'A', toString: () => 'private A' }, isSessionCurrent: () => true };
+  await render(<AdminShell><Desk /></AdminShell>);
+  expect(screen.getByText('private A')).toBeTruthy();
+  mockAuth = { isAdmin: true, loading: false, user: { id: 'B', toString: () => 'private B' }, isSessionCurrent: () => true };
+  await screen.rerender(<AdminShell><Desk /></AdminShell>);
+  expect(screen.queryByText('private A')).toBeNull(); expect(screen.getByText('private B')).toBeTruthy();
 });

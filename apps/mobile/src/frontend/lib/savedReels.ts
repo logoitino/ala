@@ -29,8 +29,8 @@ export async function fetchReelSaved(userId: string, reelId: string) {
  * @returns `error` null on success. A duplicate row also counts as success: the reel is saved either way, and a
  *   replayed offline tap or a double tap must not read as a failure.
  */
-export async function saveReelBookmark(userId: string, reelId: string) {
-  const { error } = await supabase.from('saved_reels').insert({ user_id: userId, reel_id: reelId });
+export async function saveReelBookmark(userId: string, reelId: string, client = supabase) {
+  const { error } = await client.from('saved_reels').insert({ user_id: userId, reel_id: reelId });
   if (error && /duplicate|unique/i.test(error.message)) return { error: null };
   return { error };
 }
@@ -41,7 +41,7 @@ export async function saveReelBookmark(userId: string, reelId: string) {
  * @param reelId `reels.id` (uuid).
  * @returns `error` null on success (including when there was nothing to remove).
  */
-export async function removeReelBookmark(userId: string, reelId: string) {
-  const { error } = await supabase.from('saved_reels').delete().eq('user_id', userId).eq('reel_id', reelId);
+export async function removeReelBookmark(userId: string, reelId: string, client = supabase) {
+  const { error } = await client.from('saved_reels').delete().eq('user_id', userId).eq('reel_id', reelId);
   return { error };
 }

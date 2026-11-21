@@ -1,8 +1,9 @@
 /**
- * Session JWT and live user-id helpers for JWT-gated routes and Soft-Wall resume closures.
+ * Actor-checked session JWT and live user-id helpers for JWT-gated routes and Soft-Wall resume closures.
  * Hooks must call these instead of `supabase.auth.getSession` so vendor boundary stays in `lib/`.
  */
 
+import { assertCurrent, type OfflineActor } from '@/lib/offlineActor';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 /**
@@ -11,11 +12,16 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
  * @returns Session JWT.
  * @sideEffects `supabase.auth.getSession()`.
  */
-export async function requireAccessToken(signInMessage: string): Promise<string> {
+export async function requireAccessToken(signInMessage: string, actor?: OfflineActor): Promise<string> {
   if (!isSupabaseConfigured) {
     throw new Error(signInMessage);
   }
+  if (actor) assertCurrent(actor);
   const { data, error } = await supabase.auth.getSession();
+  if (actor) {
+    assertCurrent(actor);
+    if (data.session?.user.id !== actor.userId) throw new Error('Payment account changed. Reopen checkout.');
+  }
   const token = data.session?.access_token?.trim();
   if (error || !token) {
     throw new Error(signInMessage);

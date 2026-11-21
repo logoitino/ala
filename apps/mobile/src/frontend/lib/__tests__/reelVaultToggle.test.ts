@@ -11,7 +11,7 @@ jest.mock('@/lib/supabase', () => ({
   isSupabaseConfigured: true,
   supabase: {
     rpc: (...args: unknown[]) => mockRpc(...args),
-    from: () => ({ update: (values: unknown) => ({ eq: () => mockUpdate(values) }) }),
+    from: () => ({ update: (values: unknown) => ({ eq: () => ({ select: () => ({ single: () => mockUpdate(values) }) }) }) }),
   },
 }));
 jest.mock('@/lib/photoStories', () => ({ storyPhotoPublicUrl: () => null }));
@@ -40,10 +40,21 @@ describe('toggleReelVaultStatus', () => {
     await expect(toggleReelVaultStatus(REEL_ID, false)).rejects.toThrow('Photo stories stay on the free public feed.');
   });
 
+  it('rejects an unsaved legacy Vault fallback instead of returning success', async () => {
+    mockRpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'Missing function' } });
+    mockUpdate.mockResolvedValueOnce({ error: { code: '42703', message: 'column "is_vault_only" does not exist' } }).mockResolvedValueOnce({ error: { code: '42501', message: 'Denied' } });
+    await expect(toggleReelVaultStatus(REEL_ID, false)).rejects.toThrow('Denied');
+  });
   it('keeps the legacy is_exclusive fallback when is_vault_only is missing', async () => {
-    mockRpc.mockResolvedValue({ data: null, error: { message: 'function not found' } });
-    mockUpdate.mockResolvedValueOnce({ error: { message: 'column "is_vault_only" does not exist' } }).mockResolvedValueOnce({ error: null });
+    mockRpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'Could not find the function' } });
+    mockUpdate.mockResolvedValueOnce({ error: { code: '42703', message: 'column "is_vault_only" does not exist' } }).mockResolvedValueOnce({ data: {id: REEL_ID, is_exclusive:true}, error: null });
     await expect(toggleReelVaultStatus(REEL_ID, false)).resolves.toBe(true);
     expect(mockUpdate).toHaveBeenLastCalledWith({ is_exclusive: true });
   });
+});
+
+it('rejects a zero-row clip privacy UPDATE without success', async()=>{
+ mockRpc.mockResolvedValue({data:null,error:{code:'PGRST202',message:'Missing function'}});
+ mockUpdate.mockResolvedValueOnce({data:null,error:null});
+ await expect(toggleReelVaultStatus(REEL_ID,false)).rejects.toThrow();
 });

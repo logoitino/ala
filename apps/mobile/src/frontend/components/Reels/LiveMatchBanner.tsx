@@ -1,4 +1,6 @@
-/** Highlight scoreboard uses recorded game identity and state; the parent retains the live subscription. */
+/** Highlight scoreboard uses recorded game identity and state; the parent retains the live subscription.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
@@ -25,6 +27,7 @@ import { useSportConfigs } from '@/hooks/useSportConfigs';
 import { localGameHref } from '@/lib/navigation';
 import { telemetry } from '@/services/TelemetryManager';
 import { SPRING_BOUNCE, SPRING_CARD, FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type LiveMatchBannerProps = {
   gameId?: string | null;
@@ -178,7 +181,7 @@ export function LiveMatchBanner({
             </View>
             <Animated.View style={[styles.scoreboard, scoreStyle]}>
               <View style={styles.teamRow}>
-                <Text style={styles.matchup} numberOfLines={1} ellipsizeMode="tail">{homeTeam}</Text>
+                <Text style={styles.matchup}>{homeTeam}</Text>
                 <Text style={styles.scoreline}>{homeDisplay}</Text>
               </View>
               <View style={styles.teamRow}>
@@ -277,37 +280,37 @@ const styles = StyleSheet.create({
   },
   liveLabel: {
     color: FOCAL.ember,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1,
   },
   idleLabel: { color: colors.textMuted },
   scoreboard: { gap: 4, width: '100%' },
-  teamRow: { flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%' },
+  teamRow: { flexWrap: 'wrap', flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%' },
   quarter: {
     flexShrink: 1,
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     fontVariant: ['tabular-nums'],
   },
   matchup: {
     flex: 1,
     minWidth: 0,
     color: colors.text,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '800',
+    ...TYPE.body,
+
+    ...figtree('800'),
   },
   scoreline: {
     flexShrink: 0,
     minWidth: 36,
     textAlign: 'right',
     color: colors.text,
-    fontSize: 20,
-    lineHeight: 24,
+    ...TYPE.title,
+
     fontVariant: ['tabular-nums'],
-    fontWeight: '800',
+    ...figtree('800'),
   },
   toast: {
     alignSelf: 'stretch',
@@ -324,15 +327,15 @@ const styles = StyleSheet.create({
   },
   toastTitle: {
     color: colors.primary,
-    fontSize: 16,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textAlign: 'center',
   },
   toastDetail: {
     color: colors.text,
-    fontSize: 13,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     textAlign: 'center',
   },
 });

@@ -1,4 +1,6 @@
-/** Highlight library page normalizes platform duration units before enforcing the cap and optimizing a clip. */
+/** Highlight library page normalizes platform duration units before enforcing the cap and optimizing a clip.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -36,6 +38,7 @@ import {
   type PickedHighlight,
 } from '@/services/MediaUploadService';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type HighlightPickerModalProps = {
   visible: boolean;
@@ -207,13 +210,13 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 22,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
   lede: {
     color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
     marginBottom: 8,
   },
   primary: {
@@ -225,8 +228,8 @@ const styles = StyleSheet.create({
   },
   primaryLabel: {
     color: colors.onAccent,
-    fontWeight: '800',
-    fontSize: 16,
+    ...figtree('800'),
+    ...TYPE.body,
   },
   ghost: {
     minHeight: 48,
@@ -238,7 +241,7 @@ const styles = StyleSheet.create({
   },
   ghostLabel: {
     color: colors.textMuted,
-    fontWeight: '700',
+    ...figtree('700'),
   },
   overlay: {
     backgroundColor: 'rgba(15,20,22,0.92)',
@@ -249,8 +252,8 @@ const styles = StyleSheet.create({
   },
   overlayTitle: {
     color: FOCAL.neonJade,
-    fontWeight: '800',
-    fontSize: 15,
+    ...figtree('800'),
+    ...TYPE.section,
     textAlign: 'center',
   },
   track: {
@@ -268,8 +271,8 @@ const styles = StyleSheet.create({
   },
   percent: {
     color: colors.onAccent,
-    fontWeight: '800',
-    fontSize: 18,
+    ...figtree('800'),
+    ...TYPE.title,
   },
   disabled: {
     opacity: 0.5,

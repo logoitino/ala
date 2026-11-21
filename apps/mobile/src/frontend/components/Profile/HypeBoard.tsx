@@ -1,14 +1,15 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Row of an athlete's Seki / Aura / Flex / view counts. `interactive` turns the counts into tap-to-bump buttons
  * (local-first via `lib/hype.ts`).
  */
 
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 
 import { colors, radii, SCOREBOARD_DIGITS } from '@/constants/theme';
 import {  type PlayReactionId } from '@/data/players';
 import { formatCompactCount, type PlayerHype } from '@/lib/hype';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type HypeBoardProps = {
   hype: PlayerHype;
@@ -31,6 +32,7 @@ function valueFor(hype: PlayerHype, id: (typeof METERS)[number]['id']): number {
 }
 
 export function HypeBoard({ hype, interactive = false, onBump }: HypeBoardProps) {
+  const { fontScale } = useWindowDimensions();
   const peak = Math.max(hype.aura_count, hype.flex_count, hype.seki_count, 1);
 
   return (
@@ -58,7 +60,7 @@ export function HypeBoard({ hype, interactive = false, onBump }: HypeBoardProps)
 
           if (!canTap) {
             return (
-              <View key={meter.id} style={styles.cellWrap}>
+              <View key={meter.id} style={[styles.cellWrap, fontScale > 1.3 && styles.cellLarge]}>
                 {body}
               </View>
             );
@@ -74,7 +76,7 @@ export function HypeBoard({ hype, interactive = false, onBump }: HypeBoardProps)
                 if (meter.id === 'view') return;
                 onBump?.(meter.id);
               }}
-              style={({ pressed }) => [styles.cellWrap, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.cellWrap, fontScale > 1.3 && styles.cellLarge, pressed && styles.pressed]}
             >
               {body}
             </Pressable>
@@ -96,21 +98,24 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.gold,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1.4,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.section,
+    ...figtree('700'),
   },
   row: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
     gap: 8,
   },
+  cellLarge: { flexBasis: '45%' },
   cellWrap: {
+    minWidth: 60,
     flex: 1,
   },
   cell: {
@@ -129,20 +134,20 @@ const styles = StyleSheet.create({
   emoji: {
     fontSize: 18,
   },
-  value: {
+  value: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     color: colors.text,
-    fontSize: 18,
+    ...TYPE.title,
   },
   label: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   hint: {
     color: colors.gold,
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   track: {
     marginTop: 6,
@@ -156,7 +161,7 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: colors.gold,
   },
-  pressed: {
+  pressed: { minHeight: 44,
     transform: [{ scale: 0.97 }],
     opacity: 0.92,
   },

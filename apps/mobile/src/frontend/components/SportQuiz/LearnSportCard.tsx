@@ -11,6 +11,7 @@ import { learnableSport, useTriviaAvailability } from '@/hooks/useTriviaAvailabi
 import { colors, radii } from '@/constants/theme';
 import { SportIcon } from '@/components/UI/SportIcon';
 import { FOCAL } from '@/theme/motion';
+import { figtree, TYPE } from '@/theme/fonts';
 import { QuizButton } from './QuizButton';
 
 /** @purpose Visibility gate; the router is only touched once the card is actually shown. */
@@ -33,6 +34,6 @@ function LearnSportCardBody({ sport, firstName, athletePlayerId }: { sport: stri
 const styles = StyleSheet.create({
     card: { gap: 8, padding: 12, marginTop: 4, borderRadius: radii.lg, backgroundColor: FOCAL.mistViolet },
     heading: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    title: { color: FOCAL.violetInk, fontSize: 15, fontWeight: '700', flexShrink: 1 },
-    copy: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
+    title: { ...TYPE.section, ...figtree('700'), color: FOCAL.violetInk, flexShrink: 1 },
+    copy: { ...TYPE.body, ...figtree(), color: colors.textMuted },
 });

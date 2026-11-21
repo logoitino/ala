@@ -1,4 +1,4 @@
-/** The bounded notification inbox is separate from factual Activity and its existing invitation queues. */
+/** UX-13 readable shared type preserves every action and required notice. The bounded notification inbox is separate from factual Activity and its existing invitation queues. */
 import { type Href, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNotificationInbox } from '@/hooks/useNotifications';
 import { FOCAL } from '@/theme/motion';
 import { MoreText } from '@/components/UI/MoreText';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** @purpose Review read/unread and archived notifications without mutating receipt or invitation history. */
 export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
@@ -90,19 +91,19 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: 10, gap: 6, ...cardShadow },
   heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
-  title: { color: colors.text, fontSize: 15, lineHeight: 20, fontWeight: '800' },
-  unread: { color: colors.primary, fontSize: 13, lineHeight: 18, fontWeight: '700' },
-  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
+  title: { color: colors.text, ...TYPE.section,  ...figtree('800') },
+  unread: { color: colors.primary, ...TYPE.body,  ...figtree('700') },
+  hint: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
   controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   action: { minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, paddingHorizontal: 12,
     paddingVertical: 8, alignItems: 'center', justifyContent: 'center', flexGrow: 1 },
-  actionLabel: { color: colors.primary, fontSize: 13, lineHeight: 18, fontWeight: '700' },
-  selected: { borderColor: colors.text, backgroundColor: FOCAL.mistJade },
-  error: { color: colors.danger, fontSize: 13, lineHeight: 18 },
+  actionLabel: { color: colors.primary, ...TYPE.body,  ...figtree('700') },
+  selected: { minHeight: 44, borderColor: colors.text, backgroundColor: FOCAL.mistJade },
+  error: { ...figtree('400'), color: colors.danger, ...TYPE.body,  },
   empty: { paddingVertical: 6, gap: 6 },
   item: { borderTopWidth: 1, borderColor: colors.border, paddingTop: 6, gap: 6 },
   unreadItem: { borderColor: colors.primary },
-  itemTitle: { color: colors.text, fontSize: 13, lineHeight: 18, fontWeight: '800' },
-  body: { color: colors.text, fontSize: 13, lineHeight: 18 },
-  disabled: { opacity: 0.5 },
+  itemTitle: { color: colors.text, ...TYPE.body,  ...figtree('800') },
+  body: { ...figtree('400'), color: colors.text, ...TYPE.body,  },
+  disabled: { minHeight: 44, opacity: 0.5 },
 });

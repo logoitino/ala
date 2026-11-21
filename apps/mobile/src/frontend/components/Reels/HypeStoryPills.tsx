@@ -1,6 +1,7 @@
 /**
  * Seki and Flex story on a Highlight and on a profile. On a video the full line pops in, then
  * tucks into icons above the caption so the clip stays visible. An arrow brings the line back.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -12,6 +13,7 @@ import { SheetRise } from '@/components/UI/SheetRise';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import type { HypeStory } from '@/data/hypeStory';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** How long the video story stays open before it tucks into icons. */
 const VIDEO_STORY_OPEN_MS = 1600;
@@ -113,10 +115,10 @@ export function HypeStoryPills({ stories, tone }: HypeStoryPillsProps) {
           >
             <Text style={styles.emoji}>{story.emoji}</Text>
             <View style={styles.copy}>
-              <Text style={[styles.line, onVideo ? styles.lineVideo : seki ? styles.lineSeki : styles.lineFlex]} numberOfLines={1}>
+              <Text style={[styles.line, onVideo ? styles.lineVideo : seki ? styles.lineSeki : styles.lineFlex]}>
                 {story.line}
               </Text>
-              <Text style={[styles.detail, onVideo ? styles.detailVideo : styles.detailDay]} numberOfLines={1}>
+              <Text style={[styles.detail, onVideo ? styles.detailVideo : styles.detailDay]}>
                 {story.detail}
               </Text>
             </View>
@@ -166,16 +168,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   iconBtn: {
-    width: 32,
-    height: 32,
+    minWidth: 44,
+    minHeight: 44,
     borderRadius: 16,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   arrowBtn: {
-    width: 32,
-    height: 32,
+    minWidth: 44,
+    minHeight: 44,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -204,8 +206,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   line: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   lineVideo: {
     color: '#F3FBF7',
@@ -217,8 +219,8 @@ const styles = StyleSheet.create({
     color: FOCAL.goldInk,
   },
   detail: {
-    fontSize: 11,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
   },
   detailVideo: {
     color: 'rgba(243,251,247,0.88)',

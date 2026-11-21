@@ -1,3 +1,4 @@
+/** UX-13 existing RivalryWeekBanner.tsx presentation keeps all actions/notices while aligning readable type. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -8,6 +9,7 @@ import { radii } from '@/constants/theme';
 import { featuredRivalryGame } from '@/data/regions';
 import { FOCAL } from '@/theme/motion';
 import type { Game } from '@/types/database';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** Stays dismissed for this app session, including after Highlights remounts. */
 const dismissedRivalryIds = new Set<string>();
@@ -92,19 +94,19 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: FOCAL.electricGold,
-    fontSize: 10,
-    fontWeight: '900',
+    ...TYPE.caption,
+    ...figtree('900'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   matchup: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   cta: {
     color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
 });

@@ -2,12 +2,14 @@
  * The admin-published Home campaign banner and kicker / lede copy above the Home pills
  * (split out of app/(tabs)/index.tsx for R4-03; behaviour unchanged). Empty strings render nothing,
  * so an unpublished campaign leaves no gap in the chrome stack.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/constants/theme';
 import type { AppRuntimeConfig } from '@/lib/runtime';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Show the Look desk's Home banner title / body and kicker / lede when they are set.
@@ -49,28 +51,28 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   campaignTitle: {
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     color: FOCAL.electricGold,
   },
   campaignBody: {
-    fontSize: 12,
-    fontWeight: '600',
-    lineHeight: 16,
+    ...TYPE.caption,
+    ...figtree('600'),
+
   },
   homeCopy: {
     gap: 2,
   },
   homeKicker: {
-    fontSize: 10,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     color: FOCAL.electricGold,
   },
   homeLede: {
-    fontSize: 12,
-    fontWeight: '600',
+    ...TYPE.caption,
+    ...figtree('600'),
     opacity: 0.86,
   },
 });

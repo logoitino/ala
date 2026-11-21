@@ -1,12 +1,14 @@
-/**
- * Athlete's own clip manager: long-press a tile to move a video between the free feed and one-time Exclusive access, or
+/** UX-13 readable shared type preserves every action and required notice.
+ * Confirmed account-bound Vault updates in the athlete's own clip manager: long-press a tile to move a video between the free feed and one-time Exclusive access, or
  * Flash Unlock it. Fan menu uses shared Daylight chrome. Photo stories are public only (database constraint,
  * PHOTO_STORIES_DESIGN.md decision 1), so they never open the Vault sheet.
  */
+import { offlineQueue } from '@/services/OfflineQueue';
+import type { OfflineActor } from '@/lib/offlineActor';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
-import { useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Modal, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
@@ -32,6 +34,7 @@ import { setReelFlashUnlock } from '@/lib/crew';
 import { toggleReelVaultStatus, type ReelHype } from '@/lib/reels';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export const PHOTO_STORY_PUBLIC_TOAST = 'Photo stories stay on the free public feed.';
 
@@ -42,7 +45,7 @@ type AthleteReelManagerProps = {
   onOpenAthlete?: (playerId: string) => void;
   onHypeChange?: (reelId: string, hype: ReelHype) => void;
   onBacked?: (nextCount: number) => void;
-  /** Optimistic parent write after `toggle_reel_vault_status`. */
+  /** Confirmed parent write after `toggle_reel_vault_status`. */
   onVaultChange?: (reelId: string, vaultOnly: boolean) => void;
   /** Optimistic parent write after `set_reel_flash_unlock`. */
   onFlashUnlock?: (reelId: string, until: string) => void;
@@ -70,8 +73,10 @@ export function AthleteReelManager({
   openClipId,
 }: AthleteReelManagerProps) {
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const celebration = useOptionalCelebration();
   const { live } = useAppRuntime();
+  const menuActor = useRef<OfflineActor | null>(null);
   const [menuClip, setMenuClip] = useState<HighlightClip | null>(null);
   const [toggling, setToggling] = useState(false);
   const [flashing, setFlashing] = useState(false);
@@ -86,6 +91,8 @@ export function AthleteReelManager({
       celebration?.showToast(PHOTO_STORY_PUBLIC_TOAST);
       return;
     }
+    if (menuActor.current && !menuActor.current.isCurrent()) { setToggling(false); setFlashing(false); }
+    menuActor.current = offlineQueue.captureActor();
     setMenuClip(clip);
   };
 
@@ -95,29 +102,34 @@ export function AthleteReelManager({
 
   const applyToggle = async () => {
     if (!menuClip || sheetBusy || isPhotoStory(menuClip)) return;
-    const nextVault = !vaultOnly;
+    const actor = menuActor.current;
+    const current = () => menuActor.current === actor && (!actor || actor.isCurrent());
+    if (!current()) return;
     setToggling(true);
-    onVaultChange?.(menuClip.id, nextVault);
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     } catch {
       // Simulator / web may not expose haptics.
     }
     try {
-      const saved = await toggleReelVaultStatus(menuClip.id, vaultOnly);
-      if (saved !== nextVault) onVaultChange?.(menuClip.id, saved);
+      const saved = await toggleReelVaultStatus(menuClip.id, vaultOnly, actor ?? undefined);
+      if (!current()) return;
+      onVaultChange?.(menuClip.id, saved);
       celebration?.showToast(saved ? VAULT_MOVE_TO_VAULT : VAULT_MOVE_TO_PUBLIC);
       setMenuClip(null);
     } catch (caught) {
       // toggleReelVaultStatus now throws instead of reporting a flip that did not save.
-      celebration?.showToast(caught instanceof Error && caught.message ? caught.message : 'Could not change Vault status.');
+      if (current()) celebration?.showToast(caught instanceof Error && caught.message ? caught.message : 'Could not change Vault status.');
     } finally {
-      setToggling(false);
+      if (current()) setToggling(false);
     }
   };
 
   const applyFlashUnlock = async () => {
     if (!menuClip || sheetBusy || !vaultOnly) return;
+    const actor = menuActor.current;
+    const current = () => menuActor.current === actor && (!actor || actor.isCurrent());
+    if (!current()) return;
     setFlashing(true);
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -125,7 +137,8 @@ export function AthleteReelManager({
       // Simulator / web may not expose haptics.
     }
     try {
-      const result = await setReelFlashUnlock(menuClip.id);
+      const result = await setReelFlashUnlock(menuClip.id, actor ?? undefined);
+      if (!current()) return;
       onFlashUnlock?.(menuClip.id, result.flash_unlock_until);
       telemetry.track({
         event_type: 'flash_unlock',
@@ -139,9 +152,9 @@ export function AthleteReelManager({
       celebration?.showToast(FLASH_UNLOCK_TOAST);
       setMenuClip(null);
     } catch (caught) {
-      celebration?.showToast(caught instanceof Error ? caught.message : 'Could not start Flash Unlock.');
+      if (current()) celebration?.showToast(caught instanceof Error ? caught.message : 'Could not start Flash Unlock.');
     } finally {
-      setFlashing(false);
+      if (current()) setFlashing(false);
     }
   };
 
@@ -167,7 +180,7 @@ export function AthleteReelManager({
         presentationStyle="overFullScreen"
         statusBarTranslucent
         transparent
-        visible={Boolean(menuClip)}
+        visible={Boolean(menuClip) && (menuActor.current?.isCurrent() ?? true)}
         onRequestClose={closeMenu}
       >
         <View style={styles.root}>
@@ -176,7 +189,7 @@ export function AthleteReelManager({
             <View style={styles.dim} />
           </Pressable>
           <View pointerEvents="box-none" style={frame.dock}>
-          <View style={[styles.sheet, frame.card]}>
+          <View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }]}>
           <MenuBackdrop accent="jade" />
             <SheetHandle onDismiss={sheetBusy ? undefined : closeMenu} />
             <Text style={styles.kicker}>Content placement</Text>
@@ -242,9 +255,9 @@ export function AthleteReelManager({
 const styles = StyleSheet.create({
   hint: {
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '600',
-    lineHeight: 16,
+    ...TYPE.caption,
+    ...figtree('600'),
+
     marginBottom: 8,
   },
   root: {
@@ -271,21 +284,21 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: FOCAL.jadeInk,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
   body: {
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
   },
   toggleBtn: {
     minHeight: 52,
@@ -295,13 +308,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
-  busy: {
+  busy: { minHeight: 44,
     opacity: 0.55,
   },
   toggleLabel: {
     color: FOCAL.ink,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
   flashBtn: {
@@ -316,8 +329,8 @@ const styles = StyleSheet.create({
   },
   flashLabel: {
     color: FOCAL.jadeInk,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
   cancelBtn: {
@@ -331,7 +344,7 @@ const styles = StyleSheet.create({
   },
   cancelLabel: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
 });

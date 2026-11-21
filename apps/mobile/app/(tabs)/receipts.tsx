@@ -1,4 +1,4 @@
-/** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
+/** Gift receipts show read failures and Retry before any totals so an unavailable ledger never appears empty. */
 import { type Href, useRouter } from 'expo-router';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -29,7 +29,7 @@ export default function ReceiptsScreen() {
   const router = useRouter();
   const { live } = useAppRuntime();
   const { requireAuth } = useSoftWall();
-  const { receipts, summary, loading, signedIn } = useFanTipHistory();
+  const { receipts, summary, loading, signedIn, error, refresh } = useFanTipHistory();
 
   if (!live.layouts.receipts) {
     return (
@@ -69,7 +69,7 @@ export default function ReceiptsScreen() {
           </View>
         </View>
 
-        <View style={styles.metrics} accessibilityRole="summary" accessibilityLabel="Gift history totals">
+        {signedIn && !loading && !error ? <View style={styles.metrics} accessibilityRole="summary" accessibilityLabel="Gift history totals">
           <View style={styles.metric}>
             <Text style={styles.metricValue}>{formatDollars(summary.totalTippedCents)}</Text>
             <Text style={styles.metricLabel}>Total Given ($)</Text>
@@ -84,7 +84,7 @@ export default function ReceiptsScreen() {
             <Text style={styles.metricValue}>{summary.totalAuraEarned}</Text>
             <Text style={styles.metricLabel}>Total Aura Earned ⚡</Text>
           </View>
-        </View>
+        </View> : null}
 
         {loading ? (
           <ActivityIndicator color={colors.primary} style={styles.spinner} />
@@ -102,6 +102,14 @@ export default function ReceiptsScreen() {
             }
             adminHref="/admin/money"
             adminLabel="Open Money"
+          />
+        ) : error ? (
+          <EmptyState
+            kicker="Receipts"
+            title="Could not load gift receipts"
+            lede={error}
+            actionLabel="Retry"
+            onAction={() => void refresh()}
           />
         ) : receipts.length === 0 ? (
           <EmptyState

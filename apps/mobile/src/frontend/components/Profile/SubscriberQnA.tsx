@@ -1,3 +1,4 @@
+/** UX-13 SubscriberQnA.tsx keeps existing flow with shared readable type. */
 import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -11,6 +12,7 @@ import { displayValue } from '@/data/players';
 import { useSubscriberRequests } from '@/hooks/useSubscriberRequests';
 
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const NEON_JADE = FOCAL.neonJade;
 
@@ -126,8 +128,8 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: NEON_JADE,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
@@ -140,8 +142,8 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 15,
-    fontWeight: '600',
+    ...TYPE.body,
+    ...figtree('600'),
   },
   send: {
     minHeight: 44,
@@ -150,13 +152,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendOff: {
+  sendOff: { minHeight: 44,
     opacity: 0.45,
   },
   sendLabel: {
     color: colors.onAccent,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   list: {
     gap: 10,
@@ -188,8 +190,8 @@ const styles = StyleSheet.create({
   },
   initials: {
     color: NEON_JADE,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   commentCopy: {
     flex: 1,
@@ -197,13 +199,13 @@ const styles = StyleSheet.create({
   },
   commentAuthor: {
     color: colors.text,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   commentBody: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
+    ...TYPE.body,
+    ...figtree('600'),
+
   },
 });

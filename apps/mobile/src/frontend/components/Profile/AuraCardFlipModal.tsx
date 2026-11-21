@@ -1,10 +1,10 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * The Aura trading-card sheet opened from the athlete hero's flip control (split out of AthleteProfileView.tsx for R4-03;
  * behaviour unchanged). The parent builds the card, owns the open state and passes its safe-area insets and sheet frame,
  * so hook order in AthleteProfileView is unchanged. The gesture root inside the Modal keeps tap-to-flip working.
  */
 import type { ReactNode } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import type { EdgeInsets } from 'react-native-safe-area-context';
 
@@ -13,6 +13,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii } from '@/constants/theme';
 import type { SheetFrame } from '@/hooks/useSheetFrame';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Show the athlete's Aura trading card in a dimmed sheet with a Done button.
@@ -34,6 +35,7 @@ export function AuraCardFlipModal({
   insets: EdgeInsets;
   frame: SheetFrame;
 }) {
+  const { height: windowHeight } = useWindowDimensions();
   return (
     <Modal
       transparent
@@ -54,9 +56,11 @@ export function AuraCardFlipModal({
         ]}
       >
         <Pressable haptic="none" style={styles.flipDim} onPress={() => setFlipOpen(false)} />
-        <View style={[styles.flipSheet, frame.card]}>
+        <View style={[styles.flipSheet, frame.card, { maxHeight: windowHeight * 0.85 }]}>
+          <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent}>
           <Text style={styles.flipKicker}>Aura card</Text>
           {tradingCard}
+          </ScrollView>
           <AnimatedButton
             accessibilityLabel="Close Aura card"
             haptic="selection"
@@ -73,6 +77,8 @@ export function AuraCardFlipModal({
 }
 
 const styles = StyleSheet.create({
+  bodyScroll: { flexGrow: 0, flexShrink: 1, minHeight: 0, alignSelf: 'stretch' },
+  bodyContent: { gap: 10, paddingBottom: 4 },
   flipGestureRoot: {
     flex: 1,
   },
@@ -89,8 +95,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   flipKicker: {
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: FOCAL.goldInk,
@@ -104,7 +110,7 @@ const styles = StyleSheet.create({
   },
   flipCloseLabel: {
     color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
 });

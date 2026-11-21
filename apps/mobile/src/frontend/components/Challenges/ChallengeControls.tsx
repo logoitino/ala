@@ -1,9 +1,12 @@
 /** Shared local controls for CHAL-01 participant panels; no data access or persistence.
- * A missing database update is not painted here. Admin Home and portal Health list it. */
+ * A missing database update is not painted here. Admin Home and portal Health list it.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ */
 import { Text, StyleSheet } from 'react-native';
 import { NOT_SWITCHED_ON } from '@/lib/rpc';
 import { HapticPressable } from '@/components/UI/HapticPressable';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /** @purpose Accessible challenge action with the same disabled rule on the real native press boundary. */
 export function ChallengeButton({ label, onPress, disabled = false, selected = false }: { label: string; onPress: () => void; disabled?: boolean; selected?: boolean }) {
@@ -48,12 +51,12 @@ const styles = StyleSheet.create({
     marginVertical: 3,
     flexShrink: 1,
   },
-  label: { color: FOCAL.ink, fontSize: 14, lineHeight: 20, fontWeight: '600', flexShrink: 1 },
+  label: { color: FOCAL.ink, ...TYPE.button,  ...figtree('600'), flexShrink: 1 },
   selected: { backgroundColor: FOCAL.mistJade, borderColor: FOCAL.jadeInk },
   selectedLabel: { color: FOCAL.jadeInk },
   disabled: { opacity: 0.5 },
-  reading: { color: '#4A5560', fontSize: 14, lineHeight: 20, marginVertical: 8 },
-  feedback: { fontSize: 14, lineHeight: 20, padding: 12, borderRadius: 12, marginVertical: 6 },
+  reading: { ...figtree('400'), color: '#4A5560', ...TYPE.body,  marginVertical: 8 },
+  feedback: { ...figtree('400'), ...TYPE.body,  padding: 12, borderRadius: 12, marginVertical: 6 },
   error: { color: FOCAL.emberInk, backgroundColor: FOCAL.mistEmber },
   notice: { color: FOCAL.jadeInk, backgroundColor: FOCAL.mistJade },
 });

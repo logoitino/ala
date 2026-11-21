@@ -3,6 +3,7 @@
  * checks for sign-up, and the Apple / Google / Magic Link flows. `updateOwnDisplayName` writes the signed-in
  * person's own `profiles.full_name`. Session handling lives in `context/AuthContext`. Web Google
  * keeps the initiating page/draft alive and opens its popup before any authorize network probe.
+ * Auth age/name updates accept the initiating account's client so delayed forms cannot borrow a new session (UX-13).
  * @sideEffects Supabase Auth, and a `profiles` UPDATE from `updateOwnDisplayName`.
  */
 
@@ -234,9 +235,9 @@ export async function ensureFanProfile(user: User, ageConfirmed13Plus?: boolean,
  * only ever writes `true` — never used to clear or re-check an existing confirmation.
  * @sideEffects `profiles` UPDATE.
  */
-export async function confirmAge13Plus(userId: string): Promise<void> {
+export async function confirmAge13Plus(userId: string, client = supabase): Promise<void> {
   if (!isSupabaseConfigured) return;
-  const { error } = await supabase
+  const { error } = await client
     .from('profiles')
     .update({ age_confirmed_13_plus: true })
     .eq('user_id', userId);
@@ -574,9 +575,10 @@ export function subscribeAuthDeepLinks(onUrl: (url: string) => void): () => void
  * @returns Null on success, or the database message.
  * @sideEffects `profiles` UPDATE on `full_name` for this user only.
  */
-export async function updateOwnDisplayName(userId: string, fullName: string): Promise<string | null> {
+export async function updateOwnDisplayName(userId: string, fullName: string, client = supabase): Promise<string | null> {
   const next = fullName.trim();
   if (!next || !userId || !isSupabaseConfigured) return 'Sign in to save your name to Profile.';
-  const { error } = await supabase.from('profiles').update({ full_name: next }).eq('user_id', userId);
-  return error ? error.message : null;
+  const { data, error } = await client.from('profiles').update({ full_name: next }).eq('user_id', userId).select('user_id,full_name').single();
+  if (error) return error.message;
+  return data?.user_id === userId && data.full_name === next ? null : 'Your display name was not confirmed. Try again.';
 }

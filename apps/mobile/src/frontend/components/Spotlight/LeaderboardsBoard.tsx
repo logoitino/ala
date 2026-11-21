@@ -2,6 +2,7 @@
  * Spotlight → Boards: tabbed leaderboards (hype, views, highlights, schools, fans, filmers) with loading,
  * error + Retry, "open athlete", and a share of the current board's leader. Data arrives as props from
  * `hooks/useLeaderboards`; no money amounts are shown on any board.
+ * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import { useState } from 'react';
@@ -14,6 +15,7 @@ import { cardShadow, colors, radii, space, SCOREBOARD_DIGITS } from '@/constants
 import type { Leaderboards } from '@/lib/leaderboards';
 import { boardShareMessage } from '@/lib/shareCard';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export type LeaderboardsTab = 'hype' | 'views' | 'highlights' | 'schools' | 'fans' | 'filmers';
 
@@ -223,8 +225,8 @@ const styles = StyleSheet.create({
   },
   section: {
     color: FOCAL.goldInk,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
@@ -249,8 +251,8 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   tabTextSelected: {
     color: colors.background,
@@ -265,16 +267,16 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     backgroundColor: FOCAL.mistGold,
   },
-  emptyText: {
+  emptyText: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
+    ...TYPE.body,
+
   },
   list: {
     gap: 8,
   },
   share: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 },
-  shareText: { color: FOCAL.goldInk, fontWeight: '800' },
+  shareText: { color: FOCAL.goldInk, ...figtree('800') },
   row: {
     minHeight: 44,
     flexWrap: 'wrap',
@@ -306,14 +308,14 @@ const styles = StyleSheet.create({
   rankFirst: {
     backgroundColor: FOCAL.electricGold,
   },
-  rankText: {
+  rankText: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     color: colors.textMuted,
-    fontSize: 13,
+    ...TYPE.body,
   },
-  rankTextFirst: {
+  rankTextFirst: { ...figtree('400'),
     color: FOCAL.ink,
-    fontSize: 16,
+    ...TYPE.body,
   },
   rankPodium: {
     backgroundColor: FOCAL.mistGold,
@@ -323,15 +325,15 @@ const styles = StyleSheet.create({
   },
   titleFirst: {
     color: colors.onVideo,
-    fontSize: 17,
-    fontWeight: '900',
+    ...TYPE.section,
+    ...figtree('900'),
   },
   subtitleFirst: {
     color: colors.onVideoMuted,
   },
-  metricFirst: {
+  metricFirst: { ...figtree('400'),
     color: FOCAL.electricGold,
-    fontSize: 18,
+    ...TYPE.title,
   },
   copy: {
     flex: 1,
@@ -339,17 +341,17 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.section,
+    ...figtree('800'),
   },
-  subtitle: {
+  subtitle: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 12,
+    ...TYPE.caption,
     marginTop: 2,
   },
-  metric: {
+  metric: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
     color: colors.text,
-    fontSize: 15,
+    ...TYPE.body,
   },
 });

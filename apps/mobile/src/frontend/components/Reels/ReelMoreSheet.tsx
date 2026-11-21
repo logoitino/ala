@@ -1,6 +1,6 @@
 /** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { BlurView } from 'expo-blur';
-import { Modal, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
@@ -11,6 +11,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
 import { FOCAL } from '@/theme/motion';
+import { DISPLAY_TEXT, TYPE, figtree } from '@/theme/fonts';
 
 type ReelMoreSheetProps = {
   visible: boolean;
@@ -43,6 +44,7 @@ export function ReelMoreSheet({
   onSuggest,
 }: ReelMoreSheetProps) {
   const frame = useSheetFrame();
+  const { height } = useWindowDimensions();
   const who = athleteName.trim() || 'this highlight';
 
   return (
@@ -60,11 +62,12 @@ export function ReelMoreSheet({
           <View style={styles.dim} />
         </Pressable>
         <View pointerEvents="box-none" style={frame.dock}>
-        <SheetRise active={visible} style={[styles.sheet, frame.card]}>
+        <SheetRise active={visible} style={[styles.sheet, frame.card, { maxHeight: height * 0.85 }]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={onClose} />
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.content} bounces={false}>
           <Text style={styles.kicker}>More</Text>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text accessibilityRole="header" style={styles.title}>
             {who}
           </Text>
 
@@ -89,7 +92,7 @@ export function ReelMoreSheet({
             <Ionicons
               name={saved ? 'bookmark' : 'bookmark-outline'}
               size={20}
-              color={saved ? FOCAL.neonJade : colors.text}
+              color={saved ? FOCAL.jadeInk : colors.text}
             />
             <Text style={[styles.rowLabel, saved && styles.rowSaved]}>{saved ? 'Saved' : 'Save'}</Text>
           </AnimatedButton>
@@ -116,6 +119,7 @@ export function ReelMoreSheet({
             </AnimatedButton>
           ) : null}
 
+          </ScrollView>
           <AnimatedButton
             accessibilityLabel="Close more options"
             haptic="light"
@@ -146,37 +150,42 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: 8,
   },
+  // Content scrolls at large text sizes; dismissal keeps its own reachable row.
+  scroll: { flexGrow: 0, flexShrink: 1 },
+  content: { gap: 6 },
   kicker: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...DISPLAY_TEXT,
     marginBottom: 4,
   },
   row: {
-    minHeight: 48,
+    minHeight: MENU_METRICS.touchTarget,
     borderRadius: MENU_METRICS.controlRadius,
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
   rowLabel: {
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
+    flexShrink: 1,
   },
   rowSaved: {
-    color: FOCAL.neonJade,
+    color: FOCAL.jadeInk,
   },
   rowDanger: {
     color: colors.danger,
@@ -191,7 +200,8 @@ const styles = StyleSheet.create({
   },
   cancelLabel: {
     color: colors.textMuted,
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.button,
+    ...figtree('700'),
+    flexShrink: 1,
   },
 });

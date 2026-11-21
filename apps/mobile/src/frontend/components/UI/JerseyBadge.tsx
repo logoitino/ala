@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Jersey number as a block numeral in a double-stitched patch (UX-08), used on athlete heroes, the QR donate page
  * and Spotlight. The number is the athlete's real number ("7", never "07"); the frame colour follows the caller
  * (Aura tier, brand jade or award gold) so it sits inside the Calm Island palette.
@@ -8,6 +8,7 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-na
 
 import { colors, SCOREBOARD_DIGITS } from '@/constants/theme';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 type JerseyBadgeProps = {
   number: string | number;
@@ -63,13 +64,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  number: {
+  number: { ...figtree('400'),
     ...SCOREBOARD_DIGITS,
-    fontSize: 15,
-    lineHeight: 19,
+    ...TYPE.body,
+
   },
-  numberMd: {
-    fontSize: 24,
-    lineHeight: 29,
+  numberMd: { ...figtree('400'),
+    ...TYPE.title,
+
   },
 });

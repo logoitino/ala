@@ -8,6 +8,7 @@ import { Text, View, type TextInstance } from 'react-native';
 import type { LifePlaybookState } from '@/hooks/useLifePlaybook';
 import { LIFE_NOTICE_VERSION } from '@shared/lifePlaybook';
 import { colors, radii } from '@/constants/theme';
+import { DISPLAY_TEXT, figtree, TYPE } from '@/theme/fonts';
 import { QuizButton } from './QuizButton';
 import { focusSoon } from './SportQuizRound';
 
@@ -32,10 +33,10 @@ export function LifePlaybookCard({ life }: { life: LifePlaybookState }) {
     if (!s || s.availability !== 'not_opted_in' || s.preferences?.life_opt_in === true || s.notice_version !== LIFE_NOTICE_VERSION) return null;
     if (later) return <QuizButton label="About Life Playbook" quiet onPress={() => { setLater(false); setReopened(n => n + 1); }}/>;
     return <View style={{ gap: 10, padding: 12, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}>
-        <Text ref={title} accessibilityRole="header" style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>Life Playbook: real-life skills, sports style.</Text>
-        {LIFE_NOTICE_TEXT.map(line => <Text key={line}>{line}</Text>)}
-        <Text style={{ color: colors.textMuted }}>It has its own round each week and never uses up your other rounds. You can turn it off any time.</Text>
-        {life.saveError ? <Text accessibilityRole="alert">{life.saveError}</Text> : null}
+        <Text ref={title} accessibilityRole="header" style={{ ...TYPE.section, ...DISPLAY_TEXT, color: colors.text }}>Life Playbook: real-life skills, sports style.</Text>
+        {LIFE_NOTICE_TEXT.map(line => <Text key={line} style={{ ...TYPE.body, ...figtree(), color: colors.text }}>{line}</Text>)}
+        <Text style={{ ...TYPE.body, ...figtree(), color: colors.textMuted }}>It has its own round each week and never uses up your other rounds. You can turn it off any time.</Text>
+        {life.saveError ? <Text accessibilityRole="alert" style={{ ...TYPE.body, ...figtree(), color: colors.text }}>{life.saveError}</Text> : null}
         <QuizButton label="Turn on Life Playbook" disabled={life.saving} onPress={() => { void life.setOptIn(true); }}/>
         <QuizButton label="Not now" quiet disabled={life.saving} onPress={() => setLater(true)}/>
     </View>;

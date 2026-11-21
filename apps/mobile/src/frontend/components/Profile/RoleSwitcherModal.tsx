@@ -1,22 +1,11 @@
-/** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
+/** UX-13 readable shared type preserves every action and required notice. UX-13 save failures remain visible and late results never close another account frame. Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
  * QUIZ-05: after a first athlete claim has finished, an optional last step offers "Share a fun fact?" with Not now
  * from the first frame. The claim never waits for it; the step closes itself when the server says this account can't
  * share (no recorded age, not linked yet, or fun facts off). */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  type ScrollViewInstance,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance, useWindowDimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
@@ -50,6 +39,7 @@ import {
   SPRING_SHEET,
 } from '@/theme/motion';
 import { useLegalAck } from '@/hooks/useLegalAck';
+import { TYPE, figtree } from '@/theme/fonts';
 
 const SHEET_OFF = 720;
 
@@ -75,10 +65,21 @@ function fireMediumHaptic() {
  */
 export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) {
   const frame = useSheetFrame();
+  const { height: windowHeight } = useWindowDimensions();
   const { live } = useAppRuntime();
   const classYears =
     live.catalog.classYears.length > 0 ? live.catalog.classYears : [...ATHLETE_CLASS_YEARS];
-  const { activeRole, isAthlete, profile, completeAthleteOnboarding, setActiveRole } = useAuth();
+  const { activeRole, isAthlete, profile, user, isSessionCurrent, completeAthleteOnboarding, setActiveRole } = useAuth();
+  // Preserve the initiating account and modal frame through awaits and delayed close animations.
+  const mounted = useRef(true);
+  const ownerId = user?.id ?? profile?.id ?? null;
+  const authFrame = useRef({ ownerId, visible, guard: isSessionCurrent });
+  if (authFrame.current.ownerId !== ownerId || authFrame.current.visible !== visible || authFrame.current.guard !== isSessionCurrent) {
+    authFrame.current = { ownerId, visible, guard: isSessionCurrent };
+  }
+  const [saveError, setSaveError] = useState<string | null>(null);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => { setSaveError(null); setApplying(false); }, [ownerId, visible, isSessionCurrent]);
   const { configs } = useSportConfigs();
   const sportOptions = (activeSportNames(configs).length > 0 ? activeSportNames(configs) : [...ATHLETE_SPORTS]).map(
     (item) => ({ id: item, label: item }),
@@ -167,14 +168,18 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
     onClose();
   };
 
-  const dismiss = () => {
+  const dismiss = (requestGuard?: unknown) => {
     if (!open || applying) return;
+    const finishRequest = () => {
+      if (typeof requestGuard === 'function' && !requestGuard()) return;
+      finishClose();
+    };
     dim.value = withTiming(0, { duration: SHEET_BACKDROP_OUT_MS });
     translateY.value = withTiming(
       SHEET_OFF,
       { duration: SHEET_DISMISS_MS, easing: Easing.in(Easing.cubic) },
       (finished) => {
-        if (finished) runOnJS(finishClose)();
+        if (finished) runOnJS(finishRequest)();
       },
     );
   };
@@ -197,7 +202,11 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
       showToast('Pick your team and sport.');
       return;
     }
+    const requestFrame = authFrame.current;
+    const isCurrent = () => mounted.current && requestFrame === authFrame.current && requestFrame.visible && (requestFrame.guard?.() ?? true);
+    if (!isCurrent()) return;
     fireMediumHaptic();
+    setSaveError(null);
     setApplying(true);
     try {
       await completeAthleteOnboarding({
@@ -207,11 +216,14 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
         position: position.trim(),
         classYear: classYear ?? '',
       });
+      if (!isCurrent()) return;
       showToast(isAthlete ? 'Roster saved 🏆' : 'School claimed 🏆 Get Varsity verified to unlock Player of the Week');
-      if (isAthlete) dismiss();
+      if (isAthlete) dismiss(isCurrent);
       else setFunStep(true);
+    } catch {
+      if (isCurrent()) setSaveError("Couldn't save your roster. Please try again.");
     } finally {
-      setApplying(false);
+      if (isCurrent()) setApplying(false);
     }
   };
 
@@ -230,10 +242,10 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
         </Animated.View>
       </Pressable>
       <View pointerEvents="box-none" style={frame.dock}>
-      <Animated.View style={[styles.sheet, frame.card, sheetStyle]}>
+      <Animated.View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }, sheetStyle]}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={{ flexShrink: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.handle} />
           <Text style={styles.kicker}>Account Capability</Text>
           <Text style={styles.title}>Roles on this account</Text>
@@ -391,6 +403,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
               }}
               onOpenTerms={() => setLegalOpen(true)}
             />
+            {saveError ? <Text accessibilityLiveRegion="polite" style={styles.saveError}>{saveError}</Text> : null}
             <AnimatedButton
               accessibilityLabel={isAthlete ? 'Save athlete roster' : 'Claim athlete profile'}
               disabled={applying || !legalAccepted}
@@ -435,6 +448,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
 }
 
 const styles = StyleSheet.create({
+  saveError: { ...figtree('400'), color: colors.text, ...TYPE.body,  },
   root: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -484,20 +498,20 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   title: {
     color: colors.text,
-    fontSize: 22,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
-  blurb: {
+  blurb: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    ...TYPE.body,
+
   },
   card: {
     backgroundColor: colors.background,
@@ -519,13 +533,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: colors.text,
-    fontSize: 17,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
-  cardBody: {
+  cardBody: { ...figtree('400'),
     color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+    ...TYPE.body,
+
   },
   teamChip: {
     gap: 4,
@@ -533,27 +547,27 @@ const styles = StyleSheet.create({
   },
   teamChipTitle: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   teamChipBadge: {
     color: colors.primary,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   onboard: {
     gap: 10,
   },
   onboardHint: {
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
+    ...TYPE.body,
+
+    ...figtree('600'),
   },
   fieldLabel: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
@@ -564,8 +578,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.background,
     color: colors.text,
-    fontSize: 15,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
     paddingHorizontal: 12,
   },
   pill: {
@@ -578,8 +592,8 @@ const styles = StyleSheet.create({
   },
   pillLabel: {
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   pillMuted: {
     borderRadius: 999,
@@ -591,13 +605,13 @@ const styles = StyleSheet.create({
   },
   pillMutedLabel: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
   },
   toggleLabel: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
+    ...TYPE.caption,
+    ...figtree('800'),
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     marginBottom: 8,
@@ -639,13 +653,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     backgroundColor: 'transparent',
   },
-  switchTabOn: {
+  switchTabOn: { minHeight: 44,
     backgroundColor: 'transparent',
   },
   switchCopy: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
   switchCopyOn: {
@@ -661,11 +675,11 @@ const styles = StyleSheet.create({
   },
   applyLabel: {
     color: colors.onAccent,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
-  busy: {
+  busy: { minHeight: 44,
     opacity: 0.7,
   },
 });

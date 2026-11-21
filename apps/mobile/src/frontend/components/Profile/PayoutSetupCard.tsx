@@ -1,4 +1,4 @@
-/** Test-bank setup is optional and separate from account creation, identity checks and real payouts. */
+/** UX-13 readable shared type preserves every action and required notice. Test-bank setup is optional and separate from account creation, identity checks and real payouts. */
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useState } from 'react';
 
@@ -8,6 +8,7 @@ import { cardShadow, colors, radii } from '@/constants/theme';
 import { COMPLIANCE_PAYOUT } from '@/data/legal';
 import { useLegalAck } from '@/hooks/useLegalAck';
 import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Server-authorized test-bank onboarding for an adult athlete or one guardian/athlete target.
@@ -80,20 +81,20 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '800',
+    ...TYPE.title,
+    ...figtree('800'),
   },
   lede: {
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
+    ...TYPE.body,
+    ...figtree('600'),
+
   },
   warn: {
     color: colors.text,
-    fontSize: 13,
-    fontWeight: '700',
-    lineHeight: 18,
+    ...TYPE.body,
+    ...figtree('700'),
+
   },
   connectBtn: {
     minHeight: 52,
@@ -105,8 +106,8 @@ const styles = StyleSheet.create({
   },
   connectLabel: {
     color: colors.onAccent,
-    fontSize: 15,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
   },
   manageBtn: {
     minHeight: 52,
@@ -120,11 +121,11 @@ const styles = StyleSheet.create({
   },
   manageLabel: {
     color: colors.primary,
-    fontSize: 13,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('800'),
     textAlign: 'center',
   },
-  busy: {
+  busy: { minHeight: 44,
     opacity: 0.7,
   },
 });

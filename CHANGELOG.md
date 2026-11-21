@@ -1,4 +1,28 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+## 2026-11-20 — Whole-app flow and panel review
+
+- Normalize typography and reduce oversized decorative icons and empty panel space across Highlights, Local, quizzes, profile menus and related flows. Long panel content can scroll without shrinking the text or losing dismissal controls.
+- Keep private receipts, donor activity, crew and subscription state with the current account. Delayed saves and payment follow-ups cannot update the next account or athlete.
+- Report failed profile, Vault, checkout recording and admin requests accurately; preserve confirmed payment success and existing support guidance.
+- Keep operator claims, scores and clocks with the current game/account; prevent duplicate guardian signing and stale school confirmations. Protect incoming sessions from delayed MFA operations and preserve ordinary sign-out recovery.
+- Review routes, functions and native Modal hosts across the app. Local source, browser and regression evidence is recorded in [UX-13](docs/agents/UX-13.md); device and hosted-provider acceptance remain separate. This is local work, not a deployed release.
+
+## 2026-11-20 — Readable panels and mobile spacing
+
+- Improve text hierarchy and line spacing without shrinking copy to fit:14pt body,16pt sections,12pt captions, existing Bricolage/Figtree fonts.
+- Reduce Highlight rail bulk, upload-choice icons, Local sponsor/booster images and quiz celebration/card decoration. Team and booster names wrap; panel content grows with text.
+- Popup bodies scroll above reachable Close/Cancel controls; touched controls keep44pt targets, shared badges grow with enlarged labels, and pinned play navigation wraps whole destinations at large text. Existing notices, actions, timers and reduced-motion behavior are preserved.
+- Verification and limits: [UX-12](docs/agents/UX-12.md). This is local source work, not a deployed release.
+
+## 2026-11-20 — Offline actions and fan state stay with their account
+
+- Replaying queued reactions, saves and reports preserves actions added or replaced while a request is pending. Cancelled pending actions stay removed instead of replaying or reappearing after a network failure.
+- Account switches hold the previous account's actions. Replay uses that account's captured session; guests' local reactions never become a later sign-in's actions. Older queues without recorded ownership remain held.
+- Undo during queued reaction replay retains a compensating clear, and structured SDK network errors remain retryable. Startup triggers cannot replay a hydrated action twice.
+- Bookmark state ignores stale reads and handlers; cheer selections are stored per account. QA shows current-account actions and held counts, rejects stale account views and keeps explicit device-wide discard available.
+- Native-payment fallback guidance recommends a development client or preview build. Expo Go payment behavior still needs device verification.
+- Local repair and regression evidence: [APP-REPAIR-01](docs/agents/APP-REPAIR-01.md). Device/hosted acceptance remains pending; this entry is not a deployed release.
+
 ## 2026-11-15 — WEB-DESKTOP Lovable-outline card feed FINISHED
 
 - Expo web ≥820 Home center: scrollable Highlight cards (sport pills, Why this clip, Cheer / Send a gift) matching the Lovable desktop outline with live data.

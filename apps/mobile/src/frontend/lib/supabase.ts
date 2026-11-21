@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import { resolveBackendConnection } from '@tapuai/shared-types/backendConnection';
+import { createAuthPublicationScope } from '@tapuai/shared-types/admin/authPublication';
 
 import type { Database } from '@/types/database';
 
@@ -72,13 +73,16 @@ const authStorage: AuthStorage = isWebSSR
     ? webStorage
     : AsyncStorage;
 
+export const authPublication = createAuthPublicationScope();
+
 export const supabase = createClient<Database>(
   // Keep the guarded export; a stray unconfigured request stays on-device instead of reaching a provider.
   backend.connection?.url ?? 'http://127.0.0.1:1',
   backend.connection?.publicKey ?? 'public-anon-key',
   {
+    global: { fetch: authPublication.wrapFetch((...args) => globalThis.fetch(...args)) },
     auth: {
-      storage: authStorage,
+      storage: authPublication.wrapStorage(authStorage),
       autoRefreshToken: !isWebSSR,
       persistSession: !isWebSSR,
       detectSessionInUrl: false,

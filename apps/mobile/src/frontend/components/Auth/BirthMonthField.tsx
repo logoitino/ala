@@ -1,4 +1,4 @@
-/**
+/** UX-13 readable shared type preserves every action and required notice.
  * Birth month and year (MINOR-01): compact dropdown scroll menus (no day). Used by the sign-up step, the one-time age
  * card and Profile → Privacy. Neutral on purpose: nothing hints at the age that would work, values never go to
  * telemetry. Lovable density: one row of two triggers with an inline scroll list — avoids a nested Modal inside SoftWall.
@@ -11,6 +11,7 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, KIT, MENU_METRICS } from '@/constants/theme';
 import { MONTHS } from '@/lib/minors';
 import { FOCAL } from '@/theme/motion';
+import { TYPE, figtree } from '@/theme/fonts';
 
 export type BirthDraft = { year: number | null; month: number | null };
 
@@ -150,7 +151,7 @@ export function BirthMonthField({
 
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
-  label: { fontSize: 13, fontWeight: '800', color: colors.text },
+  label: { ...TYPE.body, ...figtree('800'), color: colors.text },
   row: { flexDirection: 'row', gap: 8 },
   trigger: {
     flex: 1,
@@ -165,11 +166,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
   },
-  triggerOn: { borderColor: FOCAL.jadeInk, backgroundColor: colors.accentSoft },
-  triggerOpen: { borderColor: FOCAL.jadeInk },
-  triggerOff: { opacity: 0.55 },
-  triggerLabel: { flex: 1, fontSize: 15, fontWeight: '800', color: colors.text },
-  triggerPlaceholder: { color: colors.textMuted, fontWeight: '700' },
+  triggerOn: { minHeight: 44, borderColor: FOCAL.jadeInk, backgroundColor: colors.accentSoft },
+  triggerOpen: { minHeight: 44, borderColor: FOCAL.jadeInk },
+  triggerOff: { minHeight: 44, opacity: 0.55 },
+  triggerLabel: { flex: 1, ...TYPE.body, ...figtree('800'), color: colors.text },
+  triggerPlaceholder: { color: colors.textMuted, ...figtree('700') },
   list: {
     maxHeight: LIST_MAX,
     borderRadius: KIT.controlRadius,
@@ -184,8 +185,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
-  optionOn: { backgroundColor: colors.accentSoft },
-  optionLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
-  optionLabelOn: { color: FOCAL.jadeInk, fontWeight: '800' },
-  hint: { fontSize: 12, lineHeight: 16, color: colors.textMuted },
+  optionOn: { minHeight: 44, backgroundColor: colors.accentSoft },
+  optionLabel: { ...TYPE.body, ...figtree('700'), color: colors.text },
+  optionLabelOn: { color: FOCAL.jadeInk, ...figtree('800') },
+  hint: { ...figtree('400'), ...TYPE.caption,  color: colors.textMuted },
 });
