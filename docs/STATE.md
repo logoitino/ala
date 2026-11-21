@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-16 · FEED-ENDLESS Phase 0 audit written (pool=1 playable; no refill/cycle). APP-TEST gift web PASS on `main`. B still owner SQL/Edge. Webhook tip crediting stays **off**.
+**Last updated:** 2026-11-20 · CHECK-01 CI: refresh IP counsel packet after rebase onto main+VAULT-01.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,13 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+### 2026-11-20 — CHECK-01 rebased onto main
+
+- **CHECK-01 (#52):** `pnpm ip:sync` refreshed inventory SHA after rebase onto `main` (+VAULT-01) so `ip:check` passes.
+- Cross-check protocol / agents:check matrix rebased after WEB-DESKTOP + APP-TEST + FEED-ENDLESS.
+  Exit generated maps kept from `main` during conflict resolve.
+- **About to spend:** **$0**.
 
 ### 2026-11-16 — FEED-ENDLESS Phase 0 audit (no design yet)
 
