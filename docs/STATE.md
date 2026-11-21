@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-20 · Mobile spacing CI: refresh IP counsel packet inventory hash after source changes.
+**Last updated:** 2026-11-20 · Mobile spacing (#59) rebased onto main after CHECK-01 merge; IP packet refreshed.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -204,6 +204,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - Actual outside Codex final independent review: **7 suites / 94 tests passed**. Full quality gate PASS with the separate Documents source-cache state: **286 mobile suites / 2706 tests**, 121 portal tests, both typechecks and all root guards. Fresh Android/iOS Hermes exports PASS. Registered owner/model execution, hosted and physical-device acceptance are not claimed.
 - Corrected native-payment fallback guidance to development/preview builds; Expo Go payment behavior remains unverified. Dependencies/public preview config and separate private source cache for this Documents checkout are restored; old removed-checkout snapshots preserved. [APP-REPAIR-01](agents/APP-REPAIR-01.md) records evidence/limitations. **About to spend: $0.**
 
+### 2026-11-20 — CHECK-01 rebased onto main
+
+- **CHECK-01 (#52):** `pnpm ip:sync` refreshed inventory SHA after rebase onto `main` (+VAULT-01) so `ip:check` passes.
+- Cross-check protocol / agents:check matrix rebased after WEB-DESKTOP + APP-TEST + FEED-ENDLESS.
+  Exit generated maps kept from `main` during conflict resolve.
+- **About to spend:** **$0**.
 ### 2026-11-16 — FEED-ENDLESS Phase 0 audit (no design yet)
 
 - [FEED-ENDLESS-AUDIT.md](agents/FEED-ENDLESS-AUDIT.md): staging `reels_feed` playable **1**;

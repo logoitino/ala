@@ -396,6 +396,15 @@ The Cursor session that committed `1231af8` did the build. It also wrote this do
 
 Detail and status: [WORK_QUEUE.md](WORK_QUEUE.md). Build contract: [PHOTO_STORIES_DESIGN.md](../engineering/design/PHOTO_STORIES_DESIGN.md).
 
+## Cross-check protocol (CHECK-01, 2026-11-14)
+
+[CHECK-01](CHECK-01.md) decides who checks a change. The kind of change selects the matrix rows, and the rows name the checkers.
+1. The author files a check request naming its matrix rows, never its own reviewers.
+2. Each required checker records a verdict from a different session. A later commit to a touched file voids that verdict.
+3. The lead certifies the set is complete, then the CTO accepts or rejects.
+4. Owner decisions (prices, counsel, SQL, merge, live money) go to the owner with the record attached. QA verifies last.
+5. VP_OPERATIONS keeps the matrix current; `agents:check` validates it against the registry. Audit: [CHECK-AUDIT](CHECK-AUDIT.md).
+
 ## Pairing and escalation
 
 - Finance and accounting work starts with `CFO`: owner → CFO → CONTROLLER / TAX / TREASURY / FPA → specialist. Data and screens Finance needs go CFO → CTO → ENGINEERING → `FINANCE_DATA`; the requesting finance role accepts the result and QA verifies. Any change to splits, the revenue log, posting rules, payouts or tax wording needs CFO acceptance and CONTROLLER review.
@@ -620,7 +629,7 @@ Every agent is listed in the team it reports to. Specialists sit under their lea
 | --- | --- | --- | --- |
 | `VOICE` | Brand | `CTO` | [voice.md](../../.claude/agents/voice.md) |
 
-**107 callable agents** + Facilitator. Grouped by the lead each agent reports to (2026-10-08; Office of the CFO and Data Governance added 2026-10-13). Responsibility is assigned to every critical function; execution and launch status are tracked separately in the work queue and STATE.
+**116 callable agents** + Facilitator. Grouped by the lead each agent reports to (2026-10-08; Office of the CFO and Data Governance added 2026-10-13). Responsibility is assigned to every critical function; execution and launch status are tracked separately in the work queue and STATE.
 
 ## Paste to call someone
 
@@ -630,6 +639,7 @@ Task: <WORK_QUEUE task ID or concrete outcome>
 Surface / files: <exact scope>
 Acceptance: <observable checks>
 Dependencies / pair: <owners>
+Reviewers (from CHECK-01 matrix): <roles>
 Read first: docs/STATE.md · AGENTS.md · docs/agents/TEAMS.md
 Report: changes, executed checks/results, unverified dependencies, next owner
 ```

@@ -177,6 +177,8 @@ App at announcement: commit `378e6de32c63348e197a212c464661c2eb636de8`, source `
 
 **Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
 
+- reviewed by `SUPPLY_CHAIN_SECURITY` 2026-11-14 (executor: separate Claude general-purpose agent session, not the pinned model): ok. The only source change is `scripts/check-agents.mjs`, which reads local files only. The baseline differs only in that file hash and the plan version. The `canvaskit.wasm` entry is unchanged. Portable Exit run 43644005753 passed at c0ca0c5.
+
 ## 2026-11-14 · plan `277e85094525` → `9a503335d588` · announced by WebAppShell hydration fix
 
 App at announcement: commit `ea9b22b6b77208ae8f1a28a7073b74657b0955da` + 4 uncommitted file(s), source `9a503335d5886e7f28d1c14ee49437d2e17866e3aa7c57034c7744cf6fbc39a9`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
