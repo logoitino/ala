@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-20 · Mobile spacing PR typecheck fix (fetch mocks) + CHECK-01 rebase. FEED-ENDLESS Phase 0 + APP-TEST gift on `main`.
+**Last updated:** 2026-11-20 · Mobile spacing CI: refresh IP counsel packet inventory hash after source changes.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -179,6 +179,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ### 2026-11-20 — Mobile spacing CI: cast fetch mocks for typecheck
 
+- **Mobile spacing (#59):** `pnpm ip:sync` refreshed `docs/legal/IP_COUNSEL_PACKET.md` inventory SHA so `ip:check` passes in CI.
 - `globalThis.fetch = mock as typeof fetch` in actor/mutation tests so Node 24 /
   DOM `URL | RequestInfo` overloads typecheck. Merged latest `main` (VAULT-01).
 - **About to spend:** **$0**.
