@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-20 · CHECK-01 rebased onto main (+VAULT-01). Mobile spacing typecheck fix in flight. FEED-ENDLESS Phase 0 + APP-TEST gift on `main`.
+**Last updated:** 2026-11-20 · CHECK-01 CI: refresh IP counsel packet after rebase onto main+VAULT-01.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -179,6 +179,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ### 2026-11-20 — CHECK-01 rebased onto main
 
+- **CHECK-01 (#52):** `pnpm ip:sync` refreshed inventory SHA after rebase onto `main` (+VAULT-01) so `ip:check` passes.
 - Cross-check protocol / agents:check matrix rebased after WEB-DESKTOP + APP-TEST + FEED-ENDLESS.
   Exit generated maps kept from `main` during conflict resolve.
 - **About to spend:** **$0**.
