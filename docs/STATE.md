@@ -1881,6 +1881,13 @@ Do not re-diagnose these. Fix them or leave them.
      **iOS** Exclusive must use App Store IAP (not Stripe in-app). Production **Android** Exclusive
      must use Google Play Billing — **Android is not exempt**. StoreKit / Play Billing **not built**.
      Counsel must review before store listing claims or live money. Hosted web deploy is owner/ops.
+   - **Vault ladder (owner 2026-11-15, [VAULT-01](agents/VAULT-01.md) V1–V6 approved as recommended):**
+     - The one-time pass stays $4.99, split 20/80 of proceeds **after** the store or processor fee.
+     - Athlete and fan subscriptions are held.
+     - The +100 Aura on purchase is removed or reframed (counsel picks).
+     - A free "recorded for you" earnings view is approved.
+     - The build waits for APP-TEST lanes A–C and starts with a server-granted pass.
+     - Open: Apple 15% vs 30%, store classification, counsel items.
 
 10. **Athlete verification and fake highlights** — `docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md`.
     **Decided 2026-09-29:** gifts are held until verified and the athlete sees that in the app; the
