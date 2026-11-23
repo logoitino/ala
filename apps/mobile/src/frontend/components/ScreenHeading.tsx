@@ -3,6 +3,8 @@
  * UX-08: the viewer's sport (generic field for non-athletes) fades in behind the right side of every heading.
  * UX-10: compact fan headings use a sport mark and an ink-on-mist kicker; role headings keep their sizing.
  * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ * UX-19: fan headings put the kicker badge on the title row and use a shorter underline, saving about a line of height;
+ * role headings keep the stacked kicker so their admin-edited copy and layout stay as published.
  */
 import { StyleSheet, Text, View } from 'react-native';
 import { usePathname } from 'expo-router';
@@ -40,20 +42,33 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
   const path = usePathname();
   const fan = !/^\/(operator|parent|athlete|booster|sponsor|admin)(\/|$)/.test(path ?? '');
   const mist = Object.values(TAB_ACCENTS).find(value => value.color === mark)?.mist ?? FOCAL.mistGold;
+  const kickerBadge = kicker ? (
+    <View style={[styles.kickerRow, fan && styles.fanKickerBadge, fan && { backgroundColor: mist }]}>
+      {fan ? <SportIcon sport={sport} color={mark} size={16} /> : <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.accentDot, { backgroundColor: mark }]} />}
+      <Text style={[styles.kicker, compact && styles.kickerCompact, { color: mark }]}>{kicker}</Text>
+    </View>
+  ) : null;
+  const titleText = (
+    <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact, fan && styles.fanTitle, fan && styles.fanTitleFlex, { color: live.theme.text }]}>{title}</Text>
+  );
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact, fan && styles.fanWrap]}>
       {/* Field lines stay on the right and fade in, so the title always sits on clear ground. */}
       <View pointerEvents="none" style={styles.field}>
         <SportField sport={sport} fade="left" labels={false} opacity={0.11} />
       </View>
-      {kicker ? (
-        <View style={[styles.kickerRow, fan && styles.fanKickerBadge, fan && { backgroundColor: mist }]}>
-          {fan ? <SportIcon sport={sport} color={mark} size={16} /> : <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.accentDot, { backgroundColor: mark }]} />}
-          <Text style={[styles.kicker, compact && styles.kickerCompact, { color: mark }]}>{kicker}</Text>
+      {fan ? (
+        <View style={styles.titleRow}>
+          {titleText}
+          {kickerBadge}
         </View>
-      ) : null}
-      <Text accessibilityRole="header" style={[styles.title, compact && styles.titleCompact, fan && styles.fanTitle, { color: live.theme.text }]}>{title}</Text>
-      {compact ? null : <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.underline, { backgroundColor: mark }]} />}
+      ) : (
+        <>
+          {kickerBadge}
+          {titleText}
+        </>
+      )}
+      {compact ? null : <View testID="screen-heading-underline" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.underline, fan && styles.fanUnderline, { backgroundColor: mark }]} />}
       {/* Fan ledes may collapse to two lines with More. Role homes (parent, booster, operator…) keep admin-edited
           ledes fully visible: they can mention consent or payouts, which must never sit behind More. */}
       {lede ? (fan
@@ -67,6 +82,9 @@ const styles = StyleSheet.create({
   fanWrap: { gap: 4, paddingTop: 2, paddingBottom: 2 },
   fanTitle: { ...DISPLAY_TEXT, ...TYPE.display, letterSpacing: -0.6 },
   fanLede: { ...figtree('400'), ...TYPE.body },
+  titleRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
+  fanTitleFlex: { flexShrink: 1 },
+  fanUnderline: { width: 32 },
   fanKickerBadge: { alignSelf: 'flex-start', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10, maxWidth: '100%' },
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   accentDot: { width: 5, height: 5, borderRadius: 3 },
