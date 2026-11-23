@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — #60 IP packet refreshed after merge onto main; awaiting CI merge.
+**Last updated:** 2026-11-23 — #60 CI: security:infra + exit:map acknowledge after UX-14–18 merge onto main.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-23 — #60 CI currency:** `pnpm security:infra` and `pnpm exit:map --acknowledge` so Portable Exit / infra checks pass before merge.
 
 - **2026-11-23 — #60 IP sync:** Re-ran `pnpm ip:sync` so `ip:check` passes after merging main into UX-14–18.
 
