@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — UX-14–18 flow/layout/admin/directory on main after merge of #59/#52/#53. Local gates recorded on PR; Exit acks and device acceptance remain pending.
+**Last updated:** 2026-11-23 — #60 IP packet refreshed after merge onto main; awaiting CI merge.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-23 — #60 IP sync:** Re-ran `pnpm ip:sync` so `ip:check` passes after merging main into UX-14–18.
 
 - **2026-11-23 — #60 onto main:** Merged current `main` (#59/#52/#53) into UX-14–18 flow/layout PR; fetch mock casts use `as unknown as typeof fetch`; IP packet refreshed for CI.
 
