@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-23 · plan `b2517576254e` → `d5cb4a637472` · announced by cursor/main-ci-topology
+
+App at announcement: commit `1f72a867a64d155bdb580b1bfdb90734a65885a2` + 1 uncommitted file(s), source `d5cb4a637472eb8b7b9132914255c641534319d3afa154a6318bcc02a2df4f4f`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Common/__tests__/DesktopLeftRail.test.tsx f4fd8f40b4e1c4e207eb1e438fa91cf59685d0462345a431f191cdb4821b966c`; removed `apps/mobile/src/frontend/components/Common/__tests__/DesktopLeftRail.test.tsx 6601361de43d21cdbd9d7b4d37ef0e5569c68595a0fed502b3a71b973674985d`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-23 · plan `9c78d991e93a` → `b2517576254e` · announced by cursor/main-ci-solidify
 
 App at announcement: commit `4e486f6184cb8d1e2b620651b1578bf8c0aa2acb` + 1 uncommitted file(s), source `b2517576254e56a2474e2e2e52d5355a2cf9131e85fadf4fd09e38f2e244c67f`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
