@@ -1,7 +1,6 @@
 /**
  * Desktop left rail: Schools → /local/directory when Local is on; Local path match excludes directory.
  */
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 const mockPush = jest.fn();

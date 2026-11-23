@@ -1,5 +1,5 @@
 {
- "planVersion": "9c78d991e93a",
+ "planVersion": "d5cb4a637472",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1872,7 +1872,7 @@
    "apps/mobile/src/frontend/components/Common/SupportRuntimeObserver.tsx 3f7dd4f6a4b686f719ea343fdc6b61831899ee56bd22624dec283b0247411be4",
    "apps/mobile/src/frontend/components/Common/SwipeableBannerWrapper.tsx a08f091f781a55d2fd15227e8404b2f1feafcb9f798efeb81357522bef16fc50",
    "apps/mobile/src/frontend/components/Common/WebAppShell.tsx ad7f7252893a13538f3a387cff5308060e2c01070dd8128df7c7b6253380cad6",
-   "apps/mobile/src/frontend/components/Common/__tests__/DesktopLeftRail.test.tsx 6601361de43d21cdbd9d7b4d37ef0e5569c68595a0fed502b3a71b973674985d",
+   "apps/mobile/src/frontend/components/Common/__tests__/DesktopLeftRail.test.tsx f4fd8f40b4e1c4e207eb1e438fa91cf59685d0462345a431f191cdb4821b966c",
    "apps/mobile/src/frontend/components/Common/__tests__/FeatureBoundary.test.tsx 6d229202bf3aa0b6977573586b7f85f3b5fd55b396eeb9d9f347f0bc9e1ae3ab",
    "apps/mobile/src/frontend/components/Common/__tests__/SwipeableBannerWrapper.test.tsx 11f1c9183fe98d205e33e859e0c3022223d9e24bc850a1bc6ff358e7ad6fe119",
    "apps/mobile/src/frontend/components/Common/__tests__/TipCheckout.test.tsx af4f7f68cab05f5c3b4dbf0988a8c591d6f60cadf7905dac20cdb44da7560ceb",
@@ -2653,7 +2653,7 @@
    "packages/shared-types/admin/operations.ts 086a153b5082dc65feb4e3ea80f57499990648f31b3cc274d1777f133a37c838",
    "packages/shared-types/admin/reports.ts f1799ed390eb98ddfe956627308f8f908c6464d0b04c83593a795da3d7323b94",
    "packages/shared-types/admin/revenueModel.ts 5d309211171969bf86dafd6ff8913ee730eccdb6f7ba4ea2e4395673199772fc",
-   "packages/shared-types/admin/supportTopology.json 6511534d8b7daa6e556f9678d0bb22b15d8fc8966052b684696862a7b50cb985",
+   "packages/shared-types/admin/supportTopology.json 5304c1fef3b2d381de70dff5396efa744ad58be1546b1a88ce4badb5cafbd152",
    "packages/shared-types/admin/teamFlow.ts 8a6d50e6aa34a7b4abd678abd8be91f92dc19e48f473853dafe6f17f3278d5f8",
    "packages/shared-types/admin/unappliedControls.ts 09b9bae792defa50bf7969e64496ddcaaa48731d4cc3b259d74105e2d0154f4a",
    "packages/shared-types/backendConnection.ts 890d4399e0769f669a9d327a6ddd6a8c0c6bafc981ef3ecd1acffb466f40554a",
