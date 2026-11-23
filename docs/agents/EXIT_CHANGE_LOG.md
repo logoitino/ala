@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-23 · plan `d5cb4a637472` → `25ff86d9d955` · announced by cursor/fix-stripe-js-metro
+
+App at announcement: commit `8349ff44312611ad4cf2626e62d2085957fc5ae4`, source `25ff86d9d95594a09530a6172523ef9cce34b28611eb717bc917441fd39516af`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/metro.config.js 16035cd2ccda5daf12ec2f26f6a593baa50b170fd0b10d1dd0ff7e8ea72c361e`; removed `apps/mobile/metro.config.js 9aae58cae64cb372180722789b945c189e8978311fe15d0c2925b7668ae6e0e9`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-23 · plan `d5cb4a637472` → `d5cb4a637472` · announced by cursor/main-ci-topology
 
 App at announcement: commit `ec783c568b9e54caf5052603dec312b8de45cf7d`, source `d5cb4a637472eb8b7b9132914255c641534319d3afa154a6318bcc02a2df4f4f`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
