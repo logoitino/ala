@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-23 · plan `9c78d991e93a` → `b2517576254e` · announced by cursor/main-ci-solidify
+
+App at announcement: commit `4e486f6184cb8d1e2b620651b1578bf8c0aa2acb` + 1 uncommitted file(s), source `b2517576254e56a2474e2e2e52d5355a2cf9131e85fadf4fd09e38f2e244c67f`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `packages/shared-types/admin/supportTopology.json 5304c1fef3b2d381de70dff5396efa744ad58be1546b1a88ce4badb5cafbd152`; removed `packages/shared-types/admin/supportTopology.json 6511534d8b7daa6e556f9678d0bb22b15d8fc8966052b684696862a7b50cb985`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-23 · plan `9c78d991e93a` → `9c78d991e93a` · announced by cursor/web-school-directory-nav
 
 App at announcement: commit `d7fdd8496d83e1c357f7f0222d3e6103f2515a5a`, source `9c78d991e93af2d568d9af63f342ec5c79d7ae2c2228851114582c0baf9c084e`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.

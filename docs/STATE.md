@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — #62 CI: regenerate DATA_MAP for tabs.local desktop rails.
+**Last updated:** 2026-11-23 — Main CI: commit supportTopology for tabs.local desktop rails.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-23 — Main CI after #62:** Commit regenerated `packages/shared-types/admin/supportTopology.json` (`tabs.local` readers include DesktopLeftRail / DesktopRightRail) plus exit:map acknowledge — `data:map:check` was red on `main`.
 
 - **2026-11-23 — #62 DATA_MAP:** Regenerated `docs/engineering/DATA_MAP.md` so `tabs.local` lists DesktopLeftRail / DesktopRightRail after the Schools web entry.
 

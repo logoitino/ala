@@ -16521,6 +16521,8 @@
       "readers": [
         "apps/mobile/app/(tabs)/local/directory.tsx",
         "apps/mobile/app/(tabs)/local/index.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx",
         "apps/mobile/src/frontend/components/Reels/HomeFeedSwitch.tsx"
       ]
     },
