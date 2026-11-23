@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — #62 CI: ip:sync + security:infra after Schools web rails.
+**Last updated:** 2026-11-23 — #62 CI: regenerate DATA_MAP for tabs.local desktop rails.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-23 — #62 DATA_MAP:** Regenerated `docs/engineering/DATA_MAP.md` so `tabs.local` lists DesktopLeftRail / DesktopRightRail after the Schools web entry.
 
 - **2026-11-23 — #62 CI currency:** `pnpm ip:sync` + `pnpm security:infra` so IP / Portable Exit gates pass on the Schools desktop-rail fix.
 
