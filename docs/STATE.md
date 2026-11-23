@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — #63 CI: ip:sync after supportTopology + unused-import fix.
+**Last updated:** 2026-11-23 — Metro pins `@stripe/stripe-js` for Expo web so Payment Element resolves under pnpm.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-23 — Expo web Stripe Metro resolve:** `apps/mobile/metro.config.js` pins `@stripe/stripe-js` / `@stripe/react-stripe-js` in `extraNodeModules` and watch probes so Expo web no longer fails with `Unable to resolve module @stripe/stripe-js` under pnpm. Verified config maps both packages to the pnpm install path; package already declared. Browser Give checkout re-smoke after Metro `-c` restart remains human-side. **About to spend: $0.**
 
 - **2026-11-23 — Main CI after #62:** Commit regenerated `packages/shared-types/admin/supportTopology.json` (`tabs.local` readers include DesktopLeftRail / DesktopRightRail) plus exit:map acknowledge — `data:map:check` was red on `main`. Drop unused `React` import in `DesktopLeftRail.test.tsx` (`code:unused`); `pnpm ip:sync` for the follow-up `ip:check`.
 
