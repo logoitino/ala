@@ -30,21 +30,23 @@ export function useDonationsToThank(playerId: string | null | undefined) {
   const scope = holder.current;
   const current = useCallback(() => holder.current === scope && scope.active && (scope.guard?.() ?? true), [scope]);
   useEffect(() => { scope.active = true; return () => { scope.active = false; ++scope.read; scope.flights.clear(); }; }, [scope]);
-  const [frame, setFrame] = useState<{ owner: typeof scope; rows: DonationToThank[]; loading: boolean } | null>(null);
+  const [frame, setFrame] = useState<{ owner: typeof scope; rows: DonationToThank[]; loading: boolean; error: string | null } | null>(null);
   const shown = frame?.owner === scope && current() ? frame : null;
   const refresh = useCallback(async () => {
     if (!current()) return;
     const read = ++scope.read;
     const actor = userId ? offlineQueue.captureActor(userId) : null;
     const accepted = () => current() && read === scope.read && Boolean(actor?.isCurrent());
-    if (!userId || !playerId) { setFrame({ owner: scope, rows: [], loading: false }); return; }
+    if (!userId || !playerId) { setFrame({ owner: scope, rows: [], loading: false, error: null }); return; }
     if (!actor) return;
-    setFrame(previous => ({ owner: scope, rows: previous?.owner === scope ? previous.rows : [], loading: true }));
+    setFrame(previous => ({ owner: scope, rows: previous?.owner === scope ? previous.rows : [], loading: true, error: null }));
     try {
-      const rows = await fetchDonationsToThank(playerId);
-      if (accepted()) setFrame({ owner: scope, rows, loading: false });
+      const client = await createOfflineActorClient(actor);
+      if (!accepted()) return;
+      const rows = await fetchDonationsToThank(playerId, client);
+      if (accepted()) setFrame({ owner: scope, rows, loading: false, error: null });
     } catch {
-      if (accepted()) setFrame({ owner: scope, rows: [], loading: false });
+      if (accepted()) setFrame({ owner: scope, rows: [], loading: false, error: 'Could not load thank-you choices. Check your connection and retry.' });
     }
   }, [current, scope, playerId, userId]);
 
@@ -69,7 +71,7 @@ export function useDonationsToThank(playerId: string | null | undefined) {
       if (!current() || !actor.isCurrent()) return changed;
       // A read issued before confirmation must not put the row back into an unthanked state.
       ++scope.read;
-      setFrame(previous => previous?.owner === scope ? { owner: scope, loading: false,
+      setFrame(previous => previous?.owner === scope ? { owner: scope, loading: false, error: previous.error,
         rows: result.ok ? previous.rows.map(row => row.tipId === tipId ? { ...row, thankedKey: key } : row) : previous.rows } : previous);
       return result;
     } catch {
@@ -80,7 +82,7 @@ export function useDonationsToThank(playerId: string | null | undefined) {
     }
   }, [current, scope, userId, playerId]);
 
-  return { rows: shown?.rows ?? [], loading: shown?.loading ?? Boolean(userId && playerId), refresh, thank };
+  return { rows: shown?.rows ?? [], loading: shown?.loading ?? Boolean(userId && playerId), error: shown?.error ?? null, refresh, thank };
 }
 
 /**

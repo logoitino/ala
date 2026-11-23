@@ -102,17 +102,13 @@ export function parseThanksReceived(raw: unknown): ThanksReceived[] {
 
 /**
  * @purpose Recent donations to this athlete and whether each donor has been thanked.
- * @returns `[]` for anyone but the athlete, their guardian or an admin, or before the SQL is applied.
+ * @returns Confirmed rows (including a genuine empty list); unavailable reads remain errors.
  */
-export async function fetchDonationsToThank(playerId: string | null | undefined): Promise<DonationToThank[]> {
+export async function fetchDonationsToThank(playerId: string | null | undefined, client = supabase): Promise<DonationToThank[]> {
   if (!playerId || !isAuraUuid(playerId) || !isSupabaseConfigured) return [];
-  try {
-    const { data, error } = await supabase.rpc('get_donations_to_thank', { target_player_id: playerId });
-    if (error) return [];
-    return parseDonationsToThank(data);
-  } catch {
-    return [];
-  }
+  const { data, error } = await client.rpc('get_donations_to_thank', { target_player_id: playerId });
+  if (error || !Array.isArray(data)) throw new Error('Could not load thank-you choices. Check your connection and retry.');
+  return parseDonationsToThank(data);
 }
 
 /**

@@ -1,4 +1,4 @@
-/** Main-admin report routes share one responsive scroll surface with the navigation header.
+/** Main-admin report routes share one responsive scroll surface and proportional brand headings with the navigation header.
  * Page-specific slices preserve the existing session and expose loading, missing and failed reads. */
 import { useEffect, useRef } from 'react';
 import { ActivityIndicator, Platform, RefreshControl, ScrollView, Text, useWindowDimensions, View, type LayoutChangeEvent, type ScrollViewInstance } from 'react-native';
@@ -60,7 +60,7 @@ export function AdminReportScreen({ page }: { page: AdminReportPage }) {
             <View style={s.row}><Text style={s.small}>{data.reports.generatedAt ? `Read ${utcStamp(data.reports.generatedAt) ?? 'time unavailable'}` : 'Waiting on a read'}</Text>{refresh}</View></View>
           <AdminReportHomeHero data={data} />
         </> : <>
-          <Text style={s.kicker}>Main Admin · Reports</Text><Text accessibilityRole="header" aria-level={1} style={[s.h1, { fontSize: width < 600 ? 30 : 36 }]}>{PAGE_TITLES[page]}</Text>
+          <Text style={s.kicker}>Main Admin · Reports</Text><Text accessibilityRole="header" aria-level={1} style={[s.h1, width >= 640 && { fontSize: 32, lineHeight: 38 }]}>{PAGE_TITLES[page]}</Text>
           <Text style={s.sentence}>{PAGE_LEDES[page]}</Text>
           <View style={[s.row, { justifyContent: 'space-between' }]}><Text style={s.small}>{data.reports.generatedAt && SLICES[page].includes('reports') ? `Read ${utcStamp(data.reports.generatedAt) ?? 'time unavailable'}` : 'Recorded snapshots · UTC'}</Text>
             {refresh}</View>

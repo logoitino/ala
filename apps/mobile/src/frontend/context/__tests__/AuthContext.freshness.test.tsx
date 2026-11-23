@@ -54,6 +54,8 @@ const mockSaveOnboarding = jest.fn();
 const mockProfileUpdate = jest.fn();
 const mockRoleUpdate = jest.fn();
 const mockProfileReads = new Map<string, Array<Promise<{ data: Profile | null }>>>();
+let mockUpdatesChannel: string | null = null;
+jest.mock('expo-updates', () => ({ get channel() { return mockUpdatesChannel; } }));
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ replace: jest.fn() }) }));
 jest.mock('@/lib/supabase', () => ({
@@ -128,6 +130,7 @@ beforeEach(async () => {
   await AsyncStorage.clear();
   snapshots.length = 0;
   mockProfileReads.clear();
+  mockUpdatesChannel = null;
   mockEnsureFanProfile.mockResolvedValue(undefined);
   mockReadOnboarding.mockResolvedValue(null);
   mockFetchTeam.mockResolvedValue(null);
@@ -138,6 +141,72 @@ beforeEach(async () => {
   mockProfileUpdate.mockResolvedValue({ data: null, error: null });
   mockRoleUpdate.mockResolvedValue({ data: null, error: null });
 });
+
+async function inBuild(dev: boolean, env: string | undefined, channel: string | null, check: () => Promise<void>) {
+  const oldDev = Object.getOwnPropertyDescriptor(globalThis, '__DEV__');
+  const oldEnv = process.env.EXPO_PUBLIC_APP_ENV;
+  Object.defineProperty(globalThis, '__DEV__', { configurable: true, writable: true, value: dev });
+  if (env === undefined) delete process.env.EXPO_PUBLIC_APP_ENV; else process.env.EXPO_PUBLIC_APP_ENV = env;
+  mockUpdatesChannel = channel;
+  try { await check(); }
+  finally {
+    if (oldDev) Object.defineProperty(globalThis, '__DEV__', oldDev); else delete (globalThis as Record<string, unknown>).__DEV__;
+    if (oldEnv === undefined) delete process.env.EXPO_PUBLIC_APP_ENV; else process.env.EXPO_PUBLIC_APP_ENV = oldEnv;
+  }
+}
+
+for (const [dev, env, channel] of [[false, 'production', 'production'], [false, undefined, null], [false, 'preview', 'production'], [false, 'preview', null], [true, 'production', null]] as const) {
+  it(`refuses stored Studio/admin privilege outside eligible preview (${dev}/${env}/${channel})`, async () => inBuild(dev, env, channel, async () => {
+    await AsyncStorage.setItem('tapuai.studioUnlocked', '1');
+    await AsyncStorage.setItem('tapuai.devRole', 'admin');
+    const view = await start();
+    expect(api.isAdmin).toBe(false); expect(api.studioUnlocked).toBe(false);
+    expect(api.roles).not.toContain('admin');
+    await act(async () => { await api.unlockStudio(); await api.previewAsRole('operator'); await api.switchRole('admin'); });
+    expect(api.isAdmin).toBe(false); expect(api.studioUnlocked).toBe(false);
+    expect(api.roles).not.toContain('admin'); expect(api.role).toBe('fan');
+    await view.unmount();
+  }));
+}
+for (const [dev, env, channel] of [[true, 'development', null], [false, 'preview', 'preview']] as const) {
+  it(`preserves explicit eligible Studio preview (${dev}/${env}/${channel})`, async () => inBuild(dev, env, channel, async () => {
+    const view = await start();
+    await act(async () => { await api.previewAsRole('operator'); });
+    expect(api.studioUnlocked).toBe(true); expect(api.isAdmin).toBe(true); expect(api.role).toBe('operator');
+    await view.unmount();
+  }));
+}
+it('real server-admin profile remains authorized in production without Studio', async () => inBuild(false, 'production', 'production', async () => {
+  queueRead('A', Promise.resolve({ data: { ...mockProfileFor('A'), is_admin: true } }));
+  const view = await start();
+  expect(api.isAdmin).toBe(true); expect(api.studioUnlocked).toBe(false);
+  await view.unmount();
+}));
+it('a retained production admin role cannot authorize the incoming fan account', async () => inBuild(false, 'production', 'production', async () => {
+  queueRead('A', Promise.resolve({ data: { ...mockProfileFor('A'), role: 'admin', roles: ['admin'] } }));
+  const view = await start();
+  const oldSwitch = api.switchRole;
+  await act(async () => { await oldSwitch('admin'); });
+  expect(api.isAdmin).toBe(true);
+  await changeUser('B');
+  await act(async () => { await oldSwitch('admin'); });
+  expect(api.isAdmin).toBe(false); expect(api.role).toBe('fan'); expect(api.roles).not.toContain('admin');
+  await view.unmount();
+}));
+it('production direct unlock/preview/role callbacks cannot grant a fan admin access', async () => inBuild(false, 'production', 'production', async () => {
+  const view = await start();
+  await act(async () => { await api.unlockStudio(); await api.previewAsRole('admin'); await api.switchRole('admin'); });
+  expect(api.studioUnlocked).toBe(false); expect(api.isAdmin).toBe(false); expect(api.role).toBe('fan');
+  expect(await AsyncStorage.getItem('tapuai.studioUnlocked')).not.toBe('1');
+  await view.unmount();
+}));
+it('production restores a stored role only when the current server profile owns that capability', async () => inBuild(false, 'production', 'production', async () => {
+  await AsyncStorage.setItem('tapuai.devRole', 'operator');
+  queueRead('A', Promise.resolve({ data: { ...mockProfileFor('A'), roles: ['fan', 'operator'] } }));
+  const view = await start();
+  expect(api.role).toBe('operator'); expect(api.isAdmin).toBe(false); expect(api.studioUnlocked).toBe(false);
+  await view.unmount();
+}));
 
 it('binds replay ownership before a pending profile load and invalidates it at provider cleanup', async () => {
   const view = await start();
@@ -553,4 +622,15 @@ it('does not publish a denied current-owner profile edit as saved', async () => 
   mockProfileUpdate.mockResolvedValueOnce({ data: null, error: { code: '42501', message: 'Permission denied' } });
   await act(async () => { await expect(api.updateProfile({ full_name: 'Denied name' })).rejects.toMatchObject({ message: 'Permission denied' }); });
   expect(api.profile?.full_name).toBe('A');
+});
+
+// The existing consent workflow owns the selected roster UUID; Auth forwards it without deriving a name match.
+it.each(['33333333-3333-4333-8333-333333333333', null])('forwards explicit roster choice %s through the captured onboarding actor', async (selectedId) => {
+  await start();
+  const onboard = { team: { id: 'school-A', name: 'School A', division: 'varsity' }, sport: 'rugby', jersey: '', position: '', classYear: '' } as Parameters<typeof api.completeAthleteOnboarding>[0];
+  const completeSelected = api.completeAthleteOnboarding as (payload: typeof onboard, selectedId?: string | null) => Promise<void>;
+  await act(async () => { await completeSelected(onboard, selectedId); });
+  expect(mockSaveOnboarding).toHaveBeenCalled();
+  expect(mockSaveOnboarding.mock.calls[0][2].userId).toBe('A');
+  expect(mockSaveOnboarding.mock.calls[0][3]).toBe(selectedId);
 });

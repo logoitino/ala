@@ -1,4 +1,4 @@
-/** Exercise actual client boundaries with the shared resolver and synthetic SDK/cookie/storage fakes; no network or private env. */
+/** Exercise actual client boundaries and refuse unconfigured private pages while keeping login reachable; no network or private env. */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -125,7 +125,13 @@ test('missing or invalid inputs never pass a rejected origin/secret into an SDK 
       } else {
         if (which === 'browser') { assert.equal(loaded.api.isAdminPortalConfigured(), false); assert.equal(loaded.api.getSupabaseBrowserClient(), null); }
         if (which === 'server') assert.equal(await loaded.api.getSupabaseServerClient(), null);
-        if (which === 'middleware') assert.equal((await loaded.api.middleware(loaded.request('/health'))).kind, 'next');
+        if (which === 'middleware') {
+          // Missing configuration cannot verify private access, but must not trap the setup/login page.
+          const denied = await loaded.api.middleware(loaded.request('/health'));
+          assert.equal(denied.kind, 'redirect');
+          assert.equal(denied.url, 'https://portal.example/login?next=%2Fhealth');
+          assert.equal((await loaded.api.middleware(loaded.request('/login'))).kind, 'next');
+        }
         if (which === 'callback') await loaded.api.GET(new Request('https://portal.example/auth/callback?code=synthetic'));
         assert.equal(loaded.calls.length, 0, which);
         assert.equal(loaded.cookieReads, 0, which);

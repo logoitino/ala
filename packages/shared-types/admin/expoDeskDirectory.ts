@@ -1,6 +1,7 @@
 /**
  * Canonical Expo `/admin` desks the Next portal may name for oversight.
  * PORTAL Product / Coverage / Health unapplied notices point here; writes stay in Expo.
+ * UX-17 keeps existing public roster discovery and pending selection accountable to school/athlete desks.
  * Add a row when a desk ships so agents keep the portal and TEAMS desk list aligned.
  */
 
@@ -52,7 +53,8 @@ export const EXPO_DESKS: readonly ExpoDesk[] = [
   { path: '/admin/drip', title: 'Drip', detail: 'Merchandise catalog and orders.', group: 'commerce' },
   { path: '/admin/wishlist', title: 'Wishlist', detail: 'Gear gift goals.', group: 'commerce' },
   { path: '/admin/people', title: 'People', detail: 'Profiles, roles, and access.', group: 'audience' },
-  { path: '/admin/athletes', title: 'Athletes', detail: 'Athlete verification and school claims.', group: 'audience' },
+  { path: '/admin/athletes', title: 'Athletes', detail: 'Existing public roster, school/team labels, pending claims and verification.', group: 'audience' },
+  { path: '/admin/schools', title: 'Schools', detail: 'Existing school catalog and exact roster school-name associations.', group: 'audience' },
   { path: '/admin/feedback', title: 'Feedback', detail: 'In-app feedback intake.', group: 'growth' },
   { path: '/admin/features', title: 'Features', detail: 'Draft and publish runtime flags.', group: 'system' },
   { path: '/admin/look', title: 'Look', detail: 'Daylight theme tokens.', group: 'system' },
@@ -100,11 +102,11 @@ export type PortalCoverageSurface = {
 export const PORTAL_COVERAGE_SURFACES: readonly PortalCoverageSurface[] = [
   { id: 'home', label: 'Home · Highlights ⚡', adminPath: '/admin/highlights', hint: 'Reel pager, hype, Vault unlock, FEED-01 interest picks.' },
   { id: 'beyond', label: 'Beyond the Game', adminPath: '/admin/highlights', hint: 'Train / Serve contributions and challenges.' },
-  { id: 'local', label: 'Local', adminPath: '/admin/games', hint: 'Live scores, polls, boosters.' },
+  { id: 'local', label: 'Local', adminPath: '/admin/games', hint: 'Live scores, polls, boosters and existing school/team roster directory; repair via Schools/Athletes desks.' },
   { id: 'activity', label: 'Activity', adminPath: '/admin/features', hint: 'Feed and notification inbox actions.' },
   { id: 'spotlight', label: 'Spotlight', adminPath: '/admin/spotlight', hint: 'Player of the Week board.' },
   { id: 'drip', label: 'Drip', adminPath: '/admin/drip', hint: 'Merchandise browse and checkout.' },
-  { id: 'profile', label: 'Profile', adminPath: '/admin/athletes', hint: 'Vault, Crew, Exclusive, notifications.' },
+  { id: 'profile', label: 'Profile', adminPath: '/admin/athletes', hint: 'Vault, Crew, Exclusive, notifications and existing roster selection for pending athlete claims.' },
   { id: 'upload', label: 'Upload +', adminPath: '/admin/highlights', hint: 'Highlight and Beyond compose.' },
   { id: 'receipts', label: 'Receipts', adminPath: '/admin/money', hint: 'Gift and purchase history.' },
   { id: 'auth', label: 'Soft-Wall auth', adminPath: '/admin/features', hint: 'Guest gates and resume after sign-in.' },

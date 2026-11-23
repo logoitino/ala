@@ -1,3 +1,4 @@
+<!-- Existing-record directory reads preserve source errors, bounded pages and roster/account separation. -->
 # Client libraries
 
 Typed product and data-access helpers used by hooks and components.
@@ -21,3 +22,8 @@ Calling Supabase from an Expo route under `app/`. Routes compose UI only; move `
 `.rpc()` here and shrink `scripts/app-data-boundary-baseline.json` in the same PR.
 
 Run `pnpm app:data-boundaries` after moves.
+
+`schoolDirectory.ts` reads only existing public catalog/roster columns in bounded pages. It preserves NULL
+metadata and source failures, uses exact current school names/raw team labels, and never enumerates accounts
+or substitutes demonstration rows. `teams.ts` optionally carries an exact existing roster choice into the
+current pending claim workflow; it never writes `profiles.player_id` or grants verification.

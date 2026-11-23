@@ -13,9 +13,9 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Feature switches read by the fan app | 42 of 42 |
 | Database functions | 613 (253 used by hand, 63 trigger functions) |
 | Tables reached by at least one screen or server route | 126 of 129 |
-| Code files that read or write the database | 85 |
+| Code files that read or write the database | 86 |
 | Exported symbols nothing imports | 46 (0 proposed for archive, 46 kept on purpose) |
-| Operational data exports | 15 |
+| Operational data exports | 26 |
 | Rule failures | 0 |
 
 ## Owners
@@ -87,6 +87,17 @@ These operator tools are outside the app import graph. Source registration recor
 | `portable-target-connection-profile` | `EXIT_CLOUD` | Normalized backend/API origins, public API key only, exact original file hashes/modes; server privilege blank; excludes source private env and customer data.; Generate matching target public connection settings for both clients and server routes from explicit operator data. | Fresh private external700 folder/600 files; no automatic environment installation or source rewrite. | Preserve under operator custody; generator never overwrites/adopts prior profiles; regenerated source tooling remains current via existing exit cache/CI. | `infrastructure/portability/profile.mjs` |
 | `portable-sdk-local-contract-report` | `EXIT_SYNC` | Fixed gates/status/request counts and unexercised feature names; no provider keys/user tokens/credential payloads or customer data; local app build/check receipts may be kept privately.; Detect SDK request/response/host/config drift using actual installed SDK against bounded synthetic loopback fixture. | Local CLI stdout or explicitly retained private external verification receipts. | Point-in-time synthetic compatibility evidence; original runtime/data acceptance still separately required. | `infrastructure/portability/protocol.mjs` |
 | `infrastructure-security-source-report` | `INFRA_SECURITY` | Source hashes/counts, registered identifiers and reviewers, existing command/evidence links, fixed guard prerequisite statuses/structural issues and explicitly unverified operational requirements; no private env/customer payloads or provider output.; Maintain current registered infrastructure and exit Security review coverage and safe source/config binding. | Generated public docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md or read-only local JSON stdout; original sensitive observations remain protected outside source. | Source-controlled deterministic current awareness report plus dated scoped findings; does not inherit completed review or operational acceptance. Original full-check receipts stay private and source-bound. | `infrastructure/security/report.mjs` |
+| `admin-portal-read-availability` | `PORTAL` | Existing profile counts and app_runtime_config draft/published fields plus Next-local nullable totals and fixed safe per-source errors. No new table, column, RPC, credential or raw backend error exported.; Present independent successful profile counts and published switches while keeping denied/unavailable reads unknown; retain measured zero and explicit source failures. UX-15 Root outside Codex performs DataGov/Privacy interface review. | Current server-protected Next report responses and browser presentation only; Expo remains the write control plane. | Current response/view lifetime; explicit full-request Refresh repeats existing gated reads, no background collection. | `apps/admin-portal/lib/softWall.ts` |
+| `admin-private-view-frame` | `SESSION_SECURITY` | Backend-validated user UID, SHA256 versioned sub/session_id/aal correlation and random server verificationId only. Raw access/refresh tokens, raw session_id and claims never serialized in props, logs or persistence. Captured token pins server identity/profile/MFA reads.; Hide retained private admin presentation across browser account/session/AAL changes; server-validated identity, profile role and existing MFA remain independent authority. UX-15 Root outside Codex performs DataGov/Privacy interface review. | Existing gated server React response and current browser component memory; no new database field, endpoint, provider or credential store. | Current verified render/browser lifetime; visible children mask on incompatible account/session/AAL or signout. This UI correlation is not authorization and does not erase previously delivered browser memory. Role revocation without an Auth event still requires a fresh server request. | `apps/admin-portal/lib/authz.ts` |
+| `admin-private-frame-classifier` | `SESSION_SECURITY` | Internal SHA256 correlation or boolean equality output only. Strict private sub/session_id/aal/expiry parser; an accepted previous token may have expired, while the next token must be unexpired. Raw tokens/claims exist only transiently in memory and accepted component refs.; Compare an already accepted private-view session with a current browser session without unmounting children during a normal refresh or same-session sign-in reconfirmation. | Server gate and browser private-frame boundary only; no raw token/claim props, logging, persistence or new public API. | Current component/request lifetime. The classifier compares UID/session_id/aal and next expiry; the browser boundary separately refuses poisoned verification IDs. Backend identity/role/MFA gates remain authoritative. | `apps/admin-portal/lib/portalSessionFrame.ts` |
+| `admin-browser-session-type` | `SESSION_SECURITY` | Type-only PortalBrowserSession alias of the installed SDK Session, with the existing fields unchanged. It creates no value, response, new field or dataset.; Keep the existing browser session type behind the portal library vendor boundary; no runtime read or Auth orchestration changes. | Internal browser boundary type annotation via apps/admin-portal/lib/supabase.ts; no new props, endpoint or serialization. | Type erased at build; existing session tokens remain solely in the established memory/cookie lifetime and are not newly logged or persisted. | `apps/admin-portal/lib/supabase.ts` |
+| `fan-dock-clearance` | `DESIGN` | Existing local numerical dock height and layout measurements only; current planned default44pt plus unchanged safe-bottom minimum6. Actual finite measured/wrapped-text height remains authoritative. No schema/API/personal data.; Reserve current fan navigation surface and safe-area foot until measured layout replaces its default estimate. UX18 owner feedback supersedes dated46pt UX16 estimate; Root outside Codex performs DataGov classification without domain authority change. | Existing in-memory fan navigation context, TabScreen clearance and Home overlay placement. | Mounted provider lifetime; existing route reset/disposal, measured dedup and zero outside-provider contract unchanged. No persistence/logging/provider operation. | `apps/mobile/src/frontend/context/FanNavigationContext.tsx` |
+| `school-roster-directory` | `ROSTERS` | Minimal public schools_and_teams allowed metadata and players id/name/jersey/position/school_name/team. Exact school-name and text-team association only; no private guardian/measurable/account export or canonical team ID.; UX17 outside Codex DataGov/source review reuses current public catalog and roster for bounded discovery; no schema/identity import. | Mounted Local directory and athlete onboarding selection; public account links only by existing exact-ID/player-ID safe projection. | Bounded local current-page memory; replace/invalidate previous search/source result. No new persistence, logging, telemetry or stored identities. | `apps/mobile/src/frontend/lib/schoolDirectory.ts` |
+| `selected-roster-pending-claim` | `ROSTERS` | Optional current player UUID plus existing onboarding school/name and captured matching actor. Client association guard is not identity proof, server FK or permission.; Bind explicitly selected existing roster identity to current school selection before requesting existing pending review; preserve school-confirmation authority. | Existing claim_athlete RPC pending/disputed workflow via teams library, never direct profiles.player_id write or verification grant. | Existing server pending-claim lifecycle; ephemeral selected ID resets with changed school/name/session. No new retention store or provider action. | `apps/mobile/src/frontend/lib/teams.ts` |
+| `selected-roster-auth-plumbing` | `SESSION_SECURITY` | Optional player UUID or null no-new-choice; undefined retains existing legacy caller behavior. No new token/role authority, public enumeration, table field, verification or linkage grant.; UX17 carries an optional exact existing roster choice through the existing athlete-onboarding API, with the same captured actor and session lifetime. | Existing useAuth completeAthleteOnboarding to teams saveAthleteOnboardingRemote and existing pending claim RPC; profile publication remains current-actor guarded. | Existing provider/view lifetime; no new selection persistence or credential/logging path. Existing server claim coalesce retains earlier targets when no new target is submitted. | `apps/mobile/src/frontend/context/AuthContext.tsx` |
+| `school-roster-directory-view` | `ROSTERS` | Existing minimal DirectorySchool/DirectoryPlayer pages, exact school UUID/name and raw team label, draft search and local request generation only. Loaded page counts do not describe verified accounts or total membership.; UX17 consuming Local view exposes bounded existing public catalog and roster with exact-record links; Root outside Codex DataGov classification preserves roster/account separation. | Local/SchoolDirectory render and existing exact-roster userProfileHref; thin Expo route honors tabs.local pause before mounting readers. | Mounted view memory only. Search, school, actor or unmount invalidates old requests/actions; Back reuses only same scope pages. No persistence, telemetry, schema or media copy. | `apps/mobile/src/frontend/components/Local/SchoolDirectory.tsx` |
+| `existing-roster-choice-view` | `PROFILE` | Bounded public roster rows and optional exact UUID selected under current school/name/account/modal lifetime. Search reads use existing captured actor client; no private profile or guardian enumeration.; UX17 optional existing-roster choice during current athlete setup, distinct from verified account linkage; Root outside Codex DataGov reviews current actor/view selection and failure recovery. | Existing Auth completeAthleteOnboarding optional argument and pending claim workflow; explicit null means no new choice and does not clear an earlier server pending target. | Mounted sheet state only; invalidate changed school/name/actor/view. Existing server claim lifecycle unchanged. No new account/identity rows, persistence or automatic profiles.player_id write. | `apps/mobile/src/frontend/components/Profile/RoleSwitcherModal.tsx` |
+| `notification-inline-explanation` | `DESIGN` | Existing explanatory string and ephemeral More/Less expanded boolean; new optional inlineToggle layout boolean defaultsfalse. No notification IDs, account fields, telemetry, persistence or source query.; UX18 optional ordinary explanation layout saves a separate disclosure row in NotificationInbox; Root outside Codex DataGov classifies UI-only modifier. | Existing UI/MoreText with NotificationInbox opt-in; all other consumers retain default stacked layout and existing full accessible text. | Mounted UI lifetime only; same existing expansion state. Policy/money/safety/consent/rights copy is excluded from collapse; no new record or provider flow. | `apps/mobile/src/frontend/components/UI/MoreText.tsx` |
 
 ## Tables and views
 
@@ -106,7 +117,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/runtime.ts`; database functions: `admin_beyond_set_enabled`, `patch_app_runtime_draft`, `publish_app_runtime`
 - Read by: `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `@/lib/adminReports.ts`, `@/lib/runtime.ts`; database functions: `beyond_enabled`, `friend_requests_enabled`, `guardian_links_enabled`, `monetization_tips_enabled`, `prepare_tip_payment_context`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +58 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +59 more
 
 ### `athlete_birthdates`
 
@@ -283,7 +294,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `cast_cheer_vote`
 - Read by: —; database functions: —
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +53 more
 - Exception: noReader — Read only inside cast_cheer_vote (the stored side for this account); clients have no access and no screen needs it.
 
 ### `cheer_polls`
@@ -292,7 +303,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/adminCatalog.ts`; database functions: `cast_cheer_vote`, `upsert_cheer_poll`
 - Read by: `@/lib/adminCatalog.ts`, `@/lib/cheerPoll.ts`; database functions: `cast_cheer_vote`, `get_admin_reports`, `upsert_cheer_poll`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +59 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +60 more
 
 ### `company_revenue_logs`
 
@@ -327,7 +338,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `admin_decide_payout_override`, `admin_set_custodial_terms`, `guardian_setup_custodial`, `record_stripe_kyc`, `save_stripe_connect_account`
 - Read by: `@/lib/admin.ts`; database functions: `admin_request_payout_override`, `athlete_handover_date`, `athlete_payout_status`, `get_custodial_summary`, `payee_for_player`, `report_reel` +2 more
 - Triggers: `custodial_payout_flags_guard → guard_payout_flags`, `custodial_payee_supersede → payee_changes_supersede`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +54 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +55 more
 
 ### `custodial_withdrawals`
 
@@ -483,7 +494,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `admin_minor_report`, `guardian_decide_approval`, `guardian_list_minors`, `minor_status_json`, `quiz_fact_guardian_pending`, `quiz_fact_request_open`
 - Removed by: `admin_purge_minor_records`
 - Triggers: `quiz_fact_approval → quiz_fact_on_approval`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +51 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
 
 ### `guardian_consents`
 
@@ -492,7 +503,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `close_guardian_link`, `record_guardian_consent`, `revoke_guardian_consent`
 - Read by: —; database functions: `admin_minor_overview`, `guardian_list_minors`, `minor_has_consent`, `minor_status_json`, `stripe_connect_context`
 - Triggers: `guardian_consents_append_only → guard_consent_records`, `guardian_consents_no_truncate → guard_consent_truncate`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +53 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +54 more
 
 ### `guardian_invite_attempts`
 
@@ -520,7 +531,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `accept_guardian_invite`, `close_guardian_link`, `respond_guardian_link`, `sign_guardian_consent`
 - Read by: —; database functions: `admin_end_guardian_link`, `admin_minor_overview`, `admin_minor_report`, `close_guardian_link`, `close_under_13_account`, `end_guardian_link` +20 more
 - Triggers: `quiz_groups_guardian_rules → quiz_groups_on_guardian_link`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +56 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +57 more
 
 ### `ledger_accounts`
 
@@ -704,9 +715,9 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `ROSTERS` · Athlete roster that fans tag and give to.
 
 - Written by: `@/lib/adminCatalog.ts`, `@/lib/boosterPortal.ts`, `@/lib/hype.ts`, `@/lib/payments.ts`, `@/lib/vault.ts`; database functions: `add_user_aura`, `admin_approve_player_consent`, `admin_set_player_guardian`, `increment_backer_count`, `increment_player_hype`, `parent_set_player_consent` +1 more
-- Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/athleteStats.ts`, `@/lib/bookkeeping.ts`, `@/lib/boosterPortal.ts`, `@/lib/crew.ts` +8 more; database functions: `admin_add_athlete_game_log`, `admin_challenge_post_counts`, `admin_decide_payout_override`, `admin_payee_overview`, `admin_record_payee_check`, `admin_upsert_athlete_career_stats` +36 more
+- Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/athleteStats.ts`, `@/lib/bookkeeping.ts`, `@/lib/boosterPortal.ts`, `@/lib/crew.ts` +9 more; database functions: `admin_add_athlete_game_log`, `admin_challenge_post_counts`, `admin_decide_payout_override`, `admin_payee_overview`, `admin_record_payee_check`, `admin_upsert_athlete_career_stats` +36 more
 - Triggers: `players_payee_supersede → payee_changes_supersede`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +61 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +62 more
 
 ### `profiles`
 
@@ -715,7 +726,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/context/AuthContext.tsx`, `@/lib/adminCatalog.ts`, `@/lib/auth.ts`, `@/lib/legal.ts`, `@/lib/teams.ts`, `@/services/MediaUploadService.ts`; database functions: `add_user_aura`, `add_user_role`, `admin_decide_payout_override`, `admin_decide_verification`, `admin_revoke_verification`, `admin_set_birth_month` +13 more
 - Read by: `portal/lib/authz.ts`, `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `apps/mobile/src/backend/api/createPayout.ts`, `@/context/AuthContext.tsx`, `@/lib/admin.ts` +8 more; database functions: `admin_add_athlete_game_log`, `admin_add_school_confirmer`, `admin_athlete_sport_usage`, `admin_beyond_erase_profile`, `admin_challenge_nudge_senders`, `admin_hold_challenge_sender` +141 more
 - Triggers: `guard_profiles_admin_escalation → guard_profiles_admin_escalation`, `guard_profiles_verification → guard_profiles_verification`, `profiles_privacy_guard → guard_profiles_privacy`, `profiles_new_account_rules → profiles_apply_new_account_rules`, `profiles_age_guard → guard_profiles_age`, `profiles_payout_flags_guard → guard_payout_flags` +8 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +73 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +74 more
 
 ### `quiz_athlete_facts`
 
@@ -750,7 +761,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `increment_reel_hype`
 - Read by: `@/lib/reelVotes.ts`; database functions: `get_admin_reports`, `get_leaderboards`, `get_top_filmers`
 - Removed by: `clear_reel_hype`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +59 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +60 more
 
 ### `reel_photos`
 
@@ -759,7 +770,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `set_reel_photos`
 - Read by: `@/lib/photoStories.ts`; database functions: `view:reels_feed`, `view:reel_photos_feed`
 - Removed by: `set_reel_photos`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +42 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +43 more
 
 ### `reel_reports`
 
@@ -767,7 +778,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `report_reel`
 - Read by: `@/lib/admin.ts`; database functions: `coach_label_desk`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +53 more
 
 ### `reel_tag_rejections`
 
@@ -795,7 +806,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/photoStories.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `admin_challenge_post_counts`, `admin_get_highlight_sport`, `athlete_highlight_views`, `begin_failed_photo_story_cleanup`, `can_delete_failed_photo_story_object`, `can_read_reel_vault` +32 more
 - Removed by: `finish_failed_photo_story_cleanup`
 - Triggers: `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_filmer_rewards → reels_filmer_rewards`, `reels_reset_photo_count → reels_reset_photo_count`, `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_guard_coach_label → guard_coach_label`, `reels_audit_coach_label → audit_coach_label_on_insert` +2 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +59 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +60 more
 
 ### `safety_label_events`
 
@@ -812,7 +823,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/lib/savedReels.ts`; database functions: —
 - Read by: `@/lib/savedReels.ts`; database functions: `get_admin_reports`
 - Removed by: `@/lib/savedReels.ts`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +59 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +60 more
 
 ### `school_confirmers`
 
@@ -824,11 +835,11 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 ### `schools_and_teams`
 
-**Owner:** `SCHOOL_PARTNERS` · High school and college catalog with crests and colours.
+**Owner:** `SCHOOL_PARTNERS` · High school and college catalog with crests and colours. UX17 checks final canonical admin-only writes/public safe metadata reads; no schema or policy edit and hosted state remains unverified.
 
 - Written by: `@/lib/adminCatalog.ts`; database functions: `admin_set_school_branding`, `set_malo_freeze`
-- Read by: `@/lib/adminCatalog.ts`, `@/lib/adminControls.ts`, `@/lib/teams.ts`; database functions: `athlete_school_badge`, `can_confirm_player_tag`, `get_active_spotlight_award`, `get_admin_reports`, `get_my_verification`, `get_school_confirmation_queue` +7 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +61 more
+- Read by: `@/lib/adminCatalog.ts`, `@/lib/adminControls.ts`, `@/lib/schoolDirectory.ts`, `@/lib/teams.ts`; database functions: `athlete_school_badge`, `can_confirm_player_tag`, `get_active_spotlight_award`, `get_admin_reports`, `get_my_verification`, `get_school_confirmation_queue` +7 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +62 more
 
 ### `shop_orders`
 
@@ -1068,7 +1079,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/admin.ts`; database functions: `publish_spotlight_award`, `sync_spotlight_period`, `unlock_spotlight_period`
 - Read by: `@/lib/admin.ts`, `@/lib/spotlight.ts`; database functions: `get_active_spotlight_award`, `get_admin_reports`, `sync_spotlight_period`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +59 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +60 more
 
 ### `stripe_webhook_events`
 
@@ -1094,7 +1105,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: `@/lib/subscriptions.ts`; database functions: —
 - Read by: `@/lib/bookkeeping.ts`, `@/lib/subscriptions.ts`; database functions: `can_read_reel_vault`, `get_admin_reports`, `sync_company_revenue_logs`, `view:reels_feed`, `view:reel_photos_feed`
 - Triggers: `company_revenue_subscriptions_ai → company_revenue_after_source_insert`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +49 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +50 more
 
 ### `supervision_events`
 
@@ -1103,7 +1114,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Written by: —; database functions: `log_supervision_event`
 - Read by: —; database functions: `supervision_json`
 - Removed by: `admin_purge_minor_records`, `log_supervision_event`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +51 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
 
 ### `support_audit_events`
 
@@ -1135,7 +1146,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: `insert_support_signal`
 - Read by: —; database functions: `get_engineering_support_snapshot`, `record_support_review`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +54 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +55 more
 
 ### `telemetry_logs`
 
@@ -1163,7 +1174,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 - Read by: —; database functions: `admin_get_privacy`, `admin_privacy_report`, `is_blocked_between`, `list_my_blocks`, `supervision_json`, `view:profiles_public`
 - Removed by: `unblock_user`
 - Triggers: `user_blocks_end_links → user_blocks_end_guardian_links`, `quiz_groups_block → quiz_groups_on_block`, `quiz_facts_block → quiz_facts_on_block`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +54 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +55 more
 
 ### `user_feed_prefs`
 
@@ -1179,7 +1190,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: `@/lib/boosterPortal.ts`; database functions: `admin_decide_verification`, `admin_revoke_verification`, `claim_athlete`, `redeem_team_code`, `school_confirm_athlete`, `start_school_check`
 - Read by: `@/lib/adminCatalog.ts`, `@/lib/boosterPortal.ts`; database functions: `admin_decide_verification`, `athlete_payout_status`, `athlete_profile_for_player`, `athlete_school_badge`, `claim_athlete`, `get_admin_reports` +9 more
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +61 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +62 more
 
 ### `wishlist_items`
 
@@ -1195,7 +1206,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: —
 - Read by: `@/lib/privacy.ts`; database functions: `get_public_profiles`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +51 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +52 more
 
 ### `reel_photos_feed` (view)
 
@@ -1211,18 +1222,18 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 - Written by: —; database functions: —
 - Read by: `@/lib/reels.ts`, `@/lib/spotlight.ts`; database functions: `beyond_legacy_posts`
-- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +42 more
+- Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +43 more
 
 ## Storage buckets
 
 | Bucket | Owner | Purpose | Uploaded by | Read by | Screens |
 | --- | --- | --- | --- | --- | --- |
-| `avatars` | `PROFILE` | Profile pictures and booster/sponsor logos. | `@/lib/sponsorships.ts`, `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/lib/sponsorships.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +56 more |
+| `avatars` | `PROFILE` | Profile pictures and booster/sponsor logos. | `@/lib/sponsorships.ts`, `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/lib/sponsorships.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +57 more |
 | `beyond_game` | `UPLOAD` | Private reviewed fan media only: immutable <auth-user>/<post>/<media>.jpg|mp4, reserved before upload, exact audience/actor/closure/block checks andSDK-requested60s signed URLs. Removed bytes inaccessible to users; current open admins have narrow read/delete cleanup access until confirmed physical deletion. | — | — | `/admin/highlights`, `/beyond` |
 | `fan_zone` | `UPLOAD` | Private bounded fan MP4 revisions; owner inserts only server-reserved draft path, no overwrite/directread/signing. Authenticated revocable server proxy reads, sanitizes and completes tracked removal. | `apps/mobile/src/backend/api/fanZoneMedia.ts`, `@/lib/fanZone.ts` | `apps/mobile/src/backend/services/fanZoneMedia.ts` | `/`, `/api/fan-zone-media+api`, `/api/fan-zone-remove+api`, `/api/fan-zone-upload+api`, `/beyond`, `/booster` +4 more |
-| `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +56 more |
-| `reel_vault` | `VAULT` | Private Vault clips; authorized one-hour signing through lib/media.ts/mediaStorage.ts. Upload never requests a public URL or a public fallback. Existing paths/entitlement rules are unchanged; source adapter tests do not prove hosted policy/removal parity. | `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +56 more |
-| `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). Existing paths/rights/row metadata are unchanged by the 2026-10-21 replaceable media transport; public URL readers allow canonical public buckets only. | `@/lib/photoStoryCleanup.ts`, `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/lib/photoStories.ts`, `@/lib/photoStoryCleanup.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +56 more |
+| `game_highlights` | `UPLOAD` | Fallback bucket for Highlight uploads when reels is unavailable. | `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +57 more |
+| `reel_vault` | `VAULT` | Private Vault clips; authorized one-hour signing through lib/media.ts/mediaStorage.ts. Upload never requests a public URL or a public fallback. Existing paths/entitlement rules are unchanged; source adapter tests do not prove hosted policy/removal parity. | `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +57 more |
+| `reels` | `UPLOAD` | Public Highlight videos (reels/<uid>/…) and photo-story photos (<uid>/stories/…). Existing paths/rights/row metadata are unchanged by the 2026-10-21 replaceable media transport; public URL readers allow canonical public buckets only. | `@/lib/photoStoryCleanup.ts`, `@/services/MediaUploadService.ts` | `@/lib/media.ts`, `@/lib/photoStories.ts`, `@/lib/photoStoryCleanup.ts`, `@/services/MediaUploadService.ts` | `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience` +57 more |
 
 ## Feature switches
 
@@ -1232,7 +1243,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | --- | --- |
 | `tabs.home` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.beyond` | `apps/mobile/app/(tabs)/beyond.tsx`, `apps/mobile/app/(tabs)/index.tsx`, `@/components/Reels/HomeFeedSwitch.tsx`, `@/context/UploadSheetContext.tsx` |
-| `tabs.local` | `apps/mobile/app/(tabs)/local/index.tsx`, `@/components/Reels/HomeFeedSwitch.tsx` |
+| `tabs.local` | `apps/mobile/app/(tabs)/local/directory.tsx`, `apps/mobile/app/(tabs)/local/index.tsx`, `@/components/Reels/HomeFeedSwitch.tsx` |
 | `tabs.activity` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/activity.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.spotlight` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/spotlight.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.drip` | `apps/mobile/app/(tabs)/drip.tsx`, `apps/mobile/app/(tabs)/profile.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/Common/DesktopRightRail.tsx` |

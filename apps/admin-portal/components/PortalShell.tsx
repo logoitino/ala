@@ -1,3 +1,4 @@
+/** UX-15 keeps the existing sidebar/brand and proportionate headings; Refresh view is an explicit full request through existing access checks, never background polling. */
 /** UX-13 readable controls preserve all consent, money and operator actions.
  * Shell for every page of the read-only Next admin portal: a dark left sidebar (2026-11-04 design refresh from the
  * Lovable reference, replacing the 2026-10-12 top tabs by owner request) with the brand, the six sections, the
@@ -225,9 +226,13 @@ export function PortalShell({ children, active, heading, presentation = 'report'
           <p className="text-[12px] font-extrabold tracking-[0.18em] text-[var(--jade)] uppercase">
             {productOpen && active !== '/product' ? 'Product' : "Tapua'i admin"}
           </p>
-          <h1 className="mt-2 text-3xl leading-tight font-black tracking-tight sm:text-4xl">{TITLES[active]}</h1>
+          <h1 className="mt-2 text-[26px] leading-tight font-extrabold tracking-tight sm:text-3xl lg:text-4xl">{TITLES[active]}</h1>
           <p className="mt-2 max-w-3xl text-base leading-7 text-[var(--ink-soft)]">{SUBTITLES[active]}</p>
         </div>}
+        <div className="mb-5 flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <p className="min-w-0 text-xs leading-5 text-[var(--text-muted)]">Read-only view. Changes stay in Expo /admin.</p>
+          <a href={active} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-bold text-[var(--jade)] hover:bg-[var(--jade-soft)]">Refresh view</a>
+        </div>
         {children}
       </main>
     </div>
@@ -265,7 +270,7 @@ export function StatCard({
 }
 
 /**
- * @purpose Open report section with a kicker, heading, optional action, and its content.
+ * @purpose Report card with a kicker, heading, optional action, and its content.
  * @param level Heading level, default 2 (unchanged for older pages). Use 3 when the Panel sits
  *   under a section that already has an h2, so the outline does not skip or repeat a level.
  */
@@ -311,7 +316,7 @@ export function SectionHeading({ title, hint, id, level = 3 }: { title: string; 
   const Heading = level === 2 ? 'h2' : 'h3';
   return (
     <div className="portal-section-heading mb-5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-      <Heading id={id} className="min-w-0 text-sm font-extrabold tracking-[0.08em] break-words text-[var(--ink-soft)] uppercase">
+      <Heading id={id} className="min-w-0 text-base font-extrabold tracking-tight break-words text-[var(--ink)]">
         {title}
       </Heading>
       {hint ? <p className="min-w-0 text-xs break-words text-[var(--text-muted)]">{hint}</p> : null}

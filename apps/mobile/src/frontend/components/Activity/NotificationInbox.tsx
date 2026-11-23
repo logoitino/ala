@@ -1,4 +1,4 @@
-/** UX-13 readable shared type preserves every action and required notice. The bounded notification inbox is separate from factual Activity and its existing invitation queues. */
+/** UX-18 tightens panel spacing and ordinary explanation layout while keeping every 44pt action and full notice/body. UX-13 readable shared type preserves every action and required notice. The bounded notification inbox is separate from factual Activity and its existing invitation queues. */
 import { type Href, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -24,7 +24,7 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
       <Text accessibilityRole="header" style={styles.title}>Notifications</Text>
       {page ? <Text style={styles.unread}>{page.unreadCount} unread{archived ? ' in inbox' : ''}</Text> : null}
     </View>
-    <MoreText style={styles.hint} lines={1}>{'New connected account updates appear here. Your gift history and invitations stay in their own sections.'}</MoreText>
+    <MoreText style={styles.hint} lines={1} inlineToggle>{'New connected account updates appear here. Your gift history and invitations stay in their own sections.'}</MoreText>
     <View style={styles.controls}>
       <Pressable accessibilityRole="tab" accessibilityLabel="Current notifications" accessibilityState={{ selected: !archived, disabled: locked }}
         disabled={locked} onPress={() => void state.showArchived(false)} style={[styles.action, !archived && styles.selected]}>
@@ -89,21 +89,21 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, padding: 10, gap: 6, ...cardShadow },
-  heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
-  title: { color: colors.text, ...TYPE.section,  ...figtree('800') },
-  unread: { color: colors.primary, ...TYPE.body,  ...figtree('700') },
+  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, padding: 8, gap: 4, ...cardShadow },
+  heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
+  title: { color: colors.text, ...TYPE.body, ...figtree('700') },
+  unread: { color: colors.primary, ...TYPE.caption, ...figtree('700') },
   hint: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
-  controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  action: { minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, paddingHorizontal: 12,
-    paddingVertical: 8, alignItems: 'center', justifyContent: 'center', flexGrow: 1 },
+  controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  action: { minWidth: 44, minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, paddingHorizontal: 8,
+    paddingVertical: 4, alignItems: 'center', justifyContent: 'center', flexGrow: 1 },
   actionLabel: { color: colors.primary, ...TYPE.body,  ...figtree('700') },
   selected: { minHeight: 44, borderColor: colors.text, backgroundColor: FOCAL.mistJade },
   error: { ...figtree('400'), color: colors.danger, ...TYPE.body,  },
-  empty: { paddingVertical: 6, gap: 6 },
-  item: { borderTopWidth: 1, borderColor: colors.border, paddingTop: 6, gap: 6 },
+  empty: { paddingVertical: 4, gap: 4 },
+  item: { borderTopWidth: 1, borderColor: colors.border, paddingTop: 4, gap: 4 },
   unreadItem: { borderColor: colors.primary },
-  itemTitle: { color: colors.text, ...TYPE.body,  ...figtree('800') },
+  itemTitle: { color: colors.text, ...TYPE.body, ...figtree('700') },
   body: { ...figtree('400'), color: colors.text, ...TYPE.body,  },
   disabled: { minHeight: 44, opacity: 0.5 },
 });

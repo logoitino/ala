@@ -1,6 +1,7 @@
 /**
  * Soft-Wall + browse-first auth helpers shared by the Next admin portal.
- * Product gates live in `@tapuai/shared-types` (`SOFT_WALL_GATES`).
+ * Product gates live in `@tapuai/shared-types` (`SOFT_WALL_GATES`). Independent read
+ * failures stay unknown without erasing confirmed counts or published runtime status.
  */
 
 import {
@@ -35,15 +36,28 @@ function asInt(value: unknown): number {
   return Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0;
 }
 
+/** Next-only read status; the shared app contract and database fields remain unchanged. */
+export type PortalSoftWallOversight = Omit<SoftWallOversight, 'fanProfiles' | 'fansLast7d'> & {
+  fanProfiles: number | null;
+  fansLast7d: number | null;
+  errors: { runtime: string | null; fanProfiles: string | null; fansLast7d: string | null };
+};
+
+/** A rejected transport leaves only its own source unknown. Never expose backend details. */
+async function readSnapshot<T>(query: PromiseLike<T>): Promise<T | null> {
+  try { return await query; } catch { return null; }
+}
+
 /**
  * @purpose Load Soft-Wall oversight from `app_runtime_config` + `profiles` for the web control plane.
  * @sideEffects Supabase SELECT on runtime config and profiles (count + recent fans).
  */
-export async function fetchSoftWallOversight(): Promise<SoftWallOversight> {
-  const empty: SoftWallOversight = {
+export async function fetchSoftWallOversight(): Promise<PortalSoftWallOversight> {
+  const empty: PortalSoftWallOversight = {
     configured: false,
-    fanProfiles: 0,
-    fansLast7d: 0,
+    fanProfiles: null,
+    fansLast7d: null,
+    errors: { runtime: 'Supabase env missing', fanProfiles: 'Supabase env missing', fansLast7d: 'Supabase env missing' },
     operatorConsoleLive: false,
     operatorConsoleDraft: null,
     maloLive: true,
@@ -60,34 +74,40 @@ export async function fetchSoftWallOversight(): Promise<SoftWallOversight> {
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const [runtimeRes, fanCountRes, recentFansRes] = await Promise.all([
-    supabase.from('app_runtime_config').select('published, draft, published_at').eq('id', 'default').maybeSingle(),
-    supabase
+    readSnapshot(supabase.from('app_runtime_config').select('published, draft, published_at').eq('id', 'default').maybeSingle()),
+    readSnapshot(supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true })
-      .or('role.eq.fan,roles.cs.{fan}'),
-    supabase
+      .or('role.eq.fan,roles.cs.{fan}')),
+    readSnapshot(supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true })
       .or('role.eq.fan,roles.cs.{fan}')
-      .gte('created_at', weekAgo),
+      .gte('created_at', weekAgo)),
   ]);
 
-  if (runtimeRes.error || fanCountRes.error || recentFansRes.error || !runtimeRes.data || fanCountRes.count === null || recentFansRes.count === null) return empty;
-
-  const published = (runtimeRes.data?.published ?? {}) as RuntimeBag;
-  const draft = (runtimeRes.data?.draft ?? {}) as RuntimeBag;
+  const runtimeOk = Boolean(runtimeRes && !runtimeRes.error && runtimeRes.data);
+  const fanProfiles = fanCountRes && !fanCountRes.error && typeof fanCountRes.count === 'number' && Number.isFinite(fanCountRes.count) ? asInt(fanCountRes.count) : null;
+  const fansLast7d = recentFansRes && !recentFansRes.error && typeof recentFansRes.count === 'number' && Number.isFinite(recentFansRes.count) ? asInt(recentFansRes.count) : null;
+  const published = (runtimeOk ? runtimeRes!.data?.published ?? {} : {}) as RuntimeBag;
+  const draft = (runtimeOk ? runtimeRes!.data?.draft ?? {} : {}) as RuntimeBag;
 
   return {
-    configured: true,
-    fanProfiles: asInt(fanCountRes.count),
-    fansLast7d: asInt(recentFansRes.count),
+    configured: runtimeOk,
+    fanProfiles,
+    fansLast7d,
+    errors: {
+      runtime: runtimeOk ? null : 'Published switches could not be read.',
+      fanProfiles: fanProfiles === null ? 'Fan profile count could not be read.' : null,
+      fansLast7d: fansLast7d === null ? 'Recent fan count could not be read.' : null,
+    },
     operatorConsoleLive: asBool(published.layouts?.operatorConsole, false),
     operatorConsoleDraft:
       typeof draft.layouts?.operatorConsole === 'boolean' ? draft.layouts.operatorConsole : null,
     maloLive: asBool(published.buttons?.malo, true),
     crewLive: asBool(published.buttons?.crew, true),
     wishlistLive: asBool(published.layouts?.wishlist, true),
-    publishedAt: typeof runtimeRes.data?.published_at === 'string' ? runtimeRes.data.published_at : null,
+    publishedAt: runtimeOk && typeof runtimeRes!.data?.published_at === 'string' ? runtimeRes!.data.published_at : null,
     softWallGates: SOFT_WALL_GATES,
     authProviders: SOFT_WALL_AUTH_PROVIDERS,
   };
@@ -154,6 +174,7 @@ export async function fetchPortalPeople(limit = 40): Promise<{ people: PortalPer
 
 export type PortalRuntimeSnapshot = {
   configured: boolean;
+  error: string | null;
   draft: Record<string, unknown>;
   published: Record<string, unknown>;
   publishedAt: string | null;
@@ -167,6 +188,7 @@ export type PortalRuntimeSnapshot = {
 export async function fetchPortalRuntime(): Promise<PortalRuntimeSnapshot> {
   const empty: PortalRuntimeSnapshot = {
     configured: false,
+    error: 'Supabase env missing',
     draft: {},
     published: {},
     publishedAt: null,
@@ -174,17 +196,19 @@ export async function fetchPortalRuntime(): Promise<PortalRuntimeSnapshot> {
   };
   const supabase = await getSupabaseServerClient();
   if (!supabase) return empty;
-  const { data, error } = await supabase
+  const result = await readSnapshot(supabase
     .from('app_runtime_config')
     .select('draft, published, published_at')
     .eq('id', 'default')
-    .maybeSingle();
-  if (error || !data) return empty;
+    .maybeSingle());
+  if (!result || result.error || !result.data) return { ...empty, error: 'Published switches could not be read.' };
+  const { data } = result;
   const draft = (data.draft && typeof data.draft === 'object' ? data.draft : {}) as Record<string, unknown>;
   const published =
     data.published && typeof data.published === 'object' ? (data.published as Record<string, unknown>) : {};
   return {
     configured: true,
+    error: null,
     draft,
     published,
     publishedAt: typeof data.published_at === 'string' ? data.published_at : null,

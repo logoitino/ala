@@ -1,7 +1,9 @@
 /** UX-13 readable shared type preserves every action and required notice. Floating fan dock overlays full-height Highlights while every label/control stays opaque.
  * Report the complete wrap height so captions and normal fan screens clear safe foot and enlarged labels.
  * 2026-11 Lovable standard: same floating shape and translucent backdrop; tabs read like the sample —
- * larger icons that fill when active, jade active ink, Figtree labels, no tinted box behind the active tab.
+ * compact icons that fill when active, jade active ink, Figtree labels, no tinted box behind the active tab.
+ * UX-16 trims decoration and container spacing;44pt controls and measured text/safe-area growth remain.
+ * UX-18 removes the remaining vertical margin and fixes decorative glyph sizes while text keeps scaling.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef } from 'react';
@@ -73,7 +75,7 @@ function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accen
       onPress={() => { impactPress('selection'); onPress(); }}
     >
       <Animated.View style={iconStyle}>
-        <Ionicons name={focused ? activeIcon : icon} size={20} color={color} />
+        <Ionicons name={focused ? activeIcon : icon} size={18} allowFontScaling={false} color={color} />
       </Animated.View>
       <Text style={[styles.tabLabel, { color }]}>
         {label}
@@ -220,7 +222,7 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
             onPressIn={restore}
             onPress={() => { restore(); impactPress('medium'); openUpload(); }}
           >
-            <View style={styles.fab}><Ionicons name="add" size={20} color="#FFFFFF" /></View>
+            <View style={styles.fab}><Ionicons name="add" size={16} allowFontScaling={false} color="#FFFFFF" /></View>
             <Text style={[styles.tabLabel, { color: FOCAL.jadeInk }]}>Upload</Text>
           </Pressable>
         </View>
@@ -247,13 +249,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    minHeight: 50,
+    minHeight: 44,
     paddingHorizontal: 2,
-    borderRadius: 24,
+    borderRadius: 22,
   },
   backdrop: {
     ...StyleSheet.absoluteFill,
-    borderRadius: 24,
+    borderRadius: 22,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
@@ -271,7 +273,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    height: 3,
+    height: 2,
     borderRadius: 2,
     zIndex: 2,
     ...Platform.select({
@@ -290,17 +292,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 1,
-    paddingVertical: 3,
+    gap: 0,
+    paddingVertical: 1,
     paddingHorizontal: 2,
-    borderRadius: 20,
+    borderRadius: 18,
     marginHorizontal: 2,
-    marginVertical: 2,
+    marginVertical: 0,
     overflow: 'visible',
   },
   tabLabel: {
     ...figtree('600'),
     ...TYPE.caption,
+    includeFontPadding: false,
     letterSpacing: -0.1,
     textAlign: 'center',
     flexShrink: 1,
@@ -313,24 +316,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fab: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: FOCAL.jadeInk,
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
       ios: {
         shadowColor: FOCAL.jadeInk,
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 2 },
       },
       android: {
-        elevation: 6,
+        elevation: 3,
       },
       default: {
-        boxShadow: `0px 4px 10px ${FOCAL.jadeInk}4D`,
+        boxShadow: `0px 2px 6px ${FOCAL.jadeInk}33`,
       },
     }),
   },

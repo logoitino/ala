@@ -73,7 +73,8 @@ export async function fetchCrewGraph(athleteId: string, userId?: string | null, 
   }
 
   if (client !== supabase && isOfflineActorChanged(error)) throw error;
-  if (!isMissingFunction(error) || !userId) return fallback;
+  if (!isMissingFunction(error)) throw new Error('Could not load Crew. Check your connection and retry.');
+  if (!userId) return fallback;
 
   const mine = await client
     .from('crew_follows')
@@ -81,9 +82,10 @@ export async function fetchCrewGraph(athleteId: string, userId?: string | null, 
     .eq('follower_id', userId)
     .eq('athlete_id', athleteId)
     .maybeSingle();
-  if (mine.error) return fallback;
+  if (mine.error) throw new Error('Could not load Crew. Check your connection and retry.');
 
   const crew = await client.from('crew_follows').select('follower_id', { count: 'exact', head: true }).eq('athlete_id', athleteId);
+  if (crew.error) throw new Error('Could not load Crew. Check your connection and retry.');
   const following = Boolean(mine.data);
   await AsyncStorage.setItem(followKey(athleteId, userId), following ? '1' : '0');
   return {

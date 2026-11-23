@@ -1,11 +1,12 @@
 /** Gift totals use a stable current Auth owner fixture; missing/denied reads preserve visible error and empty-state assertions. */
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { useReceivedMalo } from '@/hooks/useReceivedMalo';
 
 const mockAuthGuard = () => true;
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'viewer-current' }, isSessionCurrent: mockAuthGuard }) }));
 jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: { captureActor: (userId: string) => ({ userId, isCurrent: mockAuthGuard }) } }));
+jest.mock('@/lib/offlineActor', () => ({ createOfflineActorClient: async () => ({ rpc: (...args: unknown[]) => mockRpc(...args) }) }));
 const mockRpc = jest.fn();
 const mockTrackIssue = jest.fn();
 
@@ -29,7 +30,7 @@ describe('useReceivedMalo', () => {
     mockTrackIssue.mockReset();
   });
 
-  it('shows $0 when the gifts call is missing or fails', async () => {
+  it('shows an unavailable ledger and retries instead of calling a failed read empty', async () => {
     mockRpc.mockResolvedValue({
       data: null,
       error: { code: 'PGRST202', message: 'Could not find the function public.get_received_malo' },
@@ -38,7 +39,11 @@ describe('useReceivedMalo', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.rows).toEqual([]);
     expect(result.current.totalCents).toBe(0);
+    expect(result.current.error).toMatch(/Could not load gifts/);
+    mockRpc.mockResolvedValue({ data: [], error: null });
+    await act(async () => { await result.current.refresh(); });
     expect(result.current.error).toBeNull();
+    expect(result.current.rows).toEqual([]);
     expect(mockTrackIssue).toHaveBeenCalledWith('received_malo_unavailable', 'profile');
   });
 

@@ -118,7 +118,7 @@ describe('replaceable upload storage', () => {
     mockProfileUpdate.mockResolvedValue({ error: null });
     global.fetch = jest.fn(async () => ({ arrayBuffer: async () => dirtyJpeg().buffer })) as unknown as typeof fetch;
   });
-  afterEach(() => { global.fetch = realFetch; jest.restoreAllMocks(); });
+  afterEach(() => { global.fetch = realFetch as unknown as typeof fetch; jest.restoreAllMocks(); });
   const service = (adapter: ReturnType<typeof storage>) => {
     expect(createMediaUploadService).toEqual(expect.any(Function));
     return createMediaUploadService(adapter);
@@ -331,7 +331,7 @@ describe('uploadStoryPhoto', () => {
     mockUpload.mockResolvedValue({ error: null });
     mockGetPublicUrl.mockImplementation((path: string) => ({ data: { publicUrl: `https://x.supabase.co/storage/v1/object/public/reels/${path}` } }));
   });
-  afterEach(() => { global.fetch = realFetch; });
+  afterEach(() => { global.fetch = realFetch as unknown as typeof fetch; });
 
   const serve = (bytes: Uint8Array) => {
     global.fetch = jest.fn(async () => ({ arrayBuffer: async () => bytes.buffer.slice(0) })) as unknown as typeof fetch;

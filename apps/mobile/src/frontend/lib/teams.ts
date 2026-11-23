@@ -2,6 +2,7 @@
  * School and team lookup over `schools_and_teams`: autocomplete for the athlete claim, and the school row shown
  * on the trading card. Saves actor-bound athlete claims and account-keyed local onboarding; configured saves
  * publish the cache only after the profile write succeeds, preserving earlier valid drafts on denial (UX-13).
+ * Explicit directory selections use current exact IDs/school text and remain staff-reviewed pending claims (UX-17).
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,6 +19,7 @@ import { orIlike } from '@/lib/postgrestFilter';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { claimAthlete } from '@/lib/verification';
 import { assertCurrent, createOfflineActorClient, OfflineActorChangedError, type OfflineActor } from '@/lib/offlineActor';
+import { getDirectorySchool } from '@/lib/schoolDirectory';
 
 export type AthleteOnboarding = {
   team: SchoolTeam;
@@ -123,13 +125,27 @@ export async function saveAthleteOnboardingRemote(
   userId: string | null | undefined,
   onboard: AthleteOnboarding,
   actor?: OfflineActor,
+  selectedPlayerId?: string | null,
 ): Promise<void> {
+  if (selectedPlayerId !== undefined && (!actor || !userId || !isSupabaseConfigured)) throw new OfflineActorChangedError();
   if (actor) {
     assertCurrent(actor);
     if (actor.userId !== userId) throw new OfflineActorChangedError();
   }
   const client = actor && isSupabaseConfigured ? await createOfflineActorClient(actor) : supabase;
   if (actor) assertCurrent(actor);
+  const validateSelection = async () => {
+    const school = await getDirectorySchool(onboard.team.id, client);
+    if (actor) assertCurrent(actor);
+    if (!school || school.name !== onboard.team.name) throw new Error('School association changed. Choose the current school and retry.');
+    if (selectedPlayerId === null) return;
+    if (typeof selectedPlayerId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedPlayerId)) throw new Error('Roster selection changed. Choose the current athlete and retry.');
+    const { data, error } = await client.from('players').select('id,school_name').eq('id', selectedPlayerId).eq('school_name', school.name).maybeSingle();
+    if (actor) assertCurrent(actor);
+    if (error) throw error;
+    if (!data || data.id !== selectedPlayerId || data.school_name !== school.name) throw new Error('Roster selection changed. Choose the current athlete and retry.');
+  };
+  if (selectedPlayerId !== undefined) await validateSelection();
   if (!userId || !isSupabaseConfigured) {
     await AsyncStorage.setItem(onboardingKey(userId), JSON.stringify(onboard));
     if (actor) assertCurrent(actor);
@@ -150,6 +166,17 @@ export async function saveAthleteOnboardingRemote(
   if (updateError) throw updateError;
   await AsyncStorage.setItem(onboardingKey(userId), JSON.stringify(onboard));
   if (actor) assertCurrent(actor);
+
+  if (selectedPlayerId !== undefined) {
+    // Admins can correct school/roster labels while the save is in flight. Refuse a changed association before claiming.
+    await validateSelection();
+    if (actor) assertCurrent(actor);
+    const claimed = await claimAthlete(selectedPlayerId, undefined, client);
+    if (actor) assertCurrent(actor);
+    // A confirmed profile save is not proof that the pending-claim endpoint exists on this backend.
+    if (!claimed) throw new Error('Athlete claim is unavailable. Your profile fields may be saved; retry the claim.');
+    return;
+  }
 
   // The roster link (`profiles.player_id`) is made only when the school confirms. Here we just
   // open the claim with the best name match so the athletic director sees who the student says

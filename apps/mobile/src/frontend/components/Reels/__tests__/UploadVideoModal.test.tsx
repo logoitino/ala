@@ -648,3 +648,38 @@ describe('photo story upload', () => {
   });
 
 });
+
+/** Pending picker callbacks belong only to their current open account draft. */
+describe('UX-14 pending native picker lifetime',()=>{
+ beforeEach(()=>{
+  jest.clearAllMocks();mockOwnerId='11111111-1111-4111-8111-111111111111';mockSessionGuard=()=>true;
+  mockPhotosAvailable=true;mockLaunchCamera.mockReset();mockLaunchLibrary.mockReset();
+  mockRememberCleanup.mockResolvedValue(undefined);mockQueuedCleanup.mockResolvedValue([]);
+  jest.spyOn(Alert,'alert').mockImplementation(()=>{});
+  for(const method of ['timing','spring','loop'] as const) jest.spyOn(Animated,method).mockReturnValue({start:jest.fn(),stop:jest.fn(),reset:jest.fn()});
+ });
+ afterEach(()=>jest.restoreAllMocks());
+ it('does not apply old camera media after closed composer reopens',async()=>{
+  let release!:(v:unknown)=>void;mockLaunchCamera.mockReturnValueOnce(new Promise(r=>{release=r}));
+  const view=await render(<UploadVideoModal {...props}/>);
+  await fireEvent.press(screen.getByLabelText('Record a video'));
+  await waitFor(()=>expect(mockLaunchCamera).toHaveBeenCalledTimes(1));
+  await view.rerender(<UploadVideoModal {...props} visible={false}/>);
+  await view.rerender(<UploadVideoModal {...props}/>);
+  await act(async()=>{release({canceled:false,assets:[{uri:'file:///departed-camera.mp4',duration:1000}]});});
+  expect(screen.queryByLabelText('Highlight caption')).toBeNull();
+ });
+ it('does not attach outgoing account photos to incoming account draft',async()=>{
+  let release!:(v:unknown)=>void;mockLaunchLibrary.mockReturnValueOnce(new Promise(r=>{release=r}));
+  const view=await render(<UploadVideoModal {...props}/>);
+  await waitFor(()=>expect(screen.getByLabelText('Photos')).toBeTruthy());
+  await fireEvent.press(screen.getByLabelText('Photos'));
+  await fireEvent.press(screen.getByLabelText('Choose photos from library'));
+  await waitFor(()=>expect(mockLaunchLibrary).toHaveBeenCalledTimes(1));
+  mockSessionGuard=()=>true;mockOwnerId='22222222-2222-4222-8222-222222222222';
+  await view.rerender(<UploadVideoModal {...props}/>);
+  await act(async()=>{release({canceled:false,assets:[{uri:'file:///departed-photo.jpg',type:'image',width:1,height:1}]});});
+  await fireEvent.press(screen.getByLabelText('Photos'));
+  expect(screen.queryByLabelText('Remove photo 1')).toBeNull();
+ });
+});

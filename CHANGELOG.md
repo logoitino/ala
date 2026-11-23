@@ -1,4 +1,43 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
+
+## 2026-11-23 — Tighter navigation and Activity panels (local acceptance)
+
+- Reduce the dock and Home/Beyond/Local bar to44pt surfaces, with smaller Search/Upload decorations and measured safe clearance.
+- Tighten notification panel and timeline spacing; preserve14pt messages/instructions,12pt school/time metadata, full text and44pt actions.
+- Existing school/team directory and optional roster selection verified locally; no new roster import or automatic athlete verification.
+- Current3116mobile and217portal tests pass; Android phone comfort/scrolling and tracked Exit acknowledgement remain pending. [Verification](docs/agents/UX-18.md).
+
+## 2026-11-22 — Compact fan navigation (local verification in progress)
+
+- UX18: tighten dock/feed bar containers and Activity rows with smaller decorative icons, less padding and clearer14px primary/12px metadata hierarchy; keep44px actions and measured safe clearance.
+
+- UX17: existing school/team roster browsing and optional pending-profile selection verified locally; serialized saves and partial-save retries preserve the current account and choice. UX18 addresses new Android bar/notification spacing feedback.
+
+- UX-17: register existing-record school directory within the Local stack; participant browsing and optional pending roster selection are being verified.
+
+- 2026-11-22: UX-17 admin/source checkpoint passes99tests and TypeScript before existing school/team directory and optional pending roster selection UI. Local entry stays in scrolling content; distinct jade/violet poll presentation accepted.
+
+- Reduce extra bottom-dock and Home/Beyond/Local framing, with a smaller Upload circle and lighter decoration. Keep readable labels,44pt touch areas, enlarged text and safe-area clearance.
+- Align Search with the existing jade palette and Figtree labels; make selected clip counts readable without changing their values or actions.
+- Verification and native limits: [UX-16](docs/agents/UX-16.md).
+
+## 2026-11-22 — Notifications, Local polls and admin workspaces (local code checked; device/acknowledgement pending)
+
+- Match Activity history fonts to its notification inbox; retain current readable text sizes. Android drag scrolling remains under device verification.
+- Make Local poll selection visible with a check/text cue and contrasting borders; distinguish result shares without changing votes or policy.
+- Align existing admin fonts, headings and cards, enlarge dashboard jump targets and keep desk search inside narrow page padding.
+- Show unavailable profile counts honestly and retain independent successful reads. Refresh published controls through an explicit protected page request.
+- Refuse protected portal access when configuration cannot verify it; add private noindex/frame headers. Production Studio and mounted-session guards reject stale lifetimes; ordinary same-session refresh keeps the current view.
+- Both typechecks,3029mobile/217portal tests, the Next production build and both native JS/Hermes exports pass. Full gate awaits the separate tracked Exit acknowledgement; Android touch scrolling remains open. Exact evidence: [UX-15](docs/agents/UX-15.md). No hosted publication or release is included.
+
+## 2026-11-21 — Existing-flow acceptance (local app-code pass)
+
+- Show a failed Spotlight load with Retry instead of presenting a demo award as a successful result. Keep the last accepted board when a refresh fails and ignore older reads that finish late.
+- Fit the Highlight picker to its content, keep Cancel reachable with enlarged text, and announce optimization progress. Delayed media cannot enter a reopened draft.
+- Preserve guest Crew intent through sign-in for the same account/athlete; show failed private loads with Retry and keep delayed thanks/QR completions with their original target.
+- Refuse zero-stock purchases and stale purchase resumes; show actual catalog errors. Bind guardian confirmation to the displayed code and prevent duplicate Sports saves and admin sign-in.
+- The full local gate passes, including mobile/portal tests and the owner-approved Exit acknowledgement; both native JS/Hermes bundles export. Verification and remaining work: [UX-14](docs/agents/UX-14.md). Phone/provider testing and release remain separate.
+
 ## 2026-11-20 — Whole-app flow and panel review
 
 - Normalize typography and reduce oversized decorative icons and empty panel space across Highlights, Local, quizzes, profile menus and related flows. Long panel content can scroll without shrinking the text or losing dismissal controls.

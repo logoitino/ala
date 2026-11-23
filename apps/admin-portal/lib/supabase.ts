@@ -1,9 +1,12 @@
 import { createBrowserClient, parseCookieHeader, serializeCookieHeader, stringFromBase64URL } from '@supabase/ssr';
-import {  type SupabaseClient } from '@supabase/supabase-js';
+import { type Session, type SupabaseClient } from '@supabase/supabase-js';
 import { resolveBackendConnection } from '@tapuai/shared-types/backendConnection';
 import { createAuthPublicationScope } from '@tapuai/shared-types/admin/authPublication';
 
 export const authPublication = createAuthPublicationScope();
+
+/** Existing SDK session shape for in-memory browser guards; importing the type keeps vendor boundaries in lib. */
+export type PortalBrowserSession = Session;
 
 /**
  * Browser-safe Supabase helpers only — no `next/headers` import here. `getSupabaseServerClient` (the

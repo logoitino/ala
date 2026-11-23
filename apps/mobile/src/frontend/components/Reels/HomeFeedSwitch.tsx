@@ -4,6 +4,9 @@
  * layout measurements and the indicator animation, so hook order in the route is unchanged; this file renders them.
  * Local is a destination, not a filter, so it navigates instead of switching the feed.
  * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ * UX-16 removes excess framing around44pt actions; measured indicator geometry and readable counts remain.
+ * Constrained tab content lets enlarged labels wrap inside their measured slots rather than overlap.
+ * UX-18 paints the outline over the same44pt controls instead of adding height around them.
  */
 import type { RefObject } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -54,6 +57,7 @@ export function HomeFeedSwitch({
 }) {
   return (
     <View style={styles.feedSwitch} accessibilityRole="tablist" accessibilityLabel="Home feed">
+      <View pointerEvents="none" style={styles.feedOutline} />
       <Animated.View pointerEvents="none" style={[styles.feedIndicator, feedIndicatorStyle]} />
       {feedPills.map((item) => {
         const on = feedFilter === item.id;
@@ -74,7 +78,7 @@ export function HomeFeedSwitch({
             accessibilityLabel={`${item.label}, ${count} ${count === 1 ? 'clip' : 'clips'}`}
             accessibilityState={{ selected: on }}
             style={styles.feedPillSlot}
-            contentStyle={styles.feedPill}
+            contentStyle={[styles.feedPill, styles.feedTabContent]}
             onPress={() => switchFeed(item.id)}
           >
             <Text style={[styles.feedPillLabel, on && styles.feedPillLabelOn]}>{item.label}</Text>
@@ -99,9 +103,9 @@ export function HomeFeedSwitch({
               router.push('/local');
             }}
           >
-            <Ionicons name="location" size={13} color={FOCAL.neonJade} />
+            <Ionicons name="location" size={13} allowFontScaling={false} color={FOCAL.neonJade} />
             <Text style={[styles.feedPillLabel, styles.localPillLabel]}>Local</Text>
-            <Ionicons name="chevron-forward" size={12} color={FOCAL.neonJade} />
+            <Ionicons name="chevron-forward" size={12} allowFontScaling={false} color={FOCAL.neonJade} />
           </AnimatedButton>
         </>
       ) : null}
@@ -115,23 +119,33 @@ const styles = StyleSheet.create({
     minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 2,
     backgroundColor: colors.videoScrim,
+    borderRadius: 999,
+    padding: 0,
+  },
+  feedOutline: {
+    // SDK 58's generated RN types expose no absoluteFillObject; explicit edges keep the same overlay geometry.
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: `${FOCAL.neonJade}66`,
-    padding: 3,
   },
   feedPill: {
     flexGrow: 0,
     minHeight: 44,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     borderRadius: 999,
     flexDirection: 'row',
     gap: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  feedTabContent: { width: '100%', minWidth: 0 },
   feedPillSlot: {
     flex: 1,
     minWidth: 0,
@@ -139,21 +153,24 @@ const styles = StyleSheet.create({
   },
   feedIndicator: {
     position: 'absolute',
-    top: 3,
-    bottom: 3,
+    top: 1,
+    bottom: 1,
     left: 0,
     borderRadius: 999,
     backgroundColor: FOCAL.jadeInk,
   },
   feedPillCount: {
+    flexShrink: 0,
     color: colors.onVideoMuted,
     ...TYPE.caption,
+    includeFontPadding: false,
     ...figtree('800'),
     opacity: 0.75,
   },
   feedPillCountOn: {
-    color: colors.videoScrim,
-    opacity: 0.9,
+    // Count text needs the same contrast as the selected label on the dark jade fill.
+    color: colors.onVideo,
+    opacity: 1,
   },
   feedDivider: {
     width: StyleSheet.hairlineWidth,
@@ -166,9 +183,7 @@ const styles = StyleSheet.create({
   localPill: {
     flex: 1,
     minWidth: 0,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: `${FOCAL.neonJade}55`,
+    paddingHorizontal: 6,
   },
   localPillLabel: {
     color: FOCAL.neonJade,
@@ -176,8 +191,10 @@ const styles = StyleSheet.create({
   feedPillLabel: {
     color: colors.onVideoMuted,
     ...TYPE.button,
-    ...figtree('800'),
+    includeFontPadding: false,
+    ...figtree('700'),
     flexShrink: 1,
+    minWidth: 0,
   },
   feedPillLabelOn: {
     color: '#FFFFFF',

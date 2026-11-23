@@ -16,9 +16,9 @@ function missing() { return response({ code: 'PGRST202', message: 'Could not fin
 function wire() { return http.mock.calls.map(([url, init]) => ({ path: new URL(String(url)).pathname, authorization: new Headers(init?.headers).get('Authorization'), method: init?.method, body: typeof init?.body === 'string' ? JSON.parse(init.body) : null })); }
 beforeEach(() => { live = true; actor = { userId: owner, isCurrent: () => live }; process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://admin-test.invalid'; process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = 'public-test-key';
   jest.spyOn(supabase.auth, 'getSession').mockResolvedValue(session() as never);
-  http = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>(async () => response({ id: 'award-1', player_id: player })); globalThis.fetch = http as typeof fetch;
+  http = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>(async () => response({ id: 'award-1', player_id: player })); globalThis.fetch = http as unknown as typeof fetch;
 });
-afterEach(() => { jest.restoreAllMocks(); globalThis.fetch = originalFetch; if (originalUrl === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_URL; else process.env.EXPO_PUBLIC_SUPABASE_URL = originalUrl; if (originalKey === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY; else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = originalKey; });
+afterEach(() => { jest.restoreAllMocks(); globalThis.fetch = originalFetch as unknown as typeof fetch; if (originalUrl === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_URL; else process.env.EXPO_PUBLIC_SUPABASE_URL = originalUrl; if (originalKey === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY; else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = originalKey; });
 it('keeps a missing-function Spotlight fallback authorized as captured admin A', async () => {
   const client = await createOfflineActorClient(actor);
   http.mockImplementationOnce(async () => { jest.mocked(supabase.auth.getSession).mockResolvedValue(session('admin-B', 'test-admin-B') as never); return missing(); });

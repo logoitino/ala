@@ -1,5 +1,5 @@
-/** UX-13 readable shared type preserves every action and required notice. Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
-import { useEffect, useState } from 'react';
+/** QR flights and close completions belong to one visible account/URL frame; issued OS operations retain their original target. UX-13 readable shared type preserves every action and required notice. Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +8,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { radii } from '@/constants/theme';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
+import { useAuth } from '@/context/AuthContext';
 import { useOptionalCelebration } from '@/context/CelebrationContext';
 import {
   SHARE_COPY_LABEL,
@@ -34,7 +35,21 @@ type ShareQrModalProps = {
  * @param visible Opens from Athlete Profile or a Locker Room Wishlist card.
  * @sideEffects `expo-clipboard`; `Share.share`; telemetry `share_qr`.
  */
-export function ShareQrModal({ visible, onClose, athleteName, username, playerId }: ShareQrModalProps) {
+export function ShareQrModal(props: ShareQrModalProps) {
+  const { user, isSessionCurrent } = useAuth();
+  const target = giftQrTarget(props.athleteName, props.username, props.playerId);
+  const frame = useRef({ owner: user?.id, guard: isSessionCurrent, visible: props.visible, url: target.url, generation: 0 });
+  if (frame.current.owner !== user?.id || frame.current.guard !== isSessionCurrent || frame.current.visible !== props.visible || frame.current.url !== target.url)
+    frame.current = { owner: user?.id, guard: isSessionCurrent, visible: props.visible, url: target.url, generation: frame.current.generation + 1 };
+  // Remount the sheet and its flight together: a previous target cannot own the new sheet's completion.
+  if (isSessionCurrent && !isSessionCurrent()) return null;
+  return <OwnedShareQrModal key={frame.current.generation} {...props} />;
+}
+function OwnedShareQrModal({ visible, onClose, athleteName, username, playerId }: ShareQrModalProps) {
+  const { isSessionCurrent } = useAuth();
+  const mounted = useRef(true), active = useRef(visible), flight = useRef(false);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const current = () => mounted.current && active.current && visible && (isSessionCurrent?.() ?? true);
   const frame = useSheetFrame();
   const { height: windowHeight } = useWindowDimensions();
   const celebration = useOptionalCelebration();
@@ -53,21 +68,26 @@ export function ShareQrModal({ visible, onClose, athleteName, username, playerId
   if (!open && !visible) return null;
 
   const dismiss = () => {
+    if (!current()) return;
+    active.current = false;
     setOpen(false);
     setBusy(null);
     onClose();
   };
 
   const run = async (kind: 'copy' | 'share', work: () => Promise<void>, ok: string) => {
+    if (!current() || flight.current) return;
+    flight.current = true;
     setBusy(kind);
     try {
       await work();
-      if (kind !== 'share') celebration?.showToast(ok);
+      if (current() && kind !== 'share') celebration?.showToast(ok);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not complete that share action.';
-      if (!/cancel/i.test(message)) celebration?.showToast(message);
+      if (current() && !/cancel/i.test(message)) celebration?.showToast(message);
     } finally {
-      setBusy(null);
+      flight.current = false;
+      if (current()) setBusy(null);
     }
   };
 

@@ -1,4 +1,4 @@
-/** UX-13 readable shared type preserves every action and required notice.
+/** Privacy drafts, codes, writes and delayed callbacks belong to one visible Auth lifetime. UX-13 readable shared type preserves every action and required notice.
  * Profile → Privacy (PRIV-01, MINOR-01): public or private account, who sees each profile item, hide from search, who
  * can send friend requests, how tags are reviewed, blocked accounts, and the minor-account pieces: birth month and
  * year, and for 13–17 the parent or guardian link (invite code, confirm, unlink), the consent status, requests waiting
@@ -9,7 +9,7 @@
  * @sideEffects `get_my_privacy`, `set_my_privacy`, `list_my_blocks`, `unblock_user` (lib/privacy) and the guardian
  *   functions in lib/minors; `set_my_birth_month` through AuthContext.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { BirthMonthField, type BirthDraft } from '@/components/Auth/BirthMonthField';
@@ -20,6 +20,8 @@ import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { colors } from '@/constants/theme';
+import { createOfflineActorClient } from '@/lib/offlineActor';
+import { offlineQueue } from '@/services/OfflineQueue';
 import { useAuth } from '@/context/AuthContext';
 import {
   APPROVAL_LABEL,
@@ -53,18 +55,19 @@ const AUDIENCES: Audience[] = ['everyone', 'friends', 'only_me'];
 type Choice<T extends string> = { value: T; label: string };
 
 /** @purpose A row of mutually exclusive choices; `disabled` greys out options the rules do not allow yet. */
-function Choices<T extends string>({ label, value, options, onChange, disabled }: {
+function Choices<T extends string>({ label, value, options, onChange, disabled, locked }: {
   label: string;
   value: T;
   options: Choice<T>[];
   onChange: (next: T) => void;
   disabled?: (option: T) => boolean;
+  locked?: boolean;
 }) {
   return (
     <View style={styles.choiceRow} accessibilityRole="radiogroup" accessibilityLabel={label}>
       {options.map((option) => {
         const on = option.value === value;
-        const off = disabled?.(option.value) ?? false;
+        const off = Boolean(locked) || (disabled?.(option.value) ?? false);
         return (
           <Pressable
             key={option.value}
@@ -87,8 +90,26 @@ function Choices<T extends string>({ label, value, options, onChange, disabled }
 const message = (caught: unknown, fallback: string) => (caught instanceof Error ? caught.message : fallback);
 
 /** @purpose The Privacy sheet opened from Edit profile. */
-export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const { recordBirthMonth, isAthlete } = useAuth();
+export function PrivacySettingsSheet(props: { visible: boolean; onClose: () => void }) {
+  const { user, isSessionCurrent } = useAuth();
+  const lifetime = useRef({ owner: user?.id, guard: isSessionCurrent, visible: props.visible, generation: 0 });
+  if (lifetime.current.owner !== user?.id || lifetime.current.guard !== isSessionCurrent || lifetime.current.visible !== props.visible)
+    lifetime.current = { owner: user?.id, guard: isSessionCurrent, visible: props.visible, generation: lifetime.current.generation + 1 };
+  // Key the whole private draft: incoming accounts never inherit settings, codes or nested guardian panels.
+  if (isSessionCurrent && !isSessionCurrent()) return null;
+  return <OwnedPrivacySettingsSheet key={lifetime.current.generation} {...props} />;
+}
+function OwnedPrivacySettingsSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const { recordBirthMonth, isAthlete, user, isSessionCurrent } = useAuth();
+  const mounted = useRef(true), flight = useRef(false), read = useRef(0);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; ++read.current; }; }, []);
+  const current = useCallback(() => mounted.current && visible && (isSessionCurrent?.() ?? true), [visible, isSessionCurrent]);
+  const capture = () => {
+    const captured = user?.id ? offlineQueue.captureActor(user.id) : null;
+    return captured ? { userId: captured.userId, isCurrent: () => current() && captured.isCurrent() } : null;
+  };
+  const dismiss = () => { if (current()) onClose(); };
+  const [loading, setLoading] = useState(Boolean(visible));
   const [saved, setSaved] = useState<PrivacySettings | null>(null);
   const [draft, setDraft] = useState<PrivacySettings | null>(null);
   const [minor, setMinor] = useState<MinorStatus | null>(null);
@@ -102,17 +123,21 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
   const [guardianOpen, setGuardianOpen] = useState(false);
 
   const load = useCallback(async () => {
-    setError(null);
+    if (!current()) return;
+    const actor = capture(), request = ++read.current;
+    const accepted = () => current() && request === read.current && Boolean(actor?.isCurrent());
+    setError(null); setLoading(true);
     try {
-      const [status, blocked] = await Promise.all([fetchMyPrivacyStatus(), fetchMyBlocks()]);
-      setSaved(status.settings);
-      setDraft(status.settings);
-      setMinor(status.minor);
-      setBlocks(blocked);
+      if (!actor) throw new Error('Your account changed. Reopen Privacy settings.');
+      const client = await createOfflineActorClient(actor);
+      if (!accepted()) return;
+      const [status, blocked] = await Promise.all([fetchMyPrivacyStatus(client), fetchMyBlocks(client)]);
+      if (!accepted()) return;
+      setSaved(status.settings); setDraft(status.settings); setMinor(status.minor); setBlocks(blocked);
     } catch (caught) {
-      setError(message(caught, 'Could not load your privacy settings.'));
-    }
-  }, []);
+      if (current() && request === read.current) setError(message(caught, 'Could not load your privacy settings.'));
+    } finally { if (current() && request === read.current) setLoading(false); }
+  }, [current, user?.id]);
   useEffect(() => {
     if (visible) {
       setNotice(null);
@@ -127,24 +152,27 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
   const under16 = band === 'teen_13_15';
   const firstGuardian = minor?.guardians[0]?.firstName ?? 'your guardian';
 
-  // Run one action with the shared busy flag and notice line.
-  const act = async (work: () => Promise<string | void>, fallback: string) => {
-    if (busy) return;
-    setBusy(true);
-    setNotice(null);
+  // A synchronous flight excludes same-render duplicates, and bound requests cannot adopt another account.
+  const act = async (work: (client: Awaited<ReturnType<typeof createOfflineActorClient>>) => Promise<string | void>, fallback: string) => {
+    if (!current() || flight.current || loading || error) return;
+    const actor = capture();
+    if (!actor) return;
+    flight.current = true; ++read.current;
+    setBusy(true); setNotice(null);
     try {
-      const done = await work();
-      if (done) setNotice(done);
+      const client = await createOfflineActorClient(actor);
+      if (!actor.isCurrent()) return;
+      const done = await work(client);
+      if (current() && actor.isCurrent() && done) setNotice(done);
     } catch (caught) {
-      setNotice(message(caught, fallback));
-    } finally {
-      setBusy(false);
-    }
+      if (current() && actor.isCurrent()) setNotice(message(caught, fallback));
+    } finally { flight.current = false; if (current()) setBusy(false); }
   };
 
-  const save = () => act(async () => {
+  const save = () => act(async (client) => {
     if (!draft) return;
-    const next = await saveMyPrivacyStatus(draft);
+    const next = await saveMyPrivacyStatus(draft, client);
+    if (!current()) return;
     setSaved(next.settings);
     setDraft(next.settings);
     setMinor(next.minor);
@@ -157,55 +185,57 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
   const saveBirth = () => act(async () => {
     if (!birth.year || !birth.month) return;
     const outcome = await recordBirthMonth(birth.year, birth.month);
+    if (!current()) return;
     if (outcome === 'blocked') {
-      onClose();
+      dismiss();
       return;
     }
     await load();
     return 'Saved.';
   }, 'Could not save your birth month and year.');
 
-  const makeInvite = () => act(async () => {
-    setInvite(await createGuardianInvite());
+  const makeInvite = () => act(async (client) => {
+    const next = await createGuardianInvite(client);
+    if (current()) setInvite(next);
   }, 'Could not make a code.');
 
-  const shareInvite = () => {
-    if (!invite) return;
-    void Share.share({ message: `My Tapua'i guardian code is ${invite.code}. Open Tapua'i, then Profile → Privacy → Link a teen. It works for 48 hours.` });
-  };
+  const shareInvite = () => act(async () => {
+    if (!invite || !current()) return;
+    await Share.share({ message: `My Tapua'i guardian code is ${invite.code}. Open Tapua'i, then Profile → Privacy → Link a teen. It works for 48 hours.` });
+  }, 'Could not share the code.');
 
-  const answerLink = (linkId: string, accept: boolean) => act(async () => {
-    const next = await respondGuardianLink(linkId, accept);
+  const answerLink = (linkId: string, accept: boolean) => act(async (client) => {
+    const next = await respondGuardianLink(linkId, accept, client);
+    if (!current()) return;
     if (next) setMinor(next);
     await load();
     return accept ? 'Linked.' : 'Declined.';
   }, 'That did not work.');
 
   const unlink = (linkId: string, name: string) => {
+    if (!current() || flight.current) return;
     Alert.alert(`Unlink ${name}?`, 'Their consent ends with the link: a public profile goes private and payouts wait. They will see that you unlinked.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Unlink', style: 'destructive', onPress: () => void act(async () => { await endGuardianLink(linkId); await load(); return 'Unlinked.'; }, 'That did not work.') },
+      { text: 'Unlink', style: 'destructive', onPress: () => void act(async (client) => { await endGuardianLink(linkId, client); if (!current()) return; await load(); return 'Unlinked.'; }, 'That did not work.') },
     ]);
   };
 
-  const cancelRequest = (id: string) => act(async () => {
-    await cancelApprovalRequest(id);
+  const cancelRequest = (id: string) => act(async (client) => {
+    await cancelApprovalRequest(id, client);
+    if (!current()) return;
     await load();
     return 'Request cancelled.';
   }, 'That did not work.');
 
-  const showMirror = () => act(async () => {
-    setMirror(await fetchMySupervision());
+  const showMirror = () => act(async (client) => {
+    const next = await fetchMySupervision(client);
+    if (current()) setMirror(next);
   }, 'Could not load the summary.');
 
-  const unblock = async (row: BlockedRow) => {
-    try {
-      await unblockUser(row.profileId);
-      setBlocks((current) => current.filter((item) => item.profileId !== row.profileId));
-    } catch (caught) {
-      setNotice(message(caught, 'Could not unblock.'));
-    }
-  };
+  const unblock = (row: BlockedRow) => act(async (client) => {
+    await unblockUser(row.profileId, client);
+    if (current()) setBlocks(previous => previous.filter(item => item.profileId !== row.profileId));
+  }, 'Could not unblock.');
 
   const changed = JSON.stringify(draft) !== JSON.stringify(saved);
   const publicBlocked = teen && !minor?.hasPublicConsent && (saved?.accountPrivate ?? true);
@@ -218,16 +248,16 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
       ];
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={dismiss}>
       <View style={styles.root}>
         <View style={styles.sheet}>
           <MenuBackdrop accent="jade" />
-          <SheetHandle onDismiss={onClose} />
+          <SheetHandle onDismiss={dismiss} />
           <Text style={styles.kicker}>Account</Text>
           <Text style={styles.title}>Privacy</Text>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          {!draft && !error ? <ActivityIndicator color={colors.primary} /> : null}
-          {draft ? (
+          {error ? <View><Text style={styles.error} accessibilityRole="alert">{error}</Text><Pressable accessibilityRole="button" accessibilityLabel="Retry privacy" disabled={loading || busy} onPress={() => void load()} style={styles.choice}><Text style={styles.choiceLabel}>Retry</Text></Pressable></View> : null}
+          {loading ? <ActivityIndicator color={colors.primary} /> : null}
+          {draft && !loading && !error ? (
             <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
               {minor?.needsBirth ? (
                 <View style={styles.box}>
@@ -249,6 +279,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
 
               <Text style={styles.section}>Account</Text>
               <Choices
+                locked={busy}
                 label="Account"
                 value={draft.accountPrivate ? 'private' : 'public'}
                 options={[{ value: 'public', label: 'Public' }, { value: 'private', label: 'Private' }]}
@@ -270,6 +301,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
                   <Text style={styles.itemLabel}>{item.label}</Text>
                   <Text style={styles.hint}>{item.hint}</Text>
                   <Choices
+                locked={busy}
                     label={item.label}
                     value={draft.audience[item.key]}
                     options={AUDIENCES.map((value) => ({ value, label: AUDIENCE_LABEL[value] }))}
@@ -284,6 +316,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
                     {under16 ? 'Trivia fun facts you share. Under 16, fun facts go to friends at most.' : 'Trivia fun facts you share.'}
                   </Text>
                   <Choices
+                locked={busy}
                     label="Fun facts"
                     value={under16 && draft.funFacts === 'everyone' ? 'friends' : draft.funFacts}
                     options={AUDIENCES.map((value) => ({ value, label: AUDIENCE_LABEL[value] }))}
@@ -295,6 +328,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
 
               <Text style={styles.section}>Finding you</Text>
               <Choices
+                locked={busy}
                 label="Search"
                 value={draft.hideFromSearch ? 'hidden' : 'shown'}
                 options={[{ value: 'shown', label: 'Show me in search' }, { value: 'hidden', label: 'Hide me from search' }]}
@@ -302,6 +336,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
               />
               <Text style={styles.hint}>Hidden people are still reachable from a clip they are tagged in.</Text>
               <Choices
+                locked={busy}
                 label="Friend requests"
                 value={draft.friendRequestsFrom}
                 options={requestOptions}
@@ -313,6 +348,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
 
               <Text style={styles.section}>Tags</Text>
               <Choices
+                locked={busy}
                 label="Tag review"
                 value={draft.tagReview}
                 options={[{ value: 'review_all', label: 'Review every tag' }, { value: 'auto_friends', label: 'Auto-approve friends' }]}
@@ -365,7 +401,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
                       <View style={styles.item}>
                         <Text style={styles.code} accessibilityLabel={`Guardian code ${invite.code.split('').join(' ')}`}>{invite.code}</Text>
                         <Text style={styles.hint}>Share this only with your parent or legal guardian. It works once, for 48 hours.</Text>
-                        <AnimatedButton accessibilityLabel="Share the code" haptic="selection" onPress={shareInvite} contentStyle={styles.small}>
+                        <AnimatedButton accessibilityLabel="Share the code" disabled={busy} haptic="selection" onPress={shareInvite} contentStyle={styles.small}>
                           <Text style={styles.smallLabel}>Share</Text>
                         </AnimatedButton>
                       </View>
@@ -384,7 +420,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
               ) : null}
 
               {band === 'adult' ? (
-                <Pressable accessibilityRole="button" accessibilityLabel="Parent or guardian: link a teen" haptic="selection" onPress={() => setGuardianOpen(true)} style={styles.choice}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Parent or guardian: link a teen" disabled={busy} haptic="selection" onPress={() => setGuardianOpen(true)} style={styles.choice}>
                   <Text style={styles.choiceLabel}>Parent or guardian? Link a teen</Text>
                 </Pressable>
               ) : null}
@@ -394,7 +430,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
               {blocks.map((row) => (
                 <View key={row.profileId} style={styles.blockRow}>
                   <Text style={styles.itemLabel}>{row.name}</Text>
-                  <Pressable accessibilityRole="button" accessibilityLabel={`Unblock ${row.name}`} haptic="selection" onPress={() => void unblock(row)} style={styles.choice}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`Unblock ${row.name}`} disabled={busy} haptic="selection" onPress={() => void unblock(row)} style={styles.choice}>
                     <Text style={styles.choiceLabel}>Unblock</Text>
                   </Pressable>
                 </View>
@@ -404,7 +440,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
           {notice ? <Text style={styles.notice} accessibilityRole="alert">{notice}</Text> : null}
           <AnimatedButton
             accessibilityLabel="Save privacy"
-            disabled={!draft || !changed || busy}
+            disabled={!draft || !changed || busy || loading || Boolean(error)}
             haptic="medium"
             onPress={() => void save()}
             contentStyle={[styles.save, (!draft || !changed || busy) && styles.saveOff]}
@@ -413,7 +449,7 @@ export function PrivacySettingsSheet({ visible, onClose }: { visible: boolean; o
           </AnimatedButton>
         </View>
       </View>
-      <Modal visible={guardianOpen} animationType="fade" transparent onRequestClose={() => setGuardianOpen(false)}>
+      <Modal visible={visible && guardianOpen} animationType="fade" transparent onRequestClose={() => setGuardianOpen(false)}>
         <View style={styles.root}>
           <View style={styles.sheet}>
             <SheetHandle onDismiss={() => setGuardianOpen(false)} />

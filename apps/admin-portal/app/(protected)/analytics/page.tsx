@@ -1,3 +1,4 @@
+/** UX-15 enlarges existing dashboard jump targets without changing request reads, measure catalogs, labels or anchor destinations. */
 /**
  * Dashboard jump links follow Home's underline navigation and open report spacing.
  * Analytics workspace (`/analytics`, owned by ANALYST). A dashboard switcher (plain anchor links,
@@ -100,7 +101,7 @@ export default async function AnalyticsPage() {
             const tile = board.tiles[0];
             return (
               <li key={board.id} className="flex min-w-0 flex-col gap-1.5">
-                <a href={`#${board.id}`} className="inline-flex min-h-6 items-center gap-1 self-start rounded-md px-1 text-xs font-extrabold tracking-wide text-[var(--jade)] uppercase hover:underline">
+                <a href={`#${board.id}`} className="inline-flex min-h-11 min-w-11 items-center gap-1 self-start rounded-md px-1 text-xs font-extrabold tracking-wide text-[var(--jade)] uppercase hover:underline">
                   {board.title}
                   <span aria-hidden="true">→</span>
                   <span className="sr-only"> dashboard</span>
@@ -150,7 +151,7 @@ export default async function AnalyticsPage() {
           <h2 id="catalog-heading" className="text-lg font-extrabold tracking-tight">
             Measure catalog
           </h2>
-          <a href="#dashboards" className="inline-flex min-h-6 items-center rounded-md px-1 text-xs font-extrabold text-[var(--jade)] hover:underline">
+          <a href="#dashboards" className="inline-flex min-h-11 min-w-11 items-center rounded-md px-1 text-xs font-extrabold text-[var(--jade)] hover:underline">
             All dashboards<span className="sr-only">, back to the switcher</span>
           </a>
         </div>

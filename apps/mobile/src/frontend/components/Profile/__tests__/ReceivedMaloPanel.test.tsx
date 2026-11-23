@@ -1,5 +1,5 @@
 /** Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { ReceivedMaloPanel } from '@/components/Profile/ReceivedMaloPanel';
 import { THANKS_MESSAGES } from '@/lib/donationThanks';
@@ -7,6 +7,11 @@ import { THANKS_MESSAGES } from '@/lib/donationThanks';
 const mockThank = jest.fn(async () => ({ ok: true as const }));
 const mockToast = jest.fn();
 const mockRefresh = jest.fn(async () => undefined);
+let mockUser = 'A';
+let mockGuard = () => true;
+let mockThanksError: string | null = null;
+const mockThanksRefresh = jest.fn();
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: mockUser }, isSessionCurrent: mockGuard }) }));
 let mockLoadError: string | null = null;
 type MockRow = { id: string; fan_name: string; amount_cents: number; family_cents?: number | null; origin: string; entry: string; source_label: string | null };
 let mockRows: MockRow[] = [
@@ -29,11 +34,8 @@ jest.mock('@/hooks/useReceivedMalo', () => ({
 
 jest.mock('@/hooks/useDonationThanks', () => ({
   useDonationsToThank: () => ({
-    rows: [
-      { tipId: 't1', amountCents: 500, createdAt: '', fanName: 'Sina', rallyTitle: 'New cleats', thankedKey: null },
-      { tipId: 't2', amountCents: 1000, createdAt: '', fanName: 'Tavita', rallyTitle: null, thankedKey: 'family' },
-    ],
-    thank: mockThank,
+    rows: mockRows.map(row => ({ tipId: row.id, amountCents: row.amount_cents, createdAt: '', fanName: row.fan_name, rallyTitle: null, thankedKey: row.id === 't2' ? 'family' : null })),
+    thank: mockThank, loading: false, error: mockThanksError, refresh: mockThanksRefresh,
   }),
 }));
 
@@ -46,7 +48,7 @@ jest.mock('@/components/UI/HapticPressable', () => {
 
 describe('ReceivedMaloPanel say thanks', () => {
   beforeEach(() => {
-    mockLoadError = null;
+    mockLoadError = null; mockThanksError = null; mockUser = 'A'; mockGuard = () => true; mockThank.mockReset(); mockThank.mockResolvedValue({ ok: true }); mockToast.mockClear();
     mockRows = [
       { id: 't1', fan_name: 'Sina', amount_cents: 500, origin: 'rally', entry: 'in_app', source_label: 'New cleats' },
       { id: 't2', fan_name: 'Tavita', amount_cents: 1000, origin: 'profile', entry: 'in_app', source_label: null },
@@ -74,14 +76,35 @@ describe('ReceivedMaloPanel say thanks', () => {
     expect(screen.getByLabelText('Pick a thank-you message').children).toHaveLength(THANKS_MESSAGES.length + 1);
   });
 
-  it('shows $0 and no connection error when the ledger is empty or the call failed', async () => {
+  it('shows load failure with Retry instead of a false zero total/empty ledger', async () => {
     mockRows = [];
-    mockLoadError = 'Could not find the function public.get_received_malo';
+    mockLoadError = 'Could not load gifts. Check your connection and retry.';
     await render(<ReceivedMaloPanel playerId="p1" />);
-    expect(screen.getByText('$0.00 given')).toBeTruthy();
-    expect(screen.getByText(/No gifts yet/)).toBeTruthy();
-    expect(screen.queryByText(/Could not load gifts/)).toBeNull();
-    expect(screen.queryByText('Retry')).toBeNull();
+    expect(screen.getByText(mockLoadError)).toBeTruthy();
+    expect(screen.queryByText('$0.00 given')).toBeNull();
+    expect(screen.queryByText(/No gifts yet/)).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Retry gifts' }));
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
+  it('shows thanks read failure and a separate Retry action', async () => {
+    mockThanksError = 'Could not load thank-you choices.';
+    await render(<ReceivedMaloPanel playerId="p1" />);
+    expect(screen.getByText(mockThanksError)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Retry thank-yous' }));
+    expect(mockThanksRefresh).toHaveBeenCalledTimes(1);
+  });
+  it('refuses an old thank completion from closing or celebrating a new athlete/account picker', async () => {
+    let release!: (value: { ok: true }) => void;
+    mockThank.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const view = await render(<ReceivedMaloPanel playerId="p1" />);
+    await fireEvent.press(screen.getByLabelText('Say thanks to Sina'));
+    await fireEvent.press(screen.getByText('Thank you — this helps with my gear.'));
+    mockUser = 'B'; mockGuard = () => true; mockRows = [{ id: 't3', fan_name: 'Sina', amount_cents: 800, origin: 'profile', entry: 'in_app', source_label: null }];
+    await view.rerender(<ReceivedMaloPanel playerId="p2" />);
+    await fireEvent.press(screen.getByLabelText('Say thanks to Sina'));
+    await act(async () => release({ ok: true }));
+    expect(screen.getByLabelText('Pick a thank-you message')).toBeTruthy();
+    expect(mockToast).not.toHaveBeenCalled();
   });
 });
 

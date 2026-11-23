@@ -1,4 +1,5 @@
 /**
+ * Only a genuine missing catalog uses defaults; denied/network reads never become purchasable seed rows.
  * Admin racks data layer: Drip shop products (`shop_products`) and Locker Room wishlist gear goals
  * (`wishlist_items`), plus the fan Drip rack read (split out of lib/adminCatalog.ts for R4-03; behaviour unchanged).
  * `adminCatalog.ts` re-exports what desks and hooks import, so `@/lib/adminCatalog` (and its test mocks) stays the path.
@@ -92,10 +93,8 @@ export async function fetchLiveDripItems(): Promise<DripItem[]> {
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
   if (error) {
-    const missing =
-      error.code === '42P01' ||
-      error.code === 'PGRST205' ||
-      /shop_products|could not find the table/i.test(error.message);
+    // A named table in a denial/network message is not evidence of a missing catalog.
+    const missing = error.code === '42P01' || error.code === 'PGRST205';
     if (missing) return DRIP_ITEMS;
     throw new Error('We could not load the Drip rack. Check your connection and try again.');
   }

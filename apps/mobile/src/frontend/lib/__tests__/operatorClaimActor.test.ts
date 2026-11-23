@@ -9,8 +9,8 @@ const oldFetch=globalThis.fetch; const oldUrl=process.env.EXPO_PUBLIC_SUPABASE_U
 let live:boolean;let actor:OfflineActor;let http:jest.Mock<ReturnType<typeof fetch>,Parameters<typeof fetch>>;
 const session=(token='synthetic-A')=>({data:{session:{user:{id:A},access_token:token}},error:null});
 const response=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
-beforeEach(async()=>{await AsyncStorage.clear();live=true;actor={userId:A,isCurrent:()=>live};process.env.EXPO_PUBLIC_SUPABASE_URL='https://operator-test.invalid';process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY='public-test-key';jest.spyOn(supabase.auth,'getSession').mockResolvedValue(session() as never);http=jest.fn<ReturnType<typeof fetch>,Parameters<typeof fetch>>(async()=>response({...game,id:'game-A',home_score:1}));globalThis.fetch=http as typeof fetch;});
-afterEach(()=>{jest.restoreAllMocks();globalThis.fetch=oldFetch;if(oldUrl===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_URL;else process.env.EXPO_PUBLIC_SUPABASE_URL=oldUrl;if(oldKey===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY=oldKey});
+beforeEach(async()=>{await AsyncStorage.clear();live=true;actor={userId:A,isCurrent:()=>live};process.env.EXPO_PUBLIC_SUPABASE_URL='https://operator-test.invalid';process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY='public-test-key';jest.spyOn(supabase.auth,'getSession').mockResolvedValue(session() as never);http=jest.fn<ReturnType<typeof fetch>,Parameters<typeof fetch>>(async()=>response({...game,id:'game-A',home_score:1}));globalThis.fetch = http as unknown as typeof fetch; });
+afterEach(()=>{jest.restoreAllMocks();globalThis.fetch = oldFetch as unknown as typeof fetch; if(oldUrl===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_URL;else process.env.EXPO_PUBLIC_SUPABASE_URL=oldUrl;if(oldKey===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY=oldKey});
 it.each([
  ['claim',(c:OfflineActorClient)=>claimOperatorGame(game.id,'profile-A',c,actor)],
  ['score',(c:OfflineActorClient)=>updateGameScore({game,homeDelta:1},c)],

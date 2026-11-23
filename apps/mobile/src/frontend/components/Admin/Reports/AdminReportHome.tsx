@@ -1,4 +1,4 @@
-/** Home follows the owner-selected portal hero and compact comparison layout. Every count and
+/** Home follows the current brand type and proportional portal hero/compact comparison layout. Every count and
  * change comes from the shared dashboard input; a zero prior week has no invented percent.
  * Desk status cards from the Home route (Trivia, 2026-10-15) sit after the weekly summary. */
 import { Platform, Text, useWindowDimensions, View } from 'react-native';
@@ -26,15 +26,15 @@ export function AdminReportHomeHero({ data }: { data: AdminReportData }) {
   const wide = width >= 1280 && fontScale <= 1.3; const paired = width >= 1024 && fontScale <= 1.3;
   return <View style={[s.grid, { gap: 24, alignItems: 'center', paddingVertical: 10 }]}>
     <View style={{ minWidth: 0, flexBasis: wide ? '40%' : paired ? '47%' : '100%', gap: 10 }}>
-      <Text accessibilityRole="header" aria-level={1} style={[s.h1, { fontSize: width < 640 ? 30 : 36 }]}>{PAGE_TITLES.home}</Text>
+      <Text accessibilityRole="header" aria-level={1} style={[s.h1, width >= 640 && { fontSize: 32, lineHeight: 38 }]}>{PAGE_TITLES.home}</Text>
       {/* Font fitting is native only; on web the full amount must wrap rather than ellipsize. */}
-      <Text style={[s.heroValue, { fontSize: width < 640 ? 48 : 60, minWidth: 0, maxWidth: '100%', flexShrink: 1 }]} numberOfLines={Platform.OS === 'web' ? undefined : 1} adjustsFontSizeToFit={Platform.OS !== 'web'} minimumFontScale={0.6} accessibilityLabel={`Gifts this week: ${donation.missing ? 'Not in this read' : donation.value}`}>{donation.value}</Text>
+      <Text style={[s.heroValue, { fontSize: width < 640 ? 40 : 56, lineHeight: width < 640 ? 48 : 64, minWidth: 0, maxWidth: '100%', flexShrink: 1 }]} numberOfLines={Platform.OS === 'web' ? undefined : 1} adjustsFontSizeToFit={Platform.OS !== 'web'} minimumFontScale={0.6} accessibilityLabel={`Gifts this week: ${donation.missing ? 'Not in this read' : donation.value}`}>{donation.value}</Text>
       <View style={[s.row, { gap: 6 }]}><Text style={s.strong}>{isMeasured(input.donationCount7d) ? `${formatCount(input.donationCount7d)} ${input.donationCount7d === 1 ? 'gift' : 'gifts'} recorded` : 'Gift count not in this read'}</Text>
         <Text style={[s.small, { color: c.jade }]}>{weeklyChange(donation)}</Text></View>
     </View>
     <View style={[s.grid, { flexBasis: wide ? '38%' : paired ? '47%' : '100%', minWidth: 0, gap: 16 }]}>
       {cards.filter(card => ['avgDonation', 'clips', 'opens'].includes(card.id)).map(card => <View key={card.id} style={{ flexGrow: 1, flexBasis: '28%', minWidth: 144, borderLeftWidth: 1, borderLeftColor: c.border, paddingLeft: 16, gap: 8 }}>
-        <Text style={s.small}>{card.label}</Text><Text style={[s.metricValue, { fontSize: 24, color: card.id === 'clips' ? c.cyan : c.ink, minWidth: 0, maxWidth: '100%', flexShrink: 1 }]} numberOfLines={Platform.OS === 'web' ? undefined : 1} adjustsFontSizeToFit={Platform.OS !== 'web'} minimumFontScale={0.6} accessibilityLabel={`${card.label}: ${card.missing ? 'Not in this read' : card.value}`}>{card.value}</Text>
+        <Text style={s.small}>{card.label}</Text><Text style={[s.metricValue, { color: card.id === 'clips' ? c.cyan : c.ink, minWidth: 0, maxWidth: '100%', flexShrink: 1 }]} numberOfLines={Platform.OS === 'web' ? undefined : 1} adjustsFontSizeToFit={Platform.OS !== 'web'} minimumFontScale={0.6} accessibilityLabel={`${card.label}: ${card.missing ? 'Not in this read' : card.value}`}>{card.value}</Text>
         <Text style={s.small}>{card.id === 'clips' ? weeklyChange(card) : card.hint}</Text>
       </View>)}
     </View>

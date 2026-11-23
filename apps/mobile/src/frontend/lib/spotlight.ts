@@ -2,7 +2,8 @@
  * Spotlight (Player of the Week / Month / Year): UTC week, month and year boundaries that match Postgres
  * `date_trunc`, parsing and fetching awards and the board, "seen" markers for the launch modal, and the labels
  * shown on Spotlight cards.
- * @sideEffects Reads Spotlight awards; AsyncStorage for the seen marker.
+ * @sideEffects Reads Spotlight awards; AsyncStorage for the seen marker. Failed configured board reads
+ * are reported for retry rather than presenting the seeded preview as a published award.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -271,7 +272,7 @@ export function withDemoVideo(award: SpotlightAward): SpotlightAward {
 /**
  * @purpose Player of the Week/Month/Year board for the Spotlight tab — includes dismissed launch awards.
  * @param roster Live `players` for Aura / Mālo hydration.
- * @returns Newest awards first; always at least the demo week if the table is empty.
+ * @returns Newest awards first; retains the seeded preview after a successful empty read.
  * @sideEffects `get_active_spotlight_award`; `spotlight_awards` SELECT; `reels` video URLs.
  */
 export async function fetchSpotlightBoard(roster: Player[] = []): Promise<SpotlightAward[]> {
@@ -283,7 +284,8 @@ export async function fetchSpotlightBoard(roster: Player[] = []): Promise<Spotli
       .select('*')
       .order('start_date', { ascending: false })
       .limit(12);
-    if (!error && Array.isArray(data)) {
+    if (error) throw error;
+    if (Array.isArray(data)) {
       rows = data.map(parseSpotlightAward).filter((row): row is SpotlightAward => Boolean(row));
     }
   }

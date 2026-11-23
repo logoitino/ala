@@ -41,12 +41,11 @@ export async function readAdminMfaStep(
   supabase: SupabaseClient,
   user: Pick<User, 'factors'>,
   validated: 'fresh' | 'local',
+  capturedToken?: string | null,
 ): Promise<AdminMfaStep> {
   if (!isAdminMfaRequired()) return 'off';
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const token = session?.access_token ?? null;
+  // The server gate can pin a token already validated for its exact user, instead of borrowing a later session.
+  const token = capturedToken !== undefined ? capturedToken : (await supabase.auth.getSession()).data.session?.access_token ?? null;
   if (!token) return adminMfaStep({ required: true, currentLevel: null, factors: user.factors });
   if (validated === 'local') {
     return adminMfaStep({ required: true, currentLevel: readAalClaim(token), factors: user.factors });

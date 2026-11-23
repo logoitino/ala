@@ -25,10 +25,10 @@ beforeEach(async () => {
     if (path.endsWith('/challenge')) return reply({ id: 'challenge-A', expires_at: 4102444800 });
     if (path.endsWith('/verify')) return reply({ access_token: jwt(A, 'aal2'), refresh_token: 'synthetic-refresh-A', token_type: 'bearer', expires_in: 3600, user: user() });
     return reply({ id: 'factor-A', type: 'totp', totp: { qr_code: '<svg/>', secret: 'synthetic-setup-A', uri: 'otpauth://test' } });
-  }); globalThis.fetch = http as typeof fetch;
+  }); globalThis.fetch = http as unknown as typeof fetch;
   await supabase.auth.setSession({ access_token: tokenA, refresh_token: 'synthetic-refresh-A' }); http.mockClear();
 });
-afterEach(() => { jest.restoreAllMocks(); globalThis.fetch = beforeFetch; if (beforeUrl === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_URL; else process.env.EXPO_PUBLIC_SUPABASE_URL = beforeUrl; if (beforeKey === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY; else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = beforeKey; });
+afterEach(() => { jest.restoreAllMocks(); globalThis.fetch = beforeFetch as unknown as typeof fetch; if (beforeUrl === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_URL; else process.env.EXPO_PUBLIC_SUPABASE_URL = beforeUrl; if (beforeKey === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY; else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = beforeKey; });
 it('keeps enrollment on captured A when mutable global Auth becomes B', async () => {
   http.mockImplementationOnce(async () => { await supabase.auth.setSession({ access_token: tokenB, refresh_token: 'synthetic-refresh-B' }); return reply(user()); });
   await startAdminTotpSetup(actor);

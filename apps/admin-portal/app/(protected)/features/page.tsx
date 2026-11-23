@@ -2,6 +2,7 @@
  * Features desk (`/features`, under Product). Read-only list of the published menu switches from
  * `app_runtime_config`; toggling and publishing happen only in Expo /admin. Browser tab title
  * "Features · Tapua'i Admin".
+ * Failed reads name the unavailable source; published changes appear on a fresh request.
  * @sideEffects `app_runtime_config` SELECT via `fetchPortalRuntime`.
  */
 import type { Metadata } from 'next';
@@ -32,11 +33,11 @@ export default async function FeaturesPage() {
           <code className="rounded bg-[var(--jade-soft)] px-1.5 py-0.5 text-[var(--jade)]">/admin/features</code> or{' '}
           <code className="rounded bg-[var(--jade-soft)] px-1.5 py-0.5 text-[var(--jade)]">/admin/look</code> — same{' '}
           <code className="rounded bg-[var(--jade-soft)] px-1.5 py-0.5 text-[var(--jade)]">app_runtime_config</code>{' '}
-          this page reads, so changes show up here immediately after Publish.
+          this page reads. After Publish, use Refresh view to read the latest published switches.
         </p>
         {!runtime.configured ? (
-          <p className="rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)]">
-            Supabase env missing.
+          <p role="alert" className="rounded-xl border border-[var(--gold-soft)] bg-[var(--gold-soft)] px-4 py-3 text-sm font-semibold text-[var(--gold)]">
+            {runtime.error ?? 'Published switches could not be read.'} Use Refresh view to retry.
           </p>
         ) : (
           <>

@@ -34,9 +34,13 @@ export async function middleware(request: NextRequest) {
   });
   const pathname = request.nextUrl.pathname;
 
-  // Missing/invalid public config: let pages render their existing "Connect Supabase" setup notice instead of
-  // trapping the operator in a redirect loop before there is anything to sign in to.
-  if (!backend.connection) return response;
+  // Configuration failure cannot authorize a private desk. The public login keeps its setup notice.
+  if (!backend.connection) {
+    if (isPublicPath(pathname)) return response;
+    const redirectUrl = new URL('/login', request.url);
+    redirectUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(redirectUrl);
+  }
 
   const supabase = createServerClient(backend.connection.url, backend.connection.publicKey, {
     cookies: {

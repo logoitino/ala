@@ -1,9 +1,10 @@
+/** UX-15 card spacing preserves Health tab IDs, roving keyboard focus, hidden panels and every existing measure. */
 /** UX-13 OperationsBoard.tsx preserves existing actions with readable spacing/type. */
 'use client';
 
 /**
- * Tabbed Health board (Where, Buttons, Errors, Menus). The open sections and underline tabs
- * match Home's shared report format while preserving the existing keyboard tab behavior. The server page already loaded the
+ * Tabbed Health board (Where, Buttons, Errors, Menus). Daylight card sections and existing
+ * underline tabs preserve the keyboard tab behavior. The server page already loaded the
  * numbers; switching tabs does not fetch again. Follows the WAI-ARIA tabs pattern: a tablist
  * with roving tabindex, Left/Right/Home/End keys (automatic activation), and one tabpanel per
  * tab wired with aria-controls / aria-labelledby. Values arrive as plain data with a unit name;
@@ -224,7 +225,7 @@ function LensPanel({ lens }: { lens: OperationsLens }) {
         </div>
       ) : null}
 
-      <section aria-label={`${lens.label}: every row`} className="portal-panel min-w-0 border-t border-[var(--border)] pt-5">
+      <section aria-label={`${lens.label}: every row`} className="portal-panel min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-base font-extrabold tracking-tight">Every row</h2>
           <p className="text-xs text-[var(--text-muted)]">{lens.details.length.toLocaleString('en-US')} rows</p>

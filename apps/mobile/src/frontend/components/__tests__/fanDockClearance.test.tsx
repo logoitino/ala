@@ -1,4 +1,4 @@
-/** Measured dock clearance protects normal fan content and leaves full-screen Highlights media intact. */
+/** Compact initial dock clearance yields to measured enlarged content; full-screen Highlights stays intact. */
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import { FanNavigationProvider, useFanDockHeight, useMeasureFanDock } from '@/context/FanNavigationContext';
@@ -29,8 +29,8 @@ function shell() {
 }
 it('reserves safe initial clearance, then uses actual enlarged dock height without truncating fan content', async () => {
  await render(<FanNavigationProvider><Probe /></FanNavigationProvider>);
- expect(screen.getByText('clearance:90')).toBeTruthy();
- expect(StyleSheet.flatten(shell().props.style).paddingBottom).toBe(90);
+ expect(screen.getByText('clearance:78')).toBeTruthy();
+ expect(StyleSheet.flatten(shell().props.style).paddingBottom).toBe(78);
  await fireEvent(screen.getByTestId('dock-measure'),'layout',{nativeEvent:{layout:{height:118}}});
  expect(screen.getByText('clearance:118')).toBeTruthy();
  expect(StyleSheet.flatten(shell().props.style).paddingBottom).toBe(118);

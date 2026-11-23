@@ -3,11 +3,13 @@
  * Booster logos display through `mediaUri` in `Local/SponsorRailCard` (legacy full URL or `sb:` reference, SCALE-02).
  * Matching helpers live in `data/localHub.ts`; the rail card and loading skeleton in `components/Local/` (R4-03).
  * Reached from the Home pill, not the tab bar. The `tabs.local` runtime flag can pause it (`RuntimePaused`).
+ * UX-17 puts school/team discovery in scrolling content so the three-tab header stays compact.
  * UX-07 keeps school/actor labels readable and directs fans through existing filters without desk instructions.
  */
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import {
   ActivityIndicator,
@@ -58,6 +60,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { localGameHref, userProfileHref } from '@/lib/navigation';
 import { DEFAULT_APP_RUNTIME } from '@/lib/runtime';
 import { FOCAL } from '@/theme/motion';
+import { figtree, TYPE } from '@/theme/fonts';
 
 type LocalHubId = 'matches' | 'polls' | 'boosters';
 
@@ -244,7 +247,7 @@ export default function LocalTab() {
 
   // Local left the fan bar for a Home pill, so this guard is now what `tabs.local` enforces.
   if (!live.tabs.local) {
-    return <TabScreen><RuntimePaused title="Local is paused" lede="Turn Local back on in Admin → Features, then Publish to app." /></TabScreen>;
+    return <TabScreen><RuntimePaused title="Local is paused" lede="Local is unavailable right now. Please check back later." /></TabScreen>;
   }
 
   return (
@@ -290,6 +293,17 @@ export default function LocalTab() {
 
         <View style={styles.hubFrame}>
           <ScrollFxScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} onScroll={onScroll}>
+            <AnimatedButton
+              accessibilityRole="link"
+              accessibilityLabel="Browse schools and teams"
+              haptic="selection"
+              contentStyle={styles.directoryEntry}
+              onPress={() => router.push('/local/directory')}
+            >
+              <Ionicons name="school-outline" size={18} color={FOCAL.jadeInk} accessible={false} />
+              <Text style={styles.directoryEntryLabel}>Schools and teams</Text>
+              <Ionicons name="chevron-forward" size={16} color={FOCAL.jadeInk} accessible={false} />
+            </AnimatedButton>
             {hubs.length === 0 ? (
               <EmptyState
             compact
@@ -496,6 +510,19 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     gap: 6,
   },
+  directoryEntry: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  directoryEntryLabel: { flex: 1, minWidth: 0, color: FOCAL.jadeInk, ...TYPE.button, ...figtree('700') },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',

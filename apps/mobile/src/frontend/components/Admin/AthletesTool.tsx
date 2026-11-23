@@ -1,4 +1,5 @@
-/** Vault refusal stays visible and account-bound. Existing athlete support screen/helper: visible money copy names personal gifts; identifiers and financial behavior stay unchanged. */
+/** UX-17 keeps the roster's team label independent of its school on edit/save; missing teams stay explicit.
+ * Vault refusal stays visible and account-bound. Existing money, guardian and school-confirmation contracts remain. */
 import { offlineQueue } from '@/services/OfflineQueue';
 import { useCallback, useMemo, useState } from 'react';
 import { AthleteRecordsPanel } from '@/components/Admin/AthleteRecordsPanel';
@@ -36,6 +37,7 @@ const empty = {
   jersey_number: '',
   position: '',
   school_name: '',
+  team: '',
   height: '',
   weight: '',
   forty_yard: '',
@@ -96,7 +98,7 @@ export function AthletesTool() {
     const needle = query.trim().toLowerCase();
     const sorted = [...players].sort((a, b) => a.name.localeCompare(b.name));
     if (!needle) return sorted;
-    return sorted.filter((row) => `${row.name} ${row.school_name} ${row.position}`.toLowerCase().includes(needle));
+    return sorted.filter((row) => `${row.name} ${row.school_name} ${row.team ?? ''} ${row.position}`.toLowerCase().includes(needle));
   }, [players, query]);
 
   const save = async () => {
@@ -110,7 +112,7 @@ export function AthletesTool() {
         position: form.position,
         height: form.height,
         school_name: form.school_name,
-        team: form.school_name,
+        team: form.team,
         weight: form.weight,
         forty_yard: form.forty_yard,
         vertical_jump: form.vertical_jump,
@@ -132,6 +134,7 @@ export function AthletesTool() {
       jersey_number: String(player.jersey_number ?? ''),
       position: player.position ?? '',
       school_name: player.school_name ?? '',
+      team: player.team ?? '',
       height: player.height ?? '',
       weight: player.weight ?? '',
       forty_yard: player.forty_yard ?? '',
@@ -235,6 +238,8 @@ export function AthletesTool() {
             onPick={(option) => setForm((c) => ({ ...c, school_name: option.title }))}
           />
         </AdminFieldRow>
+        <AdminField label="Team" value={form.team} onChangeText={(team) => setForm((current) => ({ ...current, team }))} placeholder="Varsity basketball (optional)" />
+        <AdminNotice text="Use the catalog’s school name. Team is separate; school confirmation still controls verification." />
         <AdminFieldRow>
           <AdminField label="Height" value={form.height} onChangeText={(height) => setForm((c) => ({ ...c, height }))} placeholder={`6'2"`} />
           <AdminField label="Weight" value={form.weight} onChangeText={(weight) => setForm((c) => ({ ...c, weight }))} placeholder="192 lb" />
@@ -289,7 +294,7 @@ export function AthletesTool() {
           <AdminRow
             key={player.id}
             title={player.name}
-            meta={`#${player.jersey_number} · ${player.position || 'Athlete'} · ${player.school_name || 'No school'} · Vault ${player.vault_locked === false ? 'open' : 'locked'} · Guardian ${guardianName(player.guardian_id) ?? 'none linked'}`}
+            meta={`#${player.jersey_number} · ${player.position || 'Athlete'} · ${player.school_name || 'No school'} · Team ${player.team?.trim() || 'Not recorded'} · Vault ${player.vault_locked === false ? 'open' : 'locked'} · Guardian ${guardianName(player.guardian_id) ?? 'none linked'}`}
           >
             <AdminBtn label="Edit" onPress={() => load(player)} />
             <AdminBtn

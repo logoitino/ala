@@ -1,4 +1,5 @@
 /**
+ * UX-14: optional captured clients preserve initiating-account transport without changing existing payloads.
  * Minor accounts (MINOR-01): birth month and year, guardian links and the signed consent, supervision and under-16
  * approvals, and the admin desk's minor tools. Every rule lives in the database (`20261014110000_minor_accounts.sql`);
  * this file calls those functions and names things for the screens. Design: docs/engineering/design/MINOR_ACCOUNTS_DESIGN.md.
@@ -155,14 +156,14 @@ export function parseMinorStatus(raw: unknown): MinorStatus | null {
 }
 
 /** @purpose Your settings plus your minor status (null on databases without MINOR-01). */
-export async function fetchMyPrivacyStatus(): Promise<{ settings: PrivacySettings; minor: MinorStatus | null }> {
-  const raw = obj(await callRpc('get_my_privacy'));
+export async function fetchMyPrivacyStatus(client = supabase): Promise<{ settings: PrivacySettings; minor: MinorStatus | null }> {
+  const raw = obj(await callRpc('get_my_privacy', {}, client));
   return { settings: parsePrivacy(raw), minor: parseMinorStatus(raw.minor) };
 }
 
 /** @purpose Save your settings; `heldForApproval` lists changes sent to your guardian instead (under 16). */
-export async function saveMyPrivacyStatus(next: Partial<PrivacySettings>): Promise<{ settings: PrivacySettings; minor: MinorStatus | null; heldForApproval: ApprovalKey[] }> {
-  const raw = obj(await callRpc('set_my_privacy', { settings: privacyPayload(next) }));
+export async function saveMyPrivacyStatus(next: Partial<PrivacySettings>, client = supabase): Promise<{ settings: PrivacySettings; minor: MinorStatus | null; heldForApproval: ApprovalKey[] }> {
+  const raw = obj(await callRpc('set_my_privacy', { settings: privacyPayload(next) }, client));
   const held = Array.isArray(raw.held_for_approval) ? raw.held_for_approval.flatMap((k) => (asApproval(k) ? [asApproval(k) as ApprovalKey] : [])) : [];
   return { settings: parsePrivacy(raw), minor: parseMinorStatus(raw.minor), heldForApproval: held };
 }
@@ -170,24 +171,24 @@ export async function saveMyPrivacyStatus(next: Partial<PrivacySettings>): Promi
 // Teen side --------------------------------------------------------------------------------------------------------
 
 /** @purpose A one-time 8-character code for a parent or guardian (48 hours; only the newest works). */
-export async function createGuardianInvite(): Promise<{ code: string; expiresAt: string }> {
-  const raw = obj(await callRpc('create_guardian_invite'));
+export async function createGuardianInvite(client = supabase): Promise<{ code: string; expiresAt: string }> {
+  const raw = obj(await callRpc('create_guardian_invite', {}, client));
   return { code: str(raw.code), expiresAt: str(raw.expires_at) };
 }
 
 /** @purpose Answer "Is {name} your parent or guardian?". */
-export async function respondGuardianLink(linkId: string, accept: boolean): Promise<MinorStatus | null> {
-  return parseMinorStatus(await callRpc('respond_guardian_link', { link_id: linkId, accept }));
+export async function respondGuardianLink(linkId: string, accept: boolean, client = supabase): Promise<MinorStatus | null> {
+  return parseMinorStatus(await callRpc('respond_guardian_link', { link_id: linkId, accept }, client));
 }
 
 /** @purpose End a guardian link (either side, any time). */
-export async function endGuardianLink(linkId: string): Promise<void> {
-  await callRpc('end_guardian_link', { link_id: linkId });
+export async function endGuardianLink(linkId: string, client = supabase): Promise<void> {
+  await callRpc('end_guardian_link', { link_id: linkId }, client);
 }
 
 /** @purpose Cancel a change you asked your guardian to approve. */
-export async function cancelApprovalRequest(requestId: string): Promise<void> {
-  await callRpc('cancel_my_approval_request', { request_id: requestId });
+export async function cancelApprovalRequest(requestId: string, client = supabase): Promise<void> {
+  await callRpc('cancel_my_approval_request', { request_id: requestId }, client);
 }
 
 export type SupervisionEvent = { kind: string; detail: Raw; at: string; byTeen: boolean };
@@ -234,8 +235,8 @@ export function parseSupervision(raw: unknown): Supervision {
 }
 
 /** @purpose What your guardian sees about you (the teen sees exactly this). */
-export async function fetchMySupervision(): Promise<Supervision> {
-  return parseSupervision(await callRpc('get_my_supervision'));
+export async function fetchMySupervision(client = supabase): Promise<Supervision> {
+  return parseSupervision(await callRpc('get_my_supervision', {}, client));
 }
 
 const KEY_LABEL: Record<string, string> = {
@@ -297,27 +298,27 @@ const consentArgs = (consent: ConsentInput) => ({
 export type InvitePreview = { status: 'ok'; firstName: string; username: string | null; canAllowDonations: boolean } | { status: 'bad_code' };
 
 /** @purpose Look up a teen's code (adults only; 10 wrong tries a day). */
-export async function previewGuardianInvite(code: string): Promise<InvitePreview> {
-  const raw = obj(await callRpc('preview_guardian_invite', { invite_code: code.trim().toUpperCase() }));
+export async function previewGuardianInvite(code: string, client = supabase): Promise<InvitePreview> {
+  const raw = obj(await callRpc('preview_guardian_invite', { invite_code: code.trim().toUpperCase() }, client));
   if (raw.status !== 'ok') return { status: 'bad_code' };
   return { status: 'ok', firstName: str(raw.first_name, 'This teen'), username: typeof raw.username === 'string' ? raw.username : null, canAllowDonations: raw.can_allow_donations === true };
 }
 
 /** @purpose Redeem the code and sign. The link counts once the teen confirms it. */
-export async function acceptGuardianInvite(code: string, consent: ConsentInput): Promise<{ status: 'waiting_for_teen' | 'linked' | 'bad_code'; firstName: string }> {
-  const raw = obj(await callRpc('accept_guardian_invite', { invite_code: code.trim().toUpperCase(), ...consentArgs(consent) }));
+export async function acceptGuardianInvite(code: string, consent: ConsentInput, client = supabase): Promise<{ status: 'waiting_for_teen' | 'linked' | 'bad_code'; firstName: string }> {
+  const raw = obj(await callRpc('accept_guardian_invite', { invite_code: code.trim().toUpperCase(), ...consentArgs(consent) }, client));
   const status = raw.status === 'waiting_for_teen' || raw.status === 'linked' ? raw.status : 'bad_code';
   return { status, firstName: str(raw.first_name, 'your teen') };
 }
 
 /** @purpose Sign (or sign again, to change permissions) for a teen you are linked to, or as the guardian on record. */
-export async function signGuardianConsent(minorId: string, consent: ConsentInput): Promise<Supervision> {
-  return parseSupervision(await callRpc('sign_guardian_consent', { minor_profile_id: minorId, ...consentArgs(consent) }));
+export async function signGuardianConsent(minorId: string, consent: ConsentInput, client = supabase): Promise<Supervision> {
+  return parseSupervision(await callRpc('sign_guardian_consent', { minor_profile_id: minorId, ...consentArgs(consent) }, client));
 }
 
 /** @purpose Withdraw your consent (a public profile goes private; payouts wait). */
-export async function revokeGuardianConsent(minorId: string): Promise<Supervision> {
-  return parseSupervision(await callRpc('revoke_guardian_consent', { minor_profile_id: minorId }));
+export async function revokeGuardianConsent(minorId: string, client = supabase): Promise<Supervision> {
+  return parseSupervision(await callRpc('revoke_guardian_consent', { minor_profile_id: minorId }, client));
 }
 
 export type GuardianMinorRow = {
@@ -334,8 +335,8 @@ export type GuardianMinorRow = {
 };
 
 /** @purpose Teens you supervise, are waiting on, or are the guardian on record for. */
-export async function fetchGuardianMinors(): Promise<GuardianMinorRow[]> {
-  const rows = await callRpc<Raw[] | null>('guardian_list_minors');
+export async function fetchGuardianMinors(client = supabase): Promise<GuardianMinorRow[]> {
+  const rows = await callRpc<Raw[] | null>('guardian_list_minors', {}, client);
   return (rows ?? []).flatMap((r) => (typeof r.profile_id === 'string'
     ? [{
         profileId: r.profile_id,
@@ -353,13 +354,13 @@ export async function fetchGuardianMinors(): Promise<GuardianMinorRow[]> {
 }
 
 /** @purpose The supervision summary for one teen you supervise. */
-export async function fetchGuardianSupervision(minorId: string): Promise<Supervision> {
-  return parseSupervision(await callRpc('guardian_get_supervision', { minor_profile_id: minorId }));
+export async function fetchGuardianSupervision(minorId: string, client = supabase): Promise<Supervision> {
+  return parseSupervision(await callRpc('guardian_get_supervision', { minor_profile_id: minorId }, client));
 }
 
 /** @purpose Approve or decline an under-16's request. */
-export async function decideApproval(requestId: string, approve: boolean): Promise<Supervision> {
-  return parseSupervision(await callRpc('guardian_decide_approval', { request_id: requestId, approve }));
+export async function decideApproval(requestId: string, approve: boolean, client = supabase): Promise<Supervision> {
+  return parseSupervision(await callRpc('guardian_decide_approval', { request_id: requestId, approve }, client));
 }
 
 // Admin ------------------------------------------------------------------------------------------------------------

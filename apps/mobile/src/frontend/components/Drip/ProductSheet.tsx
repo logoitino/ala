@@ -1,4 +1,4 @@
-/** Paid order recording remains bound to the initiating account; rejected records stay follow-up failures. */
+/** Paid records retain their initiating account/product; unavailable stock and stale sheet resumes cannot start purchases. */
 /** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Platform, StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
@@ -28,10 +28,12 @@ import {
   type DripItem,
   type DripSize,
 } from '@/data/shop';
+import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { recordDripOrder } from '@/lib/finance';
 import { assertCurrent } from '@/lib/offlineActor';
+import { offlineQueue } from '@/services/OfflineQueue';
 import { telemetry } from '@/services/TelemetryManager';
 import {
   FOCAL,
@@ -68,7 +70,16 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
   const frame = useSheetFrame();
   const { height: windowHeight } = useWindowDimensions();
   const { requireAuth } = useSoftWall();
+  const { user } = useAuth();
   const { startCheckout, busy } = useTipCheckout();
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const lifetime = useRef({ id: item?.id, active: Boolean(item) });
+  if (lifetime.current.id !== item?.id) lifetime.current = { id: item?.id, active: Boolean(item) };
+  const sheet = lifetime.current;
+  const selectedItem = useRef(item);
+  selectedItem.current = item;
+  const current = () => mounted.current && lifetime.current === sheet && sheet.active && Boolean(selectedItem.current);
   const [open, setOpen] = useState(false);
   const [size, setSize] = useState<DripSize>('M');
   const [qty, setQty] = useState(1);
@@ -141,12 +152,15 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
   }, [size, display?.id]);
 
   const finishClose = () => {
+    // Closing marks active=false; only the same mounted sheet may settle its animation.
+    if (!mounted.current || lifetime.current !== sheet) return;
     setOpen(false);
     onClose();
   };
 
   const dismiss = (force = false) => {
     if ((!force && busy) || !open) return;
+    sheet.active = false;
     dim.value = withTiming(0, { duration: SHEET_BACKDROP_OUT_MS });
     translateY.value = withTiming(
       SHEET_OFF,
@@ -158,8 +172,8 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
   };
 
   const totalCents = display ? display.priceCents * qty : 0;
-  const aura = display ? dripAuraForOrder(display, qty) : 0;
-  const buyLabel = `Buy Now — ${dripPriceLabel(totalCents)}`;
+  const aura = display && maxQty > 0 ? dripAuraForOrder(display, qty) : 0;
+  const buyLabel = maxQty === 0 ? 'Out of stock' : `Buy Now — ${dripPriceLabel(totalCents)}`;
 
   useEffect(() => {
     totalBump.value = withSequence(withSpring(1.1, SPRING_BOUNCE), withSpring(1, SPRING_BOUNCE));
@@ -195,11 +209,17 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
   }));
 
   const buy = () => {
-    if (!item || busy) return;
+    if (!item || busy || !current() || maxQty === 0 || qty > maxQty) return;
+    const initiatingActor = offlineQueue.captureActor(user?.id);
+    if (user?.id && !initiatingActor) return;
+    let resumed = false;
     // Guests hit createPaymentIntent as 401 without Soft-Wall; stash Buy and resume after sign-in.
     requireAuth({
       kind: 'signin',
       resume: () => {
+        if (resumed || !current() || (initiatingActor && !initiatingActor.isCurrent()) || !selectedItem.current
+          || qty > dripMaxQty(selectedItem.current)) return;
+        resumed = true;
         telemetry.trackFeature('drip_buy', 'drip');
         void startCheckout({
           tipAmount: totalCents / 100,
@@ -216,7 +236,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
               buyerId: actor.userId,
             }, client);
             assertCurrent(actor);
-            dismiss(true);
+            if (current()) dismiss(true);
           },
         });
       },
@@ -286,7 +306,7 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
               <View style={styles.qtyRow}>
                 <View style={styles.qtyCopy}>
                   <Text style={styles.qtyCaption}>Quantity</Text>
-                  <Text style={styles.qtyStock}>{maxQty} in stock</Text>
+                  <Text style={styles.qtyStock}>{maxQty === 0 ? 'Out of stock' : `${maxQty} in stock`}</Text>
                 </View>
                 <View style={styles.qtyControls}>
                   <AnimatedButton
@@ -326,10 +346,10 @@ export function ProductSheet({ item, onClose }: ProductSheetProps) {
 
               <AnimatedButton
                 accessibilityLabel={buyLabel}
-                disabled={busy}
+                disabled={busy || maxQty === 0}
                 haptic="light"
                 onPress={buy}
-                contentStyle={[styles.buy, busy && styles.buyOff]}
+                contentStyle={[styles.buy, (busy || maxQty === 0) && styles.buyOff]}
               >
                 <Text style={styles.buyLabel}>{busy ? 'Opening checkout…' : buyLabel}</Text>
               </AnimatedButton>

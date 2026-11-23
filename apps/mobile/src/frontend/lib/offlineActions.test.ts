@@ -58,14 +58,14 @@ beforeEach(async () => {
   jest.mocked(supabase.auth.getSession).mockReset().mockResolvedValue(session() as never);
   jest.mocked(NetInfo.fetch).mockResolvedValue({ type: 'unknown', isConnected: false, isInternetReachable: null, details: null } as NetInfoState);
   transport = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>(async () => response());
-  globalThis.fetch = transport as typeof fetch;
+  globalThis.fetch = transport as unknown as typeof fetch;
   await AsyncStorage.clear();
 });
 
 afterEach(() => {
   queue?.dispose();
   queue = undefined;
-  globalThis.fetch = originalFetch;
+  globalThis.fetch = originalFetch as unknown as typeof fetch;
   if (originalUrl === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_URL;
   else process.env.EXPO_PUBLIC_SUPABASE_URL = originalUrl;
   if (originalKey === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;

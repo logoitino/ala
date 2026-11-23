@@ -1,7 +1,7 @@
 <!-- Current shared UI source coverage is separate from dated rendered/native acceptance. -->
 # Menu and page style coverage
 
-**Current source alignment:** 2026-11-20 — [UX-13](../agents/UX-13.md) whole-app review and [UX-12](../agents/UX-12.md) type/spacing pass · 2026-11-04 · Whole-app [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md) (`UI/Kit`, Daylight + night moments, jade/gold/ember). UX-10 per-tab violet accents and the 2026-10-12 portal underline-tab chrome are superseded where they conflict; UX-06/Calm Island history retained below. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
+**Current source alignment:** 2026-11-23 — [UX-18](../agents/UX-18.md) owner-targeted44pt bars and compact Activity panels locally accepted; [UX-17](../agents/UX-17.md) existing-record directory/selector and distinct poll palette accepted. Current737-source ledger/718 same-byte inherited reviews/19 current changed-new reviews; source review is separate from device/provider or every-function execution. Earlier UX16/13/12/10/06 records remain dated history. Whole-app [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md), shared Figtree/body14/caption12 and44pt actions remain the standard. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
 `ACCESSIBILITY`, `DEVICE_QA` review; `DOCUMENTATION` keeps this map current.
 
 This is a source inventory of shared presentation coverage. It is not a rendered-device audit.
@@ -9,6 +9,16 @@ Every modal-bearing component is listed, including intentional full-screen video
 surfaces. A shared primitive can update many consumers without each file needing a local edit.
 
 Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATUS.md); actual documentation/coordination claims and checks: [COORD-01](../agents/COORD-01.md#whole-team-refresh--2026-10-15-americadenver). The 107-role briefing is assignment coverage, not execution or human delivery. The [UI checkpoint](design/UI_UX_FIGMA_POLISH.md) separates the original empty Figma draft, later colour file, local source and rendered evidence.
+
+## UX-17/18 current bounded acceptance
+
+UX18 supersedes UX16 default46pt dock/feed surfaces with44pt measured controls; the web dock wrapper is50pt including6pt safe footer. Glyph18/Upload16 and22pt disc reduce decoration; Search16 remains inside44pt. Outline edges are absolute and compatible with SDK58 generated RN types. Labels remain12/16 and14/20 Figtree, scalable and wrapped; actual dock94pt under label-only2x at320px demonstrates measured growth rather than clamping. Current390/320 renders have no horizontal overflow and44pt actions. Larger web widths use the existing desktop layout; mobile-height/physical gesture checks remain distinct.
+
+Activity uses6/10pt row padding,30pt decorative icons,14pt titles/amounts and12pt sent-school/time metadata. Thanks/received-gift/tag instructions stay14/20. Inbox padding8/gaps4 and an opt-in inline ordinary explanation remove excess whitespace; other MoreText consumers keep their default stack. Required notices/full body copy and read/archive/refresh/snapshot actions remain. Current320/390 rendered Activity shows honest backend notification-unavailable state. Actual web programmatic scroll advances109px, and More/Less exposes the full explanation; this does not prove Android dragging. At667x320 with all existing Home banners expanded the recovery viewport is18px; the44pt existing scoreboard dismissal remains available. Do not claim that capture fully displays recovery text.
+
+UX17 distinct jade/violet polls preserve5 existing cases and accepted current390 rendering. Existing-source admin99/6 checkpoint precedes participant browsing and optional pending roster selection; independent38 mounted participant cases and serial-save/current-actor/partial-retry checks pass. New directory remains within Local scrolling content and profile choice remains optional; no import, generated identities or automatic verification. Current public catalog10 loaded rows and one school empty-state are observed, not global enrollment or hosted RLS evidence.
+
+Final local integration passes329mobile suites/3116tests,217portaltests, bothTypeScript checks, optimized Nextbuild and currentAndroid/iOS HermesJS exports. SDK overlay correction and old FunFactStep optional-null assertion repairs retain their actual original failures. Full gate stops only at2 unannounced Exit areas; tracked acknowledgement requires new session confirmation. Current737-source ledger retains718 exact-byte prior reviews and19 changed/new source reviews; no native/provider/Instagram parity or execution of every function is inferred. See UX17/18 for original receipts and remaining boundaries.
 
 ## UX-13 review and implementation scope
 
@@ -308,3 +318,13 @@ repairs. Local browser/Jest receipts and native/system-text gaps: [UX-10](../age
 Popup frame `useSheetFrame` padding md/xs/sm and `MENU_METRICS` radii 24/16/14; step bar 32pt. `UI/MoreText` is the one
 "More / Less" disclosure for non-policy explanations; policy copy stays plain `Text` (guard test). Details: [UX-11](../agents/UX-11.md).
 
+
+## UX-15 — current Activity, Local polls and admin presentation (2026-11-22)
+
+Activity history matches its inbox namedFigtree faces at existingTYPE14/20body and16/21section; scroll/refresh/data handlers are unchanged while the reported Android gesture failure awaits direct device proof. Local selected choices use dark ink borders plus check/Selected from the existing vote state; full team names, raw shares, cheers-only notice and vote authority remain.
+
+Expo admin headings/report text use current Bricolage/Figtree, warm fixedadmin surfaces and proportional cards. Native financial figures retain their existing fit/accessibility exceptions. Open desk search now shrinks within320px page padding; existing search/filter/navigation behavior and44pt controls remain. Next report/KPI/dashboard wrappers use the same current card standard and existing dashboard anchors grow to44px; source tables, missing/zero/error distinctions, exact measure formats and keyboard/native-details contracts remain.
+
+An explicit full-request Refresh view reads existing protected sources through current server identity/role/MFA checks; it is separate from presentation and cannot authorize access or background polling. Source ownership, current-source independent reviews, synthetic/actual-component captures, full-gate/build results and remaining native/provider limits are recorded in [UX-15](../agents/UX-15.md). Temporary Expo verification source is removed before exports.
+
+UX-15 current local code checkpoint:3029mobile/217portal tests and current Next build/native JS exports pass; the full gate awaits its separate owner-confirmed Exit acknowledgement. Exact current source and supporting-file ledger is in the task evidence; Android touch scrolling remains open. Source review or a browser still does not establish native gesture/provider acceptance.

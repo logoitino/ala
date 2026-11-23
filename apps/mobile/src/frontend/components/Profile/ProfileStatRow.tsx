@@ -1,4 +1,4 @@
-/** UX-13 readable shared type preserves every action and required notice.
+/** Guest Join resumes only its mounted athlete, and unknown Crew loads offer Retry. UX-13 readable shared type preserves every action and required notice.
  * The count row under the athlete hero: Seki, Riding, Crew and Squad, with the Join control at the end of the row
  * and the pulsing Teammates badge for a mutual follow (split out of AthleteProfileView.tsx for R4-03; behaviour unchanged).
  * The parent passes peak Seki / Flex; Crew and Squad come from `useCrew`, and Join goes through the soft wall.
@@ -64,7 +64,8 @@ export function ProfileStatRow({
       athleteName: player.name,
       athleteId: player.id,
       resume: () => {
-        void crew.toggle();
+        if (crew.signedIn === false) crew.resumeGuestJoin();
+        else void crew.toggle();
       },
     });
   };
@@ -73,13 +74,13 @@ export function ProfileStatRow({
 
   const join = showJoin ? (
     crew.mutual ? (
-      <TeammatesBadge onPress={onJoin} disabled={crew.busy} compact />
+      <TeammatesBadge onPress={onJoin} disabled={crew.busy || crew.loading || Boolean(crew.error)} compact />
     ) : (
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={crew.following ? IN_CREW_LABEL : JOIN_CREW_LABEL}
-        accessibilityState={{ disabled: crew.busy, selected: crew.following }}
-        disabled={crew.busy}
+        accessibilityState={{ disabled: crew.busy || crew.loading || Boolean(crew.error), selected: crew.following }}
+        disabled={crew.busy || crew.loading || Boolean(crew.error)}
         haptic="medium"
         hitSlop={8}
         onPress={onJoin}
@@ -102,18 +103,18 @@ export function ProfileStatRow({
       {showCrew ? (
         <>
           <ProfileCount
-            value={crew.crew_count}
+            value={crew.loading || crew.error ? null : crew.crew_count}
             label="Crew"
             color={FOCAL.jadeInk}
-            accessibilityLabel={`${CREW_COUNTER_LABEL} ${crew.crew_count}`}
+            accessibilityLabel={`${CREW_COUNTER_LABEL} ${crew.error ? 'unavailable' : crew.loading ? 'loading' : crew.crew_count}`}
           />
           <ProfileCount
-            value={crew.squad_count}
+            value={crew.loading || crew.error ? null : crew.squad_count}
             label="Squad"
             color={colors.text}
-            accessibilityLabel={`${SQUAD_COUNTER_LABEL} ${crew.squad_count}`}
+            accessibilityLabel={`${SQUAD_COUNTER_LABEL} ${crew.error ? 'unavailable' : crew.loading ? 'loading' : crew.squad_count}`}
           />
-          {join ? <View style={styles.joinCell}>{join}</View> : null}
+          {crew.error ? <Pressable accessibilityRole="button" accessibilityLabel="Retry Crew" onPress={() => void crew.refresh()} style={[styles.joinCell, { minWidth: 44, minHeight: 44, justifyContent: 'center' }]}><Text style={styles.statLabel}>Retry Crew</Text></Pressable> : join ? <View style={styles.joinCell}>{join}</View> : null}
         </>
       ) : null}
     </View>
@@ -126,14 +127,14 @@ function ProfileCount({
   color,
   accessibilityLabel,
 }: {
-  value: number;
+  value: number | null;
   label: string;
   color: string;
   accessibilityLabel: string;
 }) {
   return (
     <View style={styles.stat} accessibilityRole="text" accessibilityLabel={accessibilityLabel}>
-      <Text style={[styles.statValue, { color }]}>{formatCompactCount(value)}</Text>
+      <Text style={[styles.statValue, { color }]}>{value === null ? '—' : formatCompactCount(value)}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );

@@ -4,7 +4,7 @@
  * Open full profile. The header (tier pill + Close) and the action footer are pinned outside the scroll area, so the
  * primary action is always on screen; identity, the clip row and stats scroll between them. Fetches lazily, only once the panel has opened. `ReelPage` owns the slide and the card shell
  * (rounded light surface); this file owns everything inside it.
- * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ * Crew retries remain visible and guest auth resumes only the same open athlete target. UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -189,15 +189,19 @@ export function ReelOwnerPeek({
     };
   }, [clip.uploadedBy, open, player?.id]);
 
+  const crewTarget = useRef({ open, clipId: clip.id, playerId: player?.id });
+  if (crewTarget.current.open !== open || crewTarget.current.clipId !== clip.id || crewTarget.current.playerId !== player?.id)
+    crewTarget.current = { open, clipId: clip.id, playerId: player?.id };
+  const capturedCrewTarget = crewTarget.current;
   const joinCrew = () => {
-    if (!player) return;
+    if (!player || !open || crew.loading || crew.error) return;
     telemetry.trackFeature(crew.following ? 'crew.leave' : 'crew.join', surface);
     if (!crew.signedIn) {
       requireAuth({
         kind: 'crew',
         athleteName: player.name,
         athleteId: player.id,
-        resume: () => void crew.toggle(),
+        resume: () => { if (crewTarget.current === capturedCrewTarget && capturedCrewTarget.open) crew.resumeGuestJoin(); },
       });
       return;
     }
@@ -211,7 +215,7 @@ export function ReelOwnerPeek({
     sekiPlay: clip.sekiPlay,
   });
   const stats: { label: string; value: string }[] = [
-    { label: 'Crew', value: formatCompactCount(crew.crew_count) },
+    { label: 'Crew', value: crew.loading || crew.error ? '—' : formatCompactCount(crew.crew_count) },
     { label: 'Gifts', value: formatTipDollars(totalTipsCents) },
     { label: 'Seki', value: formatCompactCount(player?.seki_count ?? clip.sekiCount ?? 0) },
     { label: 'Aura', value: formatCompactCount(auraPoints) },
@@ -235,12 +239,12 @@ export function ReelOwnerPeek({
         <View style={[styles.actions, compact && styles.actionsCompact]}>
           {player ? (
             <AnimatedPressable
-              accessibilityLabel={crew.following ? `In Crew, leave ${name} Crew` : `Join Crew, follow ${name}`}
-              accessibilityState={{ selected: crew.following, disabled: crew.busy }}
-              disabled={crew.busy}
+              accessibilityLabel={crew.error ? 'Retry Crew' : crew.following ? `In Crew, leave ${name} Crew` : `Join Crew, follow ${name}`}
+              accessibilityState={{ selected: crew.following, disabled: crew.busy || crew.loading }}
+              disabled={crew.busy || crew.loading}
               haptic="medium"
               scaleTo={0.94}
-              onPress={joinCrew}
+              onPress={crew.error ? () => void crew.refresh() : joinCrew}
               style={styles.actionHalf}
               contentStyle={[styles.actionFill, compact && styles.actionFillCompact, styles.crewBtn, crew.following && styles.crewBtnOn]}
             >
@@ -248,7 +252,7 @@ export function ReelOwnerPeek({
               <Ionicons name={crew.following ? 'checkmark-circle' : 'flash-outline'} size={16} color={FOCAL.jadeInk} />
             )}
               <Text style={styles.crewLabel}>
-                {crew.following ? 'In Crew' : 'Join Crew'}
+                {crew.error ? 'Retry Crew' : crew.loading ? 'Loading Crew…' : crew.following ? 'In Crew' : 'Join Crew'}
               </Text>
             </AnimatedPressable>
           ) : null}
@@ -386,6 +390,7 @@ export function ReelOwnerPeek({
         </View>
 
         <View style={[styles.body, compact && styles.bodyCompact]}>
+          {crew.error ? <Text style={styles.meta} accessibilityRole="alert">{crew.error}</Text> : null}
           {poster ? (
             <Animated.View
               entering={reduceMotion ? undefined : FadeInDown.delay(120)}

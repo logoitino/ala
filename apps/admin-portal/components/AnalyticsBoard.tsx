@@ -1,5 +1,6 @@
+/** UX-15 card/type/44px anchor normalization preserves all measure/source/error alternatives and exact dashboard destinations. */
 /**
- * Open report sections carry Home's format into each analytics dashboard without changing
+ * Daylight report cards carry the current portal format into each dashboard without changing
  * its measures, source disclosures or navigation.
  * @purpose One analytics dashboard on `/analytics` (owned by ANALYST): the question, a KPI row
  *   of `StatTile`s (and `Meter`s), the charts `lib/analytics.ts` picked for that board, and the
@@ -194,16 +195,16 @@ export function ReadAlert({ state, error, rpc, live = false }: { state: ReadStat
 export function AnalyticsBoard({ board }: { board: Board }) {
   const headingId = `${board.id}-heading`;
   return (
-    <section id={board.id} aria-labelledby={headingId} className="portal-panel scroll-mt-6 border-t border-[var(--border)] pt-6">
+    <section id={board.id} aria-labelledby={headingId} className="portal-panel scroll-mt-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
         <div className="min-w-0">
-          <p className="text-[11px] font-extrabold tracking-[0.16em] text-[var(--ink-soft)] uppercase">Dashboard</p>
+          <p className="text-xs leading-4 font-bold tracking-wide text-[var(--ink-soft)]">Dashboard</p>
           <h2 id={headingId} className="mt-1 text-xl font-extrabold tracking-tight">
             {board.title}
           </h2>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--ink-soft)]">{board.question}</p>
         </div>
-        <a href="#dashboards" className="inline-flex min-h-6 items-center rounded-md px-2 py-1 text-xs font-extrabold text-[var(--jade)] hover:bg-[var(--surface-muted)]">
+        <a href="#dashboards" className="inline-flex min-h-11 min-w-11 items-center rounded-md px-3 py-2 text-xs font-extrabold text-[var(--jade)] hover:bg-[var(--surface-muted)]">
           All dashboards<span className="sr-only">, back to the switcher</span>
         </a>
       </div>
@@ -287,7 +288,7 @@ export function AnalyticsBoard({ board }: { board: Board }) {
                 )}
               </dd>
               <dd className="col-span-2 mt-1 text-xs leading-4 text-[var(--text-muted)]">{measure.note}</dd>
-              <dd className="col-span-2 mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+              <dd className="col-span-2 mt-1 font-mono text-xs leading-4 text-[var(--text-muted)]">
                 <span className="sr-only">Source: </span>
                 <SourcePath path={measure.source} />
               </dd>

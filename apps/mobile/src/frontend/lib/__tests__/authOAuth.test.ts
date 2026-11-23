@@ -46,7 +46,7 @@ const originalFetch = global.fetch;
 beforeEach(() => {
   jest.clearAllMocks();
   Object.defineProperty(Platform, 'OS', { configurable: true, value: 'web' });
-  global.fetch = jest.fn().mockResolvedValue({ ok: true });
+  global.fetch = jest.fn().mockResolvedValue({ ok: true }) as unknown as typeof fetch;
   mockOAuth.mockResolvedValue({ data: { url: 'https://auth.example.test/authorize?provider=google' }, error: null });
   mockSetSession.mockResolvedValue({ data: { session: mockSession, user: mockSession.user }, error: null });
   mockExchange.mockResolvedValue({ data: { session: mockSession, user: mockSession.user }, error: null });
@@ -55,12 +55,12 @@ beforeEach(() => {
 });
 afterAll(() => {
   Object.defineProperty(Platform, 'OS', originalPlatform);
-  global.fetch = originalFetch;
+  global.fetch = originalFetch as unknown as typeof fetch;
 });
 
 it('opens Google on web without waiting for a network authorize probe', async () => {
   const network = deferred<{ ok: boolean }>();
-  global.fetch = jest.fn().mockReturnValue(network.promise);
+  global.fetch = jest.fn().mockReturnValue(network.promise) as unknown as typeof fetch;
   const result = signInWithGoogle();
   try {
     await Promise.resolve(); await Promise.resolve();
@@ -92,7 +92,7 @@ it('keeps the native disabled-provider error before opening its browser', async 
   Object.defineProperty(Platform, 'OS', { configurable: true, value: 'android' });
   global.fetch = jest.fn().mockResolvedValue({
     ok: false, status: 400, text: async () => '{"msg":"Unsupported provider: provider is not enabled"}',
-  });
+  }) as unknown as typeof fetch;
   await expect(signInWithGoogle()).rejects.toThrow('Google sign-in is turned off');
   expect(mockOpenAuth).not.toHaveBeenCalled();
 });
@@ -205,7 +205,7 @@ it('hides unknown browser diagnostics', async () => {
 
 it('hides unknown native authorize response diagnostics', async () => {
   Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
-  global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500, text: async () => 'private access_token=not-a-real-token' });
+  global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500, text: async () => 'private access_token=not-a-real-token' }) as unknown as typeof fetch;
   await expect(signInWithGoogle()).rejects.toThrow('Could not finish Google sign-in. Please try again.');
   expect(mockOpenAuth).not.toHaveBeenCalled();
 });

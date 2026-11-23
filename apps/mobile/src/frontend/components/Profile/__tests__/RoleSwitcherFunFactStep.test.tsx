@@ -2,7 +2,7 @@
  * first roster claim has finished (claim and toast first), for an athlete the server says can share; Not now completes
  * the sign-up (the sheet closes) and writes nothing; the step never blocks: the claim never waits for the fun-fact
  * read, Not now works before it answers, and an account that can't share closes straight away. An existing athlete
- * saving a roster never sees the step. Synthetic data. */
+ * saving a roster never sees the step. UX17's optional roster target stays null when none is selected. Synthetic data. */
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { useRef } from 'react';
 import * as Reanimated from 'react-native-reanimated';
@@ -59,7 +59,7 @@ it('appears after a first claim for an athlete who can share; Not now closes the
   expect(screen.queryByText('Share a fun fact?')).toBeNull();
   expect(mockClient.calls).toEqual([]);
   await claim();
-  expect(mockAuth.completeAthleteOnboarding).toHaveBeenCalledWith(expect.objectContaining({ team, sport: 'Basketball' }));
+  expect(mockAuth.completeAthleteOnboarding).toHaveBeenCalledWith(expect.objectContaining({ team, sport: 'Basketball' }), null);
   expect(mockToast).toHaveBeenCalledWith(expect.stringContaining('School claimed'));
   expect(await screen.findByText('Share a fun fact?')).toBeTruthy();
   expect(onClose).not.toHaveBeenCalled();

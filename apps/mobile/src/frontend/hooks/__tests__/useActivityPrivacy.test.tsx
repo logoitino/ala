@@ -190,7 +190,10 @@ it('rejects athlete-side delayed reads and issued thanks after A to B to A lifet
   const read = deferred<typeof toThank[]>(), write = deferred<{ ok: true }>();
   mockToThank.mockReturnValueOnce(read.promise); mockThank.mockReturnValueOnce(write.promise);
   let task!: Promise<unknown>;
-  await act(async () => { void result.current.refresh(); task = result.current.thank('gift-A', 'malo'); });
+  await act(async () => { void result.current.refresh(); });
+  // The actor transport has an await before RPC; exercise an actually issued outgoing read.
+  await waitFor(() => expect(mockToThank).toHaveBeenCalledTimes(2));
+  await act(async () => { task = result.current.thank('gift-A', 'malo'); });
   switchOwner('B'); switchOwner('A');
   mockToThank.mockResolvedValueOnce([{ ...toThank, fanName: 'New A donor' }]);
   await rerender({});
