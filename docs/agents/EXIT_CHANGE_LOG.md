@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-23 · plan `9c78d991e93a` → `9c78d991e93a` · announced by cursor/web-school-directory-nav
+
+App at announcement: commit `d7fdd8496d83e1c357f7f0222d3e6103f2515a5a`, source `9c78d991e93af2d568d9af63f342ec5c79d7ae2c2228851114582c0baf9c084e`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- Baseline created; no prior plan to compare.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-23 · plan `b24d01d8468a` → `9c78d991e93a` · announced by cursor/web-school-directory-nav
 
 App at announcement: commit `e836d459892ea092379c2574dfd188897acc7af8` + 3 uncommitted file(s), source `9c78d991e93af2d568d9af63f342ec5c79d7ae2c2228851114582c0baf9c084e`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
