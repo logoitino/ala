@@ -1,5 +1,5 @@
 /** Fan-bar routing/visibility: four destinations around Upload; Beyond and Local open from the Highlights pill row (owner 2026-10-16). */
-import {render,screen,fireEvent} from '@testing-library/react-native';
+import {render,screen,fireEvent,within} from '@testing-library/react-native';
 import {StyleSheet} from 'react-native';
 import type {BottomTabBarProps} from 'expo-router/tabs';
 import {FanTabBar} from '../FanTabBar';
@@ -73,7 +73,8 @@ it('measures the complete absolute dock wrap including safe footer and enlarged 
  const wrap=screen.getByTestId('fan-dock-wrap');
  expect(StyleSheet.flatten(wrap.props.style)).toMatchObject({ position: 'absolute', bottom: 0, paddingBottom: 34 });
  await fireEvent(wrap,'layout',{nativeEvent:{layout:{height:118,width:390,x:0,y:0}}});
- expect(mockMeasure).toHaveBeenCalledWith(118);
+ // UX-19 review I2: the 24pt fade above the bar is reserved too, so scrolled-to-bottom content is never painted over.
+ expect(mockMeasure).toHaveBeenCalledWith(142);
 });
 
 // UX-19: one continuous frosted bar that adapts to the screen behind it.
@@ -109,3 +110,13 @@ it('softened backdrop stays at least 0.78 opaque',async()=>{
  await render(<FanTabBar {...props}/>);
  expect(StyleSheet.flatten(screen.getByTestId('fan-dock-backdrop').props.style).opacity).toBeGreaterThanOrEqual(0.78);
 });
+// UX-19 review I1: 12pt captions over bright video need full on-video ink and a denser dark glass.
+it('keeps Home labels readable on dark glass, even while softened',async()=>{
+ mockSoftened=true;
+ await render(<FanTabBar {...props}/>);
+ const activity=screen.getByRole('tab',{name:'Activity'});
+ expect(StyleSheet.flatten(within(activity).getByText('Activity').props.style).color).toBe(colors.onVideo);
+ expect(tint().opacity).toBeGreaterThanOrEqual(0.85);
+ expect(StyleSheet.flatten(screen.getByTestId('fan-dock-backdrop').props.style).opacity).toBeGreaterThanOrEqual(0.9);
+});
+

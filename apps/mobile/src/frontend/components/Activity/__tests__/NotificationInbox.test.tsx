@@ -109,9 +109,13 @@ it('groups Inbox and Archived in one segment track with Refresh as a 44pt icon b
   expect(within(track).getByLabelText('Current notifications')).toBeTruthy();
   expect(within(track).getByLabelText('Archived notifications')).toBeTruthy();
   expect(screen.queryByText('Refresh')).toBeNull();
-  const refresh = screen.getByLabelText('Refresh notifications');
-  // The 44pt target overhangs the heading line instead of making that line 44pt tall.
-  expect(StyleSheet.flatten(refresh.props.style)).toMatchObject({ minWidth: 44, minHeight: 44, marginVertical: -10 });
+  // UX-19 review C1: Refresh sits at the end of the 48pt segment row, so its 44pt target never meets the More toggle.
+  const refresh = within(track).getByLabelText('Refresh notifications');
+  const style = StyleSheet.flatten(refresh.props.style);
+  expect(style).toMatchObject({ minWidth: 44, minHeight: 44 });
+  expect(style.marginVertical).toBeUndefined();
+  // 6pt card gap + 6pt margin keeps the track clear of the toggle's 12pt overhang.
+  expect(StyleSheet.flatten(track.props.style).marginTop).toBe(6);
   await fireEvent.press(refresh);
   expect(mockReload).toHaveBeenCalledTimes(1);
 });

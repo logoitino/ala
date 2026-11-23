@@ -207,8 +207,9 @@ const styles = StyleSheet.create({
   score: { ...SCOREBOARD_DIGITS, color: colors.text, fontSize: 28, textAlign: 'right', marginLeft: 'auto', maxWidth: '100%' },
   fieldLayer: { ...StyleSheet.absoluteFill, borderRadius: radii.lg, overflow: 'hidden' },
   scoreDivider: { height: 1, backgroundColor: colors.border },
-  venue: { color: colors.textMuted, ...TYPE.caption, ...figtree('500'), flex: 1 },
-  ctaArrow: { color: FOCAL.jadeInk, fontSize: 17, ...figtree('800') },
+  // Review I3: a real basis lets boosters wrap below instead of squeezing the venue into a letter column.
+  venue: { color: colors.textMuted, ...TYPE.caption, ...figtree('500'), flexGrow: 1, flexShrink: 1, flexBasis: 140 },
+  ctaArrow: { color: FOCAL.jadeInk, fontSize: 17, ...figtree('800'), marginLeft: 'auto' },
   sponsorRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
   sponsorCaption: { color: colors.textMuted, ...TYPE.caption, ...figtree('700'), marginRight: 2 },
   sponsorLogo: {

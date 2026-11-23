@@ -76,7 +76,9 @@ describe('MoreText call sites', () => {
 // UX-19: the inline toggle keeps a 44pt target but must not make the explanation row 44pt tall.
 it('inline toggle keeps its 44pt target without growing the text row', async () => {
   await render(<MoreText lines={1} inlineToggle>{'x'.repeat(120)}</MoreText>);
-  const toggle = StyleSheet.flatten(screen.getByRole('button').props.style);
-  expect(toggle).toMatchObject({ minWidth: 44, minHeight: 44, marginVertical: -12 });
+  const button = screen.getByRole('button');
+  expect(StyleSheet.flatten(button.props.style)).toMatchObject({ minWidth: 44, minHeight: 44, marginVertical: -12 });
+  // UX-19 review C1: no extra vertical slop, so the target stays exactly 44pt and never reaches neighbouring controls.
+  expect(button.props.hitSlop).toMatchObject({ top: 0, bottom: 0 });
 });
 

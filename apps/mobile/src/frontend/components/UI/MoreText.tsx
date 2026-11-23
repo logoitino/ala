@@ -47,7 +47,8 @@ export function MoreText({ children, lines = 2, style, linkColor = FOCAL.jadeInk
         accessibilityLabel={open ? 'Show less' : 'Show more'}
         accessibilityState={{ expanded: open }}
         haptic="selection"
-        hitSlop={12}
+        // Inline toggles already overhang 12pt vertically; extra vertical slop would reach neighbouring controls.
+        hitSlop={inlineToggle ? INLINE_HIT_SLOP : 12}
         onPress={() => setOpen((value) => !value)}
         style={inlineToggle ? [styles.toggle, styles.inlineToggle] : styles.toggle}
       >
@@ -56,6 +57,8 @@ export function MoreText({ children, lines = 2, style, linkColor = FOCAL.jadeInk
     </View>
   );
 }
+
+const INLINE_HIT_SLOP = { top: 0, bottom: 0, left: 12, right: 12 };
 
 const styles = StyleSheet.create({
   wrap: {

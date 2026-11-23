@@ -28,6 +28,8 @@ import { FOCAL, SPRING_BOUNCE, SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion'
 
 /** Fade band opacities, top to bottom, above the bar. */
 const FADE_STEPS = [0.15, 0.35, 0.6, 0.85];
+/** Fade height above the bar; reported with the dock height so screens reserve it (review I2). */
+const FADE_HEIGHT = 24;
 
 const TAB_META: Record<string, { label: string; accessibilityLabel?: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap }> =
   {
@@ -59,7 +61,8 @@ type TabButtonProps = {
 function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accentColor, dark, onPress, onInteract }: TabButtonProps) {
   const reduceMotion = useReduceMotion();
   const iconScale = useSharedValue(1);
-  const color = focused ? accentColor : dark ? colors.onVideoMuted : colors.textMuted;
+  // Review I1: full on-video ink on dark glass — 12pt captions over bright video need it.
+  const color = focused ? accentColor : dark ? colors.onVideo : colors.textMuted;
 
   useEffect(() => {
     if (reduceMotion || !focused) {
@@ -108,6 +111,8 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   const { restore } = useFanNavigation();
   const solid = reduceTransparency || (Platform.OS !== 'ios' && Platform.OS !== 'web');
   const backdropOpacity = solid ? 1 : softened ? 0.78 : 0.94;
+  // Over Home's video the softened floor rises to 0.9 so labels keep contrast on bright frames.
+  const darkFloor = (opacity: number) => Math.max(opacity, 0.9);
   const { openUpload } = useUploadSheet();
   const { live } = useAppRuntime();
   const slots = useRef<Record<string, { x: number; width: number }>>({});
@@ -123,7 +128,8 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   // Lovable standard: one jade active colour on every tab (per-tab accents retired from the bar).
   const barAccent = TAB_ACCENTS.index;
   useEffect(() => { restore(); }, [focusedKey, restore]);
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: reduceMotion ? backdropOpacity : withTiming(backdropOpacity, { duration: 160 }) }), [backdropOpacity, reduceMotion]);
+  const shownOpacity = dark ? darkFloor(backdropOpacity) : backdropOpacity;
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: reduceMotion ? shownOpacity : withTiming(shownOpacity, { duration: 160 }) }), [shownOpacity, reduceMotion]);
 
   const routes = state.routes.filter((route) => {
     if (!TAB_META[route.name] || (route.name === 'shop' || route.name === 'drip')) return false;
@@ -209,16 +215,16 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   };
 
   return (
-    <View testID="fan-dock-wrap" pointerEvents="box-none" onLayout={({ nativeEvent }) => measureDock(nativeEvent.layout.height)} style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 6) }]}>
+    <View testID="fan-dock-wrap" pointerEvents="box-none" onLayout={({ nativeEvent }) => measureDock(nativeEvent.layout.height + FADE_HEIGHT)} style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 6) }]}>
       {/* Content dissolves into the bar instead of meeting a hard edge (four bands: no gradient dependency). */}
       <View testID="fan-dock-fade" pointerEvents="none" style={styles.fade}>
         {FADE_STEPS.map((opacity) => <View key={opacity} style={[styles.fadeBand, { backgroundColor: fadeInk, opacity }]} />)}
       </View>
       <View style={styles.bar}>
         {/* Web uses the current React value: installed Reanimated web timing can retain the initial shared opacity. */}
-        <Animated.View testID="fan-dock-backdrop" pointerEvents="none" style={[styles.backdrop, { borderColor: dark ? KIT.onVideoLine : colors.border }, backdropStyle, Platform.OS === 'web' && { opacity: backdropOpacity }]}>
+        <Animated.View testID="fan-dock-backdrop" pointerEvents="none" style={[styles.backdrop, { borderColor: dark ? KIT.onVideoLine : colors.border }, backdropStyle, Platform.OS === 'web' && { opacity: shownOpacity }]}>
           {!solid ? <BlurView tint={dark ? 'dark' : 'light'} intensity={32} style={StyleSheet.absoluteFill} /> : null}
-          <View testID="fan-dock-tint" style={[StyleSheet.absoluteFill, { backgroundColor: glassInk, opacity: solid ? 1 : 0.72 }]} />
+          <View testID="fan-dock-tint" style={[StyleSheet.absoluteFill, { backgroundColor: glassInk, opacity: solid ? 1 : dark ? 0.86 : 0.72 }]} />
         </Animated.View>
         <Animated.View
           testID="fan-dock-pill"
@@ -300,7 +306,7 @@ const styles = StyleSheet.create({
     bottom: '100%',
     left: 0,
     right: 0,
-    height: 24,
+    height: FADE_HEIGHT,
   },
   fadeBand: {
     flex: 1,

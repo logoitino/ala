@@ -26,10 +26,6 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
     <View style={styles.heading}>
       <Text accessibilityRole="header" style={styles.title}>Notifications</Text>
       {page ? <Text style={styles.unread}>{page.unreadCount} unread{archived ? ' in inbox' : ''}</Text> : null}
-      <Pressable accessibilityRole="button" accessibilityLabel="Refresh notifications" accessibilityState={{ disabled: locked }}
-        disabled={locked} onPress={() => void state.reload()} style={[styles.iconAction, locked && styles.disabled]}>
-        <Ionicons name="refresh" size={18} color={colors.primary} />
-      </Pressable>
     </View>
     <MoreText style={styles.hint} lines={1} inlineToggle>{'New connected account updates appear here. Your gift history and invitations stay in their own sections.'}</MoreText>
     <View testID="notification-segments" accessibilityRole="tablist" style={styles.segments}>
@@ -40,6 +36,11 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
       <Pressable accessibilityRole="tab" accessibilityLabel="Archived notifications" accessibilityState={{ selected: archived, disabled: locked }}
         disabled={locked} onPress={() => void state.showArchived(true)} style={[styles.segment, archived && styles.segmentOn]}>
         <Text style={[styles.segmentLabel, archived && styles.segmentLabelOn]}>Archived</Text>
+      </Pressable>
+      {/* Review C1: Refresh lives at the end of the 48pt track, so its 44pt target never meets the inline More toggle. */}
+      <Pressable accessibilityRole="button" accessibilityLabel="Refresh notifications" accessibilityState={{ disabled: locked }}
+        disabled={locked} onPress={() => void state.reload()} style={[styles.iconAction, locked && styles.disabled]}>
+        <Ionicons name="refresh" size={18} color={colors.primary} />
       </Pressable>
     </View>
     {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
@@ -95,9 +96,9 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radii.lg, paddingVertical: 10, paddingHorizontal: 12, gap: 6, ...cardShadow },
   heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   title: { ...SECTION_HEADING, color: colors.text, flexShrink: 1 },
-  // The 44pt target overhangs the heading line (marginVertical) so the line stays one heading tall.
-  iconAction: { minWidth: 44, minHeight: 44, marginVertical: -10, marginLeft: 'auto', alignItems: 'center', justifyContent: 'center' },
-  segments: { flexDirection: 'row', backgroundColor: FOCAL.mistJade, borderRadius: 12, padding: 2, gap: 2 },
+  iconAction: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  // marginTop 6 + card gap 6 clears the inline More toggle's 12pt overhang above the track.
+  segments: { flexDirection: 'row', marginTop: 6, backgroundColor: FOCAL.mistJade, borderRadius: 12, padding: 2, gap: 2 },
   segment: { flex: 1, minWidth: 0, minHeight: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
   segmentOn: { backgroundColor: FOCAL.jadeInk },
   segmentLabel: { color: colors.textMuted, ...TYPE.button, ...figtree('700'), textAlign: 'center' },

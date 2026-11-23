@@ -123,3 +123,11 @@ it('puts HOME/AWAY on the team line and venue with Boosted by on one row', async
   expect(rowOf('Home')).toBe(rowOf('North Valley Timberwolves'));
   expect(within(rowOf('Community gym')!).getByText('Boosted by', { includeHiddenElements: true })).toBeTruthy();
 });
+
+// UX-19 review I3: the venue keeps a real basis so boosters wrap below it instead of squeezing it into a letter column.
+it('gives the venue a real width basis and pins the open arrow right', async () => {
+  await render(<GameCard game={recordedGame} onPress={jest.fn()} sponsors={[boosted]} />);
+  expect(StyleSheet.flatten(screen.getByText('Community gym', { includeHiddenElements: true }).props.style)).toMatchObject({ flexGrow: 1, flexShrink: 1, flexBasis: 140 });
+  expect(StyleSheet.flatten(screen.getByText('↗', { includeHiddenElements: true }).props.style).marginLeft).toBe('auto');
+});
+
