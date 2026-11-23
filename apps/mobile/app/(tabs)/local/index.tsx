@@ -1,4 +1,5 @@
 /**
+ * UX-19: shared section heading, readable 14pt search/hub copy and a borderless directory entry.
  * Compact Local: sticky Games/Polls/Boosters menus and search; sponsors and their action live in Boosters.
  * Booster logos display through `mediaUri` in `Local/SponsorRailCard` (legacy full URL or `sb:` reference, SCALE-02).
  * Matching helpers live in `data/localHub.ts`; the rail card and loading skeleton in `components/Local/` (R4-03).
@@ -38,7 +39,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { FilterPills } from '@/components/UI/FilterPills';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { cardShadow, colors, radii } from '@/constants/theme';
+import { cardShadow, colors, KIT, radii } from '@/constants/theme';
 import {
   UTAH_REGIONS,
   gameInRegion,
@@ -60,7 +61,7 @@ import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { localGameHref, userProfileHref } from '@/lib/navigation';
 import { DEFAULT_APP_RUNTIME } from '@/lib/runtime';
 import { FOCAL } from '@/theme/motion';
-import { figtree, TYPE } from '@/theme/fonts';
+import { figtree, SECTION_HEADING, TYPE } from '@/theme/fonts';
 
 type LocalHubId = 'matches' | 'polls' | 'boosters';
 
@@ -508,7 +509,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingTop: 6,
     paddingBottom: 12,
-    gap: 6,
+    gap: 8,
   },
   directoryEntry: {
     minHeight: 44,
@@ -518,9 +519,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
     backgroundColor: colors.surface,
+    ...KIT.shadowSoft,
   },
   directoryEntryLabel: { flex: 1, minWidth: 0, color: FOCAL.jadeInk, ...TYPE.button, ...figtree('700') },
   searchWrap: {
@@ -540,7 +540,8 @@ const styles = StyleSheet.create({
   search: {
     flex: 1,
     minWidth: 0,
-    fontSize: 13,
+    ...TYPE.body,
+    ...figtree('400'),
     color: colors.text,
     paddingVertical: 6,
   },
@@ -557,21 +558,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
+  // UX-19: the one section heading every fan tab shares (was a raw 15pt/800 with a green bar).
   sectionTitle: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: '800',
+    ...SECTION_HEADING,
     color: colors.text,
-    marginTop: 2,
-    borderLeftWidth: 3,
-    borderLeftColor: FOCAL.jadeInk,
-    paddingLeft: 8,
+    marginTop: 6,
   },
   hubCopy: {
+    ...TYPE.body,
+    ...figtree('600'),
     color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
-    lineHeight: 18,
   },
   pollStack: {
     gap: 6,

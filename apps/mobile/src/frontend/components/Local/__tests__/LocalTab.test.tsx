@@ -1,5 +1,8 @@
 /** Compact Local routing keeps sponsors in Boosters and preserves school/region discovery. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+import { FONT } from '@/theme/fonts';
+import { FOCAL } from '@/theme/motion';
 import LocalTab from '../../../../../app/(tabs)/local/index';
 import { cloneAppRuntime, DEFAULT_APP_RUNTIME } from '@/lib/runtime';
 let mockLive = cloneAppRuntime(DEFAULT_APP_RUNTIME);
@@ -77,4 +80,13 @@ it('preserves published custom hub labels and their existing navigation destinat
  await fireEvent.press(screen.getByRole('tab',{name:'Our community'}));
  expect(screen.getByRole('tab',{name:'Our community',selected:true})).toBeTruthy();
  expect(screen.getByText('Fixture Community Sponsor')).toBeTruthy();
+});
+
+it('uses the shared section heading and one Local hub track', async () => {
+  await render(<LocalTab/>);
+  const heading = StyleSheet.flatten(screen.getByRole('header', { name: 'Live matchups' }).props.style);
+  expect(heading.fontFamily).toBe(FONT.displayBold);
+  expect(heading.borderLeftWidth).toBeUndefined();
+  // The hub track is the Games tab's parent (a plain View tablist is not a queryable accessible element).
+  expect(StyleSheet.flatten(screen.getByRole('tab', { name: 'Games' }).parent!.props.style).backgroundColor).toBe(FOCAL.mistJade);
 });

@@ -2,7 +2,8 @@
  * Local scoreboard regressions: no invented live state, clock or zeroes; roster navigation stays intact; booster logos
  * render from a legacy full URL or an `sb:` reference (SCALE-02) and fall back to initials.
  */
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import { GameCard } from '@/components/Local/GameCard';
 import type { Game, Sponsorship } from '@/types/database';
 
@@ -107,4 +108,18 @@ describe('GameCard booster logos', () => {
     expect(uris).toEqual([legacy, 'https://abc123.supabase.co/storage/v1/object/public/avatars/sponsors/u2/2.png']);
     expect(screen.getByText('PC')).toBeTruthy();
   });
+});
+
+// UX-19: shorter score cards — the HOME/AWAY caption shares the team line, and venue shares a row with Boosted by.
+const rowOf = (text: string) => {
+  let node = screen.getByText(text, { includeHiddenElements: true }).parent;
+  while (node && StyleSheet.flatten(node.props.style)?.flexDirection !== 'row') node = node.parent;
+  return node;
+};
+const boosted: Sponsorship = { id: 'a', sponsor_user_id: null, business_name: 'Pizza a', logo_url: '  ', school_team: 'North Valley High School',
+  tier: 'silver', amount_cents: 5000, aura_points: 50, billing_interval: 'month', status: 'active' };
+it('puts HOME/AWAY on the team line and venue with Boosted by on one row', async () => {
+  await render(<GameCard game={recordedGame} onPress={jest.fn()} sponsors={[boosted]} />);
+  expect(rowOf('Home')).toBe(rowOf('North Valley Timberwolves'));
+  expect(within(rowOf('Community gym')!).getByText('Boosted by', { includeHiddenElements: true })).toBeTruthy();
 });
