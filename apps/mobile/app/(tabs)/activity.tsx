@@ -1,4 +1,5 @@
-/** Compact Activity rows keep notifications, factual history and invitation actions separate (Lovable jade primary). */
+/** UX-18 gives Activity rows less decoration/padding and a readable14pt primary/12pt metadata hierarchy.
+ * Named Figtree faces remain consistent with the inbox; factual history and invitation actions stay separate. */
 import { useIsFocused, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react-native';
@@ -15,8 +16,8 @@ import { ScreenHeading } from '@/components/ScreenHeading';
 import { TabScreen } from '@/components/TabScreen';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { cardShadow, colors, radii, SCOREBOARD_DIGITS, space } from '@/constants/theme';
-import { TYPE } from '@/theme/fonts';
+import { colors, radii, SCOREBOARD_DIGITS, space } from '@/constants/theme';
+import { TYPE, figtree } from '@/theme/fonts';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
@@ -64,11 +65,12 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
       style={({ pressed }) => [styles.row, item.actionable && styles.rowActionable, pressed && styles.rowPressed]}
     >
       <View style={[styles.rowIcon, { backgroundColor: meta.mist, borderColor: meta.tint }]}>
-        <Ionicons name={meta.icon} size={20} color={meta.ink} />
+        <Ionicons name={meta.icon} size={16} allowFontScaling={false} color={meta.ink} />
       </View>
       <View style={styles.rowBody}>
         <Text style={styles.rowTitle}>{item.title}</Text>
-        <Text style={styles.rowLede}>
+        {/* Only sent-gift school/source metadata uses caption size; thanks and confirmation instructions stay body size. */}
+        <Text style={[styles.rowLede, item.kind === 'malo_sent' && styles.rowMetadata]}>
           {item.body}
         </Text>
         <View style={styles.rowDetails}>
@@ -242,13 +244,13 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: space.sm,
     paddingTop: space.xs,
-    paddingBottom: space.md,
-    gap: space.sm,
+    paddingBottom: 8,
+    gap: 6,
   },
   sectionTitle: {
     color: colors.text,
     ...TYPE.section,
-    fontWeight: '800',
+    ...figtree('800'),
     marginTop: space.xs,
   },
   boot: {
@@ -259,14 +261,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     minHeight: 44,
     alignItems: 'center',
-    gap: space.sm,
+    gap: 8,
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: space.sm,
-    paddingHorizontal: space.md,
-    ...cardShadow,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
   },
   rowActionable: {
     borderColor: FOCAL.jadeInk,
@@ -276,9 +277,9 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   rowIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     borderWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
@@ -286,21 +287,27 @@ const styles = StyleSheet.create({
   rowBody: {
     flex: 1,
     minWidth: 0,
-    gap: 4,
+    gap: 2,
   },
   rowTitle: {
     color: colors.text,
-    ...TYPE.section,
-    fontWeight: '800',
+    ...TYPE.body,
+    ...figtree('700'),
+    includeFontPadding: false,
   },
   rowAgo: {
     color: colors.textMuted,
     ...TYPE.caption,
-    fontWeight: '700',
+    ...figtree('700'),
   },
   rowLede: {
     color: colors.textMuted,
     ...TYPE.body,
+    ...figtree('400'),
+    includeFontPadding: false,
+  },
+  rowMetadata: {
+    ...TYPE.caption,
   },
   rowDetails: {
     flexDirection: 'row',
@@ -310,12 +317,13 @@ const styles = StyleSheet.create({
   },
   rowCta: {
     ...TYPE.caption,
-    fontWeight: '800',
+    ...figtree('800'),
     marginTop: 2,
   },
   rowAmount: {
     ...SCOREBOARD_DIGITS,
-    ...TYPE.section,
+    ...TYPE.body,
+    includeFontPadding: false,
     flexShrink: 1,
   },
 });

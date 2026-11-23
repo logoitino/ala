@@ -1,11 +1,12 @@
 /**
+ * UX-14: one synchronous mutation flight and current-owner clients prevent duplicate or stale playbook completion.
  * Expo /admin → Sports desk: edit a sport's positions, scoring actions, stat fields and sideline callouts,
  * Participation repair shares this desk before the fan multi-sport experience is enabled.
  * with a live preview of what the scorer and profile will show. Saves through `lib/sports.ts`.
  * @sideEffects Writes sport configs to Supabase.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type Href, useFocusEffect, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -21,6 +22,9 @@ import {
 } from '@/components/Admin/AdminChrome';
 import { AthleteSportsTool } from '@/components/Admin/AthleteSportsTool';
 import { colors, radii } from '@/constants/theme';
+import { useOptionalAuth } from '@/context/AuthContext';
+import { assertCurrent, createOfflineActorClient, type OfflineActor, type OfflineActorClient } from '@/lib/offlineActor';
+import { offlineQueue } from '@/services/OfflineQueue';
 import {
   GENERIC_SPORT_CONFIG,
   SPORT_CONFIG_SEEDS,
@@ -81,6 +85,19 @@ function nextId(prefix: string, taken: string[]): string {
  * @sideEffects `get_sport_configs` on focus; `upsert_sport_config` / `delete_sport_config` on save, pause, and delete; counts read `athlete_career_stats` + `games`.
  */
 export function SportsTool() {
+  const auth = useOptionalAuth();
+  const ownerId = auth?.user?.id ?? null;
+  const sessionCurrent = auth?.isSessionCurrent;
+  const lifetime = useRef({ ownerId, sessionCurrent, epoch: 0 });
+  if (lifetime.current.ownerId !== ownerId || lifetime.current.sessionCurrent !== sessionCurrent) {
+    lifetime.current = { ownerId, sessionCurrent, epoch: lifetime.current.epoch + 1 };
+  }
+  const frame = lifetime.current;
+  const current = useCallback(() => lifetime.current === frame && (!sessionCurrent || sessionCurrent()), [frame, sessionCurrent]);
+  return <SportsToolBody key={frame.epoch} ownerId={ownerId} current={current} />;
+}
+
+function SportsToolBody({ ownerId, current }: { ownerId: string | null; current: () => boolean }) {
   const router = useRouter();
   const [rows, setRows] = useState<SportConfig[]>([]);
   const [stored, setStored] = useState<string[]>([]);
@@ -91,21 +108,36 @@ export function SportsTool() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  const mounted = useRef(true);
+  const flight = useRef(false);
+  const readRevision = useRef(0);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const captureActor = useCallback((): OfflineActor => {
+    const captured = offlineQueue.captureActor(ownerId);
+    const actor = { userId: ownerId ?? '', isCurrent: () => mounted.current && current() && captured?.userId === ownerId && Boolean(captured?.isCurrent()) };
+    assertCurrent(actor); return actor;
+  }, [ownerId, current]);
   const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    const revision = ++readRevision.current;
+    setLoading(true); setError(null);
+    let actor: OfflineActor | undefined;
     try {
-      const [saved, counts] = await Promise.all([fetchStoredSportConfigs(), fetchSportUsage()]);
-      // Nothing saved yet? Show the starter playbooks so the desk is never blank, but mark them uninstalled.
+      actor = ownerId ? captureActor() : undefined;
+      const client = actor ? await createOfflineActorClient(actor) : undefined;
+      if (actor) assertCurrent(actor);
+      const [saved, counts] = await Promise.all([fetchStoredSportConfigs(client), ownerId ? fetchSportUsage(client) : Promise.resolve({})]);
+      if (actor) assertCurrent(actor);
+      if (!mounted.current || !current() || revision !== readRevision.current) return;
+      // Nothing saved yet? Show the starter playbooks, with read-only previews outside a signed-in desk.
       setRows(saved && saved.length > 0 ? saved : SPORT_CONFIG_SEEDS);
       setStored((saved ?? []).map((row) => row.sport.trim().toLowerCase()));
       setUsage(counts);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not load sports.');
+      if (mounted.current && current() && (!actor || actor.isCurrent()) && revision === readRevision.current) setError(caught instanceof Error ? caught.message : 'Could not load sports.');
     } finally {
-      setLoading(false);
+      if (mounted.current && current() && (!actor || actor.isCurrent()) && revision === readRevision.current) setLoading(false);
     }
-  }, []);
+  }, [captureActor, current, ownerId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -118,55 +150,41 @@ export function SportsTool() {
     [stored],
   );
 
-  const patch = (next: Partial<Draft>) => setDraft((current) => (current ? { ...current, ...next } : current));
-
-  const save = async (config: Draft, note: string) => {
-    setBusy(true);
-    setMessage(null);
+  const changeDraft = (next: Draft | null) => { if (!flight.current && mounted.current && current()) setDraft(next); };
+  const patch = (next: Partial<Draft>) => {
+    if (!flight.current && mounted.current && current()) setDraft(value => value ? { ...value, ...next } : value);
+  };
+  const mutate = async (work: (client: OfflineActorClient) => Promise<string>, closeEditor: boolean, failure: string) => {
+    if (flight.current || !mounted.current || !current()) return;
+    flight.current = true; setBusy(true); setMessage(null);
+    let actor: OfflineActor | undefined;
     try {
-      const minutes = Number(config.clockMinutes);
-      await saveSportConfig({
-        ...config,
-        clockSeconds: config.usesClock && Number.isFinite(minutes) ? Math.max(0, Math.round(minutes * 60)) : 0,
-      });
-      setMessage(note);
-      setDraft(null);
+      actor = captureActor();
+      const client = await createOfflineActorClient(actor); assertCurrent(actor);
+      const result = await work(client); assertCurrent(actor);
+      setMessage(result);
+      if (closeEditor) setDraft(null);
       await refresh();
     } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : 'Could not save this sport.');
+      if (mounted.current && current() && (!actor || actor.isCurrent())) setMessage(caught instanceof Error ? caught.message : failure);
     } finally {
-      setBusy(false);
+      flight.current = false;
+      if (mounted.current && current() && (!actor || actor.isCurrent())) setBusy(false);
     }
   };
-
-  const remove = async (config: SportConfig) => {
-    setBusy(true);
-    setMessage(null);
-    try {
-      await deleteSportConfig(config.id);
-      setMessage(`${config.sport} playbook deleted. Its games fall back to the generic console.`);
-      setDraft(null);
-      await refresh();
-    } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : 'Could not delete this sport.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const installSeeds = async () => {
-    setBusy(true);
-    setMessage(null);
-    try {
-      const count = await seedSportConfigs();
-      setMessage(`${count} playbooks installed. Edit any of them below.`);
-      await refresh();
-    } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : 'Could not install the starter playbooks.');
-    } finally {
-      setBusy(false);
-    }
-  };
+  const save = (config: Draft, note: string) => mutate(async client => {
+    const minutes = Number(config.clockMinutes);
+    await saveSportConfig({ ...config, clockSeconds: config.usesClock && Number.isFinite(minutes) ? Math.max(0, Math.round(minutes * 60)) : 0 }, client);
+    return note;
+  }, true, 'Could not save this sport.');
+  const remove = (config: SportConfig) => mutate(async client => {
+    await deleteSportConfig(config.id, client);
+    return `${config.sport} playbook deleted. Its games fall back to the generic console.`;
+  }, true, 'Could not delete this sport.');
+  const installSeeds = () => mutate(async client => {
+    const count = await seedSportConfigs(client);
+    return `${count} playbooks installed. Edit any of them below.`;
+  }, false, 'Could not install the starter playbooks.');
 
   return (
     <AdminPage
@@ -178,16 +196,17 @@ export function SportsTool() {
       saveMode="instant"
     >
       <AdminNotice text={message} />
+      {error ? <AdminBtn label="Retry sports" disabled={loading || busy} onPress={() => void refresh()} /> : null}
 
       <AdminPanel title="Playbooks">
-        <AdminBtn label="+ New sport" kind="primary" disabled={busy} onPress={() => setDraft(blankDraft(rows.length))} />
+        <AdminBtn label="+ New sport" kind="primary" disabled={busy || !ownerId} onPress={() => changeDraft(blankDraft(rows.length))} />
         {unseeded.length > 0 ? (
           <AdminBtn
             label={`Install ${unseeded.length} starter playbook${unseeded.length === 1 ? '' : 's'} (${unseeded
               .slice(0, 3)
               .map((row) => row.sport)
               .join(', ')}${unseeded.length > 3 ? '…' : ''})`}
-            disabled={busy}
+            disabled={busy || !ownerId}
             onPress={() => void installSeeds()}
           />
         ) : null}
@@ -206,10 +225,10 @@ export function SportsTool() {
                 row.usesClock ? `clock ${sportClockLabel(row)}` : 'no clock'
               } · ${row.positions.length} positions · ${counts?.athletes ?? 0} athletes · ${counts?.games ?? 0} games`}
             >
-              <AdminBtn label="Edit" disabled={busy} onPress={() => setDraft(toDraft(row))} />
+              <AdminBtn label="Edit" disabled={busy || !ownerId} onPress={() => changeDraft(toDraft(row))} />
               <AdminBtn
                 label={row.isActive ? 'Pause' : 'Activate'}
-                disabled={busy}
+                disabled={busy || !ownerId}
                 onPress={() =>
                   void save(
                     { ...toDraft(row), isActive: !row.isActive },
@@ -229,7 +248,7 @@ export function SportsTool() {
           draft={draft}
           busy={busy}
           onPatch={patch}
-          onCancel={() => setDraft(null)}
+          onCancel={() => changeDraft(null)}
           onSave={() => void save(draft, `${draft.sport || 'Sport'} playbook saved.`)}
           onDelete={draft.id ? () => void remove(draft) : undefined}
         />

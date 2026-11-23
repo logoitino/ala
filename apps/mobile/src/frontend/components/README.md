@@ -1,3 +1,4 @@
+<!-- Existing-record discovery reuses consuming feature folders and keeps data access behind client libraries. -->
 # Components
 
 Reusable React Native UI, grouped by the feature that consumes it.
@@ -24,3 +25,7 @@ Putting a one-consumer component in the flat `components/` root “for convenien
 use it, it belongs in `Reels/`. Update `AGENTS.md` in the same change when you add a folder.
 
 Complex components need the project JSDoc header. Co-locate tests under `__tests__/`.
+
+UX-17 keeps the school/team directory in `Local/SchoolDirectory.tsx` and optional pending roster selection
+in `Profile/RoleSwitcherModal.tsx`. Both consume the bounded existing-record library; route files compose UI.
+Roster names, account ownership and staff verification remain separate contracts.

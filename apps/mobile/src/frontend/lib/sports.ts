@@ -1,4 +1,5 @@
 /**
+ * UX-14: optional captured clients preserve initiating-account transport without changing existing payloads.
  * Per-sport configuration (positions, scoring actions, stat fields, callouts, measurables) stored in Supabase.
  * Rows live in `sport_configs`, read with the `get_sport_configs` RPC and written with `upsert_sport_config`. Starters
  * come from `data/sports.ts`; the Expo /admin Sports desk edits them; scorer and profile screens read them through
@@ -22,6 +23,7 @@ import {
 } from '@/data/sports';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { callRpc } from '@/lib/rpc';
+import { isMissingFunction } from '@/lib/dbErrors';
 import type { SportConfigRow } from '@/types/database';
 
 function asArray(value: unknown): unknown[] {
@@ -190,9 +192,15 @@ export function sportConfigPayload(config: SportConfig): Record<string, unknown>
  * @returns Stored playbooks, or null when Supabase is offline or the table is unreachable.
  * @sideEffects `get_sport_configs` RPC.
  */
-export async function fetchStoredSportConfigs(): Promise<SportConfig[] | null> {
+export async function fetchStoredSportConfigs(client = supabase): Promise<SportConfig[] | null> {
   if (!isSupabaseConfigured) return null;
-  const { data, error } = await supabase.rpc('get_sport_configs');
+  const { data, error } = await client.rpc('get_sport_configs');
+  // Decorative/default readers retain their compatibility fallback. A captured admin read must expose a
+  // real denial/outage so the desk can retry, while a genuinely missing RPC still means not installed.
+  if (error && client !== supabase) {
+    const missing = error.code ? ['PGRST202', '42883'].includes(error.code) : isMissingFunction(error);
+    if (!missing) throw new Error(error.message || 'Could not load sports.');
+  }
   if (error || !Array.isArray(data)) return null;
   return data.map((row) => parseSportConfig(row)).filter((row): row is SportConfig => Boolean(row));
 }
@@ -202,8 +210,8 @@ export async function fetchStoredSportConfigs(): Promise<SportConfig[] | null> {
  * @returns Playbooks in builder order; the seeds when Supabase is offline or the table is empty.
  * @sideEffects `get_sport_configs` RPC.
  */
-export async function fetchSportConfigs(): Promise<SportConfig[]> {
-  const rows = await fetchStoredSportConfigs();
+export async function fetchSportConfigs(client = supabase): Promise<SportConfig[]> {
+  const rows = await fetchStoredSportConfigs(client);
   return rows && rows.length > 0 ? rows : SPORT_CONFIG_SEEDS;
 }
 
@@ -212,9 +220,9 @@ export async function fetchSportConfigs(): Promise<SportConfig[]> {
  * @returns The stored row so the desk can show server-normalized values.
  * @sideEffects `upsert_sport_config` RPC.
  */
-export async function saveSportConfig(config: SportConfig): Promise<SportConfig> {
+export async function saveSportConfig(config: SportConfig, client = supabase): Promise<SportConfig> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-  const { data, error } = await supabase.rpc('upsert_sport_config', {
+  const { data, error } = await client.rpc('upsert_sport_config', {
     payload: sportConfigPayload(config) as never,
   });
   if (error) throw new Error(error.message);
@@ -225,9 +233,9 @@ export async function saveSportConfig(config: SportConfig): Promise<SportConfig>
  * @purpose Delete a playbook. Games on that sport fall back to the generic console.
  * @sideEffects `delete_sport_config` RPC.
  */
-export async function deleteSportConfig(id: string): Promise<void> {
+export async function deleteSportConfig(id: string, client = supabase): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-  const { error } = await supabase.rpc('delete_sport_config', { target_id: id });
+  const { error } = await client.rpc('delete_sport_config', { target_id: id });
   if (error) throw new Error(error.message);
 }
 
@@ -236,10 +244,10 @@ export async function deleteSportConfig(id: string): Promise<void> {
  * @returns How many playbooks were written.
  * @sideEffects One `upsert_sport_config` per seed.
  */
-export async function seedSportConfigs(): Promise<number> {
+export async function seedSportConfigs(client = supabase): Promise<number> {
   let saved = 0;
   for (const seed of SPORT_CONFIG_SEEDS) {
-    await saveSportConfig({ ...seed, id: seed.sport.toLowerCase() });
+    await saveSportConfig({ ...seed, id: seed.sport.toLowerCase() }, client);
     saved += 1;
   }
   return saved;
@@ -257,7 +265,7 @@ export type SportUsage = {
  * @returns Map keyed by lowercase sport name.
  * @sideEffects Protected `admin_athlete_sport_usage` aggregate + `games` sport SELECT.
  */
-export async function fetchSportUsage(): Promise<Record<string, SportUsage>> {
+export async function fetchSportUsage(client = supabase): Promise<Record<string, SportUsage>> {
   const usage: Record<string, SportUsage> = {};
   if (!isSupabaseConfigured) return usage;
 
@@ -269,8 +277,8 @@ export async function fetchSportUsage(): Promise<Record<string, SportUsage>> {
   };
 
   const [stats, games] = await Promise.all([
-    callRpc<{ sport:string; athletes:number }[]>('admin_athlete_sport_usage'),
-    supabase.from('games').select('sport').limit(2000),
+    callRpc<{ sport:string; athletes:number }[]>('admin_athlete_sport_usage', {}, client),
+    client.from('games').select('sport').limit(2000),
   ]);
 
   if (Array.isArray(stats)) stats.forEach(row => {

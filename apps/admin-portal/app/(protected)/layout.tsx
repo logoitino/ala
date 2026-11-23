@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { AccessRestricted } from '@/components/AccessRestricted';
+import { PortalSessionBoundary } from '@/components/PortalSessionBoundary';
 import { adminMfaHref } from '@/lib/adminMfa';
 import { getPortalSession } from '@/lib/authz';
 import { isAdminPortalConfigured } from '@/lib/supabase';
@@ -17,14 +18,14 @@ import { isAdminPortalConfigured } from '@/lib/supabase';
  *   one `aal` re-check when the MFA switch is on).
  */
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  // Env not configured: nothing to authenticate against yet. Let pages render their own
-  // "Connect Supabase" setup notice rather than bouncing to a login page that cannot work either.
-  if (!isAdminPortalConfigured()) return <>{children}</>;
+  // A missing/invalid backend cannot verify access. Login remains public and explains setup.
+  if (!isAdminPortalConfigured()) redirect('/login');
 
   const session = await getPortalSession();
   if (!session) redirect('/login');
+  if (!session.frameId) return <PortalSessionBoundary userId={session.userId} frameId={null} verificationId={session.verificationId}>{null}</PortalSessionBoundary>;
   if (!session.isAdmin) return <AccessRestricted email={session.email} />;
   if (session.mfaStep === 'enroll' || session.mfaStep === 'verify') redirect(adminMfaHref('/'));
 
-  return <>{children}</>;
+  return <PortalSessionBoundary userId={session.userId} frameId={session.frameId} verificationId={session.verificationId}>{children}</PortalSessionBoundary>;
 }

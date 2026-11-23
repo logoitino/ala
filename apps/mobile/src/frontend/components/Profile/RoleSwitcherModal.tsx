@@ -1,10 +1,13 @@
-/** UX-13 readable shared type preserves every action and required notice. UX-13 save failures remain visible and late results never close another account frame. Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
+/** UX-17 offers bounded existing-roster choices as pending school-review requests, without copying or verifying identity.
+ * Choice/read/save lifetimes expire with school, account, name or sheet changes; failed claims stay retryable.
+ * An issued save keeps its owner slot until settlement; replacing the visible draft does not cancel the write.
+ * UX-13 readable shared type preserves every action and required notice. Fan menu uses shared Daylight chrome.
  * QUIZ-05: after a first athlete claim has finished, an optional last step offers "Share a fun fact?" with Not now
  * from the first frame. The claim never waits for it; the step closes itself when the server says this account can't
  * share (no recorded age, not linked yet, or fun facts off). */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View, type ScrollViewInstance, useWindowDimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
@@ -40,6 +43,9 @@ import {
 } from '@/theme/motion';
 import { useLegalAck } from '@/hooks/useLegalAck';
 import { TYPE, figtree } from '@/theme/fonts';
+import { offlineQueue } from '@/services/OfflineQueue';
+import { createOfflineActorClient } from '@/lib/offlineActor';
+import { listDirectoryRoster, type DirectoryPlayer } from '@/lib/schoolDirectory';
 
 const SHEET_OFF = 720;
 
@@ -47,6 +53,92 @@ type RoleSwitcherModalProps = {
   visible: boolean;
   onClose: () => void;
 };
+
+type AccountFrame = { ownerId: string | null; visible: boolean; guard?: () => boolean };
+type ChoiceFrame = { account: AccountFrame; schoolId: string | null; schoolName: string | null; fullName: string | null; revision: number };
+
+/** Optional public roster paging uses the originating account's client; no profile/guardian lookup or field copying. */
+function ExistingRosterChoice({ school, frame, isCurrent, selected, onChoose, disabled }: {
+  school: SchoolTeam; frame: AccountFrame; isCurrent: () => boolean; selected: DirectoryPlayer | null;
+  onChoose: (player: DirectoryPlayer | null) => void; disabled: boolean;
+}) {
+  const mounted = useRef(true);
+  const generation = useRef(0);
+  const flight = useRef<number | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const expandedRef = useRef(expanded);
+  expandedRef.current = expanded;
+  const disabledRef = useRef(disabled);
+  disabledRef.current = disabled;
+  const [query, setQuery] = useState('');
+  const queryRef = useRef(query);
+  queryRef.current = query;
+  const [rows, setRows] = useState<DirectoryPlayer[]>([]);
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+  const [nextOffset, setNextOffset] = useState<number | null>(null);
+  const offsetRef = useRef(nextOffset);
+  offsetRef.current = nextOffset;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; generation.current += 1; }; }, []);
+  const liveCurrent = useRef(isCurrent);
+  liveCurrent.current = isCurrent;
+  const load = useCallback(async (reset: boolean) => {
+    if (!mounted.current || !expandedRef.current || disabledRef.current || !liveCurrent.current() || queryRef.current !== query || flight.current !== null) return;
+    const offset = reset ? 0 : offsetRef.current;
+    if (offset === null) return;
+    const run = ++generation.current;
+    flight.current = run;
+    const actor = frame.ownerId ? offlineQueue.captureActor(frame.ownerId) : null;
+    const current = () => mounted.current && expandedRef.current && liveCurrent.current() && generation.current === run && queryRef.current === query && (actor?.isCurrent() ?? true);
+    setLoading(true); setError(false);
+    if (reset) { setRows([]); setNextOffset(null); }
+    try {
+      if (!actor) throw new Error('Directory owner is unavailable');
+      const client = await createOfflineActorClient(actor);
+      if (!current()) return;
+      const page = await listDirectoryRoster({ schoolId: school.id, schoolName: school.name, search: query, offset, limit: 20 }, client);
+      if (!current()) return;
+      setRows((previous) => reset ? page.items : [...new Map([...previous, ...page.items].map((row) => [row.id, row])).values()]);
+      setNextOffset(page.nextOffset);
+    } catch {
+      if (current()) setError(true);
+    } finally {
+      if (flight.current === run) flight.current = null;
+      if (current()) setLoading(false);
+    }
+  }, [frame, query, school.id, school.name]);
+  useEffect(() => { if (expanded) void load(true); }, [expanded, load]);
+  const renderedGeneration = generation.current;
+  const canChoose = () => mounted.current && expandedRef.current && !disabledRef.current && liveCurrent.current()
+    && queryRef.current === query && generation.current === renderedGeneration;
+  return <View style={styles.rosterChoice}>
+    <Pressable accessibilityLabel="Choose existing athlete (optional)" accessibilityRole="button" accessibilityState={{ expanded, disabled }} disabled={disabled} haptic="none"
+      onPress={() => { if (!mounted.current || disabledRef.current || !liveCurrent.current()) return; generation.current += 1; flight.current = null; setLoading(false); expandedRef.current = !expandedRef.current; setExpanded(expandedRef.current); }} style={styles.rosterAction}>
+      <Text style={styles.rosterActionText}>{selected ? `Selected: ${selected.name}` : 'Choose existing athlete (optional)'}</Text>
+    </Pressable>
+    <Text style={styles.rosterHint}>A choice requests school review; it does not link or verify you. No new choice keeps any existing claim.</Text>
+    {expanded ? <>
+      <TextInput accessibilityLabel="Search existing athletes" value={query} maxLength={100} editable={!disabled} placeholder="Search roster names" placeholderTextColor={colors.textMuted} style={styles.input}
+        onChangeText={(value) => { if (!mounted.current || !expandedRef.current || disabledRef.current || !liveCurrent.current()) return; generation.current += 1; flight.current = null; queryRef.current = value; rowsRef.current = []; setQuery(value); setRows([]); setNextOffset(null); setError(false); setLoading(false); }} />
+      <AnimatedButton accessibilityLabel="No new roster choice" accessibilityRole="radio" accessibilityState={{ selected: !selected }} disabled={disabled} haptic="none" onPress={() => { if (canChoose()) onChoose(null); }} contentStyle={styles.rosterAction}>
+        <Text style={styles.rosterActionText}>No new roster choice (optional)</Text>
+      </AnimatedButton>
+      {loading ? <Text style={styles.rosterHint}>Loading existing athletes…</Text> : null}
+      {rows.map((row) => <AnimatedButton key={row.id} accessibilityLabel={`Choose ${row.name}`} accessibilityRole="radio" accessibilityState={{ selected: selected?.id === row.id }} disabled={disabled} haptic="none" onPress={() => { const currentRow = rowsRef.current.find((item) => item.id === row.id); if (canChoose() && currentRow?.schoolName === school.name) onChoose(currentRow); }} contentStyle={[styles.rosterAction, selected?.id === row.id && styles.rosterSelected]}>
+        <Text style={styles.rosterActionText}>{row.name}</Text>
+        <Text style={styles.rosterHint}>{[row.team?.trim() || 'No team label recorded', row.jerseyNumber === null ? null : `#${row.jerseyNumber}`, row.position].filter(Boolean).join(' · ')}</Text>
+      </AnimatedButton>)}
+      {error ? <>
+        <Text accessibilityLiveRegion="polite" style={styles.saveError}>Existing roster is unavailable. Please retry.</Text>
+        <AnimatedButton accessibilityLabel="Retry existing roster" disabled={disabled || loading} haptic="none" onPress={() => void load(rows.length === 0)} contentStyle={styles.rosterAction}><Text style={styles.rosterActionText}>Retry</Text></AnimatedButton>
+      </> : !loading && rows.length === 0 ? <Text style={styles.rosterHint}>No matching records on this school roster. You can continue without a new choice.</Text> : null}
+      {!error && nextOffset !== null ? <AnimatedButton accessibilityLabel="Load more existing athletes" disabled={disabled || loading} haptic="none" onPress={() => void load(false)} contentStyle={styles.rosterAction}><Text style={styles.rosterActionText}>Load more existing athletes</Text></AnimatedButton> : null}
+      {rows.length ? <Text style={styles.rosterHint}>Showing {rows.length} loaded records{nextOffset !== null ? '; more may be available' : ''}.</Text> : null}
+    </> : null}
+  </View>;
+}
 
 function fireMediumHaptic() {
   try {
@@ -57,11 +149,11 @@ function fireMediumHaptic() {
 }
 
 /**
- * @purpose Account Capability sheet: Fan vs Athlete cards, unified HS/college team search, identical roster onboarding, dual-role view toggle.
+ * @purpose Account Capability sheet: Fan/Athlete cards, existing school search plus optional bounded roster choice, and dual-role view toggle.
  * @param visible Opens the Reanimated bottom sheet.
  * @param onClose Dismiss after backdrop tap or a successful conversion.
  * @returns Modal bottom sheet over an `expo-blur` backdrop.
- * @sideEffects `search_schools_and_teams`; `add_user_role` + `profiles.school_id` / `athlete_division`; Medium `impactAsync`; Aura toast on unlock; legal ack required before claiming a roster (Varsity is a later team-code step).
+ * @sideEffects Existing school search and minimal public roster pages; `add_user_role`, profile fields and a pending `claim_athlete` request; Medium `impactAsync`; Aura toast; legal ack required before claiming (Varsity is later).
  */
 export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) {
   const frame = useSheetFrame();
@@ -77,9 +169,9 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
   if (authFrame.current.ownerId !== ownerId || authFrame.current.visible !== visible || authFrame.current.guard !== isSessionCurrent) {
     authFrame.current = { ownerId, visible, guard: isSessionCurrent };
   }
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [storedSaveError, setStoredSaveError] = useState<{ frame: ChoiceFrame; message: string } | null>(null);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  useEffect(() => { setSaveError(null); setApplying(false); }, [ownerId, visible, isSessionCurrent]);
+  useEffect(() => { setStoredSaveError(null); }, [ownerId, visible, isSessionCurrent]);
   const { configs } = useSportConfigs();
   const sportOptions = (activeSportNames(configs).length > 0 ? activeSportNames(configs) : [...ATHLETE_SPORTS]).map(
     (item) => ({ id: item, label: item }),
@@ -88,13 +180,33 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
   const { accepted: legalAccepted, accept: acceptLegal } = useLegalAck();
   const [legalOpen, setLegalOpen] = useState(false);
   const [open, setOpen] = useState(false);
-  const [applying, setApplying] = useState(false);
+  const [pendingOwners, setPendingOwners] = useState<Set<string | null>>(() => new Set());
   const [teamQuery, setTeamQuery] = useState('');
   const [team, setTeam] = useState<SchoolTeam | null>(null);
   const [sport, setSport] = useState<string | null>(null);
   const [jersey, setJersey] = useState('');
   const [position, setPosition] = useState('');
   const [classYear, setClassYear] = useState<string | null>(null);
+  const choiceFrame = useRef<ChoiceFrame>({ account: authFrame.current, schoolId: null, schoolName: null, fullName: profile?.full_name ?? null, revision: 0 });
+  if (choiceFrame.current.account !== authFrame.current || choiceFrame.current.schoolId !== (team?.id ?? null)
+    || choiceFrame.current.schoolName !== (team?.name ?? null) || choiceFrame.current.fullName !== (profile?.full_name ?? null)) {
+    choiceFrame.current = { account: authFrame.current, schoolId: team?.id ?? null, schoolName: team?.name ?? null, fullName: profile?.full_name ?? null, revision: choiceFrame.current.revision + 1 };
+  }
+  const [storedChoice, setStoredChoice] = useState<{ frame: ChoiceFrame; player: DirectoryPlayer | null } | null>(null);
+  const selectedPlayer = storedChoice?.frame === choiceFrame.current ? storedChoice.player : null;
+  const saveError = storedSaveError?.frame === choiceFrame.current ? storedSaveError.message : null;
+  const saveFlights = useRef(new Map<string | null, ChoiceFrame>());
+  const applying = pendingOwners.has(ownerId);
+  const currentChoiceFrame = choiceFrame.current;
+  const isChoiceCurrent = () => mounted.current && currentChoiceFrame === choiceFrame.current
+    && currentChoiceFrame.account === authFrame.current && currentChoiceFrame.account.visible && (currentChoiceFrame.account.guard?.() ?? true);
+  const choosePlayer = (player: DirectoryPlayer | null) => {
+    if (isChoiceCurrent() && !saveFlights.current.has(ownerId)) setStoredChoice({ frame: currentChoiceFrame, player });
+  };
+  // A retained button must not adopt today's frame while sending a previous rendering's fields/choice.
+  const renderedDraft = { team, sport, jersey, position, classYear, selectedPlayer };
+  const currentDraft = useRef(renderedDraft);
+  currentDraft.current = renderedDraft;
   // Optional fun-fact step, shown only after a first claim has already saved.
   const [funStep, setFunStep] = useState(false);
   // The step sits at the top of the list, but Apply is at the bottom: bring it into view when it appears.
@@ -110,7 +222,9 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
   /** Athletes always keep Fan (`deriveRoles`); this is the dual-capability sheet. */
   const dual = isAthlete;
   const savedTeam = profile?.team ?? null;
-  const needsRoster = !savedTeam;
+  // A saved school is not proof that the pending claim succeeded. Keep this attempt's retry reachable.
+  const hasNewSchoolDraft = team && savedTeam && (team.id !== savedTeam.id || team.name !== savedTeam.name);
+  const needsRoster = !savedTeam || Boolean(saveError) || applying || Boolean(hasNewSchoolDraft);
 
   const resetForm = () => {
     setTeamQuery('');
@@ -169,8 +283,11 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
   };
 
   const dismiss = (requestGuard?: unknown) => {
-    if (!open || applying) return;
+    if (!open || (saveFlights.current.has(ownerId) && typeof requestGuard !== 'function')) return;
+    const closingFrame = authFrame.current;
+    const closingChoiceFrame = choiceFrame.current;
     const finishRequest = () => {
+      if (!mounted.current || closingFrame !== authFrame.current || closingChoiceFrame !== choiceFrame.current || !(closingFrame.guard?.() ?? true)) return;
       if (typeof requestGuard === 'function' && !requestGuard()) return;
       finishClose();
     };
@@ -191,7 +308,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
   };
 
   const onApply = async () => {
-    if (applying) return;
+    if (!isChoiceCurrent() || currentDraft.current !== renderedDraft || saveFlights.current.has(ownerId)) return;
     if (!legalAccepted) {
       showToast('Agree to Terms of Service & NIL Compliance first.');
       return;
@@ -202,12 +319,14 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
       showToast('Pick your team and sport.');
       return;
     }
-    const requestFrame = authFrame.current;
-    const isCurrent = () => mounted.current && requestFrame === authFrame.current && requestFrame.visible && (requestFrame.guard?.() ?? true);
+    const requestFrame = currentChoiceFrame.account;
+    const requestChoiceFrame = currentChoiceFrame;
+    const isCurrent = () => mounted.current && requestFrame === authFrame.current && requestChoiceFrame === choiceFrame.current && requestFrame.visible && (requestFrame.guard?.() ?? true);
     if (!isCurrent()) return;
+    saveFlights.current.set(ownerId, requestChoiceFrame);
     fireMediumHaptic();
-    setSaveError(null);
-    setApplying(true);
+    setStoredSaveError(null);
+    setPendingOwners((previous) => new Set(previous).add(ownerId));
     try {
       await completeAthleteOnboarding({
         team,
@@ -215,15 +334,20 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
         jersey: jersey.trim(),
         position: position.trim(),
         classYear: classYear ?? '',
-      });
+      }, selectedPlayer?.id ?? null);
       if (!isCurrent()) return;
       showToast(isAthlete ? 'Roster saved 🏆' : 'School claimed 🏆 Get Varsity verified to unlock Player of the Week');
       if (isAthlete) dismiss(isCurrent);
       else setFunStep(true);
-    } catch {
-      if (isCurrent()) setSaveError("Couldn't save your roster. Please try again.");
+    } catch (error) {
+      if (isCurrent()) setStoredSaveError({ frame: requestChoiceFrame, message: error instanceof Error && error.message.startsWith('Athlete claim is unavailable.')
+        ? 'Athlete claim is unavailable. Your profile fields may be saved; retry the claim.'
+        : "Couldn't save your roster. Please try again." });
     } finally {
-      if (isCurrent()) setApplying(false);
+      if (saveFlights.current.get(requestFrame.ownerId) === requestChoiceFrame) {
+        saveFlights.current.delete(requestFrame.ownerId);
+        if (mounted.current) setPendingOwners((previous) => { const next = new Set(previous); next.delete(requestFrame.ownerId); return next; });
+      }
     }
   };
 
@@ -319,17 +443,20 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
             />
             {team ? (
               <>
+                <ExistingRosterChoice key={choiceFrame.current.revision} school={team} frame={authFrame.current} selected={selectedPlayer} disabled={applying}
+                  isCurrent={isChoiceCurrent} onChoose={choosePlayer} />
                 <Text style={styles.fieldLabel}>Sport</Text>
                 <FilterPills
                   items={sportOptions}
                   value={sport}
-                  onChange={(id) => setSport(id)}
+                  onChange={(id) => { if (!saveFlights.current.has(ownerId)) setSport(id); }}
                   accessibilityLabel="Sport"
                 />
                 <Text style={styles.fieldLabel}>Roster number (optional)</Text>
                 <TextInput
                   value={jersey}
-                  onChangeText={(value) => setJersey(value.replace(/[^\d]/g, '').slice(0, 3))}
+                  editable={!applying}
+                  onChangeText={(value) => { if (!saveFlights.current.has(ownerId)) setJersey(value.replace(/[^\d]/g, '').slice(0, 3)); }}
                   keyboardType="number-pad"
                   placeholder="7"
                   placeholderTextColor={colors.textMuted}
@@ -339,7 +466,8 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
                 <Text style={styles.fieldLabel}>Position (optional)</Text>
                 <TextInput
                   value={position}
-                  onChangeText={setPosition}
+                  editable={!applying}
+                  onChangeText={(value) => { if (!saveFlights.current.has(ownerId)) setPosition(value); }}
                   autoCapitalize="characters"
                   placeholder="QB · Wing · Setter"
                   placeholderTextColor={colors.textMuted}
@@ -350,7 +478,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
                 <FilterPills
                   items={classYears.map((item) => ({ id: item, label: classYearLabel(item) }))}
                   value={classYear}
-                  onChange={(id) => setClassYear(id)}
+                  onChange={(id) => { if (!saveFlights.current.has(ownerId)) setClassYear(id); }}
                   accessibilityLabel="Graduation class year"
                 />
               </>
@@ -403,6 +531,7 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
               }}
               onOpenTerms={() => setLegalOpen(true)}
             />
+            {applying && saveFlights.current.get(ownerId) !== choiceFrame.current ? <Text accessibilityLiveRegion="polite" style={styles.saveError}>An earlier roster save is finishing. Save this school after it settles.</Text> : null}
             {saveError ? <Text accessibilityLiveRegion="polite" style={styles.saveError}>{saveError}</Text> : null}
             <AnimatedButton
               accessibilityLabel={isAthlete ? 'Save athlete roster' : 'Claim athlete profile'}
@@ -448,6 +577,11 @@ export function RoleSwitcherModal({ visible, onClose }: RoleSwitcherModalProps) 
 }
 
 const styles = StyleSheet.create({
+  rosterChoice: { gap: 8 },
+  rosterAction: { minHeight: 44, borderRadius: MENU_METRICS.controlRadius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background, paddingHorizontal: 12, paddingVertical: 10, gap: 4 },
+  rosterActionText: { ...TYPE.body, ...figtree('700'), color: colors.text },
+  rosterHint: { ...TYPE.body, ...figtree('400'), color: colors.textMuted },
+  rosterSelected: { borderColor: colors.primary, backgroundColor: colors.accentSoft },
   saveError: { ...figtree('400'), color: colors.text, ...TYPE.body,  },
   root: {
     flex: 1,

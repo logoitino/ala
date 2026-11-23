@@ -1,4 +1,5 @@
 /**
+ * Received-gift reads accept the originating client so private amounts cannot use a later session.
  * Gift ledgers read by two screens: what an athlete received (`get_received_malo`) and a fan's own
  * receipts (`get_fan_tip_history`, with a `tips` SELECT fallback for databases without that function).
  * Rows are parsed defensively here so a missing column never reaches the UI as `undefined`.
@@ -41,11 +42,11 @@ function parseReceived(row: Record<string, unknown>): ReceivedMalo | null {
 /**
  * @purpose Donations one athlete received, newest first as the server returns them.
  * @param playerId `players.id` (the athlete, or the child a guardian is linked to).
- * @returns Parsed rows, or null when the call failed or the function is missing (the caller shows $0, not an error).
+ * @returns Parsed rows, or null when the call failed or the function is missing (the caller offers Retry rather than a false zero total).
  * @sideEffects RPC `get_received_malo`.
  */
-export async function fetchReceivedMalo(playerId: string): Promise<ReceivedMalo[] | null> {
-  const { data, error } = await supabase.rpc('get_received_malo', { target_player_id: playerId });
+export async function fetchReceivedMalo(playerId: string, client = supabase): Promise<ReceivedMalo[] | null> {
+  const { data, error } = await client.rpc('get_received_malo', { target_player_id: playerId });
   if (error || !Array.isArray(data)) return null;
   return data
     .map((row) => (row && typeof row === 'object' ? parseReceived(row as Record<string, unknown>) : null))

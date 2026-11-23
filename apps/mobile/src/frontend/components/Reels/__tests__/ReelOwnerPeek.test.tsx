@@ -13,6 +13,9 @@ import type { Player } from '@/data/players';
 const mockProfiles: Record<string, Record<string, unknown> | null> = {};
 let mockReduceMotion = false;
 let mockVerified = false;
+let mockRealCrew = false, mockCrewUser: string | null = null;
+let mockCrewGuard = () => true;
+const mockCrewFetch = jest.fn(), mockCrewSet = jest.fn(), mockCrewWall = jest.fn();
 
 jest.mock('react-native-reanimated', () => {
   const { View, ScrollView, Text, Image } = jest.requireActual('react-native');
@@ -57,9 +60,13 @@ jest.mock('@/lib/verification', () => ({
   fetchPlayerVerification: async () => ({ status: mockVerified ? 'verified' : 'unverified', schoolClaimed: false, schoolId: null, avatarUrl: null }),
 }));
 jest.mock('@/hooks/useCrew', () => ({
-  useCrew: () => ({ crew_count: 12, following: false, busy: false, signedIn: true, toggle: jest.fn() }),
+  useCrew: (id: string) => mockRealCrew ? jest.requireActual('@/hooks/useCrew').useCrew(id) : ({ crew_count: 12, following: false, busy: false, signedIn: true, toggle: jest.fn() }),
 }));
-jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: jest.fn() }) }));
+jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: mockCrewWall }) }));
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: mockCrewUser ? { id: mockCrewUser } : null, isSessionCurrent: mockCrewGuard }) }));
+jest.mock('@/lib/crew', () => ({ fetchCrewGraph: (...args: unknown[]) => mockCrewFetch(...args), setCrewFollow: (...args: unknown[]) => mockCrewSet(...args) }));
+jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: { captureActor: () => { const owner = mockCrewUser, guard = mockCrewGuard; return owner ? { userId: owner, isCurrent: () => owner === mockCrewUser && guard === mockCrewGuard } : null; } } }));
+jest.mock('@/lib/offlineActor', () => ({ createOfflineActorClient: async () => ({}) }));
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn() } }));
 jest.mock('@/lib/haptics', () => ({ impactPress: jest.fn() }));
 
@@ -102,7 +109,10 @@ async function renderPeek(overrides: Partial<React.ComponentProps<typeof ReelOwn
 beforeEach(() => {
   for (const key of Object.keys(mockProfiles)) delete mockProfiles[key];
   mockReduceMotion = false;
-  mockVerified = false;
+  mockVerified = false; mockRealCrew = false; mockCrewUser = null; mockCrewGuard = () => true;
+  mockCrewFetch.mockReset(); mockCrewSet.mockReset(); mockCrewWall.mockReset();
+  mockCrewFetch.mockResolvedValue({ crew_count: 12, squad_count: 0, following: false, mutual: false });
+  mockCrewSet.mockResolvedValue({ crew_count: 13, squad_count: 0, following: true, mutual: false });
 });
 
 afterEach(() => jest.restoreAllMocks());
@@ -269,4 +279,31 @@ describe('ReelOwnerPeek', () => {
     await renderPeek();
     await waitFor(() => expect(screen.getByText(/VERIFIED/i)).toBeTruthy());
   });
+});
+
+it('resumes one guest Join for the same still-open clip/athlete with the current signed-in owner', async () => {
+ mockRealCrew = true;
+ let resume!: () => void; mockCrewWall.mockImplementation(intent => { resume = intent.resume; });
+ const props = { clip: video, player, open: true, maloReady: false, totalTipsCents: 0, onClose: jest.fn() };
+ const view = await render(<ReelOwnerPeek {...props} />);
+ await waitFor(() => expect(screen.getByLabelText('Join Crew, follow Marcus Reyes')).toBeEnabled());
+ await fireEvent.press(screen.getByLabelText('Join Crew, follow Marcus Reyes'));
+ mockCrewUser = 'A'; mockCrewGuard = () => true;
+ await view.rerender(<ReelOwnerPeek {...props} />);
+ await act(async () => { resume(); resume(); });
+ await waitFor(() => expect(mockCrewSet).toHaveBeenCalledTimes(1));
+ expect(mockCrewSet).toHaveBeenCalledWith('p1', 'A', true, expect.objectContaining({ userId: 'A' }));
+});
+it.each(['closed', 'retargeted', 'unmounted'])('refuses a guest Join resume after its peek is %s', async mode => {
+ mockRealCrew = true;
+ let resume!: () => void; mockCrewWall.mockImplementation(intent => { resume = intent.resume; });
+ const props = { clip: video, player, open: true, maloReady: false, totalTipsCents: 0, onClose: jest.fn() };
+ const view = await render(<ReelOwnerPeek {...props} />);
+ await waitFor(() => expect(screen.getByLabelText('Join Crew, follow Marcus Reyes')).toBeEnabled());
+ await fireEvent.press(screen.getByLabelText('Join Crew, follow Marcus Reyes'));
+ mockCrewUser = 'A'; mockCrewGuard = () => true;
+ if (mode === 'unmounted') await view.unmount();
+ else await view.rerender(<ReelOwnerPeek {...props} open={mode !== 'closed'} clip={{ ...video, id: mode === 'retargeted' ? 'new-clip' : video.id }} />);
+ await act(async () => resume());
+ expect(mockCrewSet).not.toHaveBeenCalled();
 });

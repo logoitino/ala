@@ -1,4 +1,5 @@
-/** UX-13 readable controls preserve all consent, money and operator actions.
+/**
+ * UX-14: one synchronous login flight locks submitted choices and suppresses unmounted notices/navigation. UX-13 readable controls preserve all consent, money and operator actions.
  * Admin portal sign-in form (`/login`): Supabase Auth email + password or a magic link. Only proves a real
  * session; the admin check runs afterwards in `app/(protected)/layout.tsx`. Two always-mounted live regions:
  * `role="alert"` for failures, `role="status"` for progress and the magic-link note (never one region that
@@ -8,7 +9,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { safeNextPath } from '@/lib/adminMfa';
 import { getSupabaseBrowserClient, isAdminPortalConfigured } from '@/lib/supabase';
@@ -35,38 +36,41 @@ export function LoginForm() {
   const [failure, setFailure] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  const mounted = useRef(true);
+  const flight = useRef<object | null>(null);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; flight.current = null; }; }, []);
   const configured = isAdminPortalConfigured();
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!mounted.current || flight.current) return;
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
       setNotice(null);
       setFailure('Add NEXT_PUBLIC_SUPABASE_* to apps/admin-portal/.env.local (same project as the Expo app).');
       return;
     }
-    setBusy(true);
-    setFailure(null);
-    setNotice(null);
+    const operation = {}; flight.current = operation;
+    const submitted = { mode, email: email.trim(), password, next };
+    const current = () => mounted.current && flight.current === operation;
+    setBusy(true); setFailure(null); setNotice(null);
     try {
-      if (mode === 'password') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (submitted.mode === 'password') {
+        const { error } = await supabase.auth.signInWithPassword({ email: submitted.email, password: submitted.password });
         if (error) throw error;
-        router.replace(next);
-        router.refresh();
+        if (!current()) return;
+        router.replace(submitted.next); router.refresh();
       } else {
-        const redirectTo =
-          typeof window !== 'undefined'
-            ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
-            : undefined;
-        const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
+        const redirectTo = typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(submitted.next)}` : undefined;
+        const { error } = await supabase.auth.signInWithOtp({ email: submitted.email, options: { emailRedirectTo: redirectTo } });
         if (error) throw error;
-        setNotice(`Magic link sent to ${email}. Open it on this device to finish signing in.`);
+        if (current()) setNotice(`Magic link sent to ${submitted.email}. Open it on this device to finish signing in.`);
       }
     } catch (caught) {
-      setFailure(caught instanceof Error ? caught.message : 'Could not sign in.');
+      if (current()) setFailure(caught instanceof Error ? caught.message : 'Could not sign in.');
     } finally {
-      setBusy(false);
+      if (current()) { flight.current = null; setBusy(false); }
     }
   };
 
@@ -96,7 +100,8 @@ export function LoginForm() {
             <div className="mt-5 flex gap-2">
               <button
                 type="button"
-                onClick={() => setMode('password')}
+                disabled={busy}
+                onClick={() => { if (!flight.current) setMode('password'); }}
                 aria-pressed={mode === 'password'}
                 className={
                   mode === 'password'
@@ -108,7 +113,8 @@ export function LoginForm() {
               </button>
               <button
                 type="button"
-                onClick={() => setMode('magic-link')}
+                disabled={busy}
+                onClick={() => { if (!flight.current) setMode('magic-link'); }}
                 aria-pressed={mode === 'magic-link'}
                 className={
                   mode === 'magic-link'
@@ -128,7 +134,8 @@ export function LoginForm() {
                   required
                   autoComplete="email"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={busy}
+                  onChange={(event) => { if (!flight.current) setEmail(event.target.value); }}
                   className="min-h-11 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus-visible:border-[var(--jade)]"
                   placeholder="you@tapuai.app"
                 />
@@ -141,7 +148,8 @@ export function LoginForm() {
                     required
                     autoComplete="current-password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    disabled={busy}
+                    onChange={(event) => { if (!flight.current) setPassword(event.target.value); }}
                     className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-sm focus-visible:border-[var(--jade)]"
                     placeholder="••••••••"
                   />

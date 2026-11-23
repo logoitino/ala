@@ -1,4 +1,5 @@
-/** UX-13 readable shared type preserves every action and required notice.
+/** UX-18 opt-in inline explanation layout preserves the default stack, full text and accessible 44pt toggle.
+ * UX-13 readable shared type preserves every action and required notice.
  * Explanatory copy that starts clamped with a "More" / "Less" toggle, so panels stay short and the full message is
  * one tap away (owner 2026-10-21: maximize screen for content). Never use it for policy, money, safety, consent or
  * rights text — those must stay fully visible (COMPLIANCE_*, held notice, 90 / 10, age gate, medical disclaimer).
@@ -23,20 +24,22 @@ type MoreTextProps = {
   style?: StyleProp<TextStyle>;
   /** Link ink; defaults to brand jade. */
   linkColor?: string;
+  /** Ordinary explanation text may place its toggle alongside the text; other consumers keep the stack. */
+  inlineToggle?: boolean;
 };
 
 /**
  * @purpose Clamp long explanatory text to a few lines with an accessible More / Less toggle.
  * @returns The text, plus a toggle when it is longer than `lines` compact lines.
  */
-export function MoreText({ children, lines = 2, style, linkColor = FOCAL.jadeInk }: MoreTextProps) {
+export function MoreText({ children, lines = 2, style, linkColor = FOCAL.jadeInk, inlineToggle = false }: MoreTextProps) {
   const [open, setOpen] = useState(false);
   const text = children.trim();
   const long = text.length > lines * CHARS_PER_LINE;
   if (!long) return <Text style={style}>{text}</Text>;
   return (
-    <View style={styles.wrap}>
-      <Text style={style} numberOfLines={open ? undefined : lines} accessibilityLabel={text}>
+    <View style={inlineToggle ? [styles.wrap, styles.inlineWrap] : styles.wrap}>
+      <Text style={inlineToggle ? [style, styles.inlineText] : style} numberOfLines={open ? undefined : lines} accessibilityLabel={text}>
         {text}
       </Text>
       <Pressable
@@ -46,7 +49,7 @@ export function MoreText({ children, lines = 2, style, linkColor = FOCAL.jadeInk
         haptic="selection"
         hitSlop={12}
         onPress={() => setOpen((value) => !value)}
-        style={styles.toggle}
+        style={inlineToggle ? [styles.toggle, styles.inlineToggle] : styles.toggle}
       >
         <Text style={[styles.toggleLabel, { color: linkColor }]}>{open ? 'Less' : 'More'}</Text>
       </Pressable>
@@ -62,6 +65,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingVertical: 2,
   },
+  inlineWrap: { flexDirection: 'row', alignItems: 'flex-start', gap: 4 },
+  inlineText: { flex: 1, minWidth: 0 },
+  inlineToggle: { minWidth: 44, minHeight: 44, flexShrink: 0, alignItems: 'center', justifyContent: 'center' },
   toggleLabel: {
     ...TYPE.caption,
     ...figtree('800'),

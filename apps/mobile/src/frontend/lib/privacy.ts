@@ -1,4 +1,5 @@
 /**
+ * Own blocked-account reads and unblocks accept originating clients so Privacy callbacks cannot borrow another session.
  * Profile privacy, friends and blocking (PRIV-01). Every rule is enforced in the database
  * (`20261014090000_profile_privacy.sql`); this file only calls those functions and names things for the screens.
  * QUIZ-05: the `fun_facts` audience is read and sent only when the server returns it (databases without the QUIZ-05
@@ -136,15 +137,15 @@ export async function blockUser(profileId: string): Promise<void> {
 }
 
 /** @purpose Unblock someone. */
-export async function unblockUser(profileId: string): Promise<void> {
-  await callRpc('unblock_user', { target_profile_id: profileId });
+export async function unblockUser(profileId: string, client = supabase): Promise<void> {
+  await callRpc('unblock_user', { target_profile_id: profileId }, client);
 }
 
 export type BlockedRow = { profileId: string; name: string; blockedAt: string };
 
 /** @purpose The accounts you blocked. */
-export async function fetchMyBlocks(): Promise<BlockedRow[]> {
-  const rows = await callRpc<Record<string, unknown>[] | null>('list_my_blocks');
+export async function fetchMyBlocks(client = supabase): Promise<BlockedRow[]> {
+  const rows = await callRpc<Record<string, unknown>[] | null>('list_my_blocks', {}, client);
   return (rows ?? []).flatMap((r) => (typeof r.profile_id === 'string'
     ? [{ profileId: r.profile_id, name: typeof r.display_name === 'string' ? r.display_name : 'Account', blockedAt: typeof r.blocked_at === 'string' ? r.blocked_at : '' }]
     : []));

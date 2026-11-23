@@ -10,6 +10,12 @@ import * as fresh from '@/lib/freshQuestions';
 import * as minors from '@/lib/minors';
 import { NOT_SWITCHED_ON } from '@/lib/rpc';
 
+const mockBoundClient = {};
+const mockAuth = { user: { id: 'guardian-user-A' }, isSessionCurrent: () => true };
+jest.mock('@/context/AuthContext', () => ({ useOptionalAuth: () => mockAuth }));
+jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: { captureActor: (id: string) => ({ userId: id, isCurrent: () => true }) } }));
+jest.mock('@/lib/offlineActor', () => ({ ...jest.requireActual('@/lib/offlineActor'), createOfflineActorClient: async () => mockBoundClient }));
+
 jest.mock('@/lib/minors', () => ({ ...jest.requireActual('@/lib/minors'), fetchGuardianMinors: jest.fn(), fetchGuardianSupervision: jest.fn() }));
 jest.mock('@/lib/freshQuestions', () => ({ ...jest.requireActual('@/lib/freshQuestions'), fetchGuardianFunFacts: jest.fn(), decideGuardianFunFact: jest.fn() }));
 const m = jest.mocked(minors);
@@ -52,7 +58,7 @@ it.each([[true, 'Approved Lani\'s fun fact. An admin checks it next.'], [false, 
   f.decideGuardianFunFact.mockResolvedValue({ contract_version: 5, fact_id: 'fact-1', status: approve ? 'admin_review' : 'declined' });
   await openLani();
   await fireEvent.press(await screen.findByLabelText(`${approve ? 'Approve' : 'Decline'} fun fact: Hidden talent`));
-  await waitFor(() => expect(f.decideGuardianFunFact).toHaveBeenCalledWith('fact-1', approve, 'guardian-1'));
+  await waitFor(() => expect(f.decideGuardianFunFact).toHaveBeenCalledWith('fact-1', approve, 'guardian-1', mockBoundClient));
   expect(await screen.findByText(words)).toBeTruthy();
   expect(f.fetchGuardianFunFacts).toHaveBeenCalledTimes(2);
 });

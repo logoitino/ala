@@ -1,4 +1,4 @@
-/** UX-07: Spotlight presents published athlete recognition without declaring a pending board empty; UX-13 close delays cannot navigate after leaving the route. */
+/** Spotlight separates failed reads from seeded/empty boards, offers retry, and prevents close delays navigating after leaving the route. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import {
@@ -62,7 +62,7 @@ export default function SpotlightTab() {
   const { live } = useAppRuntime();
   const { requireAuth } = useSoftWall();
   const { players, applyBackerCount } = useRoster();
-  const { awards, loading, refresh } = useSpotlightBoard(players);
+  const { awards, loading, error, refresh } = useSpotlightBoard(players);
   const leaderboards = useLeaderboards('week', live.layouts.leaderboards);
   const showBoards = live.layouts.leaderboards && !leaderboards.unavailable;
   const { onScroll, trackFeature } = useSurfaceUsage('spotlight');
@@ -122,6 +122,17 @@ export default function SpotlightTab() {
             <Text style={styles.loadingLabel}>Loading Spotlights…</Text>
           </View>
         ) : null}
+        {error ? (
+          <EmptyState
+            compact
+            kicker="Spotlight"
+            title="Could not load Spotlights"
+            lede="Check your connection and try again."
+            actionLabel="Retry"
+            onAction={() => void onRefresh()}
+            accent={FOCAL.goldInk}
+          />
+        ) : null}
         {featured ? (
           <ScrollFxItem variant="zoom" exitFade={false}>
             <SpotlightAwardCard featured award={featured} onPress={() => {
@@ -130,7 +141,7 @@ export default function SpotlightTab() {
               setSelected(featured);
             }} />
           </ScrollFxItem>
-        ) : !loading ? (
+        ) : !loading && !error ? (
           <EmptyState
             compact
             kicker="Spotlight"

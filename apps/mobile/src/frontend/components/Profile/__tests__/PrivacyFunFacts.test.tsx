@@ -9,8 +9,12 @@ import * as privacy from '@/lib/privacy';
 
 jest.mock('@/lib/privacy', () => ({ ...jest.requireActual('@/lib/privacy'), fetchMyBlocks: jest.fn(async () => []) }));
 jest.mock('@/lib/minors', () => ({ ...jest.requireActual('@/lib/minors'), fetchMyPrivacyStatus: jest.fn(), saveMyPrivacyStatus: jest.fn() }));
+const mockGuard = () => true;
+const mockClient = {};
+jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: { captureActor: () => ({ userId: 'A', isCurrent: mockGuard }) } }));
+jest.mock('@/lib/offlineActor', () => ({ createOfflineActorClient: async () => mockClient }));
 let mockAthlete = true;
-jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ recordBirthMonth: jest.fn(), isAthlete: mockAthlete }) }));
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'A' }, isSessionCurrent: mockGuard, recordBirthMonth: jest.fn(), isAthlete: mockAthlete }) }));
 jest.mock('@/components/Custodial/GuardianSupervisionPanel', () => ({ GuardianSupervisionPanel: () => null }));
 const mm = jest.mocked(minors);
 const status = (band: string) => minors.parseMinorStatus({ guardian_links_enabled: true, age_band: band });
@@ -37,7 +41,7 @@ it('an adult athlete chooses Everyone for fun facts and saves it', async () => {
   expect(screen.getByLabelText('Fun facts: Friends').props.accessibilityState).toMatchObject({ selected: true });
   await fireEvent.press(screen.getByLabelText('Fun facts: Everyone'));
   await fireEvent.press(screen.getByLabelText('Save privacy'));
-  await waitFor(() => expect(mm.saveMyPrivacyStatus).toHaveBeenCalledWith(expect.objectContaining({ funFacts: 'everyone' })));
+  await waitFor(() => expect(mm.saveMyPrivacyStatus).toHaveBeenCalledWith(expect.objectContaining({ funFacts: 'everyone' }), mockClient));
 });
 
 it('13–15: Everyone is not offered (capped at friends) and the sheet says why', async () => {

@@ -2,7 +2,8 @@
  * Shared Expo admin page canvas: `AdminPage` (report header, Back / Home trail, heading, workspace and
  * related-analysis rows, save cue, error line, feature boundary) and `AdminTrail`. The header lives in
  * `AdminReportHeader.tsx`, editor primitives in `AdminControls.tsx` and the palette in `adminReportColors.ts`
- * (split for R4-03, behaviour unchanged); this file re-exports them so desks and test mocks keep one import path.
+ * (split for R4-03); current shared typefaces and proportional headings keep narrow desks readable.
+ * This file re-exports primitives so desks and test mocks keep one import path.
  * @sideEffects Expo Router navigation (Back / Home / Open in app) and pull-to-refresh callbacks.
  */
 import { type ReactNode } from 'react';
@@ -17,6 +18,7 @@ import { ADMIN_REPORT_COLORS as REPORT_COLORS } from '@/components/Admin/adminRe
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { adminTrailForPath, adminWorkspaceForPath, adminAnalysisForPath, isAdminNavActive } from '@/lib/admin';
 import { FOCAL } from '@/theme/motion';
+import { FONT, TYPE, figtree } from '@/theme/fonts';
 
 // One import path for every desk and for the jest.mock factories that replace this module. Plain bindings,
 // not `export … from`: they stay writable like the original exports, so `jest.spyOn(AdminChrome, 'AdminBtn')`
@@ -140,7 +142,7 @@ export function AdminPage({
       <AdminTrail />
       <View style={styles.pageHeading}>
         <Text style={styles.pageKicker}>Tapua&apos;i admin</Text>
-        <Text accessibilityRole="header" style={styles.pageTitle}>{title}</Text>
+        <Text accessibilityRole="header" style={[styles.pageTitle, width >= 640 && { fontSize: 32, lineHeight: 38 }]}>{title}</Text>
         <Text style={styles.pageLede}>{lede}</Text>
       </View>
       {workspace ? <View style={{ gap: 4 }} accessibilityLabel={`${workspace.label} workspace`} role="navigation">
@@ -168,9 +170,9 @@ export function AdminPage({
 const styles = StyleSheet.create({
   headerSubNav: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   pageHeading: { gap: 8, paddingVertical: 8 },
-  pageKicker: { color: colors.jade, fontSize: 12, fontWeight: '800', letterSpacing: 0.8, textTransform: 'uppercase' },
-  pageTitle: { color: colors.text, fontSize: 36, fontWeight: '800', letterSpacing: -0.6 },
-  pageLede: { color: colors.textSoft, fontSize: 15, lineHeight: 23 },
+  pageKicker: { color: colors.jade, ...TYPE.caption, ...figtree('800'), letterSpacing: 0.8, textTransform: 'uppercase' },
+  pageTitle: { color: colors.text, ...TYPE.display, fontFamily: FONT.display, fontWeight: 'normal', letterSpacing: -0.6 },
+  pageLede: { color: colors.textSoft, ...TYPE.body, ...figtree('400') },
   page: {
     flex: 1,
     backgroundColor: colors.background,
@@ -206,8 +208,8 @@ const styles = StyleSheet.create({
   },
   trailHitLabel: {
     color: colors.text,
-    fontSize: 12,
-    fontWeight: '800',
+    ...TYPE.button,
+    ...figtree('800'),
   },
   trailHitLabelOn: {
     color: '#FFFFFF',
@@ -216,24 +218,22 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexShrink: 1,
     color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    ...TYPE.caption,
+    ...figtree('700'),
   },
   error: {
     color: colors.danger,
-    fontSize: 14,
-    fontWeight: '700',
+    ...TYPE.body,
+    ...figtree('700'),
   },
   saveCue: {
     color: colors.jade,
-    fontSize: 13,
-    fontWeight: '700',
-    lineHeight: 18,
+    ...TYPE.body,
+    ...figtree('700'),
   },
   saveCuePublish: {
     color: colors.electricGold,
-    fontSize: 13,
-    fontWeight: '700',
-    lineHeight: 18,
+    ...TYPE.body,
+    ...figtree('700'),
   },
 });

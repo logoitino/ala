@@ -1,9 +1,9 @@
+/** UX-15 card/type normalization preserves confirmed zero, missing values, deltas, responsive whole-figure sizing and spark alternatives. */
 /**
  * KPI tile for admin portal dashboards: label, big value, optional week-over-week delta,
  * optional 7-day sparkline, and a hint. Deltas use `weekChange` from `lib/dashboard.ts` and are
- * printed as glyph + sign + words, never colour alone. The open value block and bottom divider
- * match Home so desk grids read as one report rather than repeated floating cards (report format
- * is the default on every page, owner decision 2026-10-12). The value never wraps mid-figure
+ * printed as glyph + sign + words, never colour alone. The existing Daylight card and readable label
+ * follow the November4 report standard without changing any KPI meaning. The value never wraps mid-figure
  * (`whitespace-nowrap`); phones use a smaller display size so enlarged whole-money values fit.
  * The label and hint wrap at word boundaries. Only the two measures with a
  * prior week (clips_7d and malo_cents_7d) may pass `delta`. Server-Component safe.
@@ -80,9 +80,9 @@ function DeltaLine({ current, previous, goodDirection }: { current: number; prev
 }
 
 /**
- * @purpose One open KPI value block. Missing, zero, and a value all look different.
+ * @purpose One KPI card. Missing, zero, and a value all look different.
  * @param props See `StatTileProps`.
- * @returns An open value `<div>`; the page decides the grid.
+ * @returns A report value `<div>`; the page decides the grid.
  */
 export function StatTile({ label, value, hint, tone = 'neutral', missing = false, delta, goodDirection = 'up', spark }: StatTileProps) {
   const sparkText =
@@ -91,8 +91,8 @@ export function StatTile({ label, value, hint, tone = 'neutral', missing = false
       : null;
 
   return (
-    <div className="portal-stat flex min-w-0 flex-col gap-2 border-b border-[var(--border)] py-4">
-      <p className="flex items-center gap-1.5 text-[11px] font-extrabold tracking-[0.08em] text-[var(--text-muted)] uppercase">
+    <div className="portal-stat flex min-w-0 flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+      <p className="flex items-center gap-1.5 text-xs leading-4 font-bold text-[var(--ink-soft)]">
         {TONE_WORD[tone] ? (
           <span aria-hidden="true" className="grid size-3.5 shrink-0 place-items-center rounded-full text-[9px] leading-none font-black text-white" style={{ background: TONE_DOT[tone] }}>
             !

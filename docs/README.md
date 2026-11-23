@@ -273,3 +273,9 @@ with these files.
 | [TIP_MODEL_REPORT](engineering/evidence/TIP_MODEL_REPORT.md) | Computation inventory, exact split-change size, flag tests and settlement limits |
 
 - [UX-13 whole-app menu/function coverage](agents/UX-13.md) — complete local source/menu review, spacing and ordinary flow repairs; current-source tests/rendered evidence stay distinct from device/provider acceptance.
+- [UX-14 existing-flow acceptance](agents/UX-14.md) — finite end goal, journey checks, evidence-led repairs and separately named external prerequisites.
+- [UX-15 notifications and admin workspaces](agents/UX-15.md) — notification scrolling, Local poll contrast, admin UI/current-source accountability and independent access-boundary review.
+
+- [UX-16 compact fan navigation](agents/UX-16.md) — bounded bottom dock and Search/Home/Beyond/Local density, preserved touch/font/clearance contracts and actual local verification.
+- [UX-17 existing school/team directory](agents/UX-17.md) — bounded roster browsing, optional pending selection, distinct Local polls and verified admin-first handling.
+- [UX-18 tighter navigation and Activity panels](agents/UX-18.md) — Android owner feedback, compact spacing and decoration with readable text and preserved actions.

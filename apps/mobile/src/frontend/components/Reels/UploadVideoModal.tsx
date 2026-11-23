@@ -134,6 +134,17 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   const previousOwner = useRef(ownerId);
   const previousSessionGuard = useRef(isSessionCurrent);
   const draftIdentityCurrent = previousOwner.current === ownerId && previousSessionGuard.current === isSessionCurrent;
+  // Native picker replies belong to one visible account draft, independently of publication.
+  const pickerMounted = useRef(true);
+  useEffect(() => { pickerMounted.current = true; return () => { pickerMounted.current = false; }; }, []);
+  const pickerLifetime = useRef({ owner: ownerId, session: isSessionCurrent, visible, closed: false });
+  if (pickerLifetime.current.owner !== ownerId || pickerLifetime.current.session !== isSessionCurrent || pickerLifetime.current.visible !== visible)
+    pickerLifetime.current = { owner: ownerId, session: isSessionCurrent, visible, closed: false };
+  const pickerFrame = pickerLifetime.current;
+  const pickerFlight = useRef<{ frame: typeof pickerFrame } | null>(null);
+  const pickerCurrent = () => pickerMounted.current && pickerLifetime.current === pickerFrame
+    && !pickerFrame.closed && !submitLock.current && visibleRef.current
+    && ownerRef.current === pickerFrame.owner && (!pickerFrame.session || pickerFrame.session());
   const categoryPills = labeledReelCategories(live.catalog.reelCategories);
   const exclusiveDollars = live.catalog.exclusiveDollars;
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -192,7 +203,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     const epoch = draftEpoch.current;
     const owner = ownerId;
     const pending = [...unfinishedStories.current.values()].filter((item) => item.ownerId === owner);
-    if (!pending.length) { onClose(); return; }
+    if (!pending.length) { pickerFrame.closed = true; onClose(); return; }
     submitLock.current = true;
     setUploading(true);
     setStatusLabel('Saving unfinished-story removal…');
@@ -200,6 +211,7 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       if (!owner) throw new Error('Sign in again to save unfinished-story removal.');
       for (const item of pending) await rememberPhotoStoryCleanup(item.reelId, owner);
       if (!isCurrentDraft(epoch, owner)) return;
+      pickerFrame.closed = true;
       onClose();
       // Network cleanup can fail offline; saved intent resumes next time this owner opens Upload.
       for (const item of pending) void retirePending(item).catch(() => telemetry.trackIssue('upload', 'home'));
@@ -408,14 +420,14 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   };
 
   const pickVideo = async (source: 'library' | 'camera') => {
-    if (uploading) return;
-
+    if (uploading || submitLock.current || !pickerCurrent() || pickerFlight.current?.frame === pickerFrame) return;
+    if (source === 'library') {
+      setLibraryOpen(true);
+      return;
+    }
+    const flight = { frame: pickerFrame };
+    pickerFlight.current = flight;
     try {
-      if (source === 'library') {
-        setLibraryOpen(true);
-        return;
-      }
-
       if (IOS_SIMULATOR) {
         Alert.alert(
           'Record needs a phone',
@@ -423,20 +435,23 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         );
         return;
       }
-
       const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!pickerCurrent()) return;
       if (!permission.granted) {
         Alert.alert('Permission needed', 'Allow camera access to record a Seki play.');
         return;
       }
       const result = await ImagePicker.launchCameraAsync(CAMERA_VIDEO_OPTIONS);
-      if (result.canceled || !result.assets[0]) return;
+      if (!pickerCurrent() || result.canceled || !result.assets[0]) return;
       applyPickedAsset(source, result.assets[0]);
     } catch (caught) {
+      if (!pickerCurrent()) return;
       Alert.alert(
         source === 'camera' ? 'Could not open camera' : 'Could not open library',
         caught instanceof Error ? caught.message : 'Try Expo Go on a phone to pick or record a clip.',
       );
+    } finally {
+      if (pickerFlight.current === flight) pickerFlight.current = null;
     }
   };
 
@@ -450,15 +465,17 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
   };
 
   const pickPhotos = async () => {
-    if (uploading) return;
+    if (uploading || submitLock.current || !pickerCurrent() || pickerFlight.current?.frame === pickerFrame) return;
     const remaining = PHOTO_STORY_MAX_PHOTOS - photos.length;
     if (remaining <= 0) {
       Alert.alert('Story is full', `A photo story holds up to ${PHOTO_STORY_MAX_PHOTOS} photos. Remove one to add another.`);
       return;
     }
+    const flight = { frame: pickerFrame };
+    pickerFlight.current = flight;
     try {
       const result = await ImagePicker.launchImageLibraryAsync(libraryPhotoOptions(remaining));
-      if (result.canceled || !result.assets?.length) return;
+      if (!pickerCurrent() || result.canceled || !result.assets?.length) return;
       const picked = result.assets
         .filter((item) => item.type !== 'video' && item.type !== 'livePhoto' && item.uri)
         .map((item) => {
@@ -471,7 +488,10 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
       setRights({});
       setUploadError(null);
     } catch (caught) {
+      if (!pickerCurrent()) return;
       Alert.alert('Could not open library', caught instanceof Error ? caught.message : 'Try again on a phone.');
+    } finally {
+      if (pickerFlight.current === flight) pickerFlight.current = null;
     }
   };
 
@@ -654,8 +674,10 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
         progress={progress} barWidth={barWidth} pulse={pulse} statusLabel={statusLabel}
         showSuccess={showSuccess} successAnim={successAnim}
       />
-      <HighlightPickerModal visible={libraryOpen} onClose={() => setLibraryOpen(false)}
+      <HighlightPickerModal visible={visible && libraryOpen} draftKey={pickerFrame} isDraftCurrent={pickerCurrent}
+        onClose={() => { if (pickerCurrent()) setLibraryOpen(false); }}
         onPicked={(clip) => {
+          if (!pickerCurrent()) return;
           setAsset(clip); setPickSource('library'); setUploadError(null);
           setRights({}); setLibraryOpen(false); setStep('details');
         }} />

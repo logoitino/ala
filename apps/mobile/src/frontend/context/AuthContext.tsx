@@ -6,12 +6,14 @@
  * belong to one session lifetime: delayed refreshes and mutations cannot publish into an incoming account.
  * Auth profile/role/birth/onboarding writes capture that lifetime and use its bound transport (UX-13);
  * outgoing scoped session notifications are refused before they can install another account.
+ * Studio is development/internal-preview UI only; release authorization comes from the current server profile.
  * @sideEffects Supabase Auth session, `profiles` reads / writes, AsyncStorage guest markers.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { type Session, type User } from '@supabase/supabase-js';
 import { type Href, useRouter } from 'expo-router';
+import * as Updates from 'expo-updates';
 import {
   createContext,
   type ReactNode,
@@ -67,6 +69,14 @@ const BIRTH_PROMPT_SNOOZE_MS = 3 * 24 * 60 * 60 * 1000;
 const birthPromptKey = (userId: string) => `tapuai.birthPrompt.snoozedUntil.${userId}`;
 const STUDIO_KEY = 'tapuai.studioUnlocked';
 
+// The native channel identifies the built preview app; a public environment flag alone cannot unlock a release.
+function isStudioPreviewEligible(): boolean {
+  const environment = process.env.EXPO_PUBLIC_APP_ENV;
+  if (environment === 'production') return false;
+  if (typeof __DEV__ !== 'undefined' && __DEV__ === true) return true;
+  return environment === 'preview' && Updates.channel === 'preview';
+}
+
 type AuthContextValue = {
   /** Active RoleGate / Studio preview value. Fan chrome never shows this. */
   role: UserRole;
@@ -109,7 +119,7 @@ type AuthContextValue = {
   lockStudio: () => Promise<void>;
   setActiveRole: (role: 'fan' | 'athlete') => Promise<void>;
   addUserRole: (role: UserRole) => Promise<void>;
-  completeAthleteOnboarding: (onboard: AthleteOnboarding) => Promise<void>;
+  completeAthleteOnboarding: (onboard: AthleteOnboarding, selectedPlayerId?: string | null) => Promise<void>;
   /** Patches the signed-in fan's own `profiles` row (Edit Profile sheet: name, username, bio,
    * social links, visibility toggles). A configured remote write must succeed before local publication. */
   updateProfile: (patch: ProfileEditPatch) => Promise<void>;
@@ -133,7 +143,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [role, setRole] = useState<UserRole>('fan');
+  const [selectedRole, setRole] = useState<UserRole>('fan');
   const [{ session, epoch: renderedSessionEpoch }, setSessionState] = useState<{ session: Session | null; epoch: number }>({ session: null, epoch: 0 });
   const [storedProfile, setProfile] = useState<Profile | null>(null);
   // Mask ownership in the render as well as clearing state at the auth boundary.
@@ -146,7 +156,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [extraRoles, setExtraRoles] = useState<UserRole[]>([]);
   const [activeRoleOverride, setActiveRoleOverride] = useState<'fan' | 'athlete' | null>(null);
-  const [studioUnlocked, setStudioUnlocked] = useState(false);
+  const [storedStudioUnlocked, setStudioUnlocked] = useState(false);
+  const studioEligible = isStudioPreviewEligible();
+  const studioUnlocked = studioEligible && storedStudioUnlocked;
+  // Active role is UI state too: an outgoing account's selection cannot survive as incoming authority.
+  const serverRoles = deriveRoles('fan', { role: profile?.role, roles: [...parseRoles(profile?.roles), ...extraRoles] });
+  const role: UserRole = studioEligible || serverRoles.includes(selectedRole)
+    ? selectedRole
+    : profile && isUserRole(profile.role) && profile.role !== 'admin' ? profile.role : 'fan';
+  const roleAuthority = useRef({ profile, extraRoles });
+  roleAuthority.current = { profile, extraRoles };
   const [birthPromptDismissed, setBirthPromptDismissed] = useState(false);
 
   const isCurrentSession = useCallback((epoch: number, userId?: string) => (
@@ -235,16 +254,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const nextProfile = await hydrateSession(nextSession, bootstrapEpoch);
       if (!active) return;
 
-      let unlocked = storedStudio === '1';
-      if (storedRole === 'admin') {
+      const previewEligible = isStudioPreviewEligible();
+      const ownedProfile = nextProfile?.user_id === sessionRef.current?.user.id ? nextProfile : null;
+      const rememberedRoleAllowed = ownedProfile && isUserRole(storedRole)
+        && deriveRoles('fan', { role: ownedProfile.role, roles: parseRoles(ownedProfile.roles) }).includes(storedRole);
+      let unlocked = previewEligible && storedStudio === '1';
+      if (previewEligible && storedRole === 'admin') {
         unlocked = true;
         setRole('fan');
         await AsyncStorage.setItem(DEV_ROLE_KEY, 'fan');
         await AsyncStorage.setItem(STUDIO_KEY, '1');
-      } else if (isUserRole(storedRole)) {
+      } else if ((previewEligible || rememberedRoleAllowed) && isUserRole(storedRole)) {
         setRole(storedRole);
-      } else if (nextProfile && isUserRole(nextProfile.role) && nextProfile.role !== 'admin') {
-        setRole(nextProfile.role);
+      } else if (ownedProfile && isUserRole(ownedProfile.role) && ownedProfile.role !== 'admin') {
+        setRole(ownedProfile.role);
       } else {
         setRole('fan');
       }
@@ -297,14 +320,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const switchRole = useCallback(
     async (nextRole: UserRole) => {
+      if (!mounted.current) return;
+      if (!isStudioPreviewEligible()) {
+        const authority = roleAuthority.current;
+        const ownedProfile = authority.profile?.user_id === sessionRef.current?.user.id ? authority.profile : null;
+        const allowed = deriveRoles('fan', { role: ownedProfile?.role, roles: [...parseRoles(ownedProfile?.roles), ...(ownedProfile ? authority.extraRoles : [])] });
+        if (!allowed.includes(nextRole)) return;
+      }
+      const lifetime = accountEpoch.current;
       setRole(nextRole);
       await AsyncStorage.setItem(DEV_ROLE_KEY, nextRole);
+      if (!mounted.current || lifetime !== accountEpoch.current) return;
       router.replace(ROLE_HOME[nextRole] as Href);
     },
     [router],
   );
 
   const unlockStudio = useCallback(async () => {
+    if (!mounted.current || !isStudioPreviewEligible()) return;
     setStudioUnlocked(true);
     await AsyncStorage.setItem(STUDIO_KEY, '1');
   }, []);
@@ -321,8 +354,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const previewAsRole = useCallback(
     async (nextRole: UserRole) => {
+      if (!mounted.current || !isStudioPreviewEligible()) return;
+      const lifetime = accountEpoch.current;
       setStudioUnlocked(true);
       await AsyncStorage.setItem(STUDIO_KEY, '1');
+      if (!mounted.current || lifetime !== accountEpoch.current || !isStudioPreviewEligible()) return;
       await switchRole(nextRole);
     },
     [switchRole],
@@ -416,10 +452,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const roles = useMemo(() => {
     const merged = [...parseRoles(profile?.roles), ...extraRoles];
-    return deriveRoles(role, { role: profile?.role, roles: merged });
-  }, [extraRoles, profile, role]);
+    return deriveRoles(studioEligible ? role : 'fan', { role: profile?.role, roles: merged });
+  }, [extraRoles, profile, role, studioEligible]);
   const isAthlete = roles.includes('athlete');
-  const isAdmin = studioUnlocked || isAdminAccess({ role, roles, profile });
+  const isAdmin = studioEligible
+    ? studioUnlocked || isAdminAccess({ role, roles, profile })
+    : isAdminAccess({ profile });
   const isGuest = !session;
   const isVerified = Boolean(profile?.is_verified);
   // COPPA gate: only for a brand-new account's very first sign-in (Apple/Google have no sign-up
@@ -528,11 +566,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const completeAthleteOnboarding = useCallback(
-    async (onboard: AthleteOnboarding) => {
+    async (onboard: AthleteOnboarding, selectedPlayerId?: string | null) => {
+      // Only the caller's explicit UUID/null choice is forwarded; school confirmation still owns the roster link.
       const actor = captureMutationActor();
       await addUserRole('athlete');
       if (!(actor?.isCurrent() ?? isSessionCurrent())) return;
-      await saveAthleteOnboardingRemote(actor?.userId, onboard, actor ?? undefined);
+      await saveAthleteOnboardingRemote(actor?.userId, onboard, actor ?? undefined, selectedPlayerId);
       setProfile((current) =>
         actor?.isCurrent() && current?.user_id === actor.userId
           ? {

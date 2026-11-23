@@ -20,7 +20,12 @@ async function fetchOversight(kind: 'profile' | 'softWall', failed: number | nul
   return kind === 'profile' ? module.fetchProfileOversight() : module.fetchSoftWallOversight();
 }
 for (const kind of ['profile', 'softWall'] as const) {
-  for (const failed of [0, 1, 2]) test(`${kind} denies authoritative status when query ${failed} fails`, async () => assert.equal((await fetchOversight(kind, failed)).configured, false));
+  for (const failed of [0, 1, 2]) test(`${kind} preserves independent source status when query ${failed} fails`, async () => {
+    const value = await fetchOversight(kind, failed);
+    assert.equal(value.configured, kind === 'softWall' && failed !== 0);
+    if (kind === 'softWall' && failed === 1) { assert.equal(value.fanProfiles, null); assert.equal(value.fansLast7d, 0); }
+    if (kind === 'softWall' && failed === 2) { assert.equal(value.fansLast7d, null); assert.equal(value.fanProfiles, 0); }
+  });
   test(`${kind} missing runtime is unavailable`, async () => assert.equal((await fetchOversight(kind, null, true)).configured, false));
   test(`${kind} confirmed zero counts stay a valid configured result`, async () => { const value = await fetchOversight(kind, null); assert.equal(value.configured, true); assert.equal(kind === 'profile' ? value.claimedAthletes : value.fanProfiles, 0); });
 }

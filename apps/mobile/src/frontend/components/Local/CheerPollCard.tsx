@@ -1,9 +1,10 @@
 /** Compact Local cheer cards retain their legal notice, full team names and existing vote authority.
  * UX-12: names wrap, scaled text can stack choices, and smaller decorative dots free room for copy.
- * Vibrant Daylight rivalry chrome (Lovable Friday Night Lights): jade home, cyan away, ember LIVE.
+ * UX-17 uses distinct jade/violet inks with neutral framing; selected choices have a visible cue independent of color.
  * @sideEffects Existing useCheerPoll votes, usage telemetry and haptic feedback.
  */
 import { useEffect, useRef, useState } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { type GestureResponderEvent, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
@@ -37,7 +38,7 @@ const FLOAT_RISE = -60;
 
 /**
  * @purpose Live community cheer poll (Westlake Thunder vs Lone Peak Knights). Share bar: jade home /
- *   island cyan away; LIVE heat stays ember. Chosen side is a white button with that color border.
+ *   violet away; LIVE heat stays ember. Chosen side is a white button with an ink border and a visible Selected cue.
  *   Tap springs the bar, Medium haptics, floats +1 Vote ⚡, persists via `cast_cheer_vote`.
  * @param slug `cheer_polls.slug` (featured rivalry is `westlake-lone-peak`).
  * @param homeLabel Home school display name.
@@ -109,7 +110,6 @@ export function CheerPollCard({
 
   return (
     <View style={styles.card} accessibilityRole="summary" accessibilityLabel="Cheer poll">
-      <View style={styles.ribbon} />
       <View style={styles.top}>
         <Text style={styles.kicker}>Live cheer poll</Text>
         <View style={styles.livePill}>
@@ -130,7 +130,10 @@ export function CheerPollCard({
         style={styles.track}
         onLayout={(event) => setTrackW(event.nativeEvent.layout.width)}
       >
-        <Animated.View style={[styles.homeFill, homeBar]} />
+        <Animated.View style={[styles.homeFill, homeBar]}>
+          {/* An internal divider separates real shares without adding width or marking a zero-percent side. */}
+          {homePct > 0 && awayPct > 0 ? <View pointerEvents="none" style={styles.trackDivider} /> : null}
+        </Animated.View>
         <Animated.View style={[styles.awayFill, awayBar]} />
       </View>
 
@@ -200,12 +203,16 @@ function TeamVoteButton({
           selected && (side === 'home' ? styles.homeChosen : styles.awayChosen),
         ]}
       >
-        <View style={[styles.teamDot, side === 'home' ? styles.teamDotHome : styles.teamDotAway, selected && styles.teamDotChosen]}>
-          <View pointerEvents="none" style={styles.teamDotGloss} />
+        <View style={[styles.teamDot, side === 'home' ? styles.teamDotHome : styles.teamDotAway, selected && styles.teamDotChosen]} />
+        <View style={styles.teamCopy}>
+          <Text style={[styles.teamBtnLabel, side === 'home' ? styles.homeLabelOn : styles.awayLabelOn]}>
+            {label}
+          </Text>
+          {selected ? <View style={styles.selectionCue}>
+            <Ionicons name="checkmark-circle" size={14} color={side === 'home' ? FOCAL.jadeInk : FOCAL.violetInk} accessible={false} />
+            <Text style={[styles.selectionLabel, side === 'home' ? styles.homeLabelOn : styles.awayLabelOn]}>Selected</Text>
+          </View> : null}
         </View>
-        <Text style={[styles.teamBtnLabel, selected && (side === 'home' ? styles.homeLabelOn : styles.awayLabelOn)]}>
-          {label}
-        </Text>
         <Text style={[side === 'home' ? styles.homePct : styles.awayPct, leading && styles.pctLeading]}>{pct}%</Text>
       </AnimatedPressable>
     </View>
@@ -249,21 +256,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: FOCAL.islandCyan,
+    borderColor: colors.border,
     padding: 12,
     gap: 8,
     overflow: 'visible',
     ...cardShadow,
-  },
-  ribbon: {
-    position: 'absolute',
-    top: 0,
-    left: 16,
-    right: 16,
-    height: 4,
-    borderBottomLeftRadius: 4,
-    borderBottomRightRadius: 4,
-    backgroundColor: FOCAL.neonJade,
   },
   top: {
     flexDirection: 'row',
@@ -318,7 +315,7 @@ const styles = StyleSheet.create({
     ...figtree('900'),
   },
   awayName: {
-    color: FOCAL.cyanInk,
+    color: FOCAL.violetInk,
     ...figtree('900'),
   },
   // Required policy stays fully visible at the same readable size as the matchup copy.
@@ -338,11 +335,20 @@ const styles = StyleSheet.create({
   },
   homeFill: {
     height: 8,
-    backgroundColor: FOCAL.neonJade,
+    backgroundColor: FOCAL.jadeInk,
+    overflow: 'hidden',
+  },
+  trackDivider: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 2,
+    backgroundColor: colors.surface,
   },
   awayFill: {
     height: 8,
-    backgroundColor: FOCAL.islandCyan,
+    backgroundColor: FOCAL.violetInk,
   },
   homePct: {
     ...SCOREBOARD_DIGITS,
@@ -351,7 +357,7 @@ const styles = StyleSheet.create({
   },
   awayPct: {
     ...SCOREBOARD_DIGITS,
-    color: FOCAL.cyanInk,
+    color: FOCAL.violetInk,
     fontSize: 15,
   },
   pctLeading: {
@@ -359,7 +365,7 @@ const styles = StyleSheet.create({
   },
   voteCount: {
     marginLeft: 'auto',
-    color: FOCAL.violetInk,
+    color: colors.textMuted,
     ...TYPE.caption,
     ...figtree('800'),
   },
@@ -397,56 +403,48 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   teamDotHome: {
-    backgroundColor: FOCAL.neonJade,
+    backgroundColor: FOCAL.jadeInk,
   },
   teamDotAway: {
-    backgroundColor: FOCAL.islandCyan,
-  },
-  teamDotGloss: {
-    position: 'absolute',
-    top: -6,
-    left: -5,
-    width: 20,
-    height: 13,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.55)',
-    transform: [{ rotate: '-18deg' }],
+    backgroundColor: FOCAL.violetInk,
   },
   homeBtn: {
     borderColor: FOCAL.jadeInk,
     backgroundColor: FOCAL.mistJade,
   },
   awayBtn: {
-    borderColor: FOCAL.cyanInk,
-    backgroundColor: FOCAL.mistCyan,
+    borderColor: FOCAL.violetInk,
+    backgroundColor: FOCAL.mistViolet,
   },
   homeChosen: {
     backgroundColor: colors.surface,
-    borderColor: FOCAL.neonJade,
+    borderColor: FOCAL.jadeInk,
     borderWidth: 2.5,
   },
   awayChosen: {
     backgroundColor: colors.surface,
-    borderColor: FOCAL.islandCyan,
+    borderColor: FOCAL.violetInk,
     borderWidth: 2.5,
   },
   teamDotChosen: {
     borderWidth: 2,
     borderColor: colors.surface,
   },
+  teamCopy: { flex: 1, minWidth: 0, gap: 3 },
+  selectionCue: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  selectionLabel: { ...TYPE.caption, ...figtree('700'), flexShrink: 1, textAlign: 'center' },
   teamBtnLabel: {
     color: colors.text,
     ...TYPE.button,
     ...figtree('800'),
     textAlign: 'center',
-    flex: 1,
     minWidth: 0,
   },
   homeLabelOn: {
     color: FOCAL.jadeInk,
   },
   awayLabelOn: {
-    color: FOCAL.cyanInk,
+    color: FOCAL.violetInk,
   },
   floatBadge: {
     position: 'absolute',
@@ -460,6 +458,6 @@ const styles = StyleSheet.create({
     color: FOCAL.jadeInk,
   },
   floatAway: {
-    color: FOCAL.cyanInk,
+    color: FOCAL.violetInk,
   },
 });

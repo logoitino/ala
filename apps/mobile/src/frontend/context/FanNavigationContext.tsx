@@ -1,5 +1,6 @@
 /** Fan-tab presentation state and actual floating-dock clearance are local memory only.
  * Stable scroll/measurement actions avoid needless screen renders; role screens reserve no fan footer.
+ * UX-18's initial44pt surface estimate is replaced by actual font/safe-area layout reporting.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { usePathname } from 'expo-router';
@@ -17,7 +18,7 @@ export function FanNavigationProvider({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets();
   const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   // Before the first dock layout, reserve its compact control height plus the safe foot.
-  const dockHeight = measuredHeight ?? 56 + Math.max(insets.bottom, 6);
+  const dockHeight = measuredHeight ?? 44 + Math.max(insets.bottom, 6);
   const measureDock = useCallback((height: number) => {
     if (!Number.isFinite(height) || height <= 0) return;
     setMeasuredHeight((current) => current !== null && Math.abs(current - height) < 0.5 ? current : height);

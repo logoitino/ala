@@ -255,7 +255,8 @@ const styles = StyleSheet.create({
   deskCopy: { flexGrow: 1, flexShrink: 1, minWidth: 0, gap: 4 },
   deskTitle: { textAlign: 'left' },
   deskHint: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  flexShrink: 1 },
-  deskSearchRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, flexGrow: 1, flexBasis: 320, minWidth: 0, maxWidth: 520 },
+  // A basis is a preferred size; shrink to the padded phone width so the input edge stays reachable.
+  deskSearchRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, flexGrow: 1, flexShrink: 1, flexBasis: 320, minWidth: 0, maxWidth: 520 },
   deskSearch: { ...figtree('400'), minHeight: 44, minWidth: 0, flexGrow: 1, flexBasis: 180, borderWidth: 1, borderColor: colors.border,
     borderRadius: 8, paddingHorizontal: 12, color: colors.text, backgroundColor: colors.background, ...TYPE.body },
   menuLabel: { color: colors.textMuted, ...TYPE.caption, ...figtree('800'), letterSpacing: 0.7, textTransform: 'uppercase', marginTop: 8 },

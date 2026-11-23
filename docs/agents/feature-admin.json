@@ -2542,6 +2542,522 @@
           ]
         }
       }
+    },
+    {
+      "id": "UX-14-PICKER",
+      "title": "Fit the existing Highlight picker panel to its content",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-22T01:51:31.707Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Fresh390x844 actual-component picker has over500px unused opaque panel. Existing shared fan-sheet frame, bounded scrolling and reachable Cancel only; retain labels, compressor, rights, actions, flight/lifetime,44pt targets and fonts. Ordinary functional repairs are separate and not exempt.",
+        "reviewedBy": "Independent outside Codex local_spacing preimplementation source/image eligibility review; registered acceptance pending"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/profile",
+        "paths": [
+          "apps/mobile/src/frontend/components/Reels/HighlightPickerModal.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-22T01:51:31.707Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-14.md",
+              "command": "Independent preimplementation source and fresh09-picker-phone image review; picker-presentation-eligibility.json outside repo",
+              "result": "Presentation-only scope accepted before layout edit; bounded text/progress scrolling and fixed Cancel/handle required, no action/notice/data change."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-22T02:28:17.772Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-14.md",
+              "command": "Current2picker suites51tests; actual-component390x844,320x568 doubledCSStext and844x390 doubledCSStext browser captures; independent review",
+              "result": "Existing choices fit content; labels wrap with padding and fixed Cancel/handle remain reachable. Optimizing progress is accessible and synchronous/owner lifetime guards pass. Native DynamicType/provider compression/device feel unverified; full gate/native export pending separately."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-15-ADMIN-PRESENTATION",
+      "title": "Align existing Expo admin reports and desks with current shared presentation",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-22T07:27:26.327Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Current4modules retain superseded Avenir/system faces, cool/open report format and36pt phone desk headings. Normalize existingTYPE/Bricolage/Figtree/warm fixedadminpalette/sectioncards and proportional headings only; keep native number fitting, metrics/routes/actions/notices/source states and44pt controls. Ordinary access/freshness repairs remain separate.",
+        "reviewedBy": "Independent outside Codex offline_queue_review exactsource eligibility before implementation; registered acceptance remains separate"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/admin",
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/AdminChrome.tsx",
+          "apps/mobile/src/frontend/components/Admin/Reports/reportStyles.ts",
+          "apps/mobile/src/frontend/components/Admin/Reports/AdminReportScreen.tsx",
+          "apps/mobile/src/frontend/components/Admin/Reports/AdminReportHome.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-22T07:27:26.327Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-15.md",
+              "command": "Independent current four-module source eligibility review; expo-admin-presentation-eligibility.json retains exact hashes before UI edit",
+              "result": "Limited presentation scope accepted before implementation; existing data, access, routes, action feedback and44pt controls preserved."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-22T10:45:27.793Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-15.md",
+              "command": "Independent61existing admin regressions; actual320/390/desktop and enlarged-CSS-text component captures; expo-admin-independent-review.json exact frozen5source paths",
+              "result": "Existing report/desk presentation accepted locally with native figure fitting and current actions/data retained; device/provider proof separate."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-15-LOCAL-POLL",
+      "title": "Make current Local poll selection and results readable",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-22T07:36:50.817Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Existing selected neonjade/cyan borders fail3:1 onwhite and rely onlyoncolor. Useexistingdarkink borders and visiblecheck/text frommyVote; preserve teamnames/rawpercentages/policy/vote/Auth/hooks/haptics and44pt actions. Resultfill presentation only, no data/state change.",
+        "reviewedBy": "Root completecurrent-source independent review of local_spacing contrast/scope evidence before code; registered acceptance remains separate"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/local",
+        "paths": [
+          "apps/mobile/src/frontend/components/Local/CheerPollCard.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-22T07:36:50.817Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-15.md",
+              "command": "Independent source/contrast scope review; poll-presentation-eligibility.json plus current2suites11tests baseline",
+              "result": "Selected-state contrast and redundant visiblecue repair accepted before presentation edits; current data, actions and protected policy retained."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-22T10:45:27.793Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-15.md",
+              "command": "Current4suites33tests plus valid selected-state contrast/cue RED\u2192GREEN; Root actual Local Polls capture17 and mobile-presentation-review.json",
+              "result": "Dark ink and redundant visible cue accepted locally; full team labels, raw shares and vote authority retained."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-15-ACTIVITY-TYPE",
+      "title": "Use the current named brand faces consistently in Activity history",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-22T08:02:23.011Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Actualroute DOM confirms mixedInbox Figtree vsActivityhistorysystemfaces atsameTYPEsizes; normalize existing namedFigtree weights only. No TYPEsize/lineheight/scroll/RefreshControl/action/state/data change; genuine native scroll remains separate investigation.",
+        "reviewedBy": "Root independent complete-source andactualDOM comparison oflocal_spacing finding before edits; registered/deviceacceptance separate"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/activity",
+        "paths": [
+          "apps/mobile/app/(tabs)/activity.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-22T08:02:23.011Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-15.md",
+              "command": "Source+actual Activity DOM fontfamily comparison in activity-current-fonts.json andactivity-type-eligibility.json",
+              "result": "Mixedfaces observed andnamed-face normalization acceptedbeforecode; fontsizes/lineheights and allscroll/data/action contracts retained."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-22T10:45:27.793Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-15.md",
+              "command": "Current4suites33tests and actual Activity font/scroll-owner DOM captures11/12; unchanged handler/body byte review",
+              "result": "Named Figtree normalization accepted locally at existing TYPE sizes. Android touch-scroll report remains open and this checkpoint does not claim a gesture fix."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-15-NEXT-PRESENTATION",
+      "title": "Align current read-only portal reports with the shared admin presentation",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-22T09:06:55.795Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Current seven Next modules retain superseded open-divider chart/KPI/dashboard wrappers,11px labels and24px dashboard anchors. Normalize retained Nov4 card/type/spacing/wrapping/44px existingtargets only; preserve all data/math/source/error/zero-null semantics/props/route IDs/keyboard tabs/focus/native details. Ordinary refresh/read-state/security repairs are separate.",
+        "reviewedBy": "Independent outside Codex local_spacing full current-source/hash review plus Root before code; no registered or hosted acceptance"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/admin-portal/components/PortalShell.tsx",
+          "apps/admin-portal/app/globals.css",
+          "apps/admin-portal/components/charts/ChartFrame.tsx",
+          "apps/admin-portal/components/charts/StatTile.tsx",
+          "apps/admin-portal/components/AnalyticsBoard.tsx",
+          "apps/admin-portal/components/OperationsBoard.tsx",
+          "apps/admin-portal/app/(protected)/analytics/page.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-22T09:06:55.795Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-15.md",
+              "command": "Root current complete source review plus next-presentation-eligibility-independent.json exact seven-file eligibility before edits",
+              "result": "Current scope accepted before implementation; existing data/control/source/keyboard contracts preserved."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-22T10:45:27.793Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-15.md",
+              "command": "Independent current12source/hash review;123focused tests and independent36repeat;39SSR cases; Root corrected all13narrow panel images40\u201352",
+              "result": "Retained cards/type/44px targets accepted locally. Refresh-view/read-state/security repairs are separately reviewed; SSR/live/hydration/device limits retained."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-15-DESK-SEARCH",
+      "title": "Keep the existing admin desk search within narrow page padding",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-22T09:21:20.890Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Actual320px Manage-open search row is320px inside288px parent, clipping rightedge despite page nooverflow. Add existingrow shrink boundary only; retain520px desktopcap/search/filter/labels/fonts/44pt actions and all navigation/authority.",
+        "reviewedBy": "Independent outside Codex local_spacing full269line source review; Root actual narrow render confirms clipping before code"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/admin",
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/AdminReportHeader.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-22T09:21:20.890Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-15.md",
+              "command": "Independent full-source header review and Root current320px Manage-open child/parent geometry (capture14)",
+              "result": "Exact narrow clipping reproduced; single-row shrink remedy accepted before implementation."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-22T10:45:27.793Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-15.md",
+              "command": "Actual clipping capture14\u2192typed-Sports capture15 shows320row shrink to288padded parent; independent full269line source and61regressions",
+              "result": "Existing search/filter/navigation accepted locally; one shrink style preserves desktop cap and fits narrow page."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-16-NAV-DENSITY",
+      "title": "Compact existing bottom fan dock and Search/Home/Beyond/Local chrome",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-22T16:45:10Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Actual dock57pt is forced by30pt Upload decoration and excesspadding; Home row52pt wraps44pt controls with extra padding. Reduce default surfaces to46pt and decorative weight using existing palette/type, preserving44pt actions, natural font growth, safearea/measured clearance, runtimeflags/labels/routes/pager/search/actions. No new capability or data authority.",
+        "reviewedBy": "Independent outside Codex local_spacing complete4source eligibility plus Root source/actual390/320rendered geometry before implementation; no registered/native acceptance"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/mobile/src/frontend/components/UI/FanTabBar.tsx",
+          "apps/mobile/src/frontend/components/Reels/HomeFeedSwitch.tsx",
+          "apps/mobile/src/frontend/context/FanNavigationContext.tsx",
+          "apps/mobile/app/(tabs)/index.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-22T16:45:10Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-16.md",
+              "command": "Independent complete4source review and Root actual390/320baseline geometry/PNG; source-before.json and01-navigation-before-geometry.json external",
+              "result": "Bounded existing-presentation eligibility accepted before code;44pt actions/current readable labels, measured clearance and original routes/query/pager behavior retained."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-23T05:35:49Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-16.md",
+              "command": "Current independent Poll/navigation25tests and exact source review; actual Chrome bridge captures20/35\u201339 plus navigation-final-full-actions-fonts.json",
+              "result": "Current independent4suites25tests, exactsource preservation and actual fonts/full actions accepted locally; native/device/full repository integration remains separate."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-17-POLL-COLORS",
+      "title": "Simple distinct existing Local poll side colors",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-22T18:58:29Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Use existing jade/violet side inks/mists consistently and neutral framing; remove decorative ribbon/gloss, preserve votes/shares/Auth/animation/haptics/policy/48pt targets and Selected cues. No data/business/access/report change.",
+        "reviewedBy": "Independent outside Codex local_spacing full486line card/87line test and theme-token eligibility before code; Root source review"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/local",
+        "paths": [
+          "apps/mobile/src/frontend/components/Local/CheerPollCard.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-22T18:58:29Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-17.md",
+              "command": "Complete current card/test/token source review and external poll-colors-eligibility-independent.json",
+              "result": "Narrow presentation eligibility accepted; existing jade/violet contrast and complete vote/selected/policy behavior retained before palette implementation."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-23T05:35:49Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-17.md",
+              "command": "Current independent Poll/navigation25tests and exact source review; actual Chrome bridge captures20/35\u201339 plus navigation-final-full-actions-fonts.json",
+              "result": "Current card preserves vote/animation/Auth/policy/48pt/Selected behavior; independent5polltests and actual390px Polls screen show distinct jade/violet sides and full notice. Local presentation accepted."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-17-DIRECTORY",
+      "title": "Browse existing schools teams and public athlete roster; pending onboarding selection",
+      "owner": "ROSTERS",
+      "status": "app-ready",
+      "plannedAt": "2026-11-22T18:58:29Z",
+      "exemption": null,
+      "source": {
+        "description": "Existing schools_and_teams public safe catalog and players minimal public roster, exact school-name/text-team mapping, no new identity rows; pending claim_athlete distinct from verification.",
+        "paths": [
+          "apps/mobile/src/backend/db/schema.sql",
+          "apps/mobile/src/frontend/lib/teams.ts",
+          "apps/mobile/src/frontend/lib/schoolDirectory.ts",
+          "apps/mobile/src/frontend/context/AuthContext.tsx"
+        ]
+      },
+      "admin": {
+        "route": "/admin/athletes",
+        "actions": [
+          "Maintain existing school catalog and exact school selection",
+          "Read preserve and correct existing distinct team labels",
+          "Review pending athlete identity claims; school confirmation retains authority"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/AthletesTool.tsx",
+          "apps/mobile/src/frontend/components/Admin/SchoolsTool.tsx",
+          "apps/mobile/src/frontend/lib/adminCoverage.ts",
+          "packages/shared-types/admin/expoDeskDirectory.ts"
+        ]
+      },
+      "report": {
+        "route": "/admin/athletes",
+        "metrics": [
+          "Existing source roster/editor and pending claims only; loaded rows are not active/verified accounts or MAU. No new engagement metric; Next control map tracks existing source desks. Safe errors and unknown schema associations remain visible and repairable."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/AthletesTool.tsx",
+          "packages/shared-types/admin/expoDeskDirectory.ts",
+          "apps/admin-portal/app/(protected)/coverage/page.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Existing Local runtime availability suppresses fan entry; no new record publication switch or live flag write. Revert participant source in approved release or correct existing text associations through admin; source/network failure yields unavailable/retry rather than demo or implied empty. SUPPORT owner reviews bounded read/error and pending-claim regressions; no new hosted monitor.",
+        "paths": [
+          "apps/mobile/src/frontend/lib/teams.ts",
+          "apps/mobile/src/frontend/components/Admin/AthletesTool.tsx",
+          "apps/mobile/app/(tabs)/local/index.tsx"
+        ]
+      },
+      "access": {
+        "roles": [
+          "public roster browser",
+          "signed-in athlete onboarding",
+          "existing admin roster editor"
+        ],
+        "deniedBehavior": "Public catalog/roster RLS only with minimal columns. No raw profile/account enumeration. Exact public projections for linked profile IDs; signed-in captured actor only for pending claim, no profiles.player_id direct write or automatic verification. Existing guardian/school staff authority unchanged.",
+        "paths": [
+          "apps/mobile/src/backend/db/schema.sql",
+          "apps/mobile/src/frontend/lib/teams.ts"
+        ]
+      },
+      "app": {
+        "route": "/local/directory",
+        "paths": [
+          "apps/mobile/app/(tabs)/local/directory.tsx",
+          "apps/mobile/src/frontend/components/Local/SchoolDirectory.tsx",
+          "apps/mobile/src/frontend/components/Profile/RoleSwitcherModal.tsx",
+          "apps/mobile/app/(tabs)/local/index.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-23T05:52:10Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-17.md",
+              "command": "Current5source suites99tests and mobileTS0; existingadmin6rendered cases; Root complete source/diff/ABI review and offline independent current data/privacy/effective-policy semantic acceptance; directory-frozen-files.json external",
+              "result": "Existing admin team maintenance, bounded public existing-record readers, strict pending claim/error/current actor handling, data/control/portal/report/disable/access/support contracts locally verified before participant UI. Canonical SQL unchanged; hosted RLS/state and native acceptance untested."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-23T17:28:40.588Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-17.md",
+              "command": "Independent final2mounted suites38/38PASS with7source/test hashes unchanged; Root complete source/patch review; prior source99/admin6/TS0 preserved; actual current 320/390catalog and precise public-school empty-state browser observations",
+              "result": "Existing school/team/roster browsing, exact profile-route actions, direct Local pause, optional actor/current-school pending selection, stale action/read/draft rejection, serial same-account issued saves and partial-save retry locally verified. Public current catalog loads10records; queried school has no matching roster. No automatic verification, new schema/import/provider write or hosted/native acceptance."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-18-DENSITY",
+      "title": "Tighter Android fan navigation and Activity panel spacing",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-23T17:11:12.717Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Owner identifies bottomdock/feedbar and notification panel whitespace. Compact decoration/insets and opt-in ordinary explanation inline layout retain current text,44pt actions,scaling and all domain behavior. No data or operational capability.",
+        "reviewedBy": "Root outside Codex and local_spacing independent source QA"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/activity",
+        "paths": [
+          "apps/mobile/src/frontend/components/UI/FanTabBar.tsx",
+          "apps/mobile/src/frontend/components/Reels/HomeFeedSwitch.tsx",
+          "apps/mobile/src/frontend/context/FanNavigationContext.tsx",
+          "apps/mobile/app/(tabs)/index.tsx",
+          "apps/mobile/app/(tabs)/activity.tsx",
+          "apps/mobile/src/frontend/components/Activity/NotificationInbox.tsx",
+          "apps/mobile/src/frontend/components/UI/MoreText.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-23T17:43:15.490Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-18.md",
+              "command": "Root baseline7 current source review and independent local_spacing complete current7/same-byte Home review; baseline SHA match before edits; worker external2filepatch only",
+              "result": "Presentation-only eligibility accepted before code:44pt controls/readable14body12metadata/scaling/measured-safe-foot retained; optional ordinary explanation inline More/Less defaultfalse and full accessible copy; all data/state/privacy/actions and non-opted consumers preserved. No new operational capability or hosted/native acceptance."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-23T18:58:19.476Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-18.md",
+              "command": "Current independent7 full source/hash-matched diff and25cases; worker15; SDK explicit-edge correction Home10PASS; current320/390 loaded-font44pt bar/compact Activity rendering; bothTS0/currentAndroid+iOSHermesJS0 with7hashes stable",
+              "result": "Bounded owner-targeted bar/Activity panel density locally accepted; ordinary MoreText inline only preserves default consumers/full accessible copy, scalable text and measured safe touch clearance. Current backend notifications unavailable; physical Android gesture/font comfort/provider delivery and tracked Exit acknowledgement remain separate. Combined repository gate follows final assertion/doc metadata."
+            }
+          ]
+        }
+      }
     }
   ]
 }

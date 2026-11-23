@@ -478,6 +478,23 @@
       ],
       "limitation": "Local Node HTTP/real React plus isolated Expo navigation/resource fixtures; not a browser/device/hosted monitor or full clean-install proof.",
       "next": "SUPPORT/QA verify the owner journey after restarting old Metro processes; review/port or remove versioned patch on SDK upgrades."
+    },
+    {
+      "id": "school-roster-directory",
+      "area": "app",
+      "owner": "ROSTERS",
+      "status": "partial",
+      "detects": "Bounded public source errors, invalid shapes, changed school association and current view/session actions retain explicit unavailable/retry or fresh-school recovery. Current source99/admin6 and directory15 mounted cases are locally invoked; selector pending save/search lifetime cases are being completed.",
+      "evidence": [
+        "docs/agents/UX-17.md",
+        "apps/mobile/src/frontend/lib/teams.ts",
+        "apps/mobile/src/frontend/components/Admin/AthletesTool.tsx",
+        "apps/mobile/src/frontend/components/Local/SchoolDirectory.tsx",
+        "apps/mobile/src/frontend/components/Local/__tests__/SchoolDirectory.test.tsx",
+        "apps/mobile/src/frontend/components/Profile/__tests__/RoleSwitcherModal.directory.test.tsx"
+      ],
+      "limitation": "Current participant integration/browser/full gate in progress. No hosted collection/delivery/monitor, row publication control or canonical team membership. Actual population/service cost and hosted RLS/minor-policy/native Android touch acceptance remain unknown.",
+      "next": "ROSTERS with PROFILE with SUPPORT/SECURITY/DATA reviews local source/read/claim/admin regressions, staff corrects current text associations; owner retains schema/hosted/release decisions."
     }
   ]
 }

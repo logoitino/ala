@@ -1,5 +1,5 @@
 {
-  "_comment": "Data ownership registry (DATA-01). Owned by DATA_GOVERNANCE; DATA_LINEAGE generates docs/engineering/DATA_MAP.md from it plus the schema and code (scripts/data-map.mjs); CODE_HYGIENE keeps exportsTriage honest. Every table, view and Storage bucket needs an owner (a registered agent call) and a purpose. Functions inherit the owner of the table they touch most unless listed under functions.",
+  "_comment": "Data ownership registry (DATA-01). Owned by DATA_GOVERNANCE; DATA_LINEAGE generates docs/engineering/DATA_MAP.md from it plus the schema and code (scripts/data-map.mjs); CODE_HYGIENE keeps exportsTriage honest. Every table, view and Storage bucket needs an owner (a registered agent call) and a purpose. Functions inherit the owner of the table they touch most unless listed under functions. UX-14 DATA_GOVERNANCE review: optional originating-client arguments preserve existing exported row/RPC shapes and Storage paths; existing owners remain. Exact outside-session review and map currency are recorded in docs/agents/UX-14.md.",
   "version": 1,
   "tables": {
     "app_feedback": {
@@ -232,7 +232,7 @@
     },
     "schools_and_teams": {
       "owner": "SCHOOL_PARTNERS",
-      "purpose": "High school and college catalog with crests and colours."
+      "purpose": "High school and college catalog with crests and colours. UX17 checks final canonical admin-only writes/public safe metadata reads; no schema or policy edit and hosted state remains unverified."
     },
     "shop_orders": {
       "owner": "DRIP",
@@ -1903,28 +1903,28 @@
       "file": "apps/mobile/src/frontend/components/UI/Kit.tsx",
       "name": "KitBadge",
       "decision": "keep",
-      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete — new/touched screens use Kit.",
+      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete \u2014 new/touched screens use Kit.",
       "status": "kept"
     },
     {
       "file": "apps/mobile/src/frontend/components/UI/Kit.tsx",
       "name": "KitChip",
       "decision": "keep",
-      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete — new/touched screens use Kit.",
+      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete \u2014 new/touched screens use Kit.",
       "status": "kept"
     },
     {
       "file": "apps/mobile/src/frontend/components/UI/Kit.tsx",
       "name": "LivePill",
       "decision": "keep",
-      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete — new/touched screens use Kit.",
+      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete \u2014 new/touched screens use Kit.",
       "status": "kept"
     },
     {
       "file": "apps/mobile/src/frontend/components/UI/Kit.tsx",
       "name": "KitProgress",
       "decision": "keep",
-      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete — new/touched screens use Kit.",
+      "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete \u2014 new/touched screens use Kit.",
       "status": "kept"
     }
   ],
@@ -3191,6 +3191,105 @@
       "destination": "Generated public docs/engineering/exit/INFRASTRUCTURE_SECURITY_REPORT.md or read-only local JSON stdout; original sensitive observations remain protected outside source.",
       "retention": "Source-controlled deterministic current awareness report plus dated scoped findings; does not inherit completed review or operational acceptance. Original full-check receipts stay private and source-bound.",
       "source": "infrastructure/security/report.mjs"
+    },
+    {
+      "id": "admin-portal-read-availability",
+      "owner": "PORTAL",
+      "purpose": "Present independent successful profile counts and published switches while keeping denied/unavailable reads unknown; retain measured zero and explicit source failures. UX-15 Root outside Codex performs DataGov/Privacy interface review.",
+      "data": "Existing profile counts and app_runtime_config draft/published fields plus Next-local nullable totals and fixed safe per-source errors. No new table, column, RPC, credential or raw backend error exported.",
+      "destination": "Current server-protected Next report responses and browser presentation only; Expo remains the write control plane.",
+      "retention": "Current response/view lifetime; explicit full-request Refresh repeats existing gated reads, no background collection.",
+      "source": "apps/admin-portal/lib/softWall.ts"
+    },
+    {
+      "id": "admin-private-view-frame",
+      "owner": "SESSION_SECURITY",
+      "purpose": "Hide retained private admin presentation across browser account/session/AAL changes; server-validated identity, profile role and existing MFA remain independent authority. UX-15 Root outside Codex performs DataGov/Privacy interface review.",
+      "data": "Backend-validated user UID, SHA256 versioned sub/session_id/aal correlation and random server verificationId only. Raw access/refresh tokens, raw session_id and claims never serialized in props, logs or persistence. Captured token pins server identity/profile/MFA reads.",
+      "destination": "Existing gated server React response and current browser component memory; no new database field, endpoint, provider or credential store.",
+      "retention": "Current verified render/browser lifetime; visible children mask on incompatible account/session/AAL or signout. This UI correlation is not authorization and does not erase previously delivered browser memory. Role revocation without an Auth event still requires a fresh server request.",
+      "source": "apps/admin-portal/lib/authz.ts"
+    },
+    {
+      "id": "admin-private-frame-classifier",
+      "owner": "SESSION_SECURITY",
+      "purpose": "Compare an already accepted private-view session with a current browser session without unmounting children during a normal refresh or same-session sign-in reconfirmation.",
+      "data": "Internal SHA256 correlation or boolean equality output only. Strict private sub/session_id/aal/expiry parser; an accepted previous token may have expired, while the next token must be unexpired. Raw tokens/claims exist only transiently in memory and accepted component refs.",
+      "destination": "Server gate and browser private-frame boundary only; no raw token/claim props, logging, persistence or new public API.",
+      "retention": "Current component/request lifetime. The classifier compares UID/session_id/aal and next expiry; the browser boundary separately refuses poisoned verification IDs. Backend identity/role/MFA gates remain authoritative.",
+      "source": "apps/admin-portal/lib/portalSessionFrame.ts"
+    },
+    {
+      "id": "admin-browser-session-type",
+      "owner": "SESSION_SECURITY",
+      "purpose": "Keep the existing browser session type behind the portal library vendor boundary; no runtime read or Auth orchestration changes.",
+      "data": "Type-only PortalBrowserSession alias of the installed SDK Session, with the existing fields unchanged. It creates no value, response, new field or dataset.",
+      "destination": "Internal browser boundary type annotation via apps/admin-portal/lib/supabase.ts; no new props, endpoint or serialization.",
+      "retention": "Type erased at build; existing session tokens remain solely in the established memory/cookie lifetime and are not newly logged or persisted.",
+      "source": "apps/admin-portal/lib/supabase.ts"
+    },
+    {
+      "id": "fan-dock-clearance",
+      "owner": "DESIGN",
+      "purpose": "Reserve current fan navigation surface and safe-area foot until measured layout replaces its default estimate. UX18 owner feedback supersedes dated46pt UX16 estimate; Root outside Codex performs DataGov classification without domain authority change.",
+      "data": "Existing local numerical dock height and layout measurements only; current planned default44pt plus unchanged safe-bottom minimum6. Actual finite measured/wrapped-text height remains authoritative. No schema/API/personal data.",
+      "destination": "Existing in-memory fan navigation context, TabScreen clearance and Home overlay placement.",
+      "retention": "Mounted provider lifetime; existing route reset/disposal, measured dedup and zero outside-provider contract unchanged. No persistence/logging/provider operation.",
+      "source": "apps/mobile/src/frontend/context/FanNavigationContext.tsx"
+    },
+    {
+      "id": "school-roster-directory",
+      "owner": "ROSTERS",
+      "purpose": "UX17 outside Codex DataGov/source review reuses current public catalog and roster for bounded discovery; no schema/identity import.",
+      "data": "Minimal public schools_and_teams allowed metadata and players id/name/jersey/position/school_name/team. Exact school-name and text-team association only; no private guardian/measurable/account export or canonical team ID.",
+      "destination": "Mounted Local directory and athlete onboarding selection; public account links only by existing exact-ID/player-ID safe projection.",
+      "retention": "Bounded local current-page memory; replace/invalidate previous search/source result. No new persistence, logging, telemetry or stored identities.",
+      "source": "apps/mobile/src/frontend/lib/schoolDirectory.ts"
+    },
+    {
+      "id": "selected-roster-pending-claim",
+      "owner": "ROSTERS",
+      "purpose": "Bind explicitly selected existing roster identity to current school selection before requesting existing pending review; preserve school-confirmation authority.",
+      "data": "Optional current player UUID plus existing onboarding school/name and captured matching actor. Client association guard is not identity proof, server FK or permission.",
+      "destination": "Existing claim_athlete RPC pending/disputed workflow via teams library, never direct profiles.player_id write or verification grant.",
+      "retention": "Existing server pending-claim lifecycle; ephemeral selected ID resets with changed school/name/session. No new retention store or provider action.",
+      "source": "apps/mobile/src/frontend/lib/teams.ts"
+    },
+    {
+      "id": "selected-roster-auth-plumbing",
+      "owner": "SESSION_SECURITY",
+      "purpose": "UX17 carries an optional exact existing roster choice through the existing athlete-onboarding API, with the same captured actor and session lifetime.",
+      "data": "Optional player UUID or null no-new-choice; undefined retains existing legacy caller behavior. No new token/role authority, public enumeration, table field, verification or linkage grant.",
+      "destination": "Existing useAuth completeAthleteOnboarding to teams saveAthleteOnboardingRemote and existing pending claim RPC; profile publication remains current-actor guarded.",
+      "retention": "Existing provider/view lifetime; no new selection persistence or credential/logging path. Existing server claim coalesce retains earlier targets when no new target is submitted.",
+      "source": "apps/mobile/src/frontend/context/AuthContext.tsx"
+    },
+    {
+      "id": "school-roster-directory-view",
+      "owner": "ROSTERS",
+      "purpose": "UX17 consuming Local view exposes bounded existing public catalog and roster with exact-record links; Root outside Codex DataGov classification preserves roster/account separation.",
+      "data": "Existing minimal DirectorySchool/DirectoryPlayer pages, exact school UUID/name and raw team label, draft search and local request generation only. Loaded page counts do not describe verified accounts or total membership.",
+      "destination": "Local/SchoolDirectory render and existing exact-roster userProfileHref; thin Expo route honors tabs.local pause before mounting readers.",
+      "retention": "Mounted view memory only. Search, school, actor or unmount invalidates old requests/actions; Back reuses only same scope pages. No persistence, telemetry, schema or media copy.",
+      "source": "apps/mobile/src/frontend/components/Local/SchoolDirectory.tsx"
+    },
+    {
+      "id": "existing-roster-choice-view",
+      "owner": "PROFILE",
+      "purpose": "UX17 optional existing-roster choice during current athlete setup, distinct from verified account linkage; Root outside Codex DataGov reviews current actor/view selection and failure recovery.",
+      "data": "Bounded public roster rows and optional exact UUID selected under current school/name/account/modal lifetime. Search reads use existing captured actor client; no private profile or guardian enumeration.",
+      "destination": "Existing Auth completeAthleteOnboarding optional argument and pending claim workflow; explicit null means no new choice and does not clear an earlier server pending target.",
+      "retention": "Mounted sheet state only; invalidate changed school/name/actor/view. Existing server claim lifecycle unchanged. No new account/identity rows, persistence or automatic profiles.player_id write.",
+      "source": "apps/mobile/src/frontend/components/Profile/RoleSwitcherModal.tsx"
+    },
+    {
+      "id": "notification-inline-explanation",
+      "owner": "DESIGN",
+      "purpose": "UX18 optional ordinary explanation layout saves a separate disclosure row in NotificationInbox; Root outside Codex DataGov classifies UI-only modifier.",
+      "data": "Existing explanatory string and ephemeral More/Less expanded boolean; new optional inlineToggle layout boolean defaultsfalse. No notification IDs, account fields, telemetry, persistence or source query.",
+      "destination": "Existing UI/MoreText with NotificationInbox opt-in; all other consumers retain default stacked layout and existing full accessible text.",
+      "retention": "Mounted UI lifetime only; same existing expansion state. Policy/money/safety/consent/rights copy is excluded from collapse; no new record or provider flow.",
+      "source": "apps/mobile/src/frontend/components/UI/MoreText.tsx"
     }
   ]
 }

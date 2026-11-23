@@ -4,6 +4,7 @@
  * Add a row here whenever you add a fan control. Trivia rows (2026-10-15) add the This week strip, level and Life
  * Playbook opt-in / chapters, and the page Skip now reads "Skip my round this week". QUIZ-05 adds Report a problem,
  * the athlete's Share a fun fact, the Privacy fun facts audience and the guardian's fun-fact Approve / Decline.
+ * UX-17 maps existing-record directory and pending roster selection to source correction desks.
  * MONEY-TIPS-01 separates optional checkout controls from gifts; its absent telemetry is explicit.
  * WEB-01 / Vault rails (2026-11-13): browser Stripe Payment Element, phone-column shell, and store-billing
  * gates for production native Exclusive — keep portal Coverage (`PORTAL_COVERAGE_SURFACES`) in sync.
@@ -117,6 +118,11 @@ const fanControls: CoverageControl[] = [
  * @purpose Production map: every fan-visible control has an admin desk, an optional runtime flag, and a telemetry id.
  */
 export const COVERAGE_CONTROLS: CoverageControl[] = [
+  { id: 'directory.local.open', label: 'Schools and teams', hint: 'Existing public school catalog/roster; no account directory or imported rows. Local runtime entry; no tap telemetry.', surface: 'local', fanHref: '/local/directory', adminHref: '/admin/athletes', flag: 'tabs.local' },
+  { id: 'directory.local.search', label: 'Search schools / roster', hint: 'Bounded current-record reads; errors are unavailable, not empty. Exact catalog-name association; no broad account search or query logging.', surface: 'local', fanHref: '/local/directory', adminHref: '/admin/schools', flag: 'tabs.local' },
+  { id: 'directory.local.browse', label: 'Choose school / team / athlete', hint: 'Current text team groups and public roster IDs; existing staff source correction, no invented canonical team ID or verification.', surface: 'local', fanHref: '/local/directory', adminHref: '/admin/athletes', flag: 'tabs.local' },
+  { id: 'directory.local.recover', label: 'Directory back / retry / pages', hint: 'Local navigation and bounded source recovery only; no mutation or passive metric. No record publication switch exists.', surface: 'local', fanHref: '/local/directory', adminHref: '/admin/athletes', flag: 'tabs.local' },
+  { id: 'directory.profile.select', label: 'Choose my existing roster entry', hint: 'Exact existing ID/school consistency then existing pending claim review; never grants player linkage/verification. No selection telemetry.', surface: 'profile', fanHref: '/profile', adminHref: '/admin/athletes' },
   { id: 'notifications.profile.open', label: 'Notifications', hint: 'Profile Account sheet; server notification_config pauses reviewed sources; no passive tap metric', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features' },
   { id: 'notifications.profile.masters', label: 'Notification channel switches', hint: 'Recipient notification_preferences.email_enabled/in_app_enabled; choices/history preserved. Server notification_config controls future production; security Auth messages separate', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features' },
   { id: 'notifications.profile.categories', label: 'Category email / in-app choices', hint: 'Recipient revisioned preferences; unsupported sources unavailable, optional email blocked pending provider/unsubscribe. Applies only connected notification sources; legacy queues use own rules', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features' },

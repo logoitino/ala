@@ -26,6 +26,7 @@ const bricolage = localFont({
 });
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: false, noarchive: true },
   title: { default: "Tapua'i Admin Portal", template: "%s · Tapua'i Admin" },
   description: 'Read-only oversight for Tapua\'i — Reports, Money, Soft-Wall, Features, People. All edits happen in Expo /admin.',
 };

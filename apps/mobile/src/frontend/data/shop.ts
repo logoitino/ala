@@ -1,4 +1,5 @@
 /**
+ * Unavailable stock remains zero so ProductSheet cannot invent a purchasable unit.
  * Drip (merch marketplace) catalog defaults and price formatting. The Drip tab is off until Wave 1; the owner edits
  * the live catalog from Expo /admin → Drip.
  */
@@ -151,10 +152,10 @@ export function dripAuraForOrder(item: DripItem, quantity: number): number {
 }
 
 /**
- * @purpose Upper bound for ProductSheet quantity (never below 1).
+ * @purpose Upper bound for ProductSheet quantity; unavailable stock stays zero so checkout can refuse it.
  * @param item Catalog row with `inventory`.
  * @returns Max units the + control may reach.
  */
 export function dripMaxQty(item: DripItem): number {
-  return Math.max(1, Math.round(item.inventory));
+  return Number.isFinite(item.inventory) ? Math.max(0, Math.floor(item.inventory)) : 0;
 }

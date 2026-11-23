@@ -1,4 +1,5 @@
 /**
+ * UX-14: optional captured clients preserve initiating-account transport without changing existing payloads.
  * QUIZ-05 fresh questions adapter: fun facts (Know your athlete) for athletes, guardians and admins; question reports;
  * the Learn-card Start; Needs a look; bulk import and the fresh-question settings. The server owns every rule (audience,
  * guardian order, text filter, thresholds, caps); malformed data throws and nothing is invented here.
@@ -6,6 +7,7 @@
  * @sideEffects Authenticated database RPCs via the shared callRpc binding; no telemetry, storage or payment calls.
  */
 import { callRpc } from '@/lib/rpc';
+import { supabase } from '@/lib/supabase';
 import { checkStartReceipt } from '@/lib/sportQuiz';
 import type { TimedQuizStartReceipt } from '@shared/timedSportQuiz';
 import {
@@ -87,12 +89,12 @@ export async function exportMyFunFacts(): Promise<FunFactExport> {
   return checked<FunFactExport>(await callRpc('quiz_fact_export'), x => text(x.profile_id) && Array.isArray(x.facts));
 }
 /** @purpose Guardian: fun facts waiting for this guardian's approve / decline (teens they supervise). */
-export async function fetchGuardianFunFacts(): Promise<GuardianFunFacts> {
-  return checked<GuardianFunFacts>(await callRpc('quiz_fact_guardian_pending'), x => Array.isArray(x.facts) && x.facts.every(f => object(f) && text(f.fact_id) && text(f.minor_profile_id) && promptKey(f.prompt_key)));
+export async function fetchGuardianFunFacts(client = supabase): Promise<GuardianFunFacts> {
+  return checked<GuardianFunFacts>(await callRpc('quiz_fact_guardian_pending', {}, client), x => Array.isArray(x.facts) && x.facts.every(f => object(f) && text(f.fact_id) && text(f.minor_profile_id) && promptKey(f.prompt_key)));
 }
 /** @purpose Guardian approves or declines; a guardian never writes, edits or withdraws. */
-export async function decideGuardianFunFact(factId: string, approve: boolean, expectedProfileId: string): Promise<GuardianFunFactDecision> {
-  return checked<GuardianFunFactDecision>(await callRpc('quiz_fact_guardian_decide', { p_fact_id: factId, p_approve: approve, p_expected_profile_id: expectedProfileId }),
+export async function decideGuardianFunFact(factId: string, approve: boolean, expectedProfileId: string, client = supabase): Promise<GuardianFunFactDecision> {
+  return checked<GuardianFunFactDecision>(await callRpc('quiz_fact_guardian_decide', { p_fact_id: factId, p_approve: approve, p_expected_profile_id: expectedProfileId }, client),
     x => x.fact_id === factId && text(x.status));
 }
 

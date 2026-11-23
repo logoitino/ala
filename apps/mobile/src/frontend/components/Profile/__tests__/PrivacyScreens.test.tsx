@@ -1,5 +1,5 @@
 /** PRIV-01 / MINOR-01 app screens: settings sheet (with the teen pieces), friend / block controls, friend requests. Synthetic data. */
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 
 import { FriendRequestsCard } from '@/components/Activity/FriendRequestsCard';
@@ -19,8 +19,13 @@ jest.mock('@/lib/minors', () => ({
   fetchMyPrivacyStatus: jest.fn(), saveMyPrivacyStatus: jest.fn(), createGuardianInvite: jest.fn(), respondGuardianLink: jest.fn(),
   endGuardianLink: jest.fn(), cancelApprovalRequest: jest.fn(), fetchMySupervision: jest.fn(),
 }));
+let mockUser = 'A';
+let mockGuard = () => true;
+jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: { captureActor: () => { const owner = mockUser, guard = mockGuard; return { userId: owner, isCurrent: () => owner === mockUser && guard === mockGuard }; } } }));
+const mockClient = {};
+jest.mock('@/lib/offlineActor', () => ({ createOfflineActorClient: async () => mockClient }));
 const mockRecordBirthMonth = jest.fn();
-jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ recordBirthMonth: mockRecordBirthMonth }) }));
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: mockUser }, isSessionCurrent: mockGuard, recordBirthMonth: mockRecordBirthMonth }) }));
 jest.mock('@/components/Custodial/GuardianSupervisionPanel', () => ({ GuardianSupervisionPanel: () => null }));
 const m = jest.mocked(privacy);
 const mm = jest.mocked(minors);
@@ -29,7 +34,7 @@ const settings = (raw: Record<string, unknown> = {}) => privacy.parsePrivacy({ a
 const account = (rel: string, extra: Record<string, unknown> = {}) => ({ id: 'prof-a', player_id: 'pl-1', username: 'kaleo', full_name: 'Kaleo Fua', viewer_relation: rel, account_private: true, ...extra }) as never;
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  jest.clearAllMocks(); mockUser = 'A'; mockGuard = () => true;
   m.fetchMyBlocks.mockResolvedValue([{ profileId: 'b1', name: 'Rude Fan', blockedAt: '2026-10-14' }]);
   m.fetchMyFriends.mockResolvedValue([]);
 });
@@ -42,10 +47,10 @@ describe('PrivacySettingsSheet', () => {
     expect(screen.getByLabelText('Save privacy')).toBeDisabled();
     await fireEvent.press(await screen.findByLabelText('Bio: Only me'));
     await fireEvent.press(screen.getByLabelText('Save privacy'));
-    await waitFor(() => expect(mm.saveMyPrivacyStatus).toHaveBeenCalledWith(expect.objectContaining({ audience: expect.objectContaining({ bio: 'only_me' }) })));
+    await waitFor(() => expect(mm.saveMyPrivacyStatus).toHaveBeenCalledWith(expect.objectContaining({ audience: expect.objectContaining({ bio: 'only_me' }) }), mockClient));
     expect(await screen.findByText('Privacy saved.')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Unblock Rude Fan'));
-    await waitFor(() => expect(m.unblockUser).toHaveBeenCalledWith('b1'));
+    await waitFor(() => expect(m.unblockUser).toHaveBeenCalledWith('b1', mockClient));
   });
 
   it('a solo teen: public waits for a signed consent, and they can invite a parent or guardian', async () => {
@@ -81,7 +86,7 @@ describe('PrivacySettingsSheet', () => {
     await render(<PrivacySettingsSheet visible onClose={jest.fn()} />);
     expect(await screen.findByText('Is Mele (@guardmele) your parent or guardian?')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Yes, Mele is my parent or guardian'));
-    await waitFor(() => expect(mm.respondGuardianLink).toHaveBeenCalledWith('l9', true));
+    await waitFor(() => expect(mm.respondGuardianLink).toHaveBeenCalledWith('l9', true, mockClient));
     await fireEvent.press(screen.getByLabelText('What your guardian sees'));
     expect(await screen.findByText('4 friends')).toBeTruthy();
     expect(screen.getByText(/Mele was linked as a parent or guardian/)).toBeTruthy();
@@ -144,4 +149,69 @@ it('FriendRequestsCard accepts and declines', async () => {
   expect(await screen.findByText('You and Sina are friends.')).toBeTruthy();
   await fireEvent.press(screen.getByLabelText('Decline Tavita'));
   await waitFor(() => expect(m.respondFriend).toHaveBeenLastCalledWith('r2', false));
+});
+
+it('masks outgoing private blocks immediately and rejects a delayed A load after B', async () => {
+ let release!: (value: Awaited<ReturnType<typeof minors.fetchMyPrivacyStatus>>) => void;
+ mm.fetchMyPrivacyStatus.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+ mm.fetchMyPrivacyStatus.mockResolvedValue({ settings: settings(), minor: status({ age_band: 'adult' }) });
+ const view = await render(<PrivacySettingsSheet visible onClose={jest.fn()} />);
+ await waitFor(() => expect(mm.fetchMyPrivacyStatus).toHaveBeenCalledTimes(1));
+ mockUser = 'B'; mockGuard = () => true;
+ m.fetchMyBlocks.mockResolvedValue([]);
+ await view.rerender(<PrivacySettingsSheet visible onClose={jest.fn()} />);
+ await waitFor(() => expect(mm.fetchMyPrivacyStatus).toHaveBeenCalledTimes(2));
+ await act(async () => release({ settings: settings({ account_private: false }), minor: status({ age_band: 'adult' }) }));
+ expect(screen.queryByText('Rude Fan')).toBeNull();
+ expect(screen.getByLabelText('Account: Private').props.accessibilityState.selected).toBe(true);
+});
+it('rejects a delayed A save success after B and freezes edits during that save', async () => {
+ mm.fetchMyPrivacyStatus.mockResolvedValue({ settings: settings(), minor: status({ age_band: 'adult' }) });
+ let release!: (value: Awaited<ReturnType<typeof minors.saveMyPrivacyStatus>>) => void;
+ mm.saveMyPrivacyStatus.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+ const view = await render(<PrivacySettingsSheet visible onClose={jest.fn()} />);
+ await fireEvent.press(await screen.findByLabelText('Bio: Only me'));
+ await fireEvent.press(screen.getByLabelText('Save privacy'));
+ expect(screen.getByLabelText('Bio: Everyone')).toBeDisabled();
+ mockUser = 'B'; mockGuard = () => true;
+ await view.rerender(<PrivacySettingsSheet visible onClose={jest.fn()} />);
+ await act(async () => release({ settings: settings({ account_private: false }), minor: null, heldForApproval: [] }));
+ expect(screen.queryByText('Privacy saved.')).toBeNull();
+ expect((await screen.findByLabelText('Account: Private')).props.accessibilityState.selected).toBe(true);
+});
+it('offers Retry after a real current-owner privacy load failure', async () => {
+ mm.fetchMyPrivacyStatus.mockRejectedValueOnce(new Error('Privacy unavailable'));
+ mm.fetchMyPrivacyStatus.mockResolvedValue({ settings: settings(), minor: status({ age_band: 'adult' }) });
+ await render(<PrivacySettingsSheet visible onClose={jest.fn()} />);
+ expect(await screen.findByText('Privacy unavailable')).toBeTruthy();
+ await fireEvent.press(screen.getByRole('button', { name: 'Retry privacy' }));
+ expect(await screen.findByLabelText('Bio: Friends')).toBeTruthy();
+});
+
+it('keeps a denied own privacy save retryable without publishing saved settings', async () => {
+ mm.fetchMyPrivacyStatus.mockResolvedValue({ settings: settings(), minor: status({ age_band: 'adult' }) });
+ mm.saveMyPrivacyStatus.mockRejectedValueOnce(new Error('Permission denied'));
+ await render(<PrivacySettingsSheet visible onClose={jest.fn()} />);
+ await fireEvent.press(await screen.findByLabelText('Bio: Only me'));
+ await fireEvent.press(screen.getByLabelText('Save privacy'));
+ expect(await screen.findByText('Permission denied')).toBeTruthy();
+ expect(screen.queryByText('Privacy saved.')).toBeNull();
+ expect(screen.getByLabelText('Bio: Only me').props.accessibilityState.selected).toBe(true);
+ expect(screen.getByLabelText('Save privacy')).toBeEnabled();
+ mm.saveMyPrivacyStatus.mockResolvedValueOnce({ settings: settings({ audience: { bio: 'only_me' } }), minor: null, heldForApproval: [] });
+ await fireEvent.press(screen.getByLabelText('Save privacy'));
+ expect(await screen.findByText('Privacy saved.')).toBeTruthy();
+});
+it('does not dispatch a retained unlink confirmation after the account changes', async () => {
+ mm.fetchMyPrivacyStatus.mockResolvedValue({ settings: settings(), minor: status({ age_band: 'teen_16_17', guardians: [{ link_id: 'l1', first_name: 'Mele' }] }) });
+ let confirm!: () => void;
+ const alert = jest.spyOn(Alert, 'alert').mockImplementation((_title, _body, buttons) => { confirm = buttons?.find(button => button.style === 'destructive')?.onPress as () => void; });
+ try {
+  const view = await render(<PrivacySettingsSheet visible onClose={jest.fn()} />);
+  await fireEvent.press(await screen.findByLabelText('Unlink Mele'));
+  mockUser = 'B'; mockGuard = () => true;
+  await view.rerender(<PrivacySettingsSheet visible onClose={jest.fn()} />);
+  await act(async () => confirm());
+  expect(mm.endGuardianLink).not.toHaveBeenCalled();
+ } finally { alert.mockRestore(); }
 });

@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `5dcbf0d4bfbe` |
-| Last announced plan | `5dcbf0d4bfbe` — up to date |
+| Exit plan version (what the app uses on Supabase) | `b0951e30432e` |
+| Last announced plan | `b0951e30432e` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
 | Latest migration | `20261114010000_user_feed_prefs.sql` (58 files) |
 | Canonical schema hash | `d1729a7ee7de8e3258e35363e7955977d32d73210a6ceb91d57921ed1f172c86` (`schema.sql`) |
-| Complete source/configuration content hash | `5dcbf0d4bfbe446810dc2c16cc532bc4ac1607daed2786ca41316b14ebf9af7d` across 1411 files |
+| Complete source/configuration content hash | `b0951e30432ea54b682580be98f78950fd50a07930ce2b3feb8adea7de293b78` across 1435 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -125,7 +125,7 @@ are the calls whose answers the proofs below cover.
 
 | What the app calls | Count | Items | How the target is proven to answer the same |
 | --- | --- | --- | --- |
-| Database functions the app calls | 218 | `accept_guardian_invite`, `add_user_aura`, `admin_approve_player_consent`, `admin_athlete_sport_usage`, `admin_beyond_cleanup_finish`, `admin_beyond_cleanup_targets`, `admin_beyond_erase_profile`, `admin_beyond_posts`, `admin_beyond_retention`, `admin_beyond_review`, `admin_beyond_set_enabled`, `admin_beyond_status`, `admin_challenge_erase`, `admin_challenge_nudge_senders`, `admin_challenge_post_counts`, `admin_challenge_retention`, `admin_challenge_status`, `admin_confirm_payee_check`, `admin_decide_payout_override`, `admin_decide_verification`, `admin_end_guardian_link`, `admin_get_highlight_sport`, `admin_get_privacy`, `admin_hold_challenge_sender`, `admin_list_age_blocked` … (+193) | every one exists in `schema.sql` (checked here); parity compares body, settings, owner, execute rights |
+| Database functions the app calls | 213 | `accept_guardian_invite`, `add_user_aura`, `admin_approve_player_consent`, `admin_athlete_sport_usage`, `admin_beyond_cleanup_finish`, `admin_beyond_cleanup_targets`, `admin_beyond_erase_profile`, `admin_beyond_posts`, `admin_beyond_retention`, `admin_beyond_review`, `admin_beyond_set_enabled`, `admin_beyond_status`, `admin_challenge_erase`, `admin_challenge_nudge_senders`, `admin_challenge_post_counts`, `admin_challenge_retention`, `admin_challenge_status`, `admin_confirm_payee_check`, `admin_decide_payout_override`, `admin_decide_verification`, `admin_end_guardian_link`, `admin_get_highlight_sport`, `admin_get_privacy`, `admin_hold_challenge_sender`, `admin_list_age_blocked` … (+188) | every one exists in `schema.sql` (checked here); parity compares body, settings, owner, execute rights |
 | Tables/views the app reads or writes directly | 30 | `app_runtime_config`, `athlete_career_stats`, `athlete_game_logs`, `cheer_polls`, `crew_push_queue`, `custodial_accounts`, `disbursements`, `game_events`, `games`, `players`, `profiles`, `profiles_public`, `reel_hype_votes`, `reel_photos`, `reel_photos_feed`, `reel_reports`, `reels`, `reels_feed`, `saved_reels`, `schools_and_teams`, `shop_products`, `sponsorships`, `spotlight_awards`, `subscriber_requests`, `subscriptions`, `telemetry_logs`, `tips`, `user_feed_prefs`, `verification_requests`, `wishlist_items` | parity: rows and hashes; **access parity**: rows visible to a guest, signed-in users and an admin |
 | Storage buckets the app calls | 4 | `beyond_game`, `fan_zone`, `reel_vault`, `reels` | restore.py re-downloads and hashes every object; parity checks storage.objects policies |
 | Realtime channels the app opens | 1 | `scorer_games` | parity: realtime publication + realtime.messages policies; runbook Realtime smoke test |
@@ -163,7 +163,7 @@ Counts come from static statements in `schema.sql` and the source; the live data
 
 ### SDK callsite coverage
 
-AST callsites: 1002; literal targets: 483; explicit owner-review candidates: 185.
+AST callsites: 1005; literal targets: 487; explicit owner-review candidates: 197.
 The complete machine inventory (`node scripts/exit-map.mjs --json`) records each detected callsite path, line, column,
 operation and literal target. Dynamic arguments and unresolved client origins require owner review. Syntax inspection
 does not prove runtime/provider coverage; overloads, dynamic SQL and deployed drift require live catalog parity.
@@ -171,6 +171,8 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | Owner-review candidate | Operation | Target resolution | Reviewers |
 | --- | --- | --- | --- |
 | `apps/admin-portal/app/auth/callback/route.ts:36:11` | `auth.exchangeCodeForSession` | not-applicable; client unresolved | `EXIT_SERVICES`, `AUTH`, `SESSION_SECURITY` |
+| `apps/admin-portal/components/PortalSessionBoundary.tsx:47:26` | `auth.onAuthStateChange` | not-applicable; client unresolved | `EXIT_SERVICES`, `AUTH`, `SESSION_SECURITY` |
+| `apps/admin-portal/components/PortalSessionBoundary.tsx:88:30` | `auth.getSession` | not-applicable; client unresolved | `EXIT_SERVICES`, `AUTH`, `SESSION_SECURITY` |
 | `apps/admin-portal/lib/adminMfaClient.ts:29:33` | `auth.getSession` | not-applicable; client unresolved | `EXIT_SERVICES`, `AUTH`, `SESSION_SECURITY` |
 | `apps/admin-portal/lib/adminMfaClient.ts:39:24` | `auth.setSession` | not-applicable; client unresolved | `EXIT_SERVICES`, `AUTH`, `SESSION_SECURITY` |
 | `apps/admin-portal/lib/adminMfaClient.ts:53:24` | `auth.mfa.listFactors` | not-applicable; client unresolved | `EXIT_SERVICES`, `AUTH`, `SESSION_SECURITY` |
@@ -184,13 +186,13 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `apps/admin-portal/lib/reports.ts:26:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/admin-portal/lib/reports.ts:32:21` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/admin-portal/lib/reports.ts:34:24` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:63:5` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:64:5` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:68:5` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:115:22` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:124:15` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:177:33` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/middleware.ts:62:13` | `auth.getUser` | not-applicable; client unresolved | `EXIT_SERVICES`, `AUTH`, `SESSION_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:77:18` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:78:18` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:82:18` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:135:22` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:144:15` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:199:37` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/middleware.ts:66:13` | `auth.getUser` | not-applicable; client unresolved | `EXIT_SERVICES`, `AUTH`, `SESSION_SECURITY` |
 | `apps/mobile/src/backend/api/createPaymentIntent.ts:57:11` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/backend/api/createPaymentIntent.ts:64:29` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/backend/api/createPayout.ts:51:37` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
@@ -208,8 +210,8 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `apps/mobile/src/backend/services/fanZoneMedia.ts:44:33` | `storage.from` | literal; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/frontend/components/Admin/UnappliedControlsCard.tsx:19:31` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/context/AppRuntimeContext.tsx:88:21` | `realtime.channel` | dynamic; client resolved | `EXIT_SERVICES`, `REALTIME` |
-| `apps/mobile/src/frontend/context/AuthContext.tsx:562:13` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/context/AuthContext.tsx:573:31` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/context/AuthContext.tsx:601:13` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/context/AuthContext.tsx:612:31` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/hooks/useGameEventBroadcast.ts:51:21` | `realtime.channel` | dynamic; client resolved | `EXIT_SERVICES`, `REALTIME` |
 | `apps/mobile/src/frontend/hooks/useTipCheckout.ts:256:45` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/admin.ts:122:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
@@ -236,16 +238,18 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `apps/mobile/src/frontend/lib/boosterPortal.ts:67:33` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/cheerPoll.ts:48:19` | `realtime.channel` | dynamic; client resolved | `EXIT_SERVICES`, `REALTIME` |
 | `apps/mobile/src/frontend/lib/crew.ts:68:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/crew.ts:78:22` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/crew.ts:86:22` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/crew.ts:122:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/crew.ts:135:42` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/crew.ts:138:42` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/crew.ts:158:33` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/crew.ts:215:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/crew.ts:231:40` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/crew.ts:79:22` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/crew.ts:87:22` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/crew.ts:124:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/crew.ts:137:42` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/crew.ts:140:42` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/crew.ts:160:33` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/crew.ts:217:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/crew.ts:233:40` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/custodial.ts:253:27` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/donationThanks.ts:149:29` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/donationHistory.ts:49:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/donationThanks.ts:109:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/lib/donationThanks.ts:145:29` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/fanZone.ts:195:39` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/feedback.ts:104:27` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/finance.ts:124:27` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
@@ -266,11 +270,7 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `apps/mobile/src/frontend/lib/mediaStorage.ts:53:31` | `storage.remove` | not-applicable; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/frontend/lib/notifications.ts:49:35` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/notifications.ts:82:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/notifications.ts:88:40` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/notifications.ts:95:34` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/notifications.ts:110:28` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/lib/notifications.ts:116:13` | `database.rpc` | dynamic; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-Additional 85 candidates are included in the complete machine inventory.
+Additional 97 candidates are included in the complete machine inventory.
 
 ## 8. How the data moves
 

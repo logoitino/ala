@@ -1,12 +1,12 @@
+/** UX-15 aligns existing report chrome with current Daylight cards while preserving report/card props, chart summaries, source disclosures and error alternatives. */
 /** UX-13 readable controls preserve all consent, money and operator actions.
  * Card wrapper for every chart in the admin portal chart kit. Renders the figure, the title,
  * a visible one-sentence summary, the plot, and a "Data" disclosure holding every plotted value
  * and the source key. The source always sits inside that disclosure (named "Source" when there
  * are no rows to show), so it is disclosed the same way on every card. The plot itself is
  * aria-hidden, so the summary and table must be complete.
- * Report presentation is the default on every page (owner decision 2026-10-12): the figure sits
- * on the page with a bottom divider instead of a card, keeping the title, summary, source and
- * table. Card presentation stays available for an embedded surface. Report mode tags its title
+ * Report presentation is the default on every page: current Daylight card chrome keeps
+ * the title, summary, source and table. Card presentation stays available for embedding. Report mode tags its title
  * `portal-chart-title` and its Data block `portal-chart-data`, so a page can style them by class
  * rather than by child position (Home's lead charts colour the title in `globals.css`).
  * Server-Component safe: the Data toggle is a native <details>, no client JS.
@@ -38,8 +38,8 @@ export type ChartFrameProps = {
   children?: ReactNode;
   className?: string;
   /**
-   * How the figure sits on the page. `'report'` (default, owner decision 2026-10-12): open, on the
-   * page background, with a bottom divider and an uppercase title. `'card'`: bordered white card
+   * How the figure sits on the page. `'report'` (default): on the
+   * Daylight surface with the report title and source hooks. `'card'`: bordered white card
    * with a shadow, for a chart embedded inside another surface. Both keep the summary and Data table.
    */
   presentation?: 'card' | 'report';
@@ -48,7 +48,7 @@ export type ChartFrameProps = {
 /**
  * @purpose Figure + caption + summary + source + plot + Data table for one chart.
  * @param props See `ChartFrameProps`.
- * @returns A `<figure>`: open report block by default, or a card.
+ * @returns A `<figure>`: report card by default, or embedded card.
  */
 export function ChartFrame({ title, caption, source, summary, table, headline, error, children, className, presentation = 'report' }: ChartFrameProps) {
   // A failed read shows no values anywhere, so the summary and Data table cannot contradict the error.
@@ -59,13 +59,13 @@ export function ChartFrame({ title, caption, source, summary, table, headline, e
   return (
     <figure
       aria-labelledby={titleId}
-      className={`@container m-0 flex min-w-0 flex-col ${presentation === 'report' ? 'portal-chart border-b border-[var(--border)] pb-4' : 'rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5'} ${className ?? ''}`}
+      className={`@container m-0 flex min-w-0 flex-col ${presentation === 'report' ? 'portal-chart rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5' : 'rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5'} ${className ?? ''}`}
       style={presentation === 'card' ? { boxShadow: 'var(--shadow-card)' } : undefined}
     >
       {/* figcaption must be a direct child of figure (HTML content model). */}
       <figcaption className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
         <div className="min-w-0">
-          <p id={titleId} className={presentation === 'report' ? 'portal-chart-title text-xs font-extrabold tracking-[0.08em] text-[var(--ink)] uppercase' : 'text-sm font-extrabold tracking-tight text-[var(--ink)]'}>
+          <p id={titleId} className={presentation === 'report' ? 'portal-chart-title text-sm font-extrabold tracking-tight text-[var(--ink)]' : 'text-sm font-extrabold tracking-tight text-[var(--ink)]'}>
             {title}
           </p>
           {caption && presentation === 'card' ? <p className="mt-0.5 text-xs text-[var(--text-muted)]">{caption}</p> : null}

@@ -4,11 +4,14 @@
  * Pager, media, snap and resized active offsets use one page height; single-video ownership stays intact.
  * R4-03 split (behaviour unchanged): the empty feed, campaign copy and pill row render from `components/Reels/`
  * (`HomeFeedEmpty`, `HomeCampaignCopy`, `HomeFeedSwitch`); this route keeps every hook, state and callback.
+ * UX-16 aligns compact search chrome with the existing feed row; measured pager and search actions remain.
+ * UX-18 uses a smaller Search glyph inside the same44pt action; text and measured overlay behavior stay.
+ * Empty-feed recovery scrolls below the measured header and above the measured dock.
  */
 import { useRouter } from 'expo-router';
 import { clearVideoCacheAsync } from 'expo-video';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Platform, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,6 +40,7 @@ import { useSoftWall } from '@/context/SoftWallContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useFanDockHeight } from '@/context/FanNavigationContext';
 import { FOCAL, SPRING_SHEET } from '@/theme/motion';
+import { figtree, TYPE } from '@/theme/fonts';
 import { FeedPicksSheet } from '@/components/Reels/FeedPicksSheet';
 import { useWebDesktopMode } from '@/hooks/useAppViewport';
 import {
@@ -617,6 +621,24 @@ export default function HighlightsTab() {
           : 'Your Home mix is quiet. New Highlights from athletes you follow will appear here.'
         : runtime.copy.homeEmpty;
 
+  // Empty recovery must retain a full44pt viewport; keep this existing link in its scroll body.
+  const beyondDiscoveryLink = feedFilter === 'beyond' && runtime.tabs.beyond && !searchOpen ? (
+            <AnimatedButton
+              haptic="selection"
+              accessibilityRole="link"
+              accessibilityLabel="Open Beyond the Game: fan workouts, service, learning and stories"
+              contentStyle={styles.beyondLink}
+              onPress={() => {
+                trackFeature('feed.beyond_page');
+                router.push('/beyond');
+              }}
+            >
+              <Text style={styles.beyondLinkLabel}>Fan workouts, service, learning and stories</Text>
+              <Ionicons name="chevron-forward" size={13} color={colors.onVideo} />
+            </AnimatedButton>
+          ) : null;
+
+
   if (useDesktopCards) {
     return (
       <TabScreen>
@@ -709,9 +731,15 @@ export default function HighlightsTab() {
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : feed.length === 0 ? (
-          <View style={styles.boot}>
+          <ScrollView
+            testID="home-empty-scroll"
+            style={[styles.fill, { marginTop: chromeHeight, marginBottom: dockHeight }]}
+            contentContainerStyle={styles.emptyContent}
+            showsVerticalScrollIndicator={false}
+          >
             <HomeFeedEmpty emptyCopy={emptyCopy} feedFilter={feedFilter} runtime={runtime} openUpload={openUpload} router={router} />
-          </View>
+            {beyondDiscoveryLink}
+          </ScrollView>
         ) : (
           <Animated.FlatList
             ref={listRef}
@@ -876,7 +904,7 @@ export default function HighlightsTab() {
                 setSearchOpen(true);
               }}
             >
-              <Ionicons name={searchOpen ? 'close' : 'search'} size={18} color={searchOpen ? '#FFFFFF' : FOCAL.electricGold} />
+              <Ionicons name={searchOpen ? 'close' : 'search'} size={16} allowFontScaling={false} color={searchOpen ? '#FFFFFF' : FOCAL.neonJade} />
             </AnimatedButton>
             ) : null}
             {searchOpen && runtime.layouts.homeSearch ? (
@@ -908,21 +936,7 @@ export default function HighlightsTab() {
               />
             )}
           </View>
-          {feedFilter === 'beyond' && runtime.tabs.beyond && !searchOpen ? (
-            <AnimatedButton
-              haptic="selection"
-              accessibilityRole="link"
-              accessibilityLabel="Open Beyond the Game: fan workouts, service, learning and stories"
-              contentStyle={styles.beyondLink}
-              onPress={() => {
-                trackFeature('feed.beyond_page');
-                router.push('/beyond');
-              }}
-            >
-              <Text style={styles.beyondLinkLabel}>Fan workouts, service, learning and stories</Text>
-              <Ionicons name="chevron-forward" size={13} color={colors.onVideo} />
-            </AnimatedButton>
-          ) : null}
+          {feed.length > 0 ? beyondDiscoveryLink : null}
           <SlangGuideBanner />
           {extrasReady ? <FamilyFunDiscovery surface="home" /> : null}
         </View>
@@ -991,7 +1005,7 @@ const styles = StyleSheet.create({
   chromeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   searchBtn: {
     width: 44,
@@ -999,13 +1013,13 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: colors.videoScrim,
     borderWidth: 1,
-    borderColor: FOCAL.electricGold,
+    borderColor: `${FOCAL.neonJade}66`,
     alignItems: 'center',
     justifyContent: 'center',
   },
   searchBtnOn: {
-    backgroundColor: FOCAL.ember,
-    borderColor: FOCAL.ember,
+    backgroundColor: FOCAL.jadeInk,
+    borderColor: FOCAL.jadeInk,
   },
   searchField: {
     flex: 1,
@@ -1013,11 +1027,18 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: colors.videoScrim,
     borderWidth: 1,
-    borderColor: FOCAL.electricGold,
+    borderColor: `${FOCAL.neonJade}66`,
     color: colors.onVideo,
-    paddingHorizontal: 14,
-    fontSize: 13,
-    fontWeight: '700',
+    paddingHorizontal: 12,
+    ...TYPE.button,
+    ...figtree('700'),
+  },
+  emptyContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
   boot: {
     flex: 1,

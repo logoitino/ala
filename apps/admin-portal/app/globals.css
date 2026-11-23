@@ -1,3 +1,4 @@
+/* UX-15 gives existing report charts the same wrapping boundary as report panels; palette, fonts and figure formats remain. */
 /*
  * Admin portal design tokens and global rules. Inks reuse the mobile Island Daylight palette
  * (`apps/mobile/src/frontend/theme/motion.ts` FOCAL), so do not add a second palette here.
@@ -132,6 +133,7 @@ code {
    `anywhere` here: it is inherited by everything under `main`. */
 .portal-report,
 .portal-page-heading,
+.portal-chart,
 .portal-panel,
 .portal-stat,
 .portal-section-heading {
