@@ -4,18 +4,20 @@ import {StyleSheet} from 'react-native';
 import type {BottomTabBarProps} from 'expo-router/tabs';
 import {FanTabBar} from '../FanTabBar';
 import {cloneAppRuntime,DEFAULT_APP_RUNTIME} from '@/lib/runtime';
+import {colors} from '@/constants/theme';
 const mockNavigate=jest.fn(),mockEmit=jest.fn(()=>({defaultPrevented:false})),mockUpload=jest.fn();
 const mockRestore=jest.fn(), mockMeasure=jest.fn();
-let mockSoftened=false, mockReduceTransparency=false;
+let mockSoftened=false, mockReduceTransparency=false, mockReduceMotion=false;
 let mockLive=cloneAppRuntime(DEFAULT_APP_RUNTIME);
 jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 jest.mock('@/context/AppRuntimeContext',()=>({useAppRuntime:()=>({live:mockLive})}));
 jest.mock('@/context/UploadSheetContext',()=>({useUploadSheet:()=>({openUpload:mockUpload})}));
 jest.mock('@/context/FanNavigationContext',()=>({useFanNavigation:()=>({restore:mockRestore}),useFanDockSoftened:()=>mockSoftened,useMeasureFanDock:()=>mockMeasure}));
 jest.mock('@/hooks/useReduceTransparency',()=>({useReduceTransparency:()=>mockReduceTransparency}));
+jest.mock('@/hooks/useReduceMotion',()=>({useReduceMotion:()=>mockReduceMotion}));
 jest.mock('@/lib/supabase',()=>({isSupabaseConfigured:false,supabase:{}}));
 const props={state:{index:0,routes:['index','beyond','activity','spotlight','drip','profile','local'].map(name=>({name,key:name}))},emitter:{emit:mockEmit},navigateToTab:mockNavigate,insets:{top:0,right:0,left:0,bottom:0},descriptors:{}} as unknown as BottomTabBarProps;
-beforeEach(()=>{mockLive=cloneAppRuntime(DEFAULT_APP_RUNTIME);mockLive.tabs.drip=true;mockSoftened=false;mockReduceTransparency=false;jest.clearAllMocks();});
+beforeEach(()=>{mockLive=cloneAppRuntime(DEFAULT_APP_RUNTIME);mockLive.tabs.drip=true;mockSoftened=false;mockReduceTransparency=false;mockReduceMotion=false;jest.clearAllMocks();});
 it('softens only its backdrop while every destination and Upload stay visible and opaque',async()=>{
  mockSoftened=true;
  await render(<FanTabBar {...props}/>);
@@ -72,4 +74,38 @@ it('measures the complete absolute dock wrap including safe footer and enlarged 
  expect(StyleSheet.flatten(wrap.props.style)).toMatchObject({ position: 'absolute', bottom: 0, paddingBottom: 34 });
  await fireEvent(wrap,'layout',{nativeEvent:{layout:{height:118,width:390,x:0,y:0}}});
  expect(mockMeasure).toHaveBeenCalledWith(118);
+});
+
+// UX-19: one continuous frosted bar that adapts to the screen behind it.
+const onActivity={...props,state:{...props.state,index:2}} as unknown as BottomTabBarProps;
+const tint=()=>StyleSheet.flatten(screen.getByTestId('fan-dock-tint',{includeHiddenElements:true}).props.style);
+it('draws one continuous bar: destinations paint no face of their own',async()=>{
+ await render(<FanTabBar {...props}/>);
+ for(const tab of screen.getAllByRole('tab')){const style=StyleSheet.flatten(tab.props.style);expect(style.backgroundColor).toBeUndefined();expect(style.minHeight).toBe(44);}
+});
+it('uses dark glass while Home is focused and light glass elsewhere',async()=>{
+ const {unmount}=await render(<FanTabBar {...props}/>);
+ expect(tint().backgroundColor).toBe(colors.videoSurface);
+ await unmount();
+ await render(<FanTabBar {...onActivity}/>);
+ expect(tint().backgroundColor).toBe(mockLive.theme.surface);
+});
+it('keeps the solid dark bar without blur under Reduce Transparency on Home',async()=>{
+ mockReduceTransparency=true;
+ await render(<FanTabBar {...props}/>);
+ expect(tint()).toMatchObject({backgroundColor:colors.videoSurface,opacity:1});
+});
+it('shows the active pill and the fade, also with Reduce Motion',async()=>{
+ const {unmount}=await render(<FanTabBar {...props}/>);
+ expect(screen.getByTestId('fan-dock-pill',{includeHiddenElements:true})).toBeTruthy();
+ expect(screen.getByTestId('fan-dock-fade',{includeHiddenElements:true})).toBeTruthy();
+ await unmount();
+ mockReduceMotion=true;
+ await render(<FanTabBar {...props}/>);
+ expect(screen.getByTestId('fan-dock-pill',{includeHiddenElements:true})).toBeTruthy();
+});
+it('softened backdrop stays at least 0.78 opaque',async()=>{
+ mockSoftened=true;
+ await render(<FanTabBar {...props}/>);
+ expect(StyleSheet.flatten(screen.getByTestId('fan-dock-backdrop').props.style).opacity).toBeGreaterThanOrEqual(0.78);
 });
