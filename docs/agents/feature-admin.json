@@ -3063,7 +3063,7 @@
       "id": "UX-19-COMPACT",
       "title": "Compact, consistent fan tabs and frosted adaptive navigation",
       "owner": "DESIGN",
-      "status": "admin-ready",
+      "status": "app-ready",
       "plannedAt": "2026-11-23T22:18:07.000Z",
       "exemption": {
         "kind": "presentation-only",
@@ -3109,7 +3109,16 @@
             }
           ]
         },
-        "app": null
+        "app": {
+          "date": "2026-11-23T23:30:10.000Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-19.md",
+              "command": "Jest cases in FanTabBar/ScreenHeading/NotificationInbox/MoreText/tab-story-states/GameCard/LocalTab/LeaderboardsBoard/AthleteProfileView/fonts; Expo web browser-bridge captures 390x844 and 320x640 of Home/Activity/Local/Spotlight/Profile; independent whole-branch review with C1/I1/I2/I3 fixed test-first; full pnpm check",
+              "result": "Compact consistent fan tabs locally accepted: one SECTION_HEADING, frosted adaptive bar, segment tracks, grouped Activity rows; text 14/12 and 44pt targets kept. Native rendering/blur, device large text and Drip chips not verified."
+            }
+          ]
+        }
       }
     }
   ]
