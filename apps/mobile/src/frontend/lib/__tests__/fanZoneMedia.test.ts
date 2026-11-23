@@ -5,7 +5,7 @@ import { loadFanZoneVideo, verifyFanZoneUpload, removeFanZoneMedia } from '../fa
 const mockFetch = jest.fn();
 jest.mock('@/lib/sessionToken', () => ({ requireAccessToken: async () => 'private-session-token' }));
 beforeEach(() => {
-  mockFetch.mockReset(); global.fetch = mockFetch;
+  mockFetch.mockReset(); global.fetch = mockFetch as unknown as typeof fetch;
   process.env.EXPO_PUBLIC_API_ORIGIN = 'https://pilot.invalid';
 });
 describe('Fan Zone media client', () => {

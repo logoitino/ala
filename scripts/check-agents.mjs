@@ -91,8 +91,57 @@ for (const file of fs.readdirSync(path.join(root, '.claude/agents'))) {
     fail(`Unregistered agent file: ${file}`);
   }
 }
+// CHECK-01: the review matrix must name only real roles, give every row a checker, and
+// account for every registry role (matrix checker or author/surface pool, never neither).
+const checkFile = 'docs/agents/CHECK-01.md';
+const checkPath = path.join(root, checkFile);
+const between = (source, name) => {
+  const start = source.indexOf(`<!-- ${name}:start -->`);
+  const end = source.indexOf(`<!-- ${name}:end -->`);
+  if (start < 0 || end <= start) return null;
+  // Hidden rows must not count: drop HTML comments inside the block before parsing.
+  return source.slice(start + `<!-- ${name}:start -->`.length, end).replace(/<!--[\s\S]*?-->/g, '');
+};
+const callsIn = (text) => [...text.matchAll(/`([A-Z][A-Z0-9_]*)`/g)].map((match) => match[1]);
+let matrixRows = 0;
+if (!fs.existsSync(checkPath)) {
+  fail(`${checkFile}: missing cross-check protocol`);
+} else {
+  const source = fs.readFileSync(checkPath, 'utf8');
+  const matrix = between(source, 'check-matrix');
+  const pool = between(source, 'check-pool');
+  if (matrix === null || pool === null) {
+    fail(`${checkFile}: needs check-matrix and check-pool marker blocks`);
+  } else {
+    const checkers = new Set();
+    const rowNames = new Set();
+    for (const line of matrix.split('\n')) {
+      // Split on unescaped pipes only, so an escaped \| inside a cell stays in that cell.
+      const cells = line.split(/(?<!\\)\|/).map((cell) => cell.trim());
+      if (cells.length < 4 || !cells[1] || cells[1] === 'Change type' || /^:?-+:?$/.test(cells[1])) continue;
+      matrixRows += 1;
+      if (rowNames.has(cells[1])) fail(`${checkFile}: duplicate matrix row ${cells[1]}`);
+      rowNames.add(cells[1]);
+      const rowCalls = callsIn(cells[3]);
+      if (rowCalls.length === 0) fail(`${checkFile}: matrix row "${cells[1]}" names no checker`);
+      for (const call of rowCalls) {
+        if (!calls.has(call)) fail(`${checkFile}: matrix row "${cells[1]}" names unknown role ${call}`);
+        checkers.add(call);
+      }
+    }
+    if (matrixRows === 0) fail(`${checkFile}: review matrix has no rows`);
+    const pooled = new Set(callsIn(pool));
+    for (const call of pooled) {
+      if (!calls.has(call)) fail(`${checkFile}: pool names unknown role ${call}`);
+      if (checkers.has(call)) fail(`${checkFile}: ${call} is both a matrix checker and in the pool`);
+    }
+    for (const call of calls.keys()) {
+      if (!checkers.has(call) && !pooled.has(call)) fail(`${checkFile}: ${call} is in neither the matrix nor the pool`);
+    }
+  }
+}
 if (problems.length > 0) {
   console.error(`agents:check failed (${problems.length} issues):\n${problems.map((issue) => `- ${issue}`).join('\n')}`);
   process.exit(1);
 }
-console.log(`agents:check ok (${calls.size} agents; files, ownership paths, reporting graph, and team docs agree)`);
+console.log(`agents:check ok (${calls.size} agents; files, ownership paths, reporting graph, team docs and the ${matrixRows}-row CHECK-01 matrix agree)`);

@@ -27,7 +27,7 @@ function url(n = 0) { return new URL(String(transport.mock.calls[n][0])); }
 beforeEach(() => {
   mockConfigured = true;
   transport = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>(async () => response([]));
-  client = createClient<Database>('https://directory.invalid', 'public-test-key', { accessToken: async () => 'test-public-token', auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }, global: { fetch: transport } });
+  client = createClient<Database>('https://directory.invalid', 'public-test-key', { accessToken: async () => 'test-public-token', auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }, global: { fetch: transport as unknown as typeof fetch } }) as never;
 });
 it('exposes current-school and bounded catalog/roster readers', () => {
   expect(directory.getDirectorySchool).toEqual(expect.any(Function));

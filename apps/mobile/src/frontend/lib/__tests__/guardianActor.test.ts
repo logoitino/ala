@@ -10,9 +10,9 @@ let http: jest.Mock<ReturnType<typeof fetch>, Parameters<typeof fetch>>;
 beforeEach(() => {
  process.env.EXPO_PUBLIC_SUPABASE_URL='https://guardian-test.invalid'; process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY='public-test-key';
  jest.spyOn(supabase.auth,'getSession').mockResolvedValue({data:{session:{user:{id:'user-A'},access_token:'synthetic-A'}},error:null} as never);
- http=jest.fn<ReturnType<typeof fetch>,Parameters<typeof fetch>>(async url => new Response(JSON.stringify(String(url).endsWith('/guardian_list_minors') ? [] : { contract_version:5,profile_id:'minor-A',first_name:'Synthetic Teen',status:'ok',fact_id:'fact-A',facts:[],settings:{},summary:{},code:'AAAABBBB',expires_at:'2099-01-01' }),{headers:{'Content-Type':'application/json'}}));globalThis.fetch=http;
+ http=jest.fn<ReturnType<typeof fetch>,Parameters<typeof fetch>>(async url => new Response(JSON.stringify(String(url).endsWith('/guardian_list_minors') ? [] : { contract_version:5,profile_id:'minor-A',first_name:'Synthetic Teen',status:'ok',fact_id:'fact-A',facts:[],settings:{},summary:{},code:'AAAABBBB',expires_at:'2099-01-01' }),{headers:{'Content-Type':'application/json'}}));globalThis.fetch = http as unknown as typeof fetch;
 });
-afterEach(()=>{jest.restoreAllMocks();globalThis.fetch=oldFetch;if(oldUrl===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_URL;else process.env.EXPO_PUBLIC_SUPABASE_URL=oldUrl;if(oldKey===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY=oldKey;});
+afterEach(()=>{jest.restoreAllMocks();globalThis.fetch = oldFetch as unknown as typeof fetch; if(oldUrl===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_URL;else process.env.EXPO_PUBLIC_SUPABASE_URL=oldUrl;if(oldKey===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY=oldKey;});
 it.each([
  ['guardian list',(c:OfflineActorClient)=>minors.fetchGuardianMinors(c)],
  ['preview',(c:OfflineActorClient)=>minors.previewGuardianInvite('AAAABBBB',c)],

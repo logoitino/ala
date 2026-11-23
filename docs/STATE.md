@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — UX17 existing-record directory/selector and UX18 tighter bars/Activity panels locally complete. Current329mobile suites/3116tests and217portal tests, bothTypeScript checks, optimized Nextbuild and corrected Android/iOS HermesJS exports pass. Current737-source ledger retains718 same-byte reviews plus19 changed/new reviews. Full repository gate stops only at2 unannounced Exit areas; explicit tracked-acknowledgement approval and physical Android Activity touch/comfort remain pending. Hosted delivery/readiness stays separate.
+**Last updated:** 2026-11-23 — UX-14–18 flow/layout/admin/directory on main after merge of #59/#52/#53. Local gates recorded on PR; Exit acks and device acceptance remain pending.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -177,6 +177,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+- **2026-11-23 — #60 onto main:** Merged current `main` (#59/#52/#53) into UX-14–18 flow/layout PR; fetch mock casts use `as unknown as typeof fetch`; IP packet refreshed for CI.
+
 - **2026-11-23 — UX17/18 bounded local acceptance:** Compact44pt dock/feed actions,50pt wrapper with6pt footer, readable scaled labels and tight Activity rows/panels accepted in current320/390 web observations. Independent25+worker15 cases, SDK correctiveHome10 and legacy FunFact6 pass; combined329suites/3116mobile and217portal tests, bothTS0, currentnativeJS0 and unchanged Nextbuild0. Whole-source ledger737 entries/718same/19current; no device/hosted/Instagram-parity inference. Full gate1 only unannounced Exit2 areas; manual private raw source ensure follows final docs, approval separate. [UX-17](agents/UX-17.md) · [UX-18](agents/UX-18.md).
 - **2026-11-23 — UX17 legacy integration assertion:** Combined mobile run passes3115 and catches one legacy FunFactStep call assertion missing the new optional-target null argument. Update only the assertion to require no selected target; current runtime unchanged. Focused and combined checks follow. [UX-17](agents/UX-17.md).
 - **2026-11-23 — UX18 SDK compatibility repair:** Initial full scanner catches removed RN generated-type absoluteFillObject; equivalent explicit absolute zero-edge outline replaces it. Earlier export/browser/test hashes remain dated; corrected source undergoes final gate and overlay review. [UX-18](agents/UX-18.md).
@@ -205,6 +207,14 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - Spotlight configured read errors no longer synthesize a demo award; current failures settle visibly with Retry, while earlier focused reads cannot replace newer results. External reproduction2FAIL/1PASS →3PASS. Existing successful empty/unconfigured preview policy and optional clip recovery remain. Picker/Crew/privacy/received-gift/QR/guardian/Sports/Next login repairs are frozen with current scoped independent passes. Final picker content-fit/enlarged-CSS-text/accessible optimizing state independently passes51tests. Current whole-source ledger binds724modules (697unchanged,27changed);323mobile suites3015tests and160portal tests pass, both typechecks pass, and both native JS/Hermes exports complete. Full local gate exits0 after the approved3area Exit acknowledgement and security refresh, including exit:map:check and exit:sync ensure. Private source cache sourceCurrent:true/mapValidation:passed remains distinct from codeVerification:not-run/readyToCutOver:false. Phone/native-provider checks and Drip authoritative variant/fulfillment contract remain assigned prerequisites, not verified outcomes.
 - User explicitly approved the new UX-14 Exit acknowledgement (“let's do it”); EXIT_CHANGE_LOG/baseline now record the reviewed3areas, plan11b9cb8893f1. The session's separate-confirmation requirement is satisfied for this action. No GitHub, hosted, schema, price or release action. **About to spend: $0.**
 
+### 2026-11-20 — Mobile spacing CI: cast fetch mocks for typecheck
+
+- **Mobile spacing (#59):** `pnpm ip:sync` refreshed `docs/legal/IP_COUNSEL_PACKET.md` inventory SHA so `ip:check` passes in CI.
+- `globalThis.fetch = mock as typeof fetch` in actor/mutation tests so Node 24 /
+  DOM `URL | RequestInfo` overloads typecheck. Merged latest `main` (VAULT-01).
+- **About to spend:** **$0**.
+
+
 ### 2026-11-20 — Whole-app menus and function sweep (UX-13, local source checkpoint)
 
 - Current source review reconciles724 modules/107 routes/9,039 AST function-like nodes and43 direct native Modal hosts/44 sites; every current module hash has review evidence.140 presentation decisions extend readable brand fonts, smaller decoration,44pt actions, wrapping and bounded scroll bodies across fan/profile/admin/operator/guardian surfaces. Required notices, actual navigation, consent and money policy remain.
@@ -225,6 +235,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 - Actual outside Codex final independent review: **7 suites / 94 tests passed**. Full quality gate PASS with the separate Documents source-cache state: **286 mobile suites / 2706 tests**, 121 portal tests, both typechecks and all root guards. Fresh Android/iOS Hermes exports PASS. Registered owner/model execution, hosted and physical-device acceptance are not claimed.
 - Corrected native-payment fallback guidance to development/preview builds; Expo Go payment behavior remains unverified. Dependencies/public preview config and separate private source cache for this Documents checkout are restored; old removed-checkout snapshots preserved. [APP-REPAIR-01](agents/APP-REPAIR-01.md) records evidence/limitations. **About to spend: $0.**
 
+### 2026-11-20 — CHECK-01 rebased onto main
+
+- **CHECK-01 (#52):** `pnpm ip:sync` refreshed inventory SHA after rebase onto `main` (+VAULT-01) so `ip:check` passes.
+- Cross-check protocol / agents:check matrix rebased after WEB-DESKTOP + APP-TEST + FEED-ENDLESS.
+  Exit generated maps kept from `main` during conflict resolve.
+- **About to spend:** **$0**.
 ### 2026-11-16 — FEED-ENDLESS Phase 0 audit (no design yet)
 
 - [FEED-ENDLESS-AUDIT.md](agents/FEED-ENDLESS-AUDIT.md): staging `reels_feed` playable **1**;
@@ -1909,6 +1925,13 @@ Do not re-diagnose these. Fix them or leave them.
      **iOS** Exclusive must use App Store IAP (not Stripe in-app). Production **Android** Exclusive
      must use Google Play Billing — **Android is not exempt**. StoreKit / Play Billing **not built**.
      Counsel must review before store listing claims or live money. Hosted web deploy is owner/ops.
+   - **Vault ladder (owner 2026-11-15, [VAULT-01](agents/VAULT-01.md) V1–V6 approved as recommended):**
+     - The one-time pass stays $4.99, split 20/80 of proceeds **after** the store or processor fee.
+     - Athlete and fan subscriptions are held.
+     - The +100 Aura on purchase is removed or reframed (counsel picks).
+     - A free "recorded for you" earnings view is approved.
+     - The build waits for APP-TEST lanes A–C and starts with a server-granted pass.
+     - Open: Apple 15% vs 30%, store classification, counsel items.
 
 10. **Athlete verification and fake highlights** — `docs/engineering/design/ATHLETE_VERIFICATION_DESIGN.md`.
     **Decided 2026-09-29:** gifts are held until verified and the athlete sees that in the app; the

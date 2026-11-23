@@ -30,9 +30,9 @@ beforeEach(async () => {
     if (path.endsWith('/profiles')) return response({ full_name: 'Someone With Same Name' });
     return response({ ok: true });
   });
-  globalThis.fetch = transport; await AsyncStorage.clear(); jest.mocked(AsyncStorage.setItem).mockClear();
+  globalThis.fetch = transport as unknown as typeof fetch; await AsyncStorage.clear(); jest.mocked(AsyncStorage.setItem).mockClear();
 });
-afterEach(() => { globalThis.fetch = originalFetch; if (originalUrl === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_URL; else process.env.EXPO_PUBLIC_SUPABASE_URL = originalUrl; if (originalKey === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY; else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = originalKey; });
+afterEach(() => { globalThis.fetch = originalFetch as unknown as typeof fetch; if (originalUrl === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_URL; else process.env.EXPO_PUBLIC_SUPABASE_URL = originalUrl; if (originalKey === undefined) delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY; else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = originalKey; });
 it('uses the selected UUID and exact current school instead of a same-name first match', async () => {
   await saveSelected(USER, onboard, actor, PLAYER);
   const requests = wire();

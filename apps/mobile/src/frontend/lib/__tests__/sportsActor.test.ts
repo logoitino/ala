@@ -9,9 +9,9 @@ let http:jest.Mock<ReturnType<typeof fetch>,Parameters<typeof fetch>>;
 beforeEach(()=>{
  process.env.EXPO_PUBLIC_SUPABASE_URL='https://sport-test.invalid';process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY='public-test-key';
  jest.spyOn(supabase.auth,'getSession').mockResolvedValue({data:{session:{user:{id:'user-A'},access_token:'synthetic-A'}},error:null} as never);
- http=jest.fn<ReturnType<typeof fetch>,Parameters<typeof fetch>>(async()=>new Response(JSON.stringify({sport:'Synthetic Sport'}),{headers:{'Content-Type':'application/json'}}));globalThis.fetch=http;
+ http=jest.fn<ReturnType<typeof fetch>,Parameters<typeof fetch>>(async()=>new Response(JSON.stringify({sport:'Synthetic Sport'}),{headers:{'Content-Type':'application/json'}}));globalThis.fetch = http as unknown as typeof fetch;
 });
-afterEach(()=>{jest.restoreAllMocks();globalThis.fetch=oldFetch;if(oldUrl===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_URL;else process.env.EXPO_PUBLIC_SUPABASE_URL=oldUrl;if(oldKey===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY=oldKey;});
+afterEach(()=>{jest.restoreAllMocks();globalThis.fetch = oldFetch as unknown as typeof fetch; if(oldUrl===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_URL;else process.env.EXPO_PUBLIC_SUPABASE_URL=oldUrl;if(oldKey===undefined)delete process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;else process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY=oldKey;});
 it.each([
  ['save',(client:OfflineActorClient)=>saveSportConfig(GENERIC_SPORT_CONFIG,client)],
  ['delete',(client:OfflineActorClient)=>deleteSportConfig('sport-A',client)],
