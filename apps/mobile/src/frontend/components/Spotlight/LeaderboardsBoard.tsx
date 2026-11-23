@@ -1,4 +1,5 @@
 /**
+ * UX-19: shared section heading, borderless gold-mist board chips on one scrolling row, and borderless rows.
  * Spotlight → Boards: tabbed leaderboards (hype, views, highlights, schools, fans, filmers) with loading,
  * error + Retry, "open athlete", and a share of the current board's leader. Data arrives as props from
  * `hooks/useLeaderboards`; no money amounts are shown on any board.
@@ -6,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { ActivityIndicator, Share, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { ScrollFxItem } from '@/components/Effects/ScrollFx';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -15,7 +16,7 @@ import { cardShadow, colors, radii, space, SCOREBOARD_DIGITS } from '@/constants
 import type { Leaderboards } from '@/lib/leaderboards';
 import { boardShareMessage } from '@/lib/shareCard';
 import { FOCAL } from '@/theme/motion';
-import { TYPE, figtree } from '@/theme/fonts';
+import { SECTION_HEADING, TYPE, figtree } from '@/theme/fonts';
 
 export type LeaderboardsTab = 'hype' | 'views' | 'highlights' | 'schools' | 'fans' | 'filmers';
 
@@ -142,6 +143,7 @@ export function LeaderboardsBoard({ boards, loading, error, onRetry, onOpenAthle
         <Text style={styles.section}>Boards · This week</Text>
         {loading && boards ? <ActivityIndicator size="small" color={FOCAL.goldInk} /> : null}
       </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       <View style={styles.tabs} accessibilityRole="tablist">
         {TABS.map((item) => {
           const selected = item.id === tab;
@@ -163,6 +165,7 @@ export function LeaderboardsBoard({ boards, loading, error, onRetry, onOpenAthle
           );
         })}
       </View>
+      </ScrollView>
       {leader ? (
         <AnimatedButton
           accessibilityLabel={`Share ${boardLabel}`}
@@ -224,30 +227,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   section: {
-    color: FOCAL.goldInk,
-    ...TYPE.caption,
-    ...figtree('800'),
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
+    ...SECTION_HEADING,
+    color: colors.text,
   },
   tabs: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   tab: {
     minHeight: 44,
     justifyContent: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radii.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    backgroundColor: FOCAL.mistGold,
   },
+  // Gold stays the awards colour on Spotlight.
   tabSelected: {
-    borderColor: colors.text,
-    backgroundColor: colors.text,
+    backgroundColor: FOCAL.goldInk,
   },
   tabText: {
     color: colors.text,
@@ -255,7 +252,7 @@ const styles = StyleSheet.create({
     ...figtree('700'),
   },
   tabTextSelected: {
-    color: colors.background,
+    color: colors.onAccent,
   },
   boot: {
     minHeight: 80,
@@ -263,7 +260,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   empty: {
-    padding: space.md,
+    padding: 12,
     borderRadius: radii.lg,
     backgroundColor: FOCAL.mistGold,
   },
@@ -284,18 +281,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     paddingHorizontal: space.md,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
     ...cardShadow,
   },
   // #1 gets the dark "athlete of the week" card; gold marks the award, never body text on light.
   rowFirst: {
     backgroundColor: colors.videoSurface,
     borderColor: colors.videoSurface,
-    paddingVertical: 18,
+    paddingVertical: 14,
   },
   rank: {
     width: 36,

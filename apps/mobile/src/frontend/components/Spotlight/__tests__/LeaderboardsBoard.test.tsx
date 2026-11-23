@@ -1,4 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { FONT } from '@/theme/fonts';
 
 import { LeaderboardsBoard } from '@/components/Spotlight/LeaderboardsBoard';
 import type { Leaderboards } from '@/lib/leaderboards';
@@ -59,4 +61,18 @@ describe('LeaderboardsBoard', () => {
     fireEvent.press(screen.getByText('Retry'));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
+
+  // UX-19: board filters stay on one scrolling row under the shared heading.
+  it('shows boards in one scrolling row under the shared heading', async () => {
+    await render(
+      <LeaderboardsBoard boards={BOARDS} loading={false} error={null} onRetry={jest.fn()} onOpenAthlete={jest.fn()} />,
+    );
+    let node = screen.getByRole('tab', { name: 'Most hyped' }).parent;
+    while (node && !(node.type === ScrollView || (node.props as { horizontal?: boolean }).horizontal)) node = node.parent;
+    expect(node?.props.horizontal).toBe(true);
+    const heading = StyleSheet.flatten(screen.getByText('Boards · This week').props.style);
+    expect(heading.fontFamily).toBe(FONT.displayBold);
+    expect(heading.textTransform).toBeUndefined();
+  });
 });
+
