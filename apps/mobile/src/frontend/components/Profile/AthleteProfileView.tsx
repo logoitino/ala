@@ -1,4 +1,6 @@
-/** UX-13 readable shared type preserves every action and required notice.
+/** UX-19: Story / Highlights use the shared 16pt section heading, Story is a borderless 12pt card and Share is a compact
+ * jade-mist control, so owner tools stop outweighing the profile.
+ * UX-13 readable shared type preserves every action and required notice.
  * The public athlete page shown at /user/[id]: hero card, Aura trading card, crew and teammate badges, Rally,
  * filmer card, the viewer's "Learn {sport} with {name}" trivia card (QUIZ-03), and direct Highlights / Stats / Goals /
  * Vault / owner Manage navigation. QUIZ-05: the Learn card also receives the athlete's player id (a server-validated
@@ -66,7 +68,7 @@ import { FOCAL } from '@/theme/motion';
 import { ProfileFriendActions } from '@/components/Profile/ProfileFriendActions';
 import { LearnSportCard } from '@/components/SportQuiz/LearnSportCard';
 import { MoreText } from '@/components/UI/MoreText';
-import { TYPE, figtree } from '@/theme/fonts';
+import { SECTION_HEADING, TYPE, figtree } from '@/theme/fonts';
 
 export type AthleteProfileTab = 'highlights' | 'stats' | 'goals' | 'vault' | 'team' | 'manage';
 
@@ -625,11 +627,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   story: {
-    gap: space.sm,
-    padding: 16,
+    gap: 4,
+    padding: 12,
     borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     backgroundColor: colors.surface,
     ...cardShadow,
   },
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
   actionRow: { flex: 1, flexDirection: 'row', gap: 8, minWidth: 180 },
   sectionHeading: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   sectionCopy: { flex: 1 },
-  sectionTitle: { ...TYPE.title, ...figtree('900'), color: colors.text, letterSpacing: -0.3 },
+  sectionTitle: { ...SECTION_HEADING, color: colors.text },
   sectionHint: { ...figtree('400'), ...TYPE.body, color: colors.textMuted, marginTop: 3 },
   actionFlex: { minHeight: 44,
     flex: 1,
@@ -733,11 +733,9 @@ const styles = StyleSheet.create({
   shareHit: {
     flexDirection: 'row',
     gap: 6,
-    minHeight: 48,
+    minHeight: 44,
     borderRadius: KIT.controlRadius,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    backgroundColor: FOCAL.mistJade,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,

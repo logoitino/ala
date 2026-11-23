@@ -1,4 +1,5 @@
 /**
+ * UX-19: the Home kicker uses the shared section heading (in Home's gold accent), matching every other tab.
  * The admin-published Home campaign banner and kicker / lede copy above the Home pills
  * (split out of app/(tabs)/index.tsx for R4-03; behaviour unchanged). Empty strings render nothing,
  * so an unpublished campaign leaves no gap in the chrome stack.
@@ -9,7 +10,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/constants/theme';
 import type { AppRuntimeConfig } from '@/lib/runtime';
 import { FOCAL } from '@/theme/motion';
-import { TYPE, figtree } from '@/theme/fonts';
+import { SECTION_HEADING, TYPE, figtree } from '@/theme/fonts';
 
 /**
  * @purpose Show the Look desk's Home banner title / body and kicker / lede when they are set.
@@ -29,7 +30,7 @@ export function HomeCampaignCopy({ runtime }: { runtime: AppRuntimeConfig }) {
       {runtime.copy.homeKicker.trim() || runtime.copy.homeLede.trim() ? (
         <View style={styles.homeCopy}>
           {runtime.copy.homeKicker.trim() ? (
-            <Text style={[styles.homeKicker, { color: FOCAL.electricGold }]}>{runtime.copy.homeKicker}</Text>
+            <Text accessibilityRole="header" style={styles.homeKicker}>{runtime.copy.homeKicker}</Text>
           ) : null}
           {runtime.copy.homeLede.trim() ? (
             <Text style={[styles.homeLede, { color: colors.onVideo }]}>{runtime.copy.homeLede}</Text>
@@ -63,11 +64,9 @@ const styles = StyleSheet.create({
   homeCopy: {
     gap: 2,
   },
+  // Home keeps its electric-gold accent on the dark feed; font, size and case match every tab's heading.
   homeKicker: {
-    ...TYPE.caption,
-    ...figtree('800'),
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    ...SECTION_HEADING,
     color: FOCAL.electricGold,
   },
   homeLede: {
