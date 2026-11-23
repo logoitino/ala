@@ -1,11 +1,13 @@
 /** UX-07 route-state tests: truthful pending/filter states retain existing auth, admin and navigation boundaries. SDK58 shared fan presentation reads the route pathname from this boundary. */
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, within as withinTree } from '@testing-library/react-native';
 import type { ActivityItem } from '@/hooks/useActivityFeed';
 import type { DripItem } from '@/data/shop';
 import { cloneAppRuntime, DEFAULT_APP_RUNTIME } from '@/lib/runtime';
 import SpotlightTab from '../spotlight';
 import DripTab from '../drip';
 import ActivityTab from '../activity';
+import { FONT } from '@/theme/fonts';
+import { StyleSheet } from 'react-native';
 import LocalTab from '../local';
 import BeyondTab from '../beyond';
 
@@ -186,6 +188,19 @@ it('retains complete Activity story text, exact amount and receipt/athlete desti
   await fireEvent.press(screen.getByLabelText('An athlete thanked you. Mālo!'));
   expect(mockPush).toHaveBeenLastCalledWith('/user/athlete-id');
   expect(screen.getByLabelText('A thank-you. Mālo!').props.accessibilityState.disabled).toBe(true);
+});
+
+it('groups Activity updates in one card and keeps each row its own button', async () => {
+  mockActivity.items = [
+    { id: 'sent', kind: 'malo_sent', at: '2026-10-20', title: 'You sent a gift', body: 'ALA Hawks', amountCents: 500 },
+    { id: 'thanks', kind: 'thanks_received', at: '2026-10-20', title: 'An athlete thanked you', body: 'Mālo!', playerId: 'athlete-id' },
+  ];
+  await render(<ActivityTab />);
+  const group = screen.getByTestId('activity-updates-group');
+  for (const label of ['You sent a gift. ALA Hawks', 'An athlete thanked you. Mālo!']) {
+    expect(withinTree(group).getByLabelText(label).props.accessibilityRole).toBe('button');
+  }
+  expect(StyleSheet.flatten(screen.getByRole('header', { name: 'Your updates' }).props.style).fontFamily).toBe(FONT.displayBold);
 });
 
 it('keeps Local pending and error states separate from published empty games', async () => {

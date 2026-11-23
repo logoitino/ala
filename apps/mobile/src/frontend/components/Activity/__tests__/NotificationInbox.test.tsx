@@ -1,5 +1,6 @@
 /** Synthetic inbox presentation contracts; actual actor, cutoff and permission checks live in the hook. */
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import { NotificationInbox } from '../NotificationInbox';
 
 const mockAuth = { user: { id: 'account-a' }, isGuest: false };
@@ -100,4 +101,16 @@ it('guests see no private inbox', async () => {
   mockAuth.isGuest = true;
   await render(<NotificationInbox />);
   expect(screen.queryByText('Welcome to your account')).toBeNull();
+});
+
+it('groups Inbox and Archived in one segment track with Refresh as a 44pt icon button', async () => {
+  await render(<NotificationInbox />);
+  const track = screen.getByTestId('notification-segments');
+  expect(within(track).getByLabelText('Current notifications')).toBeTruthy();
+  expect(within(track).getByLabelText('Archived notifications')).toBeTruthy();
+  expect(screen.queryByText('Refresh')).toBeNull();
+  const refresh = screen.getByLabelText('Refresh notifications');
+  expect(StyleSheet.flatten(refresh.props.style)).toMatchObject({ minWidth: 44, minHeight: 44 });
+  await fireEvent.press(refresh);
+  expect(mockReload).toHaveBeenCalledTimes(1);
 });

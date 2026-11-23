@@ -1,4 +1,7 @@
-/** UX-18 tightens panel spacing and ordinary explanation layout while keeping every 44pt action and full notice/body. UX-13 readable shared type preserves every action and required notice. The bounded notification inbox is separate from factual Activity and its existing invitation queues. */
+/** UX-19: Inbox/Archived share one tinted segment track and Refresh is a compact icon button on the heading line, so the
+ * controls stop outweighing the content; every target stays 44pt and the card drops its border for a soft shadow.
+ * UX-18 tightens panel spacing and ordinary explanation layout while keeping every 44pt action and full notice/body. UX-13 readable shared type preserves every action and required notice. The bounded notification inbox is separate from factual Activity and its existing invitation queues. */
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { type Href, useRouter } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -8,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNotificationInbox } from '@/hooks/useNotifications';
 import { FOCAL } from '@/theme/motion';
 import { MoreText } from '@/components/UI/MoreText';
-import { TYPE, figtree } from '@/theme/fonts';
+import { SECTION_HEADING, TYPE, figtree } from '@/theme/fonts';
 
 /** @purpose Review read/unread and archived notifications without mutating receipt or invitation history. */
 export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
@@ -23,20 +26,20 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
     <View style={styles.heading}>
       <Text accessibilityRole="header" style={styles.title}>Notifications</Text>
       {page ? <Text style={styles.unread}>{page.unreadCount} unread{archived ? ' in inbox' : ''}</Text> : null}
+      <Pressable accessibilityRole="button" accessibilityLabel="Refresh notifications" accessibilityState={{ disabled: locked }}
+        disabled={locked} onPress={() => void state.reload()} style={[styles.iconAction, locked && styles.disabled]}>
+        <Ionicons name="refresh" size={18} color={colors.primary} />
+      </Pressable>
     </View>
     <MoreText style={styles.hint} lines={1} inlineToggle>{'New connected account updates appear here. Your gift history and invitations stay in their own sections.'}</MoreText>
-    <View style={styles.controls}>
+    <View testID="notification-segments" accessibilityRole="tablist" style={styles.segments}>
       <Pressable accessibilityRole="tab" accessibilityLabel="Current notifications" accessibilityState={{ selected: !archived, disabled: locked }}
-        disabled={locked} onPress={() => void state.showArchived(false)} style={[styles.action, !archived && styles.selected]}>
-        <Text style={styles.actionLabel}>Inbox</Text>
+        disabled={locked} onPress={() => void state.showArchived(false)} style={[styles.segment, !archived && styles.segmentOn]}>
+        <Text style={[styles.segmentLabel, !archived && styles.segmentLabelOn]}>Inbox</Text>
       </Pressable>
       <Pressable accessibilityRole="tab" accessibilityLabel="Archived notifications" accessibilityState={{ selected: archived, disabled: locked }}
-        disabled={locked} onPress={() => void state.showArchived(true)} style={[styles.action, archived && styles.selected]}>
-        <Text style={styles.actionLabel}>Archived</Text>
-      </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel="Refresh notifications" accessibilityState={{ disabled: locked }}
-        disabled={locked} onPress={() => void state.reload()} style={styles.action}>
-        <Text style={styles.actionLabel}>Refresh</Text>
+        disabled={locked} onPress={() => void state.showArchived(true)} style={[styles.segment, archived && styles.segmentOn]}>
+        <Text style={[styles.segmentLabel, archived && styles.segmentLabelOn]}>Archived</Text>
       </Pressable>
     </View>
     {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
@@ -89,9 +92,15 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, padding: 8, gap: 4, ...cardShadow },
-  heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
-  title: { color: colors.text, ...TYPE.body, ...figtree('700') },
+  card: { backgroundColor: colors.surface, borderRadius: radii.lg, padding: 12, gap: 6, ...cardShadow },
+  heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
+  title: { ...SECTION_HEADING, color: colors.text, flexShrink: 1 },
+  iconAction: { minWidth: 44, minHeight: 44, marginLeft: 'auto', alignItems: 'center', justifyContent: 'center' },
+  segments: { flexDirection: 'row', backgroundColor: FOCAL.mistJade, borderRadius: 12, padding: 2, gap: 2 },
+  segment: { flex: 1, minWidth: 0, minHeight: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
+  segmentOn: { backgroundColor: FOCAL.jadeInk },
+  segmentLabel: { color: colors.textMuted, ...TYPE.button, ...figtree('700'), textAlign: 'center' },
+  segmentLabelOn: { color: colors.onAccent },
   unread: { color: colors.primary, ...TYPE.caption, ...figtree('700') },
   hint: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
   controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
