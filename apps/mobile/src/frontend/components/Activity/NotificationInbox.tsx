@@ -92,10 +92,11 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radii.lg, padding: 12, gap: 6, ...cardShadow },
+  card: { backgroundColor: colors.surface, borderRadius: radii.lg, paddingVertical: 10, paddingHorizontal: 12, gap: 6, ...cardShadow },
   heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   title: { ...SECTION_HEADING, color: colors.text, flexShrink: 1 },
-  iconAction: { minWidth: 44, minHeight: 44, marginLeft: 'auto', alignItems: 'center', justifyContent: 'center' },
+  // The 44pt target overhangs the heading line (marginVertical) so the line stays one heading tall.
+  iconAction: { minWidth: 44, minHeight: 44, marginVertical: -10, marginLeft: 'auto', alignItems: 'center', justifyContent: 'center' },
   segments: { flexDirection: 'row', backgroundColor: FOCAL.mistJade, borderRadius: 12, padding: 2, gap: 2 },
   segment: { flex: 1, minWidth: 0, minHeight: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
   segmentOn: { backgroundColor: FOCAL.jadeInk },

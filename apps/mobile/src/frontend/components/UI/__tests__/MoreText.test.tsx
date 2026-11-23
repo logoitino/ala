@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import { MoreText } from '@/components/UI/MoreText';
 
 const LONG = 'New connected account updates appear here. Your gift history and invitations stay in their own sections.';
@@ -70,5 +71,12 @@ describe('MoreText call sites', () => {
     expect(uses.length).toBeGreaterThan(0);
     expect(uses.filter((use) => forbidden.test(use.split(': ').slice(1).join(': ')))).toEqual([]);
   });
+});
+
+// UX-19: the inline toggle keeps a 44pt target but must not make the explanation row 44pt tall.
+it('inline toggle keeps its 44pt target without growing the text row', async () => {
+  await render(<MoreText lines={1} inlineToggle>{'x'.repeat(120)}</MoreText>);
+  const toggle = StyleSheet.flatten(screen.getByRole('button').props.style);
+  expect(toggle).toMatchObject({ minWidth: 44, minHeight: 44, marginVertical: -12 });
 });
 

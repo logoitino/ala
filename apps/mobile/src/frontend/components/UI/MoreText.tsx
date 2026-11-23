@@ -65,10 +65,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingVertical: 2,
   },
-  inlineWrap: { flexDirection: 'row', alignItems: 'flex-start', gap: 4 },
+  inlineWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   inlineText: { flex: 1, minWidth: 0 },
-  // UX-19: the label sits on the first text line (it used to centre in the 44pt box and float below the text).
-  inlineToggle: { minWidth: 44, minHeight: 44, flexShrink: 0, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 0 },
+  // UX-19: the 44pt target overhangs by 12pt above and below so the row stays one text line tall, and the label
+  // centres on that line (it used to float below the text and make the row 44pt).
+  inlineToggle: { minWidth: 44, minHeight: 44, marginVertical: -12, flexShrink: 0, alignItems: 'center', justifyContent: 'center' },
   toggleLabel: {
     ...TYPE.caption,
     ...figtree('800'),

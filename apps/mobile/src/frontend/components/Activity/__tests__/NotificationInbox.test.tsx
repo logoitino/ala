@@ -110,7 +110,15 @@ it('groups Inbox and Archived in one segment track with Refresh as a 44pt icon b
   expect(within(track).getByLabelText('Archived notifications')).toBeTruthy();
   expect(screen.queryByText('Refresh')).toBeNull();
   const refresh = screen.getByLabelText('Refresh notifications');
-  expect(StyleSheet.flatten(refresh.props.style)).toMatchObject({ minWidth: 44, minHeight: 44 });
+  // The 44pt target overhangs the heading line instead of making that line 44pt tall.
+  expect(StyleSheet.flatten(refresh.props.style)).toMatchObject({ minWidth: 44, minHeight: 44, marginVertical: -10 });
   await fireEvent.press(refresh);
   expect(mockReload).toHaveBeenCalledTimes(1);
 });
+
+it('keeps the card compact: 10pt vertical and 12pt horizontal padding', async () => {
+  await render(<NotificationInbox />);
+  let card = screen.getByTestId('notification-segments').parent;
+  expect(StyleSheet.flatten(card!.props.style)).toMatchObject({ paddingVertical: 10, paddingHorizontal: 12 });
+});
+
