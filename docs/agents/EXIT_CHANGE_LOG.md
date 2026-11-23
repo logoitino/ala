@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-23 · plan `b24d01d8468a` → `9c78d991e93a` · announced by cursor/web-school-directory-nav
+
+App at announcement: commit `e836d459892ea092379c2574dfd188897acc7af8` + 3 uncommitted file(s), source `9c78d991e93af2d568d9af63f342ec5c79d7ae2c2228851114582c0baf9c084e`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx e232c455b8b5f33422965fb40a4866cf98feb5407bf7afa18dc95ee93af85291`, `apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx 8743556350840d57714099c42755593ea08fdf1817f08c396e29bad855f00e25`, `apps/mobile/src/frontend/components/Common/__tests__/DesktopLeftRail.test.tsx 6601361de43d21cdbd9d7b4d37ef0e5569c68595a0fed502b3a71b973674985d`; removed `apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx 89ccc3fb3787741f1f01c0480abea50325261da284c5ad251c975a90601d1823`, `apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx 5b00348be5c0a2451800bfb32f75f986d8ff3c24d2b7dc986bfd140b07dee770`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-23 · plan `b0951e30432e` → `b24d01d8468a` · announced by cloud-agent flow-acceptance-ux14
 
 App at announcement: commit `40b9b930e6baf9fd0467a002ff0e9938385dc184`, source `b24d01d8468aaced88db2cbace439c4191088098a5219b6c17d6eb556daccd8f`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.

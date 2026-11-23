@@ -28,6 +28,14 @@ type NavItem = {
 const FAN_NAV: NavItem[] = [
   { key: 'home', label: 'Highlights', href: '/', icon: 'flash-outline', iconOn: 'flash' },
   { key: 'local', label: 'Local', href: '/local', icon: 'location-outline', iconOn: 'location' },
+  // UX-17 school catalog — desktop Home omits the phone Local pill, so this rail is the web entry.
+  {
+    key: 'schools',
+    label: 'Schools',
+    href: '/local/directory',
+    icon: 'school-outline',
+    iconOn: 'school',
+  },
   { key: 'spotlight', label: 'Spotlight', href: '/spotlight', icon: 'star-outline', iconOn: 'star' },
   { key: 'drip', label: 'Drip', href: '/drip', icon: 'shirt-outline', iconOn: 'shirt' },
   { key: 'activity', label: 'Activity', href: '/activity', icon: 'notifications-outline', iconOn: 'notifications' },
@@ -38,17 +46,21 @@ const FAN_NAV: NavItem[] = [
 const ROLE_NAV: { role: UserRole; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { role: 'athlete', label: 'Athlete HQ', icon: 'trophy-outline' },
   { role: 'parent', label: 'Parent HQ', icon: 'people-outline' },
-  { role: 'booster', label: 'Booster', icon: 'school-outline' },
+  { role: 'booster', label: 'Booster', icon: 'business-outline' },
   { role: 'admin', label: 'Admin', icon: 'settings-outline' },
 ];
 
 function pathMatches(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/' || pathname === '' || pathname === '/index';
+  // Keep Local selected on hub + game detail only — not on Schools (`/local/directory`).
+  if (href === '/local') {
+    return pathname === '/local' || pathname.startsWith('/local/game');
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 /**
- * @purpose Left rail links for Expo web desktop / tablet (WEB-DESKTOP-01), including Crew shortcuts.
+ * @purpose Left rail links for Expo web desktop / tablet (WEB-DESKTOP-01), including Schools (`/local/directory`) and Crew shortcuts.
  * @param compact When true (tablet), show icons only.
  * @sideEffects `fetchCrewShortcuts` (`crew_follows` + `players`) for signed-in fans.
  */
@@ -83,6 +95,8 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
     if (item.key === 'spotlight' && live.tabs.spotlight === false) return false;
     if (item.key === 'home' && live.tabs.home === false) return false;
     if (item.key === 'profile' && live.tabs.profile === false) return false;
+    // Schools rides the Local surface flag — same pause as /local and /local/directory.
+    if ((item.key === 'local' || item.key === 'schools') && live.tabs.local === false) return false;
     return true;
   });
 

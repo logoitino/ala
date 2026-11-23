@@ -40,6 +40,7 @@ export function DesktopRightRail() {
   const { visibleGames, loading: scoresLoading, error: scoresError } = useLiveScores();
   const { boosters, loading: boostersLoading } = useAuraBoosters();
   const dripOn = live.tabs.drip !== false;
+  const localOn = live.tabs.local !== false;
 
   const games = visibleGames.slice(0, 3);
   const topBoosters = boosters.slice(0, 5);
@@ -74,14 +75,26 @@ export function DesktopRightRail() {
             <Text style={styles.rowMeta}>{scoreLine(game)}</Text>
           </Pressable>
         ))}
-        <Pressable
-          onPress={() => router.push('/local')}
-          accessibilityRole="link"
-          accessibilityLabel="Open Local"
-          style={styles.linkBtn}
-        >
-          <Text style={styles.linkText}>Open Local</Text>
-        </Pressable>
+        {localOn ? (
+          <>
+            <Pressable
+              onPress={() => router.push('/local')}
+              accessibilityRole="link"
+              accessibilityLabel="Open Local"
+              style={styles.linkBtn}
+            >
+              <Text style={styles.linkText}>Open Local</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push('/local/directory')}
+              accessibilityRole="link"
+              accessibilityLabel="Open Schools and teams"
+              style={styles.linkBtn}
+            >
+              <Text style={styles.linkText}>Schools and teams</Text>
+            </Pressable>
+          </>
+        ) : null}
       </View>
 
       <View style={styles.panel}>
