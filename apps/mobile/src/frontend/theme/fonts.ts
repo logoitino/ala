@@ -56,6 +56,18 @@ export const TYPE = {
 } as const;
 
 /**
+ * UX-19 (owner 2026-11-23): the one section heading every fan tab uses — "Your updates", "Live matchups",
+ * "Boards · This week", Story / Highlights and the Home kicker — so tabs stop drifting into their own heading styles.
+ * Callers add only `color` and spacing.
+ */
+export const SECTION_HEADING: TextStyle = {
+  ...TYPE.section,
+  fontFamily: FONT.displayBold,
+  fontWeight: 'normal',
+  letterSpacing: -0.2,
+};
+
+/**
  * @purpose Figtree face for a label weight, so callers keep thinking in weights ('700', '800'…).
  * @returns `{ fontFamily, fontWeight: 'normal' }` to spread into a text style.
  */
