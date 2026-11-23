@@ -1,5 +1,5 @@
 {
- "planVersion": "b24d01d8468a",
+ "planVersion": "9c78d991e93a",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1866,12 +1866,13 @@
    "apps/mobile/src/frontend/components/Challenges/ChallengeSettingsSheet.tsx 0b8460420e5fd778d5b71f8800b7450d166e7bdda63467ae5067735d206f8396",
    "apps/mobile/src/frontend/components/Challenges/__tests__/Challenges.test.tsx 1aabca14cb4851ed077794db3612a18aefb24f329c80924deb4397227279a157",
    "apps/mobile/src/frontend/components/Checkout/WebPaymentSheetHost.tsx 27217cadd36d484177575396ffa73acf115789af81668ae9123edfeef9ef81eb",
-   "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx 89ccc3fb3787741f1f01c0480abea50325261da284c5ad251c975a90601d1823",
-   "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx 5b00348be5c0a2451800bfb32f75f986d8ff3c24d2b7dc986bfd140b07dee770",
+   "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx e232c455b8b5f33422965fb40a4866cf98feb5407bf7afa18dc95ee93af85291",
+   "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx 8743556350840d57714099c42755593ea08fdf1817f08c396e29bad855f00e25",
    "apps/mobile/src/frontend/components/Common/FeatureBoundary.tsx ffd830fa1c6ba306aaaeb3f4367b337ef080a16ec4d4f4ec919e21c485f9b5ef",
    "apps/mobile/src/frontend/components/Common/SupportRuntimeObserver.tsx 3f7dd4f6a4b686f719ea343fdc6b61831899ee56bd22624dec283b0247411be4",
    "apps/mobile/src/frontend/components/Common/SwipeableBannerWrapper.tsx a08f091f781a55d2fd15227e8404b2f1feafcb9f798efeb81357522bef16fc50",
    "apps/mobile/src/frontend/components/Common/WebAppShell.tsx ad7f7252893a13538f3a387cff5308060e2c01070dd8128df7c7b6253380cad6",
+   "apps/mobile/src/frontend/components/Common/__tests__/DesktopLeftRail.test.tsx 6601361de43d21cdbd9d7b4d37ef0e5569c68595a0fed502b3a71b973674985d",
    "apps/mobile/src/frontend/components/Common/__tests__/FeatureBoundary.test.tsx 6d229202bf3aa0b6977573586b7f85f3b5fd55b396eeb9d9f347f0bc9e1ae3ab",
    "apps/mobile/src/frontend/components/Common/__tests__/SwipeableBannerWrapper.test.tsx 11f1c9183fe98d205e33e859e0c3022223d9e24bc850a1bc6ff358e7ad6fe119",
    "apps/mobile/src/frontend/components/Common/__tests__/TipCheckout.test.tsx af4f7f68cab05f5c3b4dbf0988a8c591d6f60cadf7905dac20cdb44da7560ceb",

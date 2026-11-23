@@ -1243,7 +1243,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | --- | --- |
 | `tabs.home` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.beyond` | `apps/mobile/app/(tabs)/beyond.tsx`, `apps/mobile/app/(tabs)/index.tsx`, `@/components/Reels/HomeFeedSwitch.tsx`, `@/context/UploadSheetContext.tsx` |
-| `tabs.local` | `apps/mobile/app/(tabs)/local/directory.tsx`, `apps/mobile/app/(tabs)/local/index.tsx`, `@/components/Reels/HomeFeedSwitch.tsx` |
+| `tabs.local` | `apps/mobile/app/(tabs)/local/directory.tsx`, `apps/mobile/app/(tabs)/local/index.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/Common/DesktopRightRail.tsx` +1 more |
 | `tabs.activity` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/activity.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.spotlight` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/spotlight.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.drip` | `apps/mobile/app/(tabs)/drip.tsx`, `apps/mobile/app/(tabs)/profile.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/Common/DesktopRightRail.tsx` |

@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — #60 CI: security:infra + exit:map acknowledge after UX-14–18 merge onto main.
+**Last updated:** 2026-11-23 — #62 CI: regenerate DATA_MAP for tabs.local desktop rails.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-23 — #62 DATA_MAP:** Regenerated `docs/engineering/DATA_MAP.md` so `tabs.local` lists DesktopLeftRail / DesktopRightRail after the Schools web entry.
+
+- **2026-11-23 — #62 CI currency:** `pnpm ip:sync` + `pnpm security:infra` so IP / Portable Exit gates pass on the Schools desktop-rail fix.
+
+- **2026-11-23 — Web Schools entry:** Desktop Expo web (≥820) omitted the phone Home Local pill, so UX-17 `/local/directory` was only reachable via Local hub scroll. Left rail adds **Schools** → `/local/directory` (gated by `tabs.local`); Local selection no longer covers the directory path; right rail adds **Schools and teams** next to Open Local.
 
 - **2026-11-23 — #60 CI currency:** `pnpm security:infra` and `pnpm exit:map --acknowledge` so Portable Exit / infra checks pass before merge.
 

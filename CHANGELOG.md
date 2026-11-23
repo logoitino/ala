@@ -1,5 +1,11 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
 
+## 2026-11-23 — Schools visible on Expo web desktop
+
+- Add a left-rail **Schools** link to `/local/directory` on web ≥820px (desktop Home no longer shows the phone Local pill).
+- Add **Schools and teams** on the right rail next to Open Local; both respect `tabs.local`.
+- Local rail selection stays on the hub and game detail only, so Schools can show as the active destination.
+
 ## 2026-11-23 — Tighter navigation and Activity panels (local acceptance)
 
 - Reduce the dock and Home/Beyond/Local bar to44pt surfaces, with smaller Search/Upload decorations and measured safe clearance.
