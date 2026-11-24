@@ -1,7 +1,7 @@
 <!-- Current shared UI source coverage is separate from dated rendered/native acceptance. -->
 # Menu and page style coverage
 
-**Current source alignment:** 2026-11-23 — [UX-18](../agents/UX-18.md) owner-targeted44pt bars and compact Activity panels locally accepted; [UX-17](../agents/UX-17.md) existing-record directory/selector and distinct poll palette accepted. Current737-source ledger/718 same-byte inherited reviews/19 current changed-new reviews; source review is separate from device/provider or every-function execution. Earlier UX16/13/12/10/06 records remain dated history. Whole-app [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md), shared Figtree/body14/caption12 and44pt actions remain the standard. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
+**Current source alignment:** 2026-11-23 — [UX-19](../agents/UX-19.md) compact consistent fan tabs: one `SECTION_HEADING`, one frosted adaptive fan bar, segment tracks and grouped Activity rows (local source + web captures); [UX-18](../agents/UX-18.md) owner-targeted44pt bars and compact Activity panels locally accepted; [UX-17](../agents/UX-17.md) existing-record directory/selector and distinct poll palette accepted. Current737-source ledger/718 same-byte inherited reviews/19 current changed-new reviews; source review is separate from device/provider or every-function execution. Earlier UX16/13/12/10/06 records remain dated history. Whole-app [LOVABLE_UI_UX_PLAN](design/LOVABLE_UI_UX_PLAN.md), shared Figtree/body14/caption12 and44pt actions remain the standard. Owners: `DESIGN`, `CHECKOUT`, `UPLOAD`, affected surface squads;
 `ACCESSIBILITY`, `DEVICE_QA` review; `DOCUMENTATION` keeps this map current.
 
 This is a source inventory of shared presentation coverage. It is not a rendered-device audit.
@@ -9,6 +9,21 @@ Every modal-bearing component is listed, including intentional full-screen video
 surfaces. A shared primitive can update many consumers without each file needing a local edit.
 
 Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATUS.md); actual documentation/coordination claims and checks: [COORD-01](../agents/COORD-01.md#whole-team-refresh--2026-10-15-americadenver). The 107-role briefing is assignment coverage, not execution or human delivery. The [UI checkpoint](design/UI_UX_FIGMA_POLISH.md) separates the original empty Figma draft, later colour file, local source and rendered evidence.
+
+## UX-19 compact fan tabs (2026-11-23)
+
+| Surface | Source | Current presentation |
+| --- | --- | --- |
+| Section headings (Activity, Local, Spotlight boards, Profile Story/Highlights, Notifications, Home kicker) | `theme/fonts.ts` `SECTION_HEADING` | 16/21 Bricolage Bold; Home keeps electric gold on the dark feed |
+| Fan page header | `ScreenHeading` | Fan kicker badge on the title row, 32pt underline; role headings unchanged |
+| Fan bar | `UI/FanTabBar` | One frosted bar: dark glass on Home, light elsewhere; no per-tab faces; sliding mist pill; 24pt fade above; softened floor 0.78; 44pt targets |
+| Notifications | `Activity/NotificationInbox`, `UI/MoreText` | Inbox/Archived segment track, icon Refresh overhanging its line, inline More on the text line; 10/12 padding, shadow only |
+| Activity updates | `app/(tabs)/activity.tsx` | One card, hairline-divided rows (10/12 padding) |
+| Local | `local/index.tsx`, `Local/LocalHubMenu`, `UI/FilterPills`, `Local/GameCard` | Hub segment track; borderless jade-mist chips; score card HOME/AWAY on team line, venue + boosters one row, shadow only (live keeps ember outline) |
+| Spotlight | `Spotlight/LeaderboardsBoard`, `SpotlightAwardCard` | Board chips on one scrolling row (gold-mist, gold selected); borderless rows |
+| Profile | `Profile/AthleteProfileView` | Borderless 12pt Story card; compact jade-mist Share |
+
+Text stays 14/20 body and 12/16 captions. Native phone feel and large system text on a device remain owner checks.
 
 ## UX-17/18 current bounded acceptance
 

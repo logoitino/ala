@@ -47,7 +47,8 @@ export function MoreText({ children, lines = 2, style, linkColor = FOCAL.jadeInk
         accessibilityLabel={open ? 'Show less' : 'Show more'}
         accessibilityState={{ expanded: open }}
         haptic="selection"
-        hitSlop={12}
+        // Horizontal slop only — the row is already minHeight 44 so vertical slop would hit neighbours.
+        hitSlop={inlineToggle ? INLINE_HIT_SLOP : 12}
         onPress={() => setOpen((value) => !value)}
         style={inlineToggle ? [styles.toggle, styles.inlineToggle] : styles.toggle}
       >
@@ -57,6 +58,8 @@ export function MoreText({ children, lines = 2, style, linkColor = FOCAL.jadeInk
   );
 }
 
+const INLINE_HIT_SLOP = { top: 0, bottom: 0, left: 12, right: 12 };
+
 const styles = StyleSheet.create({
   wrap: {
     gap: 2,
@@ -65,7 +68,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingVertical: 2,
   },
-  inlineWrap: { flexDirection: 'row', alignItems: 'flex-start', gap: 4 },
+  // Parent must be ≥44pt so the Pressable's full target stays inside its bounds (RN clips hits to parent).
+  inlineWrap: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44 },
   inlineText: { flex: 1, minWidth: 0 },
   inlineToggle: { minWidth: 44, minHeight: 44, flexShrink: 0, alignItems: 'center', justifyContent: 'center' },
   toggleLabel: {

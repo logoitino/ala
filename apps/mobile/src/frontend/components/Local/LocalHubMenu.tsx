@@ -1,6 +1,7 @@
 /** Sticky Local destinations keep short visible names and icons, including at larger text sizes.
  * UX-12: readable brand labels and small decorative icons; targets grow with wrapping text.
  * Published layout flags still decide which of the existing hubs can appear.
+ * UX-19: one tinted track with a solid jade selected segment instead of three bordered buttons; 44pt targets kept.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -24,7 +25,7 @@ export function LocalHubMenu({ items, value, onChange }: { items: { id: HubId; l
         const selected = id === value;
         const meta = META[id];
         const name = label?.trim() || meta.label;
-        const color = selected ? FOCAL.jadeInk : colors.textMuted;
+        const color = selected ? colors.onAccent : colors.textMuted;
         return (
           <Pressable key={id} accessibilityRole="tab" accessibilityLabel={name}
             accessibilityState={{ selected }} aria-selected={selected}
@@ -42,8 +43,8 @@ export function LocalHubMenu({ items, value, onChange }: { items: { id: HubId; l
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 6, paddingVertical: 4 },
-  tab: { flex: 1, minWidth: 0, minHeight: 44, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 6, paddingVertical: 6, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  selected: { backgroundColor: FOCAL.mistJade, borderColor: FOCAL.jadeInk },
+  row: { flexDirection: 'row', gap: 2, padding: 2, borderRadius: 12, backgroundColor: FOCAL.mistJade },
+  tab: { flex: 1, minWidth: 0, minHeight: 44, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 6, paddingVertical: 6, borderRadius: 10 },
+  selected: { backgroundColor: FOCAL.jadeInk },
   label: { ...TYPE.button, ...figtree('700'), flexShrink: 1, maxWidth: '100%', textAlign: 'center' },
 });

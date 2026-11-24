@@ -1,4 +1,5 @@
 /**
+ * UX-19: shadow instead of border (live keeps its ember outline), HOME/AWAY on the team line, venue + boosters on one row.
  * Compact Local discovery scoreboard: the entire card opens the game; a small arrow marks that action.
  * UX-12: readable name/body hierarchy with smaller decorative tiles and the same content-led card.
  * Neutral letter tiles identify teams without pretending to be approved school crests.
@@ -45,8 +46,10 @@ function TeamScoreRow({ name, school, side, score }: { name: string; school: str
         <Text style={styles.monogramLabel} maxFontSizeMultiplier={1.5}>{teamInitials(name)}</Text>
       </View>
       <View style={styles.teamIdentity}>
-        <Text style={styles.side}>{side}</Text>
-        <Text style={styles.teamName}>{name}</Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.side}>{side}</Text>
+          <Text style={styles.teamName}>{name}</Text>
+        </View>
         {schoolName && schoolName.toLowerCase() !== name.toLowerCase() ? (
           <Text style={styles.school}>{schoolName}</Text>
         ) : null}
@@ -110,10 +113,8 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
         <View style={styles.scoreDivider} />
         <TeamScoreRow name={away} school={game.away_school} side="Away" score={awayScore} />
       </View>
-      <View style={styles.venueRow}>
+      <View style={styles.metaRow}>
         <Text style={styles.venue}>{game.venue?.trim() || 'Venue TBA'}</Text>
-        <Text style={styles.ctaArrow} accessibilityElementsHidden importantForAccessibility="no">↗</Text>
-      </View>
       {sponsors.length > 0 ? (
         <View style={styles.sponsorRow}>
           <Text style={styles.sponsorCaption}>Boosted by</Text>
@@ -131,6 +132,8 @@ export function GameCard({ game, onPress, sponsors = [] }: GameCardProps) {
           })}
         </View>
       ) : null}
+        <Text style={styles.ctaArrow} accessibilityElementsHidden importantForAccessibility="no">↗</Text>
+      </View>
     </AnimatedPressable>
   );
 }
@@ -139,11 +142,9 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     minHeight: 44,
     padding: 12,
-    gap: 8,
+    gap: 6,
     ...cardShadow,
   },
   /** Live stays on Daylight; only the status pill flips to ember. */
@@ -196,20 +197,19 @@ const styles = StyleSheet.create({
   monogramLabel: { color: colors.textMuted, ...TYPE.body, ...figtree('900') },
   // Large scores must wrap before they squeeze the team name into single-letter lines.
   teamIdentity: { flex: 1, minWidth: 100, gap: 2 },
+  // UX-19: HOME/AWAY rides on the team line, saving a row per team.
+  nameRow: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: 6 },
+  // UX-19: venue, boosters and the open arrow share one row.
+  metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
   side: { color: colors.textMuted, ...TYPE.caption, ...figtree('700'), textTransform: 'uppercase', letterSpacing: 0.4 },
   teamName: { color: colors.text, ...TYPE.section, ...figtree('900'), flexShrink: 1 },
   school: { color: colors.textMuted, ...TYPE.caption, ...figtree('400') },
   score: { ...SCOREBOARD_DIGITS, color: colors.text, fontSize: 28, textAlign: 'right', marginLeft: 'auto', maxWidth: '100%' },
   fieldLayer: { ...StyleSheet.absoluteFill, borderRadius: radii.lg, overflow: 'hidden' },
   scoreDivider: { height: 1, backgroundColor: colors.border },
-  venue: { color: colors.textMuted, ...TYPE.caption, ...figtree('500'), flex: 1 },
-  venueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  ctaArrow: { color: FOCAL.jadeInk, fontSize: 17, ...figtree('800') },
+  // Review I3: a real basis lets boosters wrap below instead of squeezing the venue into a letter column.
+  venue: { color: colors.textMuted, ...TYPE.caption, ...figtree('500'), flexGrow: 1, flexShrink: 1, flexBasis: 140 },
+  ctaArrow: { color: FOCAL.jadeInk, fontSize: 17, ...figtree('800'), marginLeft: 'auto' },
   sponsorRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
   sponsorCaption: { color: colors.textMuted, ...TYPE.caption, ...figtree('700'), marginRight: 2 },
   sponsorLogo: {

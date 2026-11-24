@@ -1,4 +1,5 @@
 /** UX-13 readable shared type preserves every action and required notice.
+ * UX-19: borderless jade-mist chips and a jade selection so filters match the segment tracks; still one scrolling row.
  * Horizontal pill row, generic over the pill id type, with optional counts. Used by the search overlays, the athlete
  * profile and the role switcher.
  */
@@ -155,11 +156,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 0,
     borderRadius: 999,
-    backgroundColor: FOCAL.ink,
+    backgroundColor: FOCAL.jadeInk,
   },
   pill: {
     minHeight: 44,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
     alignItems: 'center',
@@ -172,8 +173,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   pillIdle: { minHeight: 44,
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    backgroundColor: FOCAL.mistJade,
+    borderColor: 'transparent',
   },
   label: {
     ...TYPE.body,

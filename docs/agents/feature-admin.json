@@ -3058,6 +3058,68 @@
           ]
         }
       }
+    },
+    {
+      "id": "UX-19-COMPACT",
+      "title": "Compact, consistent fan tabs and frosted adaptive navigation",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-23T22:18:07.000Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Owner asks for compact consistent fan tabs: one heading style, tighter panels and one frosted adaptive nav bar. Text stays 14/12, 44pt actions, no data or operational capability.",
+        "reviewedBy": "Claude Code session (owner-run) and owner design approval 2026-11-23"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/activity",
+        "paths": [
+          "apps/mobile/src/frontend/theme/fonts.ts",
+          "apps/mobile/src/frontend/components/ScreenHeading.tsx",
+          "apps/mobile/src/frontend/components/UI/FanTabBar.tsx",
+          "apps/mobile/src/frontend/components/Activity/NotificationInbox.tsx",
+          "apps/mobile/app/(tabs)/activity.tsx",
+          "apps/mobile/src/frontend/components/UI/MoreText.tsx",
+          "apps/mobile/app/(tabs)/local/index.tsx",
+          "apps/mobile/src/frontend/components/Local/LocalHubMenu.tsx",
+          "apps/mobile/src/frontend/components/UI/FilterPills.tsx",
+          "apps/mobile/src/frontend/components/Local/GameCard.tsx",
+          "apps/mobile/src/frontend/components/Spotlight/LeaderboardsBoard.tsx",
+          "apps/mobile/src/frontend/components/Spotlight/SpotlightAwardCard.tsx",
+          "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx",
+          "apps/mobile/src/frontend/components/Profile/ProfileHeroAvatar.tsx",
+          "apps/mobile/src/frontend/components/Filmers/FilmerCard.tsx",
+          "apps/mobile/src/frontend/components/Reels/HomeCampaignCopy.tsx",
+          "apps/mobile/src/frontend/components/Reels/LiveMatchBanner.tsx",
+          "apps/mobile/src/frontend/components/Local/RivalryWeekBanner.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-23T22:18:07.000Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-19.md",
+              "command": "Owner-approved design (Parts 1-3) and baseline 390x844 Expo web captures of Home/Activity/Local/Spotlight/Profile before any app edit",
+              "result": "Presentation-only eligibility: text stays 14/20 body and 12/16 captions, every pressable keeps 44pt, no data/route/telemetry/behaviour change. No hosted or native acceptance claimed."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-23T23:30:10.000Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-19.md",
+              "command": "Jest cases in FanTabBar/ScreenHeading/NotificationInbox/MoreText/tab-story-states/GameCard/LocalTab/LeaderboardsBoard/AthleteProfileView/fonts; Expo web browser-bridge captures 390x844 and 320x640 of Home/Activity/Local/Spotlight/Profile; independent whole-branch review with C1/I1/I2/I3 fixed test-first; full pnpm check",
+              "result": "Compact consistent fan tabs locally accepted: one SECTION_HEADING, frosted adaptive bar, segment tracks, grouped Activity rows; text 14/12 and 44pt targets kept. Native rendering/blur, device large text and Drip chips not verified."
+            }
+          ]
+        }
+      }
     }
   ]
 }

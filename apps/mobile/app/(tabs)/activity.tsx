@@ -1,4 +1,5 @@
-/** UX-18 gives Activity rows less decoration/padding and a readable14pt primary/12pt metadata hierarchy.
+/** UX-19 groups the updates in one card with hairline dividers and uses the shared section heading.
+ * UX-18 gives Activity rows less decoration/padding and a readable14pt primary/12pt metadata hierarchy.
  * Named Figtree faces remain consistent with the inbox; factual history and invitation actions stay separate. */
 import { useIsFocused, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -17,7 +18,7 @@ import { TabScreen } from '@/components/TabScreen';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, radii, SCOREBOARD_DIGITS, space } from '@/constants/theme';
-import { TYPE, figtree } from '@/theme/fonts';
+import { SECTION_HEADING, TYPE, figtree } from '@/theme/fonts';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSoftWall } from '@/context/SoftWallContext';
@@ -53,7 +54,7 @@ function formatUsd(cents: number): string {
   return `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
 }
 
-function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => void }) {
+function ActivityRow({ item, onPress, divider = false }: { item: ActivityItem; onPress?: () => void; divider?: boolean }) {
   const meta = KIND_META[item.kind];
   return (
     <Pressable
@@ -62,7 +63,7 @@ function ActivityRow({ item, onPress }: { item: ActivityItem; onPress?: () => vo
       accessibilityState={{ disabled: !onPress }}
       disabled={!onPress}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, item.actionable && styles.rowActionable, pressed && styles.rowPressed]}
+      style={({ pressed }) => [styles.row, divider && styles.rowDivider, item.actionable && styles.rowActionable, pressed && styles.rowPressed]}
     >
       <View style={[styles.rowIcon, { backgroundColor: meta.mist, borderColor: meta.tint }]}>
         <Ionicons name={meta.icon} size={16} allowFontScaling={false} color={meta.ink} />
@@ -204,10 +205,12 @@ export default function ActivityTab() {
         ) : null}
 
         {items.length > 0 ? <Text accessibilityRole="header" style={styles.sectionTitle}>Your updates</Text> : null}
+        {items.length > 0 ? <View testID="activity-updates-group" style={styles.group}>
         {items.map((item, index) => (
           <ScrollFxItem key={item.id} index={index} variant="rise">
             <ActivityRow
               item={item}
+              divider={index > 0}
               onPress={
                 item.kind === 'malo_sent'
                   ? () => {
@@ -235,6 +238,7 @@ export default function ActivityTab() {
             />
           </ScrollFxItem>
         ))}
+        </View> : null}
       </ScrollFxScrollView>
     </TabScreen>
   );
@@ -245,13 +249,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.sm,
     paddingTop: space.xs,
     paddingBottom: 8,
-    gap: 6,
+    gap: 8,
   },
+  // With the 8pt panel gap: 12pt above, 6pt below (UX-19 spec).
   sectionTitle: {
+    ...SECTION_HEADING,
     color: colors.text,
-    ...TYPE.section,
-    ...figtree('800'),
-    marginTop: space.xs,
+    marginTop: 4,
+    marginBottom: -2,
+  },
+  // UX-19: one card holds every update; rows are separated by hairlines instead of each carrying its own border.
+  group: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    overflow: 'hidden',
   },
   boot: {
     paddingVertical: 24,
@@ -262,15 +275,14 @@ const styles = StyleSheet.create({
     minHeight: 44,
     alignItems: 'center',
     gap: 8,
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  rowDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
   },
   rowActionable: {
-    borderColor: FOCAL.jadeInk,
     backgroundColor: FOCAL.mistJade,
   },
   rowPressed: {

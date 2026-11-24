@@ -1,5 +1,12 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
 
+## 2026-11-23 — Compact, consistent fan tabs (local)
+
+- One section heading style across Home, Activity, Local, Spotlight and Profile; shorter page headers.
+- The bottom bar is one frosted surface — dark over the Home feed, light elsewhere — with a sliding highlight and a soft fade above it.
+- Notifications: Inbox/Archived in one track, a small Refresh button and a tighter card. Activity updates sit in one grouped card.
+- Local score cards are shorter; filters and board choices sit on one scrolling row. Text sizes and tap targets are unchanged. Details: [UX-19](docs/agents/UX-19.md).
+
 ## 2026-11-23 — Schools visible on Expo web desktop
 
 - Add a left-rail **Schools** link to `/local/directory` on web ≥820px (desktop Home no longer shows the phone Local pill).

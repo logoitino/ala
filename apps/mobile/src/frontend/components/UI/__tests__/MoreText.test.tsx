@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import { MoreText } from '@/components/UI/MoreText';
 
 const LONG = 'New connected account updates appear here. Your gift history and invitations stay in their own sections.';
@@ -70,5 +71,16 @@ describe('MoreText call sites', () => {
     expect(uses.length).toBeGreaterThan(0);
     expect(uses.filter((use) => forbidden.test(use.split(': ').slice(1).join(': ')))).toEqual([]);
   });
+});
+
+// UX-19 / Codex P2: the inline row is minHeight 44 so the Pressable's full target stays inside its parent.
+it('inline toggle keeps its 44pt target inside a 44pt parent row', async () => {
+  await render(<MoreText lines={1} inlineToggle>{'x'.repeat(120)}</MoreText>);
+  const button = screen.getByRole('button');
+  expect(StyleSheet.flatten(button.props.style)).toMatchObject({ minWidth: 44, minHeight: 44 });
+  expect(StyleSheet.flatten(button.props.style).marginVertical).toBeUndefined();
+  expect(button.props.hitSlop).toMatchObject({ top: 0, bottom: 0 });
+  const row = button.parent;
+  expect(StyleSheet.flatten(row?.props.style)).toMatchObject({ minHeight: 44 });
 });
 

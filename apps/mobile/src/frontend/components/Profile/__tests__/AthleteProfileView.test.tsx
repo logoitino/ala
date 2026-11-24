@@ -4,6 +4,8 @@
  * Story presentation uses only supplied subject text/links and remains inside the selected Highlights pane.
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+import { FONT } from '@/theme/fonts';
 import * as WebBrowser from 'expo-web-browser';
 
 import { AthleteProfileView } from '@/components/Profile/AthleteProfileView';
@@ -304,6 +306,18 @@ describe('AthleteProfileView Story in Highlights', () => {
     expect(screen.queryByText('No public Highlights to show here yet.')).toBeNull();
     const tree = JSON.stringify(screen.toJSON());
     expect(tree.indexOf('Practice, family, and the game.')).toBeLessThan(tree.indexOf('Visible clips: public-play'));
+  });
+
+  // UX-19: Story and Highlights use the one shared 16pt section heading, and Story is a borderless compact card.
+  it('uses the shared section heading for Story and Highlights', async () => {
+    await render(<AthleteProfileView player={player} name={player.name} role="athlete"
+      clips={[publicClip]} stats={stats} auraPoints={0} aboutBio="take" />);
+    for (const name of ['Story', 'Highlights']) {
+      expect(StyleSheet.flatten(screen.getByRole('header', { name }).props.style)).toMatchObject({ fontFamily: FONT.displayBold, fontSize: 16 });
+    }
+    const card = StyleSheet.flatten(screen.getByRole('header', { name: 'Story' }).parent!.props.style);
+    expect(card).toMatchObject({ padding: 12 });
+    expect(card.borderWidth).toBeUndefined();
   });
 
   it('omits Story when caller-visible text and links are empty, without inventing a biography', async () => {

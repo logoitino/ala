@@ -4,6 +4,9 @@
  * compact icons that fill when active, jade active ink, Figtree labels, no tinted box behind the active tab.
  * UX-16 trims decoration and container spacing;44pt controls and measured text/safe-area growth remain.
  * UX-18 removes the remaining vertical margin and fixes decorative glyph sizes while text keeps scaling.
+ * UX-19 (owner 2026-11-23): one continuous frosted bar — dark glass over the Home video feed, light glass elsewhere —
+ * with a sliding jade pill behind the active tab and a short fade so content dissolves into the bar. Tab faces no longer
+ * paint their own white box (that hid the blur); label contrast is kept by raising the softened backdrop floor to 0.78.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef } from 'react';
@@ -12,7 +15,7 @@ import { BlurView } from 'expo-blur';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import type { BottomTabBarProps } from 'expo-router/tabs';
 
-import { colors } from '@/constants/theme';
+import { colors, KIT } from '@/constants/theme';
 import { HIGHLIGHT_NAV_LABEL, SPOTLIGHT_NAV_LABEL } from '@/data/highlights';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useAppRuntime } from '@/context/AppRuntimeContext';
@@ -22,6 +25,11 @@ import { useReduceMotion } from '@/hooks/useReduceMotion';
 import { impactPress } from '@/lib/haptics';
 import { figtree, TYPE } from '@/theme/fonts';
 import { FOCAL, SPRING_BOUNCE, SPRING_SHEET, TAB_ACCENTS } from '@/theme/motion';
+
+/** Fade band opacities, top to bottom, above the bar. */
+const FADE_STEPS = [0.15, 0.35, 0.6, 0.85];
+/** Fade height above the bar; reported with the dock height so screens reserve it (review I2). */
+const FADE_HEIGHT = 24;
 
 const TAB_META: Record<string, { label: string; accessibilityLabel?: string; icon: keyof typeof Ionicons.glyphMap; activeIcon: keyof typeof Ionicons.glyphMap }> =
   {
@@ -38,6 +46,7 @@ type TabButtonProps = {
   icon: keyof typeof Ionicons.glyphMap;
   activeIcon: keyof typeof Ionicons.glyphMap;
   accentColor: string;
+  dark: boolean;
   onPress: () => void;
   onInteract: () => void;
 };
@@ -49,10 +58,11 @@ type TabButtonProps = {
  * even though the route list length can change under runtime feature flags.
  * @sideEffects Reanimated `withSequence`/`withSpring` icon bounce + `withTiming` mist fade on focus change.
  */
-function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accentColor, onPress, onInteract }: TabButtonProps) {
+function TabButton({ focused, label, accessibilityLabel, icon, activeIcon, accentColor, dark, onPress, onInteract }: TabButtonProps) {
   const reduceMotion = useReduceMotion();
   const iconScale = useSharedValue(1);
-  const color = focused ? accentColor : colors.textMuted;
+  // Review I1: full on-video ink on dark glass — 12pt captions over bright video need it.
+  const color = focused ? accentColor : dark ? colors.onVideo : colors.textMuted;
 
   useEffect(() => {
     if (reduceMotion || !focused) {
@@ -100,7 +110,9 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   const softened = useFanDockSoftened();
   const { restore } = useFanNavigation();
   const solid = reduceTransparency || (Platform.OS !== 'ios' && Platform.OS !== 'web');
-  const backdropOpacity = solid ? 1 : softened ? 0.46 : 0.94;
+  const backdropOpacity = solid ? 1 : softened ? 0.78 : 0.94;
+  // Over Home's video the softened floor rises to 0.9 so labels keep contrast on bright frames.
+  const darkFloor = (opacity: number) => Math.max(opacity, 0.9);
   const { openUpload } = useUploadSheet();
   const { live } = useAppRuntime();
   const slots = useRef<Record<string, { x: number; width: number }>>({});
@@ -109,10 +121,15 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   const indicatorW = useSharedValue(0);
   const indicatorOp = useSharedValue(0);
   const focusedKey = state.routes[state.index]?.key ?? '';
+  // Home is the full-height dark video feed; every other fan tab sits on the light canvas.
+  const dark = state.routes[state.index]?.name === 'index';
+  const glassInk = dark ? colors.videoSurface : live.theme.surface;
+  const fadeInk = dark ? colors.videoSurface : live.theme.background;
   // Lovable standard: one jade active colour on every tab (per-tab accents retired from the bar).
   const barAccent = TAB_ACCENTS.index;
   useEffect(() => { restore(); }, [focusedKey, restore]);
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: reduceMotion ? backdropOpacity : withTiming(backdropOpacity, { duration: 160 }) }), [backdropOpacity, reduceMotion]);
+  const shownOpacity = dark ? darkFloor(backdropOpacity) : backdropOpacity;
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: reduceMotion ? shownOpacity : withTiming(shownOpacity, { duration: 160 }) }), [shownOpacity, reduceMotion]);
 
   const routes = state.routes.filter((route) => {
     if (!TAB_META[route.name] || (route.name === 'shop' || route.name === 'drip')) return false;
@@ -130,8 +147,9 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
       indicatorOp.value = 0;
       return;
     }
-    const width = Math.max(24, box.width * 0.5);
-    const x = box.x + (box.width - width) / 2;
+    // The pill sits behind the whole destination (icon + label), inset 4pt so neighbours never touch.
+    const width = Math.max(24, box.width - 8);
+    const x = box.x + 4;
     if (reduceMotion || !animate || !placed.current) {
       indicatorX.value = x;
       indicatorW.value = width;
@@ -178,7 +196,8 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
           accessibilityLabel={meta.accessibilityLabel}
           icon={meta.icon}
           activeIcon={meta.activeIcon}
-          accentColor={TAB_ACCENTS.index.color}
+          accentColor={dark ? colors.glow : TAB_ACCENTS.index.color}
+          dark={dark}
           onInteract={restore}
           onPress={() => {
             restore();
@@ -196,18 +215,23 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   };
 
   return (
-    <View testID="fan-dock-wrap" pointerEvents="box-none" onLayout={({ nativeEvent }) => measureDock(nativeEvent.layout.height)} style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 6) }]}>
+    <View testID="fan-dock-wrap" pointerEvents="box-none" onLayout={({ nativeEvent }) => measureDock(nativeEvent.layout.height + FADE_HEIGHT)} style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 6) }]}>
+      {/* Content dissolves into the bar instead of meeting a hard edge (four bands: no gradient dependency). */}
+      <View testID="fan-dock-fade" pointerEvents="none" style={styles.fade}>
+        {FADE_STEPS.map((opacity) => <View key={opacity} style={[styles.fadeBand, { backgroundColor: fadeInk, opacity }]} />)}
+      </View>
       <View style={styles.bar}>
         {/* Web uses the current React value: installed Reanimated web timing can retain the initial shared opacity. */}
-        <Animated.View testID="fan-dock-backdrop" pointerEvents="none" style={[styles.backdrop, backdropStyle, Platform.OS === 'web' && { opacity: backdropOpacity }]}>
-          {!solid ? <BlurView tint="light" intensity={32} style={StyleSheet.absoluteFill} /> : null}
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: live.theme.surface, opacity: solid ? 1 : 0.82 }]} />
+        <Animated.View testID="fan-dock-backdrop" pointerEvents="none" style={[styles.backdrop, { borderColor: dark ? KIT.onVideoLine : colors.border }, backdropStyle, Platform.OS === 'web' && { opacity: shownOpacity }]}>
+          {!solid ? <BlurView tint={dark ? 'dark' : 'light'} intensity={32} style={StyleSheet.absoluteFill} /> : null}
+          <View testID="fan-dock-tint" style={[StyleSheet.absoluteFill, { backgroundColor: glassInk, opacity: solid ? 1 : dark ? 0.86 : 0.72 }]} />
         </Animated.View>
         <Animated.View
+          testID="fan-dock-pill"
           pointerEvents="none"
           style={[
             styles.indicator,
-            { backgroundColor: barAccent.color, shadowColor: barAccent.glow },
+            { backgroundColor: dark ? `${FOCAL.neonJade}29` /* neon jade at 16% */ : barAccent.mist },
             indicatorStyle,
           ]}
         />
@@ -223,7 +247,7 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
             onPress={() => { restore(); impactPress('medium'); openUpload(); }}
           >
             <View style={styles.fab}><Ionicons name="add" size={16} allowFontScaling={false} color="#FFFFFF" /></View>
-            <Text style={[styles.tabLabel, { color: FOCAL.jadeInk }]}>Upload</Text>
+            <Text style={[styles.tabLabel, { color: dark ? colors.onVideo : FOCAL.jadeInk }]}>Upload</Text>
           </Pressable>
         </View>
         ) : null}
@@ -271,32 +295,30 @@ const styles = StyleSheet.create({
   },
   indicator: {
     position: 'absolute',
-    top: 0,
+    top: 4,
+    bottom: 4,
     left: 0,
-    height: 2,
-    borderRadius: 2,
-    zIndex: 2,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.9,
-        shadowRadius: 6,
-      },
-      android: { elevation: 3 },
-      default: {},
-    }),
+    borderRadius: 999,
+    zIndex: 0,
+  },
+  fade: {
+    position: 'absolute',
+    bottom: '100%',
+    left: 0,
+    right: 0,
+    height: FADE_HEIGHT,
+  },
+  fadeBand: {
+    flex: 1,
   },
   tabInner: {
     minHeight: 44,
-    // Opaque control faces retain text contrast when the softened backdrop sits over dark artwork.
-    backgroundColor: colors.surface,
+    // UX-19: no face of its own, so the frosted bar reads as one surface; the 0.78 softened floor keeps contrast.
     alignItems: 'center',
     justifyContent: 'center',
     gap: 0,
     paddingVertical: 1,
     paddingHorizontal: 2,
-    borderRadius: 18,
-    marginHorizontal: 2,
     marginVertical: 0,
     overflow: 'visible',
   },

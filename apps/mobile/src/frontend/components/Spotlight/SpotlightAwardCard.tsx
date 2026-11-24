@@ -1,5 +1,6 @@
 /** Compact Spotlight award rows keep readable names, award-gold field lines and jersey patches.
  * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ * UX-19: 6pt gap between portrait and copy keeps the award card compact; gold tint and border stay for awards.
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Platform, StyleSheet, Text, View } from 'react-native';
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 6,
     overflow: 'hidden',
   },
   featured: {
