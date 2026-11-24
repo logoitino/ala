@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — UX-19 review follow-ups (tests, tokens, heading spacing, search input).
+**Last updated:** 2026-11-23 — UX-19 rebased onto main (#61/#63); IP/exit currency refreshed.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-23 — UX-19 rebase + CI currency:** Rebased `claude/ux-19-compact-panels` onto main after #61/#63; refreshed `ip:sync` / `exit:map --acknowledge` / `security:infra`.
 
 - **2026-11-23 — UX-19 follow-ups:** Closed the review's minor items: Reduce Motion/Transparency behaviour tests, Home pill from the neon-jade token, centred kicker badge, unused styles removed, Local search input without lineHeight, icon-only Refresh hint copy, 12/6 heading spacing, Boards heading role. One-line Spotlight subtitle tried and reverted (taller with its More row). Enlarged-text capture needs a phone. [UX-19](agents/UX-19.md).
 
