@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   title: { ...SECTION_HEADING, color: colors.text, flexShrink: 1 },
   iconAction: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  // marginTop 6 + card gap 6 clears the inline More toggle's 12pt overhang above the track.
+  // Small top gap under the 44pt More row so the segment track stays visually separate.
   segments: { flexDirection: 'row', marginTop: 6, backgroundColor: FOCAL.mistJade, borderRadius: 12, padding: 2, gap: 2 },
   segment: { flex: 1, minWidth: 0, minHeight: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
   segmentOn: { backgroundColor: FOCAL.jadeInk },

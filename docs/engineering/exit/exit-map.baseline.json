@@ -1,5 +1,5 @@
 {
- "planVersion": "5970b0965afa",
+ "planVersion": "7d8b16084d82",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1705,8 +1705,8 @@
    "apps/mobile/src/backend/services/supportCapture.ts c584185ce1cb781094fd05045382326e46875c28c8f3936b08eb4818c053487a",
    "apps/mobile/src/frontend/components/Activity/CrewAlertsCard.tsx e39acd81dae431bea544886a3de6025e51866b95c8f822ca10cd27355615e02b",
    "apps/mobile/src/frontend/components/Activity/FriendRequestsCard.tsx 1b69ce0056bedf5c3166dd4db13b1b5c4c8c07077b7f3d8b1b193a349da69508",
-   "apps/mobile/src/frontend/components/Activity/NotificationInbox.tsx b12f6226528728601da63076ba98ceca240cc11049ea69db136d636c86b9cf89",
-   "apps/mobile/src/frontend/components/Activity/__tests__/NotificationInbox.test.tsx bd1e1300d9c027fb65b1207f8a6ed739357dfe30f4b5e538208acc4c2d01562a",
+   "apps/mobile/src/frontend/components/Activity/NotificationInbox.tsx 87d71f46d43d6d74ffbb645eb56c428de2546853240a7f6ae624410c6d4ab326",
+   "apps/mobile/src/frontend/components/Activity/__tests__/NotificationInbox.test.tsx 259b4e9cac6dbca7701ea0610a32dd87e3e33c79dfb54a8e006b95c859bb1143",
    "apps/mobile/src/frontend/components/Admin/AccessRestricted.tsx 85eeb0d03614a5dddf176acacd6fc0cadc545fc487d8b43750567215bf6776e0",
    "apps/mobile/src/frontend/components/Admin/AdminChrome.tsx 8fa9ab39512e5ac35d68037c19826974d86ddbe79ea137a1b1eb7bf435912644",
    "apps/mobile/src/frontend/components/Admin/AdminControls.tsx 2a864f61f2b3c967f61a0eee6f0767adee90ecb0d6603567c06fd79f400a0c87",
@@ -2123,14 +2123,14 @@
    "apps/mobile/src/frontend/components/UI/JerseyBadge.tsx 89343eaa78511c3a590473c678723c1ff90094bbdee516b62fbee0275f3b613d",
    "apps/mobile/src/frontend/components/UI/Kit.tsx fb5fc24122fb03d862f4df3155ce9963006670370efaeac64ae8659516a2cb7a",
    "apps/mobile/src/frontend/components/UI/MenuChrome.tsx 8e585c5dd28c2a2da0f78564517a437a276178a8e520fad64af4693332e7cf2e",
-   "apps/mobile/src/frontend/components/UI/MoreText.tsx a8fa9b72db77411705deceb72e0e06b0e92be5cf25fb2094afbcb80ea5a7b8d3",
+   "apps/mobile/src/frontend/components/UI/MoreText.tsx 7072d042b6dee7c97ad81e3ea7f2181bb89b0f943dd538fd8f15a076d7583d44",
    "apps/mobile/src/frontend/components/UI/PlayNavBar.tsx a6dcb5271397c577c8c420f0300d2b5189bcda362a4aa1e1d665625d31040937",
    "apps/mobile/src/frontend/components/UI/SheetHandle.tsx 4a81604bcc5c1d870be0fdec75295339f8f6fb2ed4939f75db4401c4317a3d51",
    "apps/mobile/src/frontend/components/UI/SheetRise.tsx 62cb3387154502d1ddf4709e3a99ed25cf3687dfade3cf4be018fb461c5f0c2c",
    "apps/mobile/src/frontend/components/UI/SportIcon.tsx 493c863e90a24b3d424d1ca9398f7e8e53820853025e626c0f5cbb1bc8f0da8e",
    "apps/mobile/src/frontend/components/UI/__tests__/AnimatedButton.test.tsx 2f715b4be9808c62024c738790da7d60b22f2df35e81d50c720e17d4e5e731c1",
    "apps/mobile/src/frontend/components/UI/__tests__/FanTabBar.test.tsx 6472ce7f9c825135807a434d7cb857d114ceb5edf63ff8090f9475c1c5c9a984",
-   "apps/mobile/src/frontend/components/UI/__tests__/MoreText.test.tsx 233e991a5bcb152baf59903d4d3168a08cb9dd487d9a563f1b4ffb3d339b559d",
+   "apps/mobile/src/frontend/components/UI/__tests__/MoreText.test.tsx f56bf889ee94fc3ce6d9ff391cafab6a9beb98e27465e2b1691cc4962dafd1c3",
    "apps/mobile/src/frontend/components/Verification/AthleteVerificationCard.tsx e2362061204aa6f4cfc0d10d37a156b2a4d9225cb24c31fac758690879606c41",
    "apps/mobile/src/frontend/components/Verification/SchoolConfirmRow.tsx 658727fe716ec8800378536fd5fb46c6fc371b14448cd55550e5cdee5f1b80f5",
    "apps/mobile/src/frontend/components/Verification/SchoolCrest.tsx 147d196d3dadeea3898587ec69a8d16269e656e4c28131c28cdfd3b044083e76",

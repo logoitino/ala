@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `5970b0965afa` |
-| Last announced plan | `5970b0965afa` — up to date |
+| Exit plan version (what the app uses on Supabase) | `7d8b16084d82` |
+| Last announced plan | `7d8b16084d82` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
 | Latest migration | `20261114010000_user_feed_prefs.sql` (58 files) |
 | Canonical schema hash | `d1729a7ee7de8e3258e35363e7955977d32d73210a6ceb91d57921ed1f172c86` (`schema.sql`) |
-| Complete source/configuration content hash | `5970b0965afa8cb97e29f3a7a31cae3ca8ba4b25dee0ec7dd2cd7043cf989204` across 1438 files |
+| Complete source/configuration content hash | `7d8b16084d8205eb4a13f60f4671e35d7807b364767fdfe1db360a186a35c550` across 1438 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.

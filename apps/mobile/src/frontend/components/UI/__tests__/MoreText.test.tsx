@@ -73,12 +73,14 @@ describe('MoreText call sites', () => {
   });
 });
 
-// UX-19: the inline toggle keeps a 44pt target but must not make the explanation row 44pt tall.
-it('inline toggle keeps its 44pt target without growing the text row', async () => {
+// UX-19 / Codex P2: the inline row is minHeight 44 so the Pressable's full target stays inside its parent.
+it('inline toggle keeps its 44pt target inside a 44pt parent row', async () => {
   await render(<MoreText lines={1} inlineToggle>{'x'.repeat(120)}</MoreText>);
   const button = screen.getByRole('button');
-  expect(StyleSheet.flatten(button.props.style)).toMatchObject({ minWidth: 44, minHeight: 44, marginVertical: -12 });
-  // UX-19 review C1: no extra vertical slop, so the target stays exactly 44pt and never reaches neighbouring controls.
+  expect(StyleSheet.flatten(button.props.style)).toMatchObject({ minWidth: 44, minHeight: 44 });
+  expect(StyleSheet.flatten(button.props.style).marginVertical).toBeUndefined();
   expect(button.props.hitSlop).toMatchObject({ top: 0, bottom: 0 });
+  const row = button.parent;
+  expect(StyleSheet.flatten(row?.props.style)).toMatchObject({ minHeight: 44 });
 });
 

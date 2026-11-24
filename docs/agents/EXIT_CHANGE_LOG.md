@@ -10,6 +10,14 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-24 · plan `5970b0965afa` → `7d8b16084d82` · announced by cursor/ux-19-more-hit
+
+App at announcement: commit `6814dff58467af3fcb3de0a383f141c703399314` + 4 uncommitted file(s), source `7d8b16084d8205eb4a13f60f4671e35d7807b364767fdfe1db360a186a35c550`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Activity/NotificationInbox.tsx 87d71f46d43d6d74ffbb645eb56c428de2546853240a7f6ae624410c6d4ab326`, `apps/mobile/src/frontend/components/Activity/__tests__/NotificationInbox.test.tsx 259b4e9cac6dbca7701ea0610a32dd87e3e33c79dfb54a8e006b95c859bb1143`, `apps/mobile/src/frontend/components/UI/MoreText.tsx 7072d042b6dee7c97ad81e3ea7f2181bb89b0f943dd538fd8f15a076d7583d44`, `apps/mobile/src/frontend/components/UI/__tests__/MoreText.test.tsx f56bf889ee94fc3ce6d9ff391cafab6a9beb98e27465e2b1691cc4962dafd1c3`; removed `apps/mobile/src/frontend/components/Activity/NotificationInbox.tsx b12f6226528728601da63076ba98ceca240cc11049ea69db136d636c86b9cf89`, `apps/mobile/src/frontend/components/Activity/__tests__/NotificationInbox.test.tsx bd1e1300d9c027fb65b1207f8a6ed739357dfe30f4b5e538208acc4c2d01562a`, `apps/mobile/src/frontend/components/UI/MoreText.tsx a8fa9b72db77411705deceb72e0e06b0e92be5cf25fb2094afbcb80ea5a7b8d3`, `apps/mobile/src/frontend/components/UI/__tests__/MoreText.test.tsx 233e991a5bcb152baf59903d4d3168a08cb9dd487d9a563f1b4ffb3d339b559d`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-24 · plan `25ff86d9d955` → `5970b0965afa` · announced by cursor/ux-19-compact-panels
 
 App at announcement: commit `b32f6896cc50cae9da941c1524f978f0d3efd276`, source `5970b0965afa8cb97e29f3a7a31cae3ca8ba4b25dee0ec7dd2cd7043cf989204`, app 1.0.0, latest migration `20261114010000_user_feed_prefs.sql`.
