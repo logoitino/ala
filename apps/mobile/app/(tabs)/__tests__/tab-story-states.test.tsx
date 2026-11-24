@@ -1,4 +1,4 @@
-/** UX-07 route-state tests: truthful pending/filter states retain existing auth, admin and navigation boundaries. SDK58 shared fan presentation reads the route pathname from this boundary. */
+/** Route-state tests keep pending states, Activity amounts, and navigation accessible across shared fan presentation changes. */
 import { act, fireEvent, render, screen, within as withinTree } from '@testing-library/react-native';
 import type { ActivityItem } from '@/hooks/useActivityFeed';
 import type { DripItem } from '@/data/shop';
@@ -183,7 +183,7 @@ it('retains complete Activity story text, exact amount and receipt/athlete desti
   expect(screen.getByText(title).props.numberOfLines).toBeUndefined();
   expect(screen.getByText(body).props.numberOfLines).toBeUndefined();
   expect(screen.getByText('$123.45')).toBeTruthy();
-  await fireEvent.press(screen.getByLabelText(`${title}. ${body}`));
+  await fireEvent.press(screen.getByLabelText(`${title}. ${body}. Amount: $123.45`));
   expect(mockPush).toHaveBeenLastCalledWith('/receipts');
   await fireEvent.press(screen.getByLabelText('An athlete thanked you. Mālo!'));
   expect(mockPush).toHaveBeenLastCalledWith('/user/athlete-id');
@@ -197,7 +197,7 @@ it('groups Activity updates in one card and keeps each row its own button', asyn
   ];
   await render(<ActivityTab />);
   const group = screen.getByTestId('activity-updates-group');
-  for (const label of ['You sent a gift. ALA Hawks', 'An athlete thanked you. Mālo!']) {
+  for (const label of ['You sent a gift. ALA Hawks. Amount: $5', 'An athlete thanked you. Mālo!']) {
     expect(withinTree(group).getByLabelText(label).props.accessibilityRole).toBe('button');
   }
   // 8pt panel gap + marginTop 4 / marginBottom -2 gives the spec's 12pt above and 6pt below (UX-19 follow-up M8).

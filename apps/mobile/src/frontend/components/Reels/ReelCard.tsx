@@ -8,7 +8,8 @@
  * Photo stories (`isPhotoStory(clip)`) render `PhotoStoryMedia` instead of `ReelVideoLayer`, so no video player
  * is created for them; their view counts after 3 s on screen with a photo loaded (VIEW_PLAY_MS). Everything else
  * is shared.
- * @sideEffects Votes, saves, reports and view counts via hooks / lib; haptics.
+ * The editor is bound to the visible clip and its exact uploader, separate from athlete Vault permissions.
+ * @sideEffects Votes, saves, reports, caption edits and view counts via hooks / lib; haptics.
  */
 
 import { fetchReelAccountTags } from '@/lib/accountTags';
@@ -35,6 +36,7 @@ import { PlayBroadcastBanner } from '@/components/Reels/PlayBroadcastBanner';
 import { ReelVideoLayer } from '@/components/Reels/ReelVideoLayer';
 import { FilmerSheet } from '@/components/Filmers/FilmerSheet';
 import { ReelMoreSheet } from '@/components/Reels/ReelMoreSheet';
+import { PostDescriptionEditor } from '@/components/Reels/PostDescriptionEditor';
 import { ReportContentModal } from '@/components/Reels/ReportContentModal';
 import type { ReportReasonId } from '@/data/contentRights';
 import { SuggestionSheet } from '@/components/Feedback/SuggestionSheet';
@@ -81,6 +83,7 @@ import { CoachLevelBadge } from '@/components/Reels/CoachLevelBadge';
 import { bumpReelHype, clearReelHype, formatReelDeepLink, hideReelLocally, hypeFromReel, isReelUuid, reportReelRemote, type ReelHype } from '@/lib/reels';
 import { clearReelVote, loadReelVotes, markReelVote, type ReelVoteMap } from '@/lib/reelVotes';
 import { isVaultSealed } from '@/lib/vault';
+import { saveReelDescription } from '@/lib/postCaptions';
 import { telemetry } from '@/services/TelemetryManager';
 import { offlineQueue } from '@/services/OfflineQueue';
 import { FOCAL } from '@/theme/motion';
@@ -124,7 +127,7 @@ function ReelCardImpl({
 }: ReelCardProps) {
   const insets = useSafeAreaInsets();
   const { live } = useAppRuntime();
-  const { user, profile, isAthlete } = useAuth();
+  const { user, profile, isAthlete, isSessionCurrent } = useAuth();
   const { requireAuth } = useSoftWall();
   const celebration = useOptionalCelebration();
   const tabFocused = useIsFocused();
@@ -156,6 +159,26 @@ function ReelCardImpl({
   const [loopFlash, setLoopFlash] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const userId = user?.id;
+  const profileId = profile?.id;
+  const canEditDescription = Boolean(isFocused && userId && profileId && profileId === clip.uploadedBy
+    && profile?.user_id === userId && !profile.age_blocked_at && isSessionCurrent?.()
+    && typeof clip.editCaptionSource === 'string' && isReelUuid(clip.id));
+  const editScope = useMemo(() => canEditDescription && userId && profileId && isSessionCurrent
+    ? { reelId: clip.id, userId, profileId, isSessionCurrent } : null,
+  [canEditDescription, clip.id, isSessionCurrent, profileId, userId]);
+  const editScopeRef = useRef(editScope);
+  editScopeRef.current = editScope;
+  const editAlive = useRef(true);
+  useEffect(() => { editAlive.current = true; return () => { editAlive.current = false; }; }, []);
+  const [descriptionEdit, setDescriptionEdit] = useState<{ scope: NonNullable<typeof editScope>; previous: string } | null>(null);
+  const [confirmedDescription, setConfirmedDescription] = useState<{
+    scope: NonNullable<typeof editScope>; original: string; caption: string;
+  } | null>(null);
+  const editedCaption = confirmedDescription && confirmedDescription.scope === editScope
+    && (clip.editCaptionSource === confirmedDescription.original || clip.editCaptionSource === confirmedDescription.caption)
+    ? confirmedDescription.caption : null;
+  const editingDescription = descriptionEdit && descriptionEdit.scope === editScope ? descriptionEdit : null;
   const [filmerOpen, setFilmerOpen] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -586,7 +609,7 @@ function ReelCardImpl({
             <View style={styles.videoFill}>
               <PhotoStoryMedia
                 clip={clip}
-                active={isFocused}
+                active={isFocused && !editingDescription}
                 // Home passes its header height; the profile pager passes 0, so clear the notch there.
                 topInset={Math.max(overlayInsetTop, insets.top + 8)}
                 onPhotoChange={onStoryPhoto}
@@ -599,7 +622,7 @@ function ReelCardImpl({
             clipId={clip.id}
             videoUrl={clip.videoUrl}
             active={active}
-            focused={isFocused}
+            focused={isFocused && !editingDescription}
             locked={locked}
             muted={muted}
             onPlaybackChange={onPlaybackChange}
@@ -724,7 +747,7 @@ function ReelCardImpl({
           schoolName={schoolName}
           jerseyNumber={player?.jersey_number}
           position={player?.position}
-          caption={clip.tag}
+          caption={editedCaption ?? clip.tag}
           storyNote={storyNote}
           whyThisClip={whyThisClip}
           withAccounts={withAccounts}
@@ -814,6 +837,11 @@ function ReelCardImpl({
           setMoreOpen(false);
           setReportOpen(true);
         }}
+        onEditDescription={editScope && typeof clip.editCaptionSource === 'string' ? () => {
+          if (!editAlive.current || editScopeRef.current !== editScope || !editScope.isSessionCurrent()) return;
+          setMoreOpen(false);
+          setDescriptionEdit({ scope: editScope, previous: editedCaption ?? clip.editCaptionSource! });
+        } : undefined}
         onSuggest={
           live.buttons.suggest
             ? () => {
@@ -823,6 +851,14 @@ function ReelCardImpl({
             : undefined
         }
       />
+      {editingDescription ? <PostDescriptionEditor initialCaption={editingDescription.previous} maxLength={120}
+        onClose={() => setDescriptionEdit(null)}
+        onSave={async (value) => {
+          const { scope, previous } = editingDescription;
+          const isCurrent = () => editAlive.current && editScopeRef.current === scope && scope.isSessionCurrent();
+          const caption = await saveReelDescription({ userId: scope.userId, profileId: scope.profileId, isCurrent }, scope.reelId, previous, value);
+          if (isCurrent()) setConfirmedDescription({ scope, original: clip.editCaptionSource!, caption });
+        }} /> : null}
       <SuggestionSheet visible={suggestOpen} surface="home" onClose={() => setSuggestOpen(false)} />
       <ReportContentModal
         visible={reportOpen}

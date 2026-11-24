@@ -5,6 +5,7 @@
  * Playbook opt-in / chapters, and the page Skip now reads "Skip my round this week". QUIZ-05 adds Report a problem,
  * the athlete's Share a fun fact, the Privacy fun facts audience and the guardian's fun-fact Approve / Decline.
  * UX-17 maps existing-record directory and pending roster selection to source correction desks.
+ * POST-EDIT-01 maps caption actions to the existing moderation desks without new usage tracking.
  * MONEY-TIPS-01 separates optional checkout controls from gifts; its absent telemetry is explicit.
  * WEB-01 / Vault rails (2026-11-13): browser Stripe Payment Element, phone-column shell, and store-billing
  * gates for production native Exclusive — keep portal Coverage (`PORTAL_COVERAGE_SURFACES`) in sync.
@@ -118,6 +119,9 @@ const fanControls: CoverageControl[] = [
  * @purpose Production map: every fan-visible control has an admin desk, an optional runtime flag, and a telemetry id.
  */
 export const COVERAGE_CONTROLS: CoverageControl[] = [
+  { id: 'profile.photo.preview', label: 'View profile photo', hint: 'Enlarge only the already visible, privacy-filtered photo; no runtime switch or telemetry.', surface: 'profile', fanHref: '/profile', adminHref: '/admin/athletes' },
+  { id: 'highlights.caption.edit', label: 'Edit Highlight description', hint: 'Uploader-only, exact current caption; flagged and removed clips cannot be edited. SQL grant is the stop boundary; no usage metric.', surface: 'home', fanHref: '/', adminHref: '/admin/moderation' },
+  { id: 'beyond.caption.edit', label: 'Edit Beyond description', hint: 'Owner-only, exact revision, changed post returns to the existing pending review queue. Existing Beyond server switch; no usage metric.', surface: 'beyond', fanHref: '/beyond', adminHref: '/admin/highlights' },
   { id: 'directory.local.open', label: 'Schools and teams', hint: 'Existing public school catalog/roster; no account directory or imported rows. Local runtime entry; no tap telemetry.', surface: 'local', fanHref: '/local/directory', adminHref: '/admin/athletes', flag: 'tabs.local' },
   { id: 'directory.local.search', label: 'Search schools / roster', hint: 'Bounded current-record reads; errors are unavailable, not empty. Exact catalog-name association; no broad account search or query logging.', surface: 'local', fanHref: '/local/directory', adminHref: '/admin/schools', flag: 'tabs.local' },
   { id: 'directory.local.browse', label: 'Choose school / team / athlete', hint: 'Current text team groups and public roster IDs; existing staff source correction, no invented canonical team ID or verification.', surface: 'local', fanHref: '/local/directory', adminHref: '/admin/athletes', flag: 'tabs.local' },

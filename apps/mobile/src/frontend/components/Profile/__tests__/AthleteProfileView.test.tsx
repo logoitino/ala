@@ -1,7 +1,7 @@
 /**
  * Profile hero integration keeps the viewer's sport, position and class on their linked roster identity.
  * Matching display names are not enough to lend another public athlete the viewer's credentials.
- * Story presentation uses only supplied subject text/links and remains inside the selected Highlights pane.
+ * Story uses only supplied subject text/links; a visitor sees actual Highlights before that optional content.
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
@@ -149,6 +149,19 @@ describe('AthleteProfileView hero credential ownership', () => {
 /** Section selection changes the content directly instead of placing goals after a long stats table. */
 describe('AthleteProfileView direct navigation', () => {
   beforeEach(() => { mockProfile = { id: 'fan', user_id: 'fan-user', full_name: 'Fan', role: 'fan', is_verified: false }; });
+  it('puts the public video grid first for a visitor who has Highlights to watch', async () => {
+    const clips = [{ id: 'play', athleteName: player.name, school: '', tag: 'A play', videoUrl: 'fixture.mp4' }];
+    const view = await render(<AthleteProfileView player={player} name={player.name} viewerProfile clips={clips}
+      stats={stats} aboutBio="Meet the athlete" auraPoints={0} />);
+    function sectionHeadings() {
+      return screen.getAllByRole('header').map(node => node.props.children);
+    }
+    expect(sectionHeadings().slice(-2)).toEqual(['Highlights', 'Story']);
+    expect(screen.getByText('Visible clips: play')).toBeTruthy();
+    await view.rerender(<AthleteProfileView player={player} name={player.name} viewerProfile clips={[]}
+      stats={stats} aboutBio="Meet the athlete" auraPoints={0} />);
+    expect(sectionHeadings().slice(-2)).toEqual(['Story', 'Highlights']);
+  });
   it('opens wishlist directly from Goals and keeps it out of Stats', async () => {
     await render(<AthleteProfileView player={player} name={player.name} role="athlete" clips={[]} stats={stats} auraPoints={0} />);
     await fireEvent.press(screen.getByRole('tab', { name: 'Goals' }));

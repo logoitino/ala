@@ -15,6 +15,8 @@ const mockCreatePlayer = jest.fn();
 const mockReplace = jest.fn(async () => undefined);
 const mockTracker = jest.fn();
 const mockOverlay = jest.fn();
+const mockAuth = jest.fn();
+const mockSaveDescription = jest.fn();
 const mockVideoPlayer = { replaceAsync: mockReplace, play: jest.fn(), pause: jest.fn(), status: 'readyToPlay', playing: false, loop: false, muted: true, duration: 9 };
 const mockVideoEvents: Record<string, (payload: any) => void> = {};
 
@@ -42,11 +44,15 @@ jest.mock('react-native-gesture-handler', () => {
     GestureDetector: ({ children }: { children: React.ReactNode }) => children,
   };
 });
-jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
+jest.mock('react-native-safe-area-context', () => ({
+  SafeAreaView: jest.requireActual('react-native').View,
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
 jest.mock('@/context/AppRuntimeContext', () => ({
   useAppRuntime: () => ({ live: { catalog: { exclusiveDollars: 5, exclusiveAura: 10 }, buttons: { suggest: false }, layouts: {} } }),
 }));
-jest.mock('@/context/AuthContext', () => ({ useAuth: () => ({ user: { id: 'u1' }, profile: null, isAthlete: false }) }));
+jest.mock('@/context/AuthContext', () => ({ useAuth: () => mockAuth() }));
+jest.mock('@/lib/postCaptions', () => ({ saveReelDescription: (...args: unknown[]) => mockSaveDescription(...args) }));
 jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: jest.fn() }) }));
 jest.mock('@/context/CelebrationContext', () => ({ useOptionalCelebration: () => null }));
 jest.mock('@/hooks/useAthleteSubscription', () => ({ useAthleteSubscription: () => ({ subscribed: null, grant: jest.fn() }) }));
@@ -65,9 +71,10 @@ jest.mock('@/services/TelemetryManager', () => ({
 }));
 jest.mock('@/services/OfflineQueue', () => ({ offlineQueue: {} }));
 jest.mock('@/components/Reels/ReelActionOverlay', () => ({
-  ReelActionOverlay: (props: { storyNote?: string | null }) => {
+  ReelActionOverlay: (props: { onOpenMore: () => void }) => {
+    const { Pressable } = jest.requireActual('react-native');
     mockOverlay(props);
-    return null;
+    return <Pressable accessibilityLabel="Open Highlight actions" onPress={props.onOpenMore} />;
   },
 }));
 jest.mock('@/components/Reels/PhotoStoryMedia', () => {
@@ -95,7 +102,12 @@ jest.mock('@/components/Reels/PhotoStoryMedia', () => {
   };
 });
 jest.mock('@/components/Filmers/FilmerSheet', () => ({ FilmerSheet: () => null }));
-jest.mock('@/components/Reels/ReelMoreSheet', () => ({ ReelMoreSheet: () => null }));
+jest.mock('@/components/Reels/ReelMoreSheet', () => ({
+  ReelMoreSheet: ({ visible, onEditDescription }: { visible: boolean; onEditDescription?: () => void }) => {
+    const { Pressable } = jest.requireActual('react-native');
+    return visible && onEditDescription ? <Pressable accessibilityLabel="Edit description" onPress={onEditDescription} /> : null;
+  },
+}));
 jest.mock('@/components/Reels/ReportContentModal', () => ({ ReportContentModal: () => null }));
 jest.mock('@/components/Feedback/SuggestionSheet', () => ({ SuggestionSheet: () => null }));
 jest.mock('@/components/Effects/HypeBurst', () => ({ HypeBurst: () => null }));
@@ -124,6 +136,43 @@ beforeEach(() => {
   for (const key of Object.keys(mockVideoEvents)) delete mockVideoEvents[key];
   mockTracker.mockReset();
   mockOverlay.mockReset();
+  mockSaveDescription.mockReset();
+  mockAuth.mockReset().mockReturnValue({ user: { id: 'u1' }, profile: null, isAthlete: false });
+});
+
+describe('Highlight caption editing', () => {
+  const owned = { ...base, id: 'feb80000-2530-4000-a000-000000000001',
+    mediaType: 'photo_story' as const, uploadedBy: 'uploader', editCaptionSource: ' Original title ' };
+
+  it('does not give the tagged athlete the uploader’s edit action', async () => {
+    mockAuth.mockReturnValue({ user: { id: 'u1' }, profile: { id: 'tagged', user_id: 'u1' },
+      isAthlete: true, isSessionCurrent: () => true });
+    await renderCard(owned);
+    await fireEvent.press(screen.getByLabelText('Open Highlight actions'));
+    expect(screen.queryByLabelText('Edit description')).toBeNull();
+    expect(mockSaveDescription).not.toHaveBeenCalled();
+  });
+
+  it('keeps the raw baseline, preserves the draft after failure and shows only the confirmed edit', async () => {
+    mockAuth.mockReturnValue({ user: { id: 'u1' }, profile: { id: 'uploader', user_id: 'u1' },
+      isAthlete: false, isSessionCurrent: () => true });
+    mockSaveDescription.mockRejectedValueOnce(new Error('Draft still here')).mockResolvedValueOnce('New caption');
+    await renderCard(owned);
+    await fireEvent.press(screen.getByLabelText('Open Highlight actions'));
+    await fireEvent.press(screen.getByLabelText('Edit description'));
+    const field = screen.getByLabelText('Post description');
+    expect(field.props.value).toBe(' Original title ');
+    await fireEvent.changeText(field, '   New caption  ');
+    await fireEvent.press(screen.getByRole('button', { name: 'Save description' }));
+    expect(mockSaveDescription).toHaveBeenLastCalledWith(expect.objectContaining({ userId: 'u1', profileId: 'uploader' }),
+      owned.id, ' Original title ', 'New caption');
+    expect(screen.getByRole('alert')).toHaveTextContent('Draft still here');
+    expect(screen.getByLabelText('Post description').props.value).toBe('   New caption  ');
+    expect(mockOverlay).toHaveBeenLastCalledWith(expect.objectContaining({ caption: base.tag }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Save description' }));
+    expect(screen.queryByLabelText('Post description')).toBeNull();
+    expect(mockOverlay).toHaveBeenLastCalledWith(expect.objectContaining({ caption: 'New caption' }));
+  });
 });
 
 describe('ReelCard photo-story branch', () => {

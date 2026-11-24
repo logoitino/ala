@@ -1,4 +1,5 @@
-/** UX-19: Story / Highlights use the shared 16pt section heading, Story is a borderless 12pt card and Share is a compact
+/** UX-21 puts playable Highlights first for visitors and enables the already-visible public photo preview.
+ * UX-19: Story / Highlights use the shared 16pt section heading, Story is a borderless 12pt card and Share is a compact
  * jade-mist control, so owner tools stop outweighing the profile.
  * UX-13 readable shared type preserves every action and required notice.
  * The public athlete page shown at /user/[id]: hero card, Aura trading card, crew and teammate badges, Rally,
@@ -131,6 +132,9 @@ type AthleteProfileViewProps = {
   onClaimVerification?: () => void;
   avatarUrl?: string | null;
   canEditAvatar?: boolean;
+  /** True only on the visitor route; a photo preview also needs a privacy-filtered source. */
+  viewerProfile?: boolean;
+  previewAvatar?: boolean;
   onAvatarUploaded?: (url: string) => void;
   /** Hide the nested stack title — back chevron on public `/user/[id]`. */
   onBack?: () => void;
@@ -200,6 +204,8 @@ export function AthleteProfileView({
   onClaimVerification,
   avatarUrl,
   canEditAvatar = false,
+  viewerProfile = false,
+  previewAvatar = false,
   onAvatarUploaded,
   onBack,
   headerRight,
@@ -403,6 +409,16 @@ export function AthleteProfileView({
     </>
   );
 
+  const highlightSection = (
+    <View style={styles.highlightSection}>
+      <Text accessibilityRole="header" style={styles.sectionTitle}>Highlights</Text>
+      {publicClips.length === 0 ? (
+        <Text style={styles.highlightEmpty}>No public Highlights to show here yet.</Text>
+      ) : grid(publicClips)}
+    </View>
+  );
+  const highlightsFirst = viewerProfile && publicClips.length > 0;
+
   return (
     <View style={styles.root}>
       {onBack ? (
@@ -438,6 +454,7 @@ export function AthleteProfileView({
         onClaimVerification={onClaimVerification}
         avatarUrl={avatarUrl}
         canEditAvatar={editAvatar}
+        previewAvatar={viewerProfile && previewAvatar}
         onAvatarUploaded={onAvatarUploaded}
         schoolBadge={schoolVisible ? schoolBadge : null}
         headerAction={headerRight}
@@ -488,6 +505,7 @@ export function AthleteProfileView({
 
       {tab === 'highlights' ? (
         <View style={styles.highlightsPane}>
+          {highlightsFirst ? highlightSection : null}
           {storyText || visibleSocialLinks.length > 0 ? (
             <View style={styles.story}>
               <Text accessibilityRole="header" style={styles.sectionTitle}>Story</Text>
@@ -511,14 +529,7 @@ export function AthleteProfileView({
             </View>
           ) : null}
 
-          <View style={styles.highlightSection}>
-            <Text accessibilityRole="header" style={styles.sectionTitle}>Highlights</Text>
-            {publicClips.length === 0 ? (
-              <Text style={styles.highlightEmpty}>No public Highlights to show here yet.</Text>
-            ) : (
-              grid(publicClips)
-            )}
-          </View>
+          {!highlightsFirst ? highlightSection : null}
 
         </View>
       ) : null}

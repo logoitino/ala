@@ -1,4 +1,4 @@
-/** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent. */
+/** Fan menu presentation offers edit only when the current reel card authorizes the uploader control. */
 import { BlurView } from 'expo-blur';
 import { Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -22,6 +22,7 @@ type ReelMoreSheetProps = {
   onShare: () => void;
   onToggleSave: () => void;
   onReport: () => void;
+  onEditDescription?: () => void;
   onSuggest?: () => void;
 };
 
@@ -41,6 +42,7 @@ export function ReelMoreSheet({
   onShare,
   onToggleSave,
   onReport,
+  onEditDescription,
   onSuggest,
 }: ReelMoreSheetProps) {
   const frame = useSheetFrame();
@@ -70,6 +72,13 @@ export function ReelMoreSheet({
           <Text accessibilityRole="header" style={styles.title}>
             {who}
           </Text>
+          {onEditDescription ? (
+            <AnimatedButton accessibilityLabel="Edit description" haptic="selection"
+              onPress={onEditDescription} contentStyle={styles.row}>
+              <Ionicons name="pencil-outline" size={18} color={colors.text} />
+              <Text style={styles.rowLabel}>Edit description</Text>
+            </AnimatedButton>
+          ) : null}
 
           <AnimatedButton
             accessibilityLabel="Share this highlight"

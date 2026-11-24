@@ -1,8 +1,8 @@
-/** UX-19: Inbox/Archived share one tinted segment track and Refresh is a compact icon button on the heading line, so the
- * controls stop outweighing the content; every target stays 44pt and the card drops its border for a soft shadow.
- * UX-18 tightens panel spacing and ordinary explanation layout while keeping every 44pt action and full notice/body. UX-13 readable shared type preserves every action and required notice. The bounded notification inbox is separate from factual Activity and its existing invitation queues. */
+/** UX-20 removes the extra explanation row at rest without overlapping any touch targets.
+ * The inbox remains separate from factual Activity and invitation queues. */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { type Href, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
@@ -10,24 +10,34 @@ import { cardShadow, colors, radii } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useNotificationInbox } from '@/hooks/useNotifications';
 import { FOCAL } from '@/theme/motion';
-import { MoreText } from '@/components/UI/MoreText';
-import { SECTION_HEADING, TYPE, figtree } from '@/theme/fonts';
+import { TYPE, figtree } from '@/theme/fonts';
+
+const EXPLANATION = 'New connected account updates appear here. Your gift history and invitations stay in their own sections.';
 
 /** @purpose Review read/unread and archived notifications without mutating receipt or invitation history. */
 export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
   const { user, isGuest } = useAuth();
   const router = useRouter();
   const state = useNotificationInbox(enabled && Boolean(user && !isGuest));
+  const [detailsOpen, setDetailsOpen] = useState(false);
   if (!user || isGuest) return null;
   const { page, archived, loading, busy, error, notice } = state;
   const locked = loading || busy || !enabled;
 
   return <View style={styles.card}>
     <View style={styles.heading}>
-      <Text accessibilityRole="header" style={styles.title}>Notifications</Text>
-      {page ? <Text style={styles.unread}>{page.unreadCount} unread{archived ? ' in inbox' : ''}</Text> : null}
+      <View style={styles.headingLabels}>
+        <Text accessibilityRole="header" style={styles.title}>Notifications</Text>
+        {page ? <Text style={styles.unread}>{page.unreadCount} unread{archived ? ' in inbox' : ''}</Text> : null}
+      </View>
+      <Pressable accessibilityRole="button"
+        accessibilityLabel={detailsOpen ? 'Less about notifications' : `More about notifications. ${EXPLANATION}`}
+        aria-expanded={detailsOpen}
+        onPress={() => setDetailsOpen(open => !open)} style={styles.detailsToggle}>
+        <Text style={styles.actionLabel}>{detailsOpen ? 'Less' : 'More'}</Text>
+      </Pressable>
     </View>
-    <MoreText style={styles.hint} lines={1} inlineToggle>{'New connected account updates appear here. Your gift history and invitations stay in their own sections.'}</MoreText>
+    {detailsOpen ? <Text style={styles.hint}>{EXPLANATION}</Text> : null}
     <View testID="notification-segments" accessibilityRole="tablist" style={styles.segments}>
       <Pressable accessibilityRole="tab" accessibilityLabel="Current notifications" accessibilityState={{ selected: !archived, disabled: locked }}
         disabled={locked} onPress={() => void state.showArchived(false)} style={[styles.segment, !archived && styles.segmentOn]}>
@@ -37,7 +47,6 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
         disabled={locked} onPress={() => void state.showArchived(true)} style={[styles.segment, archived && styles.segmentOn]}>
         <Text style={[styles.segmentLabel, archived && styles.segmentLabelOn]}>Archived</Text>
       </Pressable>
-      {/* Review C1: Refresh lives at the end of the 48pt track, so its 44pt target never meets the inline More toggle. */}
       <Pressable accessibilityRole="button" accessibilityLabel="Refresh notifications" accessibilityState={{ disabled: locked }}
         disabled={locked} onPress={() => void state.reload()} style={[styles.iconAction, locked && styles.disabled]}>
         <Ionicons name="refresh" size={18} color={colors.primary} />
@@ -64,7 +73,7 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
       {page.items.map(item => <View key={item.id} style={[styles.item, !item.readAt && styles.unreadItem]}>
         <Text style={styles.itemTitle}>{item.title}</Text>
         <Text style={styles.body}>{item.body}</Text>
-        <Text style={styles.hint}>{item.readAt ? 'Read' : 'Unread'} · {new Date(item.createdAt).toLocaleDateString()}</Text>
+        <Text style={styles.itemMetadata}>{item.readAt ? 'Read' : 'Unread'} · {new Date(item.createdAt).toLocaleDateString()}</Text>
         <View style={styles.controls}>
           {item.href ? <Pressable accessibilityRole="button" accessibilityLabel={`Open ${item.title}`}
             disabled={locked} accessibilityState={{ disabled: locked }}
@@ -93,17 +102,20 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radii.lg, paddingVertical: 10, paddingHorizontal: 12, gap: 6, ...cardShadow },
-  heading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
-  title: { ...SECTION_HEADING, color: colors.text, flexShrink: 1 },
+  card: { backgroundColor: colors.surface, borderRadius: radii.lg, paddingVertical: 6, paddingHorizontal: 10, gap: 4, ...cardShadow },
+  heading: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  headingLabels: { flex: 1, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 6 },
+  title: { ...TYPE.body, ...figtree('700'), color: colors.text, flexShrink: 1 },
+  detailsToggle: { minWidth: 44, minHeight: 44, maxWidth: '40%', paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
   iconAction: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  // Small top gap under the 44pt More row so the segment track stays visually separate.
-  segments: { flexDirection: 'row', marginTop: 6, backgroundColor: FOCAL.mistJade, borderRadius: 12, padding: 2, gap: 2 },
-  segment: { flex: 1, minWidth: 0, minHeight: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
+  // Each button owns its layout box; there is no overhanging hit area to clear.
+  segments: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: FOCAL.mistJade, borderRadius: 12, gap: 2 },
+  // Let the wider label claim the space it needs before sharing the leftover width.
+  segment: { flexGrow: 1, flexShrink: 1, minWidth: 44, minHeight: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
   segmentOn: { backgroundColor: FOCAL.jadeInk },
   segmentLabel: { color: colors.textMuted, ...TYPE.button, ...figtree('700'), textAlign: 'center' },
   segmentLabelOn: { color: colors.onAccent },
-  unread: { color: colors.primary, ...TYPE.caption, ...figtree('700') },
+  unread: { color: colors.primary, ...TYPE.caption, ...figtree('700'), flexShrink: 1 },
   hint: { ...figtree('400'), color: colors.textMuted, ...TYPE.body,  },
   controls: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   action: { minWidth: 44, minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, paddingHorizontal: 8,
@@ -114,6 +126,7 @@ const styles = StyleSheet.create({
   item: { borderTopWidth: 1, borderColor: colors.border, paddingTop: 4, gap: 4 },
   unreadItem: { borderColor: colors.primary },
   itemTitle: { color: colors.text, ...TYPE.body, ...figtree('700') },
+  itemMetadata: { ...TYPE.caption, ...figtree('400'), color: colors.textMuted },
   body: { ...figtree('400'), color: colors.text, ...TYPE.body,  },
   disabled: { minHeight: 44, opacity: 0.5 },
 });

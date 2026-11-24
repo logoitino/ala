@@ -10,6 +10,14 @@ surfaces. A shared primitive can update many consumers without each file needing
 
 Current cross-team direction and assignments: [TEAM_STATUS](../agents/TEAM_STATUS.md); actual documentation/coordination claims and checks: [COORD-01](../agents/COORD-01.md#whole-team-refresh--2026-10-15-americadenver). The 107-role briefing is assignment coverage, not execution or human delivery. The [UI checkpoint](design/UI_UX_FIGMA_POLISH.md) separates the original empty Figma draft, later colour file, local source and rendered evidence.
 
+## UX-21 public profiles and video (2026-11-24)
+
+[UX-21](../agents/UX-21.md) keeps the public photo viewer separate from the owner's picker. Highlight video names use the compact section style, and the reaction controls remain in their own rail. [POST-EDIT-01](../agents/POST-EDIT-01.md) uses one description editor for the Highlight overflow and Beyond's My posts list.
+
+## UX-20 Activity density (2026-11-23)
+
+[UX-20](../agents/UX-20.md) updates the existing Notifications and Your updates panels only. More/Less has its own 44pt box in the header. The inbox track and grouped gift rows keep separate actions, full wrapping text and exact amounts.
+
 ## UX-19 compact fan tabs (2026-11-23)
 
 | Surface | Source | Current presentation |

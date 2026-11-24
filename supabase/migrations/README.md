@@ -219,3 +219,9 @@ onto canonical `schema.sql`; installed external PGlite supplies real local Postg
 generation. SQL application, hosted denials, physical device behavior and release acceptance remain separate.
 Rollback requires a reviewed forward disable/repair migration retaining participation, media and log history;
 never collapse multiple career rows or recreate classified logs. New sport choices require a stored active catalog.
+
+## Post description edits — POST-EDIT-01
+
+| File | Purpose | Applied? |
+| --- | --- | --- |
+| [20261124010000_post_caption_edits.sql](20261124010000_post_caption_edits.sql) | Author and expected-value checks for Highlight descriptions; revisioned caption edits return Beyond submissions to the existing moderation queue. The title trigger preserves the existing admin correction path. | **Local only.** PostgreSQL replay: `node scripts/replay/post-caption-edits-replay.mjs <external-pglite-dist>`. |

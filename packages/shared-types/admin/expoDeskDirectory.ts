@@ -44,8 +44,8 @@ export const EXPO_DESKS: readonly ExpoDesk[] = [
   { path: '/admin/polls', title: 'Polls', detail: 'Cheer polls and Local engagement.', group: 'operations' },
   { path: '/admin/boosters', title: 'Boosters', detail: 'Booster tiers and Top Boosters.', group: 'operations' },
   { path: '/admin/publish', title: 'Publish', detail: 'Publish draft runtime switches to the app.', group: 'operations' },
-  { path: '/admin/highlights', title: 'Highlights', detail: 'Beyond contributions, challenges, coach-level label, and FEED-01 interest-feed contract.', group: 'content' },
-  { path: '/admin/moderation', title: 'Moderation', detail: 'Report review and hide decisions.', group: 'content' },
+  { path: '/admin/highlights', title: 'Highlights', detail: 'Beyond contributions and edited captions in the existing review queue; challenges, coach-level labels and interest-feed controls.', group: 'content' },
+  { path: '/admin/moderation', title: 'Moderation', detail: 'Review reports and hide Highlights, including posts with uploader-edited descriptions.', group: 'content' },
   { path: '/admin/fan-zone', title: 'Fan Zone', detail: 'Campaigns, private entries, and free ballots.', group: 'content' },
   { path: '/admin/sport-quiz', title: 'Sport Quiz', detail: 'Trivia rounds, Life Playbook, and fresh questions. Private noncash badges; IQ Aura only when that migration is applied.', group: 'content' },
   { path: '/admin/money', title: 'Money', detail: "Gifts, Vault Exclusive, optional Tip Tapua'i, and Connect.", group: 'commerce' },
@@ -100,13 +100,13 @@ export type PortalCoverageSurface = {
  * @purpose Read-only Control map surfaces for the Next portal. Counts stay in Expo `/admin/product/coverage`.
  */
 export const PORTAL_COVERAGE_SURFACES: readonly PortalCoverageSurface[] = [
-  { id: 'home', label: 'Home · Highlights ⚡', adminPath: '/admin/highlights', hint: 'Reel pager, hype, Vault unlock, FEED-01 interest picks.' },
-  { id: 'beyond', label: 'Beyond the Game', adminPath: '/admin/highlights', hint: 'Train / Serve contributions and challenges.' },
+  { id: 'home', label: 'Home · Highlights ⚡', adminPath: '/admin/highlights', hint: 'Reel pager, hype, Vault unlock, interest picks and uploader-only description edits; use Moderation for reports.' },
+  { id: 'beyond', label: 'Beyond the Game', adminPath: '/admin/highlights', hint: 'Contributions and edited descriptions use the existing review queue; challenges remain separate.' },
   { id: 'local', label: 'Local', adminPath: '/admin/games', hint: 'Live scores, polls, boosters and existing school/team roster directory; repair via Schools/Athletes desks.' },
   { id: 'activity', label: 'Activity', adminPath: '/admin/features', hint: 'Feed and notification inbox actions.' },
   { id: 'spotlight', label: 'Spotlight', adminPath: '/admin/spotlight', hint: 'Player of the Week board.' },
   { id: 'drip', label: 'Drip', adminPath: '/admin/drip', hint: 'Merchandise browse and checkout.' },
-  { id: 'profile', label: 'Profile', adminPath: '/admin/athletes', hint: 'Vault, Crew, Exclusive, notifications and existing roster selection for pending athlete claims.' },
+  { id: 'profile', label: 'Profile', adminPath: '/admin/athletes', hint: 'Vault, Crew, notifications, existing roster selection and enlargement of already visible profile photos.' },
   { id: 'upload', label: 'Upload +', adminPath: '/admin/highlights', hint: 'Highlight and Beyond compose.' },
   { id: 'receipts', label: 'Receipts', adminPath: '/admin/money', hint: 'Gift and purchase history.' },
   { id: 'auth', label: 'Soft-Wall auth', adminPath: '/admin/features', hint: 'Guest gates and resume after sign-in.' },

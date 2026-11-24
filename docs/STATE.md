@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — UX-19: security:infra currency after More hit-target fix.
+**Last updated:** 2026-11-24 — public profile photos, video overlays and owner caption editing work.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,10 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-24 — UX-21 / POST-EDIT-01 (local):** Public photos open in a larger view when already permitted, playable Highlights move up for visitors, and video names and decoration are more compact. Highlight uploaders and Beyond authors can edit descriptions; edited Beyond posts return to review. See [UX-21](agents/UX-21.md) and the [caption edit readiness record](agents/POST-EDIT-01.md); hosted migration and device checks are pending.
+
+- **2026-11-23 — UX-20 Activity density (local):** More/Less joins the Notifications heading, the three inbox controls keep separate 44pt targets, and gift time and amount share the supporting text line where space allows. Full message and exact amount remain. [Evidence and device follow-up](agents/UX-20.md).
 
 - **2026-11-23 — UX-19 More hit target:** Inline `MoreText` row uses `minHeight: 44` and drops `marginVertical: -12` so the Pressable’s 44pt target stays inside its parent (Codex P2 on #64).
 

@@ -31,6 +31,18 @@ Client palette: [`apps/mobile/src/frontend/lib/aura.ts`](../../apps/mobile/src/f
 
 Auth (`auth.users`) must exist before `profiles.user_id` can reference it.
 
+## Post description edits — POST-EDIT-01
+
+Local migration [20261124010000_post_caption_edits.sql](../../supabase/migrations/20261124010000_post_caption_edits.sql). No hosted database has received it.
+
+| Function | Contract |
+| --- | --- |
+| `edit_reel_caption(uuid, uuid, text, text)` | Signed-in uploader's profile ID, reel UUID, exact current title and proposed description. Updates only the title (1–120 characters) and returns the matching reel ID and saved text. Rejects stale, flagged or removed posts and missing owners. |
+| `beyond_edit_caption(uuid, uuid, integer, text)` | Signed-in Beyond author, post UUID, current revision and proposed description (1–240 characters). A changed pending or approved post gets a new revision and returns to review. Media, original submission time and audience stay unchanged. Returns the existing Beyond post shape. |
+| `guard_reel_caption_edit()` | Internal trigger blocks direct title changes by app identities outside the uploader RPC or existing adult admin permission. Inserts and unrelated column updates retain their existing paths. |
+
+No new table or column. A stale editor receives SQLSTATE `40001`. The separate Beyond moderation audit retains earlier decisions.
+
 ---
 
 ## Product names vs Postgres

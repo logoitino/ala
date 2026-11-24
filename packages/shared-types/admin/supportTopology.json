@@ -1097,6 +1097,7 @@
         "publish_app_runtime"
       ],
       "sqlReaders": [
+        "beyond_edit_caption",
         "beyond_enabled",
         "friend_requests_enabled",
         "guardian_links_enabled",
@@ -1381,6 +1382,7 @@
         "admin_beyond_erase_profile",
         "admin_beyond_retention",
         "admin_beyond_review",
+        "beyond_edit_caption",
         "beyond_finalize",
         "beyond_profile_erasure",
         "beyond_remove",
@@ -1394,6 +1396,7 @@
         "admin_beyond_posts",
         "admin_beyond_status",
         "beyond_can_view",
+        "beyond_edit_caption",
         "beyond_export_my_data",
         "beyond_my_posts",
         "beyond_post_json",
@@ -3844,6 +3847,7 @@
         "current_user_role",
         "custodial_role",
         "decide_custodial_withdrawal",
+        "edit_reel_caption",
         "enforce_minor_consent",
         "filmer_stats",
         "finish_failed_photo_story_cleanup",
@@ -4491,6 +4495,7 @@
         "clear_reel_hype",
         "close_under_13_account",
         "confirm_reel_player_tag",
+        "edit_reel_caption",
         "increment_reel_hype",
         "increment_reel_tips",
         "moderate_flagged_reel",
@@ -4514,6 +4519,7 @@
         "clear_reel_hype",
         "coach_label_desk",
         "confirm_reel_player_tag",
+        "edit_reel_caption",
         "filmer_stats",
         "fun_snapshot",
         "get_active_spotlight_award",
@@ -4553,7 +4559,8 @@
         "reels_guard_coach_label → guard_coach_label",
         "reels_audit_coach_label → audit_coach_label_on_insert",
         "guard_failed_photo_story_state → guard_failed_photo_story_state",
-        "reels_recorded_sport_guard → guard_reel_recorded_sport"
+        "reels_recorded_sport_guard → guard_reel_recorded_sport",
+        "reels_guard_caption_edit → guard_reel_caption_edit"
       ],
       "screens": [
         "/",
@@ -8243,6 +8250,7 @@
       "owner": "HIGHLIGHTS",
       "callers": [
         "sql:beyond_admin",
+        "sql:beyond_edit_caption",
         "sql:beyond_export_my_data",
         "sql:beyond_finalize",
         "sql:beyond_legacy_posts",
@@ -8295,6 +8303,21 @@
       ]
     },
     {
+      "name": "beyond_edit_caption",
+      "owner": "HIGHLIGHTS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/postCaptions.ts"
+      ],
+      "manual": "Author-only revision-checked caption replacement. A changed approved/pending post returns to the existing review queue without changing media, audience or rights.",
+      "writes": [
+        "beyond_posts"
+      ],
+      "reads": [
+        "app_runtime_config",
+        "beyond_posts"
+      ]
+    },
+    {
       "name": "beyond_enabled",
       "owner": "HIGHLIGHTS",
       "callers": [
@@ -8302,6 +8325,7 @@
         "sql:admin_beyond_review",
         "sql:admin_beyond_status",
         "sql:beyond_can_view",
+        "sql:beyond_edit_caption",
         "sql:beyond_finalize",
         "sql:beyond_my_posts",
         "sql:beyond_posts",
@@ -8415,6 +8439,7 @@
       "callers": [
         "sql:admin_beyond_review",
         "sql:beyond_can_view",
+        "sql:beyond_edit_caption",
         "sql:beyond_finalize",
         "sql:beyond_reserve",
         "sql:beyond_status",
@@ -8433,6 +8458,7 @@
       "callers": [
         "sql:admin_beyond_posts",
         "sql:admin_beyond_review",
+        "sql:beyond_edit_caption",
         "sql:beyond_export_my_data",
         "sql:beyond_finalize",
         "sql:beyond_my_posts",
@@ -9348,6 +9374,7 @@
         "sql:get_received_malo",
         "sql:guard_profiles_admin_escalation",
         "sql:guard_profiles_age",
+        "sql:guard_reel_caption_edit",
         "sql:guard_reel_recorded_sport",
         "sql:guardian_decide_approval",
         "sql:is_admin_or_db",
@@ -9443,6 +9470,21 @@
       "manual": null,
       "writes": [],
       "reads": []
+    },
+    {
+      "name": "edit_reel_caption",
+      "owner": "HIGHLIGHTS",
+      "callers": [
+        "apps/mobile/src/frontend/lib/postCaptions.ts"
+      ],
+      "manual": "Authenticated uploader only with exact current title, active account and editable reel. Change only reels.title; removed and flagged rows cannot be edited.",
+      "writes": [
+        "reels"
+      ],
+      "reads": [
+        "profiles",
+        "reels"
+      ]
     },
     {
       "name": "emit_notification_event",
@@ -10808,6 +10850,16 @@
       "reads": []
     },
     {
+      "name": "guard_reel_caption_edit",
+      "owner": "HIGHLIGHTS",
+      "callers": [
+        "trigger:reels_guard_caption_edit on reels"
+      ],
+      "manual": "Private trigger prevents participant direct title edits from bypassing caption validation and lifecycle while preserving existing admin correction.",
+      "writes": [],
+      "reads": []
+    },
+    {
       "name": "guard_reel_recorded_sport",
       "owner": "HIGHLIGHTS",
       "callers": [
@@ -11539,6 +11591,7 @@
         "sql:get_athlete_sports",
         "sql:get_my_privacy",
         "sql:get_my_supervision",
+        "sql:guard_reel_caption_edit",
         "sql:guard_reel_recorded_sport",
         "sql:guardian_decide_approval",
         "sql:guardian_invite_for_code",
@@ -11911,6 +11964,7 @@
         "sql:challenge_missing_dependencies",
         "sql:check constraint",
         "sql:create_guardian_invite",
+        "sql:edit_reel_caption",
         "sql:enforce_minor_consent",
         "sql:fun_eligible",
         "sql:fun_guardian",

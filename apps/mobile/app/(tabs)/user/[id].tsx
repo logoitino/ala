@@ -1,4 +1,4 @@
-/** Public profiles commit subject/session-bound reads and backed counts to the captured athlete. Sport chips use privacy-filtered participation,
+/** Public profiles commit subject/session-bound reads and preview only the privacy-filtered photo. Sport chips use privacy-filtered participation,
  * recorded Highlight tags and independent Stats while the manually chosen primary field remains stable. */
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -23,6 +23,7 @@ import { useRoster } from '@/hooks/useRoster';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { beginExclusiveUnlock } from '@/lib/exclusiveCheckout';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst, type ReelHype } from '@/lib/reels';
+import { applyReelCaptionChange, subscribeReelCaptionChanges } from '@/lib/postCaptions';
 import { hydratePlayerHype } from '@/lib/hype';
 import { fetchGuestPlayer, fetchPublicProfileForPlayer } from '@/lib/roster';
 import { handleFromName, isAuraUuid, resolveAuraPoints, subscribePlayerAura } from '@/lib/aura';
@@ -52,7 +53,8 @@ function mergeUploadedReel(
     players: player,
   };
   if (rows.some((row) => row.id === uploaded.id)) {
-    return rows.map((row) => (row.id === uploaded.id ? { ...row, ...next } : row));
+    // A fetched/confirmed caption is newer than the original upload receipt.
+    return rows.map((row) => (row.id === uploaded.id ? { ...row, ...next, title: row.title } : row));
   }
   return [next, ...rows].sort((left, right) => {
     const newer = Date.parse(right.created_at || '') || 0;
@@ -77,6 +79,8 @@ export default function UserAthleteProfileScreen() {
   const [loadedId, setLoadedId] = useState<string | undefined>();
   const [player, setPlayer] = useState<Player | null>(null);
   const [reels, setReels] = useState<ReelWithPlayer[]>([]);
+  useEffect(() => subscribeReelCaptionChanges(change =>
+    setReels(rows => applyReelCaptionChange(rows, change))), []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<'unverified' | 'pending' | 'verified'>('unverified');
@@ -314,6 +318,9 @@ export default function UserAthleteProfileScreen() {
           verificationStatus={verificationStatus}
           schoolClaimed={schoolClaimed}
           avatarUrl={avatarUrl}
+          viewerProfile
+          previewAvatar={Boolean(avatarUrl && publicProfile?.player_id === playerId
+            && publicProfile?.verification_status !== undefined && publicProfile?.avatar_url?.trim() === avatarUrl)}
           onBack={() => router.back()}
           onDropMalo={dropMalo}
           onOpenAthlete={(nextId) => router.push(userProfileHref(nextId))}

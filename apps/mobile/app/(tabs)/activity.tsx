@@ -1,6 +1,5 @@
-/** UX-19 groups the updates in one card with hairline dividers and uses the shared section heading.
- * UX-18 gives Activity rows less decoration/padding and a readable14pt primary/12pt metadata hierarchy.
- * Named Figtree faces remain consistent with the inbox; factual history and invitation actions stay separate. */
+/** UX-20 lets gift details share the supporting text row while keeping full titles and room for enlarged text.
+ * Factual history and invitation actions stay separate. */
 import { useIsFocused, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, Text, View } from 'react-native';
@@ -56,10 +55,12 @@ function formatUsd(cents: number): string {
 
 function ActivityRow({ item, onPress, divider = false }: { item: ActivityItem; onPress?: () => void; divider?: boolean }) {
   const meta = KIND_META[item.kind];
+  const ago = shortAgo(item.at);
+  const amount = typeof item.amountCents === 'number' ? formatUsd(item.amountCents) : null;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${item.title}. ${item.body}`}
+      accessibilityLabel={`${item.title}. ${item.body}${amount === null ? '' : `. Amount: ${amount}`}`}
       accessibilityState={{ disabled: !onPress }}
       disabled={!onPress}
       onPress={onPress}
@@ -70,15 +71,15 @@ function ActivityRow({ item, onPress, divider = false }: { item: ActivityItem; o
       </View>
       <View style={styles.rowBody}>
         <Text style={styles.rowTitle}>{item.title}</Text>
-        {/* Only sent-gift school/source metadata uses caption size; thanks and confirmation instructions stay body size. */}
-        <Text style={[styles.rowLede, item.kind === 'malo_sent' && styles.rowMetadata]}>
-          {item.body}
-        </Text>
-        <View style={styles.rowDetails}>
-          <Text style={styles.rowAgo}>{shortAgo(item.at)}</Text>
-          {typeof item.amountCents === 'number' ? (
-            <Text style={[styles.rowAmount, { color: meta.ink }]}>{formatUsd(item.amountCents)}</Text>
-          ) : null}
+        <View style={styles.rowSummary}>
+          {/* Only school/source metadata uses caption size; thanks and confirmation instructions stay body size. */}
+          <Text style={[styles.rowLede, item.kind === 'malo_sent' && styles.rowMetadata]}>
+            {item.body}
+          </Text>
+          {ago || amount !== null ? <View style={styles.rowDetails}>
+            {ago ? <Text style={styles.rowAgo}>{ago}</Text> : null}
+            {amount !== null ? <Text style={[styles.rowAmount, { color: meta.ink }]}>{amount}</Text> : null}
+          </View> : null}
         </View>
         {item.actionable ? <Text style={[styles.rowCta, { color: FOCAL.jadeInk }]}>Needs your confirmation</Text> : null}
       </View>
@@ -275,8 +276,8 @@ const styles = StyleSheet.create({
     minHeight: 44,
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
   },
   rowDivider: {
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -317,14 +318,28 @@ const styles = StyleSheet.create({
     ...TYPE.body,
     ...figtree('400'),
     includeFontPadding: false,
+    flexBasis: 160,
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
   },
   rowMetadata: {
     ...TYPE.caption,
   },
+  // Give supporting text a usable line width before trying to put the details beside it.
+  rowSummary: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    columnGap: 8,
+    rowGap: 2,
+  },
   rowDetails: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignItems: 'center',
+    alignItems: 'baseline',
+    maxWidth: '100%',
+    marginStart: 'auto',
     gap: space.xs,
   },
   rowCta: {

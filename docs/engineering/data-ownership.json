@@ -626,6 +626,18 @@
       "owner": "HIGHLIGHTS",
       "use": "Private expected-actor matched nonclosed admin gate for all7 challenge admin RPCs."
     },
+    "edit_reel_caption": {
+      "owner": "HIGHLIGHTS",
+      "use": "Authenticated uploader only with exact current title, active account and editable reel. Change only reels.title; removed and flagged rows cannot be edited."
+    },
+    "beyond_edit_caption": {
+      "owner": "HIGHLIGHTS",
+      "use": "Author-only revision-checked caption replacement. A changed approved/pending post returns to the existing review queue without changing media, audience or rights."
+    },
+    "guard_reel_caption_edit": {
+      "owner": "HIGHLIGHTS",
+      "use": "Private trigger prevents participant direct title edits from bypassing caption validation and lifecycle while preserving existing admin correction."
+    },
     "beyond_missing": {
       "owner": "HIGHLIGHTS",
       "use": "Checks required PRIV-01/MINOR-01 dependency functions before operational enable."
@@ -3287,9 +3299,27 @@
       "owner": "DESIGN",
       "purpose": "UX18 optional ordinary explanation layout saves a separate disclosure row in NotificationInbox; Root outside Codex DataGov classifies UI-only modifier.",
       "data": "Existing explanatory string and ephemeral More/Less expanded boolean; new optional inlineToggle layout boolean defaultsfalse. No notification IDs, account fields, telemetry, persistence or source query.",
-      "destination": "Existing UI/MoreText with NotificationInbox opt-in; all other consumers retain default stacked layout and existing full accessible text.",
+      "destination": "Existing UI/MoreText keeps the optional layout and default stacked behavior. UX20 NotificationInbox no longer opts in; its local header disclosure presents the same fully accessible explanation.",
       "retention": "Mounted UI lifetime only; same existing expansion state. Policy/money/safety/consent/rights copy is excluded from collapse; no new record or provider flow.",
       "source": "apps/mobile/src/frontend/components/UI/MoreText.tsx"
+    },
+    {
+      "id": "public-profile-photo-preview",
+      "owner": "DESIGN",
+      "purpose": "Enlarge the same photo that the current athlete profile may already display.",
+      "data": "Current profile subject, display name and already authorized avatar URL; no new lookup or signing operation.",
+      "destination": "Mounted public profile photo viewer. Owner editing still uses the existing picker.",
+      "retention": "Dismissed on subject/source change or close. No copied media, logging or persistent state.",
+      "source": "apps/mobile/src/frontend/components/Profile/ProfileAvatarPicker.tsx"
+    },
+    {
+      "id": "owner-post-description-edit",
+      "owner": "HIGHLIGHTS",
+      "purpose": "Change a Highlight or Beyond description using the exact current author and expected value or revision.",
+      "data": "Existing actor/profile IDs, post ID and current title or revision; proposed text and checked RPC receipt. No copied media or new auth storage.",
+      "destination": "Existing Highlight or Beyond row through its owner RPC; compatible mounted reel lists and current Beyond review queue.",
+      "retention": "Unsaved input lives in the open editor only. Confirmed values use existing post retention; no offline queue, silent retry or caption telemetry.",
+      "source": "apps/mobile/src/frontend/lib/postCaptions.ts"
     }
   ]
 }
