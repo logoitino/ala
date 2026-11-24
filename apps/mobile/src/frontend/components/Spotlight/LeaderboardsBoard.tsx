@@ -140,7 +140,7 @@ export function LeaderboardsBoard({ boards, loading, error, onRetry, onOpenAthle
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
-        <Text style={styles.section}>Boards · This week</Text>
+        <Text accessibilityRole="header" style={styles.section}>Boards · This week</Text>
         {loading && boards ? <ActivityIndicator size="small" color={FOCAL.goldInk} /> : null}
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -289,7 +289,6 @@ const styles = StyleSheet.create({
   // #1 gets the dark "athlete of the week" card; gold marks the award, never body text on light.
   rowFirst: {
     backgroundColor: colors.videoSurface,
-    borderColor: colors.videoSurface,
     paddingVertical: 14,
   },
   rank: {

@@ -43,7 +43,7 @@ export function ScreenHeading({ kicker, title, lede, compact = false, accent }: 
   const fan = !/^\/(operator|parent|athlete|booster|sponsor|admin)(\/|$)/.test(path ?? '');
   const mist = Object.values(TAB_ACCENTS).find(value => value.color === mark)?.mist ?? FOCAL.mistGold;
   const kickerBadge = kicker ? (
-    <View style={[styles.kickerRow, fan && styles.fanKickerBadge, fan && { backgroundColor: mist }]}>
+    <View style={[styles.kickerRow, fan && styles.fanKickerBadge, fan && styles.fanKickerInRow, fan && { backgroundColor: mist }]}>
       {fan ? <SportIcon sport={sport} color={mark} size={16} /> : <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.accentDot, { backgroundColor: mark }]} />}
       <Text style={[styles.kicker, compact && styles.kickerCompact, { color: mark }]}>{kicker}</Text>
     </View>
@@ -85,6 +85,8 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   fanTitleFlex: { flexShrink: 1 },
   fanUnderline: { width: 32 },
+  // On the shared title row the badge centres on the title line instead of riding its top edge.
+  fanKickerInRow: { alignSelf: 'center' },
   fanKickerBadge: { alignSelf: 'flex-start', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10, maxWidth: '100%' },
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   accentDot: { width: 5, height: 5, borderRadius: 3 },

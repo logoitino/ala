@@ -87,7 +87,7 @@ export function NotificationInbox({ enabled = true }: { enabled?: boolean }) {
         disabled={locked} accessibilityState={{ disabled: locked }} onPress={() => void state.nextPage()} style={styles.action}>
         <Text style={styles.actionLabel}>Next page</Text>
       </Pressable> : null}
-      <Text style={styles.hint}>Up to 20 notifications per page. Refresh returns to the newest page.</Text>
+      <Text style={styles.hint}>Up to 20 notifications per page. The refresh button returns to the newest page.</Text>
     </> : null}
   </View>;
 }
@@ -109,7 +109,6 @@ const styles = StyleSheet.create({
   action: { minWidth: 44, minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, paddingHorizontal: 8,
     paddingVertical: 4, alignItems: 'center', justifyContent: 'center', flexGrow: 1 },
   actionLabel: { color: colors.primary, ...TYPE.body,  ...figtree('700') },
-  selected: { minHeight: 44, borderColor: colors.text, backgroundColor: FOCAL.mistJade },
   error: { ...figtree('400'), color: colors.danger, ...TYPE.body,  },
   empty: { paddingVertical: 4, gap: 4 },
   item: { borderTopWidth: 1, borderColor: colors.border, paddingTop: 4, gap: 4 },

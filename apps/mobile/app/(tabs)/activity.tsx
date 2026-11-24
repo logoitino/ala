@@ -251,10 +251,12 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     gap: 8,
   },
+  // With the 8pt panel gap: 12pt above, 6pt below (UX-19 spec).
   sectionTitle: {
     ...SECTION_HEADING,
     color: colors.text,
-    marginTop: 6,
+    marginTop: 4,
+    marginBottom: -2,
   },
   // UX-19: one card holds every update; rows are separated by hairlines instead of each carrying its own border.
   group: {

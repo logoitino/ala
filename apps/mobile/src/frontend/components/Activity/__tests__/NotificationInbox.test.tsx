@@ -126,3 +126,8 @@ it('keeps the card compact: 10pt vertical and 12pt horizontal padding', async ()
   expect(StyleSheet.flatten(card!.props.style)).toMatchObject({ paddingVertical: 10, paddingHorizontal: 12 });
 });
 
+// UX-19 follow-up M7: Refresh is icon-only, so the paging hint names the button rather than the old visible word.
+it('describes paging without relying on a visible Refresh label', async () => {
+  await render(<NotificationInbox />);
+  expect(screen.getByText('Up to 20 notifications per page. The refresh button returns to the newest page.')).toBeTruthy();
+});

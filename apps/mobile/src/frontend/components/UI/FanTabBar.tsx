@@ -231,7 +231,7 @@ export function FanTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
           pointerEvents="none"
           style={[
             styles.indicator,
-            { backgroundColor: dark ? 'rgba(46,229,157,0.16)' : barAccent.mist },
+            { backgroundColor: dark ? `${FOCAL.neonJade}29` /* neon jade at 16% */ : barAccent.mist },
             indicatorStyle,
           ]}
         />

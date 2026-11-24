@@ -200,7 +200,8 @@ it('groups Activity updates in one card and keeps each row its own button', asyn
   for (const label of ['You sent a gift. ALA Hawks', 'An athlete thanked you. Mālo!']) {
     expect(withinTree(group).getByLabelText(label).props.accessibilityRole).toBe('button');
   }
-  expect(StyleSheet.flatten(screen.getByRole('header', { name: 'Your updates' }).props.style).fontFamily).toBe(FONT.displayBold);
+  // 8pt panel gap + marginTop 4 / marginBottom -2 gives the spec's 12pt above and 6pt below (UX-19 follow-up M8).
+  expect(StyleSheet.flatten(screen.getByRole('header', { name: 'Your updates' }).props.style)).toMatchObject({ fontFamily: FONT.displayBold, marginTop: 4, marginBottom: -2 });
 });
 
 it('keeps Local pending and error states separate from published empty games', async () => {

@@ -1,3 +1,4 @@
+/** Spotlight Boards: athlete rows open profiles, load failures offer retry, and UX-19 keeps board chips on one scrolling row under the shared heading. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 import { FONT } from '@/theme/fonts';
@@ -70,7 +71,8 @@ describe('LeaderboardsBoard', () => {
     let node = screen.getByRole('tab', { name: 'Most hyped' }).parent;
     while (node && !(node.props as { horizontal?: boolean }).horizontal) node = node.parent;
     expect(node?.props.horizontal).toBe(true);
-    const heading = StyleSheet.flatten(screen.getByText('Boards · This week').props.style);
+    // UX-19 follow-up M8: the shared heading is announced as a heading here too.
+    const heading = StyleSheet.flatten(screen.getByRole('header', { name: 'Boards · This week' }).props.style);
     expect(heading.fontFamily).toBe(FONT.displayBold);
     expect(heading.textTransform).toBeUndefined();
   });

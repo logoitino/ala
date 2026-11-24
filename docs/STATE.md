@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — UX-19 compact, consistent fan tabs and frosted adaptive fan bar (local).
+**Last updated:** 2026-11-23 — UX-19 review follow-ups (tests, tokens, heading spacing, search input).
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-23 — UX-19 follow-ups:** Closed the review's minor items: Reduce Motion/Transparency behaviour tests, Home pill from the neon-jade token, centred kicker badge, unused styles removed, Local search input without lineHeight, icon-only Refresh hint copy, 12/6 heading spacing, Boards heading role. One-line Spotlight subtitle tried and reverted (taller with its More row). Enlarged-text capture needs a phone. [UX-19](agents/UX-19.md).
 
 - **2026-11-23 — UX-19 compact fan tabs (local, branch `claude/ux-19-compact-panels`):** Owner asked for smaller consistent panels, tighter notifications, a nav bar that blends with its background and matching fonts across tabs. One `SECTION_HEADING` token (16/21 Bricolage Bold) on every fan tab; compact fan `ScreenHeading`; `FanTabBar` is one frosted bar (dark glass on Home, light elsewhere) with a sliding pill and a fade; Notifications use a segment track and icon Refresh; Activity rows grouped in one card; Local hub track, borderless chips and shorter score cards; Spotlight boards on one scrolling row; Profile Story/Share compact. Text stays 14/12; 44pt targets kept. Full local `pnpm check` (332 suites / 3135 mobile tests, 217 portal). Native feel and device large-text checks remain the owner's. Record: [UX-19](agents/UX-19.md).
 

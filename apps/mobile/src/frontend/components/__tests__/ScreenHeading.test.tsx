@@ -34,3 +34,12 @@ it('draws a 32pt fan underline and keeps the role heading unchanged', async () =
   expect(underlineWidth()).toBe(48);
   expect(rowHolding('Parent HQ')).toBe(false);
 });
+
+// UX-19 follow-up M4: the kicker badge centres on the title line.
+it('centres the fan kicker badge on the title line', async () => {
+  mockPath = '/activity';
+  await render(<ScreenHeading kicker="Friday" title="Activity" />);
+  let badge = screen.getByText('Friday').parent;
+  while (badge && StyleSheet.flatten(badge.props.style)?.paddingHorizontal !== 7) badge = badge.parent;
+  expect(StyleSheet.flatten(badge!.props.style).alignSelf).toBe('center');
+});

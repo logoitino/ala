@@ -540,7 +540,8 @@ const styles = StyleSheet.create({
   search: {
     flex: 1,
     minWidth: 0,
-    ...TYPE.body,
+    // Single-line input: fontSize only — a lineHeight can shift or clip the text vertically on iOS.
+    fontSize: TYPE.body.fontSize,
     ...figtree('400'),
     color: colors.text,
     paddingVertical: 6,
@@ -559,10 +560,12 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   // UX-19: the one section heading every fan tab shares (was a raw 15pt/800 with a green bar).
+  // With the 8pt panel gap: 12pt above, 6pt below (UX-19 spec).
   sectionTitle: {
     ...SECTION_HEADING,
     color: colors.text,
-    marginTop: 6,
+    marginTop: 4,
+    marginBottom: -2,
   },
   hubCopy: {
     ...TYPE.body,

@@ -90,3 +90,12 @@ it('uses the shared section heading and one Local hub track', async () => {
   // The hub track is the Games tab's parent (a plain View tablist is not a queryable accessible element).
   expect(StyleSheet.flatten(screen.getByRole('tab', { name: 'Games' }).parent!.props.style).backgroundColor).toBe(FOCAL.mistJade);
 });
+
+// UX-19 follow-up M6/M8: single-line search keeps 14pt without a lineHeight (iOS clipping); headings sit 12pt above / 6pt below.
+it('keeps the search input free of lineHeight and spaces the heading 12/6', async () => {
+  await render(<LocalTab/>);
+  const input = StyleSheet.flatten(screen.getByLabelText('Search players, schools, or sponsors').props.style);
+  expect(input.fontSize).toBe(14);
+  expect(input.lineHeight).toBeUndefined();
+  expect(StyleSheet.flatten(screen.getByRole('header', { name: 'Live matchups' }).props.style)).toMatchObject({ marginTop: 4, marginBottom: -2 });
+});

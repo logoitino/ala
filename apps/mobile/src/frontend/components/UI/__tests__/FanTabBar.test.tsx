@@ -5,11 +5,14 @@ import type {BottomTabBarProps} from 'expo-router/tabs';
 import {FanTabBar} from '../FanTabBar';
 import {cloneAppRuntime,DEFAULT_APP_RUNTIME} from '@/lib/runtime';
 import {colors} from '@/constants/theme';
+import {FOCAL} from '@/theme/motion';
+import * as Reanimated from 'react-native-reanimated';
 const mockNavigate=jest.fn(),mockEmit=jest.fn(()=>({defaultPrevented:false})),mockUpload=jest.fn();
 const mockRestore=jest.fn(), mockMeasure=jest.fn();
 let mockSoftened=false, mockReduceTransparency=false, mockReduceMotion=false;
 let mockLive=cloneAppRuntime(DEFAULT_APP_RUNTIME);
 jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
+jest.mock('expo-blur',()=>{const {View:MockView}=jest.requireActual('react-native');return {BlurView:(p:object)=><MockView testID="fan-dock-blur" {...p}/>};});
 jest.mock('@/context/AppRuntimeContext',()=>({useAppRuntime:()=>({live:mockLive})}));
 jest.mock('@/context/UploadSheetContext',()=>({useUploadSheet:()=>({openUpload:mockUpload})}));
 jest.mock('@/context/FanNavigationContext',()=>({useFanNavigation:()=>({restore:mockRestore}),useFanDockSoftened:()=>mockSoftened,useMeasureFanDock:()=>mockMeasure}));
@@ -120,3 +123,40 @@ it('keeps Home labels readable on dark glass, even while softened',async()=>{
  expect(StyleSheet.flatten(screen.getByTestId('fan-dock-backdrop').props.style).opacity).toBeGreaterThanOrEqual(0.9);
 });
 
+// UX-19 follow-up M1: Reduce Motion must jump the pill (no spring), and Reduce Transparency must render no blur.
+const layoutSlots=async()=>{
+ for(const name of ['Home','Activity','Spotlight','Profile']){
+  const slot=screen.getByRole('tab',{name}).parent!;
+  const index=['Home','Activity','Spotlight','Profile'].indexOf(name);
+  await fireEvent(slot,'layout',{nativeEvent:{layout:{x:index*78,y:0,width:78,height:44}}});
+ }
+};
+it('slides the pill with a spring normally and jumps it under Reduce Motion',async()=>{
+ const spring=jest.spyOn(Reanimated,'withSpring');
+ const view=await render(<FanTabBar {...props}/>);
+ await layoutSlots();
+ spring.mockClear();
+ await view.rerender(<FanTabBar {...onActivity}/>);
+ expect(spring).toHaveBeenCalled();
+ await view.unmount();
+ mockReduceMotion=true;
+ const reduced=await render(<FanTabBar {...props}/>);
+ await layoutSlots();
+ spring.mockClear();
+ await reduced.rerender(<FanTabBar {...onActivity}/>);
+ expect(spring).not.toHaveBeenCalled();
+ spring.mockRestore();
+});
+it('renders no blur layer under Reduce Transparency',async()=>{
+ const {unmount}=await render(<FanTabBar {...props}/>);
+ expect(screen.queryByTestId('fan-dock-blur',{includeHiddenElements:true})).not.toBeNull();
+ await unmount();
+ mockReduceTransparency=true;
+ await render(<FanTabBar {...props}/>);
+ expect(screen.queryByTestId('fan-dock-blur',{includeHiddenElements:true})).toBeNull();
+});
+// M2: the dark pill derives from the neon jade token.
+it('tints the Home pill from the neon jade token',async()=>{
+ await render(<FanTabBar {...props}/>);
+ expect(StyleSheet.flatten(screen.getByTestId('fan-dock-pill',{includeHiddenElements:true}).props.style).backgroundColor).toBe(`${FOCAL.neonJade}29`);
+});
