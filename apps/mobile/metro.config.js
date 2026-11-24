@@ -13,6 +13,35 @@ const config = getDefaultConfig(projectRoot);
 const localModules = [path.resolve(projectRoot, 'node_modules'), path.resolve(workspaceRoot, 'node_modules')];
 
 /**
+ * Packages Metro must always find under pnpm (hierarchical lookup is off). Stripe.js is only imported from
+ * `stripe.web.ts` / Checkout web hosts; without an explicit map Expo web fails with "Unable to resolve module
+ * @stripe/stripe-js" when the installer hoists the real files under `node_modules/.pnpm`.
+ */
+const pinnedModules = [
+  '@stripe/stripe-js',
+  '@stripe/react-stripe-js',
+  'expo-router',
+  'expo',
+  'react-native',
+  'react',
+];
+
+/**
+ * Resolve a workspace package to its real install folder (follows pnpm links). Missing packages are skipped.
+ */
+function resolvePackageRoot(name) {
+  for (const dir of localModules) {
+    const entry = path.join(dir, ...name.split('/'));
+    try {
+      return fs.realpathSync(entry);
+    } catch {
+      // Try the next node_modules root.
+    }
+  }
+  return null;
+}
+
+/**
  * Git worktrees (for example `.claude/worktrees/<name>`) do not get their own install: their `node_modules` entries are
  * symlinks into the main checkout's `node_modules`, which sits outside this workspace root. Metro follows symlinks to
  * real paths and refuses files outside `watchFolders` ("Unable to resolve module …/expo-router/entry"), so this adds
@@ -24,8 +53,8 @@ function linkedModuleRoots() {
   const inside = (dir) => dir === realWorkspace || dir.startsWith(realWorkspace + path.sep);
   const found = [];
   for (const dir of localModules) {
-    for (const probe of ['expo-router', 'expo', 'react-native', 'react']) {
-      const entry = path.join(dir, probe);
+    for (const probe of pinnedModules) {
+      const entry = path.join(dir, ...probe.split('/'));
       try {
         // The folder holding the link target (e.g. the main checkout's apps/mobile/node_modules).
         if (fs.lstatSync(entry).isSymbolicLink()) found.push(fs.realpathSync(path.dirname(path.resolve(dir, fs.readlinkSync(entry)))));
@@ -42,8 +71,18 @@ function linkedModuleRoots() {
 }
 const linked = linkedModuleRoots();
 
+const extraNodeModules = {};
+for (const name of pinnedModules) {
+  const root = resolvePackageRoot(name);
+  if (root) extraNodeModules[name] = root;
+}
+
 config.watchFolders = [workspaceRoot, ...linked];
 config.resolver.nodeModulesPaths = [...new Set([...localModules, ...linked])];
+config.resolver.extraNodeModules = {
+  ...(config.resolver.extraNodeModules || {}),
+  ...extraNodeModules,
+};
 config.resolver.disableHierarchicalLookup = true;
 
 module.exports = config;

@@ -74,6 +74,10 @@ pnpm install
 ```
 
 `shamefully-hoist=true` is set in `.npmrc` so Expo Metro resolves workspace deps cleanly.
+`apps/mobile/metro.config.js` also pins `@stripe/stripe-js` / `@stripe/react-stripe-js` for Expo web
+under pnpm. After pulling, run `pnpm install` from the repo root, then restart Metro with a clear
+cache (`pnpm mobile -- --clear` or `npx expo start -c` from `apps/mobile`) if the browser shows
+`Unable to resolve module @stripe/stripe-js`.
 
 Mobile `postinstall` copies CanvasKit WASM into `apps/mobile/public/` for Expo web Skia. Native Expo Go does not need that file.
 
