@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-23 — UX-19: inline More toggle parent is 44pt (Codex P2 hit-target fix).
+**Last updated:** 2026-11-23 — UX-19: security:infra currency after More hit-target fix.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
