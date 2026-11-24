@@ -1,5 +1,16 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
 
+## 2026-11-24 — Public profiles and quieter video overlays (local)
+
+- Tap a visible public profile photo to open it. Profiles with videos put Highlights before Story for visitors.
+- Smaller video names and no duplicate reaction badges beneath them. Seki, Aura and Flex remain usable on the reaction rail.
+- Highlight uploaders and Beyond post authors can edit their own descriptions. Edited Beyond descriptions return to review. [Local migration and verification](docs/agents/POST-EDIT-01.md).
+
+## 2026-11-23 — Tighter Activity panels (local)
+
+- Notifications has a compact header and keeps its full explanation under More. Inbox, Archived, and Refresh retain separate 44pt controls.
+- Your updates uses shorter gift rows. Time and exact amount sit beside supporting text when there is room and wrap below when needed. [UX-20](docs/agents/UX-20.md).
+
 ## 2026-11-23 — Compact, consistent fan tabs (local)
 
 - One section heading style across Home, Activity, Local, Spotlight and Profile; shorter page headers.

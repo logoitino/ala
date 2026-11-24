@@ -2,6 +2,7 @@
  * Lovable-outline desktop Highlight card (WEB-DESKTOP-01 Phase 4): poster, title, Why this clip,
  * Cheer (Seki) and Send a gift. Real clips only — no SAMPLE placeholders in the live app.
  * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ * UX-21 uses a compact title/play decoration while allowing the real identity and school to wrap.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -178,11 +179,11 @@ export function DesktopHighlightCard({
           <Text style={styles.avatarText}>{initial}</Text>
         </View>
         <View style={styles.headerText}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text style={styles.name}>
             {athlete}
           </Text>
           {meta ? (
-            <Text style={styles.meta} numberOfLines={1}>
+            <Text style={styles.meta}>
               {meta}
             </Text>
           ) : null}
@@ -201,7 +202,7 @@ export function DesktopHighlightCard({
           <View style={styles.posterFallback} />
         )}
         <View style={styles.playBadge} pointerEvents="none">
-          <Ionicons name={isPhotoStory(clip) ? 'images' : 'play'} size={28} color={colors.primary} />
+          <Ionicons name={isPhotoStory(clip) ? 'images' : 'play'} size={20} color={colors.primary} />
         </View>
       </Pressable>
 
@@ -298,9 +299,9 @@ const styles = StyleSheet.create({
     backgroundColor: FOCAL.jadeInk,
   },
   playBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.92)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -311,7 +312,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FONT.bold,
-    ...TYPE.title,
+    ...TYPE.section,
     color: colors.text,
   },
   why: {

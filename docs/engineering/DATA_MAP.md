@@ -11,11 +11,11 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Views | 3 |
 | Storage buckets | 6 |
 | Feature switches read by the fan app | 42 of 42 |
-| Database functions | 613 (253 used by hand, 63 trigger functions) |
+| Database functions | 616 (256 used by hand, 64 trigger functions) |
 | Tables reached by at least one screen or server route | 126 of 129 |
-| Code files that read or write the database | 86 |
+| Code files that read or write the database | 87 |
 | Exported symbols nothing imports | 46 (0 proposed for archive, 46 kept on purpose) |
-| Operational data exports | 26 |
+| Operational data exports | 28 |
 | Rule failures | 0 |
 
 ## Owners
@@ -37,7 +37,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | `DONATION_THANKS` | `donation_thanks` | 3 |
 | `DRIP` | `shop_orders`, `shop_products` | 0 |
 | `FILMER_REWARDS` | `filmer_props`, `filmer_rewards` | 4 |
-| `HIGHLIGHTS` | `beyond_admin_events`, `beyond_media`, `beyond_posts`, `beyond_reports`, `beyond_settings`, `beyond_submission_quota`, `challenge_athlete_settings`, `challenge_badges`, `challenge_mutes`, `challenge_nudges`, `challenge_response_quota`, `challenge_responses`, `reel_hype_votes`, `reels`, `safety_label_events`, `saved_reels`, `user_feed_prefs`, `reels_feed` | 58 |
+| `HIGHLIGHTS` | `beyond_admin_events`, `beyond_media`, `beyond_posts`, `beyond_reports`, `beyond_settings`, `beyond_submission_quota`, `challenge_athlete_settings`, `challenge_badges`, `challenge_mutes`, `challenge_nudges`, `challenge_response_quota`, `challenge_responses`, `reel_hype_votes`, `reels`, `safety_label_events`, `saved_reels`, `user_feed_prefs`, `reels_feed` | 61 |
 | `INCIDENT_TRIAGE` | `support_reviews` | 1 |
 | `LEDGER` | `company_revenue_logs`, `stripe_webhook_events`, `tips` | 7 |
 | `LOCAL` | `games` | 3 |
@@ -97,7 +97,9 @@ These operator tools are outside the app import graph. Source registration recor
 | `selected-roster-auth-plumbing` | `SESSION_SECURITY` | Optional player UUID or null no-new-choice; undefined retains existing legacy caller behavior. No new token/role authority, public enumeration, table field, verification or linkage grant.; UX17 carries an optional exact existing roster choice through the existing athlete-onboarding API, with the same captured actor and session lifetime. | Existing useAuth completeAthleteOnboarding to teams saveAthleteOnboardingRemote and existing pending claim RPC; profile publication remains current-actor guarded. | Existing provider/view lifetime; no new selection persistence or credential/logging path. Existing server claim coalesce retains earlier targets when no new target is submitted. | `apps/mobile/src/frontend/context/AuthContext.tsx` |
 | `school-roster-directory-view` | `ROSTERS` | Existing minimal DirectorySchool/DirectoryPlayer pages, exact school UUID/name and raw team label, draft search and local request generation only. Loaded page counts do not describe verified accounts or total membership.; UX17 consuming Local view exposes bounded existing public catalog and roster with exact-record links; Root outside Codex DataGov classification preserves roster/account separation. | Local/SchoolDirectory render and existing exact-roster userProfileHref; thin Expo route honors tabs.local pause before mounting readers. | Mounted view memory only. Search, school, actor or unmount invalidates old requests/actions; Back reuses only same scope pages. No persistence, telemetry, schema or media copy. | `apps/mobile/src/frontend/components/Local/SchoolDirectory.tsx` |
 | `existing-roster-choice-view` | `PROFILE` | Bounded public roster rows and optional exact UUID selected under current school/name/account/modal lifetime. Search reads use existing captured actor client; no private profile or guardian enumeration.; UX17 optional existing-roster choice during current athlete setup, distinct from verified account linkage; Root outside Codex DataGov reviews current actor/view selection and failure recovery. | Existing Auth completeAthleteOnboarding optional argument and pending claim workflow; explicit null means no new choice and does not clear an earlier server pending target. | Mounted sheet state only; invalidate changed school/name/actor/view. Existing server claim lifecycle unchanged. No new account/identity rows, persistence or automatic profiles.player_id write. | `apps/mobile/src/frontend/components/Profile/RoleSwitcherModal.tsx` |
-| `notification-inline-explanation` | `DESIGN` | Existing explanatory string and ephemeral More/Less expanded boolean; new optional inlineToggle layout boolean defaultsfalse. No notification IDs, account fields, telemetry, persistence or source query.; UX18 optional ordinary explanation layout saves a separate disclosure row in NotificationInbox; Root outside Codex DataGov classifies UI-only modifier. | Existing UI/MoreText with NotificationInbox opt-in; all other consumers retain default stacked layout and existing full accessible text. | Mounted UI lifetime only; same existing expansion state. Policy/money/safety/consent/rights copy is excluded from collapse; no new record or provider flow. | `apps/mobile/src/frontend/components/UI/MoreText.tsx` |
+| `notification-inline-explanation` | `DESIGN` | Existing explanatory string and ephemeral More/Less expanded boolean; new optional inlineToggle layout boolean defaultsfalse. No notification IDs, account fields, telemetry, persistence or source query.; UX18 optional ordinary explanation layout saves a separate disclosure row in NotificationInbox; Root outside Codex DataGov classifies UI-only modifier. | Existing UI/MoreText keeps the optional layout and default stacked behavior. UX20 NotificationInbox no longer opts in; its local header disclosure presents the same fully accessible explanation. | Mounted UI lifetime only; same existing expansion state. Policy/money/safety/consent/rights copy is excluded from collapse; no new record or provider flow. | `apps/mobile/src/frontend/components/UI/MoreText.tsx` |
+| `public-profile-photo-preview` | `DESIGN` | Current profile subject, display name and already authorized avatar URL; no new lookup or signing operation.; Enlarge the same photo that the current athlete profile may already display. | Mounted public profile photo viewer. Owner editing still uses the existing picker. | Dismissed on subject/source change or close. No copied media, logging or persistent state. | `apps/mobile/src/frontend/components/Profile/ProfileAvatarPicker.tsx` |
+| `owner-post-description-edit` | `HIGHLIGHTS` | Existing actor/profile IDs, post ID and current title or revision; proposed text and checked RPC receipt. No copied media or new auth storage.; Change a Highlight or Beyond description using the exact current author and expected value or revision. | Existing Highlight or Beyond row through its owner RPC; compatible mounted reel lists and current Beyond review queue. | Unsaved input lives in the open editor only. Confirmed values use existing post retention; no offline queue, silent retry or caption telemetry. | `apps/mobile/src/frontend/lib/postCaptions.ts` |
 
 ## Tables and views
 
@@ -116,7 +118,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `RUNTIME_CONFIG` · Draft and published app switches, copy and catalogs (Publish to app).
 
 - Written by: `@/lib/runtime.ts`; database functions: `admin_beyond_set_enabled`, `patch_app_runtime_draft`, `publish_app_runtime`
-- Read by: `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `@/lib/adminReports.ts`, `@/lib/runtime.ts`; database functions: `beyond_enabled`, `friend_requests_enabled`, `guardian_links_enabled`, `monetization_tips_enabled`, `prepare_tip_payment_context`
+- Read by: `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `@/lib/adminReports.ts`, `@/lib/runtime.ts`; database functions: `beyond_edit_caption`, `beyond_enabled`, `friend_requests_enabled`, `guardian_links_enabled`, `monetization_tips_enabled`, `prepare_tip_payment_context`
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +59 more
 
 ### `athlete_birthdates`
@@ -184,8 +186,8 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 **Owner:** `HIGHLIGHTS` · Account-owned immutable revisioned category/caption/audience/review/rights-safety version-time and cleanup state. Pending private, approved exact audience, reported held immediately; erasure anonymizes while retaining cleanup mapping.
 
-- Written by: —; database functions: `admin_beyond_cleanup_finish`, `admin_beyond_erase_profile`, `admin_beyond_retention`, `admin_beyond_review`, `beyond_finalize`, `beyond_profile_erasure` +5 more
-- Read by: —; database functions: `admin_beyond_cleanup_targets`, `admin_beyond_posts`, `admin_beyond_status`, `beyond_can_view`, `beyond_export_my_data`, `beyond_my_posts` +5 more
+- Written by: —; database functions: `admin_beyond_cleanup_finish`, `admin_beyond_erase_profile`, `admin_beyond_retention`, `admin_beyond_review`, `beyond_edit_caption`, `beyond_finalize` +6 more
+- Read by: —; database functions: `admin_beyond_cleanup_targets`, `admin_beyond_posts`, `admin_beyond_status`, `beyond_can_view`, `beyond_edit_caption`, `beyond_export_my_data` +6 more
 - Triggers: `beyond_identity_removed → beyond_identity_removed`, `beyond_posts_guard_coach_label → guard_coach_label`
 - Screens: `/admin/highlights`, `/beyond`
 
@@ -724,7 +726,7 @@ Writers and readers are app / portal / Edge Function files that call the table d
 **Owner:** `PROFILE` · Account profiles, roles and settings; trusted Connect adapters conditionally persist the own-account binding/onboarding/capability flags before links. These flags do not assert identity/TIN verification. MULTISPORT-01 athlete_sports_revision plus trusted athlete_sports_managed opt-in marker guard atomic participation/primary corrections while preserving verified school/player/guardian identities.
 
 - Written by: `@/context/AuthContext.tsx`, `@/lib/adminCatalog.ts`, `@/lib/auth.ts`, `@/lib/legal.ts`, `@/lib/teams.ts`, `@/services/MediaUploadService.ts`; database functions: `add_user_aura`, `add_user_role`, `admin_decide_payout_override`, `admin_decide_verification`, `admin_revoke_verification`, `admin_set_birth_month` +13 more
-- Read by: `portal/lib/authz.ts`, `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `apps/mobile/src/backend/api/createPayout.ts`, `@/context/AuthContext.tsx`, `@/lib/admin.ts` +8 more; database functions: `admin_add_athlete_game_log`, `admin_add_school_confirmer`, `admin_athlete_sport_usage`, `admin_beyond_erase_profile`, `admin_challenge_nudge_senders`, `admin_hold_challenge_sender` +141 more
+- Read by: `portal/lib/authz.ts`, `portal/lib/profile.ts`, `portal/lib/softWall.ts`, `apps/mobile/src/backend/api/createPayout.ts`, `@/context/AuthContext.tsx`, `@/lib/admin.ts` +8 more; database functions: `admin_add_athlete_game_log`, `admin_add_school_confirmer`, `admin_athlete_sport_usage`, `admin_beyond_erase_profile`, `admin_challenge_nudge_senders`, `admin_hold_challenge_sender` +142 more
 - Triggers: `guard_profiles_admin_escalation → guard_profiles_admin_escalation`, `guard_profiles_verification → guard_profiles_verification`, `profiles_privacy_guard → guard_profiles_privacy`, `profiles_new_account_rules → profiles_apply_new_account_rules`, `profiles_age_guard → guard_profiles_age`, `profiles_payout_flags_guard → guard_payout_flags` +8 more
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +74 more
 
@@ -802,10 +804,10 @@ Writers and readers are app / portal / Edge Function files that call the table d
 
 **Owner:** `HIGHLIGHTS` · Highlights: clips and photo stories with their tags and counters. MULTISPORT-01 optional explicit recorded sport on initial video/photo insert; legacy null never inferred, uploader cannot retag historical sport.
 
-- Written by: `@/lib/adminCatalog.ts`, `@/lib/crew.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `admin_set_highlight_sport`, `begin_failed_photo_story_cleanup`, `block_user`, `clear_reel_hype`, `close_under_13_account`, `confirm_reel_player_tag` +10 more
-- Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/photoStories.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `admin_challenge_post_counts`, `admin_get_highlight_sport`, `athlete_highlight_views`, `begin_failed_photo_story_cleanup`, `can_delete_failed_photo_story_object`, `can_read_reel_vault` +32 more
+- Written by: `@/lib/adminCatalog.ts`, `@/lib/crew.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `admin_set_highlight_sport`, `begin_failed_photo_story_cleanup`, `block_user`, `clear_reel_hype`, `close_under_13_account`, `confirm_reel_player_tag` +11 more
+- Read by: `@/lib/admin.ts`, `@/lib/adminCatalog.ts`, `@/lib/photoStories.ts`, `@/lib/reels.ts`, `@/services/MediaUploadService.ts`; database functions: `admin_challenge_post_counts`, `admin_get_highlight_sport`, `athlete_highlight_views`, `begin_failed_photo_story_cleanup`, `can_delete_failed_photo_story_object`, `can_read_reel_vault` +33 more
 - Removed by: `finish_failed_photo_story_cleanup`
-- Triggers: `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_filmer_rewards → reels_filmer_rewards`, `reels_reset_photo_count → reels_reset_photo_count`, `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_guard_coach_label → guard_coach_label`, `reels_audit_coach_label → audit_coach_label_on_insert` +2 more
+- Triggers: `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_filmer_rewards → reels_filmer_rewards`, `reels_reset_photo_count → reels_reset_photo_count`, `reels_apply_tag_defaults → reels_apply_tag_defaults`, `reels_guard_coach_label → guard_coach_label`, `reels_audit_coach_label → audit_coach_label_on_insert` +3 more
 - Screens: `/`, `/activity`, `/admin`, `/admin/analytics`, `/admin/athletes`, `/admin/audience`, `/admin/books`, `/admin/boosters`, `/admin/catalog`, `/admin/departments` +60 more
 
 ### `safety_label_events`
@@ -1372,6 +1374,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `beyond_actor` | `HIGHLIGHTS` | By hand: Private current nonclosed canonical profile and supplied expected actor match; only selected publicreads allow unauthenticated guestnull. | — | `profiles` |
 | `beyond_admin` | `HIGHLIGHTS` | By hand: Private current nonclosed admin authority plus expected canonical actor check. | — | — |
 | `beyond_can_view` | `HIGHLIGHTS` | By hand: Private exact owner/admin/guardian or accepted approved audience check with current blocks/privacy/age and switch. | — | `beyond_posts`, `profiles` |
+| `beyond_edit_caption` | `HIGHLIGHTS` | By hand: Author-only revision-checked caption replacement. A changed approved/pending post returns to the existing review queue without changing media, audience or rights. | `beyond_posts` | `app_runtime_config`, `beyond_posts` |
 | `beyond_enabled` | `HIGHLIGHTS` | By hand: Reads sole published contribution enable; disabled/missing meansfalse. | — | `app_runtime_config` |
 | `beyond_export_my_data` | `HIGHLIGHTS` | By hand: Bounded section/cursor own-data export for posts/reports/quota; server canonical actorbinding. | — | `beyond_posts`, `beyond_reports`, `beyond_submission_quota` |
 | `beyond_finalize` | `HIGHLIGHTS` | By hand: Exact existing reserved owned-file metadata validation and idempotent pending submission; actual media content review remains required. | `beyond_posts` | `beyond_media` |
@@ -1443,12 +1446,13 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `create_rally` | `RALLY` | `@/lib/rallies.ts` | `rallies` | `profiles` |
 | `crew_follow_blocked` | `PROFILE` | `sql:RLS policy`, `sql:check constraint`, `sql:toggle_crew_follow` | — | `profiles` |
 | `current_payee_check` | `CONNECT` | `sql:payee_missing_checks` | — | `payee_verifications` |
-| `current_user_role` | `PROFILE` | `sql:RLS policy`, `sql:add_user_role`, `sql:admin_add_athlete_game_log` +59 more | — | `profiles` |
+| `current_user_role` | `PROFILE` | `sql:RLS policy`, `sql:add_user_role`, `sql:admin_add_athlete_game_log` +60 more | — | `profiles` |
 | `custodial_role` | `ROSTERS` | `sql:RLS policy`, `sql:decide_custodial_withdrawal`, `sql:get_custodial_summary` +2 more | — | `players`, `profiles` |
 | `decide_custodial_withdrawal` | `CUSTODIAL` | `@/lib/custodial.ts` | `custodial_withdrawals` | `profiles` |
 | `delete_sport_config` | `BACKEND` | `@/lib/sports.ts`, `sql:check constraint` | — | — |
 | `disbursements_paid_at` | `BACKEND` | `trigger:disbursements_paid_at_bu on disbursements` | — | — |
 | `disbursements_paid_final` | `BACKEND` | `trigger:disbursements_paid_final on disbursements` | — | — |
+| `edit_reel_caption` | `HIGHLIGHTS` | By hand: Authenticated uploader only with exact current title, active account and editable reel. Change only reels.title; removed and flagged rows cannot be edited. | `reels` | `profiles`, `reels` |
 | `emit_notification_event` | `NOTIFICATIONS` | By hand: Recipient/source-authorized notification RPC or internal helper; server category/channel pauses, bounded access and current identity are enforced. SQL source written; engine/hosted execution unverified. | — | — |
 | `end_guardian_link` | `PROFILE` | `@/lib/minors.ts` | — | `guardian_links` |
 | `enforce_minor_consent` | `PROFILE` | `sql:apply_teen_defaults`, `sql:close_guardian_link`, `sql:record_guardian_consent` +3 more | `guardian_approval_requests` | `profiles` |
@@ -1548,6 +1552,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `guard_profiles_age` | `BACKEND` | `trigger:profiles_age_guard on profiles` | — | — |
 | `guard_profiles_privacy` | `BACKEND` | `trigger:profiles_privacy_guard on profiles` | — | — |
 | `guard_profiles_verification` | `BACKEND` | `trigger:guard_profiles_verification on profiles` | — | — |
+| `guard_reel_caption_edit` | `HIGHLIGHTS` | By hand: Private trigger prevents participant direct title edits from bypassing caption validation and lifecycle while preserving existing admin correction. | — | — |
 | `guard_reel_recorded_sport` | `HIGHLIGHTS` | By hand: Trigger validates explicit active recorded sport on initial upload; historical corrections admin-only. | — | `sport_configs` |
 | `guard_support_append_only` | `RLS_SECURITY` | By hand: Trigger denies mutation/deletion of retained support evidence. | — | — |
 | `guardian_consent_form_sha256` | `BACKEND` | `sql:record_guardian_consent` | — | — |
@@ -1590,7 +1595,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `moderate_flagged_reel` | `HIGHLIGHTS` | `@/lib/admin.ts`, `@/lib/adminCatalog.ts` | `reels` | `reels` |
 | `monetization_tips_enabled` | `COMMERCE` | By hand: Private trigger/quote lookup of literal published optional-extras flag; missing/nonboolean is OFF. No write, customer grant or gift-credit authority. | — | `app_runtime_config` |
 | `my_claimed_player_id` | `PROFILE` | `sql:get_my_payout_status` | — | `profiles`, `verification_requests` |
-| `my_profile_id` | `PROFILE` | `sql:RLS policy`, `sql:accept_guardian_invite`, `sql:admin_confirm_payee_check` +67 more | — | `profiles` |
+| `my_profile_id` | `PROFILE` | `sql:RLS policy`, `sql:accept_guardian_invite`, `sql:admin_confirm_payee_check` +68 more | — | `profiles` |
 | `my_vouching_school_id` | `PROFILE` | `sql:get_teammates_to_vouch`, `sql:vouch_for_teammate` | — | `profiles`, `verification_requests` |
 | `normalize_team_code` | `BACKEND` | `sql:redeem_team_code`, `sql:team_code_school_key` | — | — |
 | `notification_activate_account` | `AUTH` | By hand: New enrolled account activation producer; confirmed eligible source only, stable key and no returning-login/historical replay. | `notification_account_activations`, `notification_deliveries`, `notification_events` +2 more | `notification_config`, `profiles` |
@@ -1613,7 +1618,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `preview_guardian_invite` | `PROFILE` | `@/lib/minors.ts` | — | `guardian_invites`, `profiles` |
 | `privacy_default_audience` | `BACKEND` | `sql:admin_reset_privacy`, `sql:apply_privacy_settings`, `sql:audience_allows` +4 more | — | — |
 | `privacy_settings_json` | `PROFILE` | `sql:admin_get_privacy`, `sql:apply_privacy_settings`, `sql:get_my_privacy` +2 more | — | `profiles` |
-| `profile_age_band` | `PROFILE` | `sql:RLS policy`, `sql:accept_guardian_invite`, `sql:admin_beyond_review` +58 more | — | `profiles` |
+| `profile_age_band` | `PROFILE` | `sql:RLS policy`, `sql:accept_guardian_invite`, `sql:admin_beyond_review` +59 more | — | `profiles` |
 | `profile_item_visible` | `PROFILE` | `sql:athlete_stats_visible`, `sql:beyond_can_view`, `sql:beyond_legacy_posts` +7 more | — | `profiles` |
 | `profiles_apply_new_account_rules` | `BACKEND` | `trigger:profiles_new_account_rules on profiles` | — | — |
 | `publish_app_runtime` | `RUNTIME_CONFIG` | `@/lib/runtime.ts` | `app_runtime_config` | — |

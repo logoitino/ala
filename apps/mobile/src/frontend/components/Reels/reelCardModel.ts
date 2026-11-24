@@ -1,6 +1,7 @@
 /**
  * `ReelCard` props, the memo comparison that keeps hype taps from re-rendering every mounted card, and the
- * small hype-burst helpers and measured chrome clearances the card shares with its styles
+ * small hype-burst helpers and measured chrome clearances the card shares with its styles. The caption
+ * source participates in memo comparison because display formatting can hide changes to the raw value
  * (split out of ReelCard.tsx for R4-03; behaviour unchanged — the memo wrapper itself stays in ReelCard.tsx).
  */
 
@@ -95,6 +96,7 @@ export function sameReelCardProps(prev: ReelCardProps, next: ReelCardProps): boo
     a.athleteName !== b.athleteName ||
     a.school !== b.school ||
     a.tag !== b.tag ||
+    a.editCaptionSource !== b.editCaptionSource ||
     a.sekiCount !== b.sekiCount ||
     a.auraCount !== b.auraCount ||
     a.flexCount !== b.flexCount ||

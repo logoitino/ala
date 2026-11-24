@@ -1,4 +1,4 @@
-/** Clip identity keeps real roster context, accessible profile access and existing hype behavior. */
+/** Compact clip identity keeps the real reaction rail, roster context and tag states without duplicate story pills. */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { ReelActionOverlay } from '@/components/Reels/ReelActionOverlay';
@@ -46,7 +46,7 @@ describe('ReelActionOverlay hype chips', () => {
     expect(screen.queryByText('FLEX!')).toBeNull();
 
     await fireEvent.press(screen.getByLabelText('Aura 7'));
-    expect(screen.getByText('Seki play')).toBeTruthy();
+    expect(screen.queryByText('Seki play')).toBeNull();
     expect(screen.getByText('burst:aura')).toBeTruthy();
     expect(onReact.mock.calls.map(([kind]) => kind)).toEqual(['flex', 'seki', 'aura']);
   });
@@ -61,18 +61,21 @@ describe('ReelActionOverlay hype chips', () => {
     expect(screen.getByTestId('hype-halo-aura')).toBeTruthy();
     expect(screen.getByTestId('hype-halo-seki')).toBeTruthy();
     expect(screen.queryByTestId('hype-halo-flex')).toBeNull();
-    expect(screen.getByText('You called it')).toBeTruthy();
+    expect(screen.queryByText('You called it')).toBeNull();
   });
 
-  it('tucks the story into icons, and the arrow brings it back', async () => {
-    await renderRail({ seki: true, aura: false, flex: true });
-    expect(screen.getByText('You called it')).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText('Hide the story'));
+  it('keeps selected Seki and Flex on the working rail without repeating their story below the name', async () => {
+    const onReact = jest.fn();
+    await renderRail({ seki: true, aura: false, flex: true }, onReact);
     expect(screen.queryByText('You called it')).toBeNull();
-    expect(screen.getByLabelText('Show the Seki and Flex story')).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText('Show the Seki and Flex story'));
-    expect(screen.getByText('You called it')).toBeTruthy();
-    expect(screen.getByText('Riding with Sione')).toBeTruthy();
+    expect(screen.queryByText('Riding with Sione')).toBeNull();
+    expect(screen.queryByLabelText('Hide the story')).toBeNull();
+    expect(screen.queryByLabelText('Show the Seki and Flex story')).toBeNull();
+    expect(screen.getByTestId('hype-halo-seki')).toBeTruthy();
+    expect(screen.getByTestId('hype-halo-flex')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Remove Seki'));
+    await fireEvent.press(screen.getByLabelText('Remove Flex'));
+    expect(onReact.mock.calls.map(([kind]) => kind)).toEqual(['seki', 'flex']);
   });
 
   it('shows the current photo description above the name for a photo story (UX-05)', async () => {

@@ -1,4 +1,4 @@
-/** Synthetic inbox presentation contracts; actual actor, cutoff and permission checks live in the hook. */
+/** Synthetic inbox presentation contracts, including the compact disclosure and independent refresh action. */
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 import { NotificationInbox } from '../NotificationInbox';
@@ -109,20 +109,28 @@ it('groups Inbox and Archived in one segment track with Refresh as a 44pt icon b
   expect(within(track).getByLabelText('Current notifications')).toBeTruthy();
   expect(within(track).getByLabelText('Archived notifications')).toBeTruthy();
   expect(screen.queryByText('Refresh')).toBeNull();
-  // Refresh sits at the end of the 48pt segment row; More lives in its own 44pt row above.
+  // Refresh sits in the track, separate from the full-size header disclosure.
   const refresh = within(track).getByLabelText('Refresh notifications');
   const style = StyleSheet.flatten(refresh.props.style);
   expect(style).toMatchObject({ minWidth: 44, minHeight: 44 });
   expect(style.marginVertical).toBeUndefined();
-  expect(StyleSheet.flatten(track.props.style).marginTop).toBe(6);
+  expect(within(track).queryByRole('button', { name: /^More about notifications/ })).toBeNull();
   await fireEvent.press(refresh);
   expect(mockReload).toHaveBeenCalledTimes(1);
 });
 
-it('keeps the card compact: 10pt vertical and 12pt horizontal padding', async () => {
+it('opens the full explanation independently of inbox actions and announces expansion', async () => {
   await render(<NotificationInbox />);
-  let card = screen.getByTestId('notification-segments').parent;
-  expect(StyleSheet.flatten(card!.props.style)).toMatchObject({ paddingVertical: 10, paddingHorizontal: 12 });
+  const explanation = 'New connected account updates appear here. Your gift history and invitations stay in their own sections.';
+  const more = screen.getByRole('button', { name: `More about notifications. ${explanation}`, expanded: false });
+  expect(StyleSheet.flatten(more.props.style)).toMatchObject({ minWidth: 44, minHeight: 44 });
+  expect(screen.queryByText(explanation)).toBeNull();
+  await fireEvent.press(more);
+  expect(screen.getByText(explanation).props.numberOfLines).toBeUndefined();
+  await fireEvent.press(screen.getByRole('button', { name: 'Less about notifications', expanded: true }));
+  expect(screen.queryByText(explanation)).toBeNull();
+  expect(mockReload).not.toHaveBeenCalled();
+  expect(mockShow).not.toHaveBeenCalled();
 });
 
 // UX-19 follow-up M7: Refresh is icon-only, so the paging hint names the button rather than the old visible word.

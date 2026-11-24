@@ -1,4 +1,4 @@
-/** Public profile navigation keeps the active route identity and passes privacy-filtered sport/school settings. */
+/** Public profile navigation keeps the active route identity and only opts into preview for its filtered photo. */
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import UserAthleteProfileScreen from '../user/[id]';
 import type { Player, ProfilePublic } from '@/types/database';
@@ -8,6 +8,7 @@ import type { AthleteSportsSnapshot } from '@/lib/athleteSports';
 const firstId = '6bdfe860-3579-4eb0-8f80-1cb2bb702521';
 const secondId = 'bbc57d92-4cfa-4c7b-ae25-fdfc3948af17';
 let mockRouteId = firstId;
+let mockVerificationAvatar: string | null = null;
 const mockPlayers = new Map<string, Promise<{ data: Player | null; error: null }>>();
 const mockProfiles = new Map<string, ProfilePublic>();
 const mockSports = new Map<string, AthleteSportsSnapshot>();
@@ -40,7 +41,7 @@ jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: {
 jest.mock('@/lib/hype', () => ({ hydratePlayerHype: async (player: Player) => player }));
 jest.mock('@/lib/reels', () => ({ fetchReelsForPlayer: async () => [], sortClipsNewestFirst: (rows: unknown[]) => rows }));
 jest.mock('@/lib/verification', () => ({ fetchPlayerVerification: async () => ({
-  status: 'unverified', schoolClaimed: false, avatarUrl: null,
+  status: 'unverified', schoolClaimed: false, avatarUrl: mockVerificationAvatar,
 }) }));
 jest.mock('@/lib/athleteStats', () => ({ fetchAthleteStats: async (_id: string, player: Player, sport: string) => {
   const { emptyAthleteStats } = jest.requireActual('@/data/athleteStats');
@@ -69,6 +70,7 @@ jest.mock('@/components/Filmers/FilmerCard', () => ({ FilmerCard: () => null }))
 jest.mock('@/components/Profile/AthleteProfileView', () => ({ AthleteProfileView: (props: {
   name: string; player: Player; onBacked: (count: number) => void; onDropMalo: () => void; schoolVisible?: boolean; teamName?: string; bio?: string; stats: ReturnType<typeof emptyAthleteStats>;
   primarySport?: string; displaySport?: string | null; sportEntries?: AthleteSportsSnapshot['sports']; onDisplaySportChange?: (sport: string | null) => void;
+  previewAvatar?: boolean;
 }) => {
   const { Text, Pressable } = jest.requireActual('react-native');
   mockRenderedNames.push(props.name);
@@ -79,6 +81,7 @@ jest.mock('@/components/Profile/AthleteProfileView', () => ({ AthleteProfileView
     <Text>{`School visible: ${String(props.schoolVisible)}`}</Text>
     <Text>{`Profile sport: ${props.stats.career.sport}`}</Text>
     <Text>{`Primary sport: ${props.primarySport ?? ''}`}</Text>
+    {props.previewAvatar ? <Text>Can preview current photo</Text> : null}
     {props.sportEntries?.map(entry => <Pressable key={entry.sport} accessibilityRole="button" accessibilityLabel={`View ${entry.sport}`}
       onPress={() => props.onDisplaySportChange?.(entry.sport)}><Text>{entry.sport}</Text></Pressable>)}
     {props.teamName ? <Text>{props.teamName}</Text> : null}
@@ -94,7 +97,18 @@ function deferredPlayer() {
   const promise = new Promise<{ data: Player; error: null }>((yes) => { resolve = yes; });
   return { promise, resolve };
 }
-beforeEach(() => { jest.clearAllMocks(); mockRouteId = firstId; mockPlayers.clear(); mockProfiles.clear(); mockSports.clear(); mockRenderedNames.length = 0; mockSessionGuard = () => true; });
+beforeEach(() => { jest.clearAllMocks(); mockRouteId = firstId; mockVerificationAvatar = null; mockPlayers.clear(); mockProfiles.clear(); mockSports.clear(); mockRenderedNames.length = 0; mockSessionGuard = () => true; });
+
+it.each(['confirmed public photo', 'hidden photo', 'legacy photo'])('does not promote an unconfirmed avatar: %s', async state => {
+  mockVerificationAvatar = 'https://image.invalid/current.jpg';
+  mockPlayers.set(firstId, Promise.resolve({ data: player(firstId, 'Ana First'), error: null }));
+  mockProfiles.set(firstId, { id: 'profile-a', player_id: firstId, username: null, full_name: 'Ana First',
+    avatar_url: state === 'hidden photo' ? null : mockVerificationAvatar, is_verified: false, is_verified_athlete: false,
+    verification_status: state === 'legacy photo' ? undefined : 'unverified', bio: null, social_links: {}, school_visible: true });
+  await render(<UserAthleteProfileScreen />);
+  await act(async () => {});
+  expect(Boolean(screen.queryByText('Can preview current photo'))).toBe(state === 'confirmed public photo');
+});
 
 it('removes the old athlete immediately while another profile loads in the same route', async () => {
   mockPlayers.set(firstId, Promise.resolve({ data: player(firstId, 'Ana First'), error: null }));

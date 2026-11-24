@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `7d8b16084d82` |
-| Last announced plan | `7d8b16084d82` — up to date |
+| Exit plan version (what the app uses on Supabase) | `ec1e87ffd16d` |
+| Last announced plan | `ec1e87ffd16d` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
-| Latest migration | `20261114010000_user_feed_prefs.sql` (58 files) |
-| Canonical schema hash | `d1729a7ee7de8e3258e35363e7955977d32d73210a6ceb91d57921ed1f172c86` (`schema.sql`) |
-| Complete source/configuration content hash | `7d8b16084d8205eb4a13f60f4671e35d7807b364767fdfe1db360a186a35c550` across 1438 files |
+| Latest migration | `20261124010000_post_caption_edits.sql` (59 files) |
+| Canonical schema hash | `0d40f08f8089453a436308b0241849af0630e8d829e410dda1b867568c5c16f6` (`schema.sql`) |
+| Complete source/configuration content hash | `ec1e87ffd16d912e1437d35ac8b3fc89f9dbfb56a1a0b5cdf8d3ab557d32bff4` across 1444 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -144,14 +144,14 @@ Counts come from static statements in `schema.sql` and the source; the live data
 | Application schemas | 1 | `fan_zone_private` |
 | Tables | 126 | covered by backup, restore list and parity automatically |
 | Views | 3 | `public.profiles_public`, `public.reel_photos_feed`, `public.reels_feed` |
-| Database functions | 614 | covered by parity (body, settings, owner, execute rights) |
+| Database functions | 617 | covered by parity (body, settings, owner, execute rights) |
 | Row level security policies | 104 declared by name | policies created in DO blocks (for example per-table "Closed accounts") are not visible here; parity counts the live set, and extra or missing policies block cutover |
-| Triggers | 69 | covered by parity |
+| Triggers | 70 | covered by parity |
 | App policies/triggers on Supabase's own tables | 34 | `policy realtime.messages: Fans receive game score changes`, `policy realtime.messages: Fans receive game_events broadcast`, `policy realtime.messages: Operators send game_events broadcast`, `policy storage.objects: Beyond approved and inspection media`, `policy storage.objects: Beyond private delete guard`, `policy storage.objects: Beyond private insert guard`, `policy storage.objects: Beyond private read guard`, `policy storage.objects: Beyond private update guard`, `policy storage.objects: Beyond removed cleanup`, `policy storage.objects: Beyond reserved owner upload`, `policy storage.objects: Closed accounts`, `policy storage.objects: Delete claimed failed photo story objects`, `policy storage.objects: Owner delete avatars`, `policy storage.objects: Owner lists own public media`, `policy storage.objects: Public read avatars`, `policy storage.objects: Public read game highlights`, `policy storage.objects: Public read reels bucket`, `policy storage.objects: Public update avatars`, `policy storage.objects: Public update reels bucket`, `policy storage.objects: Public upload avatars`, `policy storage.objects: Public upload game highlights`, `policy storage.objects: Public upload reels bucket`, `policy storage.objects: Read entitled vault reel`, `policy storage.objects: Upload own vault reel`, `policy storage.objects: fan_zone_insert`, `policy storage.objects: fan_zone_insert_boundary`, `policy storage.objects: fan_zone_no_delete`, `policy storage.objects: fan_zone_no_read`, `policy storage.objects: fan_zone_no_update`, `trigger auth.users: on_auth_user_created`, `trigger auth.users: zz_notification_auth_activation`, `trigger storage.objects: beyond_storage_guard`, `trigger storage.objects: fan_zone_storage_guard`, `trigger storage.objects: guard_photo_story_storage_write` |
 | Extensions | 1 | `pgcrypto` |
 | Realtime publication tables | 4 | `public.app_runtime_config`, `public.cheer_polls`, `public.game_events`, `public.games` |
 | Storage buckets | 6 | `avatars`, `beyond_game`, `fan_zone`, `game_highlights`, `reel_vault`, `reels` |
-| Migration files | 58 | latest `20261114010000_user_feed_prefs.sql` |
+| Migration files | 59 | latest `20261124010000_post_caption_edits.sql` |
 | Edge Functions | 3 | `create-payment-intent` (self-host allowlist), `create-stripe-account` (self-host allowlist), `stripe-webhook` (excluded: Must not be deployed until P1-05 retires the client tips insert (STATE §0, §6 item 3).) |
 | Expo API routes | 6 | `create-payment-intent`, `create-payout`, `create-stripe-account`, `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload` |
 | Auth methods called | 17 | `exchangeCodeForSession` (PKCE code exchange after a redirect), `getSession` (Read the local session), `getUser` (Validate the current session with the server), `mfa.challenge` (TOTP challenge), `mfa.enroll` (TOTP factor enrollment), `mfa.getAuthenticatorAssuranceLevel` (Read aal1 / aal2), `mfa.listFactors` (List MFA factors), `mfa.unenroll` (TOTP removal), `mfa.verify` (TOTP verification), `onAuthStateChange` (Session change events), `setSession` (Restore a session from tokens), `signInWithIdToken` (Native Apple / Google ID token), `signInWithOAuth` (OAuth redirect (Google)), `signInWithOtp` (Email link / one-time code), `signInWithPassword` (Email and password sign-in), `signOut` (Sign out), `signUp` (Email sign-up) |
@@ -163,7 +163,7 @@ Counts come from static statements in `schema.sql` and the source; the live data
 
 ### SDK callsite coverage
 
-AST callsites: 1005; literal targets: 487; explicit owner-review candidates: 197.
+AST callsites: 1006; literal targets: 487; explicit owner-review candidates: 198.
 The complete machine inventory (`node scripts/exit-map.mjs --json`) records each detected callsite path, line, column,
 operation and literal target. Dynamic arguments and unresolved client origins require owner review. Syntax inspection
 does not prove runtime/provider coverage; overloads, dynamic SQL and deployed drift require live catalog parity.
@@ -270,7 +270,7 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `apps/mobile/src/frontend/lib/mediaStorage.ts:53:31` | `storage.remove` | not-applicable; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/frontend/lib/notifications.ts:49:35` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/notifications.ts:82:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-Additional 97 candidates are included in the complete machine inventory.
+Additional 98 candidates are included in the complete machine inventory.
 
 ## 8. How the data moves
 

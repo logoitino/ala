@@ -1,12 +1,13 @@
 /**
  * Loads the Highlights clips with loading / error state and a manual `refresh`.
  * Wraps `fetchReels` (lib/reels.ts); shows a readable message when Supabase env vars are missing and ignores
- * results that arrive after the screen unmounted.
+ * results that arrive after the screen unmounted. Confirmed edits patch only a matching existing row.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { fetchReels, type ReelHype } from '@/lib/reels';
+import { applyReelCaptionChange, subscribeReelCaptionChanges } from '@/lib/postCaptions';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import type { ReelWithPlayer } from '@/types/database';
 
@@ -50,6 +51,9 @@ export function useReels() {
       mountedRef.current = false;
     };
   }, [refresh]);
+
+  useEffect(() => subscribeReelCaptionChanges(change =>
+    setReels(rows => applyReelCaptionChange(rows, change))), []);
 
   const applyReelHype = useCallback((reelId: string, hype: ReelHype) => {
     setReels((current) =>

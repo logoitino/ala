@@ -3120,6 +3120,188 @@
           ]
         }
       }
+    },
+    {
+      "id": "UX-20-ACTIVITY-DENSITY",
+      "title": "Compact Activity notifications and gift rows",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-24T05:57:13.118Z",
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Moves the existing explanation toggle and restyles the inbox track and factual update rows. No new business behavior, data, write, collection, permission or reporting duty.",
+        "reviewedBy": "Owner layout approval; Codex DESIGN/SUPPORT scope and source review"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null,
+      "app": {
+        "route": "/activity",
+        "paths": [
+          "apps/mobile/src/frontend/components/Activity/NotificationInbox.tsx",
+          "apps/mobile/app/(tabs)/activity.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-24T05:57:13.118Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-20.md",
+              "command": "Inspect both current Activity surfaces and measure visible Expo web at 320px and 390px before app edits.",
+              "result": "Existing notification explanation and gift rows qualify as presentation only; baseline panel 153px, track 48px and three rows 244px. Existing actor/source error and operational contracts retained."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-24T06:05:30.124Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-20.md",
+              "command": "Expo web Activity 320/390 widths and 320px at doubled text; independent QA; focused mobile Jest and Node 24 repository check.",
+              "result": "Locally verified: 128px inbox and 166px three-gift group at both widths; 44pt controls and full wrapped text. 3143 mobile and 217 portal tests passed. The repository check still requires the tracked Exit fingerprint notice. No native or hosted delivery acceptance."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "UX-21-PROFILE-VIDEO",
+      "title": "Public profile photo preview and compact video overlays",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-24T15:24:29.400Z",
+      "app": {
+        "route": "/user/[id]",
+        "paths": [
+          "apps/mobile/src/frontend/components/Profile/ProfileAvatarPicker.tsx",
+          "apps/mobile/src/frontend/components/Profile/ProfileHeroAvatar.tsx",
+          "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx",
+          "apps/mobile/app/(tabs)/user/[id].tsx",
+          "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx",
+          "apps/mobile/src/frontend/components/Reels/DesktopHighlightCard.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/LegacyWorkoutList.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-24T15:24:46.255Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-21.md",
+              "command": "Read public avatar route, ProfileAvatarPicker, Release video copy and existing action rails before app implementation.",
+              "result": "Preview is limited to the already shown avatar; deleting duplicate video reaction decoration changes no data, permissions, collection or action ownership."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-24T15:35:44.829Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UX-21.md",
+              "command": "Run mounted public-profile-navigation, ProfileAvatarPicker, AthleteProfileView and ReelActionOverlay tests.",
+              "result": "Public read visibility, avatar fallback and subject boundaries, visitor order and the intact reaction rail pass locally. Physical Android layout not yet verified."
+            }
+          ]
+        }
+      },
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Enlarge only the image already visible on the current public profile; use existing profile sections and tighten video identity presentation without new source, collection or operational behavior.",
+        "reviewedBy": "Owner approved scope; Codex DESIGN scope and source review"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null
+    },
+    {
+      "id": "POST-EDIT-01",
+      "title": "Owner-only caption editing for Highlights and Beyond",
+      "owner": "HIGHLIGHTS",
+      "status": "app-ready",
+      "plannedAt": "2026-11-24T15:24:29.400Z",
+      "app": {
+        "route": "/beyond",
+        "paths": [
+          "apps/mobile/src/frontend/components/Reels/ReelCard.tsx",
+          "apps/mobile/src/frontend/components/Reels/ReelMoreSheet.tsx",
+          "apps/mobile/src/frontend/components/Reels/PostDescriptionEditor.tsx",
+          "apps/mobile/src/frontend/components/BeyondGame/BeyondGameScreen.tsx",
+          "apps/mobile/src/frontend/lib/postCaptions.ts"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-24T15:30:47.919Z",
+          "evidence": [
+            {
+              "path": "docs/agents/POST-EDIT-01.md",
+              "command": "Run local PGlite post-caption-edits and canonical schema replay; run BeyondGamePanel and public profile route tests; regenerate data map and validate coverage.",
+              "result": "13 caption SQL groups, 123 canonical schema checks and 20 mobile admin/route tests passed. Existing review and correction desks verified; direct author title bypass blocked; hosted SQL not applied."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-24T15:36:57.258Z",
+          "evidence": [
+            {
+              "path": "docs/agents/POST-EDIT-01.md",
+              "command": "Run ReelCard.photoStory, BeyondGameParticipant and postCaptions tests plus local Android export.",
+              "result": "Uploader-only editing, retained draft, reviewed Beyond revisions, verified mounted-list patch and account/screen boundaries passed locally. Hosted SQL and native interaction remain pending."
+            }
+          ]
+        }
+      },
+      "exemption": null,
+      "source": {
+        "description": "Update only the canonical Highlight title or Beyond caption. Beyond changed captions return to the existing revision-checked review queue.",
+        "paths": [
+          "supabase/migrations/20261124010000_post_caption_edits.sql",
+          "apps/mobile/src/backend/db/schema.sql"
+        ]
+      },
+      "admin": {
+        "route": "/admin/moderation",
+        "actions": [
+          "Review or remove reported Highlights using the existing moderation desk.",
+          "Review edited Beyond submissions in the existing Highlights/Beyond queue."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/ModerationTool.tsx",
+          "apps/mobile/src/frontend/components/Admin/BeyondGamePanel.tsx"
+        ]
+      },
+      "report": {
+        "route": "/admin/highlights",
+        "metrics": [
+          "Reuse existing flagged Highlight and pending Beyond moderation queues; no caption telemetry or separate metric."
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/ModerationTool.tsx",
+          "apps/mobile/src/frontend/components/Admin/BeyondGamePanel.tsx"
+        ]
+      },
+      "disable": {
+        "strategy": "Beyond edit follows its existing server feature switch. Restore or disable the Highlight edit RPC at the privilege boundary; no runtime switch added. Existing reports and takedowns remain available.",
+        "paths": [
+          "supabase/migrations/20261124010000_post_caption_edits.sql",
+          "apps/mobile/src/frontend/components/Admin/ModerationTool.tsx",
+          "apps/mobile/src/frontend/components/Admin/BeyondGamePanel.tsx"
+        ]
+      },
+      "access": {
+        "roles": [
+          "eligible authenticated author"
+        ],
+        "deniedBehavior": "Require canonical expected actor, ownership, current revision or caption, and editable state. Deny anonymous, other authors, removed, and held or flagged content. Preserve media, audience and tags.",
+        "paths": [
+          "supabase/migrations/20261124010000_post_caption_edits.sql"
+        ]
+      }
     }
   ]
 }

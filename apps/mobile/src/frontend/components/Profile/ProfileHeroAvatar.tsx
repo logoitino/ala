@@ -1,4 +1,4 @@
-/** UX-13 readable shared type preserves every action and required notice.
+/** UX-21 offers a larger photo only on viewer profiles; owner photo editing is unchanged.
  * Profile identity hero shared by own and public sheets, with a compact sideline-style identity row.
  * Athlete details are optional; community profiles must never inherit a favorite player's credentials.
  * School crests remain server-confirmed and avatar editing stays controlled by the parent sheet.
@@ -46,6 +46,7 @@ type ProfileHeroAvatarProps = {
   footer?: ReactNode;
   avatarUrl?: string | null;
   canEditAvatar?: boolean;
+  previewAvatar?: boolean;
   onAvatarUploaded?: (url: string) => void;
   /** Server-confirmed crest (`useSchoolBadge`). Never build this from editable profile fields. */
   schoolBadge?: SchoolBadge | null;
@@ -95,6 +96,7 @@ export function ProfileHeroAvatar({
   avatarUrl,
   footer,
   canEditAvatar = false,
+  previewAvatar = false,
   onAvatarUploaded,
   schoolBadge: suppliedSchoolBadge = null,
   headerAction,
@@ -123,7 +125,8 @@ export function ProfileHeroAvatar({
           <View style={styles.compactAvatarStage}>
             {schoolBadge ? <View style={styles.compactSchoolBand}><SchoolHeroBand badge={schoolBadge} /></View> : null}
             <View style={[styles.avatarRing, styles.compactAvatarRing, { borderColor: tier.color, backgroundColor: tier.face }]}>
-              <ProfileAvatarPicker uri={avatarUrl} editable={canEditAvatar} size={64} onUploaded={onAvatarUploaded}>
+              <ProfileAvatarPicker uri={avatarUrl} editable={canEditAvatar} previewName={previewAvatar ? name : undefined}
+                size={64} onUploaded={onAvatarUploaded}>
                 <Text style={[styles.initials, styles.compactInitials, { color: tier.ink }]}>{initials}</Text>
               </ProfileAvatarPicker>
               {subscriberCrest ? <View style={styles.crest}><SubscriberCrest /></View> : null}
@@ -197,6 +200,7 @@ export function ProfileHeroAvatar({
           <ProfileAvatarPicker
             uri={avatarUrl}
             editable={canEditAvatar}
+            previewName={previewAvatar ? name : undefined}
             size={124}
             onUploaded={onAvatarUploaded}
           >

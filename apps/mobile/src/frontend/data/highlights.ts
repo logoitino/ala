@@ -133,6 +133,8 @@ export type HighlightClip = {
   athleteName: string;
   school: string;
   tag: string;
+  /** Exact writable source caption when the canonical reel is unflagged and not removed. */
+  editCaptionSource?: string;
   videoUrl: string;
   sekiPlay?: boolean;
   exclusive?: boolean;

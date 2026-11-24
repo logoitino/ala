@@ -1,6 +1,6 @@
 /** Vault changes wait for the initiating account’s confirmed server flag before updating this profile. */
 /** Own profile shares the public sports layout and binds clips/sport reads to the current account and linked athlete.
- * Primary artwork is manually chosen; temporary chips never write it. Account settings retain their current-owner boundary. */
+ * Primary artwork is manually chosen; temporary chips never write it. Confirmed captions only patch matching loaded clips. */
 import { offlineQueue } from '@/services/OfflineQueue';
 import type { OfflineActor } from '@/lib/offlineActor';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -37,6 +37,7 @@ import { readMaloDroppedCount, useTipCheckout } from '@/hooks/useTipCheckout';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { beginExclusiveUnlock } from '@/lib/exclusiveCheckout';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst } from '@/lib/reels';
+import { applyReelCaptionChange, subscribeReelCaptionChanges } from '@/lib/postCaptions';
 import { formatCapabilityLine } from '@/lib/roles';
 import { handleFromName, resolveAuraPoints, subscribePlayerAura } from '@/lib/aura';
 import { formatTeamBadge, classYearLabel, type SchoolTeam } from '@/data/teams';
@@ -74,6 +75,8 @@ export default function MyHubTab() {
   const { onScroll, trackFeature } = useSurfaceUsage('profile');
   const [tips, setTips] = useState<TipLedgerEntry[]>([]);
   const [taggedRows, setTaggedRows] = useState<ReelWithPlayer[]>([]);
+  useEffect(() => subscribeReelCaptionChanges(change =>
+    setTaggedRows(rows => applyReelCaptionChange(rows, change))), []);
   const [taggedOwner, setTaggedOwner] = useState<{ account: string | null | undefined; playerId: string; guard: typeof isSessionCurrent } | null>(null);
   const [auraById, setAuraById] = useState<Record<string, number>>({});
   const [tipsDropped, setTipsDropped] = useState(0);

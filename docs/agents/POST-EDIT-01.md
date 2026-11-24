@@ -1,0 +1,16 @@
+<!-- Caption edit contracts are separate from device and hosted acceptance. -->
+# POST-EDIT-01 — edit your post descriptions
+
+Owner approved caption-only editing for Highlights and Beyond. HIGHLIGHTS owns the experience with Backend, Data, Safety and independent QA. Highlight ownership is the canonical uploader profile ID, not the athlete tag or an Auth UUID. Beyond uses its current actor, owner, audience, and moderation contracts. No media, tags, rights attestations, age/visibility rules or payouts change. Removed, held and flagged content must not be restored or edited through this path.
+
+A title-specific database trigger blocks direct author changes while preserving existing operator and upload behavior. Two narrow server functions validate content, author and expected current value/revision. Beyond returns a changed submission to its existing pending review queue before other viewers can see the edit; stale moderator decisions must fail. The existing Expo moderation and Beyond desks remain authoritative. Mounted editors retain the draft on failure and reconcile only a validated result for the current account and post. No silent retry after an uncertain write. The local PostgreSQL replay and selected admin-ready check precede participant implementation. Hosted SQL and device verification are separate.
+
+## Source and admin checkpoint
+
+Actual PostgreSQL 18 (CI-pinned PGlite 0.5.9 downloaded and checksum-verified in the owner's Terminal) passed 13 focused case groups, including migration reapply and the existing admin title editor, and 123 canonical schema checks. The existing Highlight column grant also permitted direct uploader title writes; a narrowly scoped invoker trigger now routes those writes through the owner RPC while preserving the admin and upload paths. Beyond reuses existing revision-checked approval and the same pending queue; tests confirm old review decisions cannot approve the changed text, and media, audience and historical admin events survive. Stale requests return SQLSTATE 40001; denied or invalid results never publish a client confirmation.
+
+Local admin/route tests passed (20), generated database types rebuilt, DataGov mapped all three functions, and the retained detection catalog identifies the absence of hosted monitoring. Expo's control map and the Next read-only coverage surface reference the existing content desks. No hosted SQL was applied.
+
+## App checkpoint
+
+In Highlight playback, the uploader opens More → Edit description. In Beyond, eligible authors edit from My posts and see that the changes go back for review. Mounted tests cover an uploader versus a tagged athlete, original raw text, failure retaining the draft, validated saves, unavailable/held/shared Beyond items and invalidation when the account, tab, category or row changes. Client receipt tests cover stale or mismatched results, no automatic retry, unchanged Beyond audience/media and no updates to different or newer local reel rows. The Android platform bundle exported locally; physical Android and staged two-account verification are still pending. Before shipping the caption editor, apply the migration to the intended staging database and repeat owner, viewer and reviewer checks there.

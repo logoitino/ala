@@ -5297,6 +5297,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      beyond_edit_caption: {
+        Args: {
+          expected_actor_id: string
+          post_id: string
+          expected_revision: number
+          new_caption: string
+        }
+        Returns: Json
+      }
       beyond_enabled: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -5767,6 +5776,15 @@ export type Database = {
           target_id: string
         }
         Returns: boolean
+      }
+      edit_reel_caption: {
+        Args: {
+          expected_actor_id: string
+          reel_id: string
+          expected_caption: string
+          new_caption: string
+        }
+        Returns: Json
       }
       emit_notification_event: {
         Args: {

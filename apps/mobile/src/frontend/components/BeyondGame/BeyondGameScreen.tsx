@@ -1,6 +1,7 @@
 /** Actor-bound Beyond discovery/history/export uses compact sport-marked categories without changing submission/privacy guards. */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { AppState, Platform, ScrollView, Text, View } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import type { BeyondCategory, BeyondPost } from '@tapuai/shared-types/beyondGame';
 import { useAuth } from '@/context/AuthContext';
 import { useChallenges } from '@/hooks/useChallenges';
@@ -14,6 +15,8 @@ import { BeyondButton, BeyondGameComposer } from './BeyondGameComposer';
 import { BeyondGameMedia } from './BeyondGameMedia';
 import { beyondStyles as styles } from './BeyondGameStyles';
 import { MoreText } from '@/components/UI/MoreText';
+import { PostDescriptionEditor } from '@/components/Reels/PostDescriptionEditor';
+import { saveBeyondDescription } from '@/lib/postCaptions';
 
 const categories: { id: BeyondCategory; label: string }[] = [
   { id: 'workout', label: 'Workouts' }, { id: 'service', label: 'Service' },
@@ -46,7 +49,7 @@ export function BeyondGameScreen(props: ScreenProps) {
   return <ScopedBeyondGameScreen key={`${actorKey}:${scope.current.epoch}`} {...props} />;
 }
 function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = false, onComposeStarted }: ScreenProps) {
-  const { user } = useAuth();
+  const { user, profile, isSessionCurrent } = useAuth();
   const [category, setCategory] = useState<BeyondCategory>('workout');
   const [compose, setCompose] = useState(false);
   const [feedBefore, setFeedBefore] = useState<string | null>(null), [ownBefore, setOwnBefore] = useState<string | null>(null);
@@ -71,6 +74,83 @@ function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = 
     && snapshot.current.version === model.version && !model.busy;
   const disabled = model.busy || model.reading || !model.ready;
   const canStart = Boolean(actor && model.ready && model.data?.status.enabled && model.data.status.canSubmit);
+  // Description drafts belong to the exact rendered account, page and reviewed revision, not just a post ID.
+  type EditTarget = { post: BeyondPost; source: string; epoch: number; userId: string; profileId: string; guard: () => boolean };
+  const [description, setDescription] = useState<EditTarget | null>(null);
+  const descriptionRef = useRef<EditTarget | null>(null);
+  const descriptionFlight = useRef<EditTarget | null>(null);
+  const descriptionSource = JSON.stringify([sourceKey, category, feedBefore, ownBefore, active, compose]);
+  const descriptionScope = useRef({ source: descriptionSource, guard: isSessionCurrent, epoch: 0, focused: false,
+    foreground: AppState.currentState === 'active' && (Platform.OS !== 'web' || typeof document === 'undefined' || !document.hidden) });
+  if (descriptionScope.current.source !== descriptionSource || descriptionScope.current.guard !== isSessionCurrent) {
+    descriptionScope.current = { ...descriptionScope.current, source: descriptionSource, guard: isSessionCurrent,
+      epoch: descriptionScope.current.epoch + 1 };
+  }
+  const invalidateDescription = useCallback(() => {
+    descriptionScope.current.epoch += 1;
+    descriptionRef.current = null;
+    setDescription(null);
+  }, []);
+  useFocusEffect(useCallback(() => {
+    descriptionScope.current.focused = true;
+    return () => { descriptionScope.current.focused = false; invalidateDescription(); };
+  }, [invalidateDescription]));
+  useEffect(() => {
+    const apply = (foreground: boolean) => {
+      descriptionScope.current.foreground = foreground;
+      if (!foreground) invalidateDescription();
+    };
+    const subscription = AppState.addEventListener('change', state => apply(state === 'active'
+      && (Platform.OS !== 'web' || typeof document === 'undefined' || !document.hidden)));
+    const visibility = () => apply(AppState.currentState === 'active' && !document.hidden);
+    if (Platform.OS === 'web' && typeof document !== 'undefined') document.addEventListener('visibilitychange', visibility);
+    return () => {
+      subscription.remove();
+      if (Platform.OS === 'web' && typeof document !== 'undefined') document.removeEventListener('visibilitychange', visibility);
+    };
+  }, [invalidateDescription]);
+  const descriptionView = useRef({ model, user, profile, active, compose });
+  descriptionView.current = { model, user, profile, active, compose };
+  const descriptionCurrent = (target: EditTarget) => {
+    const scope = descriptionScope.current, view = descriptionView.current;
+    return alive.current && scope.focused && scope.foreground && view.active && !view.compose
+      && scope.source === target.source && scope.epoch === target.epoch && scope.guard === target.guard && target.guard()
+      && view.user?.id === target.userId && view.profile?.id === target.profileId && view.profile.user_id === target.userId
+      && !view.profile.age_blocked_at && view.model.actorId === target.profileId && view.model.ready
+      && !view.model.busy && !view.model.reading && view.model.data?.status.enabled === true
+      && view.model.data.own?.enabled === true && target.post.creatorId === target.profileId
+      && (target.post.status === 'pending' || target.post.status === 'approved')
+      && view.model.data.own.posts.some(row => row === target.post);
+  };
+  const editTarget = (post: BeyondPost): EditTarget | null => actor && isSessionCurrent ? {
+    post, source: descriptionSource, epoch: descriptionScope.current.epoch,
+    userId: actor.userId, profileId: actor.profileId, guard: isSessionCurrent,
+  } : null;
+  const openDescription = (target: EditTarget) => {
+    if (!descriptionCurrent(target)) return;
+    descriptionRef.current = target;
+    setDescription(target);
+  };
+  const closeDescription = (target: EditTarget) => {
+    if (descriptionRef.current !== target) return;
+    descriptionRef.current = null;
+    setDescription(null);
+  };
+  const saveDescription = async (target: EditTarget, caption: string) => {
+    const accepted = () => descriptionRef.current === target && descriptionCurrent(target);
+    if (!accepted()) throw new Error('This post or your account changed. Reopen the editor.');
+    if (descriptionFlight.current) throw new Error('Another description save is still finishing. Try again when it settles.');
+    descriptionFlight.current = target;
+    try {
+      await saveBeyondDescription({ userId: target.userId, profileId: target.profileId, isCurrent: accepted }, target.post, caption);
+      if (!accepted()) throw new Error('This post or your account changed. Reopen the editor.');
+      closeDescription(target);
+      await model.refresh();
+    } finally {
+      if (descriptionFlight.current === target) descriptionFlight.current = null;
+    }
+  };
+  const visibleDescription = description && descriptionRef.current === description && descriptionCurrent(description) ? description : null;
   // Upload ＋ → Beyond moment lands here; open the composer only after the server says this account may submit.
   useEffect(() => {
     if (!startComposing || !active || compose || !canStart) return;
@@ -113,6 +193,11 @@ function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = 
     {own ? <><Text style={styles.hint}>{stateLabel[post.status]} · {post.audience === 'friends' ? 'Friends' : 'Everyone'}</Text>
       {post.reviewReason ? <Text style={styles.hint}>Review note: {post.reviewReason}</Text> : null}
       {post.cleanup !== 'not_requested' ? <Text style={styles.hint}>{post.cleanup === 'complete' ? 'Cleanup recorded complete; provider deletion not independently verified.' : 'File cleanup pending.'}</Text> : null}
+      {(() => {
+        const target = editTarget(post);
+        return target && descriptionCurrent(target) ? <BeyondButton variant="quiet" label="Edit description"
+          disabled={disabled} onPress={() => openDescription(target)} /> : null;
+      })()}
       {post.status !== 'removed' ? <BeyondButton variant="danger" label="Remove my post" disabled={disabled} onPress={() => remove(post)} /> : null}</> : null}
     {post.status !== 'removed' ? <BeyondGameMedia key={sourceKey} actor={actor} post={post} active={active && model.ready && !compose} scopeKey={sourceKey} /> : null}
     {!own && actor ? <BeyondButton variant="quiet" label="Report unsafe content" disabled={disabled}
@@ -121,7 +206,7 @@ function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = 
   const viewerSport = useViewerSport();
   const continuing = exportState.current.started && Object.values(exportState.current.cursors).some(Boolean);
   const categoryIcons = { workout: 'barbell-outline', service: 'heart-outline', learning: 'school-outline', story: 'book-outline' } as const;
-  return <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.screen}>
+  return <><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.screen}>
     <View style={styles.header}>
       {/* UX-08: the same fading field band as every tab heading (viewer's sport, generic for fans). */}
       <View pointerEvents="none" style={styles.headerField}><SportField sport={viewerSport} fade="left" labels={false} opacity={0.11} /></View>
@@ -160,5 +245,10 @@ function ScopedBeyondGameScreen({ active = true, renderLegacy, startComposing = 
         </> : null}
       </> : null}
     </> : null}
-  </ScrollView>;
+  </ScrollView>
+    {visibleDescription ? <PostDescriptionEditor key={`${visibleDescription.source}:${visibleDescription.epoch}:${visibleDescription.post.id}:${visibleDescription.post.revision}`}
+      initialCaption={visibleDescription.post.caption} maxLength={240}
+      note="Changes go back for review before others can see them."
+      onClose={() => closeDescription(visibleDescription)} onSave={caption => saveDescription(visibleDescription, caption)} /> : null}
+  </>;
 }

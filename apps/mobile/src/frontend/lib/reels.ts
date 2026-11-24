@@ -8,6 +8,7 @@
  * Screens call this, not Supabase. Uploading a clip is `services/MediaUploadService` plus `UploadVideoModal`.
  * Upload inputs retain the normalized duration so the service can enforce the short-clip limit.
  * Recorded sport annotations come only from reel rows; mutable profile primaries never annotate history.
+ * The owner editor receives the exact raw title only for a known uploader and an unflagged, visible row.
  * @sideEffects `reels`, `reel_hype_votes` and related RPCs; AsyncStorage for local hides and the peek hint.
  */
 
@@ -151,6 +152,9 @@ export function reelToClip(reel: Reel, player: Player | null): HighlightClip {
     athleteName: player?.name ?? 'Not tagged yet',
     school: player?.school_name ?? player?.team_name ?? player?.team ?? '',
     tag: (reel.title ?? '').trim() || 'Seki Play',
+    // Keep the precise server value for a conditional write; the display label may have a fallback.
+    editCaptionSource: reel.uploaded_by && reel.is_removed === false && reel.is_flagged === false
+      && typeof reel.title === 'string' ? reel.title : undefined,
     videoUrl: reel.video_url,
     sekiPlay: true,
     exclusive: vaultOnly,
