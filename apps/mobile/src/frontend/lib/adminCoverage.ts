@@ -1,4 +1,5 @@
 /**
+ * GUEST-ACCESS-01 maps the cross-platform account boundary to the existing Features desk.
  * The production map: every fan-visible control is listed with its admin desk, optional runtime flag and
  * telemetry id. Powers the Overview and Coverage desks ("what is live, what is paused, what is not instrumented").
  * Add a row here whenever you add a fan control. Trivia rows (2026-10-15) add the This week strip, level and Life
@@ -311,6 +312,7 @@ export const COVERAGE_CONTROLS: CoverageControl[] = [
   { id: 'checkout.platform_tip', label: "Tip Tapua'i (optional)", hint: 'Optional checkout amount; default No tip. Published authority only. No separate tap counter; checkout failures use existing fixed signals.', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.MONETIZATION_TIPS_ENABLED' },
   { id: 'checkout.cover_processing_fee', label: 'Cover the processing fee', hint: 'Optional estimated fee coverage; not the actual Stripe cost. Missing published authority stays OFF. No separate tap counter.', surface: 'profile', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.MONETIZATION_TIPS_ENABLED' },
 
+  { id: 'soft_wall.browse', label: 'Account-required browsing', hint: 'Web and phone preview only; registered account and age completion before private route hooks mount. Backend guest allowlist needs reviewed migration/API guard; no permissive runtime flag', surface: 'auth', fanHref: '/', adminHref: '/admin/features', telemetry: 'soft_wall.browse', owner: 'code' },
   { id: 'soft_wall.malo', label: 'Give Soft Wall', hint: 'Guest give → SoftWallModal → resume give sheet', surface: 'auth', fanHref: '/', adminHref: '/admin/features', flag: 'buttons.malo', telemetry: 'soft_wall.malo', owner: 'code' },
   { id: 'soft_wall.crew', label: 'Crew Soft Wall', hint: 'Guest Join Crew → SoftWallModal → resume toggle', surface: 'auth', fanHref: '/profile', adminHref: '/admin/features', flag: 'buttons.crew', telemetry: 'soft_wall.crew', owner: 'code' },
   { id: 'soft_wall.wishlist', label: 'Gear goal Soft Wall', hint: 'Guest gear-goal give → SoftWallModal → resume checkout', surface: 'auth', fanHref: '/profile', adminHref: '/admin/wishlist', flag: 'layouts.wishlist', telemetry: 'soft_wall.wishlist', owner: 'code' },

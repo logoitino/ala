@@ -1,4 +1,5 @@
-/**
+/** GUEST-ACCESS-01 carries the verified anonymous-user flag into the shared account rejection gate.
+
  * Shared auth gate for the Expo API routes: read the Bearer token and resolve the caller before any Stripe call.
  * Used by the PaymentIntent and payout handlers. The decision itself lives in the runtime-neutral money core
  * (`supabase/functions/_shared/money/session.ts`, SCALE-04) so the Edge Functions make the same one.
@@ -84,7 +85,7 @@ export async function requireAuthedUser(
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const { data, error } = await authClient.auth.getUser(token);
-    return { user: data.user ? { id: data.user.id, email: data.user.email ?? null } : null, error };
+    return { user: data.user ? { id: data.user.id, email: data.user.email ?? null, ...(data.user.is_anonymous === true ? { is_anonymous: true } : {}) } : null, error };
   };
 
   let session: Awaited<ReturnType<typeof resolveSession>>;

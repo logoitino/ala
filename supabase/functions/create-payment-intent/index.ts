@@ -7,7 +7,8 @@ import { PAYMENT_SIGN_IN_MESSAGE, runCreatePaymentIntent } from '../_shared/mone
 import { resolveSession } from '../_shared/money/session.ts';
 import { serverDonationContextAdapter } from '../_shared/money/serverDonationContext.ts';
 
-/**
+/** GUEST-ACCESS-01 carries the verified anonymous-user flag into the shared account rejection gate.
+
  * Edge Function adapter for gift and purchase checkout — the primary checkout path: `lib/stripeIntent.ts` invokes this
  * function first and only falls back to the Metro route when it is not deployed, because an installed EAS build has
  * no Metro server to answer `/api/*`. Deploy it to every project testers use.
@@ -85,7 +86,7 @@ Deno.serve(async (req) => {
     const session = await resolveSession(jwt, {
       getUser: async (token) => {
         const { data, error } = await userClient.auth.getUser(token);
-        return { user: data.user ? { id: data.user.id, email: data.user.email ?? null } : null, error };
+        return { user: data.user ? { id: data.user.id, email: data.user.email ?? null, ...(data.user.is_anonymous === true ? { is_anonymous: true } : {}) } : null, error };
       },
       verifyLocally: localVerifier(supabaseUrl, anonKey),
     });

@@ -141,3 +141,9 @@ Editable design references (2026-10-07): [Figma profiles and Aura](https://www.f
 [Canva sports direction](https://canva.link/a7meiu3xkad3e9u). Figma public screen rendered; final
 owner/Aura render requests reached the seat limit. Canva is art direction, not an exact UI spec.
 Design stats show missing values; no fabricated stats, school proof, or fee changes.
+
+## Guest account access — GUEST-ACCESS-01 (local, 2026-11-25)
+
+SDK58 root Stack `screenLayout` renders `GuestAccessBoundary` before route children, retaining the navigator and global auth/age/welcome overlays. Only the actual `auth/callback` descriptor is exempt; current-session profile readiness and existing age prompts gate member children and web rails. The public preview has no roster, search, upload or reaction hooks.
+
+`lib/supabase.getGuestPreviewClient` lazily creates a sessionless public client. `lib/guestPreview` validates its bounded RPC DTO. `lib/runtime` owns published guest reads and Realtime through `subscribeAppRuntime`, including originating-client cleanup and suppression of post-cleanup events; the context has zero direct SDK calls. Account-bound admin mutations retain their existing clients. Shared policy feeds Expo and Next oversight. [Guest access](GUEST_ACCESS.md) owns the complete contract and remaining acceptance.

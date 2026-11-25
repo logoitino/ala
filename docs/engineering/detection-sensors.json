@@ -502,9 +502,27 @@
       "owner": "HIGHLIGHTS",
       "status": "partial",
       "detects": "Local PostgreSQL replay covers denied or stale caption edits and Beyond review transitions; the client must show unconfirmed results and preserve the draft.",
-      "evidence": ["docs/agents/POST-EDIT-01.md", "supabase/migrations/20261124010000_post_caption_edits.sql", "scripts/replay/post-caption-edits-replay.mjs"],
+      "evidence": [
+        "docs/agents/POST-EDIT-01.md",
+        "supabase/migrations/20261124010000_post_caption_edits.sql",
+        "scripts/replay/post-caption-edits-replay.mjs"
+      ],
       "limitation": "Local tests only. No new production caption logging, delivery monitor, or hosted migration receipt.",
       "next": "HIGHLIGHTS and SUPPORT review reported errors and use the existing moderation desks; hosted rollout requires owner-approved migration and device smoke."
+    },
+    {
+      "id": "guest-account-access",
+      "area": "app",
+      "owner": "AUTH",
+      "status": "partial",
+      "detects": "Local PostgreSQL denial/preview and shared route/account tests; existing soft_wall.browse identifies account prompts, not enforced server denial or unique visitors.",
+      "evidence": [
+        "scripts/replay/guest-access-replay.mjs",
+        "scripts/__tests__/guest-access.test.mjs",
+        "docs/engineering/GUEST_ACCESS.md"
+      ],
+      "limitation": "Local SQL, mounted routes and source checks only. Official Supabase security/changelog cached and reviewed25Nov; hosted SQL/config/Edge deployment and HTTP/browser/physical-device enforcement not verified. Public media URLs and rate limiting are separate; preview is a fixed current window, not a per-person lifetime quota.",
+      "next": "AUTH with SUPPORT/SECURITY verifies the approved hosted migration/hook, direct HTTP denial and actual signed-in/guest device flows before release."
     }
   ]
 }

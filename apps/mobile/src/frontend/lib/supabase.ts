@@ -1,5 +1,5 @@
 /**
- * The single Supabase client for the whole app.
+ * The account Supabase client and an isolated sessionless client for explicit public preview/config reads.
  * Reads EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY (apps/mobile/.env.local) and exports `supabase`
  * plus `isSupabaseConfigured`, which callers check before querying so missing/invalid config shows a readable error
  * instead of a crash. Auth sessions persist in AsyncStorage on device (an in-memory map where that is unavailable).
@@ -100,4 +100,14 @@ let realtimeTopicSeq = 0;
 export function nextRealtimeTopic(prefix: string): string {
   realtimeTopicSeq += 1;
   return `${prefix}_${realtimeTopicSeq}`;
+}
+
+let guestPreviewClient: typeof supabase | undefined;
+/** @purpose Public preview/config client that cannot inherit persisted or anonymous-auth account tokens. @sideEffects Lazy SDK creation using the existing selected backend public configuration; no session persistence. */
+export function getGuestPreviewClient(): typeof supabase {
+  return guestPreviewClient ??= createClient<Database>(
+    backend.connection?.url ?? 'http://127.0.0.1:1',
+    backend.connection?.publicKey ?? 'public-anon-key',
+    {auth: {persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}},
+  );
 }

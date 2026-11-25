@@ -11,9 +11,9 @@ This packet contains source fingerprints and supplied investigation notes. It is
 
 ## 1. Current source and open work
 
-- Inventory SHA-256: `e637d5e516dcae2e7b858b3c218f13feb92c832887d2ac83dc0ce822256bb130`
+- Inventory SHA-256: `9e22ce3546480080a8078b4a2f262c875adf8e89e595f14dffc034d8b5f76764`
 - Register SHA-256: `86a11d86b776757dd362bc03cdfc5c8e88d1c7a862e65db85ba00dd7c6073a71`
-- Safe source/manifest files monitored: 1239. Git-tracked and non-ignored untracked source; excluded files require separate human review.
+- Safe source/manifest files monitored: 1250. Git-tracked and non-ignored untracked source; excluded files require separate human review.
 - Investigation candidates: 3; missing engineering reviews: 3; stale engineering reviews: 0.
 - Rights categories awaiting counsel review: 7.
 - Supplied filing receipts: 0. Receipt entries require independent verification; no legal status is inferred.
@@ -23,9 +23,9 @@ A changed inventory requires Documentation/feature-owner review for new capabili
 
 | Monitored area | Files |
 | --- | --- |
-| apps/ | 1070 |
-| packages/ | 36 |
-| supabase/ | 130 |
+| apps/ | 1079 |
+| packages/ | 37 |
+| supabase/ | 131 |
 
 ## 2. Technical investigation disclosures
 
@@ -35,7 +35,7 @@ These candidates are questions to investigate. None has an established novelty, 
 
 **Feature owner:** HIGHLIGHTS with ACCOUNT\_TAGS / PRIVACY\_ENGINEERING
 
-Candidate source SHA-256: `b447f0fd1624c6b420297277a8a7b8a630e60299c8ca39304952c67e714b128f`
+Candidate source SHA-256: `9a5556e04a57dd06b5e5f793a401a99747ee4bf3367286de286f359b3098b6ff`
 
 **Review state:** No engineering review supplied.
 
@@ -55,7 +55,7 @@ Candidate source SHA-256: `b447f0fd1624c6b420297277a8a7b8a630e60299c8ca39304952c
 | --- | --- |
 | [apps/mobile/src/frontend/lib/reels.ts](../../apps/mobile/src/frontend/lib/reels.ts) | `96bf78d0fdc3ea6dc4f1a7627bb80b1ca1597ad9f7d5a8c3b0ae3d1c3989effc` |
 | [apps/mobile/src/frontend/lib/privacy.ts](../../apps/mobile/src/frontend/lib/privacy.ts) | `7a8d8ffb55251199ca46dbebc0a9d34bb8ef0b160aeb5e45c9b710a9c9d91350` |
-| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `0d40f08f8089453a436308b0241849af0630e8d829e410dda1b867568c5c16f6` |
+| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `630b289842ca13269c96021260e248a2377bcc18825d084bef482e8907c2cfe3` |
 | [docs/engineering/design/PROFILE\_PRIVACY\_DESIGN.md](../../docs/engineering/design/PROFILE_PRIVACY_DESIGN.md) | `2cd42389d6492030f1bf9ff40f47c1b085cdf01bc6ebc7f0cecdf17bdabe8168` |
 
 References are source reading locations, not evidence that tests or counsel review ran.
@@ -73,7 +73,7 @@ No records supplied.
 
 **Feature owner:** VAULT / STORAGE with RLS\_SECURITY
 
-Candidate source SHA-256: `7b60751c4205af0292b3d5db0c39cea6597d27303e3cc525389f339fbf66cb79`
+Candidate source SHA-256: `c9eddae014134cc1cbcf566b98e189e8f915f3452340a84f0aca633a59c23936`
 
 **Review state:** No engineering review supplied.
 
@@ -93,7 +93,7 @@ Candidate source SHA-256: `7b60751c4205af0292b3d5db0c39cea6597d27303e3cc525389f3
 | --- | --- |
 | [apps/mobile/src/frontend/lib/vault.ts](../../apps/mobile/src/frontend/lib/vault.ts) | `402a1127c45c891ef29dd0dcce00074f8d65cded765692becd40ce291a769dcf` |
 | [apps/mobile/src/frontend/lib/media.ts](../../apps/mobile/src/frontend/lib/media.ts) | `e187e7d37869ff21a9257b66f82651cd4d004d01151d676061b4cb50dd348d41` |
-| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `0d40f08f8089453a436308b0241849af0630e8d829e410dda1b867568c5c16f6` |
+| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `630b289842ca13269c96021260e248a2377bcc18825d084bef482e8907c2cfe3` |
 | [docs/engineering/design/MEDIA\_SERVICE\_PLAN.md](../../docs/engineering/design/MEDIA_SERVICE_PLAN.md) | `84f083e341edd1fccd10dcf9cc77e52b69800cc388d7cf8ac6ea4fa0a567789f` |
 
 References are source reading locations, not evidence that tests or counsel review ran.
@@ -111,7 +111,7 @@ No records supplied.
 
 **Feature owner:** OPERATOR / LIVE\_SCORES with BACKEND
 
-Candidate source SHA-256: `97f63ab2dede16a4807b213ae6f7bcf383c15a223f23c7c8778ebaae4d317a92`
+Candidate source SHA-256: `a7a92fd6677d3f82d3e1511b7ac56620d48ac735732562a9b9b1705bb63a4fa0`
 
 **Review state:** No engineering review supplied.
 
@@ -131,7 +131,7 @@ Candidate source SHA-256: `97f63ab2dede16a4807b213ae6f7bcf383c15a223f23c7c8778eb
 | --- | --- |
 | [apps/mobile/src/frontend/lib/liveScoreSync.ts](../../apps/mobile/src/frontend/lib/liveScoreSync.ts) | `97952a2ab2ad2d0d48c909ab94fc0bc4bde26051478b6f3e3e4780ed88431b63` |
 | [apps/mobile/src/frontend/hooks/useLiveScores.ts](../../apps/mobile/src/frontend/hooks/useLiveScores.ts) | `eb41d5a58fbd01000263ce3a434a5dbb37bc97f1fc72509dd004d3a03bd266ec` |
-| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `0d40f08f8089453a436308b0241849af0630e8d829e410dda1b867568c5c16f6` |
+| [apps/mobile/src/backend/db/schema.sql](../../apps/mobile/src/backend/db/schema.sql) | `630b289842ca13269c96021260e248a2377bcc18825d084bef482e8907c2cfe3` |
 | [docs/agents/SCALE-03.md](../../docs/agents/SCALE-03.md) | `87325c3233d93ccb84701a6c182377a1cf89e80b77309ffcd7cda450333f0745` |
 
 References are source reading locations, not evidence that tests or counsel review ran.

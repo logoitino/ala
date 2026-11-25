@@ -1,4 +1,5 @@
 /**
+ * GUEST-ACCESS-01 reads shared account-policy descriptors; hosted guard acceptance remains separate.
  * Provider rows follow the open report format and wrap labels/redirects at enlarged text.
  * Config keys (flag paths, telemetry ids, provider ids, code names) sit only inside a closed "Keys"
  * disclosure, like the chart kit's Data toggle, so the page itself reads as words (ADM-01 P3, 2026-10-18).
@@ -122,7 +123,7 @@ export default async function SoftWallAuthPage() {
           <p className="mt-3 text-sm leading-6 text-[var(--ink-soft)]">
             Last Publish to app:{' '}
             {!oversight.configured ? 'Unavailable' : oversight.publishedAt ? new Date(oversight.publishedAt).toLocaleString() : 'Never / unknown'}. Toggle
-            Soft-Wall related flags on the Features desk, then Publish.
+            related action flags on the Features desk, then Publish. The browsing account requirement is a source/data policy; it has no permissive runtime toggle. Hosted acceptance requires the reviewed guest-access migration and API guard.
           </p>
         </Panel>
       </div>

@@ -1,4 +1,5 @@
-/**
+/** GUEST-ACCESS-01 anonymous-auth sessions remain guests; a uid alone does not unlock browsing.
+
  * Who is using the app: the Supabase session, the signed-in profile and role, guest browse markers, sign-in
  * (Apple / Google / Magic Link), the fan-or-athlete switch, and the owner "Studio unlock".
  * Everything else asks this context before gating a feature (`useAuth`). Profile edits write `profiles`;
@@ -88,6 +89,8 @@ type AuthContextValue = {
   isAdmin: boolean;
   /** True when there is no Supabase session (browse-first guest). Studio `guest` role is separate. */
   isGuest: boolean;
+  /** Eligibility record for the current account has hydrated; session arrival alone is insufficient. */
+  accountReady: boolean;
   /** True only right after a brand-new account's first sign-in (Apple/Google skip the sign-up form)
    * when the COPPA 13+ self-attestation has not been captured yet. Never true for a returning user. */
   needsAgeConfirmation: boolean;
@@ -377,8 +380,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshProfile = useCallback(async () => {
+    // Recovery can repair a failed initial profile ensure without borrowing a replacement account.
+    if (!profile && session?.user && session.user.is_anonymous !== true && isCurrentSession(renderedSessionEpoch, session.user.id)) {
+      await ensureFanProfile(session.user);
+      if (!isCurrentSession(renderedSessionEpoch, session.user.id)) return null;
+    }
     return loadProfile(session?.user.id, renderedSessionEpoch);
-  }, [loadProfile, renderedSessionEpoch, session?.user.id]);
+  }, [isCurrentSession, loadProfile, profile, renderedSessionEpoch, session]);
 
   // Auth events can turn A→B→A before consumers render. Check the event boundary, not just the displayed UID.
   const renderedAccountEpoch = accountEpoch.current;
@@ -458,7 +466,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = studioEligible
     ? studioUnlocked || isAdminAccess({ role, roles, profile })
     : isAdminAccess({ profile });
-  const isGuest = !session;
+  const isGuest = !session || session.user.is_anonymous === true;
+  const accountReady = !isGuest && profile != null;
   const isVerified = Boolean(profile?.is_verified);
   // COPPA gate: only for a brand-new account's very first sign-in (Apple/Google have no sign-up
   // form to collect the checkbox on). A returning user always has `session.user` last_sign_in_at
@@ -624,6 +633,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAthlete,
       isAdmin,
       isGuest,
+      accountReady,
       needsAgeConfirmation,
       confirmAge13Plus,
       birthPrompt,
@@ -666,6 +676,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAthlete,
       isAdmin,
       isGuest,
+      accountReady,
       isSessionCurrent,
       isVerified,
       loading,

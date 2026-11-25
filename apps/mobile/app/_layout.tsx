@@ -1,4 +1,5 @@
 /**
+ * GUEST-ACCESS-01 screenLayout gates route content before child hooks; the root navigator and auth overlays remain mounted.
  * Root layout, the first thing the app renders: mounts every provider (runtime config, auth, soft wall,
  * celebration, upload sheet, Stripe) and the root navigation Stack. Status-bar colour follows the runtime theme. Opt-in support observation preserves platform error handling.
  */
@@ -11,6 +12,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { GuestAccessBoundary } from '@/components/Auth/GuestAccessBoundary';
 import { SupportRuntimeObserver } from '@/components/Common/SupportRuntimeObserver';
 import { AuraToast } from '@/components/AuraToast';
 import { BackedCelebration } from '@/components/BackedCelebration';
@@ -18,12 +20,13 @@ import { StudioPreviewBar } from '@/components/Admin/StudioPreviewBar';
 import { AgeConfirmModal } from '@/components/Auth/AgeConfirmModal';
 import { SoftWallModal } from '@/components/Auth/SoftWallModal';
 import { WelcomeOverlay } from '@/components/Onboarding/WelcomeOverlay';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { AppRuntimeProvider, useAppRuntime } from '@/context/AppRuntimeContext';
 import { SoftWallProvider } from '@/context/SoftWallContext';
 import { CelebrationProvider } from '@/context/CelebrationContext';
 import { UploadSheetProvider } from '@/context/UploadSheetContext';
 import { colors, isLightCanvas } from '@/constants/theme';
+import { FOCAL } from '@/theme/motion';
 import { FONT_FILES } from '@/theme/fonts';
 import { telemetry } from '@/services/TelemetryManager';
 import { WebAppShell } from '@/components/Common/WebAppShell';
@@ -40,6 +43,7 @@ const BUNDLE_EVALLED_AT = performance.now();
 
 function RuntimeApp() {
   const { live } = useAppRuntime();
+  const { isGuest } = useAuth();
   const light = isLightCanvas(live.theme.background);
   const smoothnessOn = live.layouts?.telemetrySmoothness === true;
   const appStartSent = useRef(false);
@@ -52,16 +56,17 @@ function RuntimeApp() {
   return (
     <>
       <SupportRuntimeObserver />
-      <StatusBar style={light ? 'dark' : 'light'} />
+      <StatusBar style={isGuest ? 'light' : light ? 'dark' : 'light'} />
       <WebAppShell backgroundColor={live.theme.background}>
         <View style={[styles.root, { backgroundColor: live.theme.background }]}>
           <Stack
+            screenLayout={({ children, route }) => <GuestAccessBoundary authCallback={route.name === 'auth/callback'} previewEnabled={live.tabs.home !== false}>{children}</GuestAccessBoundary>}
             screenOptions={{
               headerStyle: { backgroundColor: live.theme.surface },
               headerShadowVisible: false,
               headerTintColor: live.theme.jade,
               headerTitleStyle: { fontWeight: '700', color: live.theme.text },
-              contentStyle: { backgroundColor: live.theme.background },
+              contentStyle: { backgroundColor: isGuest ? FOCAL.backgroundBase : live.theme.background },
             }}
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

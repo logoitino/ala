@@ -1,5 +1,6 @@
 /**
- * Soft-Wall + browse-first auth helpers shared by the Next admin portal.
+ * GUEST-ACCESS-01 shares code-owned browsing policy with Expo; no hosted enforcement is inferred.
+ * Soft-Wall + bounded-preview auth helpers shared by the Next admin portal.
  * Product gates live in `@tapuai/shared-types` (`SOFT_WALL_GATES`). Independent read
  * failures stay unknown without erasing confirmed counts or published runtime status.
  */

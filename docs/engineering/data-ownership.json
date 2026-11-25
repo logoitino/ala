@@ -1573,6 +1573,22 @@
     "tips_payment_context_guard": {
       "owner": "COMMERCE",
       "use": "Before insert: optional gift extras match a service-prepared real PaymentIntent allocation and original actor/athlete/cents; provisional/mismatched/reused references denied. Previously issued quotes survive an OFF publish; no new business writer."
+    },
+    "account_browsing_allowed": {
+      "owner": "AUTH",
+      "use": "Registered, non-anonymous, age-eligible account predicate; additional restrictive read condition preserves existing RLS. Auth user flags are server-managed, never user_metadata."
+    },
+    "guest_highlights_preview": {
+      "owner": "HIGHLIGHTS",
+      "use": "Only anonymous content source: three attested, visible free videos, fixed current window; four explicit fields, no player/account fields, paging/search or full-feed fallback. Confirmed/no-tag eligibility is checked on raw reels because the privacy view hides pending tags."
+    },
+    "enforce_registered_api_account": {
+      "owner": "AUTH",
+      "use": "PostgREST pre-request guard rejects authenticated-role anonymous sessions by signed claim and server-managed auth user flags. Hosted hook installation and denial verification are separate prerequisites."
+    },
+    "caller_not_age_blocked": {
+      "owner": "MINOR_SAFETY",
+      "use": "Existing closed-account predicate now also denies signed anonymous-auth claims and managed anonymous user records; normal anonymous key still permits the separate safe public preview. Original age-block logic retained."
     }
   },
   "exceptions": {
@@ -3347,6 +3363,24 @@
       "destination": "Existing Local/game, Profile/Vault, Booster and Drip destinations; grouped web shortcuts and tablet extras only. Existing Aura source fallback contract is retained and requires its separate production review.",
       "retention": "Transient panel results follow existing hook lifetimes; tablet data panels unmount when closed. Existing source retention is unchanged.",
       "source": "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx"
+    },
+    {
+      "id": "guest-account-policy",
+      "owner": "AUTH",
+      "purpose": "Bound account-free browsing on phone and web and keep admin oversight synchronized.",
+      "data": "Trusted Auth session/user eligibility, existing privacy-filtered preview records and current route. No new identity tracking or table. Public schema anon/PUBLIC grants restricted with existing non-guest effective grants preserved; new source defaults deny guest grants. Current profile hydration gates UI until eligibility known. Storage objects get restrictive ALL account policy while existing path/owner rules remain; hosted hook rejects anonymous-auth account RPC/mutation requests.",
+      "destination": "Shared guestAccess policy consumed by Expo route boundary/preview and shared Soft-Wall admin coverage. Anonymous preview sends only id/title/video URL/date, three records maximum. Full roster/profile/feed access requires account authorization.",
+      "retention": "Preview is a transient current window; no per-guest identifier or server quota record. Existing media/source retention unchanged. Public media URLs and future new grants need separate review; client prompt is not server proof.",
+      "source": "packages/shared-types/guestAccess.ts"
+    },
+    {
+      "id": "guest-sessionless-public-client",
+      "owner": "AUTH",
+      "purpose": "Keep the safe preview and published appearance settings reachable without anonymous-auth token inheritance.",
+      "data": "Existing selected public backend URL/key; no persistent session or new stored identity. Public RPC four-field preview plus published runtime SELECT and public runtime Realtime.",
+      "destination": "Guest preview and AppRuntimeContext only; explicit public client has persistence, refresh and URL session detection disabled. Account APIs/admin mutations keep their originating client. Runtime subscription is centralized in lib/runtime.subscribeAppRuntime; guest callbacks strip draft fields and clean up through the originating public client.",
+      "retention": "Lazy client for this JS lifetime; preview current-window only. Existing media retention unchanged. Public media URLs bypass authenticated Storage RLS and remain a separate release concern.",
+      "source": "apps/mobile/src/frontend/lib/supabase.ts"
     }
   ]
 }

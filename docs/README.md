@@ -78,6 +78,7 @@ Current gift-release packet: [COORD-02](agents/COORD-02.md) (whole-team duties),
 | [TROUBLESHOOTING.md](engineering/TROUBLESHOOTING.md) | Metro, Expo, env and payment failures and their fixes. |
 | [METRO-01](engineering/evidence/METRO-01.md) | Exact SDK request-abort reproduction, narrow streaming-render patch and local verification limits. |
 | [TESTER_SCRIPT.md](engineering/TESTER_SCRIPT.md) | What testers do per role, and what to ask them. |
+| [GUEST_ACCESS.md](engineering/GUEST_ACCESS.md) | Locally verified web/phone guest preview/account boundary, full-gate and retained detector outcomes, acceptance steps and pending hosted/CHECK-01 limits. |
 | [DATA_PRIVACY_MAP.md](engineering/DATA_PRIVACY_MAP.md) | What personal data is collected, where it lives, and the gaps. |
 | [MENU_STYLE_MAP.md](engineering/MENU_STYLE_MAP.md) | Shared sheet/menu components and which screens use them. |
 | [AUDIT_REPORT.md](engineering/AUDIT_REPORT.md) | Interaction audits (newest at the top; older sections are history). |

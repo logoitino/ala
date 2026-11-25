@@ -1,3 +1,4 @@
+/** Guest runtime chrome uses sessionless published reads; account-bound admin operations preserve ordered drafts. */
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -9,12 +10,14 @@ import {
   publishAppRuntime,
   runtimeConfigsEqual,
   saveAppRuntimeDraft,
+  subscribeAppRuntime,
   type AppRuntimeBundle,
   type AppRuntimeConfig,
 } from '@/lib/runtime';
 import { assertCurrent, createOfflineActorClient, OfflineActorChangedError, type OfflineActor } from '@/lib/offlineActor';
 import { offlineQueue } from '@/services/OfflineQueue';
-import { isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
+import { useOptionalAuth } from '@/context/AuthContext';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 type AppRuntimeContextValue = {
   live: AppRuntimeConfig;
@@ -38,6 +41,7 @@ const AppRuntimeContext = createContext<AppRuntimeContextValue | null>(null);
  * @sideEffects `app_runtime_config` SELECT + Realtime UPDATE; serializes draft writes so Look copy typing cannot race.
  */
 export function AppRuntimeProvider({ children }: { children: ReactNode }) {
+  const publicRuntime = useOptionalAuth()?.isGuest === true;
   const [bundle, setBundle] = useState<AppRuntimeBundle>({
     draft: cloneAppRuntime(DEFAULT_APP_RUNTIME),
     published: cloneAppRuntime(DEFAULT_APP_RUNTIME),
@@ -75,9 +79,9 @@ export function AppRuntimeProvider({ children }: { children: ReactNode }) {
   };
 
   const refresh = useCallback(() => enqueue(async () => {
-    try { adopt(await fetchAppRuntimeBundle()); }
+    try { adopt(await fetchAppRuntimeBundle(undefined, publicRuntime)); }
     finally { setLoading(false); }
-  }), [adopt, enqueue]);
+  }), [adopt, enqueue, publicRuntime]);
 
   useEffect(() => {
     void refresh().catch(() => undefined);
@@ -85,26 +89,16 @@ export function AppRuntimeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
-    const channel = supabase
-      .channel(nextRealtimeTopic('app-runtime'))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_runtime_config' }, (payload) => {
-        const row = payload.new as Record<string, unknown> | null;
-        if (!row) {
-          void refresh().catch(() => undefined);
-          return;
-        }
-        adopt({
-          draft: parseAppRuntimeConfig(row.draft),
-          published: parseAppRuntimeConfig(row.published),
-          publishedAt: typeof row.published_at === 'string' ? row.published_at : null,
-          updatedAt: typeof row.updated_at === 'string' ? row.updated_at : null,
-        });
-      })
-      .subscribe();
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [adopt, refresh]);
+    return subscribeAppRuntime((row) => {
+      if (!row) { void refresh().catch(() => undefined); return; }
+      adopt({
+        draft: parseAppRuntimeConfig(publicRuntime ? row.published : row.draft),
+        published: parseAppRuntimeConfig(row.published),
+        publishedAt: typeof row.published_at === 'string' ? row.published_at : null,
+        updatedAt: typeof row.updated_at === 'string' ? row.updated_at : null,
+      });
+    }, publicRuntime);
+  }, [adopt, publicRuntime, refresh]);
 
   const saveDraft = useCallback((next: AppRuntimeConfig) => {
     const actor = capture();

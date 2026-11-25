@@ -11,13 +11,13 @@ Nothing here is provisioned, priced or approved; cloud spend and cutover remain 
 
 | Fact | Current |
 | --- | --- |
-| Exit plan version (what the app uses on Supabase) | `6278fff32469` |
-| Last announced plan | `6278fff32469` — up to date |
+| Exit plan version (what the app uses on Supabase) | `e7dd4a514380` |
+| Last announced plan | `e7dd4a514380` — up to date |
 | Mobile app version / runtime | 1.0.0 / {"policy":"appVersion"}; Expo SDK ~58.0.14 |
 | Packages | `@tapuai/mobile@1.0.0`, `@tapuai/admin-portal@1.0.0`, `@tapuai/shared-types@1.0.0` |
-| Latest migration | `20261124010000_post_caption_edits.sql` (59 files) |
-| Canonical schema hash | `0d40f08f8089453a436308b0241849af0630e8d829e410dda1b867568c5c16f6` (`schema.sql`) |
-| Complete source/configuration content hash | `6278fff32469fb805304291a0a8082272df541873099e664ad8d01d2b9c6bb2c` across 1456 files |
+| Latest migration | `20261125180000_guest_account_access.sql` (60 files) |
+| Canonical schema hash | `630b289842ca13269c96021260e248a2377bcc18825d084bef482e8907c2cfe3` (`schema.sql`) |
+| Complete source/configuration content hash | `e7dd4a51438049a953cf43c8e9f7209aad9b60d984feb55460e5dae7d656fa65` across 1469 files |
 | Informational readiness planning note | local-drill, recorded for plan `14b092e40835` (**stale**: the app changed since), app source `99b03be48749814f`, commit `2f26caaf1c23` + uncommitted changes, by Claude Code session (owner-run) |
 
 Live view (commit, branch, uncommitted files, app source hash, open notices, GO / NO-GO): `pnpm exit:status`.
@@ -125,7 +125,7 @@ are the calls whose answers the proofs below cover.
 
 | What the app calls | Count | Items | How the target is proven to answer the same |
 | --- | --- | --- | --- |
-| Database functions the app calls | 213 | `accept_guardian_invite`, `add_user_aura`, `admin_approve_player_consent`, `admin_athlete_sport_usage`, `admin_beyond_cleanup_finish`, `admin_beyond_cleanup_targets`, `admin_beyond_erase_profile`, `admin_beyond_posts`, `admin_beyond_retention`, `admin_beyond_review`, `admin_beyond_set_enabled`, `admin_beyond_status`, `admin_challenge_erase`, `admin_challenge_nudge_senders`, `admin_challenge_post_counts`, `admin_challenge_retention`, `admin_challenge_status`, `admin_confirm_payee_check`, `admin_decide_payout_override`, `admin_decide_verification`, `admin_end_guardian_link`, `admin_get_highlight_sport`, `admin_get_privacy`, `admin_hold_challenge_sender`, `admin_list_age_blocked` … (+188) | every one exists in `schema.sql` (checked here); parity compares body, settings, owner, execute rights |
+| Database functions the app calls | 214 | `accept_guardian_invite`, `add_user_aura`, `admin_approve_player_consent`, `admin_athlete_sport_usage`, `admin_beyond_cleanup_finish`, `admin_beyond_cleanup_targets`, `admin_beyond_erase_profile`, `admin_beyond_posts`, `admin_beyond_retention`, `admin_beyond_review`, `admin_beyond_set_enabled`, `admin_beyond_status`, `admin_challenge_erase`, `admin_challenge_nudge_senders`, `admin_challenge_post_counts`, `admin_challenge_retention`, `admin_challenge_status`, `admin_confirm_payee_check`, `admin_decide_payout_override`, `admin_decide_verification`, `admin_end_guardian_link`, `admin_get_highlight_sport`, `admin_get_privacy`, `admin_hold_challenge_sender`, `admin_list_age_blocked` … (+189) | every one exists in `schema.sql` (checked here); parity compares body, settings, owner, execute rights |
 | Tables/views the app reads or writes directly | 30 | `app_runtime_config`, `athlete_career_stats`, `athlete_game_logs`, `cheer_polls`, `crew_push_queue`, `custodial_accounts`, `disbursements`, `game_events`, `games`, `players`, `profiles`, `profiles_public`, `reel_hype_votes`, `reel_photos`, `reel_photos_feed`, `reel_reports`, `reels`, `reels_feed`, `saved_reels`, `schools_and_teams`, `shop_products`, `sponsorships`, `spotlight_awards`, `subscriber_requests`, `subscriptions`, `telemetry_logs`, `tips`, `user_feed_prefs`, `verification_requests`, `wishlist_items` | parity: rows and hashes; **access parity**: rows visible to a guest, signed-in users and an admin |
 | Storage buckets the app calls | 4 | `beyond_game`, `fan_zone`, `reel_vault`, `reels` | restore.py re-downloads and hashes every object; parity checks storage.objects policies |
 | Realtime channels the app opens | 1 | `scorer_games` | parity: realtime publication + realtime.messages policies; runbook Realtime smoke test |
@@ -144,14 +144,14 @@ Counts come from static statements in `schema.sql` and the source; the live data
 | Application schemas | 1 | `fan_zone_private` |
 | Tables | 126 | covered by backup, restore list and parity automatically |
 | Views | 3 | `public.profiles_public`, `public.reel_photos_feed`, `public.reels_feed` |
-| Database functions | 617 | covered by parity (body, settings, owner, execute rights) |
+| Database functions | 620 | covered by parity (body, settings, owner, execute rights) |
 | Row level security policies | 104 declared by name | policies created in DO blocks (for example per-table "Closed accounts") are not visible here; parity counts the live set, and extra or missing policies block cutover |
 | Triggers | 70 | covered by parity |
-| App policies/triggers on Supabase's own tables | 34 | `policy realtime.messages: Fans receive game score changes`, `policy realtime.messages: Fans receive game_events broadcast`, `policy realtime.messages: Operators send game_events broadcast`, `policy storage.objects: Beyond approved and inspection media`, `policy storage.objects: Beyond private delete guard`, `policy storage.objects: Beyond private insert guard`, `policy storage.objects: Beyond private read guard`, `policy storage.objects: Beyond private update guard`, `policy storage.objects: Beyond removed cleanup`, `policy storage.objects: Beyond reserved owner upload`, `policy storage.objects: Closed accounts`, `policy storage.objects: Delete claimed failed photo story objects`, `policy storage.objects: Owner delete avatars`, `policy storage.objects: Owner lists own public media`, `policy storage.objects: Public read avatars`, `policy storage.objects: Public read game highlights`, `policy storage.objects: Public read reels bucket`, `policy storage.objects: Public update avatars`, `policy storage.objects: Public update reels bucket`, `policy storage.objects: Public upload avatars`, `policy storage.objects: Public upload game highlights`, `policy storage.objects: Public upload reels bucket`, `policy storage.objects: Read entitled vault reel`, `policy storage.objects: Upload own vault reel`, `policy storage.objects: fan_zone_insert`, `policy storage.objects: fan_zone_insert_boundary`, `policy storage.objects: fan_zone_no_delete`, `policy storage.objects: fan_zone_no_read`, `policy storage.objects: fan_zone_no_update`, `trigger auth.users: on_auth_user_created`, `trigger auth.users: zz_notification_auth_activation`, `trigger storage.objects: beyond_storage_guard`, `trigger storage.objects: fan_zone_storage_guard`, `trigger storage.objects: guard_photo_story_storage_write` |
+| App policies/triggers on Supabase's own tables | 35 | `policy realtime.messages: Fans receive game score changes`, `policy realtime.messages: Fans receive game_events broadcast`, `policy realtime.messages: Operators send game_events broadcast`, `policy storage.objects: Beyond approved and inspection media`, `policy storage.objects: Beyond private delete guard`, `policy storage.objects: Beyond private insert guard`, `policy storage.objects: Beyond private read guard`, `policy storage.objects: Beyond private update guard`, `policy storage.objects: Beyond removed cleanup`, `policy storage.objects: Beyond reserved owner upload`, `policy storage.objects: Closed accounts`, `policy storage.objects: Delete claimed failed photo story objects`, `policy storage.objects: Owner delete avatars`, `policy storage.objects: Owner lists own public media`, `policy storage.objects: Public read avatars`, `policy storage.objects: Public read game highlights`, `policy storage.objects: Public read reels bucket`, `policy storage.objects: Public update avatars`, `policy storage.objects: Public update reels bucket`, `policy storage.objects: Public upload avatars`, `policy storage.objects: Public upload game highlights`, `policy storage.objects: Public upload reels bucket`, `policy storage.objects: Read entitled vault reel`, `policy storage.objects: Registered account Storage access`, `policy storage.objects: Upload own vault reel`, `policy storage.objects: fan_zone_insert`, `policy storage.objects: fan_zone_insert_boundary`, `policy storage.objects: fan_zone_no_delete`, `policy storage.objects: fan_zone_no_read`, `policy storage.objects: fan_zone_no_update`, `trigger auth.users: on_auth_user_created`, `trigger auth.users: zz_notification_auth_activation`, `trigger storage.objects: beyond_storage_guard`, `trigger storage.objects: fan_zone_storage_guard`, `trigger storage.objects: guard_photo_story_storage_write` |
 | Extensions | 1 | `pgcrypto` |
 | Realtime publication tables | 4 | `public.app_runtime_config`, `public.cheer_polls`, `public.game_events`, `public.games` |
 | Storage buckets | 6 | `avatars`, `beyond_game`, `fan_zone`, `game_highlights`, `reel_vault`, `reels` |
-| Migration files | 59 | latest `20261124010000_post_caption_edits.sql` |
+| Migration files | 60 | latest `20261125180000_guest_account_access.sql` |
 | Edge Functions | 3 | `create-payment-intent` (self-host allowlist), `create-stripe-account` (self-host allowlist), `stripe-webhook` (excluded: Must not be deployed until P1-05 retires the client tips insert (STATE §0, §6 item 3).) |
 | Expo API routes | 6 | `create-payment-intent`, `create-payout`, `create-stripe-account`, `fan-zone-media`, `fan-zone-remove`, `fan-zone-upload` |
 | Auth methods called | 17 | `exchangeCodeForSession` (PKCE code exchange after a redirect), `getSession` (Read the local session), `getUser` (Validate the current session with the server), `mfa.challenge` (TOTP challenge), `mfa.enroll` (TOTP factor enrollment), `mfa.getAuthenticatorAssuranceLevel` (Read aal1 / aal2), `mfa.listFactors` (List MFA factors), `mfa.unenroll` (TOTP removal), `mfa.verify` (TOTP verification), `onAuthStateChange` (Session change events), `setSession` (Restore a session from tokens), `signInWithIdToken` (Native Apple / Google ID token), `signInWithOAuth` (OAuth redirect (Google)), `signInWithOtp` (Email link / one-time code), `signInWithPassword` (Email and password sign-in), `signOut` (Sign out), `signUp` (Email sign-up) |
@@ -159,11 +159,11 @@ Counts come from static statements in `schema.sql` and the source; the live data
 | Realtime features | 3 | `broadcast`, `postgres_changes`, `private channels` |
 | Public client environment names | 17 | `EXPO_PUBLIC_ADMIN_REQUIRE_MFA`, `EXPO_PUBLIC_API_ORIGIN`, `EXPO_PUBLIC_APP_ENV`, `EXPO_PUBLIC_DEMO_FAN_EMAIL`, `EXPO_PUBLIC_DEMO_FAN_PASSWORD`, `EXPO_PUBLIC_FEED_IMPLICIT_SIGNALS`, `EXPO_PUBLIC_LIVE_SCORES_BROADCAST`, `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPPORT_ENVIRONMENT`, `EXPO_PUBLIC_SUPPORT_RELEASE`, `EXPO_PUBLIC_SUPPORT_SENSORS_ENABLED`, `EXPO_PUBLIC_WEB_ORIGIN`, `NEXT_PUBLIC_ADMIN_REQUIRE_MFA`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL` |
 | Server environment names | 8 | `ANALYTICS_TEST_RESOLVER`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`, `SUPPORT_ENVIRONMENT`, `SUPPORT_RELEASE_ID` |
-| Direct Supabase calls outside `lib/` | 32 | places an exit B adapter change must touch (may only shrink, `pnpm app:data-boundaries`) |
+| Direct Supabase calls outside `lib/` | 30 | places an exit B adapter change must touch (may only shrink, `pnpm app:data-boundaries`) |
 
 ### SDK callsite coverage
 
-AST callsites: 1006; literal targets: 487; explicit owner-review candidates: 198.
+AST callsites: 1006; literal targets: 488; explicit owner-review candidates: 200.
 The complete machine inventory (`node scripts/exit-map.mjs --json`) records each detected callsite path, line, column,
 operation and literal target. Dynamic arguments and unresolved client origins require owner review. Syntax inspection
 does not prove runtime/provider coverage; overloads, dynamic SQL and deployed drift require live catalog parity.
@@ -186,19 +186,19 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `apps/admin-portal/lib/reports.ts:26:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/admin-portal/lib/reports.ts:32:21` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/admin-portal/lib/reports.ts:34:24` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:77:18` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/admin-portal/lib/softWall.ts:78:18` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:82:18` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:135:22` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:144:15` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/admin-portal/lib/softWall.ts:199:37` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:79:18` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:83:18` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:136:22` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:145:15` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/admin-portal/lib/softWall.ts:200:37` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/admin-portal/middleware.ts:66:13` | `auth.getUser` | not-applicable; client unresolved | `EXIT_SERVICES`, `AUTH`, `SESSION_SECURITY` |
 | `apps/mobile/src/backend/api/createPaymentIntent.ts:57:11` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/backend/api/createPaymentIntent.ts:64:29` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/backend/api/createPayout.ts:51:37` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/backend/api/createStripeAccount.ts:94:41` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/backend/api/createStripeAccount.ts:102:41` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/backend/api/createStripeAccount.ts:110:51` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/backend/api/createStripeAccount.ts:95:41` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/backend/api/createStripeAccount.ts:103:41` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/backend/api/createStripeAccount.ts:111:51` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/backend/api/fanZoneMedia.ts:81:42` | `storage.from` | literal; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/backend/api/fanZoneMedia.ts:81:42` | `storage.upload` | not-applicable; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/backend/api/fanZoneMedia.ts:83:35` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
@@ -209,9 +209,8 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `apps/mobile/src/backend/services/fanZoneMedia.ts:44:33` | `storage.download` | not-applicable; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/backend/services/fanZoneMedia.ts:44:33` | `storage.from` | literal; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/frontend/components/Admin/UnappliedControlsCard.tsx:19:31` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/context/AppRuntimeContext.tsx:88:21` | `realtime.channel` | dynamic; client resolved | `EXIT_SERVICES`, `REALTIME` |
-| `apps/mobile/src/frontend/context/AuthContext.tsx:601:13` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-| `apps/mobile/src/frontend/context/AuthContext.tsx:612:31` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/context/AuthContext.tsx:610:13` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+| `apps/mobile/src/frontend/context/AuthContext.tsx:621:31` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/hooks/useGameEventBroadcast.ts:51:21` | `realtime.channel` | dynamic; client resolved | `EXIT_SERVICES`, `REALTIME` |
 | `apps/mobile/src/frontend/hooks/useTipCheckout.ts:256:45` | `database.from` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/admin.ts:122:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
@@ -270,7 +269,8 @@ does not prove runtime/provider coverage; overloads, dynamic SQL and deployed dr
 | `apps/mobile/src/frontend/lib/mediaStorage.ts:53:31` | `storage.remove` | not-applicable; client unresolved | `EXIT_SERVICES`, `STORAGE`, `RECOVERY` |
 | `apps/mobile/src/frontend/lib/notifications.ts:49:35` | `database.rpc` | dynamic; client resolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
 | `apps/mobile/src/frontend/lib/notifications.ts:82:33` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
-Additional 98 candidates are included in the complete machine inventory.
+| `apps/mobile/src/frontend/lib/notifications.ts:88:40` | `database.rpc` | literal; client unresolved | `EXIT_DATABASE`, `DATABASE_MIGRATIONS`, `RLS_SECURITY` |
+Additional 100 candidates are included in the complete machine inventory.
 
 ## 8. How the data moves
 

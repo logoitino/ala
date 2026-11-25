@@ -1,4 +1,5 @@
 /**
+ * GUEST-ACCESS-01 account policy is reported on the existing Features desk.
  * Canonical Expo `/admin` desks the Next portal may name for oversight.
  * PORTAL Product / Coverage / Health unapplied notices point here; writes stay in Expo.
  * UX-17 keeps existing public roster discovery and pending selection accountable to school/athlete desks.
@@ -109,7 +110,7 @@ export const PORTAL_COVERAGE_SURFACES: readonly PortalCoverageSurface[] = [
   { id: 'profile', label: 'Profile', adminPath: '/admin/athletes', hint: 'Vault, Crew, notifications, existing roster selection and enlargement of already visible profile photos.' },
   { id: 'upload', label: 'Upload +', adminPath: '/admin/highlights', hint: 'Highlight and Beyond compose.' },
   { id: 'receipts', label: 'Receipts', adminPath: '/admin/money', hint: 'Gift and purchase history.' },
-  { id: 'auth', label: 'Soft-Wall auth', adminPath: '/admin/features', hint: 'Guest gates and resume after sign-in.' },
+  { id: 'auth', label: 'Soft-Wall auth', adminPath: '/admin/features', hint: 'Three-Highlight preview; registered-account browsing on web and phone. Sign-in resumes after age confirmation; hosted data/API acceptance stays separate.' },
   { id: 'operator', label: 'Operator', adminPath: '/admin/games', hint: 'Sideline console.' },
   { id: 'parent', label: 'Parent HQ', adminPath: '/admin/people', hint: 'Guardian consent and custodial.' },
   { id: 'booster', label: 'Booster HQ', adminPath: '/admin/boosters', hint: 'Booster roster portal.' },

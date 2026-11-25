@@ -3302,6 +3302,102 @@
           "supabase/migrations/20261124010000_post_caption_edits.sql"
         ]
       }
+    },
+    {
+      "id": "GUEST-ACCESS-01",
+      "title": "Account-required browsing with a bounded guest Highlights preview on web and phone",
+      "owner": "AUTH",
+      "status": "app-ready",
+      "plannedAt": "2026-11-25T19:03:13.177Z",
+      "exemption": null,
+      "source": {
+        "description": "Existing Auth session and age eligibility; shared route policy; anonymous preview is at most three safe published free videos with no roster/account fields. Full profile/roster/search/feed sources require authentication; privacy and actor rules retained.",
+        "paths": [
+          "packages/shared-types/guestAccess.ts",
+          "supabase/migrations/20261125180000_guest_account_access.sql",
+          "apps/mobile/src/backend/db/schema.sql"
+        ]
+      },
+      "admin": {
+        "route": "/admin/features",
+        "actions": [
+          "Review account-required route policy and preview allowance in existing Auth desk",
+          "Review migration application and missing-preview source errors; no client toggle can disable data authorization",
+          "Repair auth/provider configuration through existing Features/Auth workflows"
+        ],
+        "paths": [
+          "apps/mobile/src/frontend/components/Admin/FeaturesTool.tsx",
+          "apps/mobile/src/frontend/lib/adminCoverage.ts"
+        ]
+      },
+      "report": {
+        "route": "/auth",
+        "metrics": [
+          "Existing read-only sign-in oversight shows source policy and preview allowance; no new per-visitor identity tracking or conversion claim. Existing soft_wall.browse signal covers prompts, not enforcement proof. Missing hosted migration and visual/device verification remain explicit SUPPORT gaps."
+        ],
+        "paths": [
+          "apps/admin-portal/lib/softWall.ts",
+          "apps/admin-portal/app/(protected)/auth/page.tsx",
+          "packages/shared-types/admin/expoDeskDirectory.ts"
+        ]
+      },
+      "disable": {
+        "strategy": "No permissive runtime switch for access rules. Existing runtime Home pause stops preview UI; reviewed source rollback/migration remediation requires owner approval. SUPPORT uses fixed guest-preview unavailable errors, local denied-read and direct-route regression tests; missing sensors cannot be healthy. No new server monitor is claimed.",
+        "paths": [
+          "packages/shared-types/guestAccess.ts",
+          "supabase/migrations/20261125180000_guest_account_access.sql"
+        ]
+      },
+      "access": {
+        "roles": [
+          "signed-in age-eligible accounts; guest preview only"
+        ],
+        "deniedBehavior": "Guests retain welcome/auth callback/legal/public preview only. Restricted route children/data hooks never mount before account/age authorization; canceled sign-in returns preview and successful sign-in resumes destination. Anonymous full profile/roster/feed paths denied through grants/RLS/RPC; existing role/privacy/minor rules still apply. Hosted SQL is not applied by local checks.",
+        "paths": [
+          "supabase/migrations/20261125180000_guest_account_access.sql",
+          "packages/shared-types/guestAccess.ts"
+        ]
+      },
+      "app": {
+        "route": "/",
+        "paths": [
+          "apps/mobile/src/frontend/components/Auth/GuestAccessBoundary.tsx",
+          "apps/mobile/src/frontend/components/Auth/GuestHighlightsPreview.tsx",
+          "apps/mobile/app/_layout.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-25T19:13:17.780Z",
+          "evidence": [
+            {
+              "path": "docs/agents/COORD-01.md",
+              "command": "node scripts/replay/guest-access-replay.mjs /Users/seiuliian/Documents/ala-pglite-0.5.9/package/dist; node --test scripts/__tests__/guest-access.test.mjs; corepack pnpm portal:test; corepack pnpm typecheck; node scripts/data-map.mjs",
+              "result": "Local operational source checks:6 SQL cases,2 policy tests,217 portal tests, both typechecks and data map passed. Anonymous raw/RPC access denied and preview bounded; existing member reads retained. Hosted SQL/hook installation and direct HTTP denial not verified; official configuration docs unavailable in session."
+            },
+            {
+              "path": "docs/agents/COORD-01.md",
+              "command": "node scripts/replay/guest-access-replay.mjs /Users/seiuliian/Documents/ala-pglite-0.5.9/package/dist; node scripts/check-feature-admin.mjs --feature GUEST-ACCESS-01 --require admin-ready; corepack pnpm typecheck; node scripts/data-map.mjs",
+              "result": "25Nov operational revalidation:9 SQL cases, both typechecks, data map and selected gate pass. Original19:13:17.780Z checkpoint preserved; current official docs now cached/read. Hosted application/config/HTTP and formal domain acceptance remain pending."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-25T20:04:36.846Z",
+          "evidence": [
+            {
+              "path": "docs/agents/COORD-01.md",
+              "command": "corepack pnpm --filter @tapuai/mobile test -- --watchman=false --runInBand src/frontend/context/__tests__/AuthContext.freshness.test.tsx src/frontend/context/__tests__/AppRuntimeContext.test.tsx src/frontend/context/__tests__/SoftWallContext.test.tsx src/frontend/lib/__tests__/runtime.test.ts src/frontend/lib/runtimeMutations.test.ts src/frontend/lib/__tests__/guestPreview.test.ts src/frontend/components/Auth/__tests__/GuestAccessBoundary.test.tsx src/frontend/components/Auth/__tests__/GuestRouting.test.tsx src/frontend/components/Common/__tests__/WebAppShell.test.tsx",
+              "result": "Local9suites115 cases pass, including actual Router3 direct URL/account/callback cases. Public/runtime3suites23 cases and both typechecks pass separately. Four review Important issues corrected. Local source readiness only; full gate follows; formal CHECK-01/hosted/physical-device acceptance remains pending."
+            },
+            {
+              "path": "docs/agents/COORD-01.md",
+              "command": "corepack pnpm run check --state-dir \"$HOME/Library/Application Support/Tapuai/exit-source-documents-ala\"; corepack pnpm detection:scan",
+              "result": "25Nov20:17:55Z full checkout-scoped repository check passes346mobile suites3246tests,217portal and all required gates. Private sourceCurrenttrue, cutoverfalse. Retained scanner quality fails only known default sync-state mismatch; portal217pass,no skips. Independent source review corrected fourImportant and Minor realtime issue; latesthelperreview no new findings. Formal matrix/hosted/browser/device acceptance pending."
+            }
+          ]
+        }
+      }
     }
   ]
 }

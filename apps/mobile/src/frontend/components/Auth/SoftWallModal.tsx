@@ -1,4 +1,4 @@
-/** UX-13 readable shared type preserves every action and required notice. Google supports new and existing accounts; bank setup is separate and age rules remain with account confirmation. */
+/** GUEST-ACCESS-01 browse copy covers all account-required routes on web and phone. UX-13 readable shared type preserves every action and required notice. Google supports new and existing accounts; bank setup is separate and age rules remain with account confirmation. */
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -97,7 +97,7 @@ export function SoftWallModal() {
       : intent?.kind === 'upload'
         ? 'An account is required to post a Highlight.'
         : intent?.kind === 'browse'
-          ? 'Finish this Highlight, then create an account to keep swiping.'
+          ? 'Create an account or sign in to explore athletes, teams and the community.'
           : intent?.kind === 'crew'
             ? 'Sign in to join The Crew.'
             : intent?.kind === 'wishlist'
@@ -385,7 +385,7 @@ export function SoftWallModal() {
               {error ? <Text style={styles.error}>{error}</Text> : null}
 
               <Pressable accessibilityRole="button" disabled={Boolean(busy)} onPress={dismiss} style={styles.close}>
-                <Text style={styles.closeLabel}>{intent?.kind === 'browse' ? 'Finish this Highlight' : 'Not now'}</Text>
+                <Text style={styles.closeLabel}>{intent?.kind === 'browse' ? 'Back to preview' : 'Not now'}</Text>
               </Pressable>
             </ScrollView>
           </Animated.View>

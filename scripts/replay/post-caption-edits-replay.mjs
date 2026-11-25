@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** POST-EDIT-01 verifies the real SQL against synthetic creators, viewers, and review states. No hosted access. */
+/** POST-EDIT-01 verifies the real SQL against synthetic creators, viewers, and review states. No hosted access. Earlier canonical blocks remain intact when later migrations append. */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -66,7 +66,7 @@ try {
     assert.equal(await scalar(
       "select count(*)::int as value from pg_trigger where tgname='reels_guard_caption_edit' and tgrelid='public.reels'::regclass",
     ), 1);
-    assert.ok(canonical.endsWith(migration), 'canonical schema must include the unchanged incremental block');
+    assert.ok(canonical.includes(migration), 'canonical schema must include the unchanged incremental block');
   });
 
   for (const [name, id] of Object.entries(ids)) {

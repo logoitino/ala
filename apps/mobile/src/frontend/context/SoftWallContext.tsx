@@ -1,5 +1,5 @@
 /**
- * Browse-first soft wall. A guest can watch a shared Highlight and two more swipes. Upload, Give,
+ * Account browsing soft wall. Guests can watch the three safe Highlight previews. Upload, Give,
  * Join Crew, gear goals, and Vault unlock need an account. `requireAuth(intent)` runs the action at
  * once when signed in; otherwise it opens `SoftWallModal`, remembers the intent, and resumes it after sign-in.
  */
@@ -49,7 +49,7 @@ const SoftWallContext = createContext<SoftWallContextValue | null>(null);
 const RESUME_AFTER_SHEET_MS = 220;
 
 export function SoftWallProvider({ children }: { children: ReactNode }) {
-  const { isGuest, session, loading, needsAgeConfirmation, birthPrompt } = useAuth();
+  const { accountReady, isGuest, session, loading, needsAgeConfirmation, birthPrompt } = useAuth();
   const [intent, setIntent] = useState<SoftWallIntent | null>(null);
   const [presentId, setPresentId] = useState(0);
   const pendingResume = useRef<(() => void) | null>(null);
@@ -82,7 +82,7 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
       pendingWhileLoading.current = null;
       if (!isGuest && session) {
         // AgeConfirmModal covers required and optional birth prompts — arm resume, do not reopen Soft-Wall.
-        if (!needsAgeConfirmation && birthPrompt == null) {
+        if (accountReady !== false && !needsAgeConfirmation && birthPrompt == null) {
           next.resume();
           return;
         }
@@ -98,7 +98,7 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
       setIntent(next);
       telemetry.trackFeature(`soft_wall.${next.kind}`, 'auth');
     },
-    [birthPrompt, clearResumeTimer, isGuest, loading, needsAgeConfirmation, session],
+    [accountReady, birthPrompt, clearResumeTimer, isGuest, loading, needsAgeConfirmation, session],
   );
 
   // Replay the stashed tap once AuthContext finishes restoring (guest → Soft-Wall, signed-in → resume).
@@ -122,7 +122,7 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
   // (`needsAgeConfirmation` / any `birthPrompt`). SoftWallModal's dismiss animation is ~180ms;
   // wait past that so Vault / Give PaymentSheet does not fight the sign-in sheet.
   useEffect(() => {
-    if (isGuest || !session || needsAgeConfirmation || birthPrompt != null || !armedForSession.current) {
+    if (accountReady === false || isGuest || !session || needsAgeConfirmation || birthPrompt != null || !armedForSession.current) {
       return;
     }
     const resume = pendingResume.current;
@@ -135,7 +135,7 @@ export function SoftWallProvider({ children }: { children: ReactNode }) {
       resume();
     }, RESUME_AFTER_SHEET_MS);
     return clearResumeTimer;
-  }, [birthPrompt, clearResumeTimer, isGuest, needsAgeConfirmation, session]);
+  }, [accountReady, birthPrompt, clearResumeTimer, isGuest, needsAgeConfirmation, session]);
 
   useEffect(() => () => clearResumeTimer(), [clearResumeTimer]);
   const value = useMemo(

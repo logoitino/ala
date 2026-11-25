@@ -1,4 +1,5 @@
-/**
+/** GUEST-ACCESS-01 carries the verified anonymous-user flag into the shared account rejection gate.
+
  * Metro / Node adapter for Stripe Connect account set-up (`POST /api/create-stripe-account`, Accounts v2). The mode,
  * Terms / linked-account gates, account shape (US individual Express: `country: 'us'`, `entity_type: 'individual'`,
  * kept in `CONNECT_ACCOUNT_IDENTITY`), links and stored flags live in the shared money core
@@ -56,7 +57,7 @@ export async function createStripeAccountHandler(request: Request): Promise<Resp
     const session = await resolveSession(jwt, {
       getUser: async (token) => {
         const { data, error } = await authClient.auth.getUser(token);
-        return { user: data.user ? { id: data.user.id, email: data.user.email ?? null } : null, error };
+        return { user: data.user ? { id: data.user.id, email: data.user.email ?? null, ...(data.user.is_anonymous === true ? { is_anonymous: true } : {}) } : null, error };
       },
     });
     if (!session.ok) {

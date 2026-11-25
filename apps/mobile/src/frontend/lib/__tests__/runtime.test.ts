@@ -2,7 +2,7 @@
  * Synthetic local config/transport fixtures preserve legacy chrome defaults; no hosted writes run. */
 import { APP_RUNTIME_FLAG_GROUPS } from '@tapuai/shared-types';
 import {
-  cloneAppRuntime, DEFAULT_APP_RUNTIME, diffRuntimeFlags, getRuntimeFlag,
+  subscribeAppRuntime, fetchAppRuntimeBundle, cloneAppRuntime, DEFAULT_APP_RUNTIME, diffRuntimeFlags, getRuntimeFlag,
   parseAppRuntimeConfig, saveAppRuntimeDraft, setRuntimeFlag, type AppRuntimeConfig,
 } from '../runtime';
 
@@ -10,10 +10,17 @@ let mockConfigured = false;
 const mockRpc = jest.fn();
 const mockUpdate = jest.fn();
 const mockSingle = jest.fn();
+let mockRuntimeUpdate: (payload: {new: Record<string,unknown>}) => void;
+const mockPublicChannel: {on:jest.Mock;subscribe:jest.Mock}={on:jest.fn((_event:unknown,_filter:unknown,callback:typeof mockRuntimeUpdate)=>{mockRuntimeUpdate=callback;return mockPublicChannel;}),subscribe:jest.fn(()=>mockPublicChannel)};
+const mockPublicRemove=jest.fn(),mockMemberRemove=jest.fn();
+const mockPublicFrom = jest.fn();
+const mockPublicSelect = jest.fn();
 const mockFrom = jest.fn();
 jest.mock('@/lib/supabase', () => ({
   get isSupabaseConfigured() { return mockConfigured; },
-  supabase: { rpc: (...args: unknown[]) => mockRpc(...args), from: (...args: unknown[]) => mockFrom(...args) },
+  getGuestPreviewClient: () => ({from:mockPublicFrom,channel:()=>mockPublicChannel,removeChannel:mockPublicRemove}),
+  nextRealtimeTopic: () => 'runtime-test',
+  supabase: { removeChannel:mockMemberRemove, rpc: (...args: unknown[]) => mockRpc(...args), from: (...args: unknown[]) => mockFrom(...args) },
 }));
 const FLAG = 'buttons.MONETIZATION_TIPS_ENABLED' as const;
 
@@ -75,4 +82,23 @@ it('keeps the configured direct-table fallback draft-only', async () => {
   expect(mockUpdate.mock.calls[0][0]).not.toHaveProperty('published');
   expect(result.draft.buttons.MONETIZATION_TIPS_ENABLED).toBe(true);
   expect(result.published.buttons.MONETIZATION_TIPS_ENABLED).toBe(false);
+});
+
+it('guest runtime reads only published chrome with the isolated public client', async () => {
+  mockConfigured=true;
+  const published=setRuntimeFlag(DEFAULT_APP_RUNTIME,'buttons.malo',false);
+  mockPublicFrom.mockReturnValue({select:mockPublicSelect});
+  mockPublicSelect.mockReturnValue({eq:()=>({maybeSingle:async()=>({data:{published,published_at:null},error:null})})});
+  const result=await fetchAppRuntimeBundle(undefined,true);
+  expect(result.published.buttons.malo).toBe(false);
+  expect(result.draft).toEqual(result.published);
+  expect(mockPublicSelect).toHaveBeenCalledWith('published, published_at');
+  expect(mockFrom).not.toHaveBeenCalled();
+});
+
+it('public runtime subscription strips drafts and removes its own channel',()=>{
+ mockConfigured=true;const observe=jest.fn();const stop=subscribeAppRuntime(observe,true);
+ mockRuntimeUpdate({new:{draft:{privateEditor:'discard'},published:{copy:{homeLede:'Published'}},published_at:null}});
+ expect(observe).toHaveBeenCalledWith({published:{copy:{homeLede:'Published'}},published_at:null});
+ stop();mockRuntimeUpdate({new:{published:{copy:{homeLede:'Late'}}}});expect(observe).toHaveBeenCalledTimes(1);expect(mockPublicRemove).toHaveBeenCalledWith(mockPublicChannel);expect(mockMemberRemove).not.toHaveBeenCalled();
 });

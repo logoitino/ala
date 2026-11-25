@@ -22,6 +22,8 @@ jest.mock('@/components/Common/DesktopRightRail', () => ({
   },
 }));
 
+let mockGuest=false;
+jest.mock('@/context/AuthContext',()=>({useAuth:()=>({accountReady:!mockGuest,isGuest:mockGuest,loading:false,session:mockGuest?null:{user:{id:'one'}}})}));
 const windowDimensions = jest.spyOn(require('react-native'), 'useWindowDimensions');
 
 function viewport(width: number) {
@@ -34,6 +36,7 @@ describe('WebAppShell', () => {
   afterEach(() => {
     Object.defineProperty(Platform, 'OS', { configurable: true, value: originalOS });
     viewport(1440);
+    mockGuest=false;
   });
 
   it('passes children through on native', async () => {
@@ -113,3 +116,5 @@ describe('WebAppShell', () => {
   });
 
 });
+
+it('guest web does not mount desktop discovery data or navigation rails',async()=>{Object.defineProperty(Platform,'OS',{configurable:true,value:'web'});viewport(1440);mockGuest=true;await render(<WebAppShell><Text>Preview</Text></WebAppShell>);expect(screen.getByText('Preview')).toBeTruthy();expect(screen.queryByText('Left rail')).toBeNull();expect(screen.queryByText('Right rail')).toBeNull();});

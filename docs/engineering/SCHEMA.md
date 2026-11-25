@@ -2183,3 +2183,9 @@ corrects the original target-player log without replacing id/date/values. `admin
 secondary participation in protected catalog usage. `profiles.athlete_sports_managed` is an internal trusted
 opt-in marker: legacy onboarding changes advance revision, avoiding a stale first save, while post-opt-in direct
 credential mutation remains rejected. No new guardian or verification authority.
+
+## Guest account access — GUEST-ACCESS-01 (local, 2026-11-25)
+
+The prepared `20261125180000_guest_account_access.sql` is identical to the canonical suffix. New `account_browsing_allowed()`, `guest_highlights_preview()` and `enforce_registered_api_account()` helpers restrict account APIs; `caller_not_age_blocked()` now also denies signed/managed anonymous-auth identities. Existing effective non-guest grants are preserved before anon/PUBLIC public-schema table/sequence/function privileges are removed. Runtime SELECT and four helper RPCs remain public; RLS account-read restrictions and Storage objects restrictive ALL policy preserve original path/owner/privacy rules. Creator default PUBLIC function EXECUTE is revoked globally.
+
+The preview returns id/title/video URL/date only, maximum three, from visible free unflagged/nonremoved attested videos. Confirmed/no-tag eligibility uses raw reels because the view hides pending tags. No arguments, paging, paid/photo media or account fields. Authenticator pre-request hook installs only after preflight refuses unrelated or database-specific blank overrides. [Guest access](GUEST_ACCESS.md) records SQL replays and hosted apply/HTTP/Storage acceptance gaps. Public media URLs remain public; no new table/bucket/visitor quota is introduced.

@@ -399,3 +399,9 @@ Separate existing source gap: `useAuraBoosters` retains its canonical fallback b
 
 
 Final local gate: 340 mobile suites / 3,211 tests and full Ala-scoped repository check passed. Retained detection passed 217 portal tests; default quality gate failed only on the different-checkout source-sync state. The Ala-owned snapshot passed. These are separate outcomes, not a healthy runtime-monitor claim.
+
+## Guest account access — GUEST-ACCESS-01 (local, 2026-11-25)
+
+The bounded guest Home preview carries the welcome’s dark brand, readable TYPE hierarchy, safe-area gutters and 44–48pt actions into three videos with explicit Play/Next/account steps. Legal and retry remain reachable. Published Home pause prevents preview mounting. Restricted destinations explain the account requirement and offer Sign in/Create or Back; unresolved profile setup offers Retry/Sign out while existing age overlays remain outside the gate. Both web and phone are in the owner-approved scope; member screen sizes are retained.
+
+Source/mounted tests cover bounded steps, direct URLs, callback isolation, restoration/profile/age timing, cancellation and outgoing-account cleanup. [Guest access](GUEST_ACCESS.md) and [tester steps](TESTER_SCRIPT.md#guest-account-access--web-and-phone--2026-11-25) record actual evidence. Current browser Bridge credential failure and physical Android typography/scroll/playback checks remain explicit; no Instagram parity or hosted enforcement is claimed.

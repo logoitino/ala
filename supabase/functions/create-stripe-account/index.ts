@@ -10,7 +10,8 @@ import {
 import { INVALID_SESSION_MESSAGE, errorResult, refuseLiveStripeKey, readBearerLoose, type CoreResult } from '../_shared/money/http.ts';
 import { resolveSession } from '../_shared/money/session.ts';
 
-/**
+/** GUEST-ACCESS-01 carries the verified anonymous-user flag into the shared account rejection gate.
+
  * Edge Function adapter for Stripe Connect Express set-up (Accounts v2) — the path installed builds use.
  *
  * SCALE-04: the mode, Terms / linked-account gates, account shape, links and stored flags are the shared money core
@@ -74,7 +75,7 @@ Deno.serve(async (req) => {
     const session = await resolveSession(jwt, {
       getUser: async (token) => {
         const { data, error } = await userClient.auth.getUser(token);
-        return { user: data.user ? { id: data.user.id, email: data.user.email ?? null } : null, error };
+        return { user: data.user ? { id: data.user.id, email: data.user.email ?? null, ...(data.user.is_anonymous === true ? { is_anonymous: true } : {}) } : null, error };
       },
     });
     if (!session.ok) {

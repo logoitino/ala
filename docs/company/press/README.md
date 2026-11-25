@@ -24,3 +24,5 @@ If Reel / Local / Profile chrome changes, recapture these PNGs from Expo Go when
 **2026-10-22 gift/checkout STALE:** Give/Gift labels, athlete-page tax notice and default-OFF
 optional tip/estimated processing controls now differ from these historical captures. No new
 device captures; changed giving screens have a source string-table diff in the engineering evidence.
+
+**2026-11-25 guest entry STALE:** both-platform guest Home now uses a bounded welcome-style preview and account gates. Current browser credential failure prevents recapture; physical Expo Go screenshots remain pending.

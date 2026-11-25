@@ -1,4 +1,5 @@
 /**
+ * GUEST-ACCESS-01 signed-out chrome never mounts discovery data or account navigation.
  * Expo web chrome: at ≥820px, Facebook-style desktop rails (WEB-DESKTOP-01) around the existing
  * Router stack. Native ignores this wrapper. Below 820px the phone layout is unchanged.
  * The tablet drawer loads extras only when open and dismisses on navigation. Desktop vs narrow branching waits until after mount so SSR HTML matches the first client paint.
@@ -7,6 +8,8 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { useAuth } from '@/context/AuthContext';
+import { hasAccountSession } from '@tapuai/shared-types';
 import { TYPE, figtree } from '@/theme/fonts';
 import { colors } from '@/constants/theme';
 import {
@@ -33,6 +36,7 @@ type WebAppShellProps = {
  */
 export function WebAppShell({ children, backgroundColor = colors.background }: WebAppShellProps) {
   const { width } = useWindowDimensions();
+  const { accountReady, needsAgeConfirmation, birthPrompt, isGuest, loading, session } = useAuth();
   const [layoutReady, setLayoutReady] = useState(Platform.OS !== 'web');
   const [rightOpen, setRightOpen] = useState(false);
 
@@ -45,7 +49,7 @@ export function WebAppShell({ children, backgroundColor = colors.background }: W
 
   if (Platform.OS !== 'web') return <>{children}</>;
 
-  if (mode === 'mobile') {
+  if (mode === 'mobile' || !accountReady || needsAgeConfirmation || birthPrompt != null || loading || isGuest || !hasAccountSession(session)) {
     return <View style={[styles.fill, { backgroundColor }]}>{children}</View>;
   }
 

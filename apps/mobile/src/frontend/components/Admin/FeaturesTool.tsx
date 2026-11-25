@@ -18,6 +18,7 @@ import { SOFT_WALL_AUTH_PROVIDERS, SOFT_WALL_GATES } from '@tapuai/shared-types'
 import { NotificationAdminPanel } from './Notifications/NotificationAdminPanel';
 
 /**
+ * GUEST-ACCESS-01 reports account gating; security rules have no permissive feature toggle.
  * @purpose Draft fan-bar tabs, hype buttons, and boards. Publish to app is the ship step. Soft-Wall auth gates are code-owned; Features pauses the underlying Mālo / Crew / Wishlist / Operator controls.
  * @sideEffects `patch_app_runtime_draft` on each toggle; `publish_app_runtime` from this desk or the sidebar.
  */
@@ -63,9 +64,9 @@ export function FeaturesTool() {
       <View style={styles.group}>
         <AdminSectionTitle>Soft-Wall auth</AdminSectionTitle>
         <Text style={styles.body}>
-          Guests browse Highlights, trading cards, and Locker Room without an account. Give, Join Crew, and gear-goal gifts open
-          SoftWallModal (Apple / Google / Magic Link) then resume. Coverage → Soft-Wall auth tracks wall opens.
+          Guests receive a three-Highlight preview on web and phone. Profiles, search, rosters and other sections require a registered account. Sign-in resumes the intended destination after age confirmation. Coverage tracks account prompts, not server enforcement.
         </Text>
+        <AdminNotice text="Guest data source: guest_highlights_preview only. Apply the reviewed GUEST-ACCESS-01 migration and API guard before hosted security acceptance. Missing preview shows a retry, never a full-feed fallback. Access rules cannot be disabled through a fan feature flag." />
         {SOFT_WALL_GATES.map((gate) => {
           const path = gate.flagPath as AppRuntimeFlagPath | undefined;
           const live = path ? getRuntimeFlag(published, path) : true;
@@ -73,7 +74,7 @@ export function FeaturesTool() {
             <AdminRow
               key={gate.id}
               title={gate.label}
-              meta={`${gate.hint}${live ? ' · control live' : ' · control paused in Features'}`}
+              meta={`${gate.hint}${path ? live ? ' · control live' : ' · control paused in Features' : ' · account policy in code'}`}
             />
           );
         })}

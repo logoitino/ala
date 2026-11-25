@@ -25,7 +25,7 @@ original round alone has its memory-only capability. Live enablement remains sep
 
 **Product:** Tapua'i (“Back Every Athlete.”)  
 **Repo:** pnpm monorepo — `@tapuai/mobile` (Expo, the only place admin data changes) · `@tapuai/admin-portal` (Next, read-only oversight) · `@tapuai/shared-types`
-**Runtime:** Expo SDK 57 · React Native · TypeScript (fan app and main admin); Next.js retains compatible read-only reporting
+**Runtime:** Expo SDK 58 · React Native · TypeScript (fan app and main admin); Next.js retains compatible read-only reporting
 **Start here:** [docs/STATE.md](../STATE.md) (current state + hand-off) · [Voice](../product/VOICE.md) (money words)  
 **Companions:** [Architecture](ARCHITECTURE.md) · [Build layers L0–L9](BUILD_LAYERS.md) (`ARCHITECTURE_SYNC`) · [Onboarding](../ONBOARDING.md) · [Schema](SCHEMA.md) · [Teams / departments](../agents/TEAMS.md) · [ALA brief](../company/ALA_TEAM_BRIEF.md) · [Product facts](../product/PRODUCT_FACTS.md) · [Public one-pager](../product/PUBLIC.md) · [Investor briefing](../company/INVESTOR.md) · [Legal briefing](../legal/LEGAL_BRIEFING.md) · [Data privacy map](DATA_PRIVACY_MAP.md) · [Company phases](../company/COMPANY_PHASES.md) · [Troubleshooting](TROUBLESHOOTING.md) · [Changelog](../../CHANGELOG.md) · [Conventions](../../AGENTS.md) · [Audit](AUDIT_REPORT.md) · [Roadmap](../product/ROADMAP.md) · [Story](../product/STORY.md) · [Staging runbook](STAGING_RUNBOOK.md) · [Tester script](TESTER_SCRIPT.md)
 
@@ -225,3 +225,9 @@ still uses `TipCheckout` / `useTipCheckout` and the existing native/web Stripe b
 `DOCUMENTATION` synchronizes affected team contracts and tester evidence. The shared Daylight
 menu/page APIs, consumer inventory and deliberate visual exceptions are in
 [docs/engineering/MENU_STYLE_MAP.md](MENU_STYLE_MAP.md).
+
+## Guest account access — GUEST-ACCESS-01 (local, 2026-11-25)
+
+The owner approved account-required browsing on both web and phone. Guests retain the welcome, legal/auth flow and three safe Highlight previews; profiles, search, directory and other sections require an account. Auth restoration and current profile/age checks finish before protected route children or desktop rails mount. Failed setup offers retry/sign out. The callback exemption belongs only to its root route descriptor.
+
+Guest preview and published runtime settings use an isolated sessionless connection. Full data/action paths retain existing privacy, role, age and payment conditions. Admin Features and the read-only Auth report explain the same code-owned policy. [Guest access](GUEST_ACCESS.md) records source, local tests and pending hosted/domain/browser/device acceptance; [Schema](SCHEMA.md#guest-account-access--guest-access-01-local-2026-11-25) describes the prepared migration. Public media URL possession and rate limiting remain separate.

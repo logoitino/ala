@@ -22,6 +22,10 @@ describe('auth gate support evidence', () => {
     expect(await requireAuthedUser(request('private-jwt'), 'Sign in.')).toMatchObject({ ok: true, jwt: 'private-jwt', user: { id: 'verified-user' } });
     expect(mockCapture).not.toHaveBeenCalled();
   });
+  test('anonymous-auth user is refused before any account action', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'anonymous-user', is_anonymous: true } }, error: null });
+    expect(await requireAuthedUser(request('private-jwt'), 'Sign in.')).toMatchObject({ ok: false, status: 401 });
+  });
   test('rejected provider auth emits safe server capture and remains 401', async () => {
     const error = { code: 'bad_jwt' };
     mockGetUser.mockResolvedValue({ data: { user: null }, error });

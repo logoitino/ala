@@ -634,3 +634,27 @@ it.each(['33333333-3333-4333-8333-333333333333', null])('forwards explicit roste
   expect(mockSaveOnboarding.mock.calls[0][2].userId).toBe('A');
   expect(mockSaveOnboarding.mock.calls[0][3]).toBe(selectedId);
 });
+
+// A session event alone must never unlock account screens before its eligibility record arrives.
+it('keeps account access pending through delayed profile creation and hydration', async () => {
+  await start();
+  expect(api.accountReady).toBe(true);
+  const ensure = deferred<void>();
+  mockEnsureFanProfile.mockReturnValueOnce(ensure.promise);
+  await changeUser('B');
+  expect(api.user?.id).toBe('B'); expect(api.accountReady).toBe(false);
+  const profile = deferred<{ data: Profile | null }>();
+  queueRead('B', profile.promise);
+  await act(async () => ensure.resolve(undefined));
+  expect(api.accountReady).toBe(false);
+  await act(async () => profile.resolve({data:mockProfileFor('B')}));
+  expect(api.accountReady).toBe(true);
+});
+it('keeps failed profile setup gated and allows a profile retry to recover', async () => {
+  await start();
+  queueRead('B', Promise.resolve({data:null}));
+  await changeUser('B');
+  expect(api.accountReady).toBe(false);
+  await act(async () => { await api.refreshProfile(); });
+  expect(api.accountReady).toBe(true);
+});

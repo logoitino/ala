@@ -1,4 +1,5 @@
 /**
+ * GUEST-ACCESS-01 rejects anonymous-auth identities before account API actions on Node and Edge.
  * Money server core (SCALE-04): the one session decision every money handler makes, on Deno and Node. A handler
  * either allows the local token check first (PaymentIntent) or insists on the live session (payouts, Connect
  * account creation). Runtime-neutral: the live lookup (`supabase.auth.getUser`) and the local verifier are injected.
@@ -11,7 +12,7 @@
 import type { AccessTokenVerifier, LocalRejectReason } from './accessToken.ts';
 
 /** The caller as the money handlers need it: the auth user id, and the email for Connect's contact address. */
-export type SessionUser = { id: string; email?: string | null };
+export type SessionUser = { id: string; email?: string | null; is_anonymous?: boolean };
 
 /** The live lookup each runtime provides, already mapped from `supabase.auth.getUser`. May throw. */
 export type LiveSessionLookup = (jwt: string) => Promise<{ user: SessionUser | null; error: unknown }>;
@@ -46,6 +47,7 @@ export async function resolveSession(
   if (deps.verifyLocally) {
     const local = await deps.verifyLocally(jwt);
     if (local.outcome === 'verified') {
+      if (local.claims.is_anonymous === true) return { ok: false, checkedBy: 'local', error: { code: 'account_required' } };
       const email = typeof local.claims.email === 'string' ? local.claims.email : null;
       return { ok: true, checkedBy: 'local', user: { id: local.claims.sub, email } };
     }
@@ -54,6 +56,7 @@ export async function resolveSession(
     }
   }
   const { user, error } = await deps.getUser(jwt);
+  if (user?.is_anonymous === true) return { ok: false, checkedBy: 'live', error: { code: 'account_required' } };
   if (error || !user) return { ok: false, checkedBy: 'live', error };
   return { ok: true, checkedBy: 'live', user };
 }

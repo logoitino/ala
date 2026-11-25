@@ -113,7 +113,7 @@ export type TapuaiRpcMap = {
 };
 
 /** Soft-Wall auth gate kinds (browse-first guests; signed-in fans skip the wall). */
-export type SoftWallKind = 'malo' | 'crew' | 'wishlist' | 'exclusive';
+export type SoftWallKind = 'malo' | 'crew' | 'wishlist' | 'exclusive' | 'browse';
 
 export type SoftWallGate = {
   id: SoftWallKind;
@@ -131,9 +131,10 @@ export type SoftWallGate = {
 
 /**
  * @purpose Shared Soft-Wall oversight map for Expo Coverage + Next admin portal.
- * Guests browse Highlights / cards / wishlist view; these actions require auth then resume.
+ * Guests receive only the bounded Highlights preview; full browsing and these actions require an account.
  */
 export const SOFT_WALL_GATES: SoftWallGate[] = [
+  { id: 'browse', label: 'Account-required browsing', hint: 'Three guest Highlights only; profiles, search, rosters and other sections require a registered account on web and phone.', fanSurface: 'All app routes except preview and auth completion', adminDesk: '/admin/features', telemetry: 'soft_wall.browse' },
   {
     id: 'malo',
     label: 'Give Soft Wall',
@@ -386,3 +387,5 @@ export * from './timedSportQuiz';
 export * from './triviaPlayTogether';
 export * from './lifePlaybook';
 export * from './freshQuestions';
+
+export { GUEST_PREVIEW_HIGHLIGHTS, guestRouteNeedsAccount, hasAccountSession, type GuestHighlightPreview } from './guestAccess';

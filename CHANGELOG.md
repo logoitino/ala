@@ -1,5 +1,12 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
 
+## 2026-11-25 — Account-required browsing (local)
+
+- Guests see the welcome and up to three safe Highlight previews. Profiles, search, school/team browsing and other app sections request an account on web and phone.
+- Sign-in waits for account setup and existing age confirmation before opening the destination. Failed setup offers retry and sign out.
+- Guest previews keep the welcome styling and use a separate public connection. Admin Auth reporting documents the policy and remaining rollout checks.
+- Prepared and locally replayed database/API/Storage restrictions; hosted application and physical-device verification remain pending.
+
 ## 2026-11-25 — Web screen focus (local)
 
 - Group web discovery shortcuts and omit repeated Local summaries and current-page links. Published pauses also hide the corresponding extras.

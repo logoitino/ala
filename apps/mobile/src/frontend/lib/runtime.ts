@@ -1,4 +1,5 @@
 /**
+ * Sessionless guest reads select published chrome only; account-bound admin writes retain their own client.
  * Live app configuration ("runtime config") read from `app_runtime_config` and merged over built-in defaults.
  * Defines the shape of every switch the owner can change without a release: tabs, buttons, layouts, theme,
  * profile, highlights, catalog, and on-screen copy. `AppRuntimeContext` loads and distributes it; Expo
@@ -16,7 +17,7 @@ import { SPONSOR_TIERS } from '@/data/sponsorships';
 import { ATHLETE_CLASS_YEARS } from '@/data/teams';
 import { DAYLIGHT_THEME } from '@/constants/theme';
 import type { OfflineActorClient } from '@/lib/offlineActor';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { getGuestPreviewClient, isSupabaseConfigured, nextRealtimeTopic, supabase } from '@/lib/supabase';
 import { APP_RUNTIME_FLAG_GROUPS } from '@tapuai/shared-types';
 
 export type AppRuntimeTabs = {
@@ -824,7 +825,7 @@ function parseBundle(raw: Record<string, unknown> | null): AppRuntimeBundle {
  * @purpose Load draft + published chrome for the admin Features desk.
  * @sideEffects `app_runtime_config` SELECT.
  */
-export async function fetchAppRuntimeBundle(client: OfflineActorClient = supabase): Promise<AppRuntimeBundle> {
+export async function fetchAppRuntimeBundle(client: OfflineActorClient = supabase, publicRead = false): Promise<AppRuntimeBundle> {
   const empty: AppRuntimeBundle = {
     draft: cloneAppRuntime(DEFAULT_APP_RUNTIME),
     published: cloneAppRuntime(DEFAULT_APP_RUNTIME),
@@ -832,7 +833,7 @@ export async function fetchAppRuntimeBundle(client: OfflineActorClient = supabas
     updatedAt: null,
   };
   if (!isSupabaseConfigured) return empty;
-  const query = client.from('app_runtime_config').select('draft, published, published_at, updated_at').eq('id', 'default').maybeSingle();
+  const query = (publicRead ? getGuestPreviewClient() : client).from('app_runtime_config').select(publicRead ? 'published, published_at' : 'draft, published, published_at, updated_at').eq('id', 'default').maybeSingle();
   // A departed actor is a lifetime refusal, not a retryable read in a publication fallback.
   if (client !== supabase) query.retry(false);
   const { data, error } = await query;
@@ -840,7 +841,8 @@ export async function fetchAppRuntimeBundle(client: OfflineActorClient = supabas
     if (client !== supabase) throw new Error(error?.message || 'Could not confirm the app runtime draft.');
     return empty;
   }
-  return parseBundle(data as Record<string, unknown>);
+  const row = data as unknown as Record<string, unknown>;
+  return parseBundle(publicRead ? { ...row, draft: row.published } : row);
 }
 
 /**
@@ -899,4 +901,19 @@ export async function publishAppRuntime(client: OfflineActorClient = supabase): 
 export async function discardAppRuntimeDraft(client: OfflineActorClient = supabase): Promise<AppRuntimeBundle> {
   const current = await fetchAppRuntimeBundle(client);
   return saveAppRuntimeDraft(current.published, client);
+}
+
+/** @purpose Observe runtime publication in the data layer; guests use the same isolated public client as their initial read. @sideEffects One app_runtime_config Realtime subscription; returned cleanup removes its originating channel. */
+export function subscribeAppRuntime(onRow: (row: Record<string, unknown> | null) => void, publicRead = false): () => void {
+  if (!isSupabaseConfigured) return () => undefined;
+  const client = publicRead ? getGuestPreviewClient() : supabase;
+  let active = true;
+  const channel = client.channel(nextRealtimeTopic('app-runtime'))
+    .on('postgres_changes', {event:'*',schema:'public',table:'app_runtime_config'}, payload => {
+      if (!active) return; // A queued event cannot revive the outgoing subscription after sign-out.
+      const row = payload.new;
+      const value = row && typeof row === 'object' ? row as Record<string, unknown> : null;
+      onRow(publicRead && value ? {published:value.published,published_at:value.published_at} : value);
+    }).subscribe();
+  return () => { active = false; void client.removeChannel(channel); };
 }
