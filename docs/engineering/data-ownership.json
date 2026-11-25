@@ -1954,6 +1954,13 @@
       "decision": "keep",
       "reason": "Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete \u2014 new/touched screens use Kit.",
       "status": "kept"
+    },
+    {
+      "file": "apps/mobile/src/frontend/components/Reels/AccountTagField.tsx",
+      "name": "AccountTagField",
+      "decision": "keep",
+      "reason": "Replaced in the Highlight composer by caption @ tagging (UPLOAD-STUDIO-01); kept until the owner approves archiving it or reusing it in Beyond.",
+      "status": "kept"
     }
   ],
   "archived": [

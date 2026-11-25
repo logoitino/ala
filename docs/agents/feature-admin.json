@@ -3398,6 +3398,57 @@
           ]
         }
       }
+    },
+    {
+      "id": "UPLOAD-STUDIO-01",
+      "title": "Upload studio start screen, @ caption tagging and profile-grid caption editing",
+      "owner": "DESIGN",
+      "status": "app-ready",
+      "plannedAt": "2026-11-25T19:23:25.584Z",
+      "app": {
+        "route": "/(tabs)",
+        "paths": [
+          "apps/mobile/src/frontend/components/Reels/UploadVideoComposer.tsx",
+          "apps/mobile/src/frontend/components/Reels/CaptionMentionInput.tsx",
+          "apps/mobile/src/frontend/components/Reels/UploadLimitChips.tsx",
+          "apps/mobile/src/frontend/components/Reels/UploadChoiceSheet.tsx",
+          "apps/mobile/src/frontend/components/Reels/UploadVideoModal.tsx",
+          "apps/mobile/src/frontend/components/Reels/HighlightPickerModal.tsx",
+          "apps/mobile/src/frontend/components/Profile/AthleteReelManager.tsx"
+        ]
+      },
+      "readiness": {
+        "admin": {
+          "date": "2026-11-25T19:28:25.584Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UPLOAD-STUDIO-01.md",
+              "command": "Read UploadVideoModal, UploadVideoComposer, AccountTagField, lib/accountTags, lib/postCaptions, ReelCard edit scope and AthleteReelManager before app changes.",
+              "result": "Mentions reuse search_taggable_accounts/tag_reel_accounts with the same three-account cap and confirmation; profile edit reuses edit_reel_caption and the uploader rule. No new data, permission, telemetry or operator action."
+            }
+          ]
+        },
+        "app": {
+          "date": "2026-11-25T20:13:25.584Z",
+          "evidence": [
+            {
+              "path": "docs/agents/UPLOAD-STUDIO-01.md",
+              "command": "Run Reels and Profile Jest suites (incl. new CaptionMentionInput, UploadLimitChips and AthleteReelManager edit cases) and mobile typecheck.",
+              "result": "40 suites / 343 tests and typecheck pass locally. Browser, device and hosted caption-edit behaviour not verified."
+            }
+          ]
+        }
+      },
+      "exemption": {
+        "kind": "presentation-only",
+        "reason": "Restyle the existing upload chooser and Media step, show existing limits up front, move existing account mentions into the caption field and reuse the existing caption edit from the profile grid; no new source, collection or operational behavior.",
+        "reviewedBy": "Owner approved scope (\"let's do it\"); Claude Code DESIGN scope and source review"
+      },
+      "source": null,
+      "admin": null,
+      "report": null,
+      "disable": null,
+      "access": null
     }
   ]
 }

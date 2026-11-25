@@ -13,6 +13,9 @@ export const HIGHLIGHT_LENGTH_UNREADABLE = 'Could not read this clip’s length.
 /** Hard stop before Storage. A compressed 45s clip at the upload bitrate stays under this. */
 export const HIGHLIGHT_MAX_BYTES = 8 * 1024 * 1024;
 
+/** Whole megabytes for the upfront limit chips; derived so the label can never disagree with the guard. */
+export const HIGHLIGHT_MAX_MB = Math.floor(HIGHLIGHT_MAX_BYTES / (1024 * 1024));
+
 export const HIGHLIGHT_TOO_BIG = 'This clip is too big to upload. Keep it under 8 MB.';
 
 export const HIGHLIGHT_OPTIMIZING = 'Optimizing highlight quality...';

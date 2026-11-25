@@ -2,14 +2,21 @@
  * Confirmed account-bound Vault updates in the athlete's own clip manager: long-press a tile to move a video between the free feed and one-time Exclusive access, or
  * Flash Unlock it. Fan menu uses shared Daylight chrome. Photo stories are public only (database constraint,
  * PHOTO_STORIES_DESIGN.md decision 1), so they never open the Vault sheet.
+ * UPLOAD-STUDIO-01: the same long-press also offers Edit description for posts this account uploaded, using the
+ * POST-EDIT-01 ownership rule and save call the playback menu uses, so owners can fix a caption from their profile
+ * without opening the player. A photo story opens the sheet only for that edit.
  */
 import { offlineQueue } from '@/services/OfflineQueue';
 import type { OfflineActor } from '@/lib/offlineActor';
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useRef, useState } from 'react';
+import { PostDescriptionEditor } from '@/components/Reels/PostDescriptionEditor';
+import { useOptionalAuth } from '@/context/AuthContext';
+import { saveReelDescription } from '@/lib/postCaptions';
 import { Modal, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { useSheetFrame } from '@/hooks/useSheetFrame';
 
@@ -31,7 +38,7 @@ import {
 import { isPhotoStory, type HighlightClip } from '@/data/highlights';
 import type { Player } from '@/data/players';
 import { setReelFlashUnlock } from '@/lib/crew';
-import { toggleReelVaultStatus, type ReelHype } from '@/lib/reels';
+import { isReelUuid, toggleReelVaultStatus, type ReelHype } from '@/lib/reels';
 import { telemetry } from '@/services/TelemetryManager';
 import { FOCAL } from '@/theme/motion';
 import { TYPE, figtree } from '@/theme/fonts';
@@ -84,10 +91,23 @@ export function AthleteReelManager({
   const flashLive = isFlashUnlockActive(menuClip?.flashUnlockUntil);
   const flashRemaining = formatFlashUnlockRemaining(menuClip?.flashUnlockUntil);
   const sheetBusy = toggling || flashing;
+  const account = useOptionalAuth();
+  const [editing, setEditing] = useState<{
+    reelId: string; previous: string; userId: string; profileId: string; isSessionCurrent: () => boolean;
+  } | null>(null);
+  // Same rule as the playback menu: only the uploader's current, unblocked account edits a live post.
+  const canEdit = (clip: HighlightClip | null) => {
+    const profile = account?.profile;
+    const userId = account?.user?.id;
+    return Boolean(clip && userId && profile?.id && profile.id === clip.uploadedBy && profile.user_id === userId
+      && !profile.age_blocked_at && account?.isSessionCurrent?.() && typeof clip.editCaptionSource === 'string' && isReelUuid(clip.id));
+  };
+  const menuStory = menuClip ? isPhotoStory(menuClip) : false;
+  const menuEditable = canEdit(menuClip);
 
   const openMenu = (clip: HighlightClip) => {
     // Vault / Flash Unlock would be rejected by the database for a photo story; say so instead of offering it.
-    if (isPhotoStory(clip)) {
+    if (isPhotoStory(clip) && !canEdit(clip)) {
       celebration?.showToast(PHOTO_STORY_PUBLIC_TOAST);
       return;
     }
@@ -98,6 +118,16 @@ export function AthleteReelManager({
 
   const closeMenu = () => {
     if (!sheetBusy) setMenuClip(null);
+  };
+
+  const startEdit = () => {
+    const clip = menuClip;
+    const userId = account?.user?.id;
+    const profileId = account?.profile?.id;
+    const isSessionCurrent = account?.isSessionCurrent;
+    if (!clip || sheetBusy || !canEdit(clip) || !userId || !profileId || !isSessionCurrent) return;
+    setMenuClip(null);
+    setEditing({ reelId: clip.id, previous: clip.editCaptionSource!, userId, profileId, isSessionCurrent });
   };
 
   const applyToggle = async () => {
@@ -161,8 +191,8 @@ export function AthleteReelManager({
   return (
     <View>
       <Text style={styles.hint}>
-        Long-press a clip to move it between the free feed and one-time Exclusive access, or Flash Unlock a Vault clip for 2
-        hours. Photo stories always stay on the free feed.
+        Long-press a clip to edit your description, move it between the free feed and one-time Exclusive access, or Flash
+        Unlock a Vault clip for 2 hours. Photo stories always stay on the free feed.
       </Text>
       <TaggedReelGrid
         clips={clips}
@@ -192,16 +222,25 @@ export function AthleteReelManager({
           <View style={[styles.sheet, frame.card, { maxHeight: windowHeight * 0.85 }]}>
           <MenuBackdrop accent="jade" />
             <SheetHandle onDismiss={sheetBusy ? undefined : closeMenu} />
-            <Text style={styles.kicker}>Content placement</Text>
+            <Text style={styles.kicker}>{menuStory ? 'Your post' : 'Content placement'}</Text>
             <Text style={styles.title} numberOfLines={2}>
               {menuClip?.tag ?? 'Highlight'}
             </Text>
+            {menuEditable ? (
+              <AnimatedButton accessibilityLabel="Edit description" disabled={sheetBusy} haptic="selection"
+                onPress={startEdit} contentStyle={[styles.editBtn, sheetBusy && styles.busy]}>
+                <Ionicons name="create-outline" size={18} color={FOCAL.jadeInk} />
+                <Text style={styles.editLabel}>Edit description</Text>
+              </AnimatedButton>
+            ) : null}
             <Text style={styles.body}>
-              {vaultOnly
+              {menuStory
+                ? PHOTO_STORY_PUBLIC_TOAST
+                : vaultOnly
                 ? 'This clip needs one-time Exclusive access. Move it to the free public Highlights ⚡ feed anytime.'
                 : `This clip is on the free public feed. Vault it so only fans with one-time Exclusive access ($${live.catalog.exclusiveDollars.toFixed(2)}) can watch.`}
             </Text>
-            {live.buttons.vault ? (
+            {live.buttons.vault && !menuStory ? (
             <AnimatedButton
               accessibilityLabel={vaultOnly ? VAULT_MOVE_TO_PUBLIC : VAULT_MOVE_TO_VAULT}
               disabled={sheetBusy}
@@ -216,7 +255,7 @@ export function AthleteReelManager({
               </Text>
             </AnimatedButton>
             ) : null}
-            {vaultOnly && live.buttons.flashUnlock ? (
+            {vaultOnly && !menuStory && live.buttons.flashUnlock ? (
               <AnimatedButton
                 accessibilityLabel={FLASH_UNLOCK_ACTION}
                 disabled={sheetBusy}
@@ -248,11 +287,38 @@ export function AthleteReelManager({
           </View>
         </View>
       </Modal>
+      {editing ? (
+        <PostDescriptionEditor key={editing.reelId} initialCaption={editing.previous} maxLength={120}
+          onClose={() => setEditing(null)}
+          onSave={async (value) => {
+            const scope = editing;
+            // A save that lands after sign-out or account switch is reported as unconfirmed, never applied.
+            const isCurrent = () => scope.isSessionCurrent() && account?.profile?.id === scope.profileId;
+            await saveReelDescription({ userId: scope.userId, profileId: scope.profileId, isCurrent }, scope.reelId, scope.previous, value);
+            celebration?.showToast('Description updated ⚡');
+          }} />
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  editBtn: {
+    minHeight: MENU_METRICS.touchTarget,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: MENU_METRICS.controlRadius,
+    borderWidth: 1,
+    borderColor: FOCAL.jadeInk,
+    backgroundColor: FOCAL.mistJade,
+  },
+  editLabel: {
+    color: FOCAL.jadeInk,
+    ...TYPE.button,
+    ...figtree('800'),
+  },
   hint: {
     color: colors.textMuted,
     ...TYPE.caption,

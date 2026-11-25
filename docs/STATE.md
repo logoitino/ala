@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-25 — Account-required browsing on web and phone (local; hosted rollout pending).
+**Last updated:** 2026-11-25 — account-required browsing (local; hosted rollout pending) and upload studio with @ caption tagging.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-25 — UPLOAD-STUDIO-01 upload studio (merged to `main` with GUEST-ACCESS-01):** The Media step has big Record now / Camera roll tiles and shows the enforced limits up front (45s, 8 MB, vertical; photo stories 10 photos). A picked clip shows a seconds meter. Clips already over 8 MB that will upload uncompressed (web, Expo Go) are refused at pick time. Typing @ in the caption tags a roster athlete as who is in the clip or mentions up to three accounts as chips; the picked word leaves the caption so no name shows before confirmation. More options keeps sport, game and Exclusive. The chooser features Highlight with its limits. Long-pressing your own post in the profile grid offers Edit description via the existing caption RPC. Presentation-only exemption. Full `pnpm check` (Node 24) passes every gate through `exit:map:check` and `security:infra:check` (merged `main`: 348 mobile suites / 3,259 tests, portal 217); only the final `exit:sync ensure` fails because its private source-cache state belongs to the main `ala` checkout, not this worktree. Browser, device and hosted caption-edit checks not run; Jev not reached (`jev/.env` missing). [UPLOAD-STUDIO-01](agents/UPLOAD-STUDIO-01.md).
 
 - **2026-11-25 — Guest account access (local):** Both web and phone retain welcome/auth/legal and three sanitized free Highlight previews. Restricted screen children and web rails wait for a registered current account, hydrated profile and existing age steps; failed setup offers retry/sign out. Public preview/runtime reads use a sessionless SDK client. Local migration revokes anonymous raw/RPC access, preserves non-guest effective grants, blocks anonymous-auth tokens through an installed role hook and Storage policy, and excludes unconfirmed raw player tags. Code review corrected four Important findings. Full Ala-state repository check passes346 suites/3,246 tests plus217 portal cases; guest SQL9 and caption regression13 cases pass. The retained detector fails only its known default source-state mismatch. Actual local checks and open hosted/domain/browser/device acceptance are in [GUEST_ACCESS](engineering/GUEST_ACCESS.md) and [COORD-01](agents/COORD-01.md). No hosted SQL/Edge application or release approval is claimed.
 

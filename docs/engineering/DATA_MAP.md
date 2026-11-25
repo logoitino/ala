@@ -14,7 +14,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Database functions | 619 (260 used by hand, 64 trigger functions) |
 | Tables reached by at least one screen or server route | 126 of 129 |
 | Code files that read or write the database | 88 |
-| Exported symbols nothing imports | 46 (0 proposed for archive, 46 kept on purpose) |
+| Exported symbols nothing imports | 47 (0 proposed for archive, 47 kept on purpose) |
 | Operational data exports | 33 |
 | Rule failures | 0 |
 
@@ -1923,6 +1923,7 @@ Nothing is deleted (owner rule): `archive` means the code moves to `archive/` af
 | --- | --- | --- | --- |
 | `apps/mobile/src/backend/services/__fixtures__/fanZoneMp4Fixture.ts` | `sampleMp4` | keep | FUN-01 test MP4 bytes. The data map skips __tests__ imports; fanZoneMedia.test.ts builds private-upload cases from it. |
 | `apps/mobile/src/backend/services/payouts.ts` | `disburseAthleteFunds` | keep | Payout service alias held for the Wave 1 payout path (payouts are blocked by decision). |
+| `@/components/Reels/AccountTagField.tsx` | `AccountTagField` | keep | Replaced in the Highlight composer by caption @ tagging (UPLOAD-STUDIO-01); kept until the owner approves archiving it or reusing it in Beyond. |
 | `@/components/UI/Kit.tsx` | `KitChip` | keep | Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete — new/touched screens use Kit. |
 | `@/components/UI/Kit.tsx` | `KitBadge` | keep | Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete — new/touched screens use Kit. |
 | `@/components/UI/Kit.tsx` | `LivePill` | keep | Whole-app Lovable UI kit (LOVABLE_UI_UX_PLAN, owner 2026-11-04); rollout complete — new/touched screens use Kit. |

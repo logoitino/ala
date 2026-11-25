@@ -43,11 +43,12 @@ import {
   HIGHLIGHT_MAX_SECONDS,
   HIGHLIGHT_LENGTH_UNREADABLE,
   HIGHLIGHT_OPTIMIZING,
+  HIGHLIGHT_TOO_BIG,
   HIGHLIGHT_TOO_LONG,
 } from '@/data/media';
 import { PHOTO_RIGHTS_VERSION, rightsReady, type RightsAckId } from '@/data/contentRights';
 import { gameMatchupLabel, playerTagLabel, uploadSekiPlay } from '@/lib/reels';
-import { assetDurationMs, isHighlightTooLong } from '@/services/MediaUploadService';
+import { assetDurationMs, isHighlightTooBigAsPicked, isHighlightTooLong } from '@/services/MediaUploadService';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { telemetry } from '@/services/TelemetryManager';
 import type { Game, Player, Reel } from '@/types/database';
@@ -404,6 +405,10 @@ export function UploadVideoModal({ visible, players, onClose, onUploaded }: Uplo
     }
     if (isHighlightTooLong(durationMs)) {
       Alert.alert('Clip too long', HIGHLIGHT_TOO_LONG);
+      return;
+    }
+    if (isHighlightTooBigAsPicked(next.fileSize)) {
+      Alert.alert('Clip too big', HIGHLIGHT_TOO_BIG);
       return;
     }
     setAsset({

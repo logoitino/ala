@@ -32,12 +32,14 @@ import {
   HIGHLIGHT_OPTIMIZING,
   HIGHLIGHT_PICKER_LEDE,
   HIGHLIGHT_PICKER_TITLE,
+  HIGHLIGHT_TOO_BIG,
   HIGHLIGHT_TOO_LONG,
 } from '@/data/media';
 import { telemetry } from '@/services/TelemetryManager';
 import {
   assetDurationMs,
   compressHighlight,
+  isHighlightTooBigAsPicked,
   isHighlightTooLong,
   type PickedHighlight,
 } from '@/services/MediaUploadService';
@@ -111,6 +113,10 @@ export function HighlightPickerModal({ visible, draftKey, isDraftCurrent, onClos
     }
     if (isHighlightTooLong(durationMs)) {
       Alert.alert('Clip too long', HIGHLIGHT_TOO_LONG);
+      return;
+    }
+    if (isHighlightTooBigAsPicked(asset.fileSize)) {
+      Alert.alert('Clip too big', HIGHLIGHT_TOO_BIG);
       return;
     }
 

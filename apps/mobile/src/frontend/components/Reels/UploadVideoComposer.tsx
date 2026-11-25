@@ -9,6 +9,9 @@
  * when the athlete list opens and closes.
  * The optional sport chooser records an annotation for video or photos; its draft belongs to the parent.
  * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ * UPLOAD-STUDIO-01: the Media step is a playful start screen with big Record / Camera roll tiles and the real
+ * limits shown up front; the picked clip shows how much of the length limit it uses; account mentions and athlete
+ * tags happen by typing @ in the caption instead of a separate search box under More options.
  */
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -17,7 +20,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { MenuBackdrop, MenuStepIndicator } from '@/components/UI/MenuChrome';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
-import { AccountTagField } from '@/components/Reels/AccountTagField';
+import { CaptionMentionInput } from '@/components/Reels/CaptionMentionInput';
+import { UploadLimitChips } from '@/components/Reels/UploadLimitChips';
 import { MediaKindSwitch, PhotoDescriptionFields, PhotoStoryStrip, type DraftStoryPhoto } from '@/components/Reels/PhotoStoryPicker';
 import { CardShine } from '@/components/Effects/CardShine';
 import { colors, MENU_METRICS, radii } from '@/constants/theme';
@@ -32,6 +36,7 @@ import { gameMatchupLabel, playerTagLabel } from '@/lib/reels';
 import type { AccountTagHit } from '@/lib/accountTags';
 import type { Game, Player } from '@/types/database';
 import { TYPE, figtree } from '@/theme/fonts';
+import { FOCAL } from '@/theme/motion';
 
 export type UploadStep = 'clip' | 'details' | 'review' | 'options';
 type Props = {
@@ -82,6 +87,14 @@ export function UploadVideoComposer(p: Props) {
     : p.step === 'clip' ? isPhotos ? 'Choose your photos' : 'Choose your clip' : p.step === 'details' ? 'Add the details'
       : p.step === 'options' ? 'More options' : 'Ready to share?';
   const categoryLabel = p.categoryPills.find((pill) => pill.id === p.category)?.label ?? p.category;
+  const seconds = p.asset?.durationMs ? Math.max(1, Math.round(p.asset.durationMs / 1000)) : null;
+  // A small meter makes the 45-second rule visible as "how much room is left", not just an error.
+  const lengthMeter = seconds ? (
+    <View accessible accessibilityLabel={`${seconds} of ${HIGHLIGHT_MAX_SECONDS} seconds used`} style={styles.meterRow}>
+      <View style={styles.meterTrack}><View style={[styles.meterFill, { width: `${Math.min(100, (seconds / HIGHLIGHT_MAX_SECONDS) * 100)}%` }]} /></View>
+      <Text style={styles.meterText}>{seconds}s / {HIGHLIGHT_MAX_SECONDS}s</Text>
+    </View>
+  ) : null;
   const photoCard = isPhotos && p.photos[0] ? (
     <View style={styles.clipCard}>
       <Image source={{ uri: p.photos[0].uri }} style={styles.thumb} resizeMode="cover" accessible={false} />
@@ -99,7 +112,8 @@ export function UploadVideoComposer(p: Props) {
       <View style={[styles.thumb, styles.thumbMark]}><Ionicons name="play" size={18} color={colors.primary} /></View>
       <View style={styles.flex}>
         <Text style={styles.label}>Your Highlight ⚡</Text>
-        <Text style={styles.hint}>{p.asset.fileName || 'Selected video'}{p.asset.durationMs ? ` · ${Math.round(p.asset.durationMs / 1000)}s` : ''}</Text>
+        <Text style={styles.hint} numberOfLines={1}>{p.asset.fileName || 'Selected video'}</Text>
+        {lengthMeter}
       </View>
       <Pressable accessibilityRole="button" accessibilityLabel="Change video" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}>
         <Text style={styles.link}>Change</Text>
@@ -230,23 +244,38 @@ export function UploadVideoComposer(p: Props) {
               {p.photosAvailable ? <MediaKindSwitch value={p.mediaKind} onChange={p.onMediaKind} disabled={p.uploading} /> : null}
               {isPhotos ? (
                 <>
-                  <View style={styles.hero}><View style={styles.heroBadge}><Ionicons name="images" size={18} color={colors.primary} /></View><Text style={styles.heroTitle}>Tell their story in photos.</Text><Text style={styles.heroHint}>Up to {PHOTO_STORY_MAX_PHOTOS} photos, then put them in order.</Text></View>
+                  <View style={styles.studio}>
+                    <View pointerEvents="none" style={styles.studioGlow} />
+                    <View style={styles.heroBadge}><Ionicons name="images" size={20} color={colors.primary} /></View>
+                    <Text style={styles.heroTitle}>Tell their story in photos.</Text>
+                    <Text style={styles.heroHint}>Pick your best shots, then put them in order.</Text>
+                    <UploadLimitChips kind="photo_story" />
+                  </View>
                   {p.photos.length ? (
                     <PhotoStoryStrip photos={p.photos} onMove={p.onMovePhoto} onRemove={p.onRemovePhoto} onAdd={p.onPickPhotos} disabled={p.uploading} />
                   ) : (
                     <AnimatedButton accessibilityLabel="Choose photos from library" disabled={p.uploading} onPress={p.onPickPhotos} contentStyle={styles.source}>
-                      <Ionicons name="images-outline" size={22} color={colors.primary} />
-                      <Text style={styles.label}>Library</Text><Text style={styles.hint}>Choose photos</Text>
+                      <View style={[styles.sourceIcon, styles.sourceIconJade]}><Ionicons name="images" size={24} color={FOCAL.jadeInk} /></View>
+                      <Text style={styles.sourceTitle}>Camera roll</Text><Text style={styles.hint}>Choose photos</Text>
                     </AnimatedButton>
                   )}
                 </>
               ) : (<>
-              <View style={styles.hero}><View style={styles.heroBadge}><Ionicons name="play" size={24} color={colors.primary} /><View style={styles.spark}><Ionicons name="flash" size={12} color={colors.gold} /></View></View><Text style={styles.heroTitle}>Make their moment shine.</Text><Text style={styles.heroHint}>Video up to {HIGHLIGHT_MAX_SECONDS}s.</Text></View>
-              <View style={styles.sourceRow}>{(['library', 'camera'] as const).map((source) => (
+              <View style={styles.studio}>
+                <View pointerEvents="none" style={styles.studioGlow} />
+                <View style={styles.heroBadge}><Ionicons name="play" size={24} color={colors.primary} /><View style={styles.spark}><Ionicons name="flash" size={12} color={colors.gold} /></View></View>
+                <Text style={styles.heroTitle}>Make their moment shine.</Text>
+                <Text style={styles.heroHint}>Grab a clip or film it now. We handle the rest.</Text>
+                <UploadLimitChips kind="video" />
+              </View>
+              <View style={styles.sourceRow}>{(['camera', 'library'] as const).map((source) => (
                 <AnimatedButton key={source} accessibilityLabel={source === 'library' ? 'Choose a video from library' : 'Record a video'}
                   disabled={p.uploading} onPress={() => p.onPick(source)} style={styles.flex} contentStyle={[styles.source, p.pickSource === source && styles.selected]}>
-                  <Ionicons name={source === 'library' ? 'images-outline' : 'videocam-outline'} size={22} color={source === 'library' ? colors.primary : colors.gold} />
-                  <Text style={styles.label}>{source === 'library' ? 'Library' : 'Record'}</Text><Text style={styles.hint}>{source === 'library' ? 'Choose a video' : p.simulator ? 'Phone only' : 'Capture a moment'}</Text>
+                  <View style={[styles.sourceIcon, source === 'library' ? styles.sourceIconJade : styles.sourceIconGold]}>
+                    <Ionicons name={source === 'library' ? 'images' : 'videocam'} size={24} color={source === 'library' ? FOCAL.jadeInk : colors.gold} />
+                  </View>
+                  <Text style={styles.sourceTitle}>{source === 'library' ? 'Camera roll' : 'Record now'}</Text>
+                  <Text style={styles.hint}>{source === 'library' ? 'Pick a saved clip' : p.simulator ? 'Phone only' : `Stops at ${HIGHLIGHT_MAX_SECONDS}s`}</Text>
                 </AnimatedButton>
               ))}</View>
               {clipCard}
@@ -255,11 +284,10 @@ export function UploadVideoComposer(p: Props) {
           ) : p.step === 'details' ? (
             <>
               {clipCard}
-              <View style={styles.field}><Text style={styles.label}>Caption</Text>
-                <TextInput accessibilityLabel="Highlight caption" value={p.caption} onChangeText={p.onCaption} editable={!p.uploading}
-                  placeholder={isPhotos ? 'What is the story behind these photos?' : 'What made this moment special?'} placeholderTextColor={colors.textMuted} style={[styles.input, styles.caption]} multiline maxLength={120} />
-                <Text style={styles.counter}>{p.caption.length}/120</Text>
-              </View>
+              <CaptionMentionInput value={p.caption} onChange={p.onCaption} maxLength={120} editable={!p.uploading}
+                placeholder={isPhotos ? 'What is the story behind these photos?' : 'What made this moment special?'}
+                players={p.players} playerId={p.playerId} onPickAthlete={p.onPlayer}
+                mentions={p.accountTags} onMentions={p.onAccountTags} />
               {!isPhotos && p.ownPlayerId && p.players.some((player) => player.id === p.ownPlayerId) ? (
                 <Pressable accessibilityRole="button" accessibilityLabel="This is me" accessibilityState={{ selected: p.playerId === p.ownPlayerId }}
                   disabled={p.uploading} onPress={() => p.onPlayer(p.ownPlayerId ?? '')} style={[styles.option, p.playerId === p.ownPlayerId && styles.selected]}>
@@ -282,7 +310,7 @@ export function UploadVideoComposer(p: Props) {
               ) : null}</View>
               {isPhotos ? <PhotoDescriptionFields photos={p.photos} onDescription={p.onPhotoDescription} disabled={p.uploading} /> : null}
               <Pressable accessibilityRole="button" accessibilityLabel="More options" disabled={p.uploading} onPress={() => go('options')} style={styles.select}>
-                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>{isPhotos ? 'Sport, game, account mentions' : 'Sport, game, account mentions, Exclusive'}</Text></View><Ionicons name="chevron-forward" size={16} color={colors.primary} />
+                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>{isPhotos ? 'Sport and game' : 'Sport, game and Exclusive'}</Text></View><Ionicons name="chevron-forward" size={16} color={colors.primary} />
               </Pressable>
             </>
           ) : p.step === 'options' ? (
@@ -290,7 +318,6 @@ export function UploadVideoComposer(p: Props) {
               <Text style={styles.hint}>{isPhotos ? 'Optional for this story. Photo stories stay public.' : 'Optional for this clip.'}</Text>
               {selectRow('Tag a sport (optional)', p.sport || 'No sport tag', 'sport')}
               {selectRow('Tag a Game (optional)', p.gameLabel, 'game')}
-              <AccountTagField value={p.accountTags} onChange={p.onAccountTags} disabled={p.uploading} />
               {/* v1 photo stories are public only (design decision 1): Vault photos wait for the private bucket. */}
               {isPhotos ? null : <Pressable accessibilityRole="switch" accessibilityLabel={VAULT_BADGE_LABEL} accessibilityState={{ checked: p.isExclusive, disabled: p.uploading || !p.playerId }} disabled={p.uploading || !p.playerId} onPress={() => p.onExclusive(!p.isExclusive)} style={[styles.option, p.isExclusive && styles.selected]}>
                 <View style={styles.sourceRow}><Text style={[styles.label, styles.flex]}>{VAULT_BADGE_LABEL}</Text><Text style={styles.link}>{p.isExclusive ? 'On' : 'Off'}</Text></View>
@@ -305,11 +332,11 @@ export function UploadVideoComposer(p: Props) {
                 <View style={styles.sourceRow}><Text style={[styles.hint, styles.flex]}>{p.asset?.fileName || 'Selected video'}{p.asset?.durationMs ? ` · ${Math.round(p.asset.durationMs / 1000)}s` : ''}</Text><Pressable accessibilityRole="button" accessibilityLabel="Change video" disabled={p.uploading} onPress={() => go('clip')} style={styles.smallButton}><Text style={styles.link}>Change</Text></Pressable></View>
               )}
               <View style={styles.summary}><Text style={styles.label}>{p.caption}</Text><Text style={styles.hint}>{p.playerLabel} · {categoryLabel}</Text>
-                <Text style={styles.hint}>Sport: {p.sport || 'No sport tag'} · {p.gameId ? p.gameLabel : 'No game'} · {p.accountTags.length ? `${p.accountTags.length} mentions` : 'No mentions'}</Text>
+                <Text style={styles.hint}>Sport: {p.sport || 'No sport tag'} · {p.gameId ? p.gameLabel : 'No game'} · {p.accountTags.length ? `Mentions: ${p.accountTags.map((tag) => `@${tag.label}`).join(', ')}` : 'No mentions'}</Text>
                 <Text style={styles.link}>{isPhotos ? 'Public photo story' : p.isExclusive ? 'One-time Exclusive only' : 'Public Highlight'}</Text>
               </View>
               <Pressable accessibilityRole="button" accessibilityLabel="More options" disabled={p.uploading} onPress={() => go('options')} style={styles.select}>
-                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>{isPhotos ? 'Sport, game, mentions' : 'Sport, game, mentions, Exclusive'}</Text></View><Ionicons name="chevron-forward" size={16} color={colors.primary} />
+                <View style={styles.flex}><Text style={styles.label}>More options</Text><Text style={styles.hint}>{isPhotos ? 'Sport and game' : 'Sport, game and Exclusive'}</Text></View><Ionicons name="chevron-forward" size={16} color={colors.primary} />
               </Pressable>
               <View style={styles.field}><Text style={styles.label}>Before you publish</Text><Text style={styles.hint}>{COMPLIANCE_UPLOAD}</Text>
                 {(() => {
@@ -345,13 +372,26 @@ const styles = StyleSheet.create({
   kicker: { ...figtree('800'), color: colors.primary, ...TYPE.caption, letterSpacing: 0.5 },
   title: { ...figtree('800'), color: colors.text, ...TYPE.title, textAlign: 'center' },
   body: { gap: 10, paddingBottom: 12 },
-  hero: { alignItems: 'center', gap: 6, paddingVertical: 2 },
+  studio: {
+    alignItems: 'center', gap: 6, paddingVertical: 14, paddingHorizontal: 12, overflow: 'hidden',
+    borderRadius: MENU_METRICS.cardRadius, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface,
+  },
+  // Soft jade wash behind the hero icon: decoration only, hidden from touch and screen readers.
+  studioGlow: { position: 'absolute', top: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: FOCAL.mistJade, opacity: 0.9 },
   heroBadge: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-5deg' }] },
   spark: { position: 'absolute', right: -4, top: -3, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.goldSoft, alignItems: 'center', justifyContent: 'center' },
   heroTitle: { ...figtree('800'), ...TYPE.title, color: colors.text, textAlign: 'center' },
   heroHint: { ...figtree('400'), ...TYPE.body, color: colors.textMuted, textAlign: 'center' },
   sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  source: { backgroundColor: colors.surface, borderRadius: MENU_METRICS.controlRadius, borderWidth: 1, borderColor: colors.border, padding: 10, alignItems: 'center', gap: 4, minHeight: 72 },
+  source: { backgroundColor: colors.surface, borderRadius: MENU_METRICS.cardRadius, borderWidth: 1, borderColor: colors.border, padding: 12, alignItems: 'center', gap: 4, minHeight: 112, justifyContent: 'center' },
+  sourceIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
+  sourceIconJade: { backgroundColor: FOCAL.mistJade },
+  sourceIconGold: { backgroundColor: colors.goldSoft },
+  sourceTitle: { ...figtree('800'), ...TYPE.section, color: colors.text, textAlign: 'center' },
+  meterRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  meterTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: 'hidden' },
+  meterFill: { height: 6, borderRadius: 3, backgroundColor: FOCAL.neonJade },
+  meterText: { ...figtree('700'), ...TYPE.caption, color: colors.textMuted },
   selected: { borderColor: colors.primary, backgroundColor: colors.accentSoft },
   clipCard: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius },
   thumb: { width: 44, height: 58, borderRadius: 7, backgroundColor: colors.photoPlaceholder },
@@ -362,8 +402,6 @@ const styles = StyleSheet.create({
   link: { ...figtree('800'), ...TYPE.caption, color: colors.primary },
   field: { gap: 6 },
   input: { ...figtree('400'), minHeight: MENU_METRICS.touchTarget, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, paddingHorizontal: 10, backgroundColor: colors.surface, color: colors.text, ...TYPE.body },
-  caption: { height: 72, paddingTop: 10, textAlignVertical: 'top' },
-  counter: { ...figtree('400'), ...TYPE.caption, textAlign: 'right', color: colors.textMuted, marginTop: -2 },
   select: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: MENU_METRICS.touchTarget, padding: 10, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.surface },
   selectText: { flex: 1, color: colors.text, ...TYPE.body, ...figtree('600') },
   option: { minHeight: MENU_METRICS.touchTarget, padding: 10, borderWidth: 1, borderColor: colors.border, borderRadius: MENU_METRICS.controlRadius, backgroundColor: colors.surface, gap: 3 },
