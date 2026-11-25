@@ -284,6 +284,7 @@ with these files.
 - [UX-17 existing school/team directory](agents/UX-17.md) — bounded roster browsing, optional pending selection, distinct Local polls and verified admin-first handling.
 - [UX-18 tighter navigation and Activity panels](agents/UX-18.md) — Android owner feedback, compact spacing and decoration with readable text and preserved actions.
 - [UX-21 public profile and video presentation](agents/UX-21.md) — open a visible profile photo and give Highlights more room.
+- [UPLOAD-STUDIO-01 upload studio and @ tagging](agents/UPLOAD-STUDIO-01.md) — upload start screen with limits, @ caption tagging and profile-grid caption editing.
 - [POST-EDIT-01 caption editing](agents/POST-EDIT-01.md) — ownership, moderation and local verification.
 - [UX-20 compact Activity panels](agents/UX-20.md) — tighter Notifications and gift rows with local verification and device follow-up.
 - [UX-19 compact, consistent fan tabs](agents/UX-19.md) — one heading style, compact panels and a frosted navigation bar across the five fan tabs; text stays 14/12.

@@ -1,5 +1,12 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
 
+## 2026-11-25 — Easier Highlight upload and @ tagging (local)
+
+- The upload screen opens with big Record now and Camera roll tiles and shows the limits first: up to 45 seconds, under 8 MB, up to 10 photos for a story.
+- A picked clip shows how many of its 45 seconds it uses. Oversized clips that cannot be shrunk on the device are stopped right away instead of at Publish.
+- Type @ in the caption to tag the athlete in the clip or mention up to three accounts. Mentions show after each person confirms.
+- Long-press your own post on your profile to edit its description. [UPLOAD-STUDIO-01](docs/agents/UPLOAD-STUDIO-01.md).
+
 ## 2026-11-24 — Public profiles and quieter video overlays (local)
 
 - Tap a visible public profile photo to open it. Profiles with videos put Highlights before Story for visitors.

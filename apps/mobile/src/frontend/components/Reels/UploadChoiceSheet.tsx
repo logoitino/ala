@@ -3,6 +3,8 @@
  * existing athlete clip composer; Beyond moment opens the reviewed Beyond the Game composer. Story-focused
  * copy keeps the destination and review requirements clear. Tall text scrolls inside the sheet, leaving
  * its dismiss handle reachable. No upload happens here. 2026-11-08 density: hugs content (not 90% height).
+ * UPLOAD-STUDIO-01: Highlight is the featured card, with a jade wash and the real video limits on it, so the
+ * common path reads first and the limits are known before any picker opens. Labels and actions are unchanged.
  */
 import { BlurView } from 'expo-blur';
 import { Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -15,6 +17,7 @@ import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { colors, MENU_METRICS } from '@/constants/theme';
 import { useSheetFrame, SHEET_BLUR_INTENSITY } from '@/hooks/useSheetFrame';
+import { UploadLimitChips } from '@/components/Reels/UploadLimitChips';
 import { DISPLAY_TEXT, TYPE, figtree } from '@/theme/fonts';
 import { FOCAL } from '@/theme/motion';
 
@@ -46,7 +49,10 @@ export function UploadChoiceSheet({ visible, onHighlight, onBeyond, onClose }: U
             <MenuBackdrop accent="jade" />
             <SheetHandle onDismiss={onClose} />
             <ScrollView style={styles.scroll} contentContainerStyle={styles.content} bounces={false} keyboardShouldPersistTaps="handled">
-              <Text accessibilityRole="header" style={styles.title}>What are you sharing?</Text>
+              <View style={styles.titleRow}>
+                <Text accessibilityRole="header" style={styles.title}>What are you sharing?</Text>
+                <Text accessible={false} style={styles.spark}>⚡</Text>
+              </View>
               <Text style={styles.intro}>The big play. The work behind it. The moments that make you.</Text>
 
               <AnimatedButton
@@ -54,14 +60,17 @@ export function UploadChoiceSheet({ visible, onHighlight, onBeyond, onClose }: U
                 accessibilityLabel="Highlight. An athlete's game play, workout or service. Shared in Highlights, where fans can give."
                 haptic="light"
                 onPress={onHighlight}
-                contentStyle={styles.option}
+                contentStyle={[styles.option, styles.featured]}
               >
-                <View style={styles.icon}><Ionicons name="flash" size={20} color={FOCAL.jadeInk} /></View>
-                <View style={styles.copy}>
-                  <Text style={styles.optionTitle}>Highlight</Text>
-                  <Text style={styles.optionBody}>Athlete game play, workout or service — in Highlights, where fans can give.</Text>
+                <View style={styles.featuredTop}>
+                  <View style={[styles.icon, styles.featuredIcon]}><Ionicons name="flash" size={22} color={colors.onAccent} /></View>
+                  <View style={styles.copy}>
+                    <Text style={styles.optionTitle}>Highlight</Text>
+                    <Text style={styles.optionBody}>Athlete game play, workout or service — in Highlights, where fans can give.</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={FOCAL.jadeInk} />
                 </View>
-                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                <UploadLimitChips kind="video" />
               </AnimatedButton>
 
               <AnimatedButton
@@ -96,7 +105,9 @@ const styles = StyleSheet.create({
   sheet: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, gap: 8 },
   scroll: { flexGrow: 0, flexShrink: 1 },
   content: { gap: 8, paddingBottom: 2 },
-  title: { ...DISPLAY_TEXT, color: colors.text, ...TYPE.title },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  title: { ...DISPLAY_TEXT, color: colors.text, ...TYPE.title, flexShrink: 1 },
+  spark: { ...TYPE.title },
   intro: { ...figtree('400'), color: colors.textMuted, ...TYPE.body, marginBottom: 4 },
   option: {
     minHeight: MENU_METRICS.touchTarget,
@@ -110,6 +121,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  // The featured Highlight card stacks its copy over the limit chips instead of sitting in one row.
+  featured: { flexDirection: 'column', alignItems: 'stretch', gap: 10, backgroundColor: FOCAL.mistJade, borderColor: FOCAL.jadeInk, paddingVertical: 14 },
+  featuredTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  featuredIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: FOCAL.jadeInk },
   icon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: FOCAL.mistJade },
   copy: { flex: 1, minWidth: 0, gap: 3 },
   optionTitle: { ...figtree('800'), color: colors.text, ...TYPE.section },

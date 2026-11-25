@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-24 — public profile photos, video overlays and owner caption editing work.
+**Last updated:** 2026-11-25 — upload studio start screen, @ caption tagging and profile-grid caption editing.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-25 — UPLOAD-STUDIO-01 upload studio (local, branch `claude/upload-studio`):** The Media step has big Record now / Camera roll tiles and shows the enforced limits up front (45s, 8 MB, vertical; photo stories 10 photos). A picked clip shows a seconds meter. Clips already over 8 MB that will upload uncompressed (web, Expo Go) are refused at pick time. Typing @ in the caption tags a roster athlete as who is in the clip or mentions up to three accounts as chips; the picked word leaves the caption so no name shows before confirmation. More options keeps sport, game and Exclusive. The chooser features Highlight with its limits. Long-pressing your own post in the profile grid offers Edit description via the existing caption RPC. Presentation-only exemption. Full `pnpm check` (Node 24) passes every gate through `exit:map:check` and `security:infra:check` (336 mobile suites / 3,182 tests, portal 217); only the final `exit:sync ensure` fails because its private source-cache state belongs to the main `ala` checkout, not this worktree. Browser, device and hosted caption-edit checks not run; Jev not reached (`jev/.env` missing). [UPLOAD-STUDIO-01](agents/UPLOAD-STUDIO-01.md).
 
 - **2026-11-24 — UX-21 / POST-EDIT-01 (local):** Public photos open in a larger view when already permitted, playable Highlights move up for visitors, and video names and decoration are more compact. Highlight uploaders and Beyond authors can edit descriptions; edited Beyond posts return to review. See [UX-21](agents/UX-21.md) and the [caption edit readiness record](agents/POST-EDIT-01.md); hosted migration and device checks are pending.
 

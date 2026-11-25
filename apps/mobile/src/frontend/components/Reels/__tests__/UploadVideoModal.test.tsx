@@ -67,7 +67,7 @@ jest.mock('expo-image-picker', () => ({
 jest.mock('@/services/TelemetryManager', () => ({ telemetry: { trackFeature: jest.fn(), trackIssue: jest.fn() } }));
 jest.mock('@/services/MediaUploadService', () => {
   const actual = jest.requireActual('@/services/MediaUploadService');
-  return { assetDurationMs: actual.assetDurationMs, isHighlightTooLong: actual.isHighlightTooLong };
+  return { assetDurationMs: actual.assetDurationMs, isHighlightTooLong: actual.isHighlightTooLong, isHighlightTooBigAsPicked: actual.isHighlightTooBigAsPicked };
 });
 jest.mock('@/components/Effects/CardShine', () => ({ CardShine: () => null }));
 jest.mock('expo-video', () => ({
@@ -80,10 +80,12 @@ jest.mock('@/components/UI/AnimatedButton', () => ({ AnimatedButton: (props: { a
   return <Pressable {...props} />;
 } }));
 jest.mock('@/components/UI/HapticPressable', () => ({ HapticPressable: jest.requireActual('react-native').Pressable }));
-jest.mock('@/components/Reels/AccountTagField', () => ({
-  AccountTagField: ({ onChange }: { onChange: (rows: unknown[]) => void }) => {
-    const { Pressable, Text } = jest.requireActual('react-native');
-    return <Pressable onPress={() => onChange([{ id: 'mentioned-profile', label: 'Sina' }])}><Text>Choose Sina</Text></Pressable>;
+// Mentions now come from typing @ in the caption; the real @ behaviour has its own CaptionMentionInput suite.
+jest.mock('@/components/Reels/CaptionMentionInput', () => ({
+  CaptionMentionInput: ({ value, onChange, onMentions }: { value: string; onChange: (text: string) => void; onMentions: (rows: unknown[]) => void }) => {
+    const { Pressable, Text, TextInput } = jest.requireActual('react-native');
+    return <><TextInput accessibilityLabel="Highlight caption" value={value} onChangeText={onChange} />
+      <Pressable onPress={() => onMentions([{ id: 'mentioned-profile', label: 'Sina' }])}><Text>Choose Sina</Text></Pressable></>;
   },
 }));
 jest.mock('@/components/Reels/HighlightPickerModal', () => ({
@@ -324,13 +326,17 @@ describe('staged Highlight upload', () => {
 
   it('keeps optional settings out of details and retains them when returning to review', async () => {
     await render(<UploadVideoModal {...props} />); await details();
+    // Mentions are typed in the caption on Details, so the review page and optional settings carry none of it.
     expect(screen.queryByText('Choose Sina')).toBeNull();
     await fireEvent.press(screen.getByLabelText('More options'));
-    await fireEvent.press(screen.getByText('Choose Sina'));
+    expect(screen.queryByText('Choose Sina')).toBeNull();
     await fireEvent.press(screen.getByLabelText('One-time Exclusive 🔒'));
     await fireEvent.press(screen.getByLabelText('Done'));
+    await fireEvent.press(screen.getByLabelText('Back'));
+    await fireEvent.press(screen.getByText('Choose Sina'));
+    await fireEvent.press(screen.getByLabelText('Next'));
     expect(screen.getByText('One-time Exclusive only')).toBeTruthy();
-    expect(screen.getByText(/1 mentions/)).toBeTruthy();
+    expect(screen.getByText(/Mentions: @Sina/)).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('More options'));
     expect(screen.getByLabelText('One-time Exclusive 🔒').props.accessibilityState.checked).toBe(true);
   });
@@ -383,9 +389,10 @@ describe('staged Highlight upload', () => {
   it('publishes once and accurately reports unsaved optional mentions after successful upload', async () => {
     const reel = { id: 'r1' }; mockUpload.mockResolvedValue(reel); mockAttach.mockRejectedValue(new Error('mention write failed'));
     await render(<UploadVideoModal {...props} />); await details();
-    await fireEvent.press(screen.getByLabelText('More options'));
+    await fireEvent.press(screen.getByLabelText('Back'));
     await fireEvent.press(screen.getByText('Choose Sina'));
-    await fireEvent.press(screen.getByLabelText('Done'));
+    await fireEvent.press(screen.getByLabelText('Next'));
+    expect(screen.getByText(/Mentions: @Sina/)).toBeTruthy();
     await confirmRights();
     await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
     await waitFor(() => expect(props.onClose).toHaveBeenCalled(), { timeout: 2000 });
@@ -637,9 +644,9 @@ describe('photo story upload', () => {
     const stored = { id: 'story-hidden', title: 'Original caption', player_id: 'original-athlete', cover_path: 'original.jpg' };
     const { PhotoStoryAlreadyPublishedError } = jest.requireActual('@/lib/photoStories');
     mockCreateStory.mockRejectedValueOnce(new PhotoStoryAlreadyPublishedError(stored));
-    await fireEvent.press(screen.getByLabelText('More options'));
+    await fireEvent.press(screen.getByLabelText('Back'));
     await fireEvent.press(screen.getByText('Choose Sina'));
-    await fireEvent.press(screen.getByLabelText('Done'));
+    await fireEvent.press(screen.getByLabelText('Next'));
     await fireEvent.press(screen.getByLabelText(HIGHLIGHT_PUBLISH_LABEL));
     await waitFor(() => expect(props.onUploaded).toHaveBeenCalledWith(stored));
     expect(mockAttach).not.toHaveBeenCalled();

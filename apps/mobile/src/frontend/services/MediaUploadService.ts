@@ -148,6 +148,15 @@ function compressorNativeReady(): boolean {
 }
 
 /**
+ * @purpose Refuse at pick time a clip that is already over the upload cap and will be sent as picked
+ * (web and Expo Go have no native compressor), instead of letting the uploader fill in details first.
+ * Unknown sizes and clips the device will compress keep the existing Storage-time guard.
+ */
+export function isHighlightTooBigAsPicked(fileSize: number | null | undefined): boolean {
+  return typeof fileSize === 'number' && Number.isFinite(fileSize) && fileSize > HIGHLIGHT_MAX_BYTES && !compressorNativeReady();
+}
+
+/**
  * @purpose Client-side 1080p vertical compress via `react-native-compressor`. Expo Go / web skip native compress and upload the original file.
  * @param uri Local `file://` or `ph://` video URI.
  * @param onProgress 0–1 while the native encoder runs.
