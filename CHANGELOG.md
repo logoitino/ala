@@ -1,5 +1,9 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
 
+## 2026-11-25 — Web Highlights picks (local)
+
+- Center the existing workspace picker, show sports and schools side by side, and keep category choices visible. Add an explicit return to Highlights settings and a matching green Save button. Long web school names wrap; native and ordinary first-run presentation remain unchanged.
+
 ## 2026-11-25 — Web account workspace (local)
 
 - Account settings opens a larger, grouped overview with descriptions and visible Highlights preferences.

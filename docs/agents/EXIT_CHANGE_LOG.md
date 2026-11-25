@@ -10,6 +10,22 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-25 · plan `9f2996b7531a` → `8573df295dd7` · announced by Codex (owner approved) — web picker return and frame
+
+App at announcement: commit `b9b79f733551d4f4bbfd0432040cf15b6d3347b7` + 2 uncommitted file(s), source `8573df295dd7e60a66e96f15a7241e57ce4d6415b510e3066cbfd666df3e0003`, app 1.0.0, latest migration `20261124010000_post_caption_edits.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Reels/FeedPicksSheet.tsx 625640725a1606b346568b30afa0d81aedc145e67486a271995830d36f09e1ce`, `apps/mobile/src/frontend/components/Reels/__tests__/FeedPicksSheet.test.tsx c45cb57ed6c2eb43e1f0798124ba8672e394f17cfcc6bae1d1eb42bb2202ece4`; removed `apps/mobile/src/frontend/components/Reels/FeedPicksSheet.tsx c61f8a2a6610ad5559428cf4d7f58c2e6ad70357eb8607bfeee1e98337e62df0`, `apps/mobile/src/frontend/components/Reels/__tests__/FeedPicksSheet.test.tsx b939160bc0dc65c98ff482b40085ae749833aed2c4c681fb59fe42a1308c7cee`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
+## 2026-11-25 · plan `b5cac5fe96fe` → `9f2996b7531a` · announced by Codex (owner approved) — web Highlights picks
+
+App at announcement: commit `b9b79f733551d4f4bbfd0432040cf15b6d3347b7` + 2 uncommitted file(s), source `9f2996b7531aae7b22961cc785117fd2705b98a61c66b28798a7cc94913e309f`, app 1.0.0, latest migration `20261124010000_post_caption_edits.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Reels/FeedPicksSheet.tsx c61f8a2a6610ad5559428cf4d7f58c2e6ad70357eb8607bfeee1e98337e62df0`, `apps/mobile/src/frontend/components/Reels/__tests__/FeedPicksSheet.test.tsx b939160bc0dc65c98ff482b40085ae749833aed2c4c681fb59fe42a1308c7cee`; removed `apps/mobile/src/frontend/components/Reels/FeedPicksSheet.tsx 3a81229d329fb0bcb9fe034f11721a69cf1b019b71fbd5b0358d1e1205dd4a9b`, `apps/mobile/src/frontend/components/Reels/__tests__/FeedPicksSheet.test.tsx 805eb6bcf94c21c5e21db5767852574c3d7aae25835727eba593db40f66d4eef`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-25 · plan `571d396679c0` → `b5cac5fe96fe` · announced by Codex (owner approved) — web account workspace
 
 App at announcement: commit `a2d980f567166a548a680e61cf013a45578df126` + 8 uncommitted file(s), source `b5cac5fe96fecd64693ae0bb29dadd75250cd89afa0bf95c405b71c6c0dc97fd`, app 1.0.0, latest migration `20261124010000_post_caption_edits.sql`.
