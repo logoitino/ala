@@ -10,6 +10,22 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-25 · plan `76f846e10b09` → `ae5fb6d3a634` · announced by Codex (owner approved) — web sidebar contrast and compact alignment
+
+App at announcement: commit `7529d6aa842dcd04a9ebe57ea5b9e2db2968fc78` + 4 uncommitted file(s), source `ae5fb6d3a63435654d4ec7df745867270e004c8704c78e3558121de76579acd9`, app 1.0.0, latest migration `20261124010000_post_caption_edits.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx 75c0857e0abed20b94cd3b5a01ba46cb6b208340b2751c734406b611b49bdedc`; removed `apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx f9f814d26a6eef5992397029c5e16fb96287fd34db1603cc6bb9fa74dba392fe`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
+## 2026-11-25 · plan `7c01dbcb78a3` → `76f846e10b09` · announced by Codex (owner approved) — web-only sidebar account settings
+
+App at announcement: commit `7529d6aa842dcd04a9ebe57ea5b9e2db2968fc78` + 4 uncommitted file(s), source `76f846e10b09efdcb28512fee22a6d3dbdaf6f6569538a57b55662af0967670e`, app 1.0.0, latest migration `20261124010000_post_caption_edits.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx f9f814d26a6eef5992397029c5e16fb96287fd34db1603cc6bb9fa74dba392fe`, `apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx da3905252166a29e016e32147e26be97508c5079ae3e31b4fab6bb96531111e5`, `apps/mobile/src/frontend/components/Common/__tests__/DesktopAccountSettings.test.tsx 94d003e0021db80ab27737bfadb74a9add64e7825101590848a9256515187a03`, `apps/mobile/src/frontend/components/Common/__tests__/DesktopLeftRail.test.tsx a5a9d0d96614c44a36f175c27d2b8c5bf7ed22f77ee8bd2cf985d6d2770d016e`; removed `apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx e232c455b8b5f33422965fb40a4866cf98feb5407bf7afa18dc95ee93af85291`, `apps/mobile/src/frontend/components/Common/__tests__/DesktopLeftRail.test.tsx f4fd8f40b4e1c4e207eb1e438fa91cf59685d0462345a431f191cdb4821b966c`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-25 · plan `ec1e87ffd16d` → `7c01dbcb78a3` · announced by Codex (owner approved) — welcome, search and caption refresh
 
 App at announcement: commit `4d026d4f81fed6f10cd0aa04a4e8e25391ba8107` + 21 uncommitted file(s), source `7c01dbcb78a3951fe93a6aca84fd2ec269e663f3f6bbd48c90d9645ab9579a8a`, app 1.0.0, latest migration `20261124010000_post_caption_edits.sql`.

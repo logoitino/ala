@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-25 — Welcome to Highlights handoff, Home and Local search polish, and Highlight caption refresh repair.
+**Last updated:** 2026-11-25 — Web sidebar account settings and welcome brand continuity.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -177,6 +177,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 
 ## 4. Recent changes (rolling — newest first)
 
+- **2026-11-25 — Web account settings (local):** Desktop/tablet left rail adds an expandable Account settings section and welcome-style brand header. Existing account-owned panels are loaded only on selection; outgoing session panels are masked and unmounted. Profile runtime pause hides the section. Phone routes, layouts and account components have no source changes in this pass. Jev not reached (local SDK/key environment absent); no score inferred.
 - **2026-11-25 — Welcome → Highlights (local):** Watch highlights opens the existing Home feed, leads with a public video when available, and carries welcome art through loading and retry. First entry does not show optional Spotlight or preference prompts; sign-in and the guest browse allowance keep their existing rules. Jev not reached (no configured local key/SDK environment); no score inferred.
 - **2026-11-25 — Home and Local search polish (local):** Shared search input and aligned recent rows; Local opens history on focus. Results scroll in virtualized lists, outdated rows clear on query or filter changes, and both screens share the same six on-device terms. See [menu coverage](engineering/MENU_STYLE_MAP.md#home-and-local-search).
 - **2026-11-25 — Highlight caption refresh repair (local):** Home and both profile readers apply matching confirmed caption edits to in-flight reel results. An older refresh can no longer revive a row removed by a newer refresh. [POST-EDIT-01](agents/POST-EDIT-01.md#highlight-refresh-follow-up).

@@ -1,6 +1,7 @@
 /** UX-13 readable shared type preserves every action and required notice.
  * Expo web left navigation for the three-panel desktop shell (WEB-DESKTOP-01).
  * Replaces the bottom FanTabBar at ≥820px; collapses labels below 1280 (icons only).
+ * The web-only rail carries the welcome brand and exposes existing account settings.
  */
 import { useEffect, useState } from 'react';
 import { type Href, usePathname, useRouter } from 'expo-router';
@@ -15,6 +16,8 @@ import { fetchCrewShortcuts, type CrewShortcut } from '@/lib/crew';
 import { userProfileHref } from '@/lib/navigation';
 import { ROLE_HOME } from '@/lib/roles';
 import { useWebDesktopMode } from '@/hooks/useAppViewport';
+import { BrandMark } from '@/components/UI/BrandMark';
+import { DesktopAccountSettings } from '@/components/Common/DesktopAccountSettings';
 import type { UserRole } from '@/types/database';
 
 type NavItem = {
@@ -117,11 +120,8 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
         accessibilityLabel="Tapua'i Home"
         style={[styles.brand, iconsOnly && styles.brandCompact]}
       >
-        {iconsOnly ? (
-          <Text style={styles.brandMark}>T</Text>
-        ) : (
-          <Text style={styles.brandName}>{"Tapua'i"}</Text>
-        )}
+        <BrandMark dark size={iconsOnly ? 28 : 30} showWordmark={!iconsOnly} />
+        {!iconsOnly ? <Text style={styles.brandCaption}>Athletes worth cheering for.</Text> : null}
       </Pressable>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {fanItems.map((item) => {
@@ -225,6 +225,7 @@ export function DesktopLeftRail({ compact }: { compact?: boolean }) {
             })
           )}
         </View>
+        {live.tabs.profile !== false ? <DesktopAccountSettings compact={iconsOnly} /> : null}
       </ScrollView>
     </View>
   );
@@ -247,21 +248,14 @@ const styles = StyleSheet.create({
     paddingBottom: space.sm,
     minHeight: 52,
     justifyContent: 'center',
+    backgroundColor: colors.videoSurface,
+    gap: 8,
   },
   brandCompact: { minHeight: 44,
     alignItems: 'center',
     paddingHorizontal: 0,
   },
-  brandName: {
-    fontFamily: FONT.display,
-    ...TYPE.title,
-    color: colors.primary,
-  },
-  brandMark: {
-    fontFamily: FONT.display,
-    fontSize: 22,
-    color: colors.primary,
-  },
+  brandCaption: { ...TYPE.caption, color: colors.onVideoMuted, fontFamily: FONT.regular },
   scroll: {
     paddingVertical: space.sm,
     paddingHorizontal: space.sm,

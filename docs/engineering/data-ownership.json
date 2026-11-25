@@ -3329,6 +3329,15 @@
       "destination": "Home and Local read a shared in-memory snapshot backed by device AsyncStorage at tapuai.localSearchRecent. Only terms explicitly searched use the existing search endpoint.",
       "retention": "Newest six terms until Clear all or app data removal. Clearing invalidates pending hydration and saves.",
       "source": "apps/mobile/src/frontend/hooks/useLocalSearch.ts"
+    },
+    {
+      "id": "web-sidebar-account-settings",
+      "owner": "PROFILE",
+      "purpose": "Expose existing account settings from the web-only desktop and tablet navigation rail.",
+      "data": "Existing Auth account name and transient selected panel; no new fetched record, persistence or permission.",
+      "destination": "Existing Profile, Privacy, Notifications, Capability, Legal and Delete Account components keep their current data handlers. The sidebar masks outgoing session selections.",
+      "retention": "Panel selection lasts only while mounted for the current account session. Existing settings retain their original server retention. Fixed-code Auth boundary reports render failure without account data.",
+      "source": "apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx"
     }
   ]
 }

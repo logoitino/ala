@@ -15,7 +15,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Tables reached by at least one screen or server route | 126 of 129 |
 | Code files that read or write the database | 87 |
 | Exported symbols nothing imports | 46 (0 proposed for archive, 46 kept on purpose) |
-| Operational data exports | 29 |
+| Operational data exports | 30 |
 | Rule failures | 0 |
 
 ## Owners
@@ -101,6 +101,7 @@ These operator tools are outside the app import graph. Source registration recor
 | `public-profile-photo-preview` | `DESIGN` | Current profile subject, display name and already authorized avatar URL; no new lookup or signing operation.; Enlarge the same photo that the current athlete profile may already display. | Mounted public profile photo viewer. Owner editing still uses the existing picker. | Dismissed on subject/source change or close. No copied media, logging or persistent state. | `apps/mobile/src/frontend/components/Profile/ProfileAvatarPicker.tsx` |
 | `owner-post-description-edit` | `HIGHLIGHTS` | Existing actor/profile IDs, post ID and current title or revision; proposed text and checked RPC receipt. No copied media or new auth storage.; Change a Highlight or Beyond description using the exact current author and expected value or revision. | Existing Highlight or Beyond row through its owner RPC; compatible mounted reel lists and current Beyond review queue. | Unsaved input lives in the open editor only. A pending reel read retains matching confirmed receipts only until completion or invalidation; saved values use existing post retention. No offline queue, silent retry or caption telemetry. | `apps/mobile/src/frontend/lib/postCaptions.ts` |
 | `fan-search-recent-history` | `DESIGN` | Up to six unique terms from opened search results, newest first. Existing on-device key; no new account identifier.; Let Home and Local reopen a recent search from a shared aligned list. | Home and Local read a shared in-memory snapshot backed by device AsyncStorage at tapuai.localSearchRecent. Only terms explicitly searched use the existing search endpoint. | Newest six terms until Clear all or app data removal. Clearing invalidates pending hydration and saves. | `apps/mobile/src/frontend/hooks/useLocalSearch.ts` |
+| `web-sidebar-account-settings` | `PROFILE` | Existing Auth account name and transient selected panel; no new fetched record, persistence or permission.; Expose existing account settings from the web-only desktop and tablet navigation rail. | Existing Profile, Privacy, Notifications, Capability, Legal and Delete Account components keep their current data handlers. The sidebar masks outgoing session selections. | Panel selection lasts only while mounted for the current account session. Existing settings retain their original server retention. Fixed-code Auth boundary reports render failure without account data. | `apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx` |
 
 ## Tables and views
 

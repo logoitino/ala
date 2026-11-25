@@ -45,6 +45,10 @@ Final local integration passes329mobile suites/3116tests,217portaltests, bothTyp
 
 ## Home and Local search
 
+Web desktop/tablet rail now has a dark welcome-style brand header and an expandable Account settings section. The icon rail keeps named buttons, and the full-width rail wraps labels. Existing profile/privacy/notification/capability/legal/deletion panels retain their own validation and writes. The web shell still passes native children through without mounting either rail.
+
+Local browser checks show the full settings list at desktop width, Notifications opening and closing, and a named 51×52px settings control at 900px without horizontal overflow. At 390px the left rail and its settings control are absent. Local validation passes 336 mobile suites / 3,181 tests, both type checks and the repository check using this checkout's owned source-sync folder.
+
 The compact search field shares icon, type, and close-button spacing across Home's video bar and Local's light header. Recent searches use consistent icon and text columns, growing rows for long labels, and 44pt row and Clear all targets. Local opens recents on focus; Home and Local keep their respective result filters and navigation. Both search drawers use virtualized result rows. See [the device checks](TESTER_SCRIPT.md#home-and-local-search--phone-layout-and-history).
 
 Local web checks at 320px and 390px used three synthetic terms. A long query wrapped while the icon and text columns stayed aligned, standard rows and the Clear all target measured 44px, and there was no horizontal overflow. Android keyboard and font scaling still need a phone check.

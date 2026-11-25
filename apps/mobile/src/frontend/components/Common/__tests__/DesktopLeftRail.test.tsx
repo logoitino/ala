@@ -2,6 +2,7 @@
  * Desktop left rail: Schools → /local/directory when Local is on; Local path match excludes directory.
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
+jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: jest.fn() }) }));
 
 const mockPush = jest.fn();
 let mockPathname = '/';
@@ -64,6 +65,14 @@ describe('DesktopLeftRail', () => {
     await render(<DesktopLeftRail />);
     fireEvent.press(screen.getByLabelText('Schools'));
     expect(mockPush).toHaveBeenCalledWith('/local/directory');
+  });
+
+  it('places Account settings in the rail and exposes guest sign in', async () => {
+    await render(<DesktopLeftRail />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Account settings' }));
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy();
+    expect(screen.getByText('Athletes worth cheering for.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Delete account' })).toBeNull();
   });
 
   it('hides Local and Schools when tabs.local is off', async () => {

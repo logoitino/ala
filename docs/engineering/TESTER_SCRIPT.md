@@ -758,6 +758,10 @@ like a promise? (If yes, tell us — that matters.)*
 10. Use a screen reader on card-fee coverage: it announces the exact added fee and that
     the family's share stays the same. Record device evidence rather than inferring it from Jest.
 
+## Web sidebar account settings
+
+At desktop and tablet browser widths, expand **Account settings** in the left rail. Check profile, privacy, notifications, account capability and legal controls open their existing panels, Close returns to the page, and labels stay readable in the wide rail. The compact rail must retain accessible button names. Guests see Sign in and legal only; changing accounts must close outgoing private panels. With Profile paused the section is hidden. Confirm the phone app and narrow web layout have no new rail.
+
 ## Welcome to Highlights — first phone visit
 
 1. Use a fresh test install or isolated app storage. Open the welcome and tap **Watch highlights**. Expect Home to open on a public Highlight without an optional Spotlight or account prompt on that first clip. Check muted playback and that the athlete and school are legible above the dock.
