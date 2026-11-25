@@ -9,8 +9,13 @@ let mockAuth = { user: { id: 'one' }, profile: { full_name: 'Test Fan' }, isGues
   loading: false, isSessionCurrent: current, signOut: mockSignOut };
 jest.mock('@/context/AuthContext', () => ({ useAuth: () => mockAuth }));
 jest.mock('@/context/SoftWallContext', () => ({ useSoftWall: () => ({ requireAuth: mockSignIn }) }));
+jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => ({ live: { tabs: { home: true } } }) }));
 jest.mock('@/components/Profile/NotificationSettingsSheet', () => ({
-  NotificationSettingsSheet: () => { const { Text } = require('react-native'); return <Text>Existing notification choices</Text>; },
+  NotificationSettingsSheet: ({ onClose }: { onClose: () => void }) => {
+    const { Text, Pressable } = require('react-native');
+    return <><Text>Existing notification choices</Text><Pressable accessibilityRole="button"
+      accessibilityLabel="Close notification settings" onPress={onClose} /></>;
+  },
 }));
 jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 
@@ -42,9 +47,22 @@ it('keeps signout failure visible and permits retry', async () => {
   await waitFor(() => expect(mockSignOut).toHaveBeenCalledTimes(2));
 });
 
-it('keeps compact controls named for keyboard and screen reader use', async () => {
+it('opens a full overview from the compact rail with grouped choices', async () => {
   await render(<DesktopAccountSettings compact />);
   await fireEvent.press(screen.getByRole('button', { name: 'Account settings' }));
   expect(screen.getByRole('button', { name: 'Privacy and visibility' })).toBeTruthy();
-  expect(screen.queryByText('Test Fan')).toBeNull();
+  expect(screen.getByRole('header', { name: 'Make Tapua’i yours' })).toBeTruthy();
+  expect(screen.getByRole('header', { name: 'Your preferences' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Highlights preferences' })).toBeTruthy();
+});
+
+it('returns from a detail panel to the same overview', async () => {
+  await render(<DesktopAccountSettings />);
+  await fireEvent.press(screen.getByRole('button', { name: 'Account settings' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Notifications' }));
+  await fireEvent.press(await screen.findByRole('button', { name: 'Close notification settings' }));
+  expect(await screen.findByRole('header', { name: 'Make Tapua’i yours' })).toBeTruthy();
+  expect(screen.queryByText('Existing notification choices')).toBeNull();
+  await fireEvent.press(screen.getByRole('button', { name: 'Close account settings' }));
+  expect(screen.queryByRole('header', { name: 'Make Tapua’i yours' })).toBeNull();
 });

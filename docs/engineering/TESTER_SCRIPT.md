@@ -760,7 +760,9 @@ like a promise? (If yes, tell us — that matters.)*
 
 ## Web sidebar account settings
 
-At desktop and tablet browser widths, expand **Account settings** in the left rail. Check profile, privacy, notifications, account capability and legal controls open their existing panels, Close returns to the page, and labels stay readable in the wide rail. The compact rail must retain accessible button names. Guests see Sign in and legal only; changing accounts must close outgoing private panels. With Profile paused the section is hidden. Confirm the phone app and narrow web layout have no new rail.
+Open the grouped overview at desktop and tablet widths. Select Notifications, Privacy, and Highlights preferences; check detail uses the available web width and closing each restores the overview. Open sports/school picks from Highlights preferences and check the nested picker is reachable. At short heights and increased browser text, scroll to account management and Sign out, then close with the top-right control or Escape. No saves are needed for the layout check. On native and unrelated web sheets, confirm the original size remains.
+
+At desktop and tablet browser widths, expand **Account settings** in the left rail. Check profile, privacy, notifications, account capability and legal controls open their existing panels, Close returns to the settings overview, and labels stay readable in the wide rail. The compact rail must retain accessible button names. Guests see Sign in and legal only; changing accounts must close outgoing private panels. With Profile paused the section is hidden. Confirm the phone app and narrow web layout have no new rail.
 
 ## Welcome to Highlights — first phone visit
 

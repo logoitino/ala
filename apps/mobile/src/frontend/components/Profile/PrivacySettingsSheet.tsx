@@ -1,4 +1,4 @@
-/** Privacy drafts, codes, writes and delayed callbacks belong to one visible Auth lifetime. UX-13 readable shared type preserves every action and required notice.
+/** Privacy drafts, codes, writes and delayed callbacks belong to one visible Auth lifetime. Explicit desktop workspace scope bounds the web dialog; native styling remains unchanged.
  * Profile → Privacy (PRIV-01, MINOR-01): public or private account, who sees each profile item, hide from search, who
  * can send friend requests, how tags are reviewed, blocked accounts, and the minor-account pieces: birth month and
  * year, and for 13–17 the parent or guardian link (invite code, confirm, unlink), the consent status, requests waiting
@@ -9,8 +9,10 @@
  * @sideEffects `get_my_privacy`, `set_my_privacy`, `list_my_blocks`, `unblock_user` (lib/privacy) and the guardian
  *   functions in lib/minors; `set_my_birth_month` through AuthContext.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { type ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, Platform, ScrollView, Share, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useSheetFrame } from '@/hooks/useSheetFrame';
+import { SheetPresentationContext } from '@/components/UI/SheetPresentationContext';
 
 import { BirthMonthField, type BirthDraft } from '@/components/Auth/BirthMonthField';
 import { GuardianSupervisionPanel } from '@/components/Custodial/GuardianSupervisionPanel';
@@ -99,7 +101,15 @@ export function PrivacySettingsSheet(props: { visible: boolean; onClose: () => v
   if (isSessionCurrent && !isSessionCurrent()) return null;
   return <OwnedPrivacySettingsSheet key={lifetime.current.generation} {...props} />;
 }
+/** Only the explicit web frame reads shared sheet geometry; native retains its original dependencies. */
+function WorkspacePrivacyPanel({ children, style }: { children?: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const frame = useSheetFrame();
+  return <View style={[style, frame.card, { marginBottom: 24 }]}>{children}</View>;
+}
+
 function OwnedPrivacySettingsSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const workspace = useContext(SheetPresentationContext) === 'web-workspace' && Platform.OS === 'web';
+  const PrivacyPanel = workspace ? WorkspacePrivacyPanel : View;
   const { recordBirthMonth, isAthlete, user, isSessionCurrent } = useAuth();
   const mounted = useRef(true), flight = useRef(false), read = useRef(0);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; ++read.current; }; }, []);
@@ -250,7 +260,7 @@ function OwnedPrivacySettingsSheet({ visible, onClose }: { visible: boolean; onC
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={dismiss}>
       <View style={styles.root}>
-        <View style={styles.sheet}>
+        <PrivacyPanel style={styles.sheet}>
           <MenuBackdrop accent="jade" />
           <SheetHandle onDismiss={dismiss} />
           <Text style={styles.kicker}>Account</Text>
@@ -447,7 +457,7 @@ function OwnedPrivacySettingsSheet({ visible, onClose }: { visible: boolean; onC
           >
             <Text style={styles.saveLabel}>{busy ? 'Saving…' : 'Save privacy'}</Text>
           </AnimatedButton>
-        </View>
+        </PrivacyPanel>
       </View>
       <Modal visible={visible && guardianOpen} animationType="fade" transparent onRequestClose={() => setGuardianOpen(false)}>
         <View style={styles.root}>

@@ -16553,6 +16553,7 @@
       "path": "tabs.home",
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx",
         "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx"
       ]

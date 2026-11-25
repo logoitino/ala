@@ -3334,8 +3334,8 @@
       "id": "web-sidebar-account-settings",
       "owner": "PROFILE",
       "purpose": "Expose existing account settings from the web-only desktop and tablet navigation rail.",
-      "data": "Existing Auth account name and transient selected panel; no new fetched record, persistence or permission.",
-      "destination": "Existing Profile, Privacy, Notifications, Capability, Legal and Delete Account components keep their current data handlers. The sidebar masks outgoing session selections.",
+      "data": "Existing Auth account name and transient selected panel; Highlights preferences and existing roster school options load only when that panel opens. No new persisted record or permission.",
+      "destination": "Existing Profile, Privacy, Notifications, Highlights preferences, Capability, Legal and Delete Account components keep their current data handlers. The overview masks outgoing session selections. The explicit web workspace context changes only panel presentation.",
       "retention": "Panel selection lasts only while mounted for the current account session. Existing settings retain their original server retention. Fixed-code Auth boundary reports render failure without account data.",
       "source": "apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx"
     }

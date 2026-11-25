@@ -1,9 +1,11 @@
-/** Shared fan-sheet geometry; safe-area clearance stays independent from decorative menu chrome. */
-import { type ViewStyle } from 'react-native';
+/** Shared fan-sheet geometry; an explicit web workspace may expand account detail panels only. */
+import { useContext } from 'react';
+import { Platform, useWindowDimensions, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { cardShadow, colors, MENU_METRICS, space } from '@/constants/theme';
 import { useAppViewportWidth } from '@/hooks/useAppViewport';
+import { SheetPresentationContext } from '@/components/UI/SheetPresentationContext';
 
 /** Widest a fan popup grows. Wider browsers center this card instead of stretching it. */
 const SHEET_MAX = 440;
@@ -17,7 +19,7 @@ export const SHEET_BLUR_INTENSITY = 44;
 export type SheetFrame = {
   /** Equal side gutters and clearance above the home indicator. Backdrop stays full-screen. */
   dock: ViewStyle;
-  /** The card itself: even padding, one radius, never wider than `SHEET_MAX`. */
+  /** The card itself: bounded readable width; an opted-in desktop account workspace can grow. */
   card: ViewStyle;
 };
 
@@ -29,7 +31,17 @@ export type SheetFrame = {
  */
 export function useSheetFrame(): SheetFrame {
   const width = useAppViewportWidth();
+  const window = useWindowDimensions();
+  const presentation = useContext(SheetPresentationContext);
   const insets = useSafeAreaInsets();
+  if (presentation === 'web-workspace' && Platform.OS === 'web' && window.width >= 820) {
+    return {
+      dock: { width: '100%', paddingHorizontal: Math.max(24, (window.width - 760) / 2), paddingBottom: 24 },
+      card: { width: '100%', maxWidth: 760, alignSelf: 'center', paddingHorizontal: 24,
+        paddingTop: 12, paddingBottom: 20, borderRadius: MENU_METRICS.sheetRadius,
+        borderWidth: 1, borderColor: colors.border, ...cardShadow, overflow: 'hidden' },
+    };
+  }
   const compact = width < 360;
   const side = width >= SHEET_MAX + 32 ? (width - SHEET_MAX) / 2 : compact ? 10 : space.sm;
 

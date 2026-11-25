@@ -619,3 +619,12 @@ list the waiting control, the migration file, and the Expo desk. No new table. S
 Checks this session: challenge Jest 10/10; portal `missingRpc` test 1/1. Browser confirmation of
 the Health page was not run in this pass. Next owner: owner, if they want the written migrations
 applied. That apply is **$0** on the free development project unless the project is paused.
+
+
+## Web account workspace — 2026-11-25
+
+Outside-session Codex performed DESIGN implementation and DOCUMENTATION/source integration for the owner's web-only settings layout request. No separate specialist process ran. Existing account controls are grouped and explained; detail Close returns to the overview. Settings panels retain their original writes, role checks and confirmations. The scope review classifies this as presentation of existing settings, with no new data, permission or operational capability. Jev was not reached because its local SDK/key configuration is absent; no score is claimed.
+
+Updated STATE, CHANGELOG, menu map, tester script and data ownership, then refreshed generated data, Exit and security records under the owner's standing acknowledgement approval. Full repository check passes using Ala's owned source-sync folder: 337 mobile suites / 3,185 tests plus the remaining gates. Focused native Privacy and scoped sheet-frame tests pass (26 cases total). Browser Bridge checked the current Metro build with Demo Fan at desktop and 900×600: bounded overview scrolling, reachable Sign out, fixed 44px Close, and a 760px Notifications panel with its honest unavailable-source error. Existing runtime-source reader metadata refreshed automatically. The retained detector scan passed the portal tests but failed its default quality-gate command only because the default source-sync state belongs to another checkout; the explicit Ala state-dir full check passed. Sensor gaps remain declared.
+
+Next owner: app owner for layout preference review; SUPPORT for the existing unavailable notification source. Hosted delivery, phone acceptance and GitHub publication are not certified by local presentation checks.

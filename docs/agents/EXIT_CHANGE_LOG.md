@@ -10,6 +10,22 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-25 · plan `571d396679c0` → `b5cac5fe96fe` · announced by Codex (owner approved) — web account workspace
+
+App at announcement: commit `a2d980f567166a548a680e61cf013a45578df126` + 8 uncommitted file(s), source `b5cac5fe96fecd64693ae0bb29dadd75250cd89afa0bf95c405b71c6c0dc97fd`, app 1.0.0, latest migration `20261124010000_post_caption_edits.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Profile/PrivacySettingsSheet.tsx 32ba1000673ae38d3746f8808902c7267431f8a7d03b2da147e84d646de155b6`; removed `apps/mobile/src/frontend/components/Profile/PrivacySettingsSheet.tsx 045f8000ceacc11c306f2ea0e30698bdba9d34ad88e3bfe2644fa69837502d6d`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
+## 2026-11-25 · plan `ae5fb6d3a634` → `571d396679c0` · announced by Codex (owner approved) — web account workspace
+
+App at announcement: commit `a2d980f567166a548a680e61cf013a45578df126` + 8 uncommitted file(s), source `571d396679c0e1e915e514afbfec4540d1c4a6aa0496cd188d090a894517436d`, app 1.0.0, latest migration `20261124010000_post_caption_edits.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx 81e60cb615d54efbfbc94a1ebe5d149170faa3b9ae6dc0bf5185b7fb0ed16e8c`, `apps/mobile/src/frontend/components/Common/DesktopHighlightsSettings.tsx d20a0e2038e4f50eb737bc92e0e0b4285611f289dc7bea1a7cd43aa4513baf32`, `apps/mobile/src/frontend/components/Common/__tests__/DesktopAccountSettings.test.tsx 9b81c2803adc3771b6c0e0e8d05df0ab8e7d397920d23f6ddef78950be9b0c9b`, `apps/mobile/src/frontend/components/Profile/PrivacySettingsSheet.tsx 045f8000ceacc11c306f2ea0e30698bdba9d34ad88e3bfe2644fa69837502d6d`, `apps/mobile/src/frontend/components/UI/SheetPresentationContext.tsx 30b9096d9949faa9644456f4708d8f662497e56f4eebb389245300fd5a651748`, `apps/mobile/src/frontend/hooks/__tests__/useSheetFrame.test.tsx f88dad3506b284cefc9824040f8a86c26950831689a9b31b7c6d7045af9ae250`, `apps/mobile/src/frontend/hooks/useSheetFrame.ts 1f2ea1024dedad335ed5cef6867572b796a24fa83072d95510a31143498ef49d`, `packages/shared-types/admin/supportTopology.json 1c590351d15bf1ca80545767a19cb8ade8ca1d985441d2c952945f5905933fc6`; removed `apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx 75c0857e0abed20b94cd3b5a01ba46cb6b208340b2751c734406b611b49bdedc`, `apps/mobile/src/frontend/components/Common/__tests__/DesktopAccountSettings.test.tsx 94d003e0021db80ab27737bfadb74a9add64e7825101590848a9256515187a03`, `apps/mobile/src/frontend/components/Profile/PrivacySettingsSheet.tsx e77ee3ac9a9ab06b9ff078c0622883b65df1f9554876620baac0fd4028b2970f`, `apps/mobile/src/frontend/hooks/useSheetFrame.ts d65be887428fc28739a1a7c37df26617e9374046fd6d65f0f87db9758750728e`, `packages/shared-types/admin/supportTopology.json 51aab1bcfb1bdaee4a042763d6ce63f89ddd9f514c7b74ee7dac7101b758d2fa`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-25 · plan `76f846e10b09` → `ae5fb6d3a634` · announced by Codex (owner approved) — web sidebar contrast and compact alignment
 
 App at announcement: commit `7529d6aa842dcd04a9ebe57ea5b9e2db2968fc78` + 4 uncommitted file(s), source `ae5fb6d3a63435654d4ec7df745867270e004c8704c78e3558121de76579acd9`, app 1.0.0, latest migration `20261124010000_post_caption_edits.sql`.

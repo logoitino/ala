@@ -1,5 +1,10 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
 
+## 2026-11-25 — Web account workspace (local)
+
+- Account settings opens a larger, grouped overview with descriptions and visible Highlights preferences.
+- Web account detail panels use more of the browser width, and Close returns to the overview. Native sheets and other popups keep their existing sizes.
+
 ## 2026-11-25 — Web sidebar account settings (local)
 
 - Desktop and tablet web navigation now has Account settings, opening the existing profile, privacy, notification, capability, legal and deletion controls.
