@@ -171,7 +171,8 @@ record('an admin still reads every profile', adminAll[0]?.n >= 6, JSON.stringify
 const strView = await q('str', `select full_name, avatar_url, bio, social_links::text as social, aura_points, viewer_relation from public.get_public_profiles(array['${P_ATH}']::uuid[])`);
 record('a stranger sees a private athlete\'s name but not photo, bio, links or Aura', strView[0]?.full_name === 'Kaleo Private' && strView[0]?.avatar_url === null && strView[0]?.bio === null && strView[0]?.social === '{}' && strView[0]?.aura_points === null && strView[0]?.viewer_relation === 'stranger', JSON.stringify(strView));
 const guestView = await q('guest', `select bio, viewer_relation from public.get_public_profiles(array['${P_ATH}']::uuid[])`);
-record('a guest sees no private details', guestView[0]?.bio === null && guestView[0]?.viewer_relation === 'guest', JSON.stringify(guestView));
+// GUEST-ACCESS-01 (owner 2026-11-25): guests no longer call profile functions at all, a stricter form of "no private details".
+record('a guest is refused profile reads entirely (account required)', /permission denied/.test(String(guestView?.error)), JSON.stringify(guestView));
 const nameRule = await q('str', `select full_name from public.get_public_profiles(array['${P_FRI}']::uuid[])`);
 record('a fan account shows strangers a username, not the full name', nameRule[0]?.full_name === 'bestfriend', JSON.stringify(nameRule));
 const req = await q('fri', `select public.request_friend('${P_ATH}') as r`);
@@ -223,7 +224,9 @@ record("the highlights feed shows the uploader's photo only to people their phot
 await db.exec(`insert into public.crew_follows (follower_id, athlete_id) values ('${FRI}', '${ATH_PLAYER}')`);
 const crewRows = await q('str', `select count(*)::int as n from public.crew_follows where athlete_id = '${ATH_PLAYER}'`);
 const crewGuest = await q('guest', `select (public.get_crew_graph('${ATH_PLAYER}')->>'crew_count')::int as n`);
-record("Crew lists are private to the follower and the athlete; counts still show to guests", crewRows[0]?.n === 0 && crewGuest[0]?.n === 1, JSON.stringify({ crewRows, crewGuest }));
+const crewCount = await q('str', `select (public.get_crew_graph('${ATH_PLAYER}')->>'crew_count')::int as n`);
+// GUEST-ACCESS-01: counts stay visible to signed-in accounts; guests are refused the Crew graph.
+record("Crew lists are private to the follower and the athlete; counts show to accounts, guests are refused", crewRows[0]?.n === 0 && crewCount[0]?.n === 1 && /permission denied/.test(String(crewGuest?.error)), JSON.stringify({ crewRows, crewCount, crewGuest }));
 await db.exec(`update public.app_runtime_config set published = coalesce(published, '{}'::jsonb) || '{"features": {"privacy.friends": false}}'::jsonb where id = 'default'`);
 const paused = await q('fri', `select public.request_friend('${P_STR}')`);
 await db.exec(`update public.app_runtime_config set published = published - 'features' where id = 'default'`);
@@ -514,7 +517,8 @@ record('verification records cannot be deleted, truncated or rewritten (even by 
   record('guests and fans may receive a game score topic and the index; a look-alike topic gets nothing', guestReads[0]?.n === 1 && fanIndex[0]?.n === 2 && oddTopic[0]?.n === 0, JSON.stringify({ guestReads, fanIndex, oddTopic }));
   const forged = await topicAs('guest', `game_scores_${G}`, `insert into realtime.messages (topic, extension, payload, event, private) values ('game_scores_${G}', 'broadcast', '{"v":1}', 'score', true)`);
   const forgedFan = await topicAs('fan', 'game_scores_index', `insert into realtime.messages (topic, extension, payload, event, private) values ('game_scores_index', 'broadcast', '{"v":1}', 'membership', true)`);
-  record('no guest or fan can send on a score topic (only the trigger writes them)', /row-level security/.test(String(forged)) && /row-level security/.test(String(forgedFan)), JSON.stringify({ forged, forgedFan }));
+  // GUEST-ACCESS-01 can refuse the guest before row security runs; either refusal keeps the topic trigger-only.
+  record('no guest or fan can send on a score topic (only the trigger writes them)', /row-level security|permission denied/.test(String(forged)) && /row-level security/.test(String(forgedFan)), JSON.stringify({ forged, forgedFan }));
   const presence = await topicAs('guest', `game_scores_${G}`, `select count(*)::int as n from realtime.messages where extension = 'presence'`);
   await db.exec(`insert into realtime.messages (topic, extension, payload, event, private) values ('game_scores_${G}', 'presence', '{}', 'sync', true)`);
   const presenceAfter = await topicAs('guest', `game_scores_${G}`, `select count(*)::int as n from realtime.messages where extension = 'presence'`);
@@ -542,7 +546,8 @@ record('verification records cannot be deleted, truncated or rewritten (even by 
   const guestSees = await rallyRead('guest');
   const fanSees = await rallyRead('fan');
   const adminSees = await rallyRead('admin');
-  record('a guest sees a live Rally without a permission error', guestSees === 1, String(guestSees));
+  // GUEST-ACCESS-01 (owner 2026-11-25) supersedes the 2026-10-20 guest Rally read: Rallies now need an account.
+  record('a guest is refused Rally reads (account required)', /permission denied/.test(String(guestSees)), String(guestSees));
   record('a signed-in fan sees live Rallies only, not another family\'s pending one', fanSees === 1, String(fanSees));
   record('an admin still sees a pending Rally', adminSees === 2, String(adminSees));
   await db.exec(`delete from public.rallies where player_id in ('${P1}', '${P2}'); delete from public.players where id in ('${P1}', '${P2}');`);

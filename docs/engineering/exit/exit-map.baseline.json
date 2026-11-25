@@ -1,5 +1,5 @@
 {
- "planVersion": "4d05b56aba9b",
+ "planVersion": "1db1b2d73862",
  "inventory": {
   "schemas": [
    "fan_zone_private"
@@ -1690,6 +1690,7 @@
    "apps/mobile/package.json f9197512e476ab13c7912639909c49926342e68e347dc4d3ceddb9a881ef1ba3",
    "apps/mobile/plugins/withGradleLowMemory.js 83fcbfea49957d1bcb81a3255ed23b29f4b6abfd3aeb8e8bc2b760b1b87e6a1e",
    "apps/mobile/plugins/withStripeDisableSPM.js 8dc1f6cc6d92028f650a6bec12314ea75dff7b1a1651d4392215c7feaaf9747b",
+   "apps/mobile/public/canvaskit.wasm eb68c7a7f602d8cb89915352c4471a2d26edfd72000f78202cb1fe32ce1f9dc4",
    "apps/mobile/src/backend/api/__tests__/fanZoneMedia.test.ts 94103ca8f1e47ef59bca7dbbbcc7c62b7db5ae6c1cddd8d8d611c3bd66d8feb6",
    "apps/mobile/src/backend/api/accessToken.test.ts d06bb80b02cbd78ca93895a58e6bb083f1588b1dec1a29c3bf73048666c8ff6c",
    "apps/mobile/src/backend/api/createPaymentIntent.ts 92bbec400d47a98597db1fee54e66faee4d306f7159fc720db61e2b7396d2a62",
@@ -2580,7 +2581,7 @@
    "apps/mobile/src/frontend/theme/hypeFx.ts 3da7a5c199c0177cd6ea3a5c774ab6a47565b94234a6be80187dfe089916f475",
    "apps/mobile/src/frontend/theme/motion.ts 3fa40f50f5767b4e8807af6a98a7e367a8f67c0487cba5facf648051da168673",
    "apps/mobile/src/frontend/types/__tests__/databaseDrift.test.ts 0d97299bec240fb00773bee6f132a47eda4f49493534e5879d6e9eee5521499c",
-   "apps/mobile/src/frontend/types/database.generated.ts 7ba3dea050728cf0c0592efa937ab3d11138476d4256d72dbce705b5d0775d22",
+   "apps/mobile/src/frontend/types/database.generated.ts 53f8fe6df00637940e3601f2ddd40f7b652529e9d03ffe33d5e34df7a7917382",
    "apps/mobile/src/frontend/types/database.ts fa7ae47c68575766b1136637a2a11084a4cb73956eb5a022382f777ee3ede3d7",
    "apps/mobile/tsconfig.json 8f0ea87302dc7f5b6ae1b86469887d882b36cdcfc83af5de4bf8f8ffe089f7c7",
    "docs/engineering/exit/exit-map.json bcf87ca10a1cfdd50ced364d0793a6a7b099bfe7aa2fd0b5f4e458625374282e",
@@ -2772,7 +2773,7 @@
    "scripts/replay/post-caption-edits-replay.mjs 3dadf5398143c167284d208f07ad9102724c4070670db9dd8633357ff9cf7203",
    "scripts/replay/profile-update-replay.mjs 07eaa8046babe50c1de00e3cea18d11ec6f4ff900405054fd5ee1acefaf28e4c",
    "scripts/replay/public-bucket-listing-replay.mjs 700203e3df9005869c0341945dfe27818332cab4b37dbf1ccef000dbfba95ce6",
-   "scripts/replay/schema-replay.mjs ed4cab6939730dd4e5c5c7928d10ee3a01480a8fbcf07cadc7178ac467be6135",
+   "scripts/replay/schema-replay.mjs 8b06870bf415fe85acd6d23aa81a30ab92fd3830cae5d5ae447cc4fccf92cd5a",
    "scripts/replay/sport-quiz-replay.mjs 855694eabf9ddc57ef7b55a3e361d82c3133d136f9f1639225a05224a119a50b",
    "scripts/replay/stripe-kyc-replay.mjs 07ae141319c2554b702cd6c0b01514d15ef7f36817263fde75858126def1dc64",
    "scripts/replay/supabase-stubs.mjs a077c5a3968d532412e2ef8babb2beaa107dd40f3262f2755e9be0c2eadf3163",

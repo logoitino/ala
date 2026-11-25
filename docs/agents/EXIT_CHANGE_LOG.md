@@ -10,6 +10,22 @@ An announcement is a notice, not a review or an approval. Do not edit tool-writt
 
 <!-- entries below, newest first -->
 
+## 2026-11-25 · plan `6d097275eed0` → `1db1b2d73862` · announced by claude main CI repair: restore install-generated canvaskit.wasm fingerprint
+
+App at announcement: commit `a7c4b410d6bf0fcef3d19e9458dbbcef73dc53a3` + 2 uncommitted file(s), source `1db1b2d73862050b9fc91aa853bc975567cceaf63e5b7296a245b20be4ee6bed`, app 1.0.0, latest migration `20261125180000_guest_account_access.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/public/canvaskit.wasm eb68c7a7f602d8cb89915352c4471a2d26edfd72000f78202cb1fe32ce1f9dc4`; removed —. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
+## 2026-11-25 · plan `4d05b56aba9b` → `6d097275eed0` · announced by claude main CI repair after GUEST-ACCESS-01 merge
+
+App at announcement: commit `a7c4b410d6bf0fcef3d19e9458dbbcef73dc53a3` + 2 uncommitted file(s), source `6d097275eed056db74da43511505d805f5527f9d52087f6cb0ea23c9dead90ce`, app 1.0.0, latest migration `20261125180000_guest_account_access.sql`.
+
+- **Source/configuration content fingerprints** — added `apps/mobile/src/frontend/types/database.generated.ts 53f8fe6df00637940e3601f2ddd40f7b652529e9d03ffe33d5e34df7a7917382`, `scripts/replay/schema-replay.mjs 8b06870bf415fe85acd6d23aa81a30ab92fd3830cae5d5ae447cc4fccf92cd5a`; removed `apps/mobile/src/frontend/types/database.generated.ts 7ba3dea050728cf0c0592efa937ab3d11138476d4256d72dbce705b5d0775d22`, `scripts/replay/schema-replay.mjs ed4cab6939730dd4e5c5c7928d10ee3a01480a8fbcf07cadc7178ac467be6135`. Notify: `REDUNDANCY_LEAD`, `EXIT_CLOUD`, `EXIT_DATABASE`, `EXIT_SERVICES`, `EXIT_SYNC`, `INFRA_SECURITY`, `RECOVERY`, `RECOVERY_SECURITY`, `RLS_SECURITY`, `SECURITY`, `SESSION_SECURITY`, `SUPPLY_CHAIN_SECURITY`, `THREAT_DETECTION`.
+
+**Review status:** notified; each named agent reviews its part against the exit map and records the result below this line in its next task.
+
 ## 2026-11-25 · plan `e7dd4a514380` → `4d05b56aba9b` · announced by claude merge of UPLOAD-STUDIO-01 with GUEST-ACCESS-01 on main
 
 App at announcement: commit `f924cf722142f26f524be0871a0ae0e605550b68` + 13 uncommitted file(s), source `4d05b56aba9ba36f5369b099f075e64a68859633054389f3b1282e416ba6f17b`, app 1.0.0, latest migration `20261125180000_guest_account_access.sql`.

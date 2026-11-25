@@ -4669,6 +4669,10 @@ export type Database = {
         }
         Returns: Json
       }
+      account_browsing_allowed: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       account_tag_label: {
         Args: {
           target: Database["public"]["Tables"]["profiles"]["Row"]
@@ -5806,6 +5810,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      enforce_registered_api_account: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       expire_operator_checkins: {
         Args: {
           p_older_than_days?: number
@@ -6397,6 +6405,15 @@ export type Database = {
           minor: string
         }
         Returns: Json
+      }
+      guest_highlights_preview: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          video_url: string
+          title: string
+          created_at: string
+        }[]
       }
       hash_secret: {
         Args: {

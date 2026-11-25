@@ -168,6 +168,7 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
   Video patch, validated frozen lock metadata with a temporary modules directory and
   applied the tracked patch narrowly to the installed SDK. A complete clean install
   still needs a working registry or complete store. See [PLAY-01](agents/PLAY-01.md).
+- **2026-11-25 git worktrees and the exit plan:** `pnpm install` writes the git-ignored `apps/mobile/public/canvaskit.wasm`, and `exit:map` fingerprints it. A fresh worktree with linked `node_modules` lacks that file, so an acknowledgement made there drops it and GitHub's Portable Exit `exit:map:check` fails. Copy the file from the main checkout before running `exit:map --acknowledge` in a worktree. Worktrees also fail the final `exit:sync ensure` because the private source cache belongs to the main checkout.
 - **Historical NAS mode flips:** older sessions saw ~500 `100644 → 100755` changes. The
   2026-10-07 starting tree contains only `docs/STATE.md`, `docs/agents/TEAMS.md`, and the new hierarchy
   document; that old count is not the current status. Preserve user edits and stage by path.
@@ -176,6 +177,8 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-25 — Main CI after GUEST-ACCESS-01 merge:** GitHub Quality Checks failed the schema replay (119/123) after account-required browsing reached `main`: four guest-access cases still expected guests to read profiles, Crew counts and Rallies, and `database.generated.ts` lacked the new guest functions. Cases now assert the owner's stricter rule (guests refused; Crew counts still shown to accounts; score topics stay trigger-only) and types are regenerated. Local replay 123/123, `gen-db-types --check` and every other CI replay pass. Portable Exit also failed because the merge's exit acknowledgement was made in a worktree missing the install-generated `canvaskit.wasm`; re-acknowledged with it (see §3).
 
 - **2026-11-25 — UPLOAD-STUDIO-01 upload studio (merged to `main` with GUEST-ACCESS-01):** The Media step has big Record now / Camera roll tiles and shows the enforced limits up front (45s, 8 MB, vertical; photo stories 10 photos). A picked clip shows a seconds meter. Clips already over 8 MB that will upload uncompressed (web, Expo Go) are refused at pick time. Typing @ in the caption tags a roster athlete as who is in the clip or mentions up to three accounts as chips; the picked word leaves the caption so no name shows before confirmation. More options keeps sport, game and Exclusive. The chooser features Highlight with its limits. Long-pressing your own post in the profile grid offers Edit description via the existing caption RPC. Presentation-only exemption. Full `pnpm check` (Node 24) passes every gate through `exit:map:check` and `security:infra:check` (merged `main`: 348 mobile suites / 3,259 tests, portal 217); only the final `exit:sync ensure` fails because its private source-cache state belongs to the main `ala` checkout, not this worktree. Browser, device and hosted caption-edit checks not run; Jev not reached (`jev/.env` missing). [UPLOAD-STUDIO-01](agents/UPLOAD-STUDIO-01.md).
 
