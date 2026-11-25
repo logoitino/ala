@@ -1,7 +1,8 @@
 /** Public profile navigation keeps the active route identity and only opts into preview for its filtered photo. */
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import UserAthleteProfileScreen from '../user/[id]';
-import type { Player, ProfilePublic } from '@/types/database';
+import type { Player, ProfilePublic, ReelWithPlayer } from '@/types/database';
+import { saveReelDescription } from '@/lib/postCaptions';
 import { emptyAthleteStats } from '@/data/athleteStats';
 import type { AthleteSportsSnapshot } from '@/lib/athleteSports';
 
@@ -12,6 +13,8 @@ let mockVerificationAvatar: string | null = null;
 const mockPlayers = new Map<string, Promise<{ data: Player | null; error: null }>>();
 const mockProfiles = new Map<string, ProfilePublic>();
 const mockSports = new Map<string, AthleteSportsSnapshot>();
+const mockProfileReels = jest.fn<Promise<ReelWithPlayer[]>, []>();
+const mockCaptionRpc = jest.fn();
 let mockSessionGuard = () => true;
 const mockRenderedNames: string[] = [];
 const mockRequireAuth = jest.fn(), mockStartCheckout = jest.fn();
@@ -39,7 +42,16 @@ jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: {
   return query;
 } } }));
 jest.mock('@/lib/hype', () => ({ hydratePlayerHype: async (player: Player) => player }));
-jest.mock('@/lib/reels', () => ({ fetchReelsForPlayer: async () => [], sortClipsNewestFirst: (rows: unknown[]) => rows }));
+jest.mock('@/lib/reels', () => ({
+  fetchReelsForPlayer: () => mockProfileReels(),
+  playerFromReel: () => null,
+  reelToClip: (row: ReelWithPlayer) => ({ id: row.id, tag: row.title }),
+  sortClipsNewestFirst: (rows: unknown[]) => rows,
+}));
+jest.mock('@/lib/offlineActor', () => ({
+  ...jest.requireActual('@/lib/offlineActor'),
+  createOfflineActorClient: async () => ({ rpc: mockCaptionRpc }),
+}));
 jest.mock('@/lib/verification', () => ({ fetchPlayerVerification: async () => ({
   status: 'unverified', schoolClaimed: false, avatarUrl: mockVerificationAvatar,
 }) }));
@@ -70,7 +82,7 @@ jest.mock('@/components/Filmers/FilmerCard', () => ({ FilmerCard: () => null }))
 jest.mock('@/components/Profile/AthleteProfileView', () => ({ AthleteProfileView: (props: {
   name: string; player: Player; onBacked: (count: number) => void; onDropMalo: () => void; schoolVisible?: boolean; teamName?: string; bio?: string; stats: ReturnType<typeof emptyAthleteStats>;
   primarySport?: string; displaySport?: string | null; sportEntries?: AthleteSportsSnapshot['sports']; onDisplaySportChange?: (sport: string | null) => void;
-  previewAvatar?: boolean;
+  previewAvatar?: boolean; clips?: { id: string; tag: string }[];
 }) => {
   const { Text, Pressable } = jest.requireActual('react-native');
   mockRenderedNames.push(props.name);
@@ -82,6 +94,7 @@ jest.mock('@/components/Profile/AthleteProfileView', () => ({ AthleteProfileView
     <Text>{`Profile sport: ${props.stats.career.sport}`}</Text>
     <Text>{`Primary sport: ${props.primarySport ?? ''}`}</Text>
     {props.previewAvatar ? <Text>Can preview current photo</Text> : null}
+    {props.clips?.map(clip => <Text key={clip.id}>{clip.tag}</Text>)}
     {props.sportEntries?.map(entry => <Pressable key={entry.sport} accessibilityRole="button" accessibilityLabel={`View ${entry.sport}`}
       onPress={() => props.onDisplaySportChange?.(entry.sport)}><Text>{entry.sport}</Text></Pressable>)}
     {props.teamName ? <Text>{props.teamName}</Text> : null}
@@ -97,7 +110,24 @@ function deferredPlayer() {
   const promise = new Promise<{ data: Player; error: null }>((yes) => { resolve = yes; });
   return { promise, resolve };
 }
-beforeEach(() => { jest.clearAllMocks(); mockRouteId = firstId; mockVerificationAvatar = null; mockPlayers.clear(); mockProfiles.clear(); mockSports.clear(); mockRenderedNames.length = 0; mockSessionGuard = () => true; });
+beforeEach(() => { jest.clearAllMocks(); mockProfileReels.mockReset().mockResolvedValue([]); mockRouteId = firstId; mockVerificationAvatar = null; mockPlayers.clear(); mockProfiles.clear(); mockSports.clear(); mockRenderedNames.length = 0; mockSessionGuard = () => true; });
+
+it('brings a newer confirmed caption into a delayed initial profile read', async () => {
+  mockPlayers.set(firstId, Promise.resolve({ data: player(firstId, 'Ana First'), error: null }));
+  const reel = { id: 'test-reel', title: 'Old profile caption', uploaded_by: 'filmer' } as ReelWithPlayer;
+  let finish!: (rows: ReelWithPlayer[]) => void;
+  mockProfileReels.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
+  mockCaptionRpc.mockResolvedValueOnce({ data: { id: reel.id, caption: 'Saved profile caption' }, error: null });
+  await render(<UserAthleteProfileScreen />);
+  await act(async () => {});
+  expect(mockProfileReels).toHaveBeenCalledTimes(1);
+  await act(async () => {
+    await saveReelDescription({ userId: 'viewer-a', profileId: 'filmer', isCurrent: () => true }, reel.id, reel.title, 'Saved profile caption');
+    finish([reel]);
+  });
+  expect(screen.getByText('Saved profile caption')).toBeTruthy();
+  expect(screen.queryByText('Old profile caption')).toBeNull();
+});
 
 it.each(['confirmed public photo', 'hidden photo', 'legacy photo'])('does not promote an unconfirmed avatar: %s', async state => {
   mockVerificationAvatar = 'https://image.invalid/current.jpg';

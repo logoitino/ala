@@ -5,13 +5,14 @@
  * R4-03 split (behaviour unchanged): the empty feed, campaign copy and pill row render from `components/Reels/`
  * (`HomeFeedEmpty`, `HomeCampaignCopy`, `HomeFeedSwitch`); this route keeps every hook, state and callback.
  * UX-16 aligns compact search chrome with the existing feed row; measured pager and search actions remain.
- * UX-18 uses a smaller Search glyph inside the same44pt action; text and measured overlay behavior stay.
+ * The collapsed search trigger stays compact; the expanded field shares Local's alignment and hit target.
  * Empty-feed recovery scrolls below the measured header and above the measured dock.
+ * The first visit from Welcome opens a public Highlight before optional prompts.
  */
-import { useRouter } from 'expo-router';
+import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { clearVideoCacheAsync } from 'expo-video';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Platform, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,6 +22,9 @@ import { HomeCampaignCopy } from '@/components/Reels/HomeCampaignCopy';
 import { HomeFeedEmpty } from '@/components/Reels/HomeFeedEmpty';
 import { HomeFeedSwitch } from '@/components/Reels/HomeFeedSwitch';
 import { HomeSearchOverlay } from '@/components/Reels/HomeSearchOverlay';
+import { WelcomeHighlightsStage } from '@/components/Onboarding/WelcomeHighlightsStage';
+import { isClipVaultOnly } from '@/data/exclusive';
+import { FanSearchField } from '@/components/UI/FanSearchField';
 import { RivalryWeekBanner } from '@/components/Local/RivalryWeekBanner';
 import { RallyMeter } from '@/components/Rally/RallyMeter';
 import { LiveMatchBanner } from '@/components/Reels/LiveMatchBanner';
@@ -40,7 +44,6 @@ import { useSoftWall } from '@/context/SoftWallContext';
 import { useUploadSheet } from '@/context/UploadSheetContext';
 import { useFanDockHeight } from '@/context/FanNavigationContext';
 import { FOCAL, SPRING_SHEET } from '@/theme/motion';
-import { figtree, TYPE } from '@/theme/fonts';
 import { FeedPicksSheet } from '@/components/Reels/FeedPicksSheet';
 import { useWebDesktopMode } from '@/hooks/useAppViewport';
 import {
@@ -49,6 +52,7 @@ import {
   HIGHLIGHT_FEED_HOME,
   homePagerClips,
   isBeyondHighlight,
+  isPhotoStory,
   isSekiHighlight,
   measureHomeFeedTop,
   pinFeedOrder,
@@ -91,6 +95,9 @@ const BEYOND_PILL: { id: HighlightFeedFilter; label: string } = { id: 'beyond', 
 export default function HighlightsTab() {
   useScreenMountTime('home');
   const router = useRouter();
+  const { welcome } = useLocalSearchParams<{ welcome?: string }>();
+  const launchedFromWelcome = welcome === 'highlights';
+  const homeFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const dockHeight = useFanDockHeight();
   const desktopMode = useWebDesktopMode();
@@ -122,13 +129,14 @@ export default function HighlightsTab() {
   const { requireAuth, visible: accountSheetOpen } = useSoftWall();
   const { subscribeUploaded, openUpload } = useUploadSheet();
   const { players, applyBackerCount } = useRoster();
-  const { reels, refresh, setReels, applyReelHype, applyReelTips } = useReels();
+  const { reels, refresh, loading: reelsLoading, error: reelsError, setReels, applyReelHype, applyReelTips } = useReels();
   const { receipts } = useFanTipHistory();
   const feedPrefs = useFeedPrefs();
   const liveGame = useLiveGame();
   const liveGameId = liveGame.gameId;
   const { noteScrollPct, trackFeature } = useSurfaceUsage('home');
-  const spotlight = useActiveSpotlight(user?.id, players, { enabled: !authLoading && runtime.layouts.spotlightModal });
+  const spotlight = useActiveSpotlight(user?.id, players, { enabled: !launchedFromWelcome && !authLoading && runtime.layouts.spotlightModal });
+  const showSpotlight = spotlight.visible && !launchedFromWelcome;
   const [pageHeight, setPageHeight] = useState(0);
   const [chromeHeight, setChromeHeight] = useState(96);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -300,7 +308,22 @@ export default function HighlightsTab() {
     return current.map((item) => item.clip.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `clips` is read through the ref on purpose.
   }, [clipIdsKey, feedFilter, homeRanked, rankEpoch]);
-  const feed = useMemo(() => pinFeedOrder(feedOrder, clips), [clips, feedOrder]);
+  const welcomePlayback = launchedFromWelcome && feedFilter === 'home';
+  const rankedFeed = useMemo(() => pinFeedOrder(feedOrder, clips), [clips, feedOrder]);
+  // Existing moderation and rank order still own the feed. Move only a public video ahead at entry.
+  const firstPublic = useMemo(() => welcomePlayback
+    ? (rankedFeed.find(({ clip }) => !isClipVaultOnly(clip) && !isPhotoStory(clip) && clip.videoUrl.trim())
+      ?? rankedFeed.find(({ clip }) => !isClipVaultOnly(clip) && isPhotoStory(clip)))
+    : undefined, [rankedFeed, welcomePlayback]);
+  const feed = useMemo(() => firstPublic && rankedFeed[0] !== firstPublic
+    ? [firstPublic, ...rankedFeed.filter(item => item !== firstPublic)]
+    : rankedFeed, [firstPublic, rankedFeed]);
+  const welcomeStatus = welcomePlayback && (!cacheReady || !clientFeed || (!useDesktopCards && !pageHeight) || (reelsLoading && !reels.length))
+    ? 'loading'
+    : welcomePlayback && !firstPublic
+      ? (reelsError ? 'unavailable' : 'empty')
+      : null;
+  const retryWelcome = () => { if (!reelsLoading) void refresh(); };
 
   /** Pill badges: "All 24" / "Seki 8" reads as a promise about what is behind the tab. */
   const feedCounts = useMemo<Record<HighlightFeedFilter, number>>(
@@ -363,9 +386,11 @@ export default function HighlightsTab() {
       return;
     }
     // Desktop card opens are gated in requestDesktopPlay; phone pager uses activeIndex.
-    if (useDesktopCards) return;
-    const clipId = feed[activeIndex]?.clip.id;
-    if (!clipId) return;
+    if (useDesktopCards || !homeFocused || welcomeStatus) return;
+    const clip = feed[activeIndex]?.clip;
+    // Decorative samples have no playable source and do not consume a guest's browsing allowance.
+    if (!clip || (!isPhotoStory(clip) && !clip.videoUrl)) return;
+    const clipId = clip.id;
     guestSeen.current.add(clipId);
     if (!guestBrowseNeedsAccount(guestSeen.current.size)) {
       guestAllowedIndex.current = activeIndex;
@@ -387,7 +412,7 @@ export default function HighlightsTab() {
         listRef.current?.scrollToOffset({ offset: pageHeight * back, animated: true });
       }
     });
-  }, [accountSheetOpen, activeIndex, feed, isGuest, pageHeight, requireAuth, useDesktopCards]);
+  }, [accountSheetOpen, activeIndex, feed, homeFocused, isGuest, pageHeight, requireAuth, useDesktopCards, welcomeStatus]);
 
   const requestDesktopPlay = useCallback(
     (clipId: string) => {
@@ -414,6 +439,13 @@ export default function HighlightsTab() {
     },
     [accountSheetOpen, isGuest, requireAuth],
   );
+
+  const desktopWelcomeStarted = useRef(false);
+  useEffect(() => {
+    if (!useDesktopCards || !homeFocused || authLoading || welcomeStatus || !firstPublic || desktopWelcomeStarted.current) return;
+    desktopWelcomeStarted.current = true;
+    requestDesktopPlay(firstPublic.clip.id);
+  }, [authLoading, firstPublic, homeFocused, requestDesktopPlay, useDesktopCards, welcomeStatus]);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ index?: number | null }> }) => {
@@ -642,7 +674,9 @@ export default function HighlightsTab() {
   if (useDesktopCards) {
     return (
       <TabScreen>
-        {!cacheReady || !clientFeed ? (
+        {welcomeStatus ? (
+          <WelcomeHighlightsStage status={welcomeStatus} onRetry={retryWelcome} />
+        ) : !cacheReady || !clientFeed ? (
           <View style={styles.boot}>
             <ActivityIndicator color={colors.primary} />
           </View>
@@ -678,7 +712,7 @@ export default function HighlightsTab() {
             }}
           />
         )}
-        {!isGuest ? (
+        {!isGuest && !launchedFromWelcome ? (
           <FeedPicksSheet
             visible={feedPrefs.promptOpen}
             prefs={{
@@ -702,7 +736,7 @@ export default function HighlightsTab() {
         ) : null}
         <SpotlightModal
           award={spotlight.award}
-          visible={cacheReady && spotlight.visible}
+          visible={cacheReady && showSpotlight}
           onDismiss={() => {
             void spotlight.dismiss();
           }}
@@ -726,7 +760,9 @@ export default function HighlightsTab() {
         style={styles.fill}
         onLayout={(event) => setPageHeight(event.nativeEvent.layout.height)}
       >
-        {pageHeight === 0 || !cacheReady || !clientFeed ? (
+        {welcomeStatus ? (
+          <WelcomeHighlightsStage status={welcomeStatus} onRetry={retryWelcome} bottomInset={dockHeight} />
+        ) : pageHeight === 0 || !cacheReady || !clientFeed ? (
           <View style={styles.boot}>
             <ActivityIndicator color={colors.primary} />
           </View>
@@ -747,7 +783,7 @@ export default function HighlightsTab() {
             onScroll={onPagerScroll}
             scrollEventThrottle={16}
             scrollEnabled={!peekOpen}
-            extraData={`${feedFilter}:${activeIndex}:${searchOpen ? 1 : 0}${tipTarget ? 1 : 0}${spotlight.visible ? 1 : 0}:${hiddenIds.join(',')}:${[...tippedIds].join(',')}:${reels
+            extraData={`${feedFilter}:${activeIndex}:${searchOpen ? 1 : 0}${tipTarget ? 1 : 0}${showSpotlight ? 1 : 0}${homeFocused ? 1 : 0}${welcomePlayback ? 1 : 0}:${hiddenIds.join(',')}:${[...tippedIds].join(',')}:${reels
               .map(
                 (reel) =>
                   `${reel.id}:${reel.seki_count}:${reel.aura_count}:${reel.flex_count}:${reel.total_tips_cents}`,
@@ -798,7 +834,7 @@ export default function HighlightsTab() {
                   clip={item.clip}
                   player={item.player}
                   totalTipsCents={liveReel?.total_tips_cents ?? item.clip.totalTipsCents ?? 0}
-                  peekEnabled={!tipTarget && !spotlight.visible && !searchOpen}
+                  peekEnabled={!tipTarget && !showSpotlight && !searchOpen}
                   peekInsetTop={chromeHeight + 12}
                   peekInsetBottom={dockHeight + 12}
                   onOpenProfile={openProfile}
@@ -815,8 +851,9 @@ export default function HighlightsTab() {
                     height={pageHeight}
                     overlayInsetTop={chromeHeight + 8}
                     overlayInsetBottom={dockHeight + 8}
-                    tipping={Boolean(tipTarget) || spotlight.visible}
-                    playbackActive={!spotlight.visible && !tipTarget}
+                    tipping={Boolean(tipTarget) || showSpotlight}
+                    playbackActive={homeFocused && !showSpotlight && !tipTarget}
+                    welcomePoster={welcomePlayback && index === 0}
                     sekiPlay={item.clip.sekiPlay}
                     userTipped={tippedIds.has(item.clip.id)}
                     onTip={() => void tipPlayer(item.player, item.clip.id)}
@@ -838,7 +875,7 @@ export default function HighlightsTab() {
             }}
           />
         )}
-        {!isGuest ? (
+        {!isGuest && !launchedFromWelcome ? (
           <FeedPicksSheet
             visible={feedPrefs.promptOpen}
             prefs={{
@@ -860,7 +897,7 @@ export default function HighlightsTab() {
             onSave={(next) => feedPrefs.save(next)}
           />
         ) : null}
-        <View
+        {!welcomeStatus ? <View
           pointerEvents="box-none"
           style={[styles.topChrome, { paddingTop: Math.max(insets.top, 8) }]}
           onLayout={(event) => setChromeHeight(event.nativeEvent.layout.height)}
@@ -889,37 +926,18 @@ export default function HighlightsTab() {
           />
           <HomeCampaignCopy runtime={runtime} />
           <View style={styles.chromeRow}>
-            {runtime.layouts.homeSearch ? (
-            <AnimatedButton
-              haptic="selection"
-              accessibilityRole="button"
-              accessibilityLabel={searchOpen ? 'Close search' : 'Search clips and athletes'}
-              contentStyle={[styles.searchBtn, searchOpen && styles.searchBtnOn]}
-              onPress={() => {
-                if (searchOpen) {
-                  closeSearch();
-                  return;
-                }
-                trackFeature('home_search');
-                setSearchOpen(true);
-              }}
-            >
-              <Ionicons name={searchOpen ? 'close' : 'search'} size={16} allowFontScaling={false} color={searchOpen ? '#FFFFFF' : FOCAL.neonJade} />
-            </AnimatedButton>
+            {runtime.layouts.homeSearch && !searchOpen ? (
+              <AnimatedButton
+                haptic="selection" accessibilityRole="button" accessibilityLabel="Search clips and athletes"
+                contentStyle={styles.searchBtn}
+                onPress={() => { trackFeature('home_search'); setSearchOpen(true); }}
+              >
+                <Ionicons name="search" size={16} allowFontScaling={false} color={FOCAL.neonJade} />
+              </AnimatedButton>
             ) : null}
             {searchOpen && runtime.layouts.homeSearch ? (
-              <TextInput
-                autoFocus
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder="Search clips & athletes"
-                placeholderTextColor={colors.textMuted}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="search"
-                accessibilityLabel="Search clips and athletes"
-                style={styles.searchField}
-              />
+              <FanSearchField tone="video" autoFocus value={searchQuery} onChangeText={setSearchQuery}
+                placeholder="Search clips & athletes" accessibilityLabel="Search clips and athletes" onClose={closeSearch} />
             ) : (
               <HomeFeedSwitch
                 feedIndicatorStyle={feedIndicatorStyle}
@@ -939,9 +957,9 @@ export default function HighlightsTab() {
           {feed.length > 0 ? beyondDiscoveryLink : null}
           <SlangGuideBanner />
           {extrasReady ? <FamilyFunDiscovery surface="home" /> : null}
-        </View>
-        <HomeSearchOverlay
-          open={searchOpen && runtime.layouts.homeSearch}
+        </View> : null}
+        {searchOpen && runtime.layouts.homeSearch ? <HomeSearchOverlay
+          open
           query={searchQuery}
           offsetTop={chromeHeight + 8}
           clips={clips}
@@ -953,11 +971,11 @@ export default function HighlightsTab() {
             router.push(userProfileHref(playerId));
           }}
           onSelectClip={jumpToClip}
-        />
+        /> : null}
       </View>
       <SpotlightModal
         award={spotlight.award}
-        visible={cacheReady && spotlight.visible}
+        visible={cacheReady && showSpotlight}
         onDismiss={() => {
           void spotlight.dismiss();
         }}
@@ -1016,22 +1034,6 @@ const styles = StyleSheet.create({
     borderColor: `${FOCAL.neonJade}66`,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  searchBtnOn: {
-    backgroundColor: FOCAL.jadeInk,
-    borderColor: FOCAL.jadeInk,
-  },
-  searchField: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 999,
-    backgroundColor: colors.videoScrim,
-    borderWidth: 1,
-    borderColor: `${FOCAL.neonJade}66`,
-    color: colors.onVideo,
-    paddingHorizontal: 12,
-    ...TYPE.button,
-    ...figtree('700'),
   },
   emptyContent: {
     flexGrow: 1,

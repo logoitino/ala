@@ -6,6 +6,7 @@ import { untypedRpc } from '@/lib/rpc';
 
 type CaptionActor = OfflineActor & { readonly profileId: string };
 type ReelCaptionChange = { id: string; owner: string; previous: string; caption: string };
+type ReelCaptionRow = { id: string; title: string; uploaded_by?: string | null; is_removed?: boolean | null; is_flagged?: boolean | null };
 
 const subscribers = new Set<(change: ReelCaptionChange) => void>();
 
@@ -16,12 +17,27 @@ export function subscribeReelCaptionChanges(apply: (change: ReelCaptionChange) =
 }
 
 /** A receipt may update only the matching previously-read row, never replace a newer local title. */
-export function applyReelCaptionChange<T extends { id: string; title: string; uploaded_by?: string | null }>(
-  rows: T[], change: ReelCaptionChange,
-): T[] {
-  const index = rows.findIndex(row => row.id === change.id && row.uploaded_by === change.owner && row.title === change.previous);
+export function applyReelCaptionChange<T extends ReelCaptionRow>(rows: T[], change: ReelCaptionChange): T[] {
+  const index = rows.findIndex(row => row.id === change.id && row.uploaded_by === change.owner
+    && row.title === change.previous && row.is_removed !== true && row.is_flagged !== true);
   if (index < 0) return rows;
   return rows.map((row, i) => i === index ? { ...row, title: change.caption } : row);
+}
+
+/** Replay only receipts confirmed during this read. Callers close on completion or invalidation. */
+export function trackReelCaptionRead() {
+  const changes: ReelCaptionChange[] = [];
+  const stop = subscribeReelCaptionChanges(change => { changes.push(change); });
+  return {
+    reconcile<T extends ReelCaptionRow>(rows: T[]): T[] {
+      for (const change of changes) rows = applyReelCaptionChange(rows, change);
+      return rows;
+    },
+    close() {
+      stop();
+      changes.length = 0;
+    },
+  };
 }
 
 const unconfirmed = 'Could not confirm the save. Your draft is still here. Refresh the post before editing again.';

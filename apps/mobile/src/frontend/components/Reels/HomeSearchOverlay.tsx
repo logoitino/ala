@@ -1,12 +1,12 @@
 /** Fan menu presentation uses shared Daylight chrome; feature data and confirmation rules stay with the parent.
- * UX-13 aligns existing readable type and wrapping without changing any action or notice.
+ * Search orders recent terms in a shared list and mounts only visible result rows.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Animated, {
-  FadeIn,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring,
   withTiming,
@@ -16,13 +16,12 @@ import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
-import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import { RecentSearchList } from '@/components/UI/RecentSearchList';
 import { colors, MENU_METRICS, radii } from '@/constants/theme';
 import { useLocalSearch, useRecentLocalSearches } from '@/hooks/useLocalSearch';
 import type { HighlightClip } from '@/data/highlights';
-import type { LocalSearchHit } from '@/types/database';
+import type { LocalSearchHit, Player } from '@/types/database';
 import { SPRING_CARD } from '@/theme/motion';
-import type { Player } from '@/types/database';
 import { TYPE, figtree } from '@/theme/fonts';
 
 type SearchKind = 'all' | 'highlight' | 'athlete';
@@ -63,7 +62,7 @@ function needleMatch(haystack: string, needle: string): boolean {
  * @param query Header value; sheet lists recents until two characters, then live hits.
  * @param clips Current Home/All/Seki feed rows for title / school / name matching.
  * @returns Overlay covering the feed below the Home search field.
- * @sideEffects `useLocalSearch` RPC for athletes; AsyncStorage recent chips.
+ * @sideEffects `useLocalSearch` RPC for athletes; AsyncStorage recent rows.
  */
 export function HomeSearchOverlay({
   open,
@@ -76,22 +75,22 @@ export function HomeSearchOverlay({
   onSelectClip,
 }: HomeSearchOverlayProps) {
   const needle = query.trim();
-  const visible = open;
   const searching = needle.length > 1;
   const [kind, setKind] = useState<SearchKind>('all');
-  const { hits, loading } = useLocalSearch(searching ? query : '', 'athlete');
+  const { hits, loading } = useLocalSearch(open && searching && kind !== 'highlight' ? needle : '', 'athlete');
   const { recent, remember, clearRecent } = useRecentLocalSearches();
-  const translateY = useSharedValue(28);
-  const opacity = useSharedValue(0);
+  const reducedMotion = useReducedMotion();
+  const translateY = useSharedValue(reducedMotion ? 0 : 28);
+  const opacity = useSharedValue(reducedMotion ? 1 : 0);
 
   const localHits = useMemo<HomeHit[]>(() => {
-    const needle = query.trim().toLowerCase();
-    if (needle.length < 2) return [];
+    const normalized = needle.toLowerCase();
+    if (!open || normalized.length < 2) return [];
     const rows: HomeHit[] = [];
     const seenAthletes = new Set<string>();
     for (const item of clips) {
       const hay = `${item.clip.tag} ${item.clip.athleteName} ${item.clip.school}`;
-      if (!needleMatch(hay, needle)) continue;
+      if (!needleMatch(hay, normalized)) continue;
       rows.push({
         id: `hl:${item.clip.id}`,
         kind: 'highlight',
@@ -100,7 +99,7 @@ export function HomeSearchOverlay({
         clipId: item.clip.id,
       });
       const playerId = item.player?.id ?? item.clip.playerId ?? '';
-      if (playerId && !seenAthletes.has(playerId) && needleMatch(`${item.clip.athleteName} ${item.clip.school}`, needle)) {
+      if (playerId && !seenAthletes.has(playerId) && needleMatch(`${item.clip.athleteName} ${item.clip.school}`, normalized)) {
         seenAthletes.add(playerId);
         rows.push({
           id: `ath:${playerId}`,
@@ -112,7 +111,7 @@ export function HomeSearchOverlay({
       }
     }
     return rows;
-  }, [clips, query]);
+  }, [clips, needle, open]);
 
   const merged = useMemo(() => {
     const rows: HomeHit[] = [];
@@ -120,7 +119,7 @@ export function HomeSearchOverlay({
     const push = (hit: HomeHit) => {
       const key =
         hit.kind === 'athlete'
-          ? `athlete:${hit.title.trim().toLowerCase()}`
+          ? `athlete:${hit.playerId ?? hit.id}`
           : `highlight:${hit.clipId ?? hit.id}`;
       if (seen.has(key)) return;
       seen.add(key);
@@ -144,14 +143,11 @@ export function HomeSearchOverlay({
   }, [hits, kind, localHits]);
 
   useEffect(() => {
-    if (visible) {
+    if (open && !reducedMotion) {
       translateY.value = withSpring(0, SPRING_CARD);
       opacity.value = withTiming(1, { duration: 160 });
-      return;
     }
-    translateY.value = withTiming(24, { duration: 140 });
-    opacity.value = withTiming(0, { duration: 120 });
-  }, [opacity, translateY, visible]);
+  }, [opacity, open, reducedMotion, translateY]);
 
   const sheetStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -171,14 +167,12 @@ export function HomeSearchOverlay({
 
   return (
     <Animated.View
-      pointerEvents={visible ? 'box-none' : 'none'}
-      accessibilityElementsHidden={!visible}
-      importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
-      style={[styles.wrap, { paddingTop: offsetTop }, sheetStyle]}
+      pointerEvents="box-none"
+      style={[styles.wrap, { paddingTop: offsetTop }, !searching && styles.recentBackdrop, sheetStyle]}
     >
-      <View pointerEvents="auto" style={styles.sheet}>
+      <View pointerEvents="auto" style={[styles.sheet, searching && styles.resultsSheet]}>
         <MenuBackdrop accent="jade" />
-          <SheetHandle onDismiss={onClose} />
+        <SheetHandle onDismiss={onClose} />
         <Text style={styles.kicker}>Search Home</Text>
         <FilterPills
           items={KIND_PILLS}
@@ -186,49 +180,38 @@ export function HomeSearchOverlay({
           onChange={(id) => setKind(id ?? 'all')}
           accessibilityLabel="Search kind"
         />
-        {recent.length > 0 && needle.length < 2 ? (
-          <View style={styles.recentRow}>
-            {recent.map((item) => (
-              <Pressable key={item} onPress={() => onApplyQuery(item)} style={styles.recentChip}>
-                <Text style={styles.recentLabel}>{item}</Text>
-              </Pressable>
-            ))}
-            <Pressable onPress={() => void clearRecent()} style={styles.recentChip}>
-              <Text style={styles.recentLabel}>Clear</Text>
-            </Pressable>
-          </View>
-        ) : needle.length < 2 ? (
-          <Text style={styles.empty}>Search clips, athletes, and schools.</Text>
-        ) : null}
-        {loading ? <ActivityIndicator color={colors.primary} /> : null}
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          {merged.length === 0 && searching && !loading ? (
-            <Text style={styles.empty}>No clips or athletes match that yet.</Text>
-          ) : (
-            merged.map((hit) => (
-              <Animated.View key={hit.id} entering={FadeIn.duration(130)}>
-                <AnimatedButton haptic="light" onPress={() => openHit(hit)} contentStyle={styles.row}>
-                  <View style={styles.rowIcon}>
-                    <Ionicons
-                      name={hit.kind === 'highlight' ? 'play-circle-outline' : 'flash-outline'}
-                      size={20}
-                      color={colors.primary}
-                    />
-                    <View pointerEvents="none" style={styles.rowIconGloss} />
-                  </View>
-                  <View style={styles.rowCopy}>
-                    <Text style={styles.rowTitle}>
-                      {hit.title}
-                    </Text>
-                    <Text style={styles.rowMeta}>
-                      {hit.kind === 'highlight' ? 'Highlight' : 'Athlete'} · {hit.subtitle}
-                    </Text>
-                  </View>
-                </AnimatedButton>
-              </Animated.View>
-            ))
+        <FlatList
+          data={searching ? merged : []}
+          keyExtractor={(hit) => hit.id}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={8}
+          style={!searching ? styles.recentBody : undefined}
+          ListEmptyComponent={searching
+            ? (loading ? undefined : <Text style={styles.empty}>No clips or athletes match that yet.</Text>)
+            : (recent.length > 0
+              ? <RecentSearchList items={recent} onSelect={onApplyQuery} onClear={() => void clearRecent()} />
+              : <Text style={styles.empty}>Search clips, athletes, and schools.</Text>)}
+          ListFooterComponent={searching && loading ? <ActivityIndicator color={colors.primary} /> : undefined}
+          renderItem={({ item: hit }) => (
+            <AnimatedButton haptic="light" onPress={() => openHit(hit)} contentStyle={styles.row}>
+              <View style={styles.rowIcon}>
+                <Ionicons
+                  name={hit.kind === 'highlight' ? 'play-circle-outline' : 'flash-outline'}
+                  size={20}
+                  color={colors.primary}
+                />
+                <View pointerEvents="none" style={styles.rowIconGloss} />
+              </View>
+              <View style={styles.rowCopy}>
+                <Text style={styles.rowTitle}>{hit.title}</Text>
+                <Text style={styles.rowMeta}>
+                  {hit.kind === 'highlight' ? 'Highlight' : 'Athlete'} · {hit.subtitle}
+                </Text>
+              </View>
+            </AnimatedButton>
           )}
-        </ScrollView>
+        />
       </View>
     </Animated.View>
   );
@@ -240,8 +223,9 @@ const styles = StyleSheet.create({
     zIndex: 40,
     paddingHorizontal: 12,
   },
+  recentBackdrop: { backgroundColor: colors.videoScrim },
   sheet: {
-    flex: 1,
+    flexShrink: 1,
     width: '100%',
     maxWidth: 440,
     alignSelf: 'center',
@@ -253,31 +237,14 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 12,
   },
+  resultsSheet: { flex: 1 },
+  recentBody: { flexGrow: 0, flexShrink: 1 },
   kicker: {
     color: colors.textMuted,
     ...TYPE.caption,
     ...figtree('800'),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-  },
-  recentRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  recentChip: {
-    minHeight: 44,
-    justifyContent: 'center',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  recentLabel: {
-    color: colors.text,
-    ...TYPE.caption,
-    ...figtree('700'),
   },
   empty: {
     color: colors.textMuted,

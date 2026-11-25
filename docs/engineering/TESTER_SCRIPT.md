@@ -16,6 +16,40 @@ Metro). Do **not** start Exit drills here.
 
 PRs: C [#35](https://github.com/logoitino/ala/pull/35) · A [#36](https://github.com/logoitino/ala/pull/36) · B [#37](https://github.com/logoitino/ala/pull/37).
 
+## Android and caption acceptance — UX-20, UX-21, POST-EDIT-01
+
+Source is merged in [#65](https://github.com/logoitino/ala/pull/65). Record the build or commit, device
+model and Android version. Use staging test accounts and synthetic content.
+
+**Android, before the database migration**
+
+1. From `apps/mobile`, run `EXPO_OFFLINE=1 ./node_modules/.bin/expo start --go --lan --port 8082 --max-workers 1`
+   if port 8081 is already in use or its Android manifest fails here. Connect the Mac and phone
+   to the same Wi-Fi and scan the QR code from that terminal. For an installed build, use a staging preview instead.
+2. In Activity, drag on a notification to scroll, switch between Inbox and Archived, and open
+   and close More. Repeat with larger system text: controls stay distinct and the last row clears
+   the dock. Check with enough rows to scroll; an empty inbox does not verify this case.
+3. On another user's profile, open and close a visible photo, including with the Android Back
+   button. An avatar hidden by the owner's settings offers no preview. Playable Highlights
+   appear above Story. Confirm the owner's photo still opens the regular editing flow.
+4. In Home and in the profile's Highlight player, check that names and descriptions remain
+   readable above the dock and Seki, Aura and Flex can still be reached. Verify that the duplicate
+   reaction badges are gone from beneath the name.
+
+**Staging, after the owner checks and applies the migration**
+
+- Confirm the target is `ala-sports-staging`; the default CLI link may point elsewhere.
+  Use the catalog preflight in [POST-EDIT-01](../agents/POST-EDIT-01.md#read-only-staging-preflight).
+  If any prerequisite is absent, identify its existing migration before applying the caption migration.
+- As the uploader, open a Highlight → More → Edit description, save and reload the feed and
+  profile. The revised text persists. As a second test account, including the tagged athlete,
+  look for the same menu and confirm Edit description is absent.
+- In Beyond with contributions already enabled for the test account, edit an approved synthetic
+  post under My posts. It returns to review. The second account no longer sees it in the shared
+  feed until a test moderator approves the new revision. Media and audience stay the same.
+- Turn off connectivity while saving a synthetic edit. The editor keeps the draft if the save
+  cannot be confirmed. Reconnect and refresh before another attempt to learn whether it committed.
+
 ## Current giving checks — MONEY-TIPS-01 (2026-10-22)
 
 Use the [rollout runbook](GIFT_TIP_ROLLOUT.md) and [COORD-02](../agents/COORD-02.md) first.
@@ -723,6 +757,18 @@ like a promise? (If yes, tell us — that matters.)*
    The new recipient must not show the old thank-you or inherit its donation/count callbacks.
 10. Use a screen reader on card-fee coverage: it announces the exact added fee and that
     the family's share stays the same. Record device evidence rather than inferring it from Jest.
+
+## Welcome to Highlights — first phone visit
+
+1. Use a fresh test install or isolated app storage. Open the welcome and tap **Watch highlights**. Expect Home to open on a public Highlight without an optional Spotlight or account prompt on that first clip. Check muted playback and that the athlete and school are legible above the dock.
+2. Repeat with a slow or unavailable network. Expect the branded artwork while loading, then the clip or a Retry Highlights button; reconnect and retry. Decorative art should disappear when the actual video plays. A feed with only Vault videos must not open an unlock prompt.
+3. Relaunch and confirm the welcome stays dismissed. On another fresh test profile, confirm **Sign in** still opens the existing account sheet.
+
+## Home and Local search — phone layout and history
+
+1. Open Home Search and tap Local's empty search field with existing recent searches. Check that the icons and query labels line up, newest terms are at the top, and longer terms wrap without hiding the trailing arrow. Repeat with Android font size increased and the keyboard open.
+2. Open a result in one tab and confirm the query appears in the other. Tap a recent term, scroll the results, and switch the filter or replace the query while a request is pending; previous results should disappear immediately. In Home, check two same-named athletes with different schools can both open.
+3. Tap Clear all and confirm the list is empty in both tabs after an app restart. Close search and check the Home feed or Local hub is usable again.
 
 ## Shared menus and page energy
 

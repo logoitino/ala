@@ -1,8 +1,7 @@
-/** UX-13 existing SearchResultsOverlay.tsx presentation keeps all actions/notices while aligning readable type. */
+/** Local shows the shared recent list until typing and renders only visible search results. */
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
-  FadeInUp,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -13,7 +12,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { FilterPills } from '@/components/UI/FilterPills';
-import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
+import { RecentSearchList } from '@/components/UI/RecentSearchList';
 import { colors, radii } from '@/constants/theme';
 import { useLocalSearch, useRecentLocalSearches } from '@/hooks/useLocalSearch';
 import type { LocalSearchHit, LocalSearchKind } from '@/types/database';
@@ -26,7 +25,6 @@ const KIND_PILLS: { id: LocalSearchKind; label: string }[] = [
   { id: 'school', label: 'Schools' },
   { id: 'booster', label: 'Boosters' },
 ];
-
 
 type SearchResultsOverlayProps = {
   searchQuery: string;
@@ -51,14 +49,14 @@ function kindLabel(kind: LocalSearchHit['entity_type']): string {
 
 /**
  * @purpose Sliding Local Explore drawer: kind chips, recent queries, and live `search_local_entities` hits.
- * @param searchQuery Header value; the sheet is open when trimmed length is greater than 1.
+ * @param searchQuery Header value; the route mounts the sheet once search starts.
  * @param extraHits Client-side school / booster rows (demo rail) merged with RPC hits.
- * @param onApplyQuery Fills the header from a recent chip.
+ * @param onApplyQuery Fills the header from a recent row.
  * @param onSelectAthlete Opens the public athlete profile (`/user/[id]`).
  * @param onSelectSchool Filters School Polls for that high school.
  * @param onSelectBooster Highlights that sponsor on the Local Boosters rail.
  * @returns Overlay that covers the hub below the persistent search bar.
- * @sideEffects `useLocalSearch` RPC; AsyncStorage recent chips; Light haptics on row / chip press.
+ * @sideEffects `useLocalSearch` RPC; AsyncStorage recent rows; Light haptics on row / chip press.
  */
 export function SearchResultsOverlay({
   searchQuery,
@@ -68,9 +66,9 @@ export function SearchResultsOverlay({
   onSelectSchool,
   onSelectBooster,
 }: SearchResultsOverlayProps) {
-  const visible = searchQuery.trim().length > 1;
+  const searching = searchQuery.trim().length > 1;
   const [kind, setKind] = useState<LocalSearchKind>('all');
-  const { hits, loading } = useLocalSearch(visible ? searchQuery : '', kind);
+  const { hits, loading } = useLocalSearch(searching ? searchQuery : '', kind);
   const { recent, remember, clearRecent } = useRecentLocalSearches();
   const mergedHits = useMemo(() => {
     const seen = new Set(hits.map((hit) => `${hit.entity_type}:${hit.entity_id.toLowerCase()}`));
@@ -88,19 +86,9 @@ export function SearchResultsOverlay({
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    if (visible) {
-      if (reduceMotion) {
-        translateY.value = withTiming(0, { duration: SHEET_REDUCED_MS });
-        opacity.value = withTiming(1, { duration: SHEET_REDUCED_MS });
-        return;
-      }
-      translateY.value = withSpring(0, SPRING_SHEET);
-      opacity.value = withTiming(1, { duration: 160 });
-      return;
-    }
-    translateY.value = withTiming(24, { duration: reduceMotion ? SHEET_REDUCED_MS : 140 });
-    opacity.value = withTiming(0, { duration: reduceMotion ? SHEET_REDUCED_MS : 120 });
-  }, [opacity, reduceMotion, translateY, visible]);
+    translateY.value = reduceMotion ? withTiming(0, { duration: SHEET_REDUCED_MS }) : withSpring(0, SPRING_SHEET);
+    opacity.value = withTiming(1, { duration: reduceMotion ? SHEET_REDUCED_MS : 160 });
+  }, [opacity, reduceMotion, translateY]);
 
   const sheetStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -122,99 +110,55 @@ export function SearchResultsOverlay({
 
   return (
     <Animated.View
-      pointerEvents={visible ? 'auto' : 'none'}
-      accessibilityElementsHidden={!visible}
-      importantForAccessibility={visible ? 'auto' : 'no-hide-descendants'}
       style={[styles.wrap, sheetStyle]}
     >
-      <View style={styles.sheet}>
-        <View style={styles.handle} />
-        <Text style={styles.kicker}>Explore</Text>
-        <FilterPills
-          items={KIND_PILLS}
-          value={kind}
-          onChange={(id) => {
-            if (id) setKind(id);
-          }}
-          accessibilityLabel="Search entity filters"
-        />
-
-        {recent.length > 0 ? (
-          <View style={styles.recentBlock}>
-            <View style={styles.recentHead}>
-              <Text style={styles.recentLabel}>Recent</Text>
-              <Pressable style={styles.clearHit} accessibilityLabel="Clear recent searches" onPress={() => void clearRecent()}>
-                <Text style={styles.recentClear}>Clear</Text>
-              </Pressable>
-            </View>
-            <ScrollView
-              horizontal
-              nestedScrollEnabled
-              keyboardShouldPersistTaps="handled"
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.recentRail}
-            >
-              {recent.map((item) => (
-                <AnimatedButton
-                  key={item}
-                  accessibilityLabel={`Search ${item}`}
-                  onPress={() => onApplyQuery(item)}
-                  contentStyle={styles.recentChip}
-                >
-                  <Text style={styles.recentChipLabel}>
-                    {item}
-                  </Text>
-                </AnimatedButton>
-              ))}
-            </ScrollView>
-          </View>
-        ) : null}
-
-        {loading && mergedHits.length === 0 ? (
-          <View style={styles.empty}>
-            <ActivityIndicator color={colors.primary} />
-            <Text style={styles.emptyCopy}>Searching Local…</Text>
-          </View>
-        ) : mergedHits.length === 0 ? (
-          <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No matches</Text>
-            <Text style={styles.emptyCopy}>Try an athlete, high school, or booster name.</Text>
-          </View>
-        ) : (
-          <ScrollView
+      <View style={[styles.sheet, searching ? styles.results : styles.recentSheet]}>
+        {searching ? <>
+          <Text style={styles.kicker}>Explore</Text>
+          <FilterPills items={KIND_PILLS} value={kind}
+            onChange={(id) => { if (id) setKind(id); }} accessibilityLabel="Search entity filters" />
+          <FlatList
+            data={mergedHits}
+            keyExtractor={(hit) => `${hit.entity_type}:${hit.entity_id}`}
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
             showsVerticalScrollIndicator={false}
             style={styles.results}
             contentContainerStyle={styles.list}
-          >
-            {mergedHits.map((hit, index) => (
-              <Animated.View
-                key={`${hit.entity_type}:${hit.entity_id}`}
-                entering={FadeInUp.delay(Math.min(index, 6) * 22).duration(140)}
+            initialNumToRender={8}
+            ListEmptyComponent={loading ? (
+                <View style={styles.empty}>
+                  <ActivityIndicator color={colors.primary} />
+                  <Text style={styles.emptyCopy}>Searching Local…</Text>
+                </View>
+              ) : (
+                <View style={styles.empty}>
+                  <Text style={styles.emptyTitle}>No matches</Text>
+                  <Text style={styles.emptyCopy}>Try an athlete, high school, or booster name.</Text>
+                </View>
+              )}
+            renderItem={({ item: hit }) => (
+              <AnimatedButton
+                accessibilityLabel={`${kindLabel(hit.entity_type)} ${hit.title}`}
+                onPress={() => openHit(hit)}
+                contentStyle={styles.row}
               >
-                <AnimatedButton
-                  accessibilityLabel={`${kindLabel(hit.entity_type)} ${hit.title}`}
-                  onPress={() => openHit(hit)}
-                  contentStyle={styles.row}
-                >
-                  <View style={styles.rowIcon}>
-                    <Ionicons name={kindIcon(hit.entity_type)} size={18} color={colors.primary} />
-                  </View>
-                  <View style={styles.rowCopy}>
-                    <Text style={styles.rowKind}>{kindLabel(hit.entity_type)}</Text>
-                    <Text style={styles.rowTitle}>
-                      {hit.title}
-                    </Text>
-                    {hit.subtitle ? (
-                      <Text style={styles.rowSub}>
-                        {hit.subtitle}
-                      </Text>
-                    ) : null}
-                  </View>
-                </AnimatedButton>
-              </Animated.View>
-            ))}
+                <View style={styles.rowIcon}>
+                  <Ionicons name={kindIcon(hit.entity_type)} size={18} color={colors.primary} />
+                </View>
+                <View style={styles.rowCopy}>
+                  <Text style={styles.rowKind}>{kindLabel(hit.entity_type)}</Text>
+                  <Text style={styles.rowTitle}>{hit.title}</Text>
+                  {hit.subtitle ? <Text style={styles.rowSub}>{hit.subtitle}</Text> : null}
+                </View>
+              </AnimatedButton>
+            )}
+          />
+        </> : (
+          <ScrollView keyboardShouldPersistTaps="handled" style={styles.recentBody} showsVerticalScrollIndicator={false}>
+            {recent.length > 0
+              ? <RecentSearchList items={recent} onSelect={onApplyQuery} onClear={() => void clearRecent()} />
+              : <Text style={[styles.emptyCopy, styles.recentHint]}>Search for an athlete, school or booster.</Text>}
           </ScrollView>
         )}
       </View>
@@ -227,76 +171,35 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     zIndex: 20,
     paddingTop: 4,
+    paddingHorizontal: 10,
+    backgroundColor: colors.background,
   },
   sheet: {
-    flex: 1,
     width: '100%',
     maxWidth: 560,
     alignSelf: 'center',
     overflow: 'hidden',
     backgroundColor: colors.background,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
+    borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: 12,
     paddingTop: 8,
     gap: 10,
   },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: colors.border,
+  recentSheet: {
+    flexShrink: 1,
+    backgroundColor: colors.surface,
+    paddingVertical: 4,
   },
+  recentBody: { flexGrow: 0, flexShrink: 1 },
+  recentHint: { paddingVertical: 12 },
   kicker: {
     color: colors.primary,
     ...TYPE.caption,
     ...figtree('800'),
     letterSpacing: 0.7,
     textTransform: 'uppercase',
-  },
-  recentBlock: {
-    gap: 6,
-  },
-  recentHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  recentLabel: {
-    color: colors.textMuted,
-    ...TYPE.caption,
-    ...figtree('800'),
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  clearHit: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'center' },
-  recentClear: {
-    color: colors.primary,
-    ...TYPE.caption,
-    ...figtree('800'),
-  },
-  recentRail: {
-    gap: 8,
-    paddingRight: 8,
-  },
-  recentChip: {
-    minHeight: 44,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    maxWidth: '100%',
-  },
-  recentChipLabel: {
-    color: colors.text,
-    ...TYPE.caption,
-    ...figtree('700'),
   },
   results: {
     flex: 1,

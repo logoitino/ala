@@ -1,6 +1,6 @@
 /** Vault changes wait for the initiating account’s confirmed server flag before updating this profile. */
 /** Own profile shares the public sports layout and binds clips/sport reads to the current account and linked athlete.
- * Primary artwork is manually chosen; temporary chips never write it. Confirmed captions only patch matching loaded clips. */
+ * Primary artwork is manually chosen; temporary chips never write it. Matching caption receipts survive a pending clip read. */
 import { offlineQueue } from '@/services/OfflineQueue';
 import type { OfflineActor } from '@/lib/offlineActor';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -37,7 +37,7 @@ import { readMaloDroppedCount, useTipCheckout } from '@/hooks/useTipCheckout';
 import { useSurfaceUsage } from '@/hooks/useSurfaceUsage';
 import { beginExclusiveUnlock } from '@/lib/exclusiveCheckout';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst } from '@/lib/reels';
-import { applyReelCaptionChange, subscribeReelCaptionChanges } from '@/lib/postCaptions';
+import { applyReelCaptionChange, subscribeReelCaptionChanges, trackReelCaptionRead } from '@/lib/postCaptions';
 import { formatCapabilityLine } from '@/lib/roles';
 import { handleFromName, resolveAuraPoints, subscribePlayerAura } from '@/lib/aura';
 import { formatTeamBadge, classYearLabel, type SchoolTeam } from '@/data/teams';
@@ -153,6 +153,7 @@ export default function MyHubTab() {
       void readMaloDroppedCount().then(setTipsDropped);
       void countStoredCheerVotes().then(setPollVotes);
       void readAthleteOnboarding().then((onboard) => setLocalOnboardTeam(onboard?.team ?? null));
+      let clipRead: ReturnType<typeof trackReelCaptionRead> | undefined;
       if (
         !athlete.id ||
         athlete.id.startsWith('demo-') ||
@@ -161,14 +162,20 @@ export default function MyHubTab() {
       ) {
         setTaggedRows([]);
       } else {
+        const read = trackReelCaptionRead();
+        clipRead = read;
         void fetchReelsForPlayer(athlete.id).then((rows) => {
-          if (valid()) { setTaggedRows(rows); setTaggedOwner({ account: user?.id ?? profile?.user_id, playerId: athlete.id, guard: isSessionCurrent }); }
+          if (valid()) {
+            setTaggedRows(read.reconcile(rows));
+            setTaggedOwner({ account: user?.id ?? profile?.user_id, playerId: athlete.id, guard: isSessionCurrent });
+          }
         }, () => {
           if (valid()) { setTaggedRows([]); setTaggedOwner(null); }
-        });
+        }).finally(read.close);
       }
       return () => {
         cancelled = true;
+        clipRead?.close();
         unsubscribeAura();
       };
     }, [athlete.id, isSessionCurrent, profile?.user_id, user?.id]),

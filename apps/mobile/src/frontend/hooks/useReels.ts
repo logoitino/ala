@@ -1,13 +1,13 @@
 /**
  * Loads the Highlights clips with loading / error state and a manual `refresh`.
  * Wraps `fetchReels` (lib/reels.ts); shows a readable message when Supabase env vars are missing and ignores
- * results that arrive after the screen unmounted. Confirmed edits patch only a matching existing row.
+ * results from superseded or unmounted reads. Reads keep caption receipts confirmed while pending.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { fetchReels, type ReelHype } from '@/lib/reels';
-import { applyReelCaptionChange, subscribeReelCaptionChanges } from '@/lib/postCaptions';
+import { applyReelCaptionChange, subscribeReelCaptionChanges, trackReelCaptionRead } from '@/lib/postCaptions';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import type { ReelWithPlayer } from '@/types/database';
 
@@ -16,12 +16,15 @@ const CONFIG_ERROR =
 
 export function useReels() {
   const mountedRef = useRef(true);
+  const activeRead = useRef<ReturnType<typeof trackReelCaptionRead> | null>(null);
   const [reels, setReels] = useState<ReelWithPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!mountedRef.current) return;
+    activeRead.current?.close();
+    activeRead.current = null;
     setLoading(true);
     setError(null);
 
@@ -32,15 +35,20 @@ export function useReels() {
       return;
     }
 
+    const read = trackReelCaptionRead();
+    activeRead.current = read;
+    const current = () => mountedRef.current && activeRead.current === read;
     try {
       const rows = await fetchReels();
-      if (!mountedRef.current) return;
-      setReels(rows);
+      if (current()) setReels(read.reconcile(rows));
     } catch (caught) {
-      if (!mountedRef.current) return;
-      setError(caught instanceof Error ? caught.message : 'Could not load uploaded clips.');
+      if (current()) setError(caught instanceof Error ? caught.message : 'Could not load uploaded clips.');
     } finally {
-      if (mountedRef.current) setLoading(false);
+      read.close();
+      if (current()) {
+        activeRead.current = null;
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -49,6 +57,8 @@ export function useReels() {
     void refresh();
     return () => {
       mountedRef.current = false;
+      activeRead.current?.close();
+      activeRead.current = null;
     };
   }, [refresh]);
 

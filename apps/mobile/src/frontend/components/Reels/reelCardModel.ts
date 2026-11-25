@@ -23,6 +23,8 @@ export type ReelCardProps = {
   sekiPlay?: boolean;
   /** When true, play if `active` even if the host route is not focused (profile / athlete modal). */
   playbackActive?: boolean;
+  /** Only the first video after Welcome carries the welcome art until playback starts. */
+  welcomePoster?: boolean;
   onTip: () => void;
   /** True after this fan has already dropped a Mālo on this clip. */
   userTipped?: boolean;
@@ -76,6 +78,7 @@ export function sameReelCardProps(prev: ReelCardProps, next: ReelCardProps): boo
     prev.overlayInsetBottom !== next.overlayInsetBottom ||
     prev.tipping !== next.tipping ||
     prev.playbackActive !== next.playbackActive ||
+    prev.welcomePoster !== next.welcomePoster ||
     prev.userTipped !== next.userTipped ||
     prev.surface !== next.surface ||
     prev.sekiPlay !== next.sekiPlay ||

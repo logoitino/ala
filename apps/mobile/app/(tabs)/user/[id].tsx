@@ -1,5 +1,6 @@
 /** Public profiles commit subject/session-bound reads and preview only the privacy-filtered photo. Sport chips use privacy-filtered participation,
- * recorded Highlight tags and independent Stats while the manually chosen primary field remains stable. */
+ * recorded Highlight tags and independent Stats while the manually chosen primary field remains stable.
+ * Pending reads keep matching Highlight captions confirmed before the profile can render them. */
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -23,7 +24,7 @@ import { useRoster } from '@/hooks/useRoster';
 import { useTipCheckout } from '@/hooks/useTipCheckout';
 import { beginExclusiveUnlock } from '@/lib/exclusiveCheckout';
 import { fetchReelsForPlayer, playerFromReel, reelToClip, sortClipsNewestFirst, type ReelHype } from '@/lib/reels';
-import { applyReelCaptionChange, subscribeReelCaptionChanges } from '@/lib/postCaptions';
+import { applyReelCaptionChange, subscribeReelCaptionChanges, trackReelCaptionRead } from '@/lib/postCaptions';
 import { hydratePlayerHype } from '@/lib/hype';
 import { fetchGuestPlayer, fetchPublicProfileForPlayer } from '@/lib/roster';
 import { handleFromName, isAuraUuid, resolveAuraPoints, subscribePlayerAura } from '@/lib/aura';
@@ -76,6 +77,7 @@ export default function UserAthleteProfileScreen() {
   const currentId = useRef(playerId);
   currentId.current = playerId;
   const loadRequest = useRef(0);
+  const captionRead = useRef<ReturnType<typeof trackReelCaptionRead> | null>(null);
   const [loadedId, setLoadedId] = useState<string | undefined>();
   const [player, setPlayer] = useState<Player | null>(null);
   const [reels, setReels] = useState<ReelWithPlayer[]>([]);
@@ -107,6 +109,8 @@ export default function UserAthleteProfileScreen() {
 
   const load = useCallback(async () => {
     const request = ++loadRequest.current;
+    captionRead.current?.close();
+    captionRead.current = null;
     const current = () => loadRequest.current === request && currentId.current === playerId
       && activeActor.current === actor && (!isSessionCurrent || isSessionCurrent());
     setLoading(true);
@@ -126,6 +130,7 @@ export default function UserAthleteProfileScreen() {
       setLoading(false);
       return;
     }
+    let read: ReturnType<typeof trackReelCaptionRead> | undefined;
     try {
       const loaded = await fetchGuestPlayer(playerId);
       if (!current()) return;
@@ -136,6 +141,9 @@ export default function UserAthleteProfileScreen() {
         return;
       }
       const nextPlayer = await hydratePlayerHype(loaded.player);
+      if (!current()) return;
+      read = trackReelCaptionRead();
+      captionRead.current = read;
       const [tagged, verification, publicProfileRow] = await Promise.all([
         fetchReelsForPlayer(playerId), fetchPlayerVerification(playerId, nextPlayer.name),
         fetchPublicProfileForPlayer(playerId),
@@ -150,7 +158,7 @@ export default function UserAthleteProfileScreen() {
       // Commit the whole sheet together: no old profile or late result can replace the active athlete.
       if (!current()) return;
       setPlayer(nextPlayer);
-      setReels(mergeUploadedReel(tagged, uploadSheet?.lastUploaded, playerId, nextPlayer));
+      setReels(read.reconcile(mergeUploadedReel(tagged, uploadSheet?.lastUploaded, playerId, nextPlayer)));
       setVerificationStatus(verification.status); setSchoolClaimed(verification.schoolClaimed);
       setAvatarUrl(verification.avatarUrl);
       setPublicProfile(publicProfileRow);
@@ -159,12 +167,19 @@ export default function UserAthleteProfileScreen() {
     } catch {
       if (!current()) return;
       setError('Please try again.'); setLoadedId(playerId); setLoading(false);
+    } finally {
+      read?.close();
+      if (captionRead.current === read) captionRead.current = null;
     }
   }, [actor, isSessionCurrent, playerId, rawId, uploadSheet?.lastUploaded]);
 
   useFocusEffect(useCallback(() => {
     void load();
-    return () => { loadRequest.current += 1; };
+    return () => {
+      loadRequest.current += 1;
+      captionRead.current?.close();
+      captionRead.current = null;
+    };
   }, [load]));
 
   useEffect(() => {

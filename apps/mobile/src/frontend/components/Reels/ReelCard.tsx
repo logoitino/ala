@@ -34,6 +34,7 @@ import { ReelActionOverlay } from '@/components/Reels/ReelActionOverlay';
 import { PhotoStoryMedia } from '@/components/Reels/PhotoStoryMedia';
 import { PlayBroadcastBanner } from '@/components/Reels/PlayBroadcastBanner';
 import { ReelVideoLayer } from '@/components/Reels/ReelVideoLayer';
+import { WelcomeHighlightsArt } from '@/components/Onboarding/WelcomeHighlightsStage';
 import { FilmerSheet } from '@/components/Filmers/FilmerSheet';
 import { ReelMoreSheet } from '@/components/Reels/ReelMoreSheet';
 import { PostDescriptionEditor } from '@/components/Reels/PostDescriptionEditor';
@@ -117,6 +118,7 @@ function ReelCardImpl({
   tipping,
   sekiPlay: _sekiPlay = false,
   playbackActive,
+  welcomePoster = false,
   onTip,
   userTipped = false,
   onOpenProfile,
@@ -185,6 +187,7 @@ function ReelCardImpl({
   const [votes, setVotes] = useState<ReelVoteMap>({ seki: false, aura: false, flex: false });
   // True only while the video is really playing on screen; the view counter adds up this time.
   const [playing, setPlaying] = useState(false);
+  const [welcomePlayedClip, setWelcomePlayedClip] = useState<string | null>(null);
   const [durationSec, setDurationSec] = useState<number | null>(null);
   const [videoFailure, setVideoFailure] = useState<{ clipId: string; retry: () => void } | null>(null);
   const photoStory = isPhotoStory(clip);
@@ -567,7 +570,8 @@ function ReelCardImpl({
   const onPlaybackChange = useCallback((isPlaying: boolean, duration: number | null) => {
     setPlaying(isPlaying);
     setDurationSec(duration);
-  }, []);
+    if (isPlaying && welcomePoster) setWelcomePlayedClip(clip.id);
+  }, [clip.id, welcomePoster]);
 
   const onLoopEnd = useCallback(() => {
     setLoopFlash(true);
@@ -630,6 +634,7 @@ function ReelCardImpl({
             onLoopEnd={onLoopEnd}
           />
         )}
+        {welcomePoster && !photoStory && !locked && welcomePlayedClip !== clip.id ? <WelcomeHighlightsArt /> : null}
       </BlurTargetView>
 
       {photoStory ? null : (

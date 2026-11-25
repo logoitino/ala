@@ -45,7 +45,10 @@ it('keeps Games/Polls/Boosters visible and places sponsorship only in Boosters',
 
 it('opens Boosters when selecting a sponsor from search',async()=>{
  await render(<LocalTab/>);
+ expect(screen.queryByRole('button',{name:'Select searched sponsor'})).toBeNull();
+ await fireEvent(screen.getByLabelText('Search players, schools, or sponsors'), 'focus');
  await fireEvent.press(screen.getByRole('button',{name:'Select searched sponsor'}));
+ expect(screen.queryByRole('button',{name:'Select searched sponsor'})).toBeNull();
  expect(screen.getByRole('tab',{name:'Boosters',selected:true})).toBeTruthy();
  expect(screen.getByText('Fixture Community Sponsor')).toBeTruthy();
 });

@@ -6,7 +6,7 @@
  */
 import Ionicons from '@expo/vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { usePathname } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Modal, StyleSheet, Text, View, useWindowDimensions, type ImageSourcePropType } from 'react-native';
 import Animated, { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
@@ -68,11 +68,12 @@ function DriftColumn({ offset, reverse, still }: { offset: number; reverse: bool
 
 /**
  * @purpose One-time first-open welcome for guests — brand, the Give. Elevate. Celebrate. message and two
- *   actions: Watch highlights (browse as a guest) or Sign in (opens the usual account sheet).
+ *   actions: Watch highlights explicitly opens guest-friendly Home, or Sign in opens the account sheet.
  * @sideEffects AsyncStorage `tapuai.onboardingSeen`; Sign in opens Soft-Wall `signin`.
  */
 export function WelcomeOverlay() {
   const pathname = usePathname();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const reduceMotion = useReduceMotion();
@@ -143,7 +144,10 @@ export function WelcomeOverlay() {
               block
               haptic="medium"
               icon={<Ionicons name="play" size={16} color={colors.night} />}
-              onPress={() => void dismiss()}
+              onPress={() => {
+                router.navigate({ pathname: '/', params: { welcome: 'highlights' } });
+                void dismiss();
+              }}
             />
             {softWall ? (
               <KitButton

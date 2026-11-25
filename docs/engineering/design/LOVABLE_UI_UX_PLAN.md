@@ -66,7 +66,7 @@ are touched (§5).
 
 ## 4. Surface patterns
 
-- **Welcome:** full-screen night hero, decorative sport tiles, light primary "Watch highlights".
+- **Welcome:** full-screen night hero, decorative sport tiles, light primary "Watch highlights". The primary action explicitly opens Home Highlights; the same night treatment and existing sports art cover loading and the first public video before playback. A failed or empty feed offers Retry Highlights. The Sign in path still delegates to the existing account sheet.
 - **Sign-in / age:** large title, provider buttons 52pt, lock reassurance strip, icon tile on the age card.
 - **Gift sheet:** scoreboard amount tiles, ink-filled selected tip chip, 44pt review total, solid Next.
 - **Highlights reel:** full-bleed night media (already matches); keep the overlay logic untouched.

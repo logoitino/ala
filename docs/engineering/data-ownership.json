@@ -3318,8 +3318,17 @@
       "purpose": "Change a Highlight or Beyond description using the exact current author and expected value or revision.",
       "data": "Existing actor/profile IDs, post ID and current title or revision; proposed text and checked RPC receipt. No copied media or new auth storage.",
       "destination": "Existing Highlight or Beyond row through its owner RPC; compatible mounted reel lists and current Beyond review queue.",
-      "retention": "Unsaved input lives in the open editor only. Confirmed values use existing post retention; no offline queue, silent retry or caption telemetry.",
+      "retention": "Unsaved input lives in the open editor only. A pending reel read retains matching confirmed receipts only until completion or invalidation; saved values use existing post retention. No offline queue, silent retry or caption telemetry.",
       "source": "apps/mobile/src/frontend/lib/postCaptions.ts"
+    },
+    {
+      "id": "fan-search-recent-history",
+      "owner": "DESIGN",
+      "purpose": "Let Home and Local reopen a recent search from a shared aligned list.",
+      "data": "Up to six unique terms from opened search results, newest first. Existing on-device key; no new account identifier.",
+      "destination": "Home and Local read a shared in-memory snapshot backed by device AsyncStorage at tapuai.localSearchRecent. Only terms explicitly searched use the existing search endpoint.",
+      "retention": "Newest six terms until Clear all or app data removal. Clearing invalidates pending hydration and saves.",
+      "source": "apps/mobile/src/frontend/hooks/useLocalSearch.ts"
     }
   ]
 }

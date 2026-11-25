@@ -1,5 +1,6 @@
 /**
  * UX-19: shared section heading, readable 14pt search/hub copy and a borderless directory entry.
+ * Shared search chrome shows recents on focus before a query starts.
  * Compact Local: sticky Games/Polls/Boosters menus and search; sponsors and their action live in Boosters.
  * Booster logos display through `mediaUri` in `Local/SponsorRailCard` (legacy full URL or `sb:` reference, SCALE-02).
  * Matching helpers live in `data/localHub.ts`; the rail card and loading skeleton in `components/Local/` (R4-03).
@@ -18,7 +19,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
   type ScrollViewInstance,
 } from 'react-native';
@@ -38,6 +38,7 @@ import { TopAuraBoosters } from '@/components/Local/TopAuraBoosters';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
 import { EmptyState } from '@/components/UI/EmptyState';
 import { FilterPills } from '@/components/UI/FilterPills';
+import { FanSearchField } from '@/components/UI/FanSearchField';
 import { HapticPressable as Pressable } from '@/components/UI/HapticPressable';
 import { cardShadow, colors, KIT, radii } from '@/constants/theme';
 import {
@@ -91,6 +92,7 @@ export default function LocalTab() {
   const { onScroll, trackFeature } = useSurfaceUsage('local');
   const [hub, setHub] = useState<LocalHubId>('matches');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchActive, setSearchActive] = useState(false);
   const [filterId, setFilterId] = useState<string | null>(null);
   const [sponsorSheetOpen, setSponsorSheetOpen] = useState(false);
   const [highlightedSponsorId, setHighlightedSponsorId] = useState<string | null>(null);
@@ -145,9 +147,12 @@ export default function LocalTab() {
     }
   }, [hub, hubs]);
 
+  const schoolOptions = useMemo(() => schoolOptionsFromGames(games), [games]);
+  const searchNeedle = searchQuery.trim();
+  const searchingLocal = live.layouts.localSearch && (searchActive || searchNeedle.length > 1);
   const extraHits = useMemo(
-    () => extraLocalHits(searchQuery, sponsors, schoolOptionsFromGames(games)),
-    [games, searchQuery, sponsors],
+    () => live.layouts.localSearch && searchNeedle.length > 1 ? extraLocalHits(searchNeedle, sponsors, schoolOptions) : undefined,
+    [live.layouts.localSearch, schoolOptions, searchNeedle, sponsors],
   );
 
   const filteredGames = useMemo(() => {
@@ -191,7 +196,6 @@ export default function LocalTab() {
     return schoolPolls.filter((poll) => blobMatchesSchool(`${poll.homeLabel} ${poll.awayLabel}`, schoolFilter));
   }, [schoolFilter, schoolPolls]);
 
-  const schoolOptions = useMemo(() => schoolOptionsFromGames(games), [games]);
 
   const onSearchChange = (text: string) => {
     setSearchQuery(text);
@@ -215,6 +219,7 @@ export default function LocalTab() {
 
   const closeExplore = () => {
     setSearchQuery('');
+    setSearchActive(false);
     Keyboard.dismiss();
   };
 
@@ -263,28 +268,11 @@ export default function LocalTab() {
             accent={FOCAL.jadeInk}
           />
           {live.layouts.localSearch ? (
-          <View style={styles.searchWrap}>
-            <Text accessibilityElementsHidden importantForAccessibility="no" style={styles.searchGlyph}>
-              🔍
-            </Text>
-            <TextInput
-              value={searchQuery}
-              onChangeText={onSearchChange}
-              onFocus={lightImpact}
-              placeholder="Search players, schools, or sponsors..."
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="search"
+            <FanSearchField value={searchQuery} onChangeText={onSearchChange}
+              onFocus={() => { lightImpact(); setSearchActive(true); }}
+              placeholder="Players, schools or sponsors"
               accessibilityLabel="Search players, schools, or sponsors"
-              style={styles.search}
-            />
-            {searchQuery.length > 0 ? (
-              <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={closeExplore} style={styles.clearButton}>
-                <Text style={styles.searchClear}>✕</Text>
-              </Pressable>
-            ) : null}
-          </View>
+              onClose={searchActive || searchQuery.length > 0 ? closeExplore : undefined} />
           ) : null}
           <LocalHubMenu items={hubs} value={hub} onChange={(id) => {
             trackFeature(`hub.${id}`);
@@ -293,7 +281,13 @@ export default function LocalTab() {
         </View>
 
         <View style={styles.hubFrame}>
-          <ScrollFxScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} onScroll={onScroll}>
+          <ScrollFxScrollView
+            accessibilityElementsHidden={searchingLocal}
+            importantForAccessibility={searchingLocal ? 'no-hide-descendants' : 'auto'}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.content}
+            onScroll={onScroll}
+          >
             <AnimatedButton
               accessibilityRole="link"
               accessibilityLabel="Browse schools and teams"
@@ -472,14 +466,14 @@ export default function LocalTab() {
             </View>
           </ScrollFxScrollView>
 
-          <SearchResultsOverlay
-            searchQuery={live.layouts.localSearch ? searchQuery : ''}
+          {searchingLocal ? <SearchResultsOverlay
+            searchQuery={searchQuery}
             extraHits={extraHits}
             onApplyQuery={setSearchQuery}
             onSelectAthlete={(playerId) => selectAthlete(playerId)}
             onSelectSchool={selectSchool}
             onSelectBooster={(sponsorId) => selectBooster(sponsorId)}
-          />
+          /> : null}
         </View>
       </View>
       <SponsorshipModal
@@ -523,42 +517,8 @@ const styles = StyleSheet.create({
     ...KIT.shadowSoft,
   },
   directoryEntryLabel: { flex: 1, minWidth: 0, color: FOCAL.jadeInk, ...TYPE.button, ...figtree('700') },
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    minHeight: 44,
-    paddingHorizontal: 8,
-    backgroundColor: FOCAL.mistJade,
-    borderWidth: 1.5,
-    borderColor: FOCAL.jadeInk,
-    borderRadius: radii.md,
-  },
-  searchGlyph: {
-    fontSize: 14,
-  },
-  search: {
-    flex: 1,
-    minWidth: 0,
-    // Single-line input: fontSize only — a lineHeight can shift or clip the text vertically on iOS.
-    fontSize: TYPE.body.fontSize,
-    ...figtree('400'),
-    color: colors.text,
-    paddingVertical: 6,
-  },
-  searchClear: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '700',
-    paddingHorizontal: 4,
-  },
-  clearButton: {
-    minWidth: 44,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
+  clearButton: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+
   // UX-19: the one section heading every fan tab shares (was a raw 15pt/800 with a green bar).
   // With the 8pt panel gap: 12pt above, 6pt below (UX-19 spec).
   sectionTitle: {

@@ -1,5 +1,18 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
 
+## 2026-11-25 — Carry the welcome into Highlights (local)
+
+- Watch highlights opens the public feed directly. The welcome art stays visible through loading, with a retry when Highlights cannot load.
+
+## 2026-11-25 — Easier search in Home and Local (local)
+
+- Home and Local share a compact search bar and a single aligned list of recent searches. Local shows it as soon as the field is focused.
+- Changing a query or filter hides stale results, and Home keeps athletes with the same name separate.
+
+## 2026-11-25 — Fix Highlight caption refresh (local)
+
+- A delayed Highlight refresh no longer restores old text after a confirmed edit in Home or a profile.
+
 ## 2026-11-24 — Public profiles and quieter video overlays (local)
 
 - Tap a visible public profile photo to open it. Profiles with videos put Highlights before Story for visitors.

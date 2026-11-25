@@ -1,7 +1,7 @@
 <!-- Current local implementation and observed readiness; hosted activation requires original evidence. -->
 # STATE — read this first
 
-**Last updated:** 2026-11-24 — public profile photos, video overlays and owner caption editing work.
+**Last updated:** 2026-11-25 — Welcome to Highlights handoff, Home and Local search polish, and Highlight caption refresh repair.
 
 This is the living state of Tapua'i Sports (`ala-sports`). Other docs describe how things *should* work; this file is **where the project is right now**.
 
@@ -176,6 +176,12 @@ Verified 2026-09-28 on the `seiuliian` Mac. These are real constraints, not pref
 ---
 
 ## 4. Recent changes (rolling — newest first)
+
+- **2026-11-25 — Welcome → Highlights (local):** Watch highlights opens the existing Home feed, leads with a public video when available, and carries welcome art through loading and retry. First entry does not show optional Spotlight or preference prompts; sign-in and the guest browse allowance keep their existing rules. Jev not reached (no configured local key/SDK environment); no score inferred.
+- **2026-11-25 — Home and Local search polish (local):** Shared search input and aligned recent rows; Local opens history on focus. Results scroll in virtualized lists, outdated rows clear on query or filter changes, and both screens share the same six on-device terms. See [menu coverage](engineering/MENU_STYLE_MAP.md#home-and-local-search).
+- **2026-11-25 — Highlight caption refresh repair (local):** Home and both profile readers apply matching confirmed caption edits to in-flight reel results. An older refresh can no longer revive a row removed by a newer refresh. [POST-EDIT-01](agents/POST-EDIT-01.md#highlight-refresh-follow-up).
+
+- **2026-11-25 — PR #65 merged:** Activity spacing, public avatar preview, smaller video overlays and owner caption editing are on `main` (`4d026d4`). [Android and staging test steps](engineering/TESTER_SCRIPT.md#android-and-caption-acceptance--ux-20-ux-21-post-edit-01) include the read-only caption preflight. A merge does not verify phone gestures or hosted saving.
 
 - **2026-11-24 — UX-21 / POST-EDIT-01 (local):** Public photos open in a larger view when already permitted, playable Highlights move up for visitors, and video names and decoration are more compact. Highlight uploaders and Beyond authors can edit descriptions; edited Beyond posts return to review. See [UX-21](agents/UX-21.md) and the [caption edit readiness record](agents/POST-EDIT-01.md); hosted migration and device checks are pending.
 

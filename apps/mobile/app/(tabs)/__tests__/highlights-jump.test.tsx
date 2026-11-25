@@ -1,4 +1,4 @@
-/** Home keeps pager/media geometry synchronized when its overlay dock and viewport resize. */
+/** Home keeps pager geometry and playback intact across guest entry, feed switches and navigation. */
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import HighlightsTab from '../index';
@@ -26,6 +26,7 @@ jest.mock('@/lib/supabase', () => ({ isSupabaseConfigured: true, supabase: { rpc
  */
 
 const mockPush = jest.fn();
+let mockWelcome: string | undefined;
 const mockSquad = jest.fn<Promise<string[]>, [string | undefined]>(async () => []);
 const mockRankContexts: Array<{ crewIds: Set<string> }> = [];
 jest.mock('@/data/highlights', () => {
@@ -40,7 +41,9 @@ const mockSpotlight: {
   dismiss: jest.Mock;
 } = { award: null, visible: false, dismiss: jest.fn(async () => undefined) };
 
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }), useIsFocused: () => true }));
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ push: mockPush }), useIsFocused: () => true, useLocalSearchParams: () => ({ welcome: mockWelcome }),
+}));
 jest.mock('@/hooks/useReelViewTracker', () => ({ useReelViewTracker: jest.fn() }));
 jest.mock('expo-video', () => ({ clearVideoCacheAsync: jest.fn(() => Promise.resolve()) }));
 jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
@@ -78,8 +81,8 @@ jest.mock('@/components/Reels/ReelPage', () => {
 jest.mock('@/components/Reels/ReelCard', () => {
   const { Text: RNText } = require('react-native');
   return {
-    ReelCard: ({ clip, active, height, overlayInsetBottom }: { clip: { id: string }; active: boolean; height: number; overlayInsetBottom: number }) =>
-      active ? <RNText testID="active-reel-card" height={height} overlayInsetBottom={overlayInsetBottom}>{`active:${clip.id}`}</RNText> : null,
+    ReelCard: ({ clip, active, height, overlayInsetBottom, welcomePoster }: { clip: { id: string }; active: boolean; height: number; overlayInsetBottom: number; welcomePoster?: boolean }) =>
+      active ? <RNText testID="active-reel-card" height={height} overlayInsetBottom={overlayInsetBottom} welcomePoster={welcomePoster}>{`active:${clip.id}`}</RNText> : null,
   };
 });
 
@@ -165,6 +168,8 @@ jest.mock('@/context/AppRuntimeContext', () => ({ useAppRuntime: () => mockRunti
 const mockRoster = { players: [], applyBackerCount: jest.fn() };
 const mockReels = {
   reels: [] as unknown[],
+  loading: false,
+  error: null as string | null,
   refresh: jest.fn(async () => undefined),
   setReels: jest.fn(),
   applyReelHype: jest.fn(),
@@ -222,12 +227,43 @@ async function mountTab() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockWelcome = undefined;
+  mockReels.reels = [];
+  mockReels.loading = false;
+  mockReels.error = null;
   mockAuth = { user: null, profile: null, loading: false, isGuest: true };
   mockRealDiscovery = false; mockSquad.mockReset().mockResolvedValue([]); mockRankContexts.length = 0;
   (mockRuntime.live.tabs as Record<string, boolean>).beyond = false;
   mockSpotlight.award = null;
   mockSpotlight.visible = false;
   mockSpotlight.dismiss = jest.fn(async () => undefined);
+});
+
+it('keeps the welcome art through loading and retry, then opens the public video without an account or Spotlight prompt', async () => {
+  mockWelcome = 'highlights';
+  mockReels.loading = true;
+  mockSpotlight.visible = true;
+  const view = await render(<HighlightsTab />);
+  await fireEvent(screen.getByTestId('home-pager-viewport'), 'layout', { nativeEvent: { layout: { width: 390, height: 800 } } });
+  expect(screen.getByRole('header', { name: 'Getting Highlights ready' })).toBeTruthy();
+  expect(screen.queryByTestId('active-reel-card')).toBeNull();
+
+  mockReels.loading = false;
+  mockReels.error = 'Fixture connection failed';
+  await view.rerender(<HighlightsTab />);
+  await fireEvent.press(await screen.findByRole('button', { name: 'Retry Highlights' }));
+  expect(mockReels.refresh).toHaveBeenCalledTimes(1);
+
+  mockReels.error = null;
+  mockReels.reels = [
+    { id: 'vault', title: 'Locked clip', is_vault_only: true, video_url: 'https://example.test/vault.mp4' },
+    { id: 'public', title: 'Public clip', video_url: 'https://example.test/public.mp4' },
+  ];
+  await view.rerender(<HighlightsTab />);
+  expect(await screen.findByText('active:public')).toBeTruthy();
+  expect(screen.getByTestId('active-reel-card').props.welcomePoster).toBe(true);
+  expect(screen.queryByLabelText('watch-full-highlight')).toBeNull();
+  expect(mockSoftWall.requireAuth).not.toHaveBeenCalled();
 });
 
 it('includes optional discovery inside measured chrome without changing the reel viewport', async () => {

@@ -43,6 +43,12 @@ UX17 distinct jade/violet polls preserve5 existing cases and accepted current390
 
 Final local integration passes329mobile suites/3116tests,217portaltests, bothTypeScript checks, optimized Nextbuild and currentAndroid/iOS HermesJS exports. SDK overlay correction and old FunFactStep optional-null assertion repairs retain their actual original failures. Full gate stops only at2 unannounced Exit areas; tracked acknowledgement requires new session confirmation. Current737-source ledger retains718 exact-byte prior reviews and19 changed/new source reviews; no native/provider/Instagram parity or execution of every function is inferred. See UX17/18 for original receipts and remaining boundaries.
 
+## Home and Local search
+
+The compact search field shares icon, type, and close-button spacing across Home's video bar and Local's light header. Recent searches use consistent icon and text columns, growing rows for long labels, and 44pt row and Clear all targets. Local opens recents on focus; Home and Local keep their respective result filters and navigation. Both search drawers use virtualized result rows. See [the device checks](TESTER_SCRIPT.md#home-and-local-search--phone-layout-and-history).
+
+Local web checks at 320px and 390px used three synthetic terms. A long query wrapped while the icon and text columns stayed aligned, standard rows and the Clear all target measured 44px, and there was no horizontal overflow. Android keyboard and font scaling still need a phone check.
+
 ## UX-13 review and implementation scope
 
 All724 runtime modules/107 routes have current source-hash review evidence, including43 direct native Modal hosts/44 sites.140 presentation decisions normalize existing Figtree/Bricolage text hierarchy and spacing across Highlights, Local, trivia, challenges, rallies, profile/account, checkout, admin, operator, verification and guardian panels. Smaller decoration leaves readable text and44pt actions; names/labels wrap and long content scrolls within bounded cards. Required rights, consent, fee and safety text remains explicit. ScreenShell's appropriate existing geometry was retained.
