@@ -1046,3 +1046,16 @@ moderation capacity, hosted deletion or growth uplift.
 
 Local tests/replay/render evidence and unapplied SQL/device limitations are recorded in
 [MULTISPORT-01](../agents/MULTISPORT-01.md) and [UX-09](../agents/UX-09.md).
+
+
+## Web screen focus acceptance — 2026-11-25
+
+Use the current Expo web build, first desktop ≥1280px and then tablet 900×600/900×400. These are pending live visual checks; mounted regressions are separate evidence. Do not submit payments, roles, deletion or legal acknowledgements for a layout check.
+
+1. Local hub: right rail should not duplicate the page's live matchups or Aura board. Schools/teams still has complementary extras. Open a game: it must not repeat itself in Live matchups.
+2. Open own/public profile, Booster and Drip: More from Tapua’i should omit its corresponding current-page shortcut. Published Local, live-matchup, Aura-board, Profile and Drip pauses must hide their respective extras; a Vault pause retains plain Profile without the exclusive promise. Restore reviewed configuration through the existing admin workflow only.
+3. Tablet: Open extras panel has a readable Explore Tapua’i header, 420px maximum width, reachable Close and scrollable contents. Choose a destination; the drawer closes. Open again, resize desktop then tablet: it stays closed. Check long names, enlarged browser text, short-window scrolling, keyboard focus/Escape and no horizontal overflow. Do not treat mocked geometry as rendered acceptance.
+4. Account settings → Highlights: read picks/newest-first explanations and the no-ad-use notice, then Back/Close without saving. Feedback should say Share feedback and distinguish clip Report/Hide. Type a short draft to check disabled Send feedback; close without submitting unless explicitly testing feedback delivery.
+5. A paused fan surface uses a plain unavailable message and Return to app; the destination follows the existing enabled-route helper. Admin sees its operating instructions and authorized feature controls. Native copy/layout regression tests pass, but physical device acceptance is not part of this web pass.
+
+SUPPORT/LOCAL/AURA owns existing source issues: notification reads and Aura fallback/error labeling need their actual hosted/data review. This pass does not verify their delivery or production source correctness.

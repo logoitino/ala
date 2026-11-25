@@ -1,10 +1,11 @@
 /** Fan menu uses shared Daylight chrome; the feature retains its identity, validation and data ownership.
+ * Web explains app feedback versus clip reports without exposing publishing mechanics; native copy is retained.
  * UX-13 aligns existing readable type and wrapping without changing any action or notice.
  */
 import { MenuBackdrop } from '@/components/UI/MenuChrome';
 import { SheetHandle } from '@/components/UI/SheetHandle';
 import { useEffect, useState } from 'react';
-import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, View , useWindowDimensions} from 'react-native';
+import { Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, View , useWindowDimensions} from 'react-native';
 import { BlurView } from 'expo-blur';
 import Animated from 'react-native-reanimated';
 
@@ -77,7 +78,8 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
       else telemetry.trackFeature('suggestion', place);
       setBody('');
       dismiss();
-      Alert.alert('Got it', 'Admin will see this on Feedback. If it ships, it goes out with Publish to app.');
+      Alert.alert('Got it', Platform.OS === 'web' ? 'Your feedback has been sent to the Tapua’i team.'
+        : 'Admin will see this on Feedback. If it ships, it goes out with Publish to app.');
     } catch (caught) {
       Alert.alert('Could not send', caught instanceof Error ? caught.message : 'Try again in a moment.');
     } finally {
@@ -108,8 +110,9 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
           <SheetHandle onDismiss={dismiss} />
           <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.kicker}>Improve Tapua'i</Text>
-          <Text style={styles.title}>Send a suggestion</Text>
-          <Text style={styles.lede}>Goes to the admin Feedback desk — not a clip report.</Text>
+          <Text style={styles.title}>{Platform.OS === 'web' ? 'Share feedback' : 'Send a suggestion'}</Text>
+          <Text style={styles.lede}>{Platform.OS === 'web' ? 'For app ideas and problems. To report a clip, use Report / Hide.'
+            : 'Goes to the admin Feedback desk — not a clip report.'}</Text>
 
           <Text style={styles.fieldLabel}>Type · {kindLabel}</Text>
           <ScrollView
@@ -167,18 +170,18 @@ export function SuggestionSheet({ visible, surface = 'other', onClose }: Suggest
             onChangeText={setBody}
             placeholder="What should change, and why?"
             placeholderTextColor={colors.textMuted}
-            accessibilityLabel="Suggestion"
+            accessibilityLabel={Platform.OS === 'web' ? 'Your feedback' : 'Suggestion'}
             multiline
             style={styles.field}
           />
           <AnimatedButton
             haptic="medium"
             disabled={!canSend}
-            accessibilityLabel="Send suggestion"
+            accessibilityLabel={Platform.OS === 'web' ? 'Send feedback' : 'Send suggestion'}
             contentStyle={[styles.send, !canSend && styles.sendOff]}
             onPress={() => void send()}
           >
-            <Text style={styles.sendLabel}>{busy ? 'Sending…' : 'Send suggestion'}</Text>
+            <Text style={styles.sendLabel}>{busy ? 'Sending…' : Platform.OS === 'web' ? 'Send feedback' : 'Send suggestion'}</Text>
           </AnimatedButton>
           </ScrollView>
           <AnimatedButton haptic="light" accessibilityLabel="Cancel" contentStyle={styles.cancel} onPress={dismiss}>

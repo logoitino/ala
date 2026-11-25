@@ -371,3 +371,31 @@ Web Highlights picks follow-up: the existing workspace scope centers the nested 
 
 
 Verification of the web picker: 8 mounted cases pass, including native/default scope, limits, responsive draft retention and explicit return without save. The full Ala-scoped repository check passes (337 mobile suites / 3,190 tests). Browser Bridge with Demo Fan confirms the columns and all category controls at 900×600. At 900×400 the panel is 760×352px with 24px gutters, Back is 44px high, Save is 48px high, and the body scrolls (161px viewport / 366px content) with no horizontal overflow. Back → Highlights settings → Done → account overview passed without a settings write. Edit profile opens in a 760×340px frame and Escape restores the overview. Account capability and Legal also load within 760×340px in the short-window check; no role, legal acknowledgement or account write was made. Physical-device acceptance and hosted delivery remain outside this presentation pass.
+
+
+## Web screen focus review — 2026-11-25
+
+Outside-session Codex reviewed web fan route/menu copy and navigation against a finite goal: each visible panel should add useful context or an action, rather than repeat the page; menus should name their next action and preserve consent, money, privacy and source failures. Existing settings/actions are presented without new permissions or operational capabilities (presentation-only admin-workflow exemption, reviewer/executor Codex in the owner-authorized session). Native UI stays on its existing branch. Jev not reached because its SDK/key configuration remains absent; no score inferred.
+
+| Screen/menu family | Review result and reason |
+| --- | --- |
+| Highlights, Beyond, search and recent searches | Retain existing feed/search hierarchy. Web Highlights preference copy now explains picks and newest-first once, retaining the no-ad-use notice. |
+| Local hub | Omit repeated live games and Aura rankings from the right rail; the page already owns those sections. |
+| Schools/teams directory and game detail | Keep complementary summaries; omit the currently opened game. No roster or profile data handler changes. |
+| Profile/public profile, Drip/shop, Booster | One shortcut group replaces separate repeated card/button headings; omit the current destination. Profile and Drip published pauses are respected. Vault pause removes the exclusive promise while retaining Profile. |
+| Activity, Spotlight, Receipts | Retain purpose, source/empty states, confirmation and financial context. Shared web extras supplies complementary discovery. No notification-source repair is claimed. |
+| Tablet extras | 420px cap with fixed named header and Close; navigation dismisses, resize clears old open state. Closed/paused panels do not mount the scoreboard/Aura hooks. |
+| Feedback and unavailable features | Web copy gives a next step without Admin publishing instructions. Feedback remains distinct from Report/Hide. Return uses the existing enabled-route helper. Admin instructions and native copy remain. |
+| Auth/age/signup; profile/privacy/notifications/roles/verification/sports/legal/deletion | Retain separate access, privacy, consent, capability and destructive-action explanations. Existing enlarged web account frames remain. |
+| Upload/picker/edit/report; quiz/report; rally/spotlight; avatar/story/QR | Retain media rights, review, reporting and source explanations; no new action or source contract. |
+| Gift/options/review/thanks/receipts; program sponsorship | Retain independently required gift/donation/tax/fee/held notices. Repeated tax text on Profile and Receipts is intentional because each can open independently. |
+| Operator PIN/roster | Retain role-specific operating instructions; not fan-only publishing copy. Privileged/admin desks are outside this web fan copy pass. |
+
+Evidence: bounded AST inventory of 219 non-test fan components/tab route modules, 46 direct-modal hosts / 48 sites; literal-copy summaries of modal hosts and routes plus targeted source review. Those counts are inventory, not proof of all render paths or every function. Review artifacts and source hashes are outside the repository at `../ala-post-edit-evidence/web-focus-inventory.json` and `web-focus-copy-review.json`. Five focused mounted suites pass (33 cases): route/flag exclusions, no hidden data-hook mount, error/retry, drawer dismissal/resize, native/default copy and feedback submission via a mock. Mobile typecheck passes. Full repository gate results are recorded in COORD-01.
+
+Current visual verification is unavailable: `meta browser` Bridge readiness succeeds, but page listing fails while minting a delegated credential (network operation not permitted), including the unsandboxed attempt. No current screenshot, keyboard, enlarged-text or live navigation acceptance is claimed. Earlier dated browser evidence is retained for its original source only. Next: app owner/QA run the web steps in TESTER_SCRIPT when the browser connection works.
+
+Separate existing source gap: `useAuraBoosters` retains its canonical fallback behavior (DEV_PERSONAS on unavailable/empty results); `fetchAuraBoard` folds read failure into an empty result. This pass changes when that existing hook mounts, not its data contract. LOCAL/AURA and DATA_GOVERNANCE must review live-vs-fallback labeling/source behavior before production; no real-only ranking or hosted data assurance follows these layout tests.
+
+
+Final local gate: 340 mobile suites / 3,211 tests and full Ala-scoped repository check passed. Retained detection passed 217 portal tests; default quality gate failed only on the different-checkout source-sync state. The Ala-owned snapshot passed. These are separate outcomes, not a healthy runtime-monitor claim.

@@ -1,6 +1,6 @@
-/** Paused surfaces keep recovery actions scrollable at large text sizes; caller owns safe-area/dock clearance. */
+/** Web fans get a concise recovery message; operator guidance and native copy remain intact. Paused surfaces keep recovery actions scrollable at large text sizes; caller owns safe-area/dock clearance. */
 import { type Href, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet } from 'react-native';
+import { Platform, ScrollView, StyleSheet } from 'react-native';
 
 import { EmptyState } from '@/components/UI/EmptyState';
 import { useAuth } from '@/context/AuthContext';
@@ -38,8 +38,10 @@ export function RuntimePaused({
       <EmptyState
         kicker={isAdmin ? 'Paused from admin' : 'Paused'}
         title={title}
-        lede={isAdmin ? lede : 'This surface is off right now. It comes back after Admin publishes it live.'}
-        actionLabel="Back to Home"
+        lede={isAdmin ? lede : Platform.OS === 'web'
+          ? 'This part of Tapua’i is currently unavailable. Please check back later.'
+          : 'This surface is off right now. It comes back after Admin publishes it live.'}
+        actionLabel={Platform.OS === 'web' ? 'Return to app' : 'Back to Home'}
         onAction={() => router.replace(firstEnabledFanHref(live) as Href)}
         adminHref={adminHref}
         adminLabel={adminLabel}

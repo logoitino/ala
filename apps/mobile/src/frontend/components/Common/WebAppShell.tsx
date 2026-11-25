@@ -1,12 +1,13 @@
 /**
  * Expo web chrome: at ≥820px, Facebook-style desktop rails (WEB-DESKTOP-01) around the existing
  * Router stack. Native ignores this wrapper. Below 820px the phone layout is unchanged.
- * Desktop vs narrow branching waits until after mount so SSR HTML matches the first client paint.
+ * The tablet drawer loads extras only when open and dismisses on navigation. Desktop vs narrow branching waits until after mount so SSR HTML matches the first client paint.
  */
 import { type ReactNode, useEffect, useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { TYPE, figtree } from '@/theme/fonts';
 import { colors } from '@/constants/theme';
 import {
   WEB_DESKTOP_TABLET,
@@ -39,9 +40,10 @@ export function WebAppShell({ children, backgroundColor = colors.background }: W
     setLayoutReady(true);
   }, []);
 
-  if (Platform.OS !== 'web') return <>{children}</>;
+  const mode: WebDesktopMode = webDesktopMode(width, Platform.OS, layoutReady);
+  useEffect(() => { if (mode !== 'tablet') setRightOpen(false); }, [mode]);
 
-  const mode: WebDesktopMode = webDesktopMode(width, 'web', layoutReady);
+  if (Platform.OS !== 'web') return <>{children}</>;
 
   if (mode === 'mobile') {
     return <View style={[styles.fill, { backgroundColor }]}>{children}</View>;
@@ -71,7 +73,7 @@ export function WebAppShell({ children, backgroundColor = colors.background }: W
           >
             <Ionicons name="albums-outline" size={22} color={colors.surface} />
           </Pressable>
-          <Modal
+          {rightOpen ? <Modal
             visible={rightOpen}
             transparent
             animationType="fade"
@@ -84,18 +86,21 @@ export function WebAppShell({ children, backgroundColor = colors.background }: W
                 accessibilityLabel="Close extras panel"
               />
               <View style={styles.drawerPanel}>
-                <Pressable
-                  onPress={() => setRightOpen(false)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Close extras panel"
-                  style={styles.drawerClose}
-                >
-                  <Ionicons name="close" size={22} color={colors.text} />
-                </Pressable>
-                <DesktopRightRail />
+                <View style={styles.drawerHeader}>
+                  <Text accessibilityRole="header" style={styles.drawerTitle}>Explore Tapua’i</Text>
+                  <Pressable
+                    onPress={() => setRightOpen(false)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Close extras panel"
+                    style={styles.drawerClose}
+                  >
+                    <Ionicons name="close" size={22} color={colors.text} />
+                  </Pressable>
+                </View>
+                <DesktopRightRail drawer onNavigate={() => setRightOpen(false)} />
               </View>
             </View>
-          </Modal>
+          </Modal> : null}
         </>
       ) : null}
     </View>
@@ -149,11 +154,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(11, 26, 20, 0.4)',
   },
   drawerPanel: {
-    width: 320,
+    width: 420,
     maxWidth: '90%',
     height: '100%',
     backgroundColor: colors.background,
   },
+  drawerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  drawerTitle: { flex: 1, minWidth: 0, ...TYPE.section, ...figtree('800'), color: colors.text },
   drawerClose: {
     alignSelf: 'flex-end',
     padding: 12,

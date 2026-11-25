@@ -80,6 +80,8 @@ describe('HighlightsFeedSettingsSheet', () => {
       />,
     );
     expect(screen.getByText('Highlights')).toBeTruthy();
+    expect(screen.getByText(/Personal feed orders Home/)).toBeTruthy();
+    expect(screen.getByText('When off, Home is newest first with no ranking bonuses.')).toBeTruthy();
     expect(screen.getByLabelText('Personal feed')).toBeTruthy();
     fireEvent.press(screen.getByText('Edit sports, schools & lean'));
     expect(await screen.findByText('Edit Highlights picks')).toBeTruthy();
@@ -122,6 +124,17 @@ describe('web account picks layout', () => {
     expect(screen.queryByTestId('highlights-picks-columns')).toBeNull();
     expect(screen.queryByLabelText('Back to Highlights settings')).toBeNull();
     expect(StyleSheet.flatten(screen.getByTestId('highlights-picks-panel').props.style).maxWidth).toBeUndefined();
+  });
+
+  it('explains web personalization once while keeping the ad disclosure', async () => {
+    dimensions('web', 900);
+    await render(<SheetPresentationContext.Provider value="web-workspace">
+      <HighlightsFeedSettingsSheet visible prefs={prefs} sportOptions={['Football']} schoolOptions={['East High']}
+        onClose={jest.fn()} onSave={jest.fn()} onTogglePersonalization={jest.fn()} />
+    </SheetPresentationContext.Provider>);
+    expect(screen.getByText('Choose the sports and schools you want to follow. Your picks are never used for ads.')).toBeTruthy();
+    expect(screen.getByText('Turn off to see the newest clips first.')).toBeTruthy();
+    expect(screen.queryByText(/Personal feed orders Home/)).toBeNull();
   });
 
   it('offers an explicit return without saving the draft', async () => {

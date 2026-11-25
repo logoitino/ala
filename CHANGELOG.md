@@ -1,5 +1,11 @@
 <!-- Dated release copy records preserve older financial terminology as history. -->
 
+## 2026-11-25 — Web screen focus (local)
+
+- Group web discovery shortcuts and omit repeated Local summaries and current-page links. Published pauses also hide the corresponding extras.
+- Give tablet extras more room; selecting a destination closes the drawer. Closed drawers stop mounting their data panels.
+- Simplify web Highlights preferences, feedback and unavailable-feature messages while retaining privacy and financial notices. Phone presentation is unchanged.
+
 ## 2026-11-25 — Web Highlights picks (local)
 
 - Center the existing workspace picker, show sports and schools side by side, and keep category choices visible. Add an explicit return to Highlights settings and a matching green Save button. Long web school names wrap; native and ordinary first-run presentation remain unchanged.

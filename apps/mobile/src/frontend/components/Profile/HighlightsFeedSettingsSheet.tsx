@@ -1,10 +1,11 @@
 /** UX-13 readable shared type preserves every action and required notice.
+ * Web account-workspace copy explains each choice once; native keeps its original explanation.
  * Settings → Highlights: personal feed toggle + edit picks (FEED-01).
  * Off = newest-first Home with no rankHomeFeed bonuses. Guests never open this sheet.
  * @sideEffects Saves `user_feed_prefs` through `useFeedPrefs`.
  */
-import { useState } from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Switch, Text, View, ScrollView, useWindowDimensions } from 'react-native';
+import { useContext, useState } from 'react';
+import { ActivityIndicator, Modal, Platform, StyleSheet, Switch, Text, View, ScrollView, useWindowDimensions } from 'react-native';
 
 import { FeedPicksSheet } from '@/components/Reels/FeedPicksSheet';
 import { AnimatedButton } from '@/components/UI/AnimatedButton';
@@ -15,6 +16,7 @@ import { useSheetFrame } from '@/hooks/useSheetFrame';
 import { colors } from '@/constants/theme';
 import type { UserFeedPrefs } from '@/data/highlights';
 import { FOCAL } from '@/theme/motion';
+import { SheetPresentationContext } from '@/components/UI/SheetPresentationContext';
 import { TYPE, figtree } from '@/theme/fonts';
 
 type HighlightsFeedSettingsSheetProps = {
@@ -44,6 +46,7 @@ export function HighlightsFeedSettingsSheet({
   onTogglePersonalization,
 }: HighlightsFeedSettingsSheetProps) {
   const frame = useSheetFrame();
+  const workspace = useContext(SheetPresentationContext) === 'web-workspace' && Platform.OS === 'web';
   const { height: windowHeight } = useWindowDimensions();
   const [picksOpen, setPicksOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -62,13 +65,13 @@ export function HighlightsFeedSettingsSheet({
             <Text style={styles.kicker}>Settings</Text>
             <Text style={styles.title}>Highlights</Text>
             <Text style={styles.body}>
-              Personal feed orders Home by your picks and Crew. Turn it off for plain newest-first. Picks are never used
-              for ads.
+              {workspace ? 'Choose the sports and schools you want to follow. Your picks are never used for ads.'
+                : 'Personal feed orders Home by your picks and Crew. Turn it off for plain newest-first. Picks are never used for ads.'}
             </Text>
             <View style={styles.row}>
               <View style={styles.rowCopy}>
                 <Text style={styles.rowTitle}>Personal feed</Text>
-                <Text style={styles.rowHint}>When off, Home is newest first with no ranking bonuses.</Text>
+                <Text style={styles.rowHint}>{workspace ? 'Turn off to see the newest clips first.' : 'When off, Home is newest first with no ranking bonuses.'}</Text>
               </View>
               {toggling || busy ? (
                 <ActivityIndicator color={FOCAL.neonJade} />

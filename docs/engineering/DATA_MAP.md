@@ -15,7 +15,7 @@ Owned by `DATA_GOVERNANCE` (lead) with `DATA_LINEAGE` (this map) and `CODE_HYGIE
 | Tables reached by at least one screen or server route | 126 of 129 |
 | Code files that read or write the database | 87 |
 | Exported symbols nothing imports | 46 (0 proposed for archive, 46 kept on purpose) |
-| Operational data exports | 30 |
+| Operational data exports | 31 |
 | Rule failures | 0 |
 
 ## Owners
@@ -102,6 +102,7 @@ These operator tools are outside the app import graph. Source registration recor
 | `owner-post-description-edit` | `HIGHLIGHTS` | Existing actor/profile IDs, post ID and current title or revision; proposed text and checked RPC receipt. No copied media or new auth storage.; Change a Highlight or Beyond description using the exact current author and expected value or revision. | Existing Highlight or Beyond row through its owner RPC; compatible mounted reel lists and current Beyond review queue. | Unsaved input lives in the open editor only. A pending reel read retains matching confirmed receipts only until completion or invalidation; saved values use existing post retention. No offline queue, silent retry or caption telemetry. | `apps/mobile/src/frontend/lib/postCaptions.ts` |
 | `fan-search-recent-history` | `DESIGN` | Up to six unique terms from opened search results, newest first. Existing on-device key; no new account identifier.; Let Home and Local reopen a recent search from a shared aligned list. | Home and Local read a shared in-memory snapshot backed by device AsyncStorage at tapuai.localSearchRecent. Only terms explicitly searched use the existing search endpoint. | Newest six terms until Clear all or app data removal. Clearing invalidates pending hydration and saves. | `apps/mobile/src/frontend/hooks/useLocalSearch.ts` |
 | `web-sidebar-account-settings` | `PROFILE` | Existing Auth account name and transient selected panel; Highlights preferences and existing roster school options load only when that panel opens. No new persisted record or permission.; Expose existing account settings from the web-only desktop and tablet navigation rail. | Existing Profile, Privacy, Notifications, Highlights preferences, Capability, Legal and Delete Account components keep their current data handlers. The overview masks outgoing session selections. The explicit web workspace context changes only panel presentation. | Panel selection lasts only while mounted for the current account session. Existing settings retain their original server retention. Fixed-code Auth boundary reports render failure without account data. | `apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx` |
+| `web-context-extras` | `LOCAL` | Current route and published runtime flags; existing live game and Aura booster hook results only while eligible panels mount. No new persisted record or permission.; Show complementary existing discovery on web while omitting repeated current-page panels and paused surfaces. | Existing Local/game, Profile/Vault, Booster and Drip destinations; grouped web shortcuts and tablet extras only. Existing Aura source fallback contract is retained and requires its separate production review. | Transient panel results follow existing hook lifetimes; tablet data panels unmount when closed. Existing source retention is unchanged. | `apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx` |
 
 ## Tables and views
 
@@ -1251,7 +1252,7 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `tabs.activity` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/activity.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.spotlight` | `apps/mobile/app/(tabs)/_layout.tsx`, `apps/mobile/app/(tabs)/spotlight.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.drip` | `apps/mobile/app/(tabs)/drip.tsx`, `apps/mobile/app/(tabs)/profile.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/Common/DesktopRightRail.tsx` |
-| `tabs.profile` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/UI/FanTabBar.tsx` |
+| `tabs.profile` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Common/DesktopLeftRail.tsx`, `@/components/Common/DesktopRightRail.tsx`, `@/components/UI/FanTabBar.tsx` |
 | `tabs.upload` | `apps/mobile/app/(tabs)/_layout.tsx`, `@/components/Reels/HomeFeedEmpty.tsx`, `@/components/UI/FanTabBar.tsx`, `@/components/UI/PlayNavBar.tsx` |
 | `buttons.seki` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.aura` | `@/components/Reels/ReelActionOverlay.tsx` |
@@ -1261,12 +1262,12 @@ Published app switches an admin can flip (Features and Look desks). Each must be
 | `buttons.more` | `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.subscribe` | `@/components/Profile/AthleteProfileView.tsx`, `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.crew` | `@/components/Profile/ProfileStatRow.tsx`, `@/components/Reels/ReelActionOverlay.tsx` |
-| `buttons.vault` | `@/components/Profile/AthleteProfileView.tsx`, `@/components/Profile/AthleteReelManager.tsx`, `@/components/Reels/ReelActionOverlay.tsx` |
+| `buttons.vault` | `@/components/Common/DesktopRightRail.tsx`, `@/components/Profile/AthleteProfileView.tsx`, `@/components/Profile/AthleteReelManager.tsx`, `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.flashUnlock` | `@/components/Profile/AthleteReelManager.tsx`, `@/components/Reels/ReelActionOverlay.tsx` |
 | `buttons.suggest` | `apps/mobile/app/(tabs)/profile.tsx`, `@/components/Reels/ReelActionOverlay.tsx`, `@/components/Reels/ReelCard.tsx` |
-| `layouts.liveMatches` | `apps/mobile/app/(tabs)/index.tsx`, `apps/mobile/app/(tabs)/local/index.tsx` |
+| `layouts.liveMatches` | `apps/mobile/app/(tabs)/index.tsx`, `apps/mobile/app/(tabs)/local/index.tsx`, `@/components/Common/DesktopRightRail.tsx` |
 | `layouts.cheerPolls` | `apps/mobile/app/(tabs)/index.tsx`, `apps/mobile/app/(tabs)/local/index.tsx` |
-| `layouts.topBoosters` | `apps/mobile/app/(tabs)/local/index.tsx` |
+| `layouts.topBoosters` | `apps/mobile/app/(tabs)/local/index.tsx`, `@/components/Common/DesktopRightRail.tsx` |
 | `layouts.sponsorshipModal` | `apps/mobile/app/(tabs)/local/index.tsx` |
 | `layouts.spotlightModal` | `apps/mobile/app/(tabs)/index.tsx` |
 | `layouts.homeSearch` | `apps/mobile/app/(tabs)/index.tsx` |

@@ -16621,6 +16621,7 @@
       "readers": [
         "apps/mobile/app/(tabs)/_layout.tsx",
         "apps/mobile/src/frontend/components/Common/DesktopLeftRail.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx",
         "apps/mobile/src/frontend/components/UI/FanTabBar.tsx"
       ]
     },
@@ -16713,6 +16714,7 @@
       "key": "vault",
       "path": "buttons.vault",
       "readers": [
+        "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx",
         "apps/mobile/src/frontend/components/Profile/AthleteProfileView.tsx",
         "apps/mobile/src/frontend/components/Profile/AthleteReelManager.tsx",
         "apps/mobile/src/frontend/components/Reels/ReelActionOverlay.tsx"
@@ -16743,7 +16745,8 @@
       "path": "layouts.liveMatches",
       "readers": [
         "apps/mobile/app/(tabs)/index.tsx",
-        "apps/mobile/app/(tabs)/local/index.tsx"
+        "apps/mobile/app/(tabs)/local/index.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx"
       ]
     },
     {
@@ -16760,7 +16763,8 @@
       "key": "topBoosters",
       "path": "layouts.topBoosters",
       "readers": [
-        "apps/mobile/app/(tabs)/local/index.tsx"
+        "apps/mobile/app/(tabs)/local/index.tsx",
+        "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx"
       ]
     },
     {

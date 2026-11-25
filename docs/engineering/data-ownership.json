@@ -3338,6 +3338,15 @@
       "destination": "Existing Profile, Privacy, Notifications, Highlights preferences, Capability, Legal and Delete Account components keep their current data handlers. The overview masks outgoing session selections. The explicit web workspace context changes only panel presentation.",
       "retention": "Panel selection lasts only while mounted for the current account session. Existing settings retain their original server retention. Fixed-code Auth boundary reports render failure without account data.",
       "source": "apps/mobile/src/frontend/components/Common/DesktopAccountSettings.tsx"
+    },
+    {
+      "id": "web-context-extras",
+      "owner": "LOCAL",
+      "purpose": "Show complementary existing discovery on web while omitting repeated current-page panels and paused surfaces.",
+      "data": "Current route and published runtime flags; existing live game and Aura booster hook results only while eligible panels mount. No new persisted record or permission.",
+      "destination": "Existing Local/game, Profile/Vault, Booster and Drip destinations; grouped web shortcuts and tablet extras only. Existing Aura source fallback contract is retained and requires its separate production review.",
+      "retention": "Transient panel results follow existing hook lifetimes; tablet data panels unmount when closed. Existing source retention is unchanged.",
+      "source": "apps/mobile/src/frontend/components/Common/DesktopRightRail.tsx"
     }
   ]
 }
